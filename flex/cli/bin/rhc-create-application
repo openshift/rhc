@@ -1,0 +1,305 @@
+#!/usr/bin/env ruby
+# Copyright 2010 Red Hat, Inc.
+#
+# Permission is hereby granted, free of charge, to any person
+# obtaining a copy of this software and associated documentation files
+# (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge,
+# publish, distribute, sublicense, and/or sell copies of the Software,
+# and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT.  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+# BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+# ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+require 'openshift'
+
+def usage
+puts <<USAGE
+== Synopsis
+
+rhc-create-application: Creates a new application on an exisitng environemnt.
+
+== Usage
+
+rhc create-application [options] [NAME] [CHECKOUT_DIR]
+
+-u|--username
+   Redhat Login (RHN or OpenShift login with OpenShift Express access)
+
+-p|--password
+   Redhat Password
+
+-t|--target flex|express
+   Choose the cloud platform to create the application on.
+
+-v|--version
+   Version string for application (alpha numeric, default: 1.0)
+
+-t|--template TEMPLATE
+   Sets up basic cartridges for the application.
+   Flex: #{Openshift::Flex.templates.keys.join(", ")}
+
+-c|--environment CLUSTER_ID:
+   The ID of the environment that will host the application.
+
+--import-archive FILE
+   Import an existing VPM file or compressed application artifacts.
+
+-n|--no-git
+   Disables git clone of application files.
+
+-h|--help
+   Prints this message
+
+NAME: The name of the new application
+CHECKOUT_DIR: The directory to clone the application into
+USAGE
+end
+
+def create_flex_environment(args,cookie)
+    args.delete('--target')
+    args.delete('--username')
+    args.delete('--password')
+    args.delete('--environment')
+    args.delete('--sso')            
+    args = JSON.generate(args)
+    args.gsub!(/(["\\])/, '\\\\\1')
+    exec( "rhc-create-environment --target flex --sso \"#{cookie}\" --new-application \"#{args}\"" )
+end
+
+begin
+    opts = GetoptLong.new(
+        ["--username",         "-u", GetoptLong::REQUIRED_ARGUMENT],
+        ["--password",         "-p", GetoptLong::REQUIRED_ARGUMENT],
+        ["--sso",                    GetoptLong::REQUIRED_ARGUMENT],
+        ["--environment",      "-e", GetoptLong::REQUIRED_ARGUMENT],        
+        ["--target",           "-t", GetoptLong::REQUIRED_ARGUMENT],
+        ["--version",          "-v", GetoptLong::REQUIRED_ARGUMENT],
+        ["--template",         "-m", GetoptLong::REQUIRED_ARGUMENT],
+        ["--no-git",           "-n", GetoptLong::NO_ARGUMENT],
+        ["--import-archive",   "-a", GetoptLong::REQUIRED_ARGUMENT],
+        ["--debug",                  GetoptLong::NO_ARGUMENT],                  
+        ["--help",             "-h", GetoptLong::NO_ARGUMENT]
+    )
+rescue Exception => e
+    puts e.message
+end
+
+args = {}
+begin
+    opts.each{ |k,v| args[k]=v }
+rescue GetoptLong::Error => e
+    usage
+    exit -100
+end
+
+if args['--help']
+    usage
+    exit
+end
+
+app_name = ARGV.shift
+clone_dir = ARGV.shift
+@debug = true if args['--debug']
+debug "Application name: #{app_name}, Clone dir: #{clone_dir}"
+
+args['--target'] = conf('default_target') || 'flex' if args['--target'].nil? or args['--target']==""
+debug "Target platform #{args['--target']}"
+
+if args['--target'] == 'flex'
+    flex_server = conf('flex_server')
+    cookie = args['--sso']
+    if !cookie
+        username = args['--username'] || conf("username") || Openshift::IO.prompt("Redhat username",[],Openshift::Validation.method(:check_login))
+        password = args['--password'] || Openshift::IO.prompt("Redhat password",nil,nil,true,false)
+        csay("Logging into Openshift Flex as #{username}\n",:message)
+        cookie=Openshift.login(@http,username,password)
+    end
+    
+    environment_id = args['--environment']
+    environments = JSON.parse(`rhc-list-environments --sso "#{cookie}" --porcelin`)
+    if not environment_id
+        if environments.size == 0
+            csay("You have no existing environments, this wizard will help you create a cloud and Flex environment to host your applications\n", :message)
+            create_flex_environment(args,cookie)
+        end
+        
+        menu = environments + [{'id'=>"n", 'name'=>'New envionment'}] 
+        csay("Select an envionment to host the new application or select 'n' to create a new envionment", :message)
+        Openshift::Formatter.table(["Environment Id","Name","Cloud", "DNS", "Load balancer", "Location", "State", "# Nodes"],
+              ['id','name','cloud-account-name', 'dns', 'load-balancer-address','location','cluster-status','num-nodes'],
+              [16,15,20,40,20,15,10,10],
+              menu)
+        environment_id = Openshift::IO.prompt("Environment Id", menu.map{|c| c['id'].to_s})
+    end
+    create_flex_environment(args,cookie) if environment_id.downcase == 'n'
+    environment = environments.find_all{|c| c['id'].to_s == environment_id.to_s}[0]
+    environment_dns = environment['dns']
+    
+    ssh_key = Openshift::SSH::gen_ssh_keys(@libra_kfile,@libra_kpfile)
+    csay("\nRetrieving environment SSH keys... ")    
+    uri = URI.parse("https://#{environment['dns']}:4242/security/keys")
+    response = Openshift::Rest.get(@http, uri, nil, nil, {'user' => environment['username'], 'password' => environment['password']})
+    case response
+    when Net::HTTPSuccess
+        csay("[OK]",:conf)
+    else
+        debug "HTTP code: #{response.code}"
+        debug response.body
+        csay("[ERROR]",:error)
+        csay("Please verify your cloud credentials and try again.\n",:red)
+        exit -301
+    end
+    
+    data = JSON.parse(response.body)
+    keys = data['keys']
+    if not keys.index(ssh_key)
+        csay("Uploading SSH key to environment... ")
+        uri = URI.parse("https://#{environment['dns']}:4242/security/keys")
+        response = Openshift::Rest.post(@http, uri, {'type'=>'ssh-rsa','identifier'=>'', 'key'=>ssh_key}, nil, {'user' => environment['username'], 'password' => environment['password']})
+        case response
+        when Net::HTTPSuccess
+            csay("[OK]",:conf)
+        else
+            debug "HTTP code: #{response.code}"
+            debug response.body
+            csay("[ERROR]",:error)
+            csay("Unable to update ssh keys on environment.",:error)
+            exit -301
+        end
+    end
+
+    response = nil
+    vpm_imported = false
+    if args['--import-archive'] and (args['--import-archive'] =~ /vpm$/)
+        file_name = args['--import-archive']        
+        csay("Importing application vpm ")
+        csay("#{file_name} ", :emphasis)
+        csay("... ")
+        uri = URI.parse("https://#{environment_dns}:4242/applications")
+        response = Openshift::Rest.postFile(@http, uri, nil, {"package"=>file_name}, nil, {'user' => environment['username'], 'password' => environment['password']})
+        case response        
+        when Net::HTTPSuccess
+            csay("[OK]",:conf)
+        else
+            debug "HTTP code: #{response.code}"
+            debug response.body
+            csay("[ERROR]",:error)
+            csay("Unable to upload VPM archive",:error)
+            exit -301
+        end
+        vpm_imported = true
+    else
+        if not Openshift::Validation.check_field(app_name,"application name",8)
+            app_name = Openshift::IO.prompt("Application name",[],lambda{|a| Openshift::Validation.check_field(a,"application name",8)})
+        end
+        app_version = args['--version'] || "1.0"    
+        csay("Creating application ")
+        csay("#{app_name} ", :emphasis)
+        csay("Version:#{app_version})... ")
+        uri = URI.parse("https://#{environment_dns}:4242/applications")
+        response = Openshift::Rest.post(@http, uri, {"name" => app_name, "version" => app_version}, nil, {'user' => environment['username'], 'password' => environment['password']})
+        case response
+        when Net::HTTPSuccess
+            csay("[OK]",:conf)
+        else
+            debug "HTTP code: #{response.code}"
+            debug response.body
+            csay("[ERROR]",:error)
+            csay("Unable to create new application",:error)
+            exit -301
+        end
+    end
+    data = JSON.parse(response.body)    
+    app = data['application']
+    
+    if not vpm_imported and args['--import-archive']
+        #some other type of archive
+        file_name = args['--import-archive']         
+        csay("Uploading archive ")
+        csay("#{file_name} ",:emphasis)
+        csay("to server... ")
+        uri = URI.parse("https://#{environment_dns}:4242/applications/#{app['guid']}/tree/")
+        response = Openshift::Rest.postFile(@http, uri,{"operation"=>"extract"},{"archive"=>file_name},
+                nil, {'user' => environment['username'], 'password' => environment['password']})
+        case response        
+        when Net::HTTPSuccess
+            csay("[OK]",:conf)
+        else
+            debug "HTTP code: #{response.code}"
+            debug response.body
+            csay("[ERROR]",:error)
+            csay("Unable to create upload archive.",:error)
+            exit -301
+        end
+    end
+    
+    if not vpm_imported
+        template = args['--template'] || Openshift::IO.prompt("Choose an application template",Openshift::Flex.templates.keys)
+        carts=Openshift::Flex.templates[template]
+        csay("Retrieving list of available cartridges... ")
+        cart_data = nil
+        begin
+            cmd = "rhc-list-cartridges --sso \"#{cookie}\" --porcelin --environment #{environment["id"]} #{app["guid"]}"
+            debug cmd
+            cart_data = JSON.parse(`#{cmd}`)
+            csay("[OK]",:conf)
+        rescue Exception => e
+            debug cart_data
+            debug e.message
+            csay("[ERROR]",:error)
+            csay("Unable to retrieve available cartridges",:error)
+            exit -400
+        end
+        avail = cart_data['available']
+        carts_to_install=[]                                                                                                                                                                                                                          
+        avail.each{ |cart|                                                                                                                                                                                                              
+            carts.each{ |req|                                                                                                                                                                                                           
+                if cart["name"].index(req) == 0                                                                                                                                                                                         
+                    carts_to_install += [cart["name"]]                                                                                                                                                                                               
+                end                                                                                                                                                                                                                     
+            }                                                                                                                                                                                                                           
+        }
+        csay("Installing cartridges: #{carts_to_install.join(",")}")
+        system( "rhc-add-cartridge --sso \"#{cookie}\" --environment #{environment['id']} #{app['guid']} #{carts_to_install.join(",")}" )
+    else
+        system("Ignoring template argument since VPM archive includes dependency information",:warn) if args["--template"]
+    end
+    
+    if not args['--no-git'] 
+        if not vpm_imported and Openshift::Git.git_repo? and Openshift::IO.prompt("A git repository has been detected. Import this application? [Yn]",['Y','y','N','n']).downcase == 'y'
+            csay("Adding GIT remote 'flex' to existing repository",:message)
+            Openshift::Git.add_remote("ssh://admin@#{environment_dns}/mnt/glusterfs/web-apps/#{app['guid']}/repository","flex")
+            Openshift::Git.pull("flex")
+        else
+            clone_dir = app['name'] if clone_dir.nil? or clone_dir == ""
+            csay("Cloning application ")
+            csay("#{app['name']} ",:emphasis)
+            csay("to directory ")    
+            csay("#{clone_dir}",:emphasis)
+            Openshift::Git.clone("ssh://admin@#{environment_dns}/mnt/glusterfs/web-apps/#{app['guid']}/repository",app['name'],'origin')
+        end
+    end
+
+    if args['--porcelin']
+        print JSON.generate(app)
+    else
+        csay("Application created",:message)
+        Openshift::Formatter.table(["Application GUID","Application name", "Version", "State"],
+              ['guid','name','version','status'],
+              [39,20,7,10],
+              [app])
+    end
+else #express
+    csay("This feature is currently not implemented for Openshift Express applications.\n",:red)       
+end

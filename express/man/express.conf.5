@@ -1,0 +1,68 @@
+.\" Process this file with
+.\" groff -man -Tascii express.conf.5
+.\"
+.TH express.conf 5 "JANUARY 2011" Linux "User Manuals"
+.SH NAME
+express.conf \- configuration file for OpenShift Express
+.SH SYNOPSIS
+Search order (on a per variable basis):
+
+1) ~/.openshift/express.conf (Created on first usage of rhc client tools and can be customized per system user)
+
+2) /etc/openshift/express.conf (RPM install path)
+
+3) <ruby_gem_dir>/gems/rhc-<version>/conf/express.conf (RubyGem install path)
+.SH DESCRIPTION
+.B express.conf
+contains the following configuration params:
+
+.I libra_server
+The server the rhc client tools communicate with i.e. 
+.B https://openshift.redhat.com
+
+.I debug
+Boolean indicating whether debug should always be enabled for the rhc client tools
+
+.I default_rhlogin
+The default rhc client tools rhlogin.  Used as the default when the -l argument is not passed to each of the client tools.
+
+.SH FILES
+.I <ruby_gem_dir>/gems/rhc-<version>/conf/express.conf
+.RS
+The RubyGem system wide configuration file.
+.RE
+.I /etc/openshift/express.conf
+.RS
+The system wide configuration file.
+.RE
+.I ~/.openshift/express.conf
+.RS
+Per user configuration file.
+.RE
+.I ~/.ssh/config
+.RS
+SSH Config file is altered automatically to create support for
+newly created OpenShift hosts.  Should be harmless.  See
+.BR ssh_config (5)
+for more information.
+.RE
+.I ~/.ssh/libra_id_rsa
+.RS
+SSH key created by rhc-create-domain to interact with OpenShift Express services
+see
+.BR ssh-keygen (1)
+for more information
+.RE
+.SH BUGS
+Please contact the Red Hat OpenShift team.
+Forums: http://www.redhat.com/openshift/
+IRC: #openshift on irc.freenode.net
+.SH AUTHOR
+Mike McGrath <mmcgrath@redhat.com>, Jim Jagielski <jimjag@redhat.com>
+.SH "SEE ALSO"
+.BR rhc-create-domain (1),
+.BR rhc-ctl-app (1),
+.BR rhc-snapshot(1),
+.BR rhc-user-info(1),
+.BR rhc-tail-files (1),
+.BR rhc-create-app (1)

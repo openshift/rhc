@@ -1,0 +1,181 @@
+#!/usr/bin/env ruby
+# Copyright 2010 Red Hat, Inc.
+#
+# Permission is hereby granted, free of charge, to any person
+# obtaining a copy of this software and associated documentation files
+# (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge,
+# publish, distribute, sublicense, and/or sell copies of the Software,
+# and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT.  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+# BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+# ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+def usage
+    puts <<USAGE
+== Synopsis
+
+rhc-register-cloud: Registers a new cloud account with Openshift Flex.
+
+== Usage
+
+rhc register-cartridge [options] [NAME]
+
+-u|--username USERNAME:
+   Redhat Login (RHN or OpenShift login with OpenShift Flex access).
+
+-p|--password PASSWORD:
+   Redhat Password.
+
+-t|--target flex|express
+   Choose the cloud platform for the cloud account.
+
+-r|--provider PROVIDER:
+   The IaaS Cloud provider
+
+-a|--account ACCOUNT
+   The cloud account number
+
+-c|--credentials CREDS:
+   The cloud account credentials.
+
+-s|--secret KEY:
+   The cloud account secret key
+
+-h|--help:
+   Prints this message
+
+NAME: The name of the new cloud account
+USAGE
+end
+
+require 'openshift'
+
+opts = GetoptLong.new(
+    ["--username",         "-u", GetoptLong::REQUIRED_ARGUMENT],
+    ["--password",         "-p", GetoptLong::REQUIRED_ARGUMENT],
+    ["--provider",         "-r", GetoptLong::REQUIRED_ARGUMENT],
+    ["--credentials",      "-c", GetoptLong::REQUIRED_ARGUMENT],
+    ["--secret",           "-s", GetoptLong::REQUIRED_ARGUMENT],
+    ["--account",          "-a", GetoptLong::REQUIRED_ARGUMENT],                                
+    ["--sso",                    GetoptLong::REQUIRED_ARGUMENT],        #Internal use only
+    ["--porcelin",               GetoptLong::NO_ARGUMENT],              #Internal use only
+    ["--debug",                  GetoptLong::NO_ARGUMENT],                  
+    ["--help",             "-h", GetoptLong::NO_ARGUMENT],              
+    ["--new-environment",        GetoptLong::REQUIRED_ARGUMENT],        #Internal use only
+    ["--target",           "-t", GetoptLong::REQUIRED_ARGUMENT]                        
+)
+
+args = {}
+begin
+    opts.each{ |k,v| args[k]=v }
+rescue GetoptLong::Error => e
+    usage
+    exit -100
+end
+
+if args['--help']
+    usage
+    exit -101
+end
+
+@debug = true if args['--debug']
+porcelin = args['--porcelin'] ? true : false
+
+args['--target'] = conf('default_target') || 'flex' if args['--target'].nil? or args['--target']==""
+debug args['--target']
+
+if args['--target'] == 'flex'
+    flex_server = conf('flex_server')
+    cookie = args['--sso']
+    
+    if !cookie
+        username = args['--username'] || conf("username") || Openshift::IO.prompt("Redhat username",[],Openshift::Validation.method(:check_login))
+        password = args['--password'] || Openshift::IO.prompt("Redhat password",nil,nil,true,false)
+        csay("Logging into Openshift Flex as #{username}\n",:message)
+        cookie=Openshift.login(@http,username,password)
+    end
+    
+    providers = ["EC2"]
+    uri = URI.parse("#{flex_server}/rest/cloud-providers")
+    response = Openshift::Rest.get(@http, uri, nil, cookie, nil)
+    if response.code.to_s != "200"
+        debug response.body
+        debug "Unable to retrieve list of cloud providers.\n"
+    else
+        providers = JSON.parse(response.body)
+    end
+    
+    cloud_name   = ARGV.shift || Openshift::IO.prompt("Cloud name",[],lambda{|n| Openshift::Validation.check_field(n,"cloud name",16,true)})
+    provider = args['--provider'] || Openshift::IO.prompt("Cloud provider",["EC2"])
+    account     = args['--account'] || Openshift::IO.prompt("Cloud Account")
+    credentials = args['--credentials'] || Openshift::IO.prompt("Cloud account credentials",nil,nil,true)
+    secret      = args['--secret'] || Openshift::IO.prompt("Cloud account secret key",nil,nil,true,false)
+
+    csay("Contacting Openshift Flex server... ") if not @porcelin
+    uri = URI.parse("#{flex_server}/rest/api")
+    response = Openshift::Rest.get(@http, uri, nil, cookie, nil)
+    case response
+    when Net::HTTPSuccess
+        csay("[OK]",:conf) if not @porcelin
+    else
+        debug "HTTP code: #{response.code}"
+        debug response.body
+        csay("[ERROR]",:error) if not @porcelin
+        csay("Unable to contact Flex server",:error)
+        exit -301
+    end
+    data = JSON.parse(response.body)
+    create_cloud_url = data['links']['create-cloud-account']
+    
+    say("\nCreating #{provider} cloud named ")
+    csay("#{cloud_name} ",:emphasis)
+    say("... ")
+    
+    uri = URI.parse("#{flex_server}/rest/#{create_cloud_url['href']}")
+    response = Openshift::Rest.doHttp(@http, create_cloud_url['method'], uri, {"name" => cloud_name, "type" => provider,
+         "identity" => credentials, "credentials" => secret, "account-id" => account}, cookie, nil)
+    case response
+    when Net::HTTPSuccess
+        say("[<%=color('OK',[GREEN,BOLD])%>]\n")    
+    else
+        debug "HTTP code: #{response.code}"
+        debug response.body
+        say("[<%=color('ERROR',[RED,BOLD])%>]\n")    
+        csay("Please verify your cloud credentials an try again.\n",:error)    
+        exit -301
+    end
+    
+    data = JSON.parse(response.body)
+    data = data['cloud-account']
+    
+    if args['--porcelin']
+        print JSON.generate(data)
+    else
+        Openshift::Formatter.table(["Id","Name","Type"],
+              ['id','name','provider-type'],
+              [10,15,20],
+              [data])
+    end
+    
+    if args['--new-environment']
+        new_args = JSON.parse(args['--new-environment'])
+        cmd = "rhc-create-environment --target flex --cloud #{data['id']} --sso \"#{cookie}\" "
+        new_args.each{ |k,v|
+            cmd += "#{k} \"#{v}\" "
+        }
+        exec(cmd)
+    end
+else
+    csay("Cloud account can only be created for the Openshift Flex platform.\n",:error)    
+end

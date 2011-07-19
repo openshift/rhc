@@ -1,0 +1,76 @@
+.\" Process this file with
+.\" groff -man -Tascii rhc-create-domain.1
+.\"
+.TH RHC_CREATE_DOMAIN 1 "JANUARY 2011" Linux "User Manuals"
+.SH NAME
+rhc-create-domain \- creates a new OpenShift Express domain namespace with a user
+.SH SYNOPSIS
+.B rhc-create-domain [-p
+.I password
+.B ] [-a] [-d] [-h]
+.B -l
+.I rhlogin
+.B -n
+.I namespace
+.SH DESCRIPTION
+.B rhc-create-domain
+create a new domain at rhcloud.com.  Once created
+this user will be able to create and control
+applications under their domain namespace.
+
+Running
+.B rhc-create-domain
+will cause a new ssh key to be created in ssh
+dir at
+.I ~/.ssh/libra_id_rsa
+
+Once created run
+.BR rhc-create-app (1)
+to create new applications or run
+.BR rhc-ctl-app (1)
+to control created applications.
+.SH OPTIONS
+.IP "-n|--namespace namespace"
+Namespace for your application(s).  Applications will be created as <application_name>-<namespace>.rhcloud.com (alphanumeric - max 16 chars)
+.IP "-l|--rhlogin login"
+Red Hat login (RHN or OpenShift login with OpenShift Express access)
+.IP "-p|--password password"
+RHLogin password
+.IP "-a|--alter"
+Alter namespace (will change urls) and/or ssh key
+.IP -d|--debug
+Enable debugging / verbose output
+.IP -h|--help
+Display help menu
+.SH FILES
+.I <ruby_gem_dir>/gems/rhc-<version>/conf/express.conf
+.RS
+The RubyGem system wide configuration file. See
+.BR express.conf (5)
+for further details.
+.RE
+.I /etc/openshift/express.conf
+.RS
+The system wide configuration file. See
+.BR express.conf (5)
+for further details.
+.RE
+.I ~/.openshift/express.conf
+.RS
+Per user configuration file. See
+.BR express.conf (5)
+for further details.
+.RE
+.SH BUGS
+Please contact the Red Hat OpenShift team.
+Forums: http://www.redhat.com/openshift/
+IRC: #openshift on irc.freenode.net
+.SH AUTHOR
+Mike McGrath <mmcgrath@redhat.com>, Jim Jagielski <jimjag@redhat.com>
+.SH "SEE ALSO"
+.BR rhc-ctl-app (1),
+.BR rhc-create-app (1),
+.BR rhc-snapshot(1),
+.BR rhc-user-info(1),
+.BR rhc-tail-files(1),
+.BR express.conf (5)

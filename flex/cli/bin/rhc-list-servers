@@ -1,0 +1,122 @@
+#!/usr/bin/env ruby
+# Copyright 2010 Red Hat, Inc.
+#
+# Permission is hereby granted, free of charge, to any person
+# obtaining a copy of this software and associated documentation files
+# (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge,
+# publish, distribute, sublicense, and/or sell copies of the Software,
+# and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT.  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+# BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+# ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+require 'openshift'
+
+def usage
+puts <<USAGE
+== Synopsis
+
+rhc-list-servers: List all servers on all running environments.
+
+== Usage
+
+rhc list-servers [options]
+
+-u|--username
+    Redhat Login (RHN or OpenShift login with OpenShift Express access)
+
+-p|--password
+    Redhat Password
+
+-t|--target flex|express
+    The cloud platform hosting the environments.
+    
+-h|--help
+    Prints this message
+USAGE
+end
+
+opts = GetoptLong.new(
+    ["--username",         "-u", GetoptLong::REQUIRED_ARGUMENT],
+    ["--password",         "-p", GetoptLong::REQUIRED_ARGUMENT],
+    ["--target",           "-t", GetoptLong::REQUIRED_ARGUMENT],        
+    ["--sso",                    GetoptLong::REQUIRED_ARGUMENT],        
+    ["--porcelin",               GetoptLong::NO_ARGUMENT],
+    ["--debug",               GetoptLong::NO_ARGUMENT]    
+)
+
+args = {}
+begin
+    opts.each{ |k,v| args[k]=v }
+rescue GetoptLong::Error => e
+    usage
+    exit -100
+end
+
+if args['--help']
+    usage
+    exit
+end
+
+@debug = true if args['--debug']
+@porcelin = true if args['--porcelin']
+
+args['--target'] = conf('default_target') || 'flex' if args['--target'].nil? or args['--target']==""
+debug "Target platform #{args['--target']}"
+
+if args['--target'] == 'flex'
+    flex_server = conf('flex_server')
+    
+    cookie = args['--sso']
+    if !cookie
+        username = args['--username'] || conf("username") || Openshift::IO.prompt("Redhat username",[],Openshift::Validation.method(:check_login))
+        password = args['--password'] || Openshift::IO.prompt("Redhat password",nil,nil,true,false)
+        csay("Logging into Openshift Flex as #{username}\n",:message)
+        cookie=Openshift.login(@http,username,password)
+    end
+    
+    csay("Retrieving list of environments... ") if not @porcelin    
+    uri = URI.parse("#{flex_server}/rest/clusters")
+    response = Openshift::Rest.get(@http, uri, nil, cookie, nil)
+    case response
+    when Net::HTTPSuccess
+        csay("[OK]",:conf) if not @porcelin
+    else
+        debug "HTTP code: #{response.code}"
+        debug response.body
+        csay("[ERROR]",:error) if not @porcelin
+        csay("Unable to retrieve environment list",:error)
+        exit -301
+    end
+    
+    data = JSON.parse(response.body)
+    data = data['clusters']    
+    
+    data.each{ |environment|
+#        if not environment_name or environment["name"].strip == environment_name.strip
+            Openshift::Formatter.table(["Environment Id","Name","Cloud", "DNS", "Load balancer", "Location", "State"],
+                  ['id','name','cloud-account-name', 'dns', 'load-balancer-address','location','cluster-status'],
+                  [16,15,20,40,20,15,10],
+                  [environment])
+                 debug environment['nodes']
+            csay("Servers",:message)
+            Openshift::Formatter.table(["Name","Node Provider Id","IP Address","Date Created","State"],
+                      ['name','provider-id', 'ip-address','creation-date','status'],
+                      [15,25,20,15,10],
+                      environment["nodes"], 1)
+#        end
+    }
+else
+    csay("This feature is currently not implemented for Openshift Express applications.\n",:red)    
+end
