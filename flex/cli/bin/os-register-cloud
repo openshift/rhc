@@ -25,11 +25,11 @@ def usage
     puts <<USAGE
 == Synopsis
 
-rhc-register-cloud: Registers a new cloud account with Openshift Flex.
+os-register-cloud: Registers a new cloud account with Openshift Flex.
 
 == Usage
 
-rhc register-cartridge [options] [NAME]
+os register-cartridge [options] [NAME]
 
 -u|--username USERNAME:
    Redhat Login (RHN or OpenShift login with OpenShift Flex access).
@@ -170,7 +170,7 @@ if args['--target'] == 'flex'
     
     if args['--new-environment']
         new_args = JSON.parse(args['--new-environment'])
-        cmd = "rhc-create-environment --target flex --cloud #{data['id']} --sso \"#{cookie}\" "
+        cmd = "os-create-environment --target flex --cloud #{data['id']} --sso \"#{cookie}\" "
         new_args.each{ |k,v|
             cmd += "#{k} \"#{v}\" "
         }

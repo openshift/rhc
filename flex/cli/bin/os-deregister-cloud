@@ -27,11 +27,11 @@ def usage
 puts <<USAGE
 == Synopsis
 
-rhc-deregister-cloud: Deregister a cloud account.
+os-deregister-cloud: Deregister a cloud account.
 
 == Usage
 
-rhc deregister-cloud [options] [NAME]
+os deregister-cloud [options] [NAME]
 
 -u|--username
     Redhat Login (RHN or OpenShift login with OpenShift Express access)
@@ -96,7 +96,7 @@ if args['--target'] == 'flex'
     end
     
     csay("Retrieving list of cloud accounts...")
-    clouds = JSON.parse(`rhc-list-clouds --sso "#{cookie}" --porcelin`)
+    clouds = JSON.parse(`os-list-clouds --sso "#{cookie}" --porcelin`)
     
     clouds.each{ |cloud|
         if cloud["name"].strip == cloud_name.strip

@@ -22,15 +22,16 @@
 # SOFTWARE.
 
 require 'openshift'
+
 def usage
 puts <<USAGE
 == Synopsis
 
-rhc-delete-application: Deletes an application.
+os-stop-environemnt: Stops an OpenShift Flex environment
 
 == Usage
 
-rhc delete-application [options] [NAME]
+os stop-environment [options] [NAME]
 
 -u|--username
     Redhat Login (RHN or OpenShift login with OpenShift Express access)
@@ -39,26 +40,22 @@ rhc delete-application [options] [NAME]
     Redhat Password
 
 -t|--target flex|express
-    Choose the cloud platform to delete the application from.
-    
--e|--environment CLUSTER_ID:
-   The ID of the environment that is hoting the application.    
+    The cloud platform the environment is running on.
     
 -h|--help
     Prints this message
 
-NAME: The name or GUID of the application to delete.
+NAME: The name or GUID of the environment to stop.
 USAGE
 end
 
 opts = GetoptLong.new(
     ["--username",         "-u", GetoptLong::REQUIRED_ARGUMENT],
     ["--password",         "-p", GetoptLong::REQUIRED_ARGUMENT],
-    ["--environment",      "-e", GetoptLong::REQUIRED_ARGUMENT],        
     ["--sso",                    GetoptLong::REQUIRED_ARGUMENT],
     ["--debug",                  GetoptLong::NO_ARGUMENT],        
-    ["--help",                   GetoptLong::NO_ARGUMENT],            
-    ["--target",           "-t", GetoptLong::REQUIRED_ARGUMENT]                
+    ["--help",                   GetoptLong::NO_ARGUMENT],        
+    ["--porcelin",               GetoptLong::NO_ARGUMENT]
 )
 
 args = {}
@@ -69,17 +66,15 @@ rescue GetoptLong::Error => e
     exit -100
 end
 
+@debug = true if args['--debug']
+args['--target'] = conf('default_target') || 'flex' if args['--target'].nil? or args['--target']==""
+debug "Target platform #{args['--target']}"
+
 if args['--help']
     usage
     exit
 end
 
-app_name = ARGV.shift
-@debug = true if args['--debug']
-debug "Deleting application name: #{app_name}"
-
-args['--target'] = conf('default_target') || 'flex' if args['--target'].nil? or args['--target']==""
-debug "Target platform #{args['--target']}"
 if args['--target'] == 'flex'
     flex_server = conf('flex_server')
     cookie = args['--sso']
@@ -89,43 +84,48 @@ if args['--target'] == 'flex'
         csay("Logging into Openshift Flex as #{username}\n",:message)
         cookie=Openshift.login(@http,username,password)
     end
+    
+    environment_id = ARGV.shift
+    debug "Deleting application name: #{environment_id}"
+    if not environment_id
+        csay("No environment specified.",:error)
+        exit
+    end
 
-    environment_id = args['--environment']
-
-    csay("\nRetrieving application details... ")    
-    environmentInfo = "--environment #{environment_id}" if environment_id
-    cmd = "rhc-inspect-application --sso \"#{cookie}\" --porcelin #{environmentInfo} #{app_name}"
-    candidates=nil
+    csay("Fetching environment list... ")
+    environments=nil
     begin
-        candidates=`#{cmd}`
-        candidates=JSON.parse(candidates)
-        csay("[OK]",:conf)
+        environments=`os-list-environments --sso "#{cookie}" --porcelin`
+        environments = JSON.parse(environments)
+        csay("[OK]",:conf)        
     rescue Exception => e
-        debug candidates        
+        debug environments
         debug e
         csay("[ERROR]",:error)
+        csay("Error retrieving environment list.")
         exit -400
     end
+    candidates = environments.find_all{ |c| c["name"]==environment_id or c["id"]==environment_id }
     
     if candidates.size == 0
-        csay("No application found with specified name or guid.",:error) 
-        return -200
+        csay("Unable to find environment identified by #{environment_id}",:error)
+        exit -200
     end
+    
     if candidates.size > 1
-        csay("Ambiguous application. Please specify environment id and/or application guid.",:error) 
-        return -201
+        csay("Multiple environments are named #{environment_id}. Please provide the environment Id",:error)
+        exit -201
     end
-    
-    environment = candidates[0]["environment"]
-    app = candidates[0]["application"]
-    
-    csay("Deleting application ")
-    csay("#{app_name} ",:emphasis)
-    csay("on Flex environment ")
-    csay("#{environment['name']} ",:emphasis)
+
+    env = candidates[0]
+    stop_env_url = env['links']['stop']
+    stop_env_url['method'] = 'POST'     #override due to bug in Flex REST API
+            
+    csay("Stopping environment ")
+    csay("#{candidates[0]["name"]} ",:emphasis)
     csay("... ")
-    uri = URI.parse("https://#{environment['dns']}:4242/applications/#{app['guid']}")
-    response = Openshift::Rest.delete(@http, uri, nil, nil, {'user' => environment['username'], 'password' => environment['password']})
+    uri = URI.parse("#{flex_server}/rest/#{stop_env_url['href']}")
+    response = Openshift::Rest.doHttp(@http, stop_env_url['method'], uri, {"state" => "stopped"}, cookie, nil)
     case response
     when Net::HTTPSuccess
         csay("[OK]",:conf)
@@ -133,9 +133,12 @@ if args['--target'] == 'flex'
         debug "HTTP code: #{response.code}"
         debug response.body
         csay("[ERROR]",:error)
-        csay("Unable to delete application.",:error)
+        csay("Unable to stop environment.",:error)
         exit -301
     end
+    
+    csay("Loading environment states...")
+    system( "os-list-environments --sso \"#{cookie}\"" )
 else
-    csay("This feature is currently not implemented for Openshift Express applications.\n",:red)        
+    csay("This feature is currently not implemented for Openshift Express applications.\n",:red)    
 end

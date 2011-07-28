@@ -27,7 +27,7 @@ def usage
     puts <<USAGE
 == Usage
 
-rhc COMMAND [ARGS]
+os COMMAND [ARGS]
 
 COMMAND:
 - register-cloud
@@ -96,7 +96,7 @@ COMMAND:
 - remove-cartridges
     Uninstalls application dependency cartridges
 
-See 'rhc help COMMAND' for more information on a sepcific command.
+See 'os help COMMAND' for more information on a sepcific command.
 USAGE
 end
 
@@ -104,5 +104,5 @@ command = ARGV.shift
 if command.nil? or command.strip == ''
     usage
 else
-    system("rhc #{command} --help")
+    system("os #{command} --help")
 end

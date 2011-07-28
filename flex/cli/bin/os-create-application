@@ -27,11 +27,11 @@ def usage
 puts <<USAGE
 == Synopsis
 
-rhc-create-application: Creates a new application on an exisitng environemnt.
+os-create-application: Creates a new application on an exisitng environemnt.
 
 == Usage
 
-rhc create-application [options] [NAME] [CHECKOUT_DIR]
+os create-application [options] [NAME] [CHECKOUT_DIR]
 
 -u|--username
    Redhat Login (RHN or OpenShift login with OpenShift Express access)
@@ -74,7 +74,7 @@ def create_flex_environment(args,cookie)
     args.delete('--sso')            
     args = JSON.generate(args)
     args.gsub!(/(["\\])/, '\\\\\1')
-    exec( "rhc-create-environment --target flex --sso \"#{cookie}\" --new-application \"#{args}\"" )
+    exec( "os-create-environment --target flex --sso \"#{cookie}\" --new-application \"#{args}\"" )
 end
 
 begin
@@ -127,7 +127,7 @@ if args['--target'] == 'flex'
     end
     
     environment_id = args['--environment']
-    environments = JSON.parse(`rhc-list-environments --sso "#{cookie}" --porcelin`)
+    environments = JSON.parse(`os-list-environments --sso "#{cookie}" --porcelin`)
     if not environment_id
         if environments.size == 0
             csay("You have no existing environments, this wizard will help you create a cloud and Flex environment to host your applications\n", :message)
@@ -250,7 +250,7 @@ if args['--target'] == 'flex'
         csay("Retrieving list of available cartridges... ")
         cart_data = nil
         begin
-            cmd = "rhc-list-cartridges --sso \"#{cookie}\" --porcelin --environment #{environment["id"]} #{app["guid"]}"
+            cmd = "os-list-cartridges --sso \"#{cookie}\" --porcelin --environment #{environment["id"]} #{app["guid"]}"
             debug cmd
             cart_data = JSON.parse(`#{cmd}`)
             csay("[OK]",:conf)
@@ -271,7 +271,7 @@ if args['--target'] == 'flex'
             }                                                                                                                                                                                                                           
         }
         csay("Installing cartridges: #{carts_to_install.join(",")}")
-        system( "rhc-add-cartridge --sso \"#{cookie}\" --environment #{environment['id']} #{app['guid']} #{carts_to_install.join(",")}" )
+        system( "os-add-cartridge --sso \"#{cookie}\" --environment #{environment['id']} #{app['guid']} #{carts_to_install.join(",")}" )
     else
         system("Ignoring template argument since VPM archive includes dependency information",:warn) if args["--template"]
     end

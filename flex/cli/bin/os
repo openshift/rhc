@@ -27,12 +27,12 @@ print "Redhat Openshift Cloud Platform\n\n"
 
 begin
     command = ARGV.shift
-    cmdArgs = ["rhc-#{command.downcase}"] + ARGV
+    cmdArgs = ["os-#{command.downcase}"] + ARGV
     cmd = cmdArgs.join(' ')
     exec( cmd )
 rescue Exception => e
     print e
-    exec( "rhc-help" )
+    exec( "os-help" )
 end
 
 

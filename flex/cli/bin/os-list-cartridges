@@ -27,11 +27,11 @@ def usage
 puts <<USAGE
 == Synopsis
 
-rhc-list-cartridges: List all applications on all running environments.
+os-list-cartridges: List all applications on all running environments.
 
 == Usage
 
-rhc list-cartridges [options] [NAME]
+os list-cartridges [options] [NAME]
 
 -u|--username
     Redhat Login (RHN or OpenShift login with OpenShift Express access)
@@ -101,7 +101,7 @@ if args['--target'] == 'flex'
     environment_id = args['--environment']
     csay("\nRetrieving application details... ") if not @porcelin    
     environmentInfo = "--environment #{environment_id}" if environment_id
-    cmd = "rhc-inspect-application --sso \"#{cookie}\" --porcelin #{environmentInfo} #{app_name}"
+    cmd = "os-inspect-application --sso \"#{cookie}\" --porcelin #{environmentInfo} #{app_name}"
     candidates=nil
     begin
         candidates=`#{cmd}`

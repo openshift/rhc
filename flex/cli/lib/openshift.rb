@@ -71,7 +71,10 @@ else
 end
 
 def conf(name)
-    $local_config.get_value(name) ? $local_config.get_value(name) : $global_config.get_value(name)
+    val = $local_config.get_value(name) ? $local_config.get_value(name) : $global_config.get_value(name)
+    val.gsub!(/\\:/,":") if not val.nil?
+    #print "CONF #{name} => #{val}\n\n"
+    val
 end
 
 def setconf(name,value)
@@ -105,6 +108,7 @@ def csay(str,*options)
 end
 
 def debug(*s)
+    @h = HighLine.new if @h.nil?
     if @debug or conf('debug') == "true"
         str = "DEBUG"
         str += " "*(@h.output_cols()-str.length) if str.length < @h.output_cols()
@@ -457,7 +461,8 @@ SSH
             'zend' => ['zend-server-php', 'www-dynamic'],                                                                                                                                                                               
             'zend_ce' => ['zend-server-ce', 'www-dynamic'],                                                                                                                                                                             
             'tomcat' => ['tomcat', 'jdk6'],                                                                                                                                                                                             
-            'jboss' => ['jboss', 'jdk6']
+            'jboss6' => ['jboss-6', 'jdk6'],
+            'jboss7' => ['jboss-7', 'jdk6']
         }
         
         def self.templates

@@ -27,11 +27,11 @@ def usage
 puts <<USAGE
 == Synopsis
 
-rhc-create-environemnt: Creates a new OpenShift Express or OpenShift Flex environemnt.
+os-create-environemnt: Creates a new OpenShift Express or OpenShift Flex environemnt.
 
 == Usage
 
-rhc create-environment [options] [NAME]
+os create-environment [options] [NAME]
 
 -u|--username
     Redhat Login (RHN or OpenShift login with OpenShift Express access)
@@ -48,7 +48,7 @@ rhc create-environment [options] [NAME]
 === Openshift Flex options
 
 -c|--cloud
-    The cloud ID account to create the environment. (See rhc-list-clouds)
+    The cloud ID account to create the environment. (See os-list-clouds)
     
 -l|--location         
     The cloud provider specific location.
@@ -64,6 +64,9 @@ rhc create-environment [options] [NAME]
 
 --load-balanced
     Enables load-balancing for the envionment.
+
+--64
+    Create a 64 bit instance
 
 === Openshift Express options
     
@@ -82,7 +85,7 @@ def create_flex_cloud(args,name,cookie)
     args.delete('--sso')          
     args = JSON.generate(args)
     args.gsub!(/(["\\])/, '\\\\\1')
-    exec( "rhc-register-cloud --sso \"#{cookie}\" --new-environment \"#{args} #{name}\"" )
+    exec( "os-register-cloud --sso \"#{cookie}\" --new-environment \"#{args} #{name}\"" )
 end
 
 begin
@@ -100,6 +103,7 @@ begin
         ["--sso",                    GetoptLong::REQUIRED_ARGUMENT],
         ["--porcelin",               GetoptLong::NO_ARGUMENT],
         ["--new-application",        GetoptLong::REQUIRED_ARGUMENT],
+        ["--64",                     GetoptLong::NO_ARGUMENT],        
         ["--debug",                  GetoptLong::NO_ARGUMENT],        
         ["--help",             "-h", GetoptLong::NO_ARGUMENT]        
     )
@@ -138,7 +142,7 @@ if args['--target'] == 'flex'
         #Openshift::add_rhlogin_config(username)
     end
     
-    clouds = JSON.parse(`rhc-list-clouds --sso "#{cookie}" --porcelin`)
+    clouds = JSON.parse(`os-list-clouds --sso "#{cookie}" --porcelin`)
     cloud_id = args['--cloud']
     cloud_candidates = clouds.find_all{ |cloud| cloud["id"].to_s == cloud_id.to_s }
     if cloud_id and cloud_candidates.size < 1
@@ -199,8 +203,13 @@ if args['--target'] == 'flex'
     uri = URI.parse("#{flex_server}/rest/#{create_env_url['href']}")
     csay("Creating a new environment can take upto 5 minutes.",:message)
     csay("Creating the environment... ")
+
+    architecture = 32
+    architecture = 64 if args['--64']
+
     response = Openshift::Rest.doHttp(@http, create_env_url['method'], uri, {"cloud-account-id" => cloud['id'], "name" => name, "location" => location, "admin-password" => env_pass,
-        "min-cores-per-node" => "1", "min-memory-per-node" => min_memory, "loadbalanced" => loadbalanced, "number-of-nodes" => num_nodes, "architecture" => 32 }, cookie, nil)
+        "min-cores-per-node" => "1", "min-memory-per-node" => min_memory, "loadbalanced" => loadbalanced, "number-of-nodes" => num_nodes, "architecture" => architecture }, cookie, nil)
+
     case response
     when Net::HTTPSuccess
         csay("[OK]",:conf)
@@ -240,7 +249,7 @@ if args['--target'] == 'flex'
     
     if args['--new-application']
         new_args = JSON.parse(args['--new-application'])
-        cmd = "rhc-create-application --target flex --environment #{environment['id']} --sso \"#{cookie}\" "
+        cmd = "os-create-application --target flex --environment #{environment['id']} --sso \"#{cookie}\" "
         new_args.each{ |k,v|
             cmd += "#{k} \"#{v}\" "
         }
@@ -269,7 +278,7 @@ else #express
     case response
     when Net::HTTPNotFound
         csay("[ERROR]",:error)
-        csay("RHCloud server not found.  You might want to try updating your rhc client tools.",:error)
+        csay("RHCloud server not found.  You might want to try updating your os client tools.",:error)
         exit -218
     when Net::HTTPSuccess
         csay("[OK]",:conf)
@@ -277,7 +286,7 @@ else #express
         csay("[ERROR]",:error)
         csay("There was a problem communicating with the server. Response message: #{response.code}",:error)
         csay("If you were disconnected it is possible the operation finished without being able to report success.")
-        csay("You can use rhc-list-environments and rhc-inspect-application to learn about the status of your")
+        csay("You can use os-list-environments and os-inspect-application to learn about the status of your")
         csay("Openshift Express environment and application(s).")
         exit -219
     end

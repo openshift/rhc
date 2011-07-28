@@ -27,12 +27,12 @@ def usage
     puts <<USAGE
 == Synopsis
 
-rhc-remove-cartridge: Removes a software cartridge and configuration 
+os-remove-cartridge: Removes a software cartridge and configuration 
 from the application.
 
 == Usage
 
-rhc remove-cartridge [options] APP CARTRIDGES
+os remove-cartridge [options] APP CARTRIDGES
 
 -u|--username USERNAME:
    Redhat Login (RHN or OpenShift login with OpenShift Flex access).
@@ -96,8 +96,8 @@ if args['--target'] == 'flex'
     candidates=nil
     begin
         environment_info = "--environment #{environment_id}" if environment_id
-        debug "Invoking rhc-inspect-application --sso \"#{cookie}\" --porcelin #{environment_info} #{app_name}"
-        candidates = JSON.parse(`rhc-inspect-application --sso \"#{cookie}\" --porcelin #{environment_info} #{app_name}`)
+        debug "Invoking os-inspect-application --sso \"#{cookie}\" --porcelin #{environment_info} #{app_name}"
+        candidates = JSON.parse(`os-inspect-application --sso \"#{cookie}\" --porcelin #{environment_info} #{app_name}`)
     rescue JSON::ParserError => e
         debug e.message
         csay("Unable to load application data from server\n.",:error)
@@ -121,8 +121,8 @@ if args['--target'] == 'flex'
     
     cart_data = nil
     begin
-        debug 'Invoking rhc-list-cartridges --sso "#{cookie}" --porcelin --environment #{environment["id"]} #{app["guid"]}"'
-        cart_data = JSON.parse(`rhc-list-cartridges --sso "#{cookie}" --porcelin --environment #{environment['id']} #{app['guid']}`)
+        debug 'Invoking os-list-cartridges --sso "#{cookie}" --porcelin --environment #{environment["id"]} #{app["guid"]}"'
+        cart_data = JSON.parse(`os-list-cartridges --sso "#{cookie}" --porcelin --environment #{environment['id']} #{app['guid']}`)
     rescue JSON::ParserError => e
         debug e.message
         csay("Unable to retrieve a list of cartridges from the server\n.",:error)
@@ -149,20 +149,6 @@ if args['--target'] == 'flex'
         debug response.body
         csay("[ERROR]",:error)
         csay("Unable to set application cartridges due to error. Message: #{data['error']}",:error)
-        exit -301
-    end
-    
-    say("Updating configuration files... ")
-    uri = URI.parse("https://#{environment['dns']}:4242/applications/#{app['guid']}/configurators")
-    response = Openshift::Rest.get(@http, uri, nil, nil, {'user' => environment['username'], 'password' => environment['password']})
-    case response    
-    when Net::HTTPSuccess
-        csay("[OK]",:conf)
-    else
-        debug "HTTP code: #{response.code}"
-        debug response.body
-        csay("[ERROR]",:error)
-        csay("Unable to load cartridges configuration. Message: #{data['error']}",:error)
         exit -301
     end
 

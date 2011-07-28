@@ -27,11 +27,11 @@ def usage
     puts <<USAGE
 == Synopsis
 
-rhc-clone-application: Clone the application repository into a new directory.
+os-start-application: Restart an application.
 
 == Usage
 
-rhc clone-application [options] APP [DIR]
+os start-application [options] [APP]
 
 -u|--username USERNAME:
    Redhat Login (RHN or OpenShift login).
@@ -51,20 +51,21 @@ rhc clone-application [options] APP [DIR]
    Prints this message
 
 APP: The application name or application GUID
-
-DIR: Directory to clone application into    
 USAGE
 end
 
-opts = GetoptLong.new(
-    ["--username",         "-u", GetoptLong::REQUIRED_ARGUMENT],
-    ["--password",         "-p", GetoptLong::REQUIRED_ARGUMENT],
-    ["--environment",      "-e", GetoptLong::REQUIRED_ARGUMENT],        
-    ["--help",             "-h", GetoptLong::NO_ARGUMENT],        
-    ["--debug",                  GetoptLong::NO_ARGUMENT],    
-    ["--sso",                    GetoptLong::REQUIRED_ARGUMENT],
-    ["--target",           "-t", GetoptLong::REQUIRED_ARGUMENT]
-)
+begin
+    opts = GetoptLong.new(
+        ["--username",         "-u", GetoptLong::REQUIRED_ARGUMENT],
+        ["--password",         "-p", GetoptLong::REQUIRED_ARGUMENT],
+        ["--environment",      "-e", GetoptLong::REQUIRED_ARGUMENT],
+        ["--help",             "-h", GetoptLong::NO_ARGUMENT],        
+        ["--debug",                  GetoptLong::NO_ARGUMENT],                
+        ["--sso",                    GetoptLong::REQUIRED_ARGUMENT]        
+    )
+rescue Exception => e
+    puts e.message
+end
 
 args = {}
 begin
@@ -75,7 +76,6 @@ rescue GetoptLong::Error => e
 end
 
 app_name = ARGV.shift
-clone_dir = ARGV.shift
 @debug = true if args['--debug']
 
 if args['--help'] or app_name.nil? or app_name == ""
@@ -101,10 +101,13 @@ if args['--target'] == 'flex'
     candidates=nil
     begin
         environment_info = "--environment #{environment_id}" if environment_id
-        debug "Invoking rhc-inspect-application --sso \"#{cookie}\" --porcelin #{environment_info} #{app_name}"    
-        candidates = JSON.parse(`rhc-inspect-application --sso \"#{cookie}\" --porcelin #{environment_info} #{app_name}`)
+        csay("Loading application state... ")
+        debug "Invoking os-inspect-application --sso \"#{cookie}\" --porcelin #{environment_info} #{app_name}"    
+        candidates = JSON.parse(`os-inspect-application --sso \"#{cookie}\" --porcelin #{environment_info} #{app_name}`)
+        csay("[OK]",:conf)
     rescue JSON::ParserError => e
         debug e.message
+        csay("[ERROR]",:conf)        
         csay("Unable to load application data from server\n.",:error)
         exit -400
     end
@@ -123,19 +126,9 @@ if args['--target'] == 'flex'
     
     environment = candidates[0]["environment"]
     app = candidates[0]["application"]
-    
-    clone_dir = app['name'] if clone_dir.nil? or clone_dir == ""
-    
-    if not File.readable?(@libra_kfile)
-        csay("Generating OpenShift Express ssh key to #{@libra_kfile}",:message)
-        debug "Invoking ssh-keygen -t rsa -f '#{@libra_kfile}'"
-        system("ssh-keygen -t rsa -f '#{@libra_kfile}'")
-    end
-    ssh_key = File.open(@libra_kpfile).gets.chomp.split(' ')[1]
-
-    csay("\nRetrieving environment SSH keys... ")
-    uri = URI.parse("https://#{environment['dns']}:4242/security/keys")
-    response = Openshift::Rest.get(@http, uri, nil, nil, {'user' => environment['username'], 'password' => environment['password']})
+    csay("Starting application... ")    
+    uri = URI.parse("https://#{environment['dns']}:4242/applications/#{app['guid']}/state")
+    response = Openshift::Rest.put(@http, uri, {"state" => "started"}, nil, {'user' => environment['username'], 'password' => environment['password']})
     case response
     when Net::HTTPSuccess
         csay("[OK]",:conf)
@@ -143,33 +136,12 @@ if args['--target'] == 'flex'
         debug "HTTP code: #{response.code}"
         debug response.body
         csay("[ERROR]",:error)
-        csay("Unable to retrieve environment ssh-keys. Message: #{data['error']}",:error)
-        exit -301
+        csay("Unable to start application",:error)
     end
     
-    data = nil
-    data = JSON.parse(response.body)
-    keys = data['keys']
-    if not keys.index(ssh_key)
-        csay("\nUploading ssh-key to environment... ")
-        uri = URI.parse("https://#{environment['dns']}:4242/security/keys")
-        response = Openshift::Rest.post(@http, uri, {'type'=>'ssh-rsa','identifier'=>'', 'key'=>ssh_key}, nil, {'user' => environment['username'], 'password' => environment['password']})
-        case response
-        when Net::HTTPSuccess
-            csay("[OK]",:conf)
-        else
-            debug "HTTP code: #{response.code}"
-            debug response.body
-            csay("[ERROR]",:error)
-            csay("Unable to update ssh keys on environment. Please use environment admin password when prompted below",:error)
-        end
-    end
-    
-    csay("Cloning application ")
-    csay("#{app['name']} ",:emphasis)
-    csay("to directory ")    
-    csay("#{clone_dir}",:emphasis)    
-    Openshift::Git.clone("ssh://admin@#{environment['dns']}/mnt/glusterfs/web-apps/#{app['guid']}/repository",clone_dir,'flex')
+    csay("Loading application state...")    
+    cmd = "os-inspect-application --sso \"#{cookie}\" #{environment_info} #{app_name}"
+    exec(cmd)
 else
     csay("This feature is currently not implemented for Openshift Express applications.\n",:red)    
-end 
+end

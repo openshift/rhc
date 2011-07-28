@@ -27,11 +27,11 @@ def usage
 puts <<USAGE
 == Synopsis
 
-rhc-inspect-application: Inspect application details
+os-inspect-application: Inspect application details
 
 == Usage
 
-rhc inspect-application [options] [NAME]
+os inspect-application [options] [NAME]
 
 -u|--username
     Redhat Login (RHN or OpenShift login with OpenShift Express access)
@@ -133,7 +133,7 @@ if args['--target'] == 'flex'
         data = [JSON.parse(response.body)['cluster']]
     else
         csay("Retrieving environment details... ") if not @porcelin
-        data = JSON.parse(`rhc-list-environments --sso "#{cookie}" --porcelin`)
+        data = JSON.parse(`os-list-environments --sso "#{cookie}" --porcelin`)
     end
 
     environments = data
@@ -144,7 +144,7 @@ if args['--target'] == 'flex'
             uri = URI.parse("https://#{environment['dns']}:4242/api")
             response = Openshift::Rest.get(@http, uri, nil, nil, {'user' => environment['username'], 'password' => environment['password']})
             api = JSON.parse(response.body)
-            list_app_link = api['links']['applications']
+            list_app_link = api['links']['list-applications']
 
             uri = URI.parse("https://#{environment['dns']}:4242/#{list_app_link['href']}")
             response = Openshift::Rest.doHttp(@http, list_app_link['method'], uri, nil, nil, {'user' => environment['username'], 'password' => environment['password']})

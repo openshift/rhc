@@ -27,11 +27,11 @@ def usage
     puts <<USAGE
 == Synopsis
 
-rhc-restart-application: Restart an application.
+os-restart-application: Restart an application.
 
 == Usage
 
-rhc restart-application [options] [APP]
+os restart-application [options] [APP]
 
 -u|--username USERNAME:
    Redhat Login (RHN or OpenShift login).
@@ -102,8 +102,8 @@ if args['--target'] == 'flex'
     begin
         environment_info = "--environment #{environment_id}" if environment_id
         csay("Loading application state... ")
-        debug "Invoking rhc-inspect-application --sso \"#{cookie}\" --porcelin #{environment_info} #{app_name}"    
-        candidates = JSON.parse(`rhc-inspect-application --sso \"#{cookie}\" --porcelin #{environment_info} #{app_name}`)
+        debug "Invoking os-inspect-application --sso \"#{cookie}\" --porcelin #{environment_info} #{app_name}"    
+        candidates = JSON.parse(`os-inspect-application --sso \"#{cookie}\" --porcelin #{environment_info} #{app_name}`)
         csay("[OK]",:conf)
     rescue JSON::ParserError => e
         debug e.message
@@ -140,7 +140,7 @@ if args['--target'] == 'flex'
     end
     
     csay("Loading application state...")    
-    cmd = "rhc-inspect-application --sso \"#{cookie}\" #{environment_info} #{app_name}"
+    cmd = "os-inspect-application --sso \"#{cookie}\" #{environment_info} #{app_name}"
     exec(cmd)
 else
     csay("This feature is currently not implemented for Openshift Express applications.\n",:red)    

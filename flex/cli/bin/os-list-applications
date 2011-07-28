@@ -27,11 +27,11 @@ def usage
 puts <<USAGE
 == Synopsis
 
-rhc-list-applications: List all applications on all running environments.
+os-list-applications: List all applications on all running environments.
 
 == Usage
 
-rhc list-application [options] [NAME]
+os list-application [options] [NAME]
 
 -u|--username
     Redhat Login (RHN or OpenShift login with OpenShift Express access)
@@ -92,7 +92,7 @@ if args['--target'] == 'flex'
     end
     
     csay("Retrieving environment list... ") if not @porcelin
-    environments = JSON.parse(`rhc-list-environments --sso "#{cookie}" --porcelin`)
+    environments = JSON.parse(`os-list-environments --sso "#{cookie}" --porcelin`)
     csay("[OK]",:conf) if not @porcelin
     
     environments.each{ |environment|
@@ -106,7 +106,7 @@ if args['--target'] == 'flex'
                 uri = URI.parse("https://#{environment['dns']}:4242/api")
                 response = Openshift::Rest.get(@http, uri, nil, nil, {'user' => environment['username'], 'password' => environment['password']})
                 api = JSON.parse(response.body)
-                list_app_link = api['links']['applications']
+                list_app_link = api['links']['list-applications']
                       
                 uri = URI.parse("https://#{environment['dns']}:4242/#{list_app_link['href']}")
                 

@@ -27,11 +27,11 @@ def usage
 puts <<USAGE
 == Synopsis
 
-rhc-list-environments: List all environments.
+os-list-environments: List all environments.
 
 == Usage
 
-rhc list-environments [options]
+os list-environments [options]
 
 -u|--username
     Redhat Login (RHN or OpenShift login with OpenShift Express access)
@@ -156,7 +156,7 @@ else
         csay("[OK]",:conf) if not @porcelin
     when Net::HTTPNotFound
         csay("No Openshift Express environments found for user '#{username}'")
-        csay("Be sure to run rhc-create-environment before using the other rhc tools.")
+        csay("Be sure to run os-create-environment before using the other os tools.")
         exit -200
     when Net::HTTPUnauthorized
         csay("Invalid login credentials.")
