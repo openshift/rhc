@@ -3,13 +3,13 @@ require 'rake'
 
 Gem::Specification.new do |s|
   s.name = %q{openshift}
-  s.version = "1.0.0"
-  s.date = %q{2011-07-04}
+  s.version = "0.60.0"
+  s.date = %q{2011-07-29}
   s.authors = ["Mike McGrath", "Krishna Raman", "Jim Jagielski"]
   s.email = ["mmcgrath@redhat.com", "kraman@redhat.com", "jimjag@redhat.com"]
   s.summary = %q{Client tools for Redhat Openshift clouds}
   s.homepage = %q{http://www.openshit.com/}
-  s.description = %q{Client tools for Redhat Openshift Express and Openshift Flex clouds}
+  s.description = %q{Client tools for Redhat Openshift Flex clouds}
   s.files = FileList['lib/**/*.rb', 'bin/*', 'conf/*', '[A-Z]*'].to_a
   s.executables = [
 					'os',
@@ -34,7 +34,7 @@ Gem::Specification.new do |s|
 					'os-start-application',
 					'os-start-environment',
 					'os-stop-application',
-					'os-stop-environment'
+					'os-stop-environment',
 					'os-tail-logs'
 				  ]
   s.default_executable = 'bin/os'
