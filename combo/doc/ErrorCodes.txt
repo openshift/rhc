@@ -1,0 +1,15 @@
+-1: ^C quit
+
+-100: Error parsing arguments
+-101: Missing parameters
+
+-200: object not found
+-201: Multiple objects with same name. Ambiguous choice
+-218: Server not reachable
+-219: Incomplete operation
+
+-300: Unknown server communication error
+-301: Generic server side error
+
+-400: Error parsing data from sub-command
+-401: Invalid credentials

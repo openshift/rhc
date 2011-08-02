@@ -1,0 +1,182 @@
+#!/usr/bin/env ruby
+# Copyright 2010 Red Hat, Inc.
+#
+# Permission is hereby granted, free of charge, to any person
+# obtaining a copy of this software and associated documentation files
+# (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge,
+# publish, distribute, sublicense, and/or sell copies of the Software,
+# and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT.  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+# BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+# ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+require 'openshift'
+
+def usage
+puts <<USAGE
+== Synopsis
+
+os-list-cartridges: List all applications on all running environments.
+
+== Usage
+
+os list-cartridges [options] [NAME]
+
+-u|--username
+    Redhat Login (RHN or OpenShift login with OpenShift Express access)
+
+-p|--password
+    Redhat Password
+
+-t|--target flex|express
+    Choose the cloud platform hosting the application.
+
+-e|--environment ENVIRONMENT_ID:
+    The name or ID of the environment that hosts the application.
+    
+-v|--verbose
+    Get application deployment history.
+    
+-h|--help
+    Prints this message
+
+NAME: The name or GUID of the application to list cartridges for.
+USAGE
+end
+
+opts = GetoptLong.new(
+    ["--username",         "-u", GetoptLong::REQUIRED_ARGUMENT],
+    ["--password",         "-p", GetoptLong::REQUIRED_ARGUMENT],
+    ["--environment",      "-e", GetoptLong::REQUIRED_ARGUMENT],
+    ["--sso",                    GetoptLong::REQUIRED_ARGUMENT],
+    ["--help",             "-h", GetoptLong::NO_ARGUMENT],
+    ["--debug",                  GetoptLong::NO_ARGUMENT],
+    ["--porcelin",               GetoptLong::NO_ARGUMENT]
+)
+
+args = {}
+begin
+    opts.each{ |k,v| args[k]=v }
+rescue GetoptLong::Error => e
+    usage
+    exit -100
+end
+
+if args['--help']
+    usage
+    exit
+end
+
+app_name = ARGV.shift
+clone_dir = ARGV.shift
+@debug = true if args['--debug']
+debug "Application name: #{app_name}"
+
+@porcelin = true if args['--porcelin']
+
+args['--target'] = conf('default_target') || 'flex' if args['--target'].nil? or args['--target']==""
+debug "Target platform #{args['--target']}"
+
+if args['--target'] == 'flex'
+    flex_server = conf('flex_server')
+    cookie = args['--sso']
+    if !cookie
+        username = args['--username'] || conf("username") || Openshift::IO.prompt("Redhat username",[],Openshift::Validation.method(:check_login))
+        password = args['--password'] || Openshift::IO.prompt("Redhat password",nil,nil,true,false)
+        csay("Logging into Openshift Flex as #{username}\n",:message)
+        cookie=Openshift.login(@http,username,password)
+    end
+
+    environment_id = args['--environment']
+    csay("\nRetrieving application details... ") if not @porcelin    
+    environmentInfo = "--environment #{environment_id}" if environment_id
+    cmd = "os-inspect-application --sso \"#{cookie}\" --porcelin #{environmentInfo} #{app_name}"
+    candidates=nil
+    begin
+        candidates=`#{cmd}`
+        candidates=JSON.parse(candidates)
+        csay("[OK]",:conf) if not @porcelin    
+    rescue Exception => e
+        debug candidates        
+        debug e
+        csay("[ERROR]",:error) if not @porcelin
+        exit -400
+    end
+    
+    if candidates.size == 0
+        csay("No application found with specified name or guid.",:error) 
+        exit -200
+    end
+    if candidates.size > 1
+        csay("Ambiguous application. Please specify environment id and/or application guid.",:error) 
+        exit -201
+    end
+
+    environment = candidates[0]["environment"]
+    app = candidates[0]["application"]
+    
+    uri = URI.parse("https://#{environment['dns']}:4242/cartridges")
+    csay("Listing cartridges for application ") if not @porcelin
+    csay("#{candidates[0]["application"]["name"]} ",:emphasis) if not @porcelin
+    csay("... ") if not @porcelin
+    response = Openshift::Rest.get(@http, uri, nil, nil, {'user' => environment['username'], 'password' => environment['password']})
+    case response
+    when Net::HTTPSuccess
+        csay("[OK]",:conf) if not @porcelin
+    else
+        debug "HTTP code: #{response.code}"
+        debug response.body
+        csay("[ERROR]",:error) if not @porcelin
+        csay("Unable to retrieve application cartridge list",:error)
+        exit -301
+    end
+    
+    data = JSON.parse(response.body)
+    available_carts = data["cartridges"].sort {|x,y| x["name"] <=> y["name"]}
+    
+    uri = URI.parse("https://#{environment['dns']}:4242/applications/#{app['guid']}/cartridges")
+    csay("Listing all available cartridges... ") if not @porcelin
+    response = Openshift::Rest.get(@http, uri, nil, nil, {'user' => environment['username'], 'password' => environment['password']})
+    case response
+    when Net::HTTPSuccess
+        csay("[OK]",:conf) if not @porcelin
+    else
+        debug "HTTP code: #{response.code}"
+        debug response.body
+        csay("[ERROR]",:error) if not @porcelin
+        csay("Unable to available cartridge list",:error)
+        exit -301
+    end
+        
+    data = JSON.parse(response.body)
+    installed_carts = data["cartridges"].sort {|x,y| x["name"] <=> y["name"]}
+    
+    if @porcelin
+        print JSON.generate({"available" => available_carts, "installed" => installed_carts})
+    else
+        print "Installed cartridges:\n"
+        Openshift::Formatter.table(["Name","Version", "Arch.", "Vendir"],
+              ['name','version','architecture','vendor'],
+              [30,20,10,30],
+              installed_carts)
+        
+        print "\nAvailable cartridges:\n"
+        Openshift::Formatter.table(["Name","Version", "Arch.", "Vendir"],
+              ['name','version','architecture','vendor'],
+              [30,20,10,30],
+              available_carts)
+    end
+else
+    csay("This feature is currently not implemented for Openshift Express applications.\n",:red)    
+end

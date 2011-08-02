@@ -1,0 +1,159 @@
+#!/usr/bin/env ruby
+# Copyright 2010 Red Hat, Inc.
+#
+# Permission is hereby granted, free of charge, to any person
+# obtaining a copy of this software and associated documentation files
+# (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge,
+# publish, distribute, sublicense, and/or sell copies of the Software,
+# and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT.  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+# BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+# ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+require 'openshift'
+
+def usage
+puts <<USAGE
+== Synopsis
+
+os-tail-logs: Tail or download log files from an environment
+
+== Usage
+
+os tail-logs [options] [NAME]
+
+-u|--username
+    Redhat Login (RHN or OpenShift login with OpenShift Express access)
+
+-p|--password
+    Redhat Password
+
+-t|--target flex|express
+    The cloud platform the environment is running on.
+    
+-h|--help
+    Prints this message
+
+NAME: The name or GUID of the environment to get logs from.
+USAGE
+end
+
+opts = GetoptLong.new(
+    ["--username",         "-u", GetoptLong::REQUIRED_ARGUMENT],
+    ["--password",         "-p", GetoptLong::REQUIRED_ARGUMENT],
+    ["--sso",                    GetoptLong::REQUIRED_ARGUMENT],
+    ["--debug",                  GetoptLong::NO_ARGUMENT],        
+    ["--help",                   GetoptLong::NO_ARGUMENT],        
+    ["--porcelin",               GetoptLong::NO_ARGUMENT]
+)
+
+args = {}
+begin
+    opts.each{ |k,v| args[k]=v }
+rescue GetoptLong::Error => e
+    usage
+    exit -100
+end
+
+@debug = true if args['--debug']
+args['--target'] = conf('default_target') || 'flex' if args['--target'].nil? or args['--target']==""
+debug "Target platform #{args['--target']}"
+
+if args['--help']
+    usage
+    exit
+end
+
+if args['--target'] == 'flex'
+    flex_server = conf('flex_server')
+    cookie = args['--sso']
+    if !cookie
+        username = args['--username'] || conf("username") || Openshift::IO.prompt("Redhat username",[],Openshift::Validation.method(:check_login))
+        password = args['--password'] || Openshift::IO.prompt("Redhat password",nil,nil,true,false)
+        csay("Logging into Openshift Flex as #{username}\n",:message)
+        cookie=Openshift.login(@http,username,password)
+    end
+    
+    environment_id = ARGV.shift
+    debug "Tailing environment: #{environment_id}"
+    if not environment_id
+        csay("No environment specified.",:error)
+        exit
+    end
+
+    csay("Fetching environment list... ")
+    environments=nil
+    begin
+        environments=`os-list-environments --sso "#{cookie}" --porcelin`
+        environments = JSON.parse(environments)
+        csay("[OK]",:conf)        
+    rescue Exception => e
+        debug environments
+        debug e
+        csay("[ERROR]",:error)
+        csay("Error retrieving environment list.")
+        exit -400
+    end
+    candidates = environments.find_all{ |c| c["name"]==environment_id or c["id"]==environment_id }
+   
+    if candidates.size == 0
+        csay("Unable to find environment identified by #{environment_id}",:error)
+       exit -200
+    end
+   
+    if candidates.size > 1
+        csay("Multiple environments are named #{environment_id}. Please provide the environment Id",:error)
+        exit -201
+    end
+           
+    environment = candidates[0]
+    csay("Tailing logs for environment ")
+    csay("#{environment["name"]} ",:emphasis)
+    csay("...")
+    lastEntry = nil
+    params = nil
+    while(true)
+        params = { "start-time" => lastEntry['timestamp'].to_i, "start-index" => lastEntry['index'].to_i} if not lastEntry.nil?
+        uri = URI.parse("https://#{environment['dns']}:4242/monitoring/logs")
+        response = Openshift::Rest.get(@http, uri, params,
+            nil, {'user' => environment['username'], 'password' => environment['password']})
+        case response
+        when Net::HTTPSuccess
+            
+        else
+            debug "HTTP code: #{response.code}"
+            debug response.body
+            csay("[ERROR]",:error) if not @porcelin
+            csay("Unable to retrieve application logs for environment.",:error)
+        end
+        logs = JSON.parse(response.body)
+        logs = logs['logs']
+        lastEntry = logs['last-entry']
+        entries = logs['entries']
+
+        if entries.size ==0
+            csay("No more logs..sleeping 5 sec..")
+            sleep(5)
+        end
+        entries.each{ |entry|
+            csay("[#{Time.at(entry['timestamp']).utc}] ")
+            csay("[#{entry['app_id']}] ")
+            csay(entry['text'])
+        }
+        lastEntry['index'] = lastEntry['index'].to_i + 1
+        debug lastEntry
+    end
+else
+    csay("This feature is currently not implemented for Openshift Express applications.\n",:red)    
+end
