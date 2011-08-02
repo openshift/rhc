@@ -1,0 +1,46 @@
+Clone the git repos:
+
+git clone ssh://git1.ops.rhcloud.com/srv/git/li
+
+-----------
+OS X Notes:
+-----------
+
+git:
+OS X 10.6 comes w/ ssh and ruby, but not with git, unless you have
+Xcode 4.0.x installed (as a developer you should have Xcode anyway).
+Xcode, however, is not free (unless you are a registered Apple
+Developer) and costs around $5 from the Apple App Store.
+
+If you do not have Xcode, you can obtain a pre-packaged version
+of git from:
+
+    http://code.google.com/p/git-osx-installer/
+
+Installing git from MacPorts/HomeBrew/Fink/etc requires Xcode.
+
+Now obtain the client code, either via 'git clone' as above
+or via the rhc gem.
+
+json_pure gem:
+The client tools also make use of JSON as the data set for
+I/O, and therefore needs the json ruby gem. Unless you have
+Xcode installed, you will need to install json_pure, which
+is the 100% ruby version of the JSON gem. If you have Xcode,
+you can elect to install either json_pure or the native
+json gem.
+
+-------------
+More Setup:
+-------------
+
+yum install mcollective-common mcollective-client rhc rubygem-right_aws rubygem-aws
+
+edit ~/.openshift/express.conf and point libra_server your broker system
+
+sudo mkdir /etc/libra
+sudo cp server-common/conf/libra/controller.conf  /etc/libra
+
+Running Test Cases:
+
+https://engineering.redhat.com/trac/Libra/wiki/SOP/Running_Tests

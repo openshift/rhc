@@ -1,0 +1,12 @@
+mcollective
+===========
+a framework to build server orchestration or parallel job
+    execution systems
+
+Screencasts / demos
+===================
+
+People new to mcollective might find the following videos useful. They include
+introductions, ec2 demos, message flow, writing agents, simple RPC, etc.
+
+http://www.puppetlabs.com/mcollective/screencasts/

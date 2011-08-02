@@ -1,0 +1,39 @@
+User errors:
+97:  Invalid user credentials
+99:  User does not exist
+100: An application with specified name already exists
+101: An application with specified name does not exist and can not be operated on
+102: A user with login already exists
+103: The namespace already exists
+104: User's application limit has been reached
+105: Invalid appname
+106: Invalid namespace
+107: Invalid rhlogin
+108: Invalid ssh key
+109: Invalid cartridge types
+110: Invalid application type specified
+146: User has valid credentials but hasn't been granted access to Express yet.
+147: User has valid credentials but hasn't requested access to Express yet.
+210: Can not override existing location for git repo
+211: Parent directory for git repo does not exist
+212: Could not find libra_id_rsa
+213: Could not read from ssh config
+214: Could not write to ssh config
+215: Host could not be created and/or found...
+216: Error in git pull
+217: Destroy aborted
+218: Not found response from request.  Possibly need to update client tools.
+219: Unable to communicate with server
+253: Could not open config file
+254: Unknown error
+255: Usage error
+
+Uncommon server errors:
+140: No nodes available.  If the problem persists please contact Red Hat support.
+141: Cartridge Exception.
+142: Application is registered to an invalid node.  If the problem persists please contact Red Hat support.
+143: Node execution failure.  If the problem persists please contact Red Hat support.
+144: Error communicating with user validation system.  If the problem persists please contact Red Hat support.
+145: Error communicating with DNS system.  If the problem persists please contact Red Hat support.
+
+0 is success

@@ -1,0 +1,92 @@
+Basic Overview
+==============
+
+Selinux is the primary mechanism we're using to protect customer applications
+from the host operating system as well as from eachother.  The theory used is
+very similar to selinux sandboxes.  If you've never played with selinux
+sandboxes before they are worth a look before reading the rest of this document.
+
+
+Common difficulties
+===================
+
+STARTING AND STOPPING:
+
+The most common problem that has come up with our selinux sandbox is customer
+applications not starting and stopping.  This is because selinux transitions are
+fairly complicated.  You want the application to start up with the proper
+contexts (via runcon) but simply running as root may result in permission denied
+errors (this is good but annoying at times)
+
+This isn't that different to making sure things run as the correct user.  In our
+case you need the correct user, type and mcs label.
+
+
+CUSTOMER APPLICATION ACCESS
+
+The next most common problem will be a customer application not being able to
+access something it might need.  Perhaps it can't get to an outbound port or it
+needs something from /proc and it cannot access it.  This is going to be a
+tricky wire to walk.  We want the customers to do whatever they need, but no
+more.  As we open up our beta, we'll be getting lots of requests for access.
+All major changes should go through the selinux team for audits and this should
+be done regularly.
+
+
+MCS Labels
+==========
+
+One bit of "magic" that we're doing in selinux that is at least less common is
+what we're doing with mcs labels.  Every customer gets their own mcs label.
+This prevents the running applications from accessing other applications in any
+way.
+
+An MCS label is the last part of an selinux context (seen from ls -lZ):
+
+    unconfined_u:object_r:libra_var_lib_t:s0:c2
+
+In the above example the mcs is "s0:c2", the mcs can be expanded on
+significantly for example: s0:c2,c9 is also valuable.  They go from 0 to 1023.
+One got'cha here is running admin commands, as is done by mcollective or an init
+script.  The MCS restrictions are being set in each applications init script via
+runcon:
+
+    runcon -t libra_t -l s0:c3
+
+if we ran the init script with a restricted mcs (like s0:c1) the above command
+would fail because s0:c1 != s0:c3.  To get around this restriction, we need to
+use an mcs that has a range.  For example, to restart the master
+/etc/init.d/libra script one would need to run:
+
+    runcon -l s0-s0:c0.c1023 /etc/init.d/libra
+
+The "runcon -l s0-s0:c0.c1023" will be common for us when doing admin functions
+either via scripts called by the system (init scripts) or scripts called by
+mcollective.  However, when we run individual user applications, we'll be
+narrowing down to their domain with just s0:c3.
+
+
+How to find an MCS label for a user
+===================================
+
+SELinux leaves it up to admins to determin what mcs label should be where.  In
+our case we're using uid - 499.  So uid 500 has an mcs of "s0:c1" and uid 501
+has an mcs of "s0:c2"
+
+
+The Labels
+==========
+
+libra_t: Our primary libra type, all running customer apps should be of type
+    libra_t
+libra_var_lib_t: Most customer files should be labeled libra_var_lib_t
+
+
+The Files
+=========
+libra.fc: The libra file context list
+libra.if: The libra interface (so other policies can interface with libra if
+            need be.
+libra.te: The actual libra policy rules
+libra.pp: The compiled libra policy
+libra.sh: The script that automatically compiles a new libra.pp and installs it

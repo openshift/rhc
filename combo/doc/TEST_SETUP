@@ -1,0 +1,26 @@
+1. Create the environment variable LIBRA_DEV which will prefix a verifier as
+your own:
+  export LIBRA_DEV='mhicks'
+
+2. Create your test instance.  By default it will create an instance, upload
+the current tests to it and run them.
+  rake ami:verify:start
+
+3. Login to the node to run specific tests / debug.  Here are some common commands
+that can be run from /root:
+
+  Run all verification tests
+    cucumber --tags @verify li/tests/
+
+  Run a specific test scenario (i.e. the one starting on line 55)
+    cucumber li/tests/cartridge.feature:55
+
+4. Check out the output logs
+  Test output - /tmp/rhc/cucumber.log
+  Rails logs - /var/www/html/libra/log/*
+
+5. If you make some local test changes and want to push them up to your verifier, run
+  rake ami:verify:update
+
+6. There is also the li-log-util utility that you can use to clear out logs
+and archive them up as well (i.e. to attach to a Bugzilla)

@@ -1,0 +1,22 @@
+Installing from tarball
+=======================
+
+First you need to make sure the following applications/libraries are available
+on your system:
+
+1) git
+2) ruby
+3) rubygems: json, parseconfig
+
+NOTE: To check for rubygems, just run:
+
+    # gem list json
+    # gem list parseconfig
+
+If either are missing you can install them with:
+
+    # gem install json
+    # gem install parseconfig
+
+That's it, the above deps are installed, the rhc-commands should start
+functioning, see USAGE.txt for more information.

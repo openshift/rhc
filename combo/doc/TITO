@@ -1,0 +1,63 @@
+Tito (https://github.com/dgoodwin/tito) is the tool that we use to coordinate
+our RPM build strategy with git tagging.  Tito supports local builds to ease
+development usage of RPMs as well as automatic submission to Brew / Koji.
+
+Here is how you would use tito to build and release the 'broker' project.
+
+# Get into the directory that has the appropriate spec
+cd broker
+
+# Make your changes
+...
+
+# Commit your changes
+git commit -a -m "My changes"
+
+# If you want to get an RPM built with your changes
+# use the --test flag to build off the latest
+tito build --rpm --test
+
+# Now, you'll want to tag your work and bump the RPM version
+tito tag
+
+# Usually after this you need to push your tags live
+git pull
+git push && git push --tags
+
+# Lastly, do your build in Brew
+tito build --cvs-release
+
+Now, if you know that there are lots of changes, you can use tito to figure
+out which packages have committed changes since their last tag.  To do this
+run:
+
+tito report --untagged-commits | grep rhc-
+
+That's it!
+
+
+Power Users:
+
+If you know you don't want to get prompted, here is a simple script to tag and release a package:
+
+#!/bin/bash
+
+# Setup an answer file
+echo -e "y\nn" > /tmp/answerfile
+
+# Remove your workdir
+rm -rf /tmp/tito/cvswork/rhc*
+
+# Tag a package with no prompt
+tito tag --accept-auto-changelog
+
+git pull && git push && git push --tags
+
+# To build the package
+tito build --cvs-release < /tmp/answerfile
+
+Building an older build:
+
+If you hit the case where you need to build something that has already been tagged and built, you'll need to manually untag stuff before it.  Mash uses the latest tagged NVR, so use this command to untag the more recent versions:
+
+brew untag-pkg libra-rhel-6.1-candidate $nvr

@@ -1,0 +1,20 @@
+1. git clone git://github.com/FooBarWidget/passenger.git
+
+2. Copy the modified epel-6 mock config from <libra>/docs
+  sudo cp <libra>/docs/epel-6-x86_64.cfg /etc/mock/
+
+3. Add epel-6 to the passenger build options
+  sed -i 's/epel-5/epel-{5,6}/g'  passenger/rpm/release/*.{sh,rb}
+
+4. Setup the mock environments for the first time
+  sudo ./rpm/release/mocksetup.sh
+
+5. Build epel-6 (against the RHEL 6 binaries)
+  ./rpm/release/build.rb epel-6-x86_64
+
+6. Build a repo from the RPMs
+  mkdir -p /tmp/passenger
+  cp /var/lib/mock/passenger-epel-6-x86_64/result/*.rpm /tmp/passenger
+  rm /tmp/passenger/nginx*.rpm
+  rm /tmp/passenger/*standalone*.rpm
+  createrepo /tmp/passenger

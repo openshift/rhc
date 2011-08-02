@@ -1,0 +1,46 @@
+To develop on the Rails site locally, there are a couple of steps you need to
+do.
+
+First - decide if you are going to work with an integrated setup or not.  By
+default you will not be integrated with IT's corporate systems.  Any
+registrations will essentially be 'trusted'.  This is configurable though if
+you want to try logging in as real users.
+
+Developing on laptop - integrated
+1. edit development.rb and search for 'Integrated Streamline'.  Uncomment the
+appropriate section to enable integration testing.  If you are in AWS, you
+need to use the AWS settings to allow the calls to be routed over the reverse
+proxy.
+
+2. yum install mod_ssl
+This will install apache certs you will need
+
+3. mkdir site/public/app; cd site/public/app; ln -s ../* .; rm app
+This should link all the resources in public into /app/public
+
+4. sudo cp -R server-common/openshift* /usr/lib/ruby/site_ruby/1.8/
+You'll have to do this any time you modify files in server-common
+
+5. cd site; rm Gemfile.lock; bundle install
+Note: Be sure not to commit the new Gemfile.lock
+
+6. sudo rails s
+Note: if you get an error about a newer version of rails already activated you might need to uninstall the newer versions first  
+
+7b. To run against streamline in rails production mode with captcha enabled, you can use:
+cp config/environments/streamline-internal.rb config/environments/production.rb; sudo rails s -e production
+
+7. Set an entry in /etc/hosts for
+127.0.0.1 openshift.redhat.com
+
+This will get you setup pretty well to test the site locally.
+
+Running the tests
+
+1. cp misc/devenv/controller.conf to /etc/libra/controller.conf
+2. cd site
+3. rake test
+
+Running a specific test
+
+1. ruby -Itest/ test/functional/home_controller_test.rb

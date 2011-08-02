@@ -1,0 +1,111 @@
+Simple Setup
+============
+Note: this is the "just get me up and running" section.  Everything from
+Overview and below is the hard way.
+
+The easy way?
+
+Create a RHEL6 x86_64 instance on ec2.
+copy and run ../scripts/li-devenv.sh
+
+done, you can now create users and apps.
+
+
+Overview
+========
+
+The basic overview of what needs to be setup is this
+1) Install and configure activemq
+2) Install and configure node/mcollective
+3) Install and configure controller
+4) Install a cartridge
+5) Create user
+6) Create a project
+
+The directions below are for an "all in one" solution where the node,
+controller and message bus are all on the same machine.  These directions
+are designed for RHEL6 on ec2.  Other systems should work if you can find the
+applications.  To run on non-ec2 see the non-ec2 section below.
+
+Note about DDNS
+===============
+
+This setup assumes DDNS is already setup.  DDNS is outside the scope of this
+document.  Bind is a good DDNS server.  You can read more at:
+
+http://linux.yyz.us/nsupdate/
+
+DDNS is not required in a strict sense to get libra up and running.  When new
+applications are created, they are available at some localhost IP and a port.
+
+
+Prereqs
+=======
+
+You'll need access to RHEL6, RHEL6-optional and EPEL packages.  If you're on ec2
+follow the steps below.  If you're building locally, you'll need RHEL entitlements.
+
+Make sure you have the optional and epel repos enabled:
+rpm -Uhv http://download.fedora.redhat.com/pub/epel/6/x86_64/epel-release-6-5.noarch.rpm
+rpm -e rh-amazon-rhui-client
+rpm -Uhv http://209.132.178.9/gpxe/trees/li/rhel/6/x86_64/rhel6-and-optional-0.1-1.noarch.rpm
+
+Install and configure activemq
+==============================
+
+1) Copy the misc/li.repo file to /etc/yum.repos.d/
+2) Run "yum install activemq activemq-info-provider"
+3) Copy misc/activemq.xml to /etc/activemq/activemq.xml
+4) Start activemq: service activemq start
+
+
+Install and configure node/mcollective
+======================================
+
+1) run "yum install mcollective mcollective-client li-node"
+2) edit /etc/mcollective/server.cfg
+    - Set the plugin.psk line to something unique, remember it
+    - Point plugin.stomp.host to localhost
+3) edit /etc/mcollective/client.cfg
+    - Set plugin.psk line to what you set in server.cfg
+    - Set plugin.stomp.host to localhost
+4) Start mcollective - service mcollective start
+5) Confirm mcollective is working by issuing a ping:
+    mc-ping
+6) Confirm /etc/libra/node_data.conf exists.  If not run
+    service libra-data start
+7) Edit /etc/libra/node.conf and set the following items:
+    - libra_domain: The DDNS domain to alter
+    - resolver: IP address of your master DDNS server
+    - secret: The secret key information for DDNS updates
+    - unobfuscate: Set to 1 in dev environments (makes debugging easier)
+
+
+Install and configure controller
+================================
+
+1) run "yum install rhc-*"
+2) Add your EC2 key and secret to /etc/libra/controller.conf
+3) Create libra bucket (log in to amazon or use s3cmd and create a bucket called libra
+4) Create a new user by running:
+    /usr/bin/rhc-new-user -n namespace -l <rhlogin> -s ssh_key
+    NOTE: "ssh_key" in this case must just be the payload portion of an RSA ssh
+    key. (exclude the ssh-rsa from the begining and the comment / email from the end)
+5) After running the command from 4) make note of the uuid that is printed to the screen
+6) add the following crontab to root's cron tasks (crontab -e)
+    * * * * * /usr/bin/puppet /usr/libexec/mcollective/update_yaml.pp
+
+Prep Host for httpd access
+==========================
+1) add port 80 as being open in /etc/sysconfig/iptables
+2) enable httpd relay in selinux - "setsebool -P httpd_can_network_relay=on"
+3) Uncomment the line in /etc/httpd/conf/httpd.conf that starts with "NameVirtualHost"
+4) start httpd and make sure it starts on reboot "service httpd start; chkconfig httpd on"
+
+
+Non-ec2
+=======
+
+To run on non-ec2 you need to alter /etc/libra/node_data.conf and set instance_id
+and public_ip to the IP of your host.
+
