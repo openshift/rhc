@@ -3,7 +3,7 @@ require 'rake'
 
 Gem::Specification.new do |s|
   s.name = %q{openshift}
-  s.version = "0.60.2"
+  s.version = "0.60.3"
   s.date = %q{2011-07-29}
   s.authors = ["Mike McGrath", "Krishna Raman", "Jim Jagielski"]
   s.email = ["mmcgrath@redhat.com", "kraman@redhat.com", "jimjag@redhat.com"]

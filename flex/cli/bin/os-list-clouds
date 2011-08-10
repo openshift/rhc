@@ -120,6 +120,7 @@ if target == 'flex'
     id = 1
     data.each{ |cloud|
         cloud["_id"] = id
+        cloud["clusters"] = nil
         id += 1
     }
     
@@ -130,19 +131,6 @@ if target == 'flex'
               ['id','name','provider-type'],
               [10,20,20],
               data)
-        data.each{ |cloud| 
-            environments = cloud['clusters']
-            if environments.size > 0
-                csay("Environments",:message)
-                environments.each{ |environment|
-                    environment["cloudId"] = cloud["id"]
-                }
-                Openshift::Formatter.table(["Environment Id","Name","DNS", "Load balancer", "Location", "State"],
-                      ['id','name','dns', 'load-balancer-address','location','cluster-status'],
-                      [16,15,40,20,15,10],
-                      environments,1)
-            end
-        }          
     end
 else
     csay("This feature is currently not implemented for Openshift Express applications.\n",:red)
