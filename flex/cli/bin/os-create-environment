@@ -141,7 +141,7 @@ if args['--target'] == 'flex'
         cookie=Openshift.login(@http,username,password)
         #Openshift::add_rhlogin_config(username)
     end
-    
+
     clouds = JSON.parse(`os-list-clouds --sso "#{cookie}" --porcelin`)
     cloud_id = args['--cloud']
     cloud_candidates = clouds.find_all{ |cloud| cloud["id"].to_s == cloud_id.to_s }
@@ -223,6 +223,7 @@ if args['--target'] == 'flex'
     environment = data['cluster']
     
     ssh_key = Openshift::SSH::gen_ssh_keys(@libra_kfile,@libra_kpfile)
+    Openshift::SSH::setup_ssh_config(conf('domain'))
     csay("Uploading SSH key to environment... ")
     uri = URI.parse("https://#{environment['dns']}:4242/security/keys")
     response = Openshift::Rest.post(@http, uri, {'type'=>'ssh-rsa','identifier'=>'', 'key'=>ssh_key}, nil, {'user' => environment['username'], 'password' => environment['password']})

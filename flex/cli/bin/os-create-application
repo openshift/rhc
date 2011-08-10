@@ -45,7 +45,7 @@ os create-application [options] [NAME] [CHECKOUT_DIR]
 -v|--version
    Version string for application (alpha numeric, default: 1.0)
 
--t|--template TEMPLATE
+-m|--template TEMPLATE
    Sets up basic cartridges for the application.
    Flex: #{Openshift::Flex.templates.keys.join(", ")}
 
@@ -147,6 +147,7 @@ if args['--target'] == 'flex'
     environment_dns = environment['dns']
     
     ssh_key = Openshift::SSH::gen_ssh_keys(@libra_kfile,@libra_kpfile)
+    Openshift::SSH::setup_ssh_config(conf('domain'))
     csay("\nRetrieving environment SSH keys... ")    
     uri = URI.parse("https://#{environment['dns']}:4242/security/keys")
     response = Openshift::Rest.get(@http, uri, nil, nil, {'user' => environment['username'], 'password' => environment['password']})
