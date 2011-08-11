@@ -105,11 +105,28 @@ if args['--target'] == 'flex'
 
                 uri = URI.parse("https://#{environment['dns']}:4242/api")
                 response = Openshift::Rest.get(@http, uri, nil, nil, {'user' => environment['username'], 'password' => environment['password']})
+                case response
+                when Net::HTTPSuccess
+                when Timeout::Error
+                    csay("[ERROR]",:error) if not @porcelin
+                    csay("Environment is unreachable.",:error)
+                    next
+                else
+                    debug "HTTP code: #{response.code}"
+                    debug response.body
+                    csay("[ERROR]",:error) if not @porcelin
+                    csay("Unable to retrieve application list for environment.",:error)
+                    next
+                end
                 api = JSON.parse(response.body)
+                unless api['version'].to_f >= 3.0
+                    csay("Environment is based on an older release of OpenShift Flex. Skipping.", :warn)
+                    next
+                end
+
                 list_app_link = api['links']['list-applications']
-                      
+                 
                 uri = URI.parse("https://#{environment['dns']}:4242/#{list_app_link['href']}")
-                
                 response = Openshift::Rest.doHttp(@http, list_app_link['method'], uri, nil, nil, {'user' => environment['username'], 'password' => environment['password']})
                 case response
                 when Net::HTTPSuccess
@@ -121,7 +138,6 @@ if args['--target'] == 'flex'
                     next
                 end
                 apps = JSON.parse(response.body)
-                debug response.body
                 if( apps['applications'].length > 0 )
                     csay("Applications",:message)
                     Openshift::Formatter.table(["Application GUID","Application name", "Version", "State"],

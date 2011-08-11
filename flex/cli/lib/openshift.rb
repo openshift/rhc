@@ -375,10 +375,8 @@ SSH
                 debug "Response code:#{response.code} body:#{response.body}"
                 response
             rescue Exception => e
-                puts "There was a problem communicating with the server. Response message: #{e.message}"
-                exit 219
+                return e
             end
-
         end
 
         def self.doHttp(http, method, url, params=nil, cookies=nil, auth=nil)

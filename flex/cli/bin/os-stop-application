@@ -138,10 +138,6 @@ if args['--target'] == 'flex'
         csay("[ERROR]",:error)
         csay("Unable to stop application",:error)
     end
-    
-    csay("Loading application state...")    
-    cmd = "os-inspect-application --sso \"#{cookie}\" #{environment_info} #{app_name}"
-    exec(cmd)
 else
     csay("This feature is currently not implemented for Openshift Express applications.\n",:red)    
 end

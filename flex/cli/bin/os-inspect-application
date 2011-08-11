@@ -112,7 +112,7 @@ if args['--target'] == 'flex'
             debug "HTTP code: #{response.code}"
             debug response.body
             csay("[ERROR]",:error) if not @porcelin
-            csay("Unable to contact Flex server",:error)
+            csay("Unable to contact Flex server",:error) if not @porcelin
             exit -301
         end
         data = JSON.parse(response.body)
@@ -127,7 +127,7 @@ if args['--target'] == 'flex'
             debug "HTTP code: #{response.code}"
             debug response.body
             csay("[ERROR]",:error) if not @porcelin
-            csay("Unable to retrieve environment details.",:error)
+            csay("Unable to retrieve environment details.",:error) if not @porcelin
             exit -301
         end
         data = [JSON.parse(response.body)['cluster']]
@@ -142,8 +142,20 @@ if args['--target'] == 'flex'
         if environment['cluster-status'] == 'STARTED'
             csay("Retrieving application list for environment #{environment["name"]}... ") if not @porcelin
             uri = URI.parse("https://#{environment['dns']}:4242/api")
-            response = Openshift::Rest.get(@http, uri, nil, nil, {'user' => environment['username'], 'password' => environment['password']})
-            api = JSON.parse(response.body)
+		    response = Openshift::Rest.get(@http, uri, nil, nil, {'user' => environment['username'], 'password' => environment['password']})
+		    case response
+		    when Net::HTTPSuccess
+		    when Timeout::Error
+		        csay("[ERROR]",:error) if not @porcelin
+		        csay("Environment #{environment["name"]} is unreachable.",:error) if not @porcelin
+		        next
+		    end
+		    api = JSON.parse(response.body)
+		    unless api['version'].to_f >= 3.0
+		        csay("Environment #{environment["name"]} is based on an older release of OpenShift Flex. Skipping.", :warn) if not @porcelin
+		        next
+		    end
+           
             list_app_link = api['links']['list-applications']
 
             uri = URI.parse("https://#{environment['dns']}:4242/#{list_app_link['href']}")
@@ -155,7 +167,7 @@ if args['--target'] == 'flex'
                 debug "HTTP code: #{response.code}"
                 debug response.body
                 csay("[ERROR]",:error) if not @porcelin
-                csay("Unable to retrieve application list.",:error)
+                csay("Unable to retrieve application list.",:error) if not @porcelin
                 exit -301
             end
             

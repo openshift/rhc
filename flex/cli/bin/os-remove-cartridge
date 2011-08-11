@@ -119,6 +119,21 @@ if args['--target'] == 'flex'
     environment = candidates[0]["environment"]
     app = candidates[0]["application"]
     
+    uri = URI.parse("https://#{environment['dns']}:4242/api")
+    response = Openshift::Rest.get(@http, uri, nil, nil, {'user' => environment['username'], 'password' => environment['password']})
+    case response
+    when Net::HTTPSuccess
+    when Timeout::Error
+        csay("[ERROR]",:error) if not @porcelin
+        csay("Environment is unreachable.",:error)
+        exit -218
+    end
+    api = JSON.parse(response.body)
+    unless api['version'].to_f >= 3.0
+        csay("Environment is based on an older release of OpenShift Flex.", :error)
+        exit -220
+    end
+    
     cart_data = nil
     begin
         debug 'Invoking os-list-cartridges --sso "#{cookie}" --porcelin --environment #{environment["id"]} #{app["guid"]}"'

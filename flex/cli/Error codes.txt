@@ -7,6 +7,7 @@
 -201: Multiple objects with same name. Ambiguous choice
 -218: Server not reachable
 -219: Incomplete operation
+-220: API Version mismatch
 
 -300: Unknown server communication error
 -301: Generic server side error

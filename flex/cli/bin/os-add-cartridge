@@ -131,8 +131,6 @@ if args['--target'] == 'flex'
     
     avail = cart_data['available']
     installed = cart_data['installed']
-
-    debug "hi 1\n"
     
     carts_to_install = []
     new_carts = carts.split(",")
