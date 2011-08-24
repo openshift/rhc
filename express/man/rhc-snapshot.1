@@ -10,7 +10,9 @@ rhc-snapshot \- Pulls down an application snapshot as gzipped tarfile
 .B ]
 .B [-s
 .I pathname
-.B ] [-d] [-h]
+.B ] [-r
+.I pathname
+.B ][-d] [-h]
 .B [-l
 .I rhlogin
 .B ] -a
@@ -28,9 +30,12 @@ Red Hat login (RHN or OpenShift login with OpenShift Express access)
 RHLogin password
 .IP "-a|--app application_name"
 Name of application to snapshot
-.IP "-s|--save"
-Pathname to save location: default:
+.IP "-s|--save pathname"
+Saves entire application in an archive.  Pathname default:
 .I ./$APPNAME.tar.gz
+.IP "-r|--restore pathname"
+Restores git and application data folders found in archive. Pathname example:
+.I ./$APPNAME.tar.gz 
 .IP -d|--debug
 Enable debugging / verbose output
 .IP -h|--help

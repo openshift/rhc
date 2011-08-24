@@ -173,7 +173,7 @@ if debug
   data['debug'] = "true"
 end
 
-json_data = JSON.generate(data)
+json_data = RHC::generate_json(data)
 puts "Submitting form: #{json_data}" if debug
 
 puts "Contacting https://#{libra_server}"

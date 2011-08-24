@@ -34,13 +34,31 @@ require 'uri'
 module RHC
 
   Maxdlen = 16
-  Maxretries = 10
+  Maxretries = 7
   Defaultdelay = 2
+  API = "1.1.1"
+  broker_version = "?.?.?"
+  api_version = "?.?.?"
+
+  def self.update_server_api_v(dict)
+    if !dict['broker'].nil? && (dict['broker'] =~ /\A\d+\.\d+\.\d+\z/)
+      broker_version = dict['broker']
+    end
+    if !dict['api'].nil? && (dict['api'] =~ /\A\d+\.\d+\.\d+\z/)
+      api_version = dict['api']
+    end
+  end
 
   def self.delay(time, adj=Defaultdelay)
     (time*=adj).to_int
   end
-  
+
+  def self.generate_json(data)
+      data['api'] = API
+      json = JSON.generate(data)
+      json
+  end
+
   def self.get_cartridges_list(libra_server, net_http, cart_type="standalone", debug=true, print_result=nil)
     puts "Contacting https://#{libra_server} to obtain list of cartridges..."
     puts " (please excuse the delay)"
@@ -49,7 +67,7 @@ module RHC
       data['debug'] = "true"
     end
     print_post_data(data, debug)
-    json_data = JSON.generate(data)
+    json_data = generate_json(data)
 
     url = URI.parse("https://#{libra_server}/broker/cartlist")
     response = http_post(net_http, url, json_data, "none")
@@ -58,7 +76,12 @@ module RHC
       print_response_err(response, debug)
       return []
     end
-    json_resp = JSON.parse(response.body)
+    begin
+      json_resp = JSON.parse(response.body)
+    rescue JSON::ParserError
+      exit 254
+    end
+    update_server_api_v(json_resp)
     if print_result
       print_response_success(json_resp, debug)
     end
@@ -143,7 +166,7 @@ module RHC
       data['debug'] = "true"
     end
     print_post_data(data, debug)
-    json_data = JSON.generate(data)
+    json_data = generate_json(data)
 
     url = URI.parse("https://#{libra_server}/broker/userinfo")
     response = http_post(net_http, url, json_data, password)
@@ -164,7 +187,12 @@ module RHC
       end
       exit 254
     end
-    json_resp = JSON.parse(response.body)
+    begin
+      json_resp = JSON.parse(response.body)
+    rescue JSON::ParserError
+      exit 254
+    end
+    update_server_api_v(json_resp)
     if print_result
       print_response_success(json_resp, debug)
     end
@@ -223,15 +251,20 @@ module RHC
     end
     exit_code = 254
     if response.content_type == 'application/json'
-      json_resp = JSON.parse(response.body)
-      exit_code = print_json_body(json_resp, debug)
+      puts "JSON response:"
+      begin
+        json_resp = JSON.parse(response.body)
+        exit_code = print_json_body(json_resp, debug)
+      rescue JSON::ParserError
+        exit_code = 254
+      end
     elsif debug
       puts "HTTP response from server is #{response.body}"
     end
     exit exit_code.nil? ? 666 : exit_code
   end
-  
-  def self.print_response_messages(json_resp)    
+
+  def self.print_response_messages(json_resp)
     messages = json_resp['messages']
     if (messages && !messages.empty?)
       puts ''
@@ -271,6 +304,12 @@ module RHC
         end
       end
     end
+    if json_resp['api']
+      puts "API version:    #{json_resp['api']}"
+    end
+    if json_resp['broker']
+      puts "Broker version: #{json_resp['broker']}"
+    end
     if json_resp['result']
       puts ''
       puts 'RESULT:'
@@ -308,7 +347,7 @@ if !File.exists? local_config_path
   FileUtils.touch local_config_path
   puts ""
   puts "Created local config file: " + local_config_path
-  puts "express.conf contains user configuration and can be transferred across clients."  
+  puts "express.conf contains user configuration and can be transferred across clients."
   puts ""
 end
 
@@ -331,11 +370,54 @@ else
 end
 
 #
-# Check for local var in 
+# Check for local var in
 #   1) ~/.openshift/express.conf
 #   2) /etc/openshift/express.conf
 #   3) $GEM/../conf/express.conf
 #
 def get_var(var)
   @local_config.get_value(var) ? @local_config.get_value(var) : @global_config.get_value(var)
+end
+
+def kfile_not_found
+  puts <<KFILE_NOT_FOUND
+Your SSH keys are created either by running ssh-keygen (password optional)
+or by having the rhc-create-domain command do it for you.  If you created
+them on your own (or want to use an existing keypair), be sure to paste
+your public key into the dashboard page at http://www.openshift.com.
+The client tools use the value of 'rsa_key_file' in express.conf to find
+your key.  'libra_id_rsa[.pub]' followed by 'id_rsa[.pub]' are used as
+if rsa_key_file isn't specified in express.conf.
+Also, make sure you never give out your secret key!
+KFILE_NOT_FOUND
+
+exit 212
+end
+
+def get_kfile(check_readable=true)
+  rsa_key_file_var = get_var('rsa_key_file')
+  rsa_key_file = rsa_key_file_var ? rsa_key_file_var : 'libra_id_rsa'
+  kfile = "#{ENV['HOME']}/.ssh/#{rsa_key_file}"
+  if check_readable && !File.readable?(kfile)
+    if rsa_key_file_var
+      puts "Unable to read from '#{kfile}' referenced in express.conf."
+      kfile_not_found
+    else
+      kfile = "#{ENV['HOME']}/.ssh/id_rsa"
+      if !File.readable?(kfile)
+        puts "Unable to read from rsa key file."
+        kfile_not_found
+      end
+    end
+  end
+  return kfile
+end
+
+def get_kpfile(kfile, check_readable=true)
+  kpfile = kfile + '.pub'
+  if check_readable && !File.readable?(kpfile)
+    puts "Unable to read from '#{kpfile}'"
+    kfile_not_found
+  end
+  return kpfile
 end

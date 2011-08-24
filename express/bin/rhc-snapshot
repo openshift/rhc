@@ -35,6 +35,7 @@ Pull down application snapshot for a user
 
   -l|--rhlogin   rhlogin    Red Hat login (RHN or OpenShift login with OpenShift Express access) (#{rhlogin})
   -a|--app                  Target application to snapshot (required)
+  -r|--restore              Local path of the tarball to restore (restores git and application data folders found in archive)
   -s|--save                 Local path to save tarball (default: ./$APPNAME.tar.gz)
   -p|--password  password   RHLogin password (optional, will prompt)
   -d|--debug                Print Debug info
@@ -50,6 +51,7 @@ begin
         ["--help",  "-h", GetoptLong::NO_ARGUMENT],
         ["--app",  "-a", GetoptLong::REQUIRED_ARGUMENT],
         ["--save",  "-s", GetoptLong::REQUIRED_ARGUMENT],
+        ["--restore",  "-r", GetoptLong::REQUIRED_ARGUMENT],
         ["--rhlogin",  "-l", GetoptLong::REQUIRED_ARGUMENT],
         ["--password",  "-p", GetoptLong::REQUIRED_ARGUMENT]
     )
@@ -65,9 +67,6 @@ end
 # Pull in configs from files
 libra_server = get_var('libra_server')
 debug = get_var('debug') == 'false' ? nil : get_var('debug')
-
-libra_kfile = "#{ENV['HOME']}/.ssh/libra_id_rsa"
-libra_kpfile = "#{ENV['HOME']}/.ssh/libra_id_rsa.pub"
 
 if opt["help"] || !opt['app']
     p_usage
@@ -91,7 +90,7 @@ end
 user_info = RHC::get_user_info(libra_server, opt['rhlogin'], password, @http, debug, false)
 
 app = opt['app']
-opt['save'] = "#{opt['app']}.tar.gz" unless opt['save']
+opt['save'] = "#{opt['app']}.tar.gz" unless opt['save'] || opt['restore']
 
 unless user_info['app_info'][app]
     puts
@@ -104,18 +103,44 @@ end
 app_uuid = user_info['app_info'][app]['uuid']
 namespace = user_info['user_info']['namespace']
 rhc_domain = user_info['user_info']['rhc_domain']
-ssh_cmd = "ssh #{app_uuid}@#{app}-#{namespace}.#{rhc_domain} 'snapshot #{app}' > #{opt['save']}"
+if opt['save']
+  ssh_cmd = "ssh #{app_uuid}@#{app}-#{namespace}.#{rhc_domain} 'snapshot' > #{opt['save']}"
+  puts "Pulling down a snapshot to #{opt['save']}"
+else
+  if File.exists? opt['restore']
+    `tar -tf #{opt['restore']} './*/#{app}'`
+    if $?.exitstatus != 0
+      puts "Archive at #{opt['restore']} does not contain the target application: ./#{app}"
+      exit 255
+    else
+      `tar -tf #{opt['restore']} './*/git'`
+      include_git = $?.exitstatus == 0
+      ssh_cmd = "cat #{opt['restore']} | ssh #{app_uuid}@#{app}-#{namespace}.#{rhc_domain} 'restore#{include_git ? ' INCLUDE_GIT' : ''}'"
+      puts "Restoring from snapshot #{opt['restore']}"
+    end
+  else
+    puts "Archive not found: #{opt['restore']}"
+    exit 255
+  end
+end
 
-puts "Pulling down a snapshot to #{opt['save']}"
+
 puts 
 puts ssh_cmd if debug
-git_pull = `#{ssh_cmd}`
+output = `#{ssh_cmd}`
+puts
 if $?.exitstatus != 0
+    puts output
     puts
+if opt['save']
     puts "Error in trying to save snapshot.  You can try to save manually by running:"
+else
+    puts "Error in trying to restore snapshot.  You can try to restore manually by running:"
+end
     puts
     puts ssh_cmd
     puts
     exit 254
 end
+puts output if opt['restore'] && debug
 exit 0

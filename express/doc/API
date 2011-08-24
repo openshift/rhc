@@ -69,14 +69,14 @@ Submit via POST to: {openshift.express.server}/broker/cartridge
 
 Submit JSON String:
 {
-    'cartridge': 'framework-type, ex: php-5.3 - Valid types determined from /broker/cartlist with cart_type of standalone',
+    'cartridge': 'framework-type, e.g. php-5.3 - Valid types determined from /broker/cartlist with cart_type of standalone',
     'action': 'configure, start, stop, restart, reload, status, deconfigure',
     'app_name': 'Application_name',
     'rhlogin': 'login',
     'debug': 'true - An optional flag to get debug information returned'
 }
 
-Return JSON (exit_code non-zero is failure):
+Return JSON String (exit_code non-zero is failure):
 {
     "debug":"Debug Output",
     "messages":"Other messages (outage notifications for example)",
@@ -107,14 +107,14 @@ Submit via POST to: {openshift.express.server}/broker/embed_cartridge
 
 Submit JSON String:
 {
-    'cartridge': 'framework-type, ex: mysql-5.1 - Valid types determined from /broker/cartlist with cart_type of embedded',
+    'cartridge': 'framework-type, e.g. mysql-5.1 - Valid types determined from /broker/cartlist with cart_type of embedded',
     'action': 'configure, deconfigure',
     'app_name': 'Application_name',
     'rhlogin': 'login',
     'debug': 'true - An optional flag to get debug information returned'
 }
 
-Return JSON (exit_code non-zero is failure):
+Return JSON String (exit_code non-zero is failure):
 {
     "debug":"Debug Output",
     "messages":"Other messages (outage notifications for example)",

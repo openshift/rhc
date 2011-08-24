@@ -27,13 +27,14 @@ require 'rhc-common'
 # print help
 #
 def p_usage
+
     puts <<USAGE
 
 Usage: #{$0}
 Bind a registered rhcloud user to a domain in rhcloud.
 
-  NOTE: to change ssh key, please alter your ~/.ssh/libra_id_rsa and
-        ~/.ssh/libra_id_rsa.pub key, then re-run with --alter
+  NOTE: to change ssh key, alter your openshift <id_rsa> and
+        <id_rsa>.pub keys, then re-run with --alter
 
   -n|--namespace   namespace   Namespace for your application(s) (alphanumeric - max #{RHC::Maxdlen} chars) (required)
   -l|--rhlogin     rhlogin     Red Hat login (RHN or OpenShift login with OpenShift Express access) (required)
@@ -62,7 +63,7 @@ begin
     end
 rescue Exception => e
   #puts e.message
-    p_usage
+  p_usage
 end
 
 # Pull in configs from files
@@ -70,8 +71,8 @@ libra_server = get_var('libra_server')
 debug = get_var('debug') == 'false' ? nil : get_var('debug')
 
 
-libra_kfile = "#{ENV['HOME']}/.ssh/libra_id_rsa"
-libra_kpfile = "#{ENV['HOME']}/.ssh/libra_id_rsa.pub"
+libra_kfile = get_kfile(opt['alter'])
+libra_kpfile = get_kpfile(libra_kfile, opt['alter'])
 
 if opt["help"]
     p_usage
@@ -115,7 +116,7 @@ end
 
 
 #
-# Check to see if a libra_id_rsa key exists, if not create it.
+# Check to see if a libra_kfile exists, if not create it.
 #
 
 if File.readable?(libra_kfile)
@@ -141,7 +142,7 @@ if debug
   data['debug'] = "true"
 end
 RHC::print_post_data(data, debug)
-json_data = JSON.generate(data)
+json_data = RHC::generate_json(data)
 
 url = URI.parse("https://#{libra_server}/broker/domain")
 response = RHC::http_post(@http, url, json_data, password)
@@ -168,7 +169,7 @@ EOF
               #
               # Confirm that the host(s) exist in DNS
               #
-              puts "Now your new domain name(s) are being populated worldwide (this might take a minute)..."
+              puts "Now your new domain name(s) are being propagated worldwide (this might take a minute)..."
               # Allow DNS to propogate
               sleep 15
               app_info.each_key do |appname|

@@ -140,17 +140,8 @@ unless opt['nogit']
     end
 end
 
-#
-# Confirm libra_id_rsa exists
-#
-unless File.exists?("#{ssh_config_d}/libra_id_rsa")
-    puts
-    puts "Could not find #{ssh_config_d}/libra_id_rsa, cannot continue"
-    puts "This file was created by rhc-create-domain.  If it does not exist you may need to create"
-    puts "a new one."
-    puts
-    exit 212
-end
+libra_kfile = get_kfile()
+libra_kpfile = get_kpfile(libra_kfile)
 
 #
 # Create remote application space
@@ -166,7 +157,7 @@ data = {:cartridge => opt['type'],
 if debug
   data['debug'] = "true"
 end
-json_data = JSON.generate(data)
+json_data = RHC::generate_json(data)
 
 puts "Contacting https://#{libra_server}"
 
@@ -188,7 +179,7 @@ end
 #
 at_exit do
     unless $!.nil? || $!.is_a?(SystemExit) && $!.success?
-        json_data = JSON.generate(
+        json_data = RHC::generate_json(
                    {:cartridge => opt['type'],
                     :action => 'deconfigure',
                     :app_name => opt['app'],
@@ -210,69 +201,72 @@ user_info = RHC::get_user_info(libra_server, opt['rhlogin'], password, @http, de
 
 fqdn = "#{opt['app']}-#{user_info['user_info']['namespace']}.#{user_info['user_info']['rhc_domain']}"
 
-found = false
-
-begin
-    File.open(ssh_config, "r") do |sline|
-        while(line = sline.gets)
-            if line.to_s.index("Host *.#{user_info['user_info']['rhc_domain']}") == 0
-                found = true
-                break
-            end
-        end
-    end
-rescue Errno::EACCES
-    puts "Could not read from #{ssh_config}"
-    puts "Reason: " + $!
-    puts
-    puts "Please correct this first.  Then run rerun."
-    puts
-    exit 213
-rescue Errno::ENOENT
-    puts "Could not find #{ssh_config}.  This is ok, continuing"
-end
-if found
-    puts "Found #{user_info['user_info']['rhc_domain']} in ~/.ssh/config... No need to adjust"
-else
-    puts "    Adding #{user_info['user_info']['rhc_domain']} to ~/.ssh/config"
-    begin
-        f = File.open(ssh_config, "a")
-        f.puts <<SSH
-
+rsa_key_file_name = File.basename(libra_kfile)
+if (rsa_key_file_name != 'id_rsa')
+  found = false
+  
+  begin
+      File.open(ssh_config, "r") do |sline|
+          while(line = sline.gets)
+              if line.to_s.index("Host *.#{user_info['user_info']['rhc_domain']}") == 0
+                  found = true
+                  break
+              end
+          end
+      end
+  rescue Errno::EACCES
+      puts "Could not read from #{ssh_config}"
+      puts "Reason: " + $!
+      puts
+      puts "Please correct this first.  Then run rerun."
+      puts
+      exit 213
+  rescue Errno::ENOENT
+      puts "Could not find #{ssh_config}.  This is ok, continuing"
+  end
+  if found
+      puts "Found #{user_info['user_info']['rhc_domain']} in ~/.ssh/config... No need to adjust"
+  else
+      puts "    Adding #{user_info['user_info']['rhc_domain']} to ~/.ssh/config"
+      begin
+          f = File.open(ssh_config, "a")
+          f.puts <<SSH
+  
 # Added by rhc-create-app on #{`date`}
 Host *.#{user_info['user_info']['rhc_domain']}
-    IdentityFile ~/.ssh/libra_id_rsa
+    IdentityFile ~/.ssh/#{rsa_key_file_name}
     VerifyHostKeyDNS yes
     StrictHostKeyChecking no
     UserKnownHostsFile ~/.ssh/libra_known_hosts
 
 SSH
-        f.close
-     rescue Errno::EACCES
-        puts "Could not write to #{ssh_config}"
-        puts "Reason: " + $!
-        puts
-        puts "Please correct this first.  Then run rerun."
-        puts
-        exit 214
-    rescue Errno::ENOENT
-        # Make directory and config if they do not exist
-        puts "Could not find directory: " + $!
-        puts "creating"
-        FileUtils.mkdir_p ssh_config_d
-        file = File.open(ssh_config, 'w')
-        file.close
-        retry
-    end
+          f.close
+      rescue Errno::EACCES
+          puts "Could not write to #{ssh_config}"
+          puts "Reason: " + $!
+          puts
+          puts "Please correct this first.  Then run rerun."
+          puts
+          exit 214
+      rescue Errno::ENOENT
+          # Make directory and config if they do not exist
+          puts "Could not find directory: " + $!
+          puts "creating"
+          FileUtils.mkdir_p ssh_config_d
+          file = File.open(ssh_config, 'w')
+          file.close
+          retry
+      end
+  end
+  
+  File.chmod(0700, ssh_config_d)
+  File.chmod(0600, ssh_config)
 end
-
-File.chmod(0700, ssh_config_d)
-File.chmod(0600, ssh_config)
 
 #
 # Confirm that the host exists in DNS
 #
-puts "Now your new domain name is being populated worldwide (this might take a minute)..."
+puts "Now your new domain name is being propagated worldwide (this might take a minute)..."
 
 # Allow DNS to propogate
 sleep 15
@@ -287,13 +281,9 @@ while loop < RHC::Maxretries && !RHC::hostexist?(fqdn)
     sleep_time = RHC::delay(sleep_time)
 end
 
-if loop >= RHC::Maxretries
-    puts "Host could not be created and/or found..."
-    exit 215
-end
-
 sleep_time = 2
 attempt = 0
+
 #
 # Pull new repo locally
 #
@@ -305,15 +295,52 @@ app_uuid = user_info['app_info'][app_name]['uuid']
 
 git_url = "ssh://#{app_uuid}@#{app_name}-#{namespace}.#{rhc_domain}/~/git/#{app_name}.git/"
 
+# If the hostname couldn't be resolved, print out the git URL
+# and exit cleanly.  This will help solve issues where DNS times
+# out in APAC, etc on resolution.
+if loop >= RHC::Maxretries
+    puts <<WARNING
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+WARNING: We weren't able to lookup your hostname (#{fqdn}) 
+in a reasonable amount of time.  This can happen periodically and will just
+take an extra minute or two to propagate depending on where you are in the
+world.  Once you are able to access your application in a browser, you can then
+clone your git repository.
+
+  Application URL: http://#{fqdn}
+
+  Git Repository URL: #{git_url}
+
+  Git Clone command: 
+    git clone #{git_url} #{opt['repo']}
+
+If you can't get your application running in the browser, you can also try
+destroying and recreating the application as well using:
+
+  rhc-ctl-app -c destroy -a #{opt['app']} -l #{opt["rhlogin"]}
+
+If this doesn't work for you, let us know in the forums or in IRC and we'll
+make sure to get you up and running.
+
+  Forums: https://www.redhat.com/openshift/forums/express
+
+  IRC: #openshift (on Freenode)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+WARNING
+    exit 0
+end
+
 unless opt['nogit']
     puts "Pulling new repo down"
 
     puts "git clone --quiet #{git_url} #{opt['repo']}" if debug
     quiet = (debug ? ' ' : '--quiet ')
-    git_pull = %x<git clone #{quiet} #{git_url} #{opt['repo']}>
+    git_clone = %x<git clone #{quiet} #{git_url} #{opt['repo']}>
     if $?.exitstatus != 0
-        puts "Error in git pull"
-        puts git_pull
+        puts "Error in git clone"
+        puts git_clone
         exit 216
     end
 else
