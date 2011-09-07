@@ -71,7 +71,7 @@ libra_server = get_var('libra_server')
 debug = get_var('debug') == 'false' ? nil : get_var('debug')
 
 
-libra_kfile = get_kfile(opt['alter'])
+libra_kfile = get_kfile(false)
 libra_kpfile = get_kpfile(libra_kfile, opt['alter'])
 
 if opt["help"]

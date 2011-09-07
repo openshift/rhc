@@ -344,7 +344,16 @@ _home_conf = File.expand_path('~/.openshift')
 FileUtils.mkdir_p _home_conf unless File.directory?(_home_conf)
 local_config_path = File.expand_path(@local_config_path)
 if !File.exists? local_config_path
-  FileUtils.touch local_config_path
+  file = File.open(local_config_path, 'w')
+  begin
+    file.puts <<EOF
+# SSH key file
+#ssh_key_file = 'libra_id_rsa'
+EOF
+
+  ensure
+    file.close
+  end
   puts ""
   puts "Created local config file: " + local_config_path
   puts "express.conf contains user configuration and can be transferred across clients."
@@ -384,28 +393,34 @@ def kfile_not_found
 Your SSH keys are created either by running ssh-keygen (password optional)
 or by having the rhc-create-domain command do it for you.  If you created
 them on your own (or want to use an existing keypair), be sure to paste
-your public key into the dashboard page at http://www.openshift.com.
-The client tools use the value of 'rsa_key_file' in express.conf to find
-your key.  'libra_id_rsa[.pub]' followed by 'id_rsa[.pub]' are used as
-if rsa_key_file isn't specified in express.conf.
-Also, make sure you never give out your secret key!
+your public key into the express console at http://www.openshift.com.
+The client tools use the value of 'ssh_key_file' in express.conf to find
+your key followed by the defaults of libra_id_rsa[.pub] and then
+id_rsa[.pub].
 KFILE_NOT_FOUND
 
-exit 212
+#exit 212
 end
 
-def get_kfile(check_readable=true)
-  rsa_key_file_var = get_var('rsa_key_file')
-  rsa_key_file = rsa_key_file_var ? rsa_key_file_var : 'libra_id_rsa'
-  kfile = "#{ENV['HOME']}/.ssh/#{rsa_key_file}"
-  if check_readable && !File.readable?(kfile)
-    if rsa_key_file_var
-      puts "Unable to read from '#{kfile}' referenced in express.conf."
+def get_kfile(check_exists=true)
+  ssh_key_file = get_var('ssh_key_file')
+  if ssh_key_file
+     if (File.basename(ssh_key_file) == ssh_key_file)
+       kfile = "#{ENV['HOME']}/.ssh/#{ssh_key_file}"
+     else
+       kfile = ssh_key_file
+     end
+  else
+    kfile = "#{ENV['HOME']}/.ssh/libra_id_rsa"
+  end
+  if check_exists && !File.exists?(kfile)
+    if ssh_key_file
+      puts "WARNING: Unable to find '#{kfile}' referenced in express.conf."
       kfile_not_found
     else
       kfile = "#{ENV['HOME']}/.ssh/id_rsa"
-      if !File.readable?(kfile)
-        puts "Unable to read from rsa key file."
+      if !File.exists?(kfile)
+        puts "WARNING: Unable to find ssh key file."
         kfile_not_found
       end
     end
@@ -413,10 +428,10 @@ def get_kfile(check_readable=true)
   return kfile
 end
 
-def get_kpfile(kfile, check_readable=true)
+def get_kpfile(kfile, check_exists=true)
   kpfile = kfile + '.pub'
-  if check_readable && !File.readable?(kpfile)
-    puts "Unable to read from '#{kpfile}'"
+  if check_exists && !File.exists?(kpfile)
+    puts "WARNING: Unable to find '#{kpfile}'"
     kfile_not_found
   end
   return kpfile

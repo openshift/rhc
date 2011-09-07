@@ -140,9 +140,6 @@ unless opt['nogit']
     end
 end
 
-libra_kfile = get_kfile()
-libra_kpfile = get_kpfile(libra_kfile)
-
 #
 # Create remote application space
 #
@@ -200,9 +197,9 @@ puts "Checking ~/.ssh/config"
 user_info = RHC::get_user_info(libra_server, opt['rhlogin'], password, @http, debug, false)
 
 fqdn = "#{opt['app']}-#{user_info['user_info']['namespace']}.#{user_info['user_info']['rhc_domain']}"
-
-rsa_key_file_name = File.basename(libra_kfile)
-if (rsa_key_file_name != 'id_rsa')
+ 
+ssh_key_file_name = File.basename(get_kfile())
+if (ssh_key_file_name != 'id_rsa')
   found = false
   
   begin
@@ -234,7 +231,7 @@ if (rsa_key_file_name != 'id_rsa')
   
 # Added by rhc-create-app on #{`date`}
 Host *.#{user_info['user_info']['rhc_domain']}
-    IdentityFile ~/.ssh/#{rsa_key_file_name}
+    IdentityFile ~/.ssh/#{ssh_key_file_name}
     VerifyHostKeyDNS yes
     StrictHostKeyChecking no
     UserKnownHostsFile ~/.ssh/libra_known_hosts

@@ -105,19 +105,26 @@ file_glob = "#{opt['files']}"
 app_uuid = user_info['app_info'][app]['uuid']
 namespace = user_info['user_info']['namespace']
 rhc_domain = user_info['user_info']['rhc_domain']
-ssh_cmd = "ssh #{app_uuid}@#{app}-#{namespace}.#{rhc_domain} 'tail#{opt['opts'] ? ' --opts ' + Base64::encode64(opt['opts']).chomp : ''} #{file_glob}'"
+
+# -t to force PTY and avoid daemons
+# Red Hat Openshift: https://bugzilla.redhat.com/show_bug.cgi?id=726646
+# OpenSSH https://bugzilla.mindrot.org/show_bug.cgi?id=396
+
+ssh_cmd = "ssh -t #{app_uuid}@#{app}-#{namespace}.#{rhc_domain} 'tail#{opt['opts'] ? ' --opts ' + Base64::encode64(opt['opts']).chomp : ''} #{file_glob}'"
 
 puts "Attempting to tail files: #{file_glob}"
 puts "Use ctl + c to stop"
 puts 
 puts ssh_cmd if debug
-system(ssh_cmd)
-if $?.exitstatus != 0 and $?.exitstatus != 255
-    puts
-    puts "Error in trying to tail files.  You can tail manually by running:"
-    puts
-    puts ssh_cmd
-    puts
-    exit 254
+begin
+  exec ssh_cmd
+rescue SystemCallError
+  puts
+  puts "Error in trying to tail files.  You can tail manually by running:"
+  puts
+  puts ssh_cmd
+  puts
+  exit 254
 end
-exit 0
+# this should never happen
+exit 1
