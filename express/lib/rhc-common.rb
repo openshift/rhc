@@ -334,6 +334,7 @@ end
 # Config paths... /etc/openshift/express.conf or $GEM/conf/express.conf -> ~/.openshift/express.conf
 #
 # semi-private: Just in case we rename again :)
+@mconf = nil
 @conf_name = 'express.conf'
 _linux_cfg = '/etc/openshift/' + @conf_name
 _gem_cfg = File.join(File.expand_path(File.dirname(__FILE__) + "/../conf"), @conf_name)
@@ -385,7 +386,19 @@ end
 #   3) $GEM/../conf/express.conf
 #
 def get_var(var)
-  @local_config.get_value(var) ? @local_config.get_value(var) : @global_config.get_value(var)
+  mvar = @local_config.get_value(var) ? @local_config.get_value(var) : @global_config.get_value(var)
+  if !@mconf.nil?
+    begin
+      mp = ParseConfig.new(File.expand_path(@mconf))
+      if !mp.nil?
+        mvar = mp.get_value(var) ? mp.get_value(var) : mvar
+      end
+    rescue Errno::EACCES => e
+      puts "Could not open config file (#{@mconf}): #{e.message}"
+      exit 253
+    end
+  end
+  mvar
 end
 
 def kfile_not_found

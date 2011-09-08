@@ -41,6 +41,7 @@ Control an OpenShift express app
   -b|--bypass              Bypass warnings
   -d|--debug               Print Debug info
   -h|--help                Show Usage info
+  --config  path           Path of alternate config file
 
 USAGE
 exit 255
@@ -67,6 +68,7 @@ begin
         ["--embed",      "-e", GetoptLong::REQUIRED_ARGUMENT],
         ["--password",   "-p", GetoptLong::REQUIRED_ARGUMENT],
         ["--app",        "-a", GetoptLong::REQUIRED_ARGUMENT],
+        ["--config", GetoptLong::REQUIRED_ARGUMENT],
         ["--command",    "-c", GetoptLong::REQUIRED_ARGUMENT]
     )
     opt = {}
@@ -76,6 +78,15 @@ begin
 rescue Exception => e
   #puts e.message
     p_usage
+end
+
+# If provided a config path, check it
+if !opt["config"].nil?
+    @mconf = opt["config"]
+    if !File.readable?(File.expand_path(@mconf))
+        puts "Could not open config file: #{@mconf}"
+        exit 253
+    end
 end
 
 # Pull in configs from files

@@ -40,6 +40,7 @@ Create an OpenShift Express app.
   -n|--nogit                 Only create remote space, don't pull it locally
   -d|--debug                 Print Debug info
   -h|--help                  Show Usage info
+  --config  path             Path of alternate config file
 
 USAGE
 exit 255
@@ -54,6 +55,7 @@ begin
         ["--password",  "-p", GetoptLong::REQUIRED_ARGUMENT],
         ["--app",   "-a", GetoptLong::REQUIRED_ARGUMENT],
         ["--repo",  "-r", GetoptLong::REQUIRED_ARGUMENT],
+        ["--config", GetoptLong::REQUIRED_ARGUMENT],
         ["--type",  "-t", GetoptLong::REQUIRED_ARGUMENT]
     )
     opt = {}
@@ -63,6 +65,15 @@ begin
 rescue Exception => e
   #puts e.message
     p_usage
+end
+
+# If provided a config path, check it
+if !opt["config"].nil?
+    @mconf = opt["config"]
+    if !File.readable?(File.expand_path(@mconf))
+        puts "Could not open config file: #{@mconf}"
+        exit 253
+    end
 end
 
 # Pull in configs from files

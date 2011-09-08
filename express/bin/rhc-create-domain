@@ -42,6 +42,7 @@ Bind a registered rhcloud user to a domain in rhcloud.
   -a|--alter                   Alter namespace (will change urls) and/or ssh key
   -d|--debug                   Print Debug info
   -h|--help                    Show Usage info
+  --config  path               Path of alternate config file
 
 USAGE
 exit 255
@@ -54,6 +55,7 @@ begin
         ["--rhlogin",  "-l", GetoptLong::REQUIRED_ARGUMENT],
         ["--password",  "-p", GetoptLong::REQUIRED_ARGUMENT],
         ["--namespace", "-n", GetoptLong::REQUIRED_ARGUMENT],
+        ["--config", GetoptLong::REQUIRED_ARGUMENT],
         ["--alter", "-a", GetoptLong::NO_ARGUMENT]
     )
     
@@ -64,6 +66,15 @@ begin
 rescue Exception => e
   #puts e.message
   p_usage
+end
+
+# If provided a config path, check it
+if !opt["config"].nil?
+    @mconf = opt["config"]
+    if !File.readable?(File.expand_path(@mconf))
+        puts "Could not open config file: #{@mconf}"
+        exit 253
+    end
 end
 
 # Pull in configs from files

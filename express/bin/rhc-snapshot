@@ -40,6 +40,7 @@ Pull down application snapshot for a user
   -p|--password  password   RHLogin password (optional, will prompt)
   -d|--debug                Print Debug info
   -h|--help                 Show Usage info
+  --config  path            Path of alternate config file
 
 USAGE
 exit 255
@@ -53,6 +54,7 @@ begin
         ["--save",  "-s", GetoptLong::REQUIRED_ARGUMENT],
         ["--restore",  "-r", GetoptLong::REQUIRED_ARGUMENT],
         ["--rhlogin",  "-l", GetoptLong::REQUIRED_ARGUMENT],
+        ["--config", GetoptLong::REQUIRED_ARGUMENT],
         ["--password",  "-p", GetoptLong::REQUIRED_ARGUMENT]
     )
     opt = {}
@@ -62,6 +64,15 @@ begin
 rescue Exception => e
   #puts e.message
     p_usage
+end
+
+# If provided a config path, check it
+if !opt["config"].nil?
+    @mconf = opt["config"]
+    if !File.readable?(File.expand_path(@mconf))
+        puts "Could not open config file: #{@mconf}"
+        exit 253
+    end
 end
 
 # Pull in configs from files
