@@ -65,13 +65,7 @@ rescue Exception => e
 end
 
 # If provided a config path, check it
-if !opt["config"].nil?
-    @mconf = opt["config"]
-    if !File.readable?(File.expand_path(@mconf))
-        puts "Could not open config file: #{@mconf}"
-        exit 253
-    end
-end
+check_cpath(opt)
 
 # Pull in configs from files
 libra_server = get_var('libra_server')

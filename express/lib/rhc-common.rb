@@ -379,8 +379,23 @@ else
   @http = Net::HTTP
 end
 
+
+#
+# Support funcs
+#
+def check_cpath(opt)
+  if !opt["config"].nil?
+    @mconf = opt["config"]
+    if !File.readable?(File.expand_path(@mconf))
+        puts "Could not open config file: #{@mconf}"
+        exit 253
+    end
+  end
+end
+
 #
 # Check for local var in
+#   0) --config path file
 #   1) ~/.openshift/express.conf
 #   2) /etc/openshift/express.conf
 #   3) $GEM/../conf/express.conf
