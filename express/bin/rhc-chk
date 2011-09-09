@@ -1,0 +1,207 @@
+#!/usr/bin/env ruby
+# Copyright 2011 Red Hat, Inc.
+#
+# Permission is hereby granted, free of charge, to any person
+# obtaining a copy of this software and associated documentation files
+# (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge,
+# publish, distribute, sublicense, and/or sell copies of the Software,
+# and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT.  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+# BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+# ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+require 'rhc-common'
+require 'net/http'
+require 'net/https'
+require 'rbconfig'
+
+
+#
+# print help
+#
+def p_usage
+    rhlogin = get_var('default_rhlogin') ? "Default: #{get_var('default_rhlogin')}" : "required"
+    puts <<USAGE
+
+Usage: #{$0}
+Run a simple check on local configs and credentials to confirm tools are
+properly setup.  Often run to troubleshoot connection issues.
+
+  -l|--rhlogin   rhlogin    Red Hat login (RHN or OpenShift login with OpenShift Express access) (#{rhlogin})
+  -p|--password  password   Red Hat password (for RHN or OpenShift)
+  -d|--debug                Print Debug info
+  -h|--help                 Show Usage info
+
+USAGE
+exit 255
+end
+
+begin
+    opts = GetoptLong.new(
+        ["--debug", "-d", GetoptLong::NO_ARGUMENT],
+        ["--help",  "-h", GetoptLong::NO_ARGUMENT],
+        ["--rhlogin",  "-l", GetoptLong::REQUIRED_ARGUMENT],
+        ["--password",  "-p", GetoptLong::REQUIRED_ARGUMENT]
+    )
+    opt = {}
+    opts.each do |o, a|
+        opt[o[2..-1]] = a.to_s
+    end
+rescue Exception => e
+  #puts e.message
+    p_usage
+end
+
+# Pull in configs from files
+@libra_server = get_var('libra_server')
+@debug = get_var('debug') == 'false' ? nil : get_var('debug')
+
+libra_kfile = "#{ENV['HOME']}/.ssh/libra_id_rsa"
+libra_kpfile = "#{ENV['HOME']}/.ssh/libra_id_rsa.pub"
+
+if opt["help"]
+    p_usage
+end
+
+if opt["debug"]
+    @debug = true
+end
+
+opt["rhlogin"] = get_var('default_rhlogin') unless opt["rhlogin"]
+if !RHC::check_rhlogin(opt['rhlogin'])
+    p_usage
+end
+@rhlogin = opt["rhlogin"]
+
+@password = opt['password']
+if !@password
+  @password = RHC::get_password
+end
+
+#
+# Generic Info
+#
+puts "Ruby Version: #{RUBY_VERSION}"
+puts "host_alias: #{Config::CONFIG['host_alias']}"
+
+#
+# Check for proxy environment
+#
+if ENV['http_proxy']
+  host, port = ENV['http_proxy'].split(':')
+  @http = Net::HTTP::Proxy(host, port)
+  puts "Proxy being used: #{host}:#{port}"
+else
+  @http = Net::HTTP
+  puts "Proxy being used: none"
+end
+
+def test_url_json(uri, data)
+    json_data = RHC::generate_json(data)
+    url = URI.parse("https://#{@libra_server}#{uri}")
+    puts "  Contacting URL: https://#{@libra_server}#{uri}" if @debug
+    puts "  json_data: #{json_data}" if @debug
+    req = @http::Post.new(url.path)
+    req.set_form_data({'json_data' => json_data, 'password' => @password})
+    http = @http.new(url.host, url.port)
+    http.open_timeout = 10
+    if url.scheme == "https"
+      http.use_ssl = true
+      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    end
+    begin
+        response = http.start {|http| http.request(req)}
+        puts "  Raw Response: #{response.body}" if @debug
+    rescue Exception => e
+        puts "  ERROR: #{e.message}"
+        return nil
+    end
+    return response
+end
+
+#
+# Checking Connectivity / cart list
+#
+puts
+puts "TEST1: Confirming connection to OpenShift"
+data = {'cart_type' => 'standalone'}
+
+response = test_url_json("/broker/cartlist", data)
+if response
+    puts "  Code: #{response.code}"
+    puts "  Message: #{response.message}"
+    resp_json = JSON.parse(response.body)
+    puts "  Cart Info: #{resp_json["data"]}"
+end
+
+
+#
+# Checking Authentication
+#
+
+puts
+puts "TEST2: Authentication (RHN account) / user info"
+data = {'rhlogin' => @rhlogin}
+
+response = test_url_json("/broker/userinfo", data)
+if response
+    puts "  Code: #{response.code}"
+    puts "  Message: #{response.message}"
+    body = JSON.parse(response.body)
+    @user_info = JSON.parse(body['data'].to_s)
+    puts "  rhlogin: #{@user_info["user_info"]["rhlogin"]}"
+    puts "  namespace: #{@user_info["user_info"]["namespace"]}"
+end
+
+#
+# Checking ssh key
+#
+puts
+puts "TEST3: SSH Key check"
+remote_ssh_pubkey = @user_info["user_info"]["ssh_key"]
+if File.exists?("#{ENV['HOME']}/.ssh/libra_id_rsa")
+    puts "  OK: ~/.ssh/libra_id_rsa - Found"
+    key_dump = `ssh-keygen -f ~/.ssh/libra_id_rsa -y`
+    local_derived_ssh_pubkey = key_dump.to_s.strip.split(' ')[1]
+else
+    puts "  ERROR: ~/.ssh/libra_id_rsa - Not Found!"
+end
+
+if File.exists?("#{ENV['HOME']}/.ssh/libra_id_rsa.pub")
+    puts "  OK: ~/.ssh/libra_id_rsa.pub Found"
+    fp = File.open("#{ENV['HOME']}/.ssh/libra_id_rsa.pub")
+    local_ssh_pubkey = fp.gets.split(' ')[1]
+    fp.close
+else
+    puts "  WARNING: ~/.ssh/libra_id_rsa.pub Not Found! (non fatal error)"
+end
+
+if local_ssh_pubkey.to_s.strip == remote_ssh_pubkey.to_s.strip
+    puts "  OK: Remote and ~/.ssh/libra_id_rsa.pub - match"
+else
+    puts "  WARNING: Remote and ~/.ssh/libra_id_rsa key do not match.  (have you changed machines or ssh keys?)"
+end
+
+if local_derived_ssh_pubkey.to_s.strip == remote_ssh_pubkey.to_s.strip
+    puts "  OK: local ~/.ssh/libra_id_rsa should auth with openshift"
+else
+    puts "  WARNING: local ~/.ssh/libra_id_rsa DOES NOT match remote pub key, ssh auth cannot continue"
+    puts "      FIX: Perhaps you should regenerate your public key, or run rhc-create-domain with -a to alter the remote key"
+end
+
+puts "remote_ssh_pubkey: #{remote_ssh_pubkey}" if @debug
+puts "local_ssh_pubkey: #{local_ssh_pubkey}" if @debug
+puts "local_derived_ssh_pubkey: #{local_derived_ssh_pubkey}" if @debug
+
+exit 0
