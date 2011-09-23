@@ -79,10 +79,7 @@ module RHC
   # Invalid chars (") ($) (^) (<) (>) (|) (%) (/) (;) (:) (,) (\) (*) (=) (~)
   def self.check_rhlogin(rhlogin)
     if rhlogin
-      if rhlogin.length < 6
-        puts 'RHLogin must be at least 6 characters'
-        return false
-      elsif rhlogin =~ /["\$\^<>\|%\/;:,\\\*=~]/
+      if rhlogin =~ /["\$\^<>\|%\/;:,\\\*=~]/
         puts 'RHLogin may not contain any of these characters: (\") ($) (^) (<) (>) (|) (%) (/) (;) (:) (,) (\) (*) (=) (~)'
         return false
       end
