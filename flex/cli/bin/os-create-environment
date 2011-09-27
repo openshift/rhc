@@ -299,8 +299,7 @@ else #express
     puts <<EOF
  Creation successful
  
- You may now create an application.  Please make note of your local config file
- in #{@local_config_path} which has been created and populated for you.
+ You may now create an application.
  
 EOF
 end

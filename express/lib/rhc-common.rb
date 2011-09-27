@@ -331,7 +331,7 @@ end
 # Config paths... /etc/openshift/express.conf or $GEM/conf/express.conf -> ~/.openshift/express.conf
 #
 # semi-private: Just in case we rename again :)
-@mconf = nil
+@opts_config_path = nil
 @conf_name = 'express.conf'
 _linux_cfg = '/etc/openshift/' + @conf_name
 _gem_cfg = File.join(File.expand_path(File.dirname(__FILE__) + "/../conf"), @conf_name)
@@ -380,14 +380,29 @@ end
 #
 # Support funcs
 #
-def check_cpath(opt)
-  if !opt["config"].nil?
-    @mconf = opt["config"]
-    if !File.readable?(File.expand_path(@mconf))
-        puts "Could not open config file: #{@mconf}"
+def check_cpath(opts)
+  if !opts["config"].nil?
+    @opts_config_path = opts["config"]
+    if !File.readable?(File.expand_path(@opts_config_path))
+      puts "Could not open config file: #{@opts_config_path}"
+      exit 253
+    else
+      begin
+        @opts_config = ParseConfig.new(File.expand_path(@opts_config_path))
+      rescue Errno::EACCES => e
+        puts "Could not open config file (#{@opts_config_path}): #{e.message}"
         exit 253
+      end
     end
   end
+end
+
+def config_path
+  return @opts_config_path ? @opts_config_path : @local_config_path
+end
+
+def config
+  return @opts_config ? @opts_config : @local_config
 end
 
 #
@@ -398,19 +413,13 @@ end
 #   3) $GEM/../conf/express.conf
 #
 def get_var(var)
-  mvar = @local_config.get_value(var) ? @local_config.get_value(var) : @global_config.get_value(var)
-  if !@mconf.nil?
-    begin
-      mp = ParseConfig.new(File.expand_path(@mconf))
-      if !mp.nil?
-        mvar = mp.get_value(var) ? mp.get_value(var) : mvar
-      end
-    rescue Errno::EACCES => e
-      puts "Could not open config file (#{@mconf}): #{e.message}"
-      exit 253
-    end
+  v = nil
+  if !@opts_config.nil? && @opts_config.get_value(var)
+    v = @opts_config.get_value(var)
+  else
+    v = @local_config.get_value(var) ? @local_config.get_value(var) : @global_config.get_value(var)
   end
-  mvar
+  v
 end
 
 def kfile_not_found

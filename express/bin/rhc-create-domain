@@ -110,8 +110,8 @@ end
 #
 
 def add_rhlogin_config(rhlogin, uuid)
-    f = open(File.expand_path(@local_config_path), 'a')
-    unless @local_config.get_value('default_rhlogin')
+    f = open(File.expand_path(config_path), 'a')
+    unless config.get_value('default_rhlogin')
         f.puts("# Default rhlogin to use if none is specified")
         f.puts("default_rhlogin=#{rhlogin}")
         f.puts("")
@@ -163,8 +163,7 @@ if response.code == '200'
             puts <<EOF
 Creation successful
 
-You may now create an application.  Please make note of your local config file
-in #{@local_config_path} which has been created and populated for you.
+You may now create an application.
 
 EOF
         else
