@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.77.3
+Version:       0.77.4
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -99,6 +99,17 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/openshift/express.conf
 
 %changelog
+* Tue Sep 27 2011 Dan McPherson <dmcphers@redhat.com> 0.77.4-1
+- remove rhlogin length check (dmcphers@redhat.com)
+- match working names (jim@jaguNET.com)
+- remove old (jim@jaguNET.com)
+- and replace (jim@jaguNET.com)
+- update (jim@jaguNET.com)
+- fold in chcker (jim@jaguNET.com)
+- Abtract out the --config path check... reuse (jim@jaguNET.com)
+- Allow user to specify config-file directly via --config opt (jim@jaguNET.com)
+- updated (jim@jaguNET.com)
+
 * Mon Sep 12 2011 Dan McPherson <dmcphers@redhat.com> 0.77.3-1
 - Merge branch 'master' of ssh://git1.ops.rhcloud.com/srv/git/li
   (mmcgrath@redhat.com)
