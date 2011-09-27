@@ -42,6 +42,7 @@ properly setup.  Often run to troubleshoot connection issues.
   -p|--password  password   Red Hat password (for RHN or OpenShift)
   -d|--debug                Print Debug info
   -h|--help                 Show Usage info
+  --config  path             Path of alternate config file
 
 USAGE
 exit 255
@@ -52,7 +53,8 @@ begin
         ["--debug", "-d", GetoptLong::NO_ARGUMENT],
         ["--help",  "-h", GetoptLong::NO_ARGUMENT],
         ["--rhlogin",  "-l", GetoptLong::REQUIRED_ARGUMENT],
-        ["--password",  "-p", GetoptLong::REQUIRED_ARGUMENT]
+        ["--password",  "-p", GetoptLong::REQUIRED_ARGUMENT],
+        ["--config", GetoptLong::REQUIRED_ARGUMENT]
     )
     opt = {}
     opts.each do |o, a|
@@ -62,6 +64,9 @@ rescue Exception => e
   #puts e.message
     p_usage
 end
+
+# If provided a config path, check it
+check_cpath(opt)
 
 # Pull in configs from files
 @libra_server = get_var('libra_server')
