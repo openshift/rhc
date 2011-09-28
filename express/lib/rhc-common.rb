@@ -439,11 +439,11 @@ end
 def get_kfile(check_exists=true)
   ssh_key_file = get_var('ssh_key_file')
   if ssh_key_file
-     if (File.basename(ssh_key_file) == ssh_key_file)
-       kfile = "#{ENV['HOME']}/.ssh/#{ssh_key_file}"
-     else
-       kfile = ssh_key_file
-     end
+    if (File.basename(ssh_key_file) == ssh_key_file)
+      kfile = "#{ENV['HOME']}/.ssh/#{ssh_key_file}"
+    else
+      kfile = File.expand_path(ssh_key_file)
+    end
   else
     kfile = "#{ENV['HOME']}/.ssh/libra_id_rsa"
   end

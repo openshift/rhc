@@ -72,9 +72,6 @@ check_cpath(opt)
 @libra_server = get_var('libra_server')
 @debug = get_var('debug') == 'false' ? nil : get_var('debug')
 
-libra_kfile = "#{ENV['HOME']}/.ssh/libra_id_rsa"
-libra_kpfile = "#{ENV['HOME']}/.ssh/libra_id_rsa.pub"
-
 if opt["help"]
     p_usage
 end
@@ -175,33 +172,36 @@ end
 puts
 puts "TEST3: SSH Key check"
 remote_ssh_pubkey = @user_info["user_info"]["ssh_key"]
-if File.exists?("#{ENV['HOME']}/.ssh/libra_id_rsa")
-    puts "  OK: ~/.ssh/libra_id_rsa - Found"
-    key_dump = `ssh-keygen -f ~/.ssh/libra_id_rsa -y`
+libra_kfile = get_kfile(false)
+libra_kpfile = get_kpfile(libra_kfile, false)
+
+if File.exists?(libra_kfile)
+    puts "  OK: #{libra_kfile} - Found"
+    key_dump = `ssh-keygen -f #{libra_kfile} -y`
     local_derived_ssh_pubkey = key_dump.to_s.strip.split(' ')[1]
 else
-    puts "  ERROR: ~/.ssh/libra_id_rsa - Not Found!"
+    puts "  ERROR: #{libra_kfile} - Not Found!"
 end
 
-if File.exists?("#{ENV['HOME']}/.ssh/libra_id_rsa.pub")
-    puts "  OK: ~/.ssh/libra_id_rsa.pub Found"
-    fp = File.open("#{ENV['HOME']}/.ssh/libra_id_rsa.pub")
+if File.exists?(libra_kpfile)
+    puts "  OK: #{libra_kpfile} Found"
+    fp = File.open(libra_kpfile)
     local_ssh_pubkey = fp.gets.split(' ')[1]
     fp.close
 else
-    puts "  WARNING: ~/.ssh/libra_id_rsa.pub Not Found! (non fatal error)"
+    puts "  WARNING: #{libra_kpfile} Not Found! (non fatal error)"
 end
 
 if local_ssh_pubkey.to_s.strip == remote_ssh_pubkey.to_s.strip
-    puts "  OK: Remote and ~/.ssh/libra_id_rsa.pub - match"
+    puts "  OK: Remote and #{libra_kpfile} - match"
 else
-    puts "  WARNING: Remote and ~/.ssh/libra_id_rsa key do not match.  (have you changed machines or ssh keys?)"
+    puts "  WARNING: Remote and #{libra_kpfile} key do not match.  (have you changed machines or ssh keys?)"
 end
 
 if local_derived_ssh_pubkey.to_s.strip == remote_ssh_pubkey.to_s.strip
-    puts "  OK: local ~/.ssh/libra_id_rsa should auth with openshift"
+    puts "  OK: local #{libra_kfile} should auth with openshift"
 else
-    puts "  WARNING: local ~/.ssh/libra_id_rsa DOES NOT match remote pub key, ssh auth cannot continue"
+    puts "  WARNING: local #{libra_kpfile} DOES NOT match remote pub key, ssh auth cannot continue"
     puts "      FIX: Perhaps you should regenerate your public key, or run rhc-create-domain with -a to alter the remote key"
 end
 
