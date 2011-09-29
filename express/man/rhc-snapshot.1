@@ -15,6 +15,9 @@ rhc-snapshot \- Pulls down an application snapshot as gzipped tarfile
 .B ][-d] [-h]
 .B [-l
 .I rhlogin
+.B ]
+.B [--config
+.I config_path
 .B ] -a
 .I application_name
 .SH DESCRIPTION
@@ -41,7 +44,11 @@ Enable debugging / verbose output
 .IP -h|--help
 Display help menu
 .IP --config
+<<<<<<< HEAD
 Alternate full pathname for the config file
+=======
+Config file to use before ~/.openshift/express.conf
+>>>>>>> add --config to man pages
 .SH FILES
 .I <ruby_gem_dir>/gems/rhc-<version>/conf/express.conf
 .RS
