@@ -37,8 +37,13 @@ module RHC
   Maxretries = 7
   Defaultdelay = 2
   API = "1.1.1"
+  @mytimeout = 10
   broker_version = "?.?.?"
   api_version = "?.?.?"
+
+  def self.timeout(val)
+    @mytimeout = val.to_i
+  end
 
   def self.update_server_api_v(dict)
     if !dict['broker'].nil? && (dict['broker'] =~ /\A\d+\.\d+\.\d+\z/)
@@ -219,7 +224,7 @@ module RHC
 
     req.set_form_data({'json_data' => json_data, 'password' => password})
     http = http.new(url.host, url.port)
-    http.open_timeout = 10
+    http.open_timeout = @mytimeout
     if url.scheme == "https"
       http.use_ssl = true
       http.verify_mode = OpenSSL::SSL::VERIFY_NONE

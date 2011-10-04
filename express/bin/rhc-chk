@@ -42,7 +42,8 @@ properly setup.  Often run to troubleshoot connection issues.
   -p|--password  password   Red Hat password (for RHN or OpenShift)
   -d|--debug                Print Debug info
   -h|--help                 Show Usage info
-  --config  path             Path of alternate config file
+  --config  path            Path of alternate config file
+  --timeout #               Timeout, in seconds, for connection
 
 USAGE
 exit 255
@@ -54,7 +55,8 @@ begin
         ["--help",  "-h", GetoptLong::NO_ARGUMENT],
         ["--rhlogin",  "-l", GetoptLong::REQUIRED_ARGUMENT],
         ["--password",  "-p", GetoptLong::REQUIRED_ARGUMENT],
-        ["--config", GetoptLong::REQUIRED_ARGUMENT]
+        ["--config", GetoptLong::REQUIRED_ARGUMENT],
+        ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
     )
     opt = {}
     opts.each do |o, a|
@@ -78,6 +80,10 @@ end
 
 if opt["debug"]
     @debug = true
+end
+
+if opt["timeout"]
+    RHC::timeout(opt["timeout"])
 end
 
 opt["rhlogin"] = get_var('default_rhlogin') unless opt["rhlogin"]

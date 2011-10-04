@@ -41,6 +41,7 @@ Create an OpenShift Express app.
   -d|--debug                 Print Debug info
   -h|--help                  Show Usage info
   --config  path             Path of alternate config file
+  --timeout #                Timeout, in seconds, for connection
 
 USAGE
 exit 255
@@ -56,7 +57,8 @@ begin
         ["--app",   "-a", GetoptLong::REQUIRED_ARGUMENT],
         ["--repo",  "-r", GetoptLong::REQUIRED_ARGUMENT],
         ["--config", GetoptLong::REQUIRED_ARGUMENT],
-        ["--type",  "-t", GetoptLong::REQUIRED_ARGUMENT]
+        ["--type",  "-t", GetoptLong::REQUIRED_ARGUMENT],
+        ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
     )
     opt = {}
     opts.each do |o, a|
@@ -83,6 +85,10 @@ end
 
 if opt["debug"]
     debug = true
+end
+
+if opt["timeout"]
+    RHC::timeout(opt["timeout"])
 end
 
 opt["rhlogin"] = get_var('default_rhlogin') unless opt["rhlogin"]
