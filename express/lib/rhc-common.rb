@@ -38,11 +38,16 @@ module RHC
   Defaultdelay = 2
   API = "1.1.1"
   @mytimeout = 10
+  @mydebug = false
   broker_version = "?.?.?"
   api_version = "?.?.?"
 
   def self.timeout(val)
     @mytimeout = val.to_i
+  end
+
+  def self.debug(bool)
+    @mydebug = bool
   end
 
   def self.update_server_api_v(dict)
@@ -64,21 +69,21 @@ module RHC
       json
   end
 
-  def self.get_cartridges_list(libra_server, net_http, cart_type="standalone", debug=true, print_result=nil)
+  def self.get_cartridges_list(libra_server, net_http, cart_type="standalone", print_result=nil)
     puts "Contacting https://#{libra_server} to obtain list of cartridges..."
     puts " (please excuse the delay)"
     data = {'cart_type' => cart_type}
-    if debug
+    if @mydebug
       data['debug'] = "true"
     end
-    print_post_data(data, debug)
+    print_post_data(data)
     json_data = generate_json(data)
 
     url = URI.parse("https://#{libra_server}/broker/cartlist")
     response = http_post(net_http, url, json_data, "none")
 
     unless response.code == '200'
-      print_response_err(response, debug)
+      print_response_err(response)
       return []
     end
     begin
@@ -88,7 +93,7 @@ module RHC
     end
     update_server_api_v(json_resp)
     if print_result
-      print_response_success(json_resp, debug)
+      print_response_success(json_resp)
     end
     begin
       carts = (JSON.parse(json_resp['data']))['carts']
@@ -98,8 +103,8 @@ module RHC
     carts
   end
 
-  def self.get_cartridge_listing(carts, sep, libra_server, net_http, cart_type="standalone", debug=true, print_result=nil)
-    carts = get_cartridges_list(libra_server, net_http, cart_type, debug, print_result) if carts.nil?
+  def self.get_cartridge_listing(carts, sep, libra_server, net_http, cart_type="standalone", print_result=nil)
+    carts = get_cartridges_list(libra_server, net_http, cart_type, print_result) if carts.nil?
     carts.join(sep)
   end
 
@@ -143,8 +148,8 @@ module RHC
     true
   end
 
-  def self.print_post_data(h, debug)
-    if (debug)
+  def self.print_post_data(h)
+    if (@mydebug)
       puts 'Submitting form:'
       h.each do |k,v|
         if k.to_s != 'password'
@@ -160,14 +165,14 @@ module RHC
     end
   end
 
-  def self.get_user_info(libra_server, rhlogin, password, net_http, debug, print_result, not_found_message=nil)
+  def self.get_user_info(libra_server, rhlogin, password, net_http, print_result, not_found_message=nil)
 
     puts "Contacting https://#{libra_server}"
     data = {'rhlogin' => rhlogin}
-    if debug
+    if @mydebug
       data['debug'] = "true"
     end
-    print_post_data(data, debug)
+    print_post_data(data)
     json_data = generate_json(data)
 
     url = URI.parse("https://#{libra_server}/broker/userinfo")
@@ -185,7 +190,7 @@ module RHC
         puts "Invalid user credentials"
         exit 97
       else
-        print_response_err(response, debug)
+        print_response_err(response)
       end
       exit 254
     end
@@ -196,7 +201,7 @@ module RHC
     end
     update_server_api_v(json_resp)
     if print_result
-      print_response_success(json_resp, debug)
+      print_response_success(json_resp)
     end
     begin
       user_info = JSON.parse(json_resp['data'].to_s)
@@ -246,9 +251,9 @@ module RHC
     end
   end
 
-  def self.print_response_err(response, debug)
+  def self.print_response_err(response)
     puts "Problem reported from server. Response code was #{response.code}."
-    if (!debug)
+    if (!@mydebug)
       puts "Re-run with -d for more information."
     end
     exit_code = 254
@@ -256,11 +261,11 @@ module RHC
       puts "JSON response:"
       begin
         json_resp = JSON.parse(response.body)
-        exit_code = print_json_body(json_resp, debug)
+        exit_code = print_json_body(json_resp)
       rescue JSON::ParserError
         exit_code = 254
       end
-    elsif debug
+    elsif @mydebug
       puts "HTTP response from server is #{response.body}"
     end
     exit exit_code.nil? ? 666 : exit_code
@@ -276,21 +281,21 @@ module RHC
     end
   end
 
-  def self.print_response_success(json_resp, debug, always_print_result=false)
-    if debug
+  def self.print_response_success(json_resp, always_print_result=false)
+    if @mydebug
       puts "Response from server:"
-      print_json_body(json_resp, debug)
+      print_json_body(json_resp)
     elsif always_print_result
-      print_json_body(json_resp, debug)
+      print_json_body(json_resp)
     else
       print_response_messages(json_resp)
     end
   end
 
-  def self.print_json_body(json_resp, debug)
+  def self.print_json_body(json_resp)
     print_response_messages(json_resp)
     exit_code = json_resp['exit_code']
-    if debug
+    if @mydebug
       if json_resp['debug']
         puts ''
         puts 'DEBUG:'

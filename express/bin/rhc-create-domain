@@ -88,6 +88,7 @@ end
 if opt["debug"]
     debug = true
 end
+RHC::debug(debug)
 
 if opt["timeout"]
     RHC::timeout(opt["timeout"])
@@ -147,12 +148,12 @@ data = {'namespace' => opt['namespace'],
 if (opt['alter'])
   data['alter'] = "true"
   not_found_message = "A user with rhlogin '#{opt['rhlogin']}' does not have a registered domain.  Be sure to run rhc-create-domain without -a|--alter first."
-  user_info = RHC::get_user_info(libra_server, opt['rhlogin'], password, @http, debug, true, not_found_message)
+  user_info = RHC::get_user_info(libra_server, opt['rhlogin'], password, @http, true, not_found_message)
 end
 if debug
   data['debug'] = "true"
 end
-RHC::print_post_data(data, debug)
+RHC::print_post_data(data)
 json_data = RHC::generate_json(data)
 
 url = URI.parse("https://#{libra_server}/broker/domain")
@@ -161,7 +162,7 @@ response = RHC::http_post(@http, url, json_data, password)
 if response.code == '200'
     begin
         json_resp = JSON.parse(response.body)
-        RHC::print_response_success(json_resp, debug)
+        RHC::print_response_success(json_resp)
         json_rhlogininfo = JSON.parse(json_resp['data'])
         add_rhlogin_config(json_rhlogininfo['rhlogin'], json_rhlogininfo['uuid'])
     
@@ -210,9 +211,9 @@ EOF
         end
         exit 0
     rescue JSON::ParserError
-        RHC::print_response_err(response, debug)
+        RHC::print_response_err(response)
     end
 else
-    RHC::print_response_err(response, debug)
+    RHC::print_response_err(response)
 end
 exit 254

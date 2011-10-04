@@ -86,6 +86,7 @@ end
 if opt["debug"]
     debug = true
 end
+RHC::debug(debug)
 
 if opt["timeout"]
     RHC::timeout(opt["timeout"])
@@ -174,11 +175,11 @@ response = RHC::http_post(@http, url, json_data, password)
 
 if response.code == '200'
     json_resp = JSON.parse(response.body)
-    RHC::print_response_success(json_resp, debug, true)
+    RHC::print_response_success(json_resp, true)
     json_data = JSON.parse(json_resp['data'])
     health_check_path = json_data['health_check_path']
 else
-    RHC::print_response_err(response, debug)
+    RHC::print_response_err(response)
 end
 
 #
@@ -205,7 +206,7 @@ end
 
 puts "Checking ~/.ssh/config"
 
-user_info = RHC::get_user_info(libra_server, opt['rhlogin'], password, @http, debug, false)
+user_info = RHC::get_user_info(libra_server, opt['rhlogin'], password, @http, false)
 
 fqdn = "#{opt['app']}-#{user_info['user_info']['namespace']}.#{user_info['user_info']['rhc_domain']}"
  

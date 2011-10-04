@@ -101,6 +101,7 @@ end
 if opt["debug"]
     debug = true
 end
+RHC::debug(debug)
 
 if opt["timeout"]
     RHC::timeout(opt["timeout"])
@@ -193,7 +194,7 @@ response = RHC::http_post(@http, url, json_data, password)
 
 if response.code == '200'
     json_resp = JSON.parse(response.body)
-    RHC::print_response_success(json_resp, debug, true)
+    RHC::print_response_success(json_resp, true)
 else
-    RHC::print_response_err(response, debug)
+    RHC::print_response_err(response)
 end

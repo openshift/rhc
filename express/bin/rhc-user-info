@@ -80,6 +80,7 @@ end
 if opt["debug"]
     debug = true
 end
+RHC::debug(debug)
 
 if opt["timeout"]
     RHC::timeout(opt["timeout"])
@@ -97,7 +98,7 @@ if !password
 end
 
 opt['apps'] = true if not opt['info'] and not opt['apps']
-user_info = RHC::get_user_info(libra_server, opt['rhlogin'], password, @http, debug, true)
+user_info = RHC::get_user_info(libra_server, opt['rhlogin'], password, @http, true)
 
 if opt['info']
     puts "User Info"

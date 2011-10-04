@@ -81,6 +81,7 @@ end
 if opt["debug"]
     @debug = true
 end
+RHC::debug(debug)
 
 if opt["timeout"]
     RHC::timeout(opt["timeout"])
@@ -211,8 +212,10 @@ else
     puts "      FIX: Perhaps you should regenerate your public key, or run rhc-create-domain with -a to alter the remote key"
 end
 
-puts "remote_ssh_pubkey: #{remote_ssh_pubkey}" if @debug
-puts "local_ssh_pubkey: #{local_ssh_pubkey}" if @debug
-puts "local_derived_ssh_pubkey: #{local_derived_ssh_pubkey}" if @debug
+if @debug
+    puts "remote_ssh_pubkey: #{remote_ssh_pubkey}"
+    puts "local_ssh_pubkey: #{local_ssh_pubkey}"
+    puts "local_derived_ssh_pubkey: #{local_derived_ssh_pubkey}"
+end
 
 exit 0
