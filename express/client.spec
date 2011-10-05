@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.79.1
+Version:       0.79.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -100,6 +100,11 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/openshift/express.conf
 
 %changelog
+* Tue Oct 04 2011 Dan McPherson <dmcphers@redhat.com> 0.79.2-1
+- debug cleanups... (jim@jaguNET.com)
+- Update doccos (jim@jaguNET.com)
+- Make the connection timeout user configurable (jim@jaguNET.com)
+
 * Thu Sep 29 2011 Dan McPherson <dmcphers@redhat.com> 0.79.1-1
 - cleanup merge (dmcphers@redhat.com)
 - add --config to man pages (dmcphers@redhat.com)
