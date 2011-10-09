@@ -81,7 +81,6 @@ end
 if opt["debug"]
     @debug = true
 end
-RHC::debug(debug)
 
 if opt["timeout"]
     RHC::timeout(opt["timeout"])
