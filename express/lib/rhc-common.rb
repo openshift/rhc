@@ -43,7 +43,9 @@ module RHC
   api_version = "?.?.?"
 
   def self.timeout(val)
-    @mytimeout = val.to_i
+    if val
+      @mytimeout = val.to_i
+    end
   end
 
   def self.debug(bool)

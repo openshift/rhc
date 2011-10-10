@@ -85,9 +85,7 @@ if opt['debug']
 end
 RHC::debug(debug)
 
-if opt["timeout"]
-    RHC::timeout(opt["timeout"])
-end
+RHC::timeout(opt["timeout"] ? opt["timeout"] : get_var('timeout'))
 
 opt['rhlogin'] = get_var('default_rhlogin') unless opt['rhlogin']
 
