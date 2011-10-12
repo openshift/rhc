@@ -45,6 +45,10 @@ module RHC
   def self.timeout(val)
     if val
       @mytimeout = val.to_i
+      unless @mytimeout > 0 
+        puts 'Timeout must be specified as a number greater than 0'
+        exit 254
+      end
     end
   end
 
