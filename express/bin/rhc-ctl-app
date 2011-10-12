@@ -37,12 +37,12 @@ Control an OpenShift express app
   -p|--password password   RHLogin password  (optional, will prompt)
   -c|--command command     (start|stop|restart|reload|status|destroy)
   -L|--embedded-list       List supported embedded cartridges
-  -e|--embed               (add-$cartridge|remove-$cartridge) eg: add-mysql-5.1
+  -e|--embed               (add|remove|stop|start|restart|status|reload)-$cartridge eg: add-mysql-5.1
   -b|--bypass              Bypass warnings
   -d|--debug               Print Debug info
   -h|--help                Show Usage info
   --config  path           Path of alternate config file
-  --timeout #               Timeout, in seconds, for connection
+  --timeout #              Timeout, in seconds, for connection
 
 USAGE
 exit 255
@@ -115,9 +115,22 @@ if !RHC::check_app(opt['app'])
     p_usage
 end
 
-unless opt["embed"] or (opt["command"] and opt["command"] =~ /(start|stop|restart|reload|status|destroy)/)
+unless opt["embed"] or opt["command"]
     puts "Command or embed is required"
     p_usage
+end
+
+if opt["command"]
+  unless opt["command"] =~ /^(start|stop|restart|reload|status|destroy)$/
+    puts "Invalid command '#{opt["command"]}' specified.  Valid commands are (start|stop|restart|reload|status|destroy)"
+    p_usage
+  end
+elsif opt["embed"]
+  action = opt['embed'].split('-')[0]
+  unless action =~ /^(add|remove|start|stop|restart|status|reload)$/
+    puts "Invalid embed action '#{action}' specified.  Valid embed actions are (add|remove|start|stop|restart|status|reload)"
+    p_usage
+  end
 end
 
 unless opt['rhlogin'] && opt['app'] && (opt['command'] || opt['embed'])

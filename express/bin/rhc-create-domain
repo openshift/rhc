@@ -43,7 +43,7 @@ Bind a registered rhcloud user to a domain in rhcloud.
   -d|--debug                   Print Debug info
   -h|--help                    Show Usage info
   --config  path               Path of alternate config file
-  --timeout #               Timeout, in seconds, for connection
+  --timeout #                  Timeout, in seconds, for connection
 
 USAGE
 exit 255
