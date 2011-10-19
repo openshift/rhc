@@ -33,7 +33,7 @@ command.
 options include start, stop, restart, reload, status and
 destroy.  Note that
 .BR destroy
-is not reversable and will stop your application from
+is not reversible and will stop your application from
 then remove the application and repo from the remote
 server.  No local changes are made.
 
@@ -45,7 +45,7 @@ RHLogin password
 .IP "-a|--app application_name"
 Name of application to create
 .IP "-c|--command command"
-The command to send to remote server (start|stop|restart|reload|status|destroy)
+The command to send to remote server (start|stop|force-stop|restart|reload|status|destroy)
 .IP "-e|--embed embed_action"
 The action to add or remove an embedded cartridge (add|remove|stop|start|restart|status|reload)-$cartridge. Ex: add-mysql-5.1
 .IP "-L|--embedded-list embedded-list"

@@ -35,7 +35,7 @@ Control an OpenShift express app
   -a|--app   application   Application name  (alphanumeric) (required)
   -l|--rhlogin rhlogin     Red Hat login (RHN or OpenShift login with OpenShift Express access) (#{rhlogin})
   -p|--password password   RHLogin password  (optional, will prompt)
-  -c|--command command     (start|stop|restart|reload|status|destroy)
+  -c|--command command     (start|stop|force-stop|restart|reload|status|destroy)
   -L|--embedded-list       List supported embedded cartridges
   -e|--embed               (add|remove|stop|start|restart|status|reload)-$cartridge eg: add-mysql-5.1
   -b|--bypass              Bypass warnings
@@ -121,8 +121,8 @@ unless opt["embed"] or opt["command"]
 end
 
 if opt["command"]
-  unless opt["command"] =~ /^(start|stop|restart|reload|status|destroy)$/
-    puts "Invalid command '#{opt["command"]}' specified.  Valid commands are (start|stop|restart|reload|status|destroy)"
+  unless opt["command"] =~ /^(start|stop|force-stop|restart|reload|status|destroy)$/
+    puts "Invalid command '#{opt["command"]}' specified.  Valid commands are (start|stop|force-stop|restart|reload|status|destroy)"
     p_usage
   end
 elsif opt["embed"]
