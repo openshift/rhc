@@ -33,9 +33,10 @@ require 'uri'
 
 module RHC
 
-  Maxdlen = 16
-  Maxretries = 7
-  Defaultdelay = 2
+  DEFAULT_MAX_LENGTH = 16
+  APP_NAME_MAX_LENGTH = 32
+  MAX_RETRIES = 7
+  DEFAULT_DELAY = 2
   API = "1.1.1"
   @mytimeout = 10
   @mydebug = false
@@ -65,7 +66,7 @@ module RHC
     end
   end
 
-  def self.delay(time, adj=Defaultdelay)
+  def self.delay(time, adj=DEFAULT_DELAY)
     (time*=adj).to_int
   end
 
@@ -130,11 +131,11 @@ module RHC
   end
 
   def self.check_app(app)
-    check_field(app, 'application', Maxdlen)
+    check_field(app, 'application', APP_NAME_MAX_LENGTH)
   end
 
   def self.check_namespace(namespace)
-    check_field(namespace, 'namespace', Maxdlen)
+    check_field(namespace, 'namespace', DEFAULT_MAX_LENGTH)
   end
 
   def self.check_field(field, type, max=0)
@@ -143,8 +144,8 @@ module RHC
         puts "#{type} contains non-alphanumeric characters!"
         return false
       end
-      if max != 0 && field.length > Maxdlen
-        puts "maximum #{type} size is #{Maxdlen} characters"
+      if max != 0 && field.length > max
+        puts "maximum #{type} size is #{max} characters"
         return false
       end
     else

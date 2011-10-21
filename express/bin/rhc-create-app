@@ -32,7 +32,7 @@ def p_usage
 Usage: #{$0}
 Create an OpenShift Express app.
 
-  -a|--app   application     Application name  (alphanumeric - max #{RHC::Maxdlen} chars) (required)
+  -a|--app   application     Application name  (alphanumeric - max #{RHC::APP_NAME_MAX_LENGTH} chars) (required)
   -t|--type  type            Type of app to create (#{type_keys}) (required)
   -l|--rhlogin  rhlogin      Red Hat login (RHN or OpenShift login with OpenShift Express access) (#{rhlogin})
   -p|--password  password    RHLogin password  (optional, will prompt)
@@ -281,7 +281,7 @@ sleep 15
 # Now start checking for DNS
 loop = 0
 sleep_time = 2
-while loop < RHC::Maxretries && !RHC::hostexist?(fqdn)
+while loop < RHC::MAX_RETRIES && !RHC::hostexist?(fqdn)
     sleep sleep_time
     loop+=1
     puts "  retry # #{loop} - Waiting for DNS: #{fqdn}"
@@ -305,7 +305,7 @@ git_url = "ssh://#{app_uuid}@#{app_name}-#{namespace}.#{rhc_domain}/~/git/#{app_
 # If the hostname couldn't be resolved, print out the git URL
 # and exit cleanly.  This will help solve issues where DNS times
 # out in APAC, etc on resolution.
-if loop >= RHC::Maxretries
+if loop >= RHC::MAX_RETRIES
     puts <<WARNING
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -379,7 +379,7 @@ end
 sleep_time = 2
 attempt = 0
 puts "Confirming application #{opt['app']} is available"
-while attempt < RHC::Maxretries
+while attempt < RHC::MAX_RETRIES
     attempt+=1
     puts "  Attempt # #{attempt}"
     url = URI.parse("http://#{fqdn}/#{health_check_path}")

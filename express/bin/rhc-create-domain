@@ -36,7 +36,7 @@ Bind a registered rhcloud user to a domain in rhcloud.
   NOTE: to change ssh key, alter your openshift <id_rsa> and
         <id_rsa>.pub keys, then re-run with --alter
 
-  -n|--namespace   namespace   Namespace for your application(s) (alphanumeric - max #{RHC::Maxdlen} chars) (required)
+  -n|--namespace   namespace   Namespace for your application(s) (alphanumeric - max #{RHC::DEFAULT_MAX_LENGTH} chars) (required)
   -l|--rhlogin     rhlogin     Red Hat login (RHN or OpenShift login with OpenShift Express access) (required)
   -p|--password    password    RHLogin password (optional, will prompt)
   -a|--alter                   Alter namespace (will change urls) and/or ssh key
@@ -187,14 +187,14 @@ EOF
                   # Now start checking for DNS
                   loop = 0
                   sleep_time = 2
-                  while loop < RHC::Maxretries && !RHC::hostexist?(fqdn)
+                  while loop < RHC::MAX_RETRIES && !RHC::hostexist?(fqdn)
                       sleep sleep_time
                       loop+=1
                       puts "  retry # #{loop} - Waiting for DNS: #{fqdn}"
                       sleep_time = RHC::delay(sleep_time)
                   end
                   
-                  if loop >= RHC::Maxretries
+                  if loop >= RHC::MAX_RETRIES
                       puts "Host could not be found: #{fqdn}"
                       dns_success = false
                   end
