@@ -123,7 +123,11 @@ if opt['apps']
         puts " Embedded: "
         if val['embedded'] && !val['embedded'].empty? 
             val['embedded'].each do |embed_key, embed_val|
-                puts "      #{embed_key} - #{embed_val['info']}"
+                if embed_val.has_key?('info') && !embed_val['info'].empty?
+                    puts "      #{embed_key} - #{embed_val['info']}"
+                else
+                    puts "      #{embed_key}"
+                end
             end
         else
             puts "      None"
