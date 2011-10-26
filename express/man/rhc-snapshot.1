@@ -35,10 +35,13 @@ RHLogin password
 Name of application to snapshot
 .IP "-s|--save pathname"
 Saves entire application in an archive.  Pathname default:
-.I ./$APPNAME.tar.gz
+.I ./<app_name>.tar.gz
 .IP "-r|--restore pathname"
 Restores git and application data folders found in archive. Pathname example:
-.I ./$APPNAME.tar.gz 
+.I ./<app_name>.tar.gz 
+Note: If you create this archive rather than export with rhc-snapshot, be sure
+the directory structure inside the archive starts with ./<app_uuid>/
+i.e.: tar -czvf <app_name>.tar.gz ./<app_uuid>/
 .IP -d|--debug
 Enable debugging / verbose output
 .IP -h|--help
