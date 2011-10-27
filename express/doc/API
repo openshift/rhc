@@ -69,7 +69,6 @@ Submit via POST to: {openshift.express.server}/broker/cartridge
 
 Submit JSON String:
 {
-    'cartridge': 'framework-type, e.g. php-5.3 - Valid types determined from /broker/cartlist with cart_type of standalone',
     'action': 'configure, start, stop, restart, reload, status, deconfigure',
     'app_name': 'Application_name',
     'rhlogin': 'login',
