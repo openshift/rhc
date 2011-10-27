@@ -123,18 +123,29 @@ def test_url_json(uri, data)
     req.set_form_data({'json_data' => json_data, 'password' => @password})
     http = @http.new(url.host, url.port)
     http.open_timeout = 10
-    if url.scheme == "https"
-      http.use_ssl = true
-      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-    end
+    http.use_ssl = true
+    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    response = nil
     begin
         response = http.start {|http| http.request(req)}
         puts "  Raw Response: #{response.body}" if @debug
     rescue Exception => e
         puts "  ERROR: #{e.message}"
-        return nil
     end
-    return response
+    if response
+        puts "  Code: #{response.code}"
+        puts "  Message: #{response.message}"
+        if response.code == "200"
+            resp_json = JSON.parse(response.body)
+            return resp_json
+        else
+            puts "Exiting due to error!"
+            exit 1
+        end
+    else
+        puts "Unable to connect to: https://#{@libra_server}"
+        exit 1
+    end
 end
 
 #
@@ -144,32 +155,21 @@ puts
 puts "TEST1: Confirming connection to OpenShift"
 data = {'cart_type' => 'standalone'}
 
-response = test_url_json("/broker/cartlist", data)
-if response
-    puts "  Code: #{response.code}"
-    puts "  Message: #{response.message}"
-    resp_json = JSON.parse(response.body)
-    puts "  Cart Info: #{resp_json["data"]}"
-end
+resp_json = test_url_json("/broker/cartlist", data)
+puts "  Cart Info: #{resp_json["data"]}"
 
 
 #
 # Checking Authentication
 #
-
 puts
 puts "TEST2: Authentication (RHN account) / user info"
 data = {'rhlogin' => @rhlogin}
 
-response = test_url_json("/broker/userinfo", data)
-if response
-    puts "  Code: #{response.code}"
-    puts "  Message: #{response.message}"
-    body = JSON.parse(response.body)
-    @user_info = JSON.parse(body['data'].to_s)
-    puts "  rhlogin: #{@user_info["user_info"]["rhlogin"]}"
-    puts "  namespace: #{@user_info["user_info"]["namespace"]}"
-end
+resp_json = test_url_json("/broker/userinfo", data)
+@user_info = JSON.parse(resp_json['data'].to_s)
+puts "  rhlogin: #{@user_info["user_info"]["rhlogin"]}"
+puts "  namespace: #{@user_info["user_info"]["namespace"]}"
 
 #
 # Checking ssh key
