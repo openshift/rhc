@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.81.1
+Version:       0.81.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -100,6 +100,13 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/openshift/express.conf
 
 %changelog
+* Thu Oct 27 2011 Dan McPherson <dmcphers@redhat.com> 0.81.2-1
+- fix doc (dmcphers@redhat.com)
+- update API doc as well (dmcphers@redhat.com)
+- stop passing cartridge to server for normal ctl commands (except for
+  embedded) (dmcphers@redhat.com)
+- Bug 749464 (dmcphers@redhat.com)
+
 * Thu Oct 27 2011 Dan McPherson <dmcphers@redhat.com> 0.81.1-1
 - bump spec number (dmcphers@redhat.com)
 
