@@ -142,18 +142,6 @@ if !password
   password = RHC::get_password
 end
 
-user_info = RHC::get_user_info(libra_server, opt['rhlogin'], password, @http, debug, false)
-app = user_info['app_info'][opt['app']]
-if app
-  framework = app['framework']
-else
-  puts "Application not found: #{opt['app']}"
-  exit 101
-end
-#
-# Send Warning
-#
-
 opt["command"] = "deconfigure" if opt["command"] == "destroy"
 
 if !opt["bypass"] and opt["command"] == "deconfigure"
@@ -176,6 +164,7 @@ WARNING
     end
 end
 
+framework = nil
 if opt['embed']
     action = opt['embed'].split('-')[0]
     # override action if it's in the mapper
@@ -187,11 +176,15 @@ else
     url = URI.parse("https://#{libra_server}/broker/cartridge")
 end
 
-data = {:cartridge => framework,
-                :action => action,
-                :app_name => "#{opt['app']}",
-                :rhlogin => "#{opt['rhlogin']}"
-                }
+data = {:action => action,
+        :app_name => "#{opt['app']}",
+        :rhlogin => "#{opt['rhlogin']}"
+       }
+
+if framework
+  data[:cartridge] = framework
+end
+
 if debug
   data['debug'] = "true"
 end
