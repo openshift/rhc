@@ -135,7 +135,8 @@ def test_url_json(uri, data)
     if response
         puts "  Code: #{response.code}"
         puts "  Message: #{response.message}"
-        if response.code == "200"
+        if response.code == '200'
+        puts response.body
             resp_json = JSON.parse(response.body)
             return resp_json
         elsif response.code == '404' && data['rhlogin']
