@@ -81,7 +81,7 @@ module RHC
     puts " (please excuse the delay)"
     data = {'cart_type' => cart_type}
     if @mydebug
-      data['debug'] = "true"
+      data['debug'] = true
     end
     print_post_data(data)
     json_data = generate_json(data)
@@ -177,7 +177,7 @@ module RHC
     puts "Contacting https://#{libra_server}"
     data = {'rhlogin' => rhlogin}
     if @mydebug
-      data['debug'] = "true"
+      data['debug'] = true
     end
     print_post_data(data)
     json_data = generate_json(data)

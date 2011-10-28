@@ -162,7 +162,7 @@ data = {:cartridge => opt['type'],
                 :rhlogin => opt['rhlogin']
                 }
 if debug
-  data['debug'] = "true"
+  data['debug'] = true
 end
 json_data = RHC::generate_json(data)
 

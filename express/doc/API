@@ -27,8 +27,8 @@ JSON String:
     'namespace': 'string',
     'rhlogin': 'login',
     'ssh': 'the key portion of an rsa key (excluding ssh-rsa and comment)',
-    'alter': 'true - An optional flag to alter namespace and/or ssh key after creation',
-    'debug': 'true - An optional flag to get debug information returned'
+    'alter': true - An optional flag to alter namespace and/or ssh key after creation,
+    'debug': true - An optional flag to get debug information returned
 }
 
 Return JSON String (exit_code non-zero is failure):
@@ -73,7 +73,7 @@ Submit JSON String:
     'action': 'configure, start, stop, restart, reload, status, deconfigure',
     'app_name': 'Application_name',
     'rhlogin': 'login',
-    'debug': 'true - An optional flag to get debug information returned'
+    'debug': true - An optional flag to get debug information returned
 }
 
 Return JSON String (exit_code non-zero is failure):
@@ -111,7 +111,7 @@ Submit JSON String:
     'action': 'configure, deconfigure',
     'app_name': 'Application_name',
     'rhlogin': 'login',
-    'debug': 'true - An optional flag to get debug information returned'
+    'debug': true - An optional flag to get debug information returned
 }
 
 Return JSON String (exit_code non-zero is failure):
@@ -138,7 +138,7 @@ Submit via POST to: {openshift.express.server}/broker/userinfo
 JSON String:
 {
     'rhlogin': 'rhlogin',
-    'debug': 'true - An optional flag to get debug information returned'
+    'debug': true - An optional flag to get debug information returned
 }
 
 Return JSON String (exit_code non-zero is failure):
@@ -185,7 +185,7 @@ Submit via POST to: {openshift.express.server}/broker/cartlist
 JSON String:
 {
     'cart_type': 'standalone, embedded',
-    'debug': 'true - An optional flag to get debug information returned'
+    'debug': true - An optional flag to get debug information returned
 }
 
 Return JSON String (exit_code non-zero is failure):
