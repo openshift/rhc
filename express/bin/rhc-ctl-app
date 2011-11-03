@@ -35,12 +35,13 @@ Control an OpenShift express app
   -a|--app   application   Application name  (alphanumeric) (required)
   -l|--rhlogin rhlogin     Red Hat login (RHN or OpenShift login with OpenShift Express access) (#{rhlogin})
   -p|--password password   RHLogin password  (optional, will prompt)
-  -c|--command command     (start|stop|force-stop|restart|reload|status|destroy)
+  -c|--command command     (start|stop|force-stop|restart|reload|status|destroy|add-alias|remove-alias)
   -L|--embedded-list       List supported embedded cartridges
   -e|--embed               (add|remove|stop|start|restart|status|reload)-$cartridge eg: add-mysql-5.1
   -b|--bypass              Bypass warnings
   -d|--debug               Print Debug info
   -h|--help                Show Usage info
+  --alias                  Specify server alias (when using add/remove-alias)
   --config  path           Path of alternate config file
   --timeout #              Timeout, in seconds, for connection
 
@@ -69,6 +70,7 @@ begin
         ["--embed",      "-e", GetoptLong::REQUIRED_ARGUMENT],
         ["--password",   "-p", GetoptLong::REQUIRED_ARGUMENT],
         ["--app",        "-a", GetoptLong::REQUIRED_ARGUMENT],
+        ["--alias",      GetoptLong::REQUIRED_ARGUMENT],
         ["--config", GetoptLong::REQUIRED_ARGUMENT],
         ["--command",    "-c", GetoptLong::REQUIRED_ARGUMENT],
         ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
@@ -121,14 +123,14 @@ unless opt["embed"] or opt["command"]
 end
 
 if opt["command"]
-  unless opt["command"] =~ /^(start|stop|force-stop|restart|reload|status|destroy)$/
-    puts "Invalid command '#{opt["command"]}' specified.  Valid commands are (start|stop|force-stop|restart|reload|status|destroy)"
+  unless opt["command"] =~ /^(start|stop|force-stop|restart|reload|status|destroy|add-alias|remove-alias)$/
+    puts "Invalid command '#{opt["command"]}' specified.  Valid commands are (start|stop|force-stop|restart|reload|status|destroy|add-alias|remove-alias)"
     p_usage
   end
 elsif opt["embed"]
   action = opt['embed'].split('-')[0]
   unless action =~ /^(add|remove|start|stop|restart|status|reload)$/
-    puts "Invalid embed action '#{action}' specified.  Valid embed actions are (add|remove|start|stop|restart|status|reload)"
+    puts "Invalid embed action '#{action}' specified.  Valid embed actions are (add|remove|start|stop|restart|status|reload|add-alias|remove-alias)"
     p_usage
   end
 end
@@ -136,6 +138,12 @@ end
 unless opt['rhlogin'] && opt['app'] && (opt['command'] || opt['embed'])
     p_usage
 end
+
+if ( opt['alias'] and ! opt['command'].end_with?('-alias') ) || (opt['command'].end_with?('-alias') and ! opt['alias'])
+    puts "When specifying alias make sure to use -c add-alias or -c remove-alias"
+    p_usage
+end
+
 
 password = opt['password']
 if !password
@@ -181,6 +189,7 @@ data = {:action => action,
         :rhlogin => "#{opt['rhlogin']}"
        }
 
+data[:server_alias] = opt['alias'] if opt['alias']
 if framework
   data[:cartridge] = framework
 end
