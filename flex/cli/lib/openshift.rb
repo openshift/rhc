@@ -99,6 +99,7 @@ end
 def csay(str,*options)
     lastChar = str[-1..-1]
     h = HighLine.new    
+    h = HighLine.new($stdin, $stderr) if options.include? :debug
     if lastChar == ' ' or lastChar == '\t'
         str=h.color(str[0..-2],*options)+lastChar
     else
