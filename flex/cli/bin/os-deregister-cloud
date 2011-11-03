@@ -99,7 +99,7 @@ if args['--target'] == 'flex'
     clouds = JSON.parse(`os-list-clouds --sso "#{cookie}" --porcelin`)
     
     clouds.each{ |cloud|
-        if cloud["name"].strip == cloud_name.strip
+        if (cloud["name"].strip == cloud_name.strip) or (cloud["id"] == Integer(cloud_name.strip))
             csay("Deregistering cloud ")
             csay("#{cloud["name"]} ",:emphasis)
             csay("... ")
