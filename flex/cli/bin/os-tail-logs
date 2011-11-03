@@ -81,7 +81,7 @@ if args['--target'] == 'flex'
     if !cookie
         username = args['--username'] || conf("username") || Openshift::IO.prompt("Redhat username",[],Openshift::Validation.method(:check_login))
         password = args['--password'] || Openshift::IO.prompt("Redhat password",nil,nil,true,false)
-        csay("Logging into Openshift Flex as #{username}\n",:message)
+        csay("Logging into Openshift Flex as #{username}\n",:message) if not @porcelin
         cookie=Openshift.login(@http,username,password)
     end
     

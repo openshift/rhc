@@ -91,7 +91,7 @@ if args['--target'] == 'flex'
     if !cookie
         username = args['--username'] || conf("username") || Openshift::IO.prompt("Redhat username",[],Openshift::Validation.method(:check_login))
         password = args['--password'] || Openshift::IO.prompt("Redhat password",nil,nil,true,false)
-        csay("Logging into Openshift Flex as #{username}\n",:message)
+        csay("Logging into Openshift Flex as #{username}\n",:message) if not @porcelin
         cookie=Openshift.login(@http,username,password)
     end
     
@@ -99,7 +99,7 @@ if args['--target'] == 'flex'
     clouds = JSON.parse(`os-list-clouds --sso "#{cookie}" --porcelin`)
     
     clouds.each{ |cloud|
-        if cloud["name"].strip == cloud_name.strip
+        if (cloud["name"].strip == cloud_name.strip) or (cloud["id"] == Integer(cloud_name.strip))
             csay("Deregistering cloud ")
             csay("#{cloud["name"]} ",:emphasis)
             csay("... ")
