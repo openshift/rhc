@@ -40,6 +40,7 @@ Create an OpenShift Express app.
   -n|--nogit                 Only create remote space, don't pull it locally
   -d|--debug                 Print Debug info
   -h|--help                  Show Usage info
+  --no-dns                   Skip DNS check
   --config  path             Path of alternate config file
   --timeout #                Timeout, in seconds, for connection
 
@@ -51,6 +52,7 @@ begin
     opts = GetoptLong.new(
         ["--debug", "-d", GetoptLong::NO_ARGUMENT],
         ["--help",  "-h", GetoptLong::NO_ARGUMENT],
+        ["--no-dns", GetoptLong::NO_ARGUMENT],
         ["--nogit", "-n", GetoptLong::NO_ARGUMENT],
         ["--rhlogin",  "-l", GetoptLong::REQUIRED_ARGUMENT],
         ["--password",  "-p", GetoptLong::REQUIRED_ARGUMENT],
@@ -273,21 +275,24 @@ end
 #
 # Confirm that the host exists in DNS
 #
-puts "Now your new domain name is being propagated worldwide (this might take a minute)..."
+unless opt['no-dns']
+    puts "Now your new domain name is being propagated worldwide (this might take a minute)..."
 
-# Allow DNS to propogate
-sleep 15
+    # Allow DNS to propogate
+    sleep 15
 
-# Now start checking for DNS
-loop = 0
-sleep_time = 2
-while loop < RHC::MAX_RETRIES && !RHC::hostexist?(fqdn)
-    sleep sleep_time
-    loop+=1
-    puts "  retry # #{loop} - Waiting for DNS: #{fqdn}"
-    sleep_time = RHC::delay(sleep_time)
+    # Now start checking for DNS
+    loop = 0
+    sleep_time = 2
+    while loop < RHC::MAX_RETRIES && !RHC::hostexist?(fqdn)
+        sleep sleep_time
+        loop+=1
+        puts "  retry # #{loop} - Waiting for DNS: #{fqdn}"
+        sleep_time = RHC::delay(sleep_time)
+    end
+else
+    loop = 0
 end
-
 sleep_time = 2
 attempt = 0
 
@@ -379,7 +384,7 @@ end
 sleep_time = 2
 attempt = 0
 puts "Confirming application #{opt['app']} is available"
-while attempt < RHC::MAX_RETRIES
+while attempt < RHC::MAX_RETRIES or ! opt['no-dns']
     attempt+=1
     puts "  Attempt # #{attempt}"
     url = URI.parse("http://#{fqdn}/#{health_check_path}")
