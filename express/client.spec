@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.81.6
+Version:       0.81.7
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -100,6 +100,13 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/openshift/express.conf
 
 %changelog
+* Fri Nov 04 2011 Dan McPherson <dmcphers@redhat.com> 0.81.7-1
+- move messages to a more appropriate place (dmcphers@redhat.com)
+- 749758 (dmcphers@redhat.com)
+- Merge branch 'master' of github.com:openshift/os-client-tools
+  (mmcgrath@redhat.com)
+- Added no-dns feature (mmcgrath@redhat.com)
+
 * Fri Nov 04 2011 Dan McPherson <dmcphers@redhat.com> 0.81.6-1
 - Merge branch 'master' of github.com:openshift/os-client-tools
   (mmcgrath@redhat.com)
