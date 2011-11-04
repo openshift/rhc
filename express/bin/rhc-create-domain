@@ -201,10 +201,12 @@ EOF
               end
             end
             if dns_success
-              puts "Alteration successful.  You can use rhc-user-info to view any url changes."
+              puts "Alteration successful."
             else
-              puts "Alteration successful but at least one of the urls is still updating in DNS.  You can use rhc-user-info to view any url changes."
+              puts "Alteration successful but at least one of the urls is still updating in DNS."
             end
+            puts "You can use rhc-user-info to view any url changes.  Be sure to update any links"
+            puts "including the url in your local git config: <local_git_repo>/.git/config"
             puts ""
         end
         exit 0
