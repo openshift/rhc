@@ -184,7 +184,7 @@ puts "  namespace: #{@user_info["user_info"]["namespace"]}"
 puts
 puts "TEST3: SSH Key check"
 remote_ssh_pubkey = @user_info["user_info"]["ssh_key"]
-libra_kfile = get_kfile(false)
+libra_kfile = get_kfile()
 libra_kpfile = get_kpfile(libra_kfile, false)
 
 if File.exists?(libra_kfile)
