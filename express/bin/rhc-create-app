@@ -196,8 +196,7 @@ unless opt['nogit']
     end
 end
 
-
-if !has_jenkins
+if jenkins_app_name && !has_jenkins
   jenkins_no_git_message = "
 
 Note: There is a git repo for your Jenkins application '#{jenkins_app_name}'
