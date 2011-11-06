@@ -28,9 +28,9 @@ libra_id_rsa followed by id_rsa.  Ex:
 .B libra_id_rsa
 Note: If you set this value after creating your domain you'll need to run
 .B rhc-create-domain -l <rhlogin> -n <namespace> --alter
-to update the corresponding key in OpenShift.  And if you update after
-creating your apps you'll also need to update the IdentityFile value in
-your ~/.ssh/config file for the *.rhcloud.com host.
+to update the corresponding key in OpenShift.  You'll also want to 
+modify the value of IdentityFile in your ~/.ssh/config file 
+for the *.rhcloud.com host.
 
 
 .I debug

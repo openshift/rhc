@@ -43,6 +43,10 @@ Create an OpenShift Express app.
   --no-dns                   Skip DNS check
   --config  path             Path of alternate config file
   --timeout #                Timeout, in seconds, for connection
+  --enable-jenkins [name]    Indicates to create a Jenkins application (if not already available)
+                             and embed the Jenkins client into this application.  The default 
+                             name will be 'jenkins' if not specified. Note that --no-dns is ignored
+                             for the creation of the Jenkins application.
 
 USAGE
 exit 255
@@ -60,7 +64,8 @@ begin
         ["--repo",  "-r", GetoptLong::REQUIRED_ARGUMENT],
         ["--config", GetoptLong::REQUIRED_ARGUMENT],
         ["--type",  "-t", GetoptLong::REQUIRED_ARGUMENT],
-        ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
+        ["--timeout", GetoptLong::REQUIRED_ARGUMENT],
+        ["--enable-jenkins", GetoptLong::OPTIONAL_ARGUMENT]
     )
     opt = {}
     opts.each do |o, a|
@@ -78,9 +83,6 @@ check_cpath(opt)
 libra_server = get_var('libra_server')
 debug = get_var('debug') == 'false' ? nil : get_var('debug')
 
-ssh_config = "#{ENV['HOME']}/.ssh/config"
-ssh_config_d = "#{ENV['HOME']}/.ssh/"
-
 if opt["help"]
     p_usage
 end
@@ -90,9 +92,9 @@ if opt["debug"]
 end
 RHC::debug(debug)
 
-RHC::timeout(opt["timeout"] ? opt["timeout"] : get_var('timeout'))
+RHC::timeout(opt['timeout'] ? opt['timeout'] : get_var('timeout'))
 
-opt["rhlogin"] = get_var('default_rhlogin') unless opt["rhlogin"]
+opt['rhlogin'] = get_var('default_rhlogin') unless opt['rhlogin']
 
 if !RHC::check_rhlogin(opt['rhlogin'])
     p_usage
@@ -107,7 +109,7 @@ if !opt['type']
     p_usage
 end
 
-if !opt["rhlogin"] || !opt["app"] || !opt["type"]
+if !opt['rhlogin'] || !opt['app'] || !opt['type']
     p_usage
 end
 
@@ -116,7 +118,49 @@ if !password
   password = RHC::get_password
 end
 
-opt["repo"] = opt["app"] unless opt["repo"]
+user_info = RHC::get_user_info(libra_server, opt['rhlogin'], password, @http, false)
+jenkins_app_name = nil
+has_jenkins = false
+if opt['enable-jenkins']
+  app_info = user_info['app_info']  
+  app_info.each do |app_name, app|
+    if app['framework'] == 'jenkins-1.4'
+      jenkins_app_name = app_name
+      has_jenkins = true
+      puts "
+Found existing Jenkins application: #{jenkins_app_name}
+"
+      if !opt['enable-jenkins'].empty?
+        puts "Ignoring specified Jenkins app name: #{opt['enable-jenkins']}"
+      end
+    end
+  end
+  if !has_jenkins
+    if !opt['enable-jenkins'].empty?
+      jenkins_app_name = opt['enable-jenkins']
+    else
+      jenkins_app_name = 'jenkins'
+    end
+  
+    if !RHC::check_app(jenkins_app_name)
+        p_usage
+    end
+      
+    if jenkins_app_name == opt['app']
+      puts "You must specify a different name for your application and Jenkins ('#{opt['app']}')."
+      exit 100
+    end
+  
+    if user_info.has_key?('app_info') && user_info['app_info'].has_key?(jenkins_app_name)
+      puts "You already have an application named '#{jenkins_app_name}'."
+      puts "In order to continue you'll need to specify a different name"
+      puts "with --enable-jenkins or destroy the existing application."
+      exit 100
+    end
+  end
+end
+
+opt['repo'] = opt['app'] unless opt['repo']
 
 puts "
 Found a bug? Post to the forum and we'll get right on it.
@@ -152,272 +196,39 @@ unless opt['nogit']
     end
 end
 
+
+if !has_jenkins
+  jenkins_no_git_message = "
+
+Note: There is a git repo for your Jenkins application '#{jenkins_app_name}'
+but it isn't being downloaded as part of this process.  In most cases
+it isn't needed but you can always clone it later.
+
+"
+  jenkins_app = RHC::create_app(libra_server, @http, user_info, jenkins_app_name, 'jenkins-1.4', opt['rhlogin'], password, nil, false, true, jenkins_no_git_message)
+  available = RHC::check_app_available(@http, jenkins_app[:app_name], jenkins_app[:fqdn], jenkins_app[:health_check_path], jenkins_app[:git_url], nil, true)
+  if !available
+    puts "Unable to access your new Jenkins application."
+    exit 1
+  end
+end
+
 #
 # Create remote application space
 #
+main_app = RHC::create_app(libra_server, @http, user_info, opt['app'], opt['type'], opt['rhlogin'], password, opt['repo'], opt['no-dns'], opt['nogit'])
+if jenkins_app_name
+  puts "
+Now embedding the jenkins client into '#{opt['app']}'
 
-puts "Attempting to create remote application space: " + opt['app']
-
-data = {:cartridge => opt['type'],
-                :action => 'configure',
-                :app_name => opt['app'],
-                :rhlogin => opt['rhlogin']
-                }
-if debug
-  data['debug'] = true
-end
-json_data = RHC::generate_json(data)
-
-puts "Contacting https://#{libra_server}"
-
-url = URI.parse("https://#{libra_server}/broker/cartridge")
-response = RHC::http_post(@http, url, json_data, password)
-
-if response.code == '200'
-    json_resp = JSON.parse(response.body)
-    RHC::print_response_success(json_resp, true)
-    json_data = JSON.parse(json_resp['data'])
-    health_check_path = json_data['health_check_path']
-else
-    RHC::print_response_err(response)
+"
+  RHC::ctl_app(libra_server, @http, opt['app'], opt['rhlogin'], password, 'configure', true, 'jenkins-client-1.4')
 end
 
-#
-# At this point, we need to register a handler to guarantee app
-# cleanup on any exceptions or calls to exit
-#
-at_exit do
-    unless $!.nil? || $!.is_a?(SystemExit) && $!.success?
-        json_data = RHC::generate_json(
-                   {:cartridge => opt['type'],
-                    :action => 'deconfigure',
-                    :app_name => opt['app'],
-                    :rhlogin => opt['rhlogin']
-                    })
-        puts "Cleaning up application"
-        url = URI.parse("https://#{libra_server}/broker/cartridge")
-        RHC::http_post(@http, url, json_data, password)
-    end
-end
-
-#
-# Check / add new host to ~/.ssh/config
-#
-
-puts "Checking ~/.ssh/config"
-
-user_info = RHC::get_user_info(libra_server, opt['rhlogin'], password, @http, false)
-
-fqdn = "#{opt['app']}-#{user_info['user_info']['namespace']}.#{user_info['user_info']['rhc_domain']}"
- 
-ssh_key_file_name = File.basename(get_kfile())
-if (ssh_key_file_name != 'id_rsa')
-  found = false
-  
-  begin
-      File.open(ssh_config, "r") do |sline|
-          while(line = sline.gets)
-              if line.to_s.index("Host *.#{user_info['user_info']['rhc_domain']}") == 0
-                  found = true
-                  break
-              end
-          end
-      end
-  rescue Errno::EACCES
-      puts "Could not read from #{ssh_config}"
-      puts "Reason: " + $!
-      puts
-      puts "Please correct this first.  Then run rerun."
-      puts
-      exit 213
-  rescue Errno::ENOENT
-      puts "Could not find #{ssh_config}.  This is ok, continuing"
-  end
-  if found
-      puts "Found #{user_info['user_info']['rhc_domain']} in ~/.ssh/config... No need to adjust"
-  else
-      puts "    Adding #{user_info['user_info']['rhc_domain']} to ~/.ssh/config"
-      begin
-          f = File.open(ssh_config, "a")
-          f.puts <<SSH
-  
-# Added by rhc-create-app on #{`date`}
-Host *.#{user_info['user_info']['rhc_domain']}
-    IdentityFile ~/.ssh/#{ssh_key_file_name}
-    VerifyHostKeyDNS yes
-    StrictHostKeyChecking no
-    UserKnownHostsFile ~/.ssh/libra_known_hosts
-
-SSH
-          f.close
-      rescue Errno::EACCES
-          puts "Could not write to #{ssh_config}"
-          puts "Reason: " + $!
-          puts
-          puts "Please correct this first.  Then run rerun."
-          puts
-          exit 214
-      rescue Errno::ENOENT
-          # Make directory and config if they do not exist
-          puts "Could not find directory: " + $!
-          puts "creating"
-          FileUtils.mkdir_p ssh_config_d
-          file = File.open(ssh_config, 'w')
-          file.close
-          retry
-      end
-  end
-  
-  File.chmod(0700, ssh_config_d)
-  File.chmod(0600, ssh_config)
-end
-
-#
-# Confirm that the host exists in DNS
-#
 unless opt['no-dns']
-    puts "Now your new domain name is being propagated worldwide (this might take a minute)..."
-
-    # Allow DNS to propogate
-    sleep 15
-
-    # Now start checking for DNS
-    loop = 0
-    sleep_time = 2
-    while loop < RHC::MAX_RETRIES && !RHC::hostexist?(fqdn)
-        sleep sleep_time
-        loop+=1
-        puts "  retry # #{loop} - Waiting for DNS: #{fqdn}"
-        sleep_time = RHC::delay(sleep_time)
-    end
-else
-    loop = 0
+  available = RHC::check_app_available(@http, main_app[:app_name], main_app[:fqdn], main_app[:health_check_path], main_app[:git_url], opt['repo'], opt['nogit'])
+  if !available
+    puts "Unable to access your new application."
+    exit 1
+  end
 end
-sleep_time = 2
-attempt = 0
-
-#
-# Pull new repo locally
-#
-
-app_name = opt['app']
-namespace = user_info['user_info']['namespace']
-rhc_domain = user_info['user_info']['rhc_domain']
-app_uuid = user_info['app_info'][app_name]['uuid']
-
-git_url = "ssh://#{app_uuid}@#{app_name}-#{namespace}.#{rhc_domain}/~/git/#{app_name}.git/"
-
-# If the hostname couldn't be resolved, print out the git URL
-# and exit cleanly.  This will help solve issues where DNS times
-# out in APAC, etc on resolution.
-if loop >= RHC::MAX_RETRIES
-    puts <<WARNING
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-WARNING: We weren't able to lookup your hostname (#{fqdn}) 
-in a reasonable amount of time.  This can happen periodically and will just
-take an extra minute or two to propagate depending on where you are in the
-world.  Once you are able to access your application in a browser, you can then
-clone your git repository.
-
-  Application URL: http://#{fqdn}
-
-  Git Repository URL: #{git_url}
-
-  Git Clone command: 
-    git clone #{git_url} #{opt['repo']}
-
-If you can't get your application running in the browser, you can also try
-destroying and recreating the application as well using:
-
-  rhc-ctl-app -c destroy -a #{opt['app']} -l #{opt["rhlogin"]}
-
-If this doesn't work for you, let us know in the forums or in IRC and we'll
-make sure to get you up and running.
-
-  Forums: https://www.redhat.com/openshift/forums/express
-
-  IRC: #openshift (on Freenode)
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-WARNING
-    exit 0
-end
-
-unless opt['nogit']
-    puts "Pulling new repo down"
-
-    puts "git clone --quiet #{git_url} #{opt['repo']}" if debug
-    quiet = (debug ? ' ' : '--quiet ')
-    git_clone = %x<git clone #{quiet} #{git_url} #{opt['repo']}>
-    if $?.exitstatus != 0
-        puts "Error in git clone"
-        puts git_clone
-        exit 216
-    end
-else
-    puts <<IMPORTANT
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-IMPORTANT: Since the -n flag was specified, no local repo has been created.
-This means you can't make changes to your published application until after
-you clone the repo yourself.  See the git url below for more information.
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-IMPORTANT
-end
-
-#
-# At this point, we need to register a handler to guarantee git
-# repo cleanup on any exceptions or calls to exit
-#
-at_exit do
-    unless $!.nil? || $!.is_a?(SystemExit) && $!.success?
-        puts "Cleaning up git repo"
-        FileUtils.rm_rf opt['repo']
-    end
-end
-
-#
-# Test several times, doubling sleep time between attempts.
-#
-sleep_time = 2
-attempt = 0
-puts "Confirming application #{opt['app']} is available"
-while attempt < RHC::MAX_RETRIES or ! opt['no-dns']
-    attempt+=1
-    puts "  Attempt # #{attempt}"
-    url = URI.parse("http://#{fqdn}/#{health_check_path}")
-    begin
-      response = @http.get_response(url)
-    rescue Exception => e
-      response = nil
-    end
-    if !response.nil? && response.code == "200" && response.body[0,1] == "1"
-        puts <<LOOKSGOOD
-
-Success!  Your application is now published here:
-
-      http://#{fqdn}/
-
-The remote repository is located here:
-
-    #{git_url}
-
-To make changes to your application, commit to #{opt['repo']}/.
-Then run 'git push' to update your OpenShift Express space
-
-LOOKSGOOD
-        exit 0
-    end
-    if !response.nil? && debug
-      puts "Server responded with #{response.code}"
-      puts response.body unless response.code == '503'
-    end
-    puts
-    puts "    sleeping #{sleep_time} seconds"
-    sleep sleep_time
-    sleep_time = RHC::delay(sleep_time)
-end
-puts "Unable to find or access the site... problems"
-exit 254

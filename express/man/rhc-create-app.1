@@ -21,6 +21,10 @@ rhcloud.com
 .B ]
 .B [--timeout
 .I #
+.B ]]
+.B [--no-dns]
+.B [--enable-jenkins [
+.I name
 .B ]
 .B -a
 .I application_name
@@ -70,6 +74,15 @@ Do not 'git clone' default git repo from server
 Alternate full pathname for the config file
 .IP --timeout
 Timeout value, in seconds, for the connection (default is 10)
+.IP --no-dns
+Skip the DNS checks for your new app
+.IP --enable-jenkins [name]
+Indicates to create a Jenkins application (if not already available)
+and embed the Jenkins client into this application.  The default 
+name will be 'jenkins' if not specified. Note that --no-dns is ignored
+for the creation of the Jenkins application.  Specifying a name with
+an existing Jenkins application is also ignored.  If a Jenkins application
+is already available it must be running for this option to succeed.
 .SH FILES
 .I <ruby_gem_dir>/gems/rhc-<version>/conf/express.conf
 .RS

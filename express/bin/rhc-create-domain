@@ -78,8 +78,11 @@ libra_server = get_var('libra_server')
 debug = get_var('debug') == 'false' ? nil : get_var('debug')
 
 
-libra_kfile = get_kfile(false)
-libra_kpfile = get_kpfile(libra_kfile, opt['alter'])
+ssh_key_file_path = get_kfile(false)
+ssh_pub_key_file_path = get_kpfile(ssh_key_file_path, opt['alter'])
+
+ssh_config = "#{ENV['HOME']}/.ssh/config"
+ssh_config_d = "#{ENV['HOME']}/.ssh/"
 
 if opt["help"]
     p_usage
@@ -113,7 +116,6 @@ end
 #
 # Add a new namespace to configs
 #
-
 def add_rhlogin_config(rhlogin, uuid)
     f = open(File.expand_path(config_path), 'a')
     unless config.get_value('default_rhlogin')
@@ -124,32 +126,108 @@ def add_rhlogin_config(rhlogin, uuid)
     f.close
 end
 
-
 #
-# Check to see if a libra_kfile exists, if not create it.
+# Check / add new host to ~/.ssh/config
 #
+def add_ssh_config_host(rhc_domain, ssh_key_file_path, ssh_config, ssh_config_d)
+  
+  puts "Checking ~/.ssh/config"
+  ssh_key_file_name = File.basename(ssh_key_file_path)
+  if ssh_key_file_path.start_with?(ENV['HOME'])
+    ssh_key_file_path = ssh_key_file_path[ENV['HOME'].length..-1]
+    if ssh_key_file_path.start_with?('/') || ssh_key_file_path.start_with?('\\')
+      ssh_key_file_path = '~' + ssh_key_file_path
+    else
+      ssh_key_file_path = '~/' + ssh_key_file_path
+    end
+  end
+  if (ssh_key_file_name != 'id_rsa')
+    found = false
 
-if File.readable?(libra_kfile)
-    puts "OpenShift Express key found at #{libra_kfile}.  Reusing..."
-else
-    puts "Generating OpenShift Express ssh key to #{libra_kfile}"
-    # Use system for interaction
-    system("ssh-keygen -t rsa -f '#{libra_kfile}'")
+    begin
+        File.open(ssh_config, "r") do |sline|
+            while(line = sline.gets)
+                if line.to_s.index("Host *.#{rhc_domain}") == 0
+                    found = true
+                    break
+                end
+            end
+        end
+    rescue Errno::EACCES
+        puts "Could not read from #{ssh_config}"
+        puts "Reason: " + $!
+        puts
+        puts "Please correct this first.  Then run rerun."
+        puts
+        exit 213
+    rescue Errno::ENOENT
+        puts "Could not find #{ssh_config}.  This is ok, continuing"
+    end
+    if found
+        puts "Found #{rhc_domain} in ~/.ssh/config... No need to adjust"
+    else
+        puts "    Adding #{rhc_domain} to ~/.ssh/config"
+        begin
+            f = File.open(ssh_config, "a")
+            f.puts <<SSH
+
+# Added by rhc-create-domain on #{`date`}
+Host *.#{rhc_domain}
+    IdentityFile #{ssh_key_file_path}
+    VerifyHostKeyDNS yes
+    StrictHostKeyChecking no
+    UserKnownHostsFile ~/.ssh/libra_known_hosts
+
+SSH
+            f.close
+        rescue Errno::EACCES
+            puts "Could not write to #{ssh_config}"
+            puts "Reason: " + $!
+            puts
+            puts "Please correct this first.  Then run rerun."
+            puts
+            exit 214
+        rescue Errno::ENOENT
+            # Make directory and config if they do not exist
+            puts "Could not find directory: " + $!
+            puts "creating"
+            FileUtils.mkdir_p ssh_config_d
+            file = File.open(ssh_config, 'w')
+            file.close
+            retry
+        end
+    end
+
+    File.chmod(0700, ssh_config_d)
+    File.chmod(0600, ssh_config)
+  end
 end
 
-ssh_key = File.open(libra_kpfile).gets.chomp.split(' ')[1]
 
-puts "Contacting https://#{libra_server}"
+#
+# Check to see if a ssh_key_file_path exists, if not create it.
+#
+
+if File.readable?(ssh_key_file_path)
+    puts "OpenShift Express key found at #{ssh_key_file_path}.  Reusing..."
+else
+    puts "Generating OpenShift Express ssh key to #{ssh_key_file_path}"
+    # Use system for interaction
+    system("ssh-keygen -t rsa -f '#{ssh_key_file_path}'")
+end
+
+ssh_key = File.open(ssh_pub_key_file_path).gets.chomp.split(' ')[1]
+
 data = {'namespace' => opt['namespace'],
-                'rhlogin' => opt['rhlogin'],
-                'ssh' => ssh_key}
+        'rhlogin' => opt['rhlogin'],
+        'ssh' => ssh_key}
 if (opt['alter'])
-  data['alter'] = true
+  data[:alter] = true
   not_found_message = "A user with rhlogin '#{opt['rhlogin']}' does not have a registered domain.  Be sure to run rhc-create-domain without -a|--alter first."
   user_info = RHC::get_user_info(libra_server, opt['rhlogin'], password, @http, true, not_found_message)
 end
 if debug
-  data['debug'] = true
+  data[:debug] = true
 end
 RHC::print_post_data(data)
 json_data = RHC::generate_json(data)
@@ -163,6 +241,7 @@ if response.code == '200'
         RHC::print_response_success(json_resp)
         json_rhlogininfo = JSON.parse(json_resp['data'])
         add_rhlogin_config(json_rhlogininfo['rhlogin'], json_rhlogininfo['uuid'])
+        add_ssh_config_host(json_rhlogininfo['rhc_domain'], ssh_key_file_path, ssh_config, ssh_config_d)
     
         if opt['alter'] != ''
             puts <<EOF
@@ -216,4 +295,4 @@ EOF
 else
     RHC::print_response_err(response)
 end
-exit 254
+exit 1

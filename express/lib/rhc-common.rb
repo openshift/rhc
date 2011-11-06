@@ -42,13 +42,23 @@ module RHC
   @mydebug = false
   broker_version = "?.?.?"
   api_version = "?.?.?"
+  
+  DEBUG_INGORE_KEYS = {
+    'result' => nil,
+    'debug' => nil,
+    'exit_code' => nil,
+    'messages' => nil,
+    'data' => nil,
+    'api' => nil,
+    'broker' => nil
+  }
 
   def self.timeout(val)
     if val
       @mytimeout = val.to_i
       unless @mytimeout > 0 
         puts 'Timeout must be specified as a number greater than 0'
-        exit 254
+        exit 1
       end
     end
   end
@@ -77,11 +87,10 @@ module RHC
   end
 
   def self.get_cartridges_list(libra_server, net_http, cart_type="standalone", print_result=nil)
-    puts "Contacting https://#{libra_server} to obtain list of cartridges..."
-    puts " (please excuse the delay)"
+    puts "Obtaining list of cartridges (please excuse the delay)..."
     data = {'cart_type' => cart_type}
     if @mydebug
-      data['debug'] = true
+      data[:debug] = true
     end
     print_post_data(data)
     json_data = generate_json(data)
@@ -96,7 +105,7 @@ module RHC
     begin
       json_resp = JSON.parse(response.body)
     rescue JSON::ParserError
-      exit 254
+      exit 1
     end
     update_server_api_v(json_resp)
     if print_result
@@ -105,7 +114,7 @@ module RHC
     begin
       carts = (JSON.parse(json_resp['data']))['carts']
     rescue JSON::ParserError
-      exit 254
+      exit 1
     end
     carts
   end
@@ -173,11 +182,9 @@ module RHC
   end
 
   def self.get_user_info(libra_server, rhlogin, password, net_http, print_result, not_found_message=nil)
-
-    puts "Contacting https://#{libra_server}"
     data = {'rhlogin' => rhlogin}
     if @mydebug
-      data['debug'] = true
+      data[:debug] = true
     end
     print_post_data(data)
     json_data = generate_json(data)
@@ -199,12 +206,12 @@ module RHC
       else
         print_response_err(response)
       end
-      exit 254
+      exit 1
     end
     begin
       json_resp = JSON.parse(response.body)
     rescue JSON::ParserError
-      exit 254
+      exit 1
     end
     update_server_api_v(json_resp)
     if print_result
@@ -213,7 +220,7 @@ module RHC
     begin
       user_info = JSON.parse(json_resp['data'].to_s)
     rescue JSON::ParserError
-      exit 254
+      exit 1
     end
     user_info
   end
@@ -234,6 +241,7 @@ module RHC
   def self.http_post(http, url, json_data, password)
     req = http::Post.new(url.path)
 
+    puts "Contacting #{url.scheme}://#{url.host}" if @mydebug
     req.set_form_data({'json_data' => json_data, 'password' => password})
     http = http.new(url.host, url.port)
     http.open_timeout = @mytimeout
@@ -263,14 +271,14 @@ module RHC
     if (!@mydebug)
       puts "Re-run with -d for more information."
     end
-    exit_code = 254
+    exit_code = 1
     if response.content_type == 'application/json'
       puts "JSON response:"
       begin
         json_resp = JSON.parse(response.body)
         exit_code = print_json_body(json_resp)
       rescue JSON::ParserError
-        exit_code = 254
+        exit_code = 1
       end
     elsif @mydebug
       puts "HTTP response from server is #{response.body}"
@@ -311,18 +319,18 @@ module RHC
         puts "Exit Code: #{exit_code}"
         if (json_resp.length > 3)
           json_resp.each do |k,v|
-            if (k != 'result' && k != 'debug' && k != 'exit_code' && k != 'messages' && k != 'data')
+            if !DEBUG_INGORE_KEYS.has_key?(k)
               puts "#{k.to_s}: #{v.to_s}"
             end
           end
         end
       end
-    end
-    if json_resp['api']
-      puts "API version:    #{json_resp['api']}"
-    end
-    if json_resp['broker']
-      puts "Broker version: #{json_resp['broker']}"
+      if json_resp['api']
+        puts "API version:    #{json_resp['api']}"
+      end
+      if json_resp['broker']
+        puts "Broker version: #{json_resp['broker']}"
+      end
     end
     if json_resp['result']
       puts ''
@@ -340,6 +348,259 @@ module RHC
       dns = Resolv::DNS.new
       resp = dns.getresources(host, Resolv::DNS::Resource::IN::A)
       return resp.any?
+  end
+  
+  def self.create_app(libra_server, net_http, user_info, app_name, app_type, rhlogin, password, repo_dir=nil, no_dns=false, no_git=false, no_git_message=nil)
+    puts "Attempting to create remote application space: #{app_name}"
+    
+    data = {:cartridge => app_type,
+            :action => 'configure',
+            :app_name => app_name,
+            :rhlogin => rhlogin
+           }
+    if @mydebug
+      data[:debug] = true
+    end    
+    json_data = generate_json(data)
+    
+    url = URI.parse("https://#{libra_server}/broker/cartridge")
+    response = http_post(net_http, url, json_data, password)
+    
+    if response.code == '200'
+        json_resp = JSON.parse(response.body)
+        print_response_success(json_resp, true)
+        json_data = JSON.parse(json_resp['data'])
+        health_check_path = json_data['health_check_path']
+        app_uuid = json_data['uuid']
+    else
+        print_response_err(response)
+    end
+
+    #
+    # At this point, we need to register a handler to guarantee app
+    # cleanup on any exceptions or calls to exit
+    #
+    at_exit do
+      unless $!.nil? || $!.is_a?(SystemExit) && $!.success?
+        puts "Cleaning up application"
+        destroy_app(libra_server, net_http, app_name, rhlogin, password)
+      end
+    end
+    
+    namespace = user_info['user_info']['namespace']
+    rhc_domain = user_info['user_info']['rhc_domain']
+
+    fqdn = "#{app_name}-#{namespace}.#{rhc_domain}"
+    
+    loop = 0
+    #
+    # Confirm that the host exists in DNS
+    #
+    unless no_dns
+      puts "Now your new domain name is being propagated worldwide (this might take a minute)..."
+  
+      # Allow DNS to propogate
+      sleep 15
+  
+      # Now start checking for DNS
+      sleep_time = 2
+      while loop < MAX_RETRIES && !hostexist?(fqdn)
+          sleep sleep_time
+          loop+=1
+          puts "  retry # #{loop} - Waiting for DNS: #{fqdn}"
+          sleep_time = delay(sleep_time)
+      end
+    end
+    
+    # If the hostname couldn't be resolved, print out the git URL
+    # and exit cleanly.  This will help solve issues where DNS times
+    # out in APAC, etc on resolution.
+    if loop >= MAX_RETRIES
+        puts <<WARNING
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+WARNING: We weren't able to lookup your hostname (#{fqdn}) 
+in a reasonable amount of time.  This can happen periodically and will just
+take an extra minute or two to propagate depending on where you are in the
+world.  Once you are able to access your application in a browser, you can then
+clone your git repository.
+
+  Application URL: http://#{fqdn}
+
+  Git Repository URL: #{git_url}
+
+  Git Clone command: 
+    git clone #{git_url} #{repo_dir}
+
+If you can't get your application '#{app_name}' running in the browser, you can
+also try destroying and recreating the application as well using:
+
+  rhc-ctl-app -c destroy -a #{app_name} -l #{rhlogin}
+
+If this doesn't work for you, let us know in the forums or in IRC and we'll
+make sure to get you up and running.
+
+  Forums: https://www.redhat.com/openshift/forums/express
+
+  IRC: #openshift (on Freenode)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+WARNING
+        exit 0
+    end
+    
+    #
+    # Pull new repo locally
+    #
+    
+    git_url = "ssh://#{app_uuid}@#{app_name}-#{namespace}.#{rhc_domain}/~/git/#{app_name}.git/"
+    
+    unless no_git
+        puts "Pulling new repo down"
+    
+        puts "git clone --quiet #{git_url} #{repo_dir}" if @mydebug
+        quiet = (@mydebug ? ' ' : '--quiet ')
+        git_clone = %x<git clone #{quiet} #{git_url} #{repo_dir}>
+        if $?.exitstatus != 0
+            puts "Error in git clone"
+            puts git_clone
+            exit 216
+        end
+    else
+      if no_git_message
+        puts no_git_message
+      else         
+        puts <<IMPORTANT
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+IMPORTANT: Since the -n flag was specified, no local repo has been created.
+This means you can't make changes to your published application until after
+you clone the repo yourself.  See the git url below for more information.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+IMPORTANT
+      end
+    end
+    
+    #
+    # At this point, we need to register a handler to guarantee git
+    # repo cleanup on any exceptions or calls to exit
+    #
+    unless no_git
+      at_exit do
+          unless $!.nil? || $!.is_a?(SystemExit) && $!.success?
+              puts "Cleaning up git repo"
+              FileUtils.rm_rf repo_dir
+          end
+      end
+    end
+    return {:app_name => app_name,
+            :fqdn => fqdn,
+            :health_check_path => health_check_path,
+            :git_url => git_url,
+            :repo_dir => repo_dir
+           }
+  end
+
+  def self.check_app_available(net_http, app_name, fqdn, health_check_path, git_url, repo_dir, no_git)
+      #
+      # Test several times, doubling sleep time between attempts.
+      #
+      sleep_time = 2
+      attempt = 0
+      puts "Confirming application '#{app_name}' is available"
+      while attempt < MAX_RETRIES
+          attempt += 1
+          puts "  Attempt # #{attempt}"
+          url = URI.parse("http://#{fqdn}/#{health_check_path}")
+          begin
+            response = net_http.get_response(url)
+          rescue Exception => e
+            response = nil
+          end
+          if !response.nil? && response.code == "200" && response.body[0,1] == "1"
+            puts <<LOOKSGOOD
+
+Success!  Your application '#{app_name}' is now published here:
+
+      http://#{fqdn}/
+
+The remote repository is located here:
+
+    #{git_url}
+
+LOOKSGOOD
+            unless no_git
+      puts <<LOOKSGOOD
+To make changes to '#{app_name}', commit to #{repo_dir}/.
+LOOKSGOOD
+            else
+        puts <<LOOKSGOOD
+To make changes to '#{app_name}', you must first clone it with:
+
+    git clone #{git_url}
+
+LOOKSGOOD
+        puts <<LOOKSGOOD
+Then run 'git push' to update your OpenShift Express space.
+
+LOOKSGOOD
+            end
+            return true
+          end
+          if !response.nil? && @mydebug
+            puts "Server responded with #{response.code}"
+            puts response.body unless response.code == '503'
+          end
+          puts
+          puts "    sleeping #{sleep_time} seconds"
+          sleep sleep_time
+          sleep_time = delay(sleep_time)
+      end
+      return false
+  end
+  
+  def self.destroy_app(libra_server, net_http, app_name, rhlogin, password)
+    json_data = generate_json(
+                       {:action => 'deconfigure',
+                        :app_name => app_name,
+                        :rhlogin => rhlogin
+                        })
+    url = URI.parse("https://#{libra_server}/broker/cartridge")
+    http_post(net_http, url, json_data, password)
+  end
+  
+  def self.ctl_app(libra_server, net_http, app_name, rhlogin, password, action, embedded=false, framework=nil, server_alias=nil)
+    data = {:action => action,
+            :app_name => app_name,
+            :rhlogin => rhlogin
+           }
+    
+    data[:server_alias] = server_alias if server_alias
+    if framework
+      data[:cartridge] = framework
+    end
+    
+    if @mydebug
+      data[:debug] = true
+    end
+    
+    json_data = generate_json(data)
+
+    url = nil
+    if embedded
+      url = URI.parse("https://#{libra_server}/broker/embed_cartridge")
+    else
+      url = URI.parse("https://#{libra_server}/broker/cartridge")
+    end
+    response = http_post(net_http, url, json_data, password)
+    
+    if response.code == '200'
+        json_resp = JSON.parse(response.body)
+        print_response_success(json_resp, true)
+    else
+        print_response_err(response)
+    end
   end
 
 end

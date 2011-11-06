@@ -42,8 +42,9 @@ Return JSON String (exit_code non-zero is failure):
 
 Data JSON:
 {
-    'rhlogin': 'Red Hat Login',
-    'uuid': "User UUID"
+    "rhlogin":"<RH_LOGIN>",
+    "uuid":"<USER_UUID>",
+    "rhc_domain": "<RHC_DOMAIN>"
 }
 
 
@@ -87,7 +88,8 @@ Return JSON String (exit_code non-zero is failure):
 
 Configure Data JSON (only returned for action=configure):
 {
-    'health_check_path': 'health'
+    'health_check_path': 'health',
+    'uuid': 'app_uuid'
 }
 
 Emdedded Cartridges

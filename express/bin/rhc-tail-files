@@ -134,7 +134,7 @@ rescue SystemCallError
   puts
   puts ssh_cmd
   puts
-  exit 254
+  exit 1
 end
 # this should never happen
 exit 1

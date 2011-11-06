@@ -153,7 +153,7 @@ end
     puts
     puts ssh_cmd
     puts
-    exit 254
+    exit 1
 end
 puts output if opt['restore'] && debug
 exit 0

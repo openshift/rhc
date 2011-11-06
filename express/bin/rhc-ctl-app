@@ -184,30 +184,4 @@ else
     url = URI.parse("https://#{libra_server}/broker/cartridge")
 end
 
-data = {:action => action,
-        :app_name => "#{opt['app']}",
-        :rhlogin => "#{opt['rhlogin']}"
-       }
-
-data[:server_alias] = opt['alias'] if opt['alias']
-if framework
-  data[:cartridge] = framework
-end
-
-if debug
-  data['debug'] = true
-end
-
-json_data = RHC::generate_json(data)
-puts "Submitting form: #{json_data}" if debug
-
-puts "Contacting https://#{libra_server}"
-
-response = RHC::http_post(@http, url, json_data, password)
-
-if response.code == '200'
-    json_resp = JSON.parse(response.body)
-    RHC::print_response_success(json_resp, true)
-else
-    RHC::print_response_err(response)
-end
+RHC::ctl_app(libra_server, @http, opt['app'], opt['rhlogin'], password, action, opt['embed'], framework, opt['alias'])
