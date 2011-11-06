@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.81.7
+Version:       0.81.8
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -100,6 +100,11 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/openshift/express.conf
 
 %changelog
+* Sat Nov 05 2011 Dan McPherson <dmcphers@redhat.com> 0.81.8-1
+- adding auto enable jenkins (dmcphers@redhat.com)
+- hide user uuid to avoid confusion (dmcphers@redhat.com)
+- rhc-chk needs to default back to id_rsa like create app (dmcphers@redhat.com)
+
 * Fri Nov 04 2011 Dan McPherson <dmcphers@redhat.com> 0.81.7-1
 - move messages to a more appropriate place (dmcphers@redhat.com)
 - 749758 (dmcphers@redhat.com)
