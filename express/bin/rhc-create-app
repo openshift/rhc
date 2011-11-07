@@ -136,6 +136,25 @@ Found existing Jenkins application: #{jenkins_app_name}
     end
   end
   if !has_jenkins
+    if opt['type'].start_with?('jenkins-')
+      has_jenkins = true
+      if opt['no-dns']
+        puts "
+The --no-dns option can't be used in conjunction with --enable_jenkins 
+when creating a #{opt['type']} application.  Either remove the --no-dns
+option or first install your #{opt['type']} application with --no-dns
+and then use rhc-ctl-app to embed the Jenkins client. 
+"
+        exit 255
+      end
+      jenkins_app_name = opt['app']
+      puts "
+The Jenkins client will be emebdded into the Jenkins application 
+currently being created: '#{opt['app']}'
+"
+    end
+  end
+  if !has_jenkins
     if !opt['enable-jenkins'].empty?
       jenkins_app_name = opt['enable-jenkins']
     else
@@ -145,7 +164,7 @@ Found existing Jenkins application: #{jenkins_app_name}
     if !RHC::check_app(jenkins_app_name)
         p_usage
     end
-      
+
     if jenkins_app_name == opt['app']
       puts "You must specify a different name for your application and Jenkins ('#{opt['app']}')."
       exit 100
