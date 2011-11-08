@@ -231,6 +231,9 @@ module RHC
       print "Password: "
       system "stty -echo"
       password = gets.chomp
+    rescue Interrupt
+      puts "\n"
+      exit 1
     ensure
       system "stty echo"
     end
