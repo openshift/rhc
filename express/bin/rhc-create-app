@@ -122,7 +122,7 @@ user_info = RHC::get_user_info(libra_server, opt['rhlogin'], password, @http, fa
 jenkins_app_name = nil
 has_jenkins = false
 if opt['enable-jenkins']
-  app_info = user_info['app_info']  
+  app_info = user_info['app_info']
   app_info.each do |app_name, app|
     if app['framework'] == 'jenkins-1.4'
       jenkins_app_name = app_name
@@ -140,7 +140,7 @@ Found existing Jenkins application: #{jenkins_app_name}
       has_jenkins = true
       if opt['no-dns']
         puts "
-The --no-dns option can't be used in conjunction with --enable_jenkins 
+The --no-dns option can't be used in conjunction with --enable-jenkins 
 when creating a #{opt['type']} application.  Either remove the --no-dns
 option or first install your #{opt['type']} application with --no-dns
 and then use rhc-ctl-app to embed the Jenkins client. 
@@ -170,7 +170,7 @@ currently being created: '#{opt['app']}'
       exit 100
     end
   
-    if user_info.has_key?('app_info') && user_info['app_info'].has_key?(jenkins_app_name)
+    if app_info.has_key?(jenkins_app_name)
       puts "You already have an application named '#{jenkins_app_name}'."
       puts "In order to continue you'll need to specify a different name"
       puts "with --enable-jenkins or destroy the existing application."
