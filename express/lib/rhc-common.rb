@@ -296,18 +296,18 @@ module RHC
     end
   end
 
-  def self.print_response_success(json_resp, always_print_result=false)
+  def self.print_response_success(json_resp, print_result=false)
     if @mydebug
       puts "Response from server:"
-      print_json_body(json_resp)
-    elsif always_print_result
+      print_json_body(json_resp, print_result)
+    elsif print_result
       print_json_body(json_resp)
     else
       print_response_messages(json_resp)
     end
   end
 
-  def self.print_json_body(json_resp)
+  def self.print_json_body(json_resp, print_result=true)
     print_response_messages(json_resp)
     exit_code = json_resp['exit_code']
     if @mydebug
@@ -332,7 +332,7 @@ module RHC
         puts "Broker version: #{json_resp['broker']}"
       end
     end
-    if json_resp['result']
+    if print_result && json_resp['result']
       puts ''
       puts 'RESULT:'
       puts json_resp['result']
@@ -368,10 +368,12 @@ module RHC
     
     if response.code == '200'
         json_resp = JSON.parse(response.body)
-        print_response_success(json_resp, true)
+        print_response_success(json_resp)
         json_data = JSON.parse(json_resp['data'])
         health_check_path = json_data['health_check_path']
         app_uuid = json_data['uuid']
+        result = json_resp['result']
+        puts "DEBUG: '#{app_name}' creation returned success." if @mydebug
     else
         print_response_err(response)
     end
@@ -498,11 +500,12 @@ IMPORTANT
             :fqdn => fqdn,
             :health_check_path => health_check_path,
             :git_url => git_url,
-            :repo_dir => repo_dir
+            :repo_dir => repo_dir,
+            :result => result
            }
   end
 
-  def self.check_app_available(net_http, app_name, fqdn, health_check_path, git_url, repo_dir, no_git)
+  def self.check_app_available(net_http, app_name, fqdn, health_check_path, result, git_url, repo_dir, no_git)
       #
       # Test several times, doubling sleep time between attempts.
       #
@@ -544,6 +547,14 @@ LOOKSGOOD
         puts <<LOOKSGOOD
 Then run 'git push' to update your OpenShift Express space.
 
+LOOKSGOOD
+            end
+            if result && !result.empty?
+        
+              puts <<LOOKSGOOD
+
+#{result}
+              
 LOOKSGOOD
             end
             return true

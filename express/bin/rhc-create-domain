@@ -133,9 +133,9 @@ def add_ssh_config_host(rhc_domain, ssh_key_file_path, ssh_config, ssh_config_d)
   
   puts "Checking ~/.ssh/config"
   ssh_key_file_name = File.basename(ssh_key_file_path)
-  if ssh_key_file_path.start_with?(ENV['HOME'])
+  if ssh_key_file_path =~ /^#{ENV['HOME']}/
     ssh_key_file_path = ssh_key_file_path[ENV['HOME'].length..-1]
-    if ssh_key_file_path.start_with?('/') || ssh_key_file_path.start_with?('\\')
+    if ssh_key_file_path =~ /^\// || ssh_key_file_path =~ /^\\/
       ssh_key_file_path = '~' + ssh_key_file_path
     else
       ssh_key_file_path = '~/' + ssh_key_file_path

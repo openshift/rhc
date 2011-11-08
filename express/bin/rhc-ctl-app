@@ -139,7 +139,7 @@ unless opt['rhlogin'] && opt['app'] && (opt['command'] || opt['embed'])
     p_usage
 end
 
-if opt['command'] and ( opt['alias'] and ! opt['command'].end_with?('-alias') ) || (opt['command'].end_with?('-alias') and ! opt['alias'])
+if opt['command'] and (opt['alias'] and !(opt['command'] =~ /-alias$/)) || ((opt['command'] =~ /-alias$/) and ! opt['alias'])
     puts "When specifying alias make sure to use -c add-alias or -c remove-alias"
     p_usage
 end
