@@ -100,11 +100,7 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/openshift/express.conf
 
 %changelog
-* Wed Nov 09 2011 Dan McPherson <dmcphers@redhat.com> 0.81.12-1
-- Bug 752341 (dmcphers@redhat.com)
-- update man page with alias logic (dmcphers@redhat.com)
-- Typo in message (mhicks@redhat.com)
-- fix not to throw exception on ctl+c from password (dmcphers@redhat.com)
+* Tue Nov 08 2011 Alex Boone <aboone@redhat.com> 0.81.12-1
 - cleanup (dmcphers@redhat.com)
 
 * Mon Nov 07 2011 Dan McPherson <dmcphers@redhat.com> 0.81.11-1
