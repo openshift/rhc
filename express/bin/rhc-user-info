@@ -120,6 +120,9 @@ if opt['apps']
           puts "         UUID: #{val['uuid']}"
           puts "      Git URL: ssh://#{val['uuid']}@#{key}-#{user_info['user_info']['namespace']}.#{user_info['user_info']['rhc_domain']}/~/git/#{key}.git/"
           puts "   Public URL: http://#{key}-#{user_info['user_info']['namespace']}.#{user_info['user_info']['rhc_domain']}/"
+          if val['aliases'] && !val['aliases'].empty?
+            puts "      Aliases: #{val['aliases'].join(', ')}"
+          end
           puts ""
           puts " Embedded: "
           if val['embedded'] && !val['embedded'].empty? 
