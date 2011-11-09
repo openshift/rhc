@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.81.11
+Version:       0.81.12
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -100,6 +100,13 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/openshift/express.conf
 
 %changelog
+* Wed Nov 09 2011 Dan McPherson <dmcphers@redhat.com> 0.81.12-1
+- Bug 752341 (dmcphers@redhat.com)
+- update man page with alias logic (dmcphers@redhat.com)
+- Typo in message (mhicks@redhat.com)
+- fix not to throw exception on ctl+c from password (dmcphers@redhat.com)
+- cleanup (dmcphers@redhat.com)
+
 * Mon Nov 07 2011 Dan McPherson <dmcphers@redhat.com> 0.81.11-1
 - move create app message down and ruby 1.8.6 compatibility
   (dmcphers@redhat.com)
