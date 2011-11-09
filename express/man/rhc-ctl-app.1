@@ -18,6 +18,9 @@ rhc-ctl-app \- Control an existing rhcloud.com application
 .B ] [-c 
 .I command
 .B ]
+.B [--alias
+.I server_alias
+.B ]
 .B [--config
 .I config_path
 .B ]
@@ -48,7 +51,7 @@ RHLogin password
 .IP "-a|--app application_name"
 Name of application to create
 .IP "-c|--command command"
-The command to send to remote server (start|stop|force-stop|restart|reload|status|destroy)
+The command to send to remote server (start|stop|force-stop|restart|reload|status|destroy|add-alias|remove-alias)
 .IP "-e|--embed embed_action"
 The action to add or remove an embedded cartridge (add|remove|stop|start|restart|status|reload)-$cartridge. Ex: add-mysql-5.1
 .IP "-L|--embedded-list embedded-list"
@@ -59,6 +62,8 @@ Bypass any TOS/SLA warnings and notifications
 Enable debugging / verbose output
 .IP -h|--help
 Display help menu
+.IP --alias
+Specify server alias (when using add/remove-alias)
 .IP --config
 Alternate full pathname for the config file
 .IP --timeout
