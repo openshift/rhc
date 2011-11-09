@@ -149,7 +149,7 @@ and then use rhc-ctl-app to embed the Jenkins client.
       end
       jenkins_app_name = opt['app']
       puts "
-The Jenkins client will be emebdded into the Jenkins application 
+The Jenkins client will be embedded into the Jenkins application 
 currently being created: '#{opt['app']}'
 "
     end
