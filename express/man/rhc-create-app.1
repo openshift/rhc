@@ -21,11 +21,11 @@ rhcloud.com
 .B ]
 .B [--timeout
 .I #
-.B ]]
+.B ]
 .B [--no-dns]
 .B [--enable-jenkins [
 .I name
-.B ]
+.B ]]
 .B -a
 .I application_name
 .B -t
@@ -76,7 +76,7 @@ Alternate full pathname for the config file
 Timeout value, in seconds, for the connection (default is 10)
 .IP --no-dns
 Skip the DNS checks for your new app
-.IP --enable-jenkins [name]
+.IP "--enable-jenkins [name]"
 Indicates to create a Jenkins application (if not already available)
 and embed the Jenkins client into this application.  The default 
 name will be 'jenkins' if not specified. Note that --no-dns is ignored
