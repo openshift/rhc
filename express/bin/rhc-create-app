@@ -40,7 +40,7 @@ Create an OpenShift Express app.
   -n|--nogit                 Only create remote space, don't pull it locally
   -d|--debug                 Print Debug info
   -h|--help                  Show Usage info
-  --no-dns                   Skip DNS check
+  --no-dns                   Skip DNS check. Must be used in combination with --nogit
   --config  path             Path of alternate config file
   --timeout #                Timeout, in seconds, for connection
   --enable-jenkins [name]    Indicates to create a Jenkins application (if not already available)
