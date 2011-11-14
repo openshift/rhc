@@ -119,10 +119,10 @@ if !password
 end
 
 user_info = RHC::get_user_info(libra_server, opt['rhlogin'], password, @http, false)
+app_info = user_info['app_info']
 jenkins_app_name = nil
 has_jenkins = false
 if opt['enable-jenkins']
-  app_info = user_info['app_info']
   app_info.each do |app_name, app|
     if app['framework'] == 'jenkins-1.4'
       jenkins_app_name = app_name
@@ -177,6 +177,11 @@ currently being created: '#{opt['app']}'
       exit 100
     end
   end
+end
+
+if app_info[opt['app']]
+  puts "An application named '#{opt['app']}' already exists"
+  exit 255
 end
 
 opt['repo'] = opt['app'] unless opt['repo']
