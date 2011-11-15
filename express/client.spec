@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.82.3
+Version:       0.82.4
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -100,6 +100,9 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/openshift/express.conf
 
 %changelog
+* Tue Nov 15 2011 Dan McPherson <dmcphers@redhat.com> 0.82.4-1
+- adding tidy option to rhc-ctl-app (dmcphers@redhat.com)
+
 * Mon Nov 14 2011 Dan McPherson <dmcphers@redhat.com> 0.82.3-1
 - match client and server messages (dmcphers@redhat.com)
 - error sooner on app already exists (dmcphers@redhat.com)
