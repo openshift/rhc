@@ -12,7 +12,7 @@ Source0:       rhc-%{version}.tar.gz
 BuildRoot:     %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 BuildRequires: rubygem-rake
 BuildRequires: rubygem-rspec
-Requires:      ruby >= 1.8.6
+Requires:      ruby >= 1.8.5
 Requires:      rubygem-parseconfig
 
 %if 0%{?fedora} == 13
