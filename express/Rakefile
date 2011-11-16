@@ -3,7 +3,13 @@
 require 'rubygems'
 require 'rake'
 require 'rake/clean'
-require 'rubygems/package_task'
+
+begin
+  require 'rubygems/package_task'
+rescue LoadError
+  require 'rake/gempackagetask'
+  rake_gempackage = true
+end
 
 task :default => [:package]
 
@@ -31,8 +37,14 @@ spec = Gem::Specification.new do |s|
 end
 
 # Define a :package task that bundles the gem
-Gem::PackageTask.new(spec) do |pkg, args|
-  pkg.need_tar = false
+if rake_gempackage
+  Rake::GemPackageTask.new(spec) do |pkg, args|
+    pkg.need_tar = false
+  end
+else
+  Gem::PackageTask.new(spec) do |pkg, args|
+    pkg.need_tar = false
+  end
 end
 
 # Add the 'pkg' directory to the clean task
