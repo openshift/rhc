@@ -6,4 +6,4 @@ changelog_with_email = 1
 
 [cvs]
 cvsroot = :gserver:cvs.devel.redhat.com:/cvs/dist
-branches = RHEL-6_1-LIBRA RHEL-6_2-LIBRA
+branches = RHEL-6_1-LIBRA RHEL-6_2-LIBRA RHEL-5_7-LIBRA RHEL-5_8-LIBRA
