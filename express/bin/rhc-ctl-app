@@ -165,10 +165,15 @@ This is NOT reversible, all remote data for this application will be removed.
 WARNING
 
     print "Do you want to destroy this application (y/n): "
-    agree = gets.chomp
-    if agree != 'y'
-        puts "Destroy aborted"
-        exit 217
+    begin
+      agree = gets.chomp
+      if agree != 'y'
+          puts "\n"
+          exit 217
+      end
+    rescue Interrupt
+      puts "\n"
+      exit 217
     end
 end
 
