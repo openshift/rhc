@@ -25,14 +25,18 @@ require 'rhc-common'
 require 'net/http'
 require 'net/https'
 require 'rbconfig'
+require 'yaml'
+require 'tempfile'
 
+require 'test/unit'
+require 'test/unit/ui/console/testrunner'
 
 #
 # print help
 #
 def p_usage
-    rhlogin = get_var('default_rhlogin') ? "Default: #{get_var('default_rhlogin')}" : "required"
-    puts <<USAGE
+  rhlogin = get_var('default_rhlogin') ? "Default: #{get_var('default_rhlogin')}" : "required"
+  puts <<USAGE
 
 Usage: #{$0}
 Run a simple check on local configs and credentials to confirm tools are
@@ -50,177 +54,391 @@ exit 255
 end
 
 begin
-    opts = GetoptLong.new(
-        ["--debug", "-d", GetoptLong::NO_ARGUMENT],
-        ["--help",  "-h", GetoptLong::NO_ARGUMENT],
-        ["--rhlogin",  "-l", GetoptLong::REQUIRED_ARGUMENT],
-        ["--password",  "-p", GetoptLong::REQUIRED_ARGUMENT],
-        ["--config", GetoptLong::REQUIRED_ARGUMENT],
-        ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
-    )
-    opt = {}
-    opts.each do |o, a|
-        opt[o[2..-1]] = a.to_s
-    end
+  opts = GetoptLong.new(
+    ["--debug", "-d", GetoptLong::NO_ARGUMENT],
+    ["--help",  "-h", GetoptLong::NO_ARGUMENT],
+    ["--rhlogin",  "-l", GetoptLong::REQUIRED_ARGUMENT],
+    ["--password",  "-p", GetoptLong::REQUIRED_ARGUMENT],
+    ["--config", GetoptLong::REQUIRED_ARGUMENT],
+    ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
+  )
+  $opt = {}
+  opts.each do |o, a|
+    $opt[o[2..-1]] = a.to_s
+  end
 rescue Exception => e
   #puts e.message
-    p_usage
+  p_usage
 end
+
+if $opt["help"]
+  p_usage
+end
+
 
 # If provided a config path, check it
-check_cpath(opt)
+check_cpath($opt)
+
+# Need to store the config information so tests can use it
+#  since they are technically new objects
+$opts_config_path   = @opts_config_path 
+$local_config_path  = @local_config_path
+$opts_config        = @opts_config
+$local_config       = @local_config
 
 # Pull in configs from files
-@libra_server = get_var('libra_server')
-@debug = get_var('debug') == 'false' ? nil : get_var('debug')
+$libra_server = get_var('libra_server')
+$debug = get_var('debug') == 'false' ? nil : get_var('debug')
 
-if opt["help"]
-    p_usage
+
+if $opt["debug"]
+  $debug = true
 end
+RHC::debug($debug)
 
-if opt["debug"]
-    @debug = true
+RHC::timeout($opt["timeout"] ? $opt["timeout"] : get_var('timeout'))
+
+$opt["rhlogin"] = get_var('default_rhlogin') unless $opt["rhlogin"]
+if !RHC::check_rhlogin($opt['rhlogin'])
+  p_usage
 end
-RHC::debug(@debug)
+$rhlogin = $opt["rhlogin"]
 
-RHC::timeout(opt["timeout"] ? opt["timeout"] : get_var('timeout'))
-
-opt["rhlogin"] = get_var('default_rhlogin') unless opt["rhlogin"]
-if !RHC::check_rhlogin(opt['rhlogin'])
-    p_usage
-end
-@rhlogin = opt["rhlogin"]
-
-@password = opt['password']
-if !@password
-  @password = RHC::get_password
+$password = $opt['password']
+if !$password
+  $password = RHC::get_password
 end
 
 #
 # Generic Info
 #
-puts "Ruby Version: #{RUBY_VERSION}"
-puts "host_alias: #{Config::CONFIG['host_alias']}"
+$debuginfo = {
+  'environment' => {
+    'Ruby Version' => RUBY_VERSION,
+    "host_alias" => Config::CONFIG['host_alias']
+  },
+  'options' => {
+    "Command Line" => $opt,
+    "Opts" => $opts_config,
+    "Local" => $local_config
+  }
+}
+
+# Don't actually log the password, but some information to help with troubleshooting
+$debuginfo['options']['Command Line']['password'] = {
+  "Length" => $opt['password'].length, 
+  "Starts with" => $opt['password'][0..0]
+}
 
 #
 # Check for proxy environment
 #
 if ENV['http_proxy']
   host, port = ENV['http_proxy'].split(':')
-  @http = Net::HTTP::Proxy(host, port)
-  puts "Proxy being used: #{host}:#{port}"
+  $http = Net::HTTP::Proxy(host, port)
+  $debuginfo['environment']['proxy'] = "#{host}:#{port}"
 else
-  @http = Net::HTTP
-  puts "Proxy being used: none"
+  $http = Net::HTTP
+  $debuginfo['environment']['proxy'] = "none"
 end
 
-def test_url_json(uri, data)
+#####################################
+#     Done setting up environment   #
+#####################################
+
+module TestBase
+  def initialize(*args)
+    super
+    $connectivity ||= false
+    # These need to be loaded for each test to be able to access them
+    @opts_config_path   = $opts_config_path 
+    @local_config_path  = $local_config_path
+    @opts_config        = $opts_config
+    @local_config       = $local_config
+  end
+
+  def fetch_url_json(uri, data)
     json_data = RHC::generate_json(data)
-    url = URI.parse("https://#{@libra_server}#{uri}")
-    puts "  Contacting URL: https://#{@libra_server}#{uri}" if @debug
-    puts "  json_data: #{json_data}" if @debug
-    req = @http::Post.new(url.path)
-    req.set_form_data({'json_data' => json_data, 'password' => @password})
-    http = @http.new(url.host, url.port)
+    url = URI.parse("https://#{$libra_server}#{uri}")
+    req = $http::Post.new(url.path)
+    req.set_form_data({'json_data' => json_data, 'password' => $password})
+    http = $http.new(url.host, url.port)
     http.open_timeout = 10
     http.use_ssl = true
     http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-    response = nil
-    begin
-        response = http.start {|http| http.request(req)}
-        puts "  Raw Response: #{response.body}" if @debug
-    rescue Exception => e
-        puts "  ERROR: #{e.message}"
-    end
-    if response
-        puts "  Code: #{response.code}"
-        puts "  Message: #{response.message}"
-        if response.code == '200'
-        puts response.body
-            resp_json = JSON.parse(response.body)
-            return resp_json
-        elsif response.code == '404' && data['rhlogin']
-            puts "A user with rhlogin '#{data['rhlogin']}' does not have a registered domain."
-            exit 99
-        elsif response.code == '401'
-            puts "Invalid user credentials"
-            exit 97
-        else
-            puts "Exiting due to error!"
-            exit 1
-        end
-    else
-        puts "Unable to connect to: https://#{@libra_server}"
-        exit 1
-    end
+
+    response = http.start {|http| http.request(req)}
+    return response
+  ensure
+    $debuginfo['fetches'] ||= []
+    body = JSON.parse(response.body)
+    body['data'] = body['data'] ? JSON.parse(body['data']) : ''
+    $debuginfo['fetches'] << {url.to_s => {
+      'body' => body,
+      'header' => response.instance_variable_get(:@header)
+    }}
+  end
 end
 
-#
-# Checking Connectivity / cart list
-#
-puts
-puts "TEST1: Confirming connection to OpenShift"
-data = {'cart_type' => 'standalone'}
+#####################################################
+#                Tests start here                   #
+#####################################################
+#                                                   #                                                  
+#  Note: Tests and testcases are run alphabetically # 
+#                                                   #                                                  
+#####################################################
 
-resp_json = test_url_json("/broker/cartlist", data)
-puts "  Cart Info: #{resp_json["data"]}"
+$messages = {
+  :started  => 'Analyzing system',
+  :passed   => "Congratulations, your system has passed all tests",
+  :failed   => "Your system did not pass all of the tests",
+  :error    => 'Something went wrong, and not all tests completed',
 
+  :no_connectivity => <<-ERR, 
+      Cannot connect to server, therefore most tests will not work
+      FIX: Ensure that you are able to connect to %s
+  ERR
 
-#
-# Checking Authentication
-#
-puts
-puts "TEST2: Authentication (RHN account) / user info"
-data = {'rhlogin' => @rhlogin}
+  :cant_connect => <<-ERR,
+      You need to be able to connect to the server in order to test authentication
+  ERR
+  
+  :_404 => <<-ERR,
+    The user %s does not have an account on this server
+    FIX: Please ensure that you've entered the correct username
+  ERR
 
-resp_json = test_url_json("/broker/userinfo", data)
-@user_info = JSON.parse(resp_json['data'].to_s)
-puts "  rhlogin: #{@user_info["user_info"]["rhlogin"]}"
-puts "  namespace: #{@user_info["user_info"]["namespace"]}"
+  :_401 => <<-ERR,
+    Invalid user credentials for %s
+    FIX: Please ensure you used the correct password
+  ERR
+
+  :_other_http => <<-ERR,
+    There was an error communicating with the server: 
+    %s
+  ERR
+
+  :no_derive => <<-ERR,
+    We were unable to derive your public SSH key and compare it to the remote
+    FIX: ???
+  ERR
+
+  :no_account => <<-ERR,
+    You must have an account on the server in order to test SSH key matches
+  ERR
+
+  :no_match_pub => <<-ERR,
+    Local %s does not match remote pub key, SSH auth will not work
+    FIX: Perhaps you should regenerate your public key, or run rhc-create-domain with -a to alter the remote key
+  ERR
+
+  :no_pubkey => <<-ERR,
+    We were unable to read your public SSH key to compare to the remote
+  ERR
+
+  :file_not_found => <<-ERR,
+    File %s does not exist, cannot check permissions
+  ERR
+
+  :bad_permissions => <<-ERR,
+      File %s has incorrect permissions %s
+      FIX: Permissions should match %s
+  ERR
+}
+
+def error_for(name,*args)
+  if name.kind_of? String
+    name = name.downcase.to_sym
+  end
+  sprintf($messages[name],*args)
+end
+
+class Test1_Connectivity < Test::Unit::TestCase
+  include TestBase
+  def teardown
+    # Set global variable in case we cannot connect to the server
+    if method_name == 'test_connectivity'
+      $connectivity = passed?
+    end
+  end
+
+  #
+  # Checking Connectivity / cart list
+  #
+  def test_connectivity
+    data = {'cart_type' => 'standalone'}
+
+    response = fetch_url_json("/broker/cartlist", data)
+    assert_equal 200, response.code.to_i, error_for(:no_connectivity, $libra_server)
+  end
+end
+
+class Test2_Authentication < Test::Unit::TestCase
+  include TestBase
+  #
+  # Checking Authentication
+  #
+  def test_authentication
+    assert $connectivity, error_for(:cant_connect)
+
+    data = {'rhlogin' => $rhlogin}
+    response = fetch_url_json("/broker/userinfo", data)
+    resp_json = JSON.parse(response.body)
+
+    case response.code.to_i
+    when 404
+      assert false, error_for(:_404, $rhlogin)     
+    when 401
+      assert false, error_for(:_401, $rhlogin)     
+    when 200
+      assert true
+    else
+      assert false, error_for(:_other_http, resp_json['result'])
+    end
+
+    $user_info = JSON.parse(resp_json['data'].to_s)
+  end
+end
 
 #
 # Checking ssh key
 #
-puts
-puts "TEST3: SSH Key check"
-remote_ssh_pubkey = @user_info["user_info"]["ssh_key"]
-libra_kfile = get_kfile()
-libra_kpfile = get_kpfile(libra_kfile, false)
+class Test3_SSH < Test::Unit::TestCase
 
-if File.exists?(libra_kfile)
-    puts "  OK: #{libra_kfile} - Found"
-    key_dump = `ssh-keygen -f #{libra_kfile} -y`
-    local_derived_ssh_pubkey = key_dump.to_s.strip.split(' ')[1]
-else
-    puts "  ERROR: #{libra_kfile} - Not Found!"
+  @@local_derived_ssh_pubkey = nil
+  @@local_ssh_pubkey = nil
+
+  include TestBase
+
+  def setup
+    @libra_kfile = get_kfile()
+    @libra_kpfile = get_kpfile(@libra_kfile, false)
+  end
+
+  def test_01_ssh_private_key
+    check_permissions(@libra_kfile, /[4-7]00/) # Needs to at least be readable by user and nobody else
+
+    # Derive the public key from the private key
+    key_dump = `ssh-keygen -f #{@libra_kfile} -y`
+    @@local_derived_ssh_pubkey = key_dump.to_s.strip.split(' ')[1]
+
+    assert_not_nil @@local_derived_ssh_pubkey, error_for(:no_derive)
+
+    assert_not_nil $user_info, error_for(:no_account) 
+    remote_ssh_pubkey = $user_info["user_info"]["ssh_key"]
+
+    assert_match @@local_derived_ssh_pubkey, remote_ssh_pubkey, error_for(:no_match_pub, @libra_kfile)
+  end
+
+  def test_02_ssh_public_key
+    check_permissions(@libra_kpfile, /.../) # Any permissions are OK
+
+    # Store the public key
+    fp = File.open(@libra_kpfile)
+    @@local_ssh_pubkey = fp.gets.split(' ')[1]
+
+    assert_not_nil @@local_ssh_pubkey, error_for(:no_pubkey)    
+
+    assert_not_nil $user_info, error_for(:no_account)
+    remote_ssh_pubkey = $user_info["user_info"]["ssh_key"]
+
+    # Test public key and remote key
+    assert_match @@local_ssh_pubkey, remote_ssh_pubkey, error_for(:no_match_pub,@libra_kpfile)
+  ensure
+    fp.close if fp
+  end
+
+  def test_05_ssh_config
+    check_permissions('~/.ssh/config',/600/)
+  end
+
+  private
+  def check_permissions(file,permission)
+    file = File.expand_path(file)
+
+    assert File.exists?(file), error_for(:file_not_found,file)
+
+    perms = sprintf('%o',File.stat(file).mode)[-3..-1]
+
+    assert_match permission, perms, error_for(:bad_permissions,file,perms,permission.source)
+  end
 end
 
-if File.exists?(libra_kpfile)
-    puts "  OK: #{libra_kpfile} Found"
-    fp = File.open(libra_kpfile)
-    local_ssh_pubkey = fp.gets.split(' ')[1]
-    fp.close
-else
-    puts "  WARNING: #{libra_kpfile} Not Found! (non fatal error)"
+############################################################
+#     Below this line is the custom Test::Runner code      #
+# Modification should not be necessary to add/modify tests #
+############################################################
+
+class CheckRunner < Test::Unit::UI::Console::TestRunner
+  def initialize(*args)
+    super
+    @output_level = 1
+    puts $messages[:started]
+  end
+
+  def add_fault(fault)
+    @faults << fault
+    print(fault.single_character_display)
+    @already_outputted = true
+  end
+
+  def print_underlined(string)
+    string = "||  #{string}  ||"
+    line = "=" * string.length
+    puts
+    puts line
+    puts string
+    puts line
+  end
+
+  def finished(*args)
+    super
+    $debuginfo['errors'] = @faults
+    if @faults.empty?
+      print_underlined $messages[:passed]
+    else
+      print_underlined $messages[:failed]
+      @num = 0
+      @errors = []
+      # Need to separate the failures from the errors
+      @faults.each do |f|
+        case f
+        when Test::Unit::Failure
+          lines = f.message.to_a
+          puts "#{@num+=1}) #{lines.shift.strip}"
+          lines.each do |line|
+            break if line.match(/^\./) or line.match(/^\s*$/)
+            puts "\t#{line.strip}"
+          end
+        when Test::Unit::Error
+          @errors << f
+        end
+      end
+
+      # Errors mean something in the test is broken, not just failed
+      unless @errors.empty?
+        @num = 0
+        print_underlined $messages[:error]
+        @errors.each do |e| 
+          lines = e.long_display.to_a[1..-1]
+          puts "#{@num+=1}) #{lines.shift}"
+          lines.each{|l| puts "\t#{l}"}
+        end 
+      end
+
+    end
+
+    if $debug
+      Tempfile.open(%w(rhc-chk. .log))do |file|
+        ObjectSpace.undefine_finalizer(file) # persist tempfile
+        file.write $debuginfo.to_yaml
+        puts
+        puts "Debugging information dumped to #{file.path}"
+      end
+    end
+  end
 end
 
-if local_ssh_pubkey.to_s.strip == remote_ssh_pubkey.to_s.strip
-    puts "  OK: Remote and #{libra_kpfile} - match"
-else
-    puts "  WARNING: Remote and #{libra_kpfile} key do not match.  (have you changed machines or ssh keys?)"
+Test::Unit::AutoRunner::RUNNERS[:console] = proc do |r|
+  CheckRunner
 end
-
-if local_derived_ssh_pubkey.to_s.strip == remote_ssh_pubkey.to_s.strip
-    puts "  OK: local #{libra_kfile} should auth with openshift"
-else
-    puts "  WARNING: local #{libra_kpfile} DOES NOT match remote pub key, ssh auth cannot continue"
-    puts "      FIX: Perhaps you should regenerate your public key, or run rhc-create-domain with -a to alter the remote key"
-end
-
-if @debug
-    puts "remote_ssh_pubkey: #{remote_ssh_pubkey}"
-    puts "local_ssh_pubkey: #{local_ssh_pubkey}"
-    puts "local_derived_ssh_pubkey: #{local_derived_ssh_pubkey}"
-end
-
-exit 0
