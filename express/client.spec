@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.82.6
+Version:       0.82.8
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -100,6 +100,12 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/openshift/express.conf
 
 %changelog
+* Sat Nov 19 2011 Dan McPherson <dmcphers@redhat.com> 0.82.8-1
+- Refactored rhc-chk to use Test::Unit for tests (fotios@redhat.com)
+
+* Sat Nov 19 2011 Dan McPherson <dmcphers@redhat.com>
+- Refactored rhc-chk to use Test::Unit for tests (fotios@redhat.com)
+
 * Thu Nov 17 2011 Dan McPherson <dmcphers@redhat.com> 0.82.6-1
 - fail gracefully on ctrl+c from destroy y/n prompt (dmcphers@redhat.com)
 
