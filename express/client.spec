@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.82.7
+Version:       0.82.8
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -12,10 +12,13 @@ Source0:       rhc-%{version}.tar.gz
 BuildRoot:     %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 BuildRequires: rubygem-rake
 BuildRequires: rubygem-rspec
-Requires:      ruby >= 1.8.5
+Requires:      ruby >= 1.8.6
 Requires:      rubygem-parseconfig
 
 %if 0%{?fedora} == 13
+%define jpure 1
+%endif
+%if 0%{?rhel} == 5
 %define jpure 1
 %endif
 %ifos darwin
@@ -97,10 +100,11 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/openshift/express.conf
 
 %changelog
-* Thu Nov 17 2011 Alex Boone <aboone@redhat.com> 0.82.7-1
-- Degrade to Rake::GemPackageTask when Gem::PackageTask is not supported
-  (aboone@redhat.com)
-- Lower requirement on ruby version to 1.8.5 (aboone@redhat.com)
+* Sat Nov 19 2011 Dan McPherson <dmcphers@redhat.com> 0.82.8-1
+- Refactored rhc-chk to use Test::Unit for tests (fotios@redhat.com)
+
+* Sat Nov 19 2011 Dan McPherson <dmcphers@redhat.com>
+- Refactored rhc-chk to use Test::Unit for tests (fotios@redhat.com)
 
 * Thu Nov 17 2011 Dan McPherson <dmcphers@redhat.com> 0.82.6-1
 - fail gracefully on ctrl+c from destroy y/n prompt (dmcphers@redhat.com)
