@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.82.8
+Version:       0.82.9
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -100,6 +100,16 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/openshift/express.conf
 
 %changelog
+* Mon Nov 21 2011 Alex Boone <aboone@redhat.com> 0.82.9-1
+- Merge remote-tracking branch 'origin/master' into rhel5 (aboone@redhat.com)
+- Use rubygem-json for RHEL5 (aboone@redhat.com)
+- Moved messages to __END__. Added ssh-agent test. Moved message rendering to
+  its own function (fotios@redhat.com)
+- Automatic commit of package [rhc] release [0.82.7-1]. (aboone@redhat.com)
+- Degrade to Rake::GemPackageTask when Gem::PackageTask is not supported
+  (aboone@redhat.com)
+- Lower requirement on ruby version to 1.8.5 (aboone@redhat.com)
+
 * Sat Nov 19 2011 Dan McPherson <dmcphers@redhat.com> 0.82.8-1
 - Refactored rhc-chk to use Test::Unit for tests (fotios@redhat.com)
 
