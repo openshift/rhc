@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.82.9
+Version:       0.82.10
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -97,6 +97,9 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/openshift/express.conf
 
 %changelog
+* Mon Nov 21 2011 Alex Boone <aboone@redhat.com> 0.82.10-1
+- allow ruby >= 1.8.5, don't use json_pure for RHEL5 (aboone@redhat.com)
+
 * Mon Nov 21 2011 Alex Boone <aboone@redhat.com> 0.82.9-1
 - Merge remote-tracking branch 'origin/master' into rhel5 (aboone@redhat.com)
 - Use rubygem-json for RHEL5 (aboone@redhat.com)
