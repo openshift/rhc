@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.82.12
+Version:       0.82.13
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -97,6 +97,11 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/openshift/express.conf
 
 %changelog
+* Tue Nov 22 2011 Dan McPherson <dmcphers@redhat.com> 0.82.13-1
+- need some output on ctl-app (dmcphers@redhat.com)
+- Added test to attempt to SSH into all of the user's apps (fotios@redhat.com)
+- Moved YAML from __END__ (fotios@redhat.com)
+
 * Tue Nov 22 2011 Alex Boone <aboone@redhat.com> 0.82.12-1
 - Use rubygem-json for RHEL5 (aboone@redhat.com)
 - Degrade to Rake::GemPackageTask when Gem::PackageTask is not supported
