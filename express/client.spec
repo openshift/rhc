@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.82.8
+Version:       0.82.11
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -100,6 +100,24 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/openshift/express.conf
 
 %changelog
+* Mon Nov 21 2011 Dan McPherson <dmcphers@redhat.com> 0.82.11-1
+- reducing the number of messages being output for the rhc-create-app command
+  (abhgupta@redhat.com)
+- Moved messages to __END__. Added ssh-agent test. Moved message rendering to
+  its own function (fotios@redhat.com)
+
+* Mon Nov 21 2011 Dan McPherson <dmcphers@redhat.com>
+- reducing the number of messages being output for the rhc-create-app command
+  (abhgupta@redhat.com)
+- Moved messages to __END__. Added ssh-agent test. Moved message rendering to
+  its own function (fotios@redhat.com)
+
+* Mon Nov 21 2011 Dan McPherson <dmcphers@redhat.com>
+- reducing the number of messages being output for the rhc-create-app command
+  (abhgupta@redhat.com)
+- Moved messages to __END__. Added ssh-agent test. Moved message rendering to
+  its own function (fotios@redhat.com)
+
 * Sat Nov 19 2011 Dan McPherson <dmcphers@redhat.com> 0.82.8-1
 - Refactored rhc-chk to use Test::Unit for tests (fotios@redhat.com)
 
