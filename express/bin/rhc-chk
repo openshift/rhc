@@ -178,6 +178,14 @@ module TestBase
       'header' => response.instance_variable_get(:@header)
     }}
   end
+
+  def continue_test
+    begin
+      yield
+    rescue Test::Unit::AssertionFailedError => e
+      self.send(:add_failure,e.message,e.backtrace)
+    end
+  end
 end
 
 #####################################################
@@ -304,6 +312,19 @@ class Test3_SSH < Test::Unit::TestCase
     assert loaded_keys.include?(@@local_ssh_pubkey),error_for(:pubkey_not_loaded)
   end
 
+  def test_07_ssh_connect
+    assert_not_nil $user_info, error_for(:no_account)
+    host_template = "%s@%s-%s.%s"
+    $user_info['app_info'].each do |k,v|
+      uuid = v['uuid']
+      host = sprintf("%s-%s",k,$user_info['user_info']['namespace'])
+      domain = $user_info['user_info']['rhc_domain']
+      ssh_command = sprintf("ssh %s@%s.%s true &> /dev/null", uuid, host, domain)
+      system(ssh_command)
+      continue_test{ assert_equal $?, 0, error_for(:cant_ssh, host) }
+    end
+  end
+
   private
   def check_permissions(file,permission)
     file = File.expand_path(file)
@@ -423,4 +444,5 @@ $messages = YAML.load <<-EOF
   :bad_permissions: "File %s has incorrect permissions %s\n FIX: Permissions should match %s"
   :no_keys_loaded: Either ssh-agent is not running or you do not have any keys loaded 
   :pubkey_not_loaded: Your public key is not loaded into a running ssh-agent
+  :cant_ssh: "Cannot SSH into your app: %s"
   EOF
