@@ -125,10 +125,12 @@ $debuginfo = {
 }
 
 # Don't actually log the password, but some information to help with troubleshooting
-$debuginfo['options']['Command Line']['password'] = {
-  "Length" => $opt['password'].length, 
-  "Starts with" => $opt['password'][0..0]
-}
+if $opt['password']
+  $debuginfo['options']['Command Line']['password'] = {
+    "Length" => $opt['password'].length, 
+    "Starts with" => $opt['password'][0..0]
+  }
+end
 
 #
 # Check for proxy environment
@@ -262,7 +264,9 @@ class Test3_SSH < Test::Unit::TestCase
 
   def setup
     @libra_kfile = get_kfile(false)
-    @libra_kpfile = get_kpfile(@libra_kfile, false)
+    if @libra_kfile
+      @libra_kpfile = get_kpfile(@libra_kfile, false)
+    end
   end
 
   def test_01_ssh_private_key
