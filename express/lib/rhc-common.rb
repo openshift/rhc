@@ -633,9 +633,7 @@ LOOKSGOOD
     
     if response.code == '200'
       json_resp = JSON.parse(response.body)
-      # print the result only in debug mode
-      # else just display the messages
-      print_response_success(json_resp, @mydebug)
+      print_response_success(json_resp, true)
     else
         print_response_err(response)
     end
