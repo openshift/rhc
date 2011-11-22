@@ -187,12 +187,14 @@ end
 
 opt['repo'] = opt['app'] unless opt['repo']
 
-puts "
-Found a bug? Post to the forum and we'll get right on it.
-    IRC: #openshift on freenode
-    Forums: https://www.redhat.com/openshift/forums
-
-"
+if @mydebug
+  puts "
+  Found a bug? Post to the forum and we'll get right on it.
+      IRC: #openshift on freenode
+      Forums: https://www.redhat.com/openshift/forums
+  
+  "
+end
 
 #
 # Confirm local git repo exists
@@ -223,14 +225,13 @@ end
 
 if jenkins_app_name && !has_jenkins
   jenkins_no_git_message = "
-
 Note: There is a git repo for your Jenkins application '#{jenkins_app_name}'
 but it isn't being downloaded as part of this process.  In most cases
 it isn't needed but you can always clone it later.
 
 "
   jenkins_app = RHC::create_app(libra_server, @http, user_info, jenkins_app_name, 'jenkins-1.4', opt['rhlogin'], password, nil, false, true, jenkins_no_git_message)
-  available = RHC::check_app_available(@http, jenkins_app[:app_name], jenkins_app[:fqdn], jenkins_app[:health_check_path], jenkins_app[:result], jenkins_app[:git_url], nil, true)
+  available = RHC::check_app_available(@http, jenkins_app[:app_name], 'jenkins-1.4', jenkins_app[:fqdn], jenkins_app[:health_check_path], jenkins_app[:result], jenkins_app[:git_url], nil, true)
   if !available
     puts "Unable to access your new Jenkins application."
     exit 1
@@ -244,13 +245,12 @@ main_app = RHC::create_app(libra_server, @http, user_info, opt['app'], opt['type
 if jenkins_app_name
   puts "
 Now embedding the jenkins client into '#{opt['app']}'...
-
 "
   RHC::ctl_app(libra_server, @http, opt['app'], opt['rhlogin'], password, 'configure', true, 'jenkins-client-1.4')
 end
 
 unless opt['no-dns']
-  available = RHC::check_app_available(@http, main_app[:app_name], main_app[:fqdn], main_app[:health_check_path], main_app[:result], main_app[:git_url], opt['repo'], opt['nogit'])
+  available = RHC::check_app_available(@http, main_app[:app_name], opt['type'], main_app[:fqdn], main_app[:health_check_path], main_app[:result], main_app[:git_url], opt['repo'], opt['nogit'])
   if !available
     puts "Unable to access your new application."
     exit 1

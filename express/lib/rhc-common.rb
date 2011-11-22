@@ -42,6 +42,13 @@ module RHC
   @mydebug = false
   broker_version = "?.?.?"
   api_version = "?.?.?"
+
+  # reset lines
+  # \r moves the cursor to the beginning of line
+  # ANSI escape code to clear line from cursor to end of line
+  # "\e" is an alternative to "\033"
+  # cf. http://en.wikipedia.org/wiki/ANSI_escape_code
+  CLEAR_LINE = "\r" + "\e[0K"
   
   DEBUG_INGORE_KEYS = {
     'result' => nil,
@@ -276,7 +283,8 @@ module RHC
     end
     exit_code = 1
     if response.content_type == 'application/json'
-      puts "JSON response:"
+      print "JSON response:"
+      $stdout.flush
       begin
         json_resp = JSON.parse(response.body)
         exit_code = print_json_body(json_resp)
@@ -301,7 +309,8 @@ module RHC
 
   def self.print_response_success(json_resp, print_result=false)
     if @mydebug
-      puts "Response from server:"
+      print "Response from server:"
+      $stdout.flush
       print_json_body(json_resp, print_result)
     elsif print_result
       print_json_body(json_resp)
@@ -412,9 +421,15 @@ module RHC
       while loop < MAX_RETRIES && !hostexist?(fqdn)
           sleep sleep_time
           loop+=1
-          puts "  retry # #{loop} - Waiting for DNS: #{fqdn}"
+          print CLEAR_LINE + "    retry # #{loop} - Waiting for DNS: #{fqdn}"
+          $stdout.flush
           sleep_time = delay(sleep_time)
       end
+    end
+    
+    # if we have executed print statements, then move to the next line
+    if loop > 0
+      puts
     end
     
     # If the hostname couldn't be resolved, print out the git URL
@@ -461,7 +476,7 @@ WARNING
     git_url = "ssh://#{app_uuid}@#{app_name}-#{namespace}.#{rhc_domain}/~/git/#{app_name}.git/"
     
     unless no_git
-        puts "Pulling new repo down"
+        puts "Pulling new repo down" if @mydebug
     
         puts "git clone --quiet #{git_url} #{repo_dir}" if @mydebug
         quiet = (@mydebug ? ' ' : '--quiet ')
@@ -473,7 +488,8 @@ WARNING
         end
     else
       if no_git_message
-        puts no_git_message
+        # if this is a jenkins application, then print this message only in debug mode
+        puts no_git_message if @mydebug || !app_type.index("jenkins")
       else         
         puts <<IMPORTANT
 
@@ -508,57 +524,64 @@ IMPORTANT
            }
   end
 
-  def self.check_app_available(net_http, app_name, fqdn, health_check_path, result, git_url, repo_dir, no_git)
+  def self.check_app_available(net_http, app_name, app_type, fqdn, health_check_path, result, git_url, repo_dir, no_git)
       #
       # Test several times, doubling sleep time between attempts.
       #
       sleep_time = 2
       attempt = 0
-      puts "Confirming application '#{app_name}' is available"
+      puts "Confirming application '#{app_name}' is available" if @mydebug
       while attempt < MAX_RETRIES
           attempt += 1
-          puts "  Attempt # #{attempt}"
+          if @mydebug
+            puts "  Attempt # #{attempt}"
+          else
+            print CLEAR_LINE + "Confirming application '#{app_name}' is available:  Attempt # #{attempt}"
+          end
+          $stdout.flush
           url = URI.parse("http://#{fqdn}/#{health_check_path}")
+          
+          sleep(2.0)
           begin
             response = net_http.get_response(url)
           rescue Exception => e
             response = nil
           end
           if !response.nil? && response.code == "200" && response.body[0,1] == "1"
+            puts CLEAR_LINE + "Confirming application '#{app_name}' is available:  Success!"
             puts <<LOOKSGOOD
 
-Success!  Your application '#{app_name}' is now published here:
-
+Your application '#{app_name}' is now published here:
       http://#{fqdn}/
+LOOKSGOOD
+
+            if @mydebug || !app_type.index("jenkins")
+              puts <<LOOKSGOOD
 
 The remote repository is located here:
-
     #{git_url}
-
 LOOKSGOOD
-            unless no_git
-      puts <<LOOKSGOOD
+              unless no_git
+                puts <<LOOKSGOOD
+
 To make changes to '#{app_name}', commit to #{repo_dir}/.
+
 LOOKSGOOD
-            else
-        puts <<LOOKSGOOD
+              else
+                puts <<LOOKSGOOD
 To make changes to '#{app_name}', you must first clone it with:
-
-    git clone #{git_url}
-
+      git clone #{git_url}
+  
 LOOKSGOOD
-        puts <<LOOKSGOOD
+
+              puts <<LOOKSGOOD
 Then run 'git push' to update your OpenShift Express space.
 
 LOOKSGOOD
+              end
             end
             if result && !result.empty?
-        
-              puts <<LOOKSGOOD
-
-#{result}
-              
-LOOKSGOOD
+              puts "#{result}"
             end
             return true
           end
@@ -566,8 +589,7 @@ LOOKSGOOD
             puts "Server responded with #{response.code}"
             puts response.body unless response.code == '503'
           end
-          puts
-          puts "    sleeping #{sleep_time} seconds"
+          puts "    sleeping #{sleep_time} seconds" if @mydebug
           sleep sleep_time
           sleep_time = delay(sleep_time)
       end
@@ -610,8 +632,10 @@ LOOKSGOOD
     response = http_post(net_http, url, json_data, password)
     
     if response.code == '200'
-        json_resp = JSON.parse(response.body)
-        print_response_success(json_resp, true)
+      json_resp = JSON.parse(response.body)
+      # print the result only in debug mode
+      # else just display the messages
+      print_response_success(json_resp, @mydebug)
     else
         print_response_err(response)
     end
