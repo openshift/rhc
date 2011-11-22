@@ -188,9 +188,6 @@ end
 #                                                   #                                                  
 #####################################################
 
-# Load the error messages from after __END__
-$messages = YAML.load(DATA)
-
 def error_for(name,*args)
   if name.kind_of? String
     name = name.downcase.to_sym
@@ -406,8 +403,9 @@ end
 Test::Unit::AutoRunner::RUNNERS[:console] = proc do |r|
   CheckRunner
 end
-__END__
---- 
+
+$messages = YAML.load <<-EOF
+---
   :started: Analyzing system
   :passed: Congratulations, your system has passed all tests
   :failed: Your system did not pass all of the tests
@@ -425,3 +423,4 @@ __END__
   :bad_permissions: "File %s has incorrect permissions %s\n FIX: Permissions should match %s"
   :no_keys_loaded: Either ssh-agent is not running or you do not have any keys loaded 
   :pubkey_not_loaded: Your public key is not loaded into a running ssh-agent
+  EOF
