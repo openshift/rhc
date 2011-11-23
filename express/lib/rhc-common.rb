@@ -362,8 +362,8 @@ module RHC
       return resp.any?
   end
   
-  def self.create_app(libra_server, net_http, user_info, app_name, app_type, rhlogin, password, repo_dir=nil, no_dns=false, no_git=false, no_git_message=nil)
-    puts "Attempting to create remote application space: #{app_name}"
+  def self.create_app(libra_server, net_http, user_info, app_name, app_type, rhlogin, password, repo_dir=nil, no_dns=false, no_git=false, is_embedded_jenkins=false)
+    puts "Creating application: #{app_name}"
     
     data = {:cartridge => app_type,
             :action => 'configure',
@@ -487,9 +487,17 @@ WARNING
             exit 216
         end
     else
-      if no_git_message
-        # if this is a jenkins application, then print this message only in debug mode
-        puts no_git_message if @mydebug || !app_type.index("jenkins")
+      if is_embedded_jenkins
+        # if this is a jenkins client application to be embedded, 
+        # then print this message only in debug mode
+        if @mydebug
+          puts "
+Note: There is a git repo for your Jenkins application '#{app_name}'
+but it isn't being downloaded as part of this process.  In most cases
+it isn't needed but you can always clone it later.
+
+"
+        end
       else         
         puts <<IMPORTANT
 
@@ -524,7 +532,7 @@ IMPORTANT
            }
   end
 
-  def self.check_app_available(net_http, app_name, app_type, fqdn, health_check_path, result, git_url, repo_dir, no_git)
+  def self.check_app_available(net_http, app_name, fqdn, health_check_path, result, git_url, repo_dir, no_git)
       #
       # Test several times, doubling sleep time between attempts.
       #
@@ -549,35 +557,20 @@ IMPORTANT
           end
           if !response.nil? && response.code == "200" && response.body[0,1] == "1"
             puts CLEAR_LINE + "Confirming application '#{app_name}' is available:  Success!"
-            puts <<LOOKSGOOD
+            puts ""
+            puts "#{app_name} published:  http://#{fqdn}/"
+            puts "git url:  #{git_url}"
 
-Your application '#{app_name}' is now published here:
-      http://#{fqdn}/
-LOOKSGOOD
-
-            if @mydebug || !app_type.index("jenkins")
-              puts <<LOOKSGOOD
-
-The remote repository is located here:
-    #{git_url}
-LOOKSGOOD
+            if @mydebug
               unless no_git
-                puts <<LOOKSGOOD
-
-To make changes to '#{app_name}', commit to #{repo_dir}/.
-
-LOOKSGOOD
+                puts "To make changes to '#{app_name}', commit to #{repo_dir}/."
               else
                 puts <<LOOKSGOOD
 To make changes to '#{app_name}', you must first clone it with:
       git clone #{git_url}
-  
-LOOKSGOOD
-
-              puts <<LOOKSGOOD
-Then run 'git push' to update your OpenShift Express space.
 
 LOOKSGOOD
+                puts "Then run 'git push' to update your OpenShift Express space."
               end
             end
             if result && !result.empty?
@@ -606,7 +599,7 @@ LOOKSGOOD
     http_post(net_http, url, json_data, password)
   end
   
-  def self.ctl_app(libra_server, net_http, app_name, rhlogin, password, action, embedded=false, framework=nil, server_alias=nil)
+  def self.ctl_app(libra_server, net_http, app_name, rhlogin, password, action, embedded=false, framework=nil, server_alias=nil, print_result=true)
     data = {:action => action,
             :app_name => app_name,
             :rhlogin => rhlogin
@@ -633,7 +626,7 @@ LOOKSGOOD
     
     if response.code == '200'
       json_resp = JSON.parse(response.body)
-      print_response_success(json_resp, true)
+      print_response_success(json_resp, print_result || @mydebug)
     else
         print_response_err(response)
     end

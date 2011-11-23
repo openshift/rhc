@@ -224,14 +224,8 @@ unless opt['nogit']
 end
 
 if jenkins_app_name && !has_jenkins
-  jenkins_no_git_message = "
-Note: There is a git repo for your Jenkins application '#{jenkins_app_name}'
-but it isn't being downloaded as part of this process.  In most cases
-it isn't needed but you can always clone it later.
-
-"
-  jenkins_app = RHC::create_app(libra_server, @http, user_info, jenkins_app_name, 'jenkins-1.4', opt['rhlogin'], password, nil, false, true, jenkins_no_git_message)
-  available = RHC::check_app_available(@http, jenkins_app[:app_name], 'jenkins-1.4', jenkins_app[:fqdn], jenkins_app[:health_check_path], jenkins_app[:result], jenkins_app[:git_url], nil, true)
+  jenkins_app = RHC::create_app(libra_server, @http, user_info, jenkins_app_name, 'jenkins-1.4', opt['rhlogin'], password, nil, false, true, true)
+  available = RHC::check_app_available(@http, jenkins_app[:app_name], jenkins_app[:fqdn], jenkins_app[:health_check_path], jenkins_app[:result], jenkins_app[:git_url], nil, true)
   if !available
     puts "Unable to access your new Jenkins application."
     exit 1
@@ -241,16 +235,14 @@ end
 #
 # Create remote application space
 #
-main_app = RHC::create_app(libra_server, @http, user_info, opt['app'], opt['type'], opt['rhlogin'], password, opt['repo'], opt['no-dns'], opt['nogit'])
+main_app = RHC::create_app(libra_server, @http, user_info, opt['app'], opt['type'], opt['rhlogin'], password, opt['repo'], opt['no-dns'], opt['nogit'], false)
 if jenkins_app_name
-  puts "
-Now embedding the jenkins client into '#{opt['app']}'...
-"
-  RHC::ctl_app(libra_server, @http, opt['app'], opt['rhlogin'], password, 'configure', true, 'jenkins-client-1.4')
+  puts "Now embedding the jenkins client into '#{opt['app']}'..."
+  RHC::ctl_app(libra_server, @http, opt['app'], opt['rhlogin'], password, 'configure', true, 'jenkins-client-1.4', nil, false)
 end
 
 unless opt['no-dns']
-  available = RHC::check_app_available(@http, main_app[:app_name], opt['type'], main_app[:fqdn], main_app[:health_check_path], main_app[:result], main_app[:git_url], opt['repo'], opt['nogit'])
+  available = RHC::check_app_available(@http, main_app[:app_name], main_app[:fqdn], main_app[:health_check_path], main_app[:result], main_app[:git_url], opt['repo'], opt['nogit'])
   if !available
     puts "Unable to access your new application."
     exit 1
