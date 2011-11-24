@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.82.15
+Version:       0.82.16
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -97,6 +97,9 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/openshift/express.conf
 
 %changelog
+* Wed Nov 23 2011 Dan McPherson <dmcphers@redhat.com> 0.82.16-1
+- further trimming the output of rhc-create-app (abhgupta@redhat.com)
+
 * Tue Nov 22 2011 Dan McPherson <dmcphers@redhat.com> 0.82.15-1
 - Added 2 checks to prevent errors if password not specified or kfile does not
   exist (fotios@redhat.com)
