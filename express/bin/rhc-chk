@@ -85,6 +85,7 @@ $opts_config_path   = @opts_config_path
 $local_config_path  = @local_config_path
 $opts_config        = @opts_config
 $local_config       = @local_config
+$global_config      = @global_config
 
 # Pull in configs from files
 $libra_server = get_var('libra_server')
@@ -120,7 +121,8 @@ $debuginfo = {
   'options' => {
     "Command Line" => $opt,
     "Opts" => $opts_config,
-    "Local" => $local_config
+    "Local" => $local_config,
+    "Global" => $global_config
   }
 }
 
@@ -157,6 +159,7 @@ module TestBase
     @local_config_path  = $local_config_path
     @opts_config        = $opts_config
     @local_config       = $local_config
+    @global_config      = $global_config
   end
 
   def fetch_url_json(uri, data)
