@@ -677,8 +677,11 @@ end
 # Check for proxy environment
 #
 if ENV['http_proxy']
-  host, port = ENV['http_proxy'].split(':')
-  @http = Net::HTTP::Proxy(host, port)
+  if ENV['http_proxy']!~/^(\w+):\/\// then
+    ENV['http_proxy']="http://" + ENV['http_proxy']
+  end
+  proxy_uri=URI.parse(ENV['http_proxy'])
+  @http = Net::HTTP::Proxy(proxy_uri.host, proxy_uri.port, proxy_uri.user, proxy_uri.password)
 else
   @http = Net::HTTP
 end
