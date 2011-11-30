@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.82.17
+Version:       0.82.18
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -97,6 +97,13 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/openshift/express.conf
 
 %changelog
+* Wed Nov 30 2011 Dan McPherson <dmcphers@redhat.com> 0.82.18-1
+- Bugzilla ticket 710112 Fix up http_proxy environment variable to allow
+  username and password.  Also allow it to specify a full URL for compat with
+  other utilities.  All of these should now work:
+  http://foo@bar:10.11.12.13:3128/ http://10.11.12.13:3128
+  foo@bar:10.11.12.13:3128 10.11.12.13:3128 (rmillner@redhat.com)
+
 * Mon Nov 28 2011 Dan McPherson <dmcphers@redhat.com> 0.82.17-1
 - Added global config file support to rhc-chk (fotios@redhat.com)
 
