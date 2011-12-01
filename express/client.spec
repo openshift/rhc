@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.83.0
+Version:       0.83.1
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -97,6 +97,9 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/openshift/express.conf
 
 %changelog
+* Thu Dec 01 2011 Dan McPherson <dmcphers@redhat.com> 0.83.1-1
+- bump spec version (dmcphers@redhat.com)
+
 * Wed Nov 30 2011 Dan McPherson <dmcphers@redhat.com> 0.82.18-1
 - Bugzilla ticket 710112 Fix up http_proxy environment variable to allow
   username and password.  Also allow it to specify a full URL for compat with
