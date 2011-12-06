@@ -432,6 +432,9 @@ module RHC
       puts
     end
     
+    # construct the Git URL
+    git_url = "ssh://#{app_uuid}@#{app_name}-#{namespace}.#{rhc_domain}/~/git/#{app_name}.git/"
+
     # If the hostname couldn't be resolved, print out the git URL
     # and exit cleanly.  This will help solve issues where DNS times
     # out in APAC, etc on resolution.
@@ -472,8 +475,6 @@ WARNING
     #
     # Pull new repo locally
     #
-    
-    git_url = "ssh://#{app_uuid}@#{app_name}-#{namespace}.#{rhc_domain}/~/git/#{app_name}.git/"
     
     unless no_git
         puts "Pulling new repo down" if @mydebug
