@@ -38,10 +38,11 @@ module RHC
   MAX_RETRIES = 7
   DEFAULT_DELAY = 2
   API = "1.1.1"
+  PATTERN_VERSION=/\A\d+\.\d+\.\d+\z/
   @mytimeout = 10
   @mydebug = false
-  broker_version = "?.?.?"
-  api_version = "?.?.?"
+  @@broker_version = "?.?.?"
+  @@api_version = "?.?.?"
 
   # reset lines
   # \r moves the cursor to the beginning of line
@@ -75,11 +76,19 @@ module RHC
   end
 
   def self.update_server_api_v(dict)
-    if !dict['broker'].nil? && (dict['broker'] =~ /\A\d+\.\d+\.\d+\z/)
-      broker_version = dict['broker']
+    if !dict['broker'].nil? && (dict['broker'] =~ PATTERN_VERSION)
+      @@broker_version = dict['broker']
     end
-    if !dict['api'].nil? && (dict['api'] =~ /\A\d+\.\d+\.\d+\z/)
-      api_version = dict['api']
+    if !dict['api'].nil? && (dict['api'] =~ PATTERN_VERSION)
+      @@api_version = dict['api']
+    end
+  end
+
+  def self.check_version
+    if @@api_version =~ PATTERN_VERSION
+      if API != @@api_version
+        puts "\nNOTICE: Client API version (#{API}) does not match the server (#{@@api_version}).\nThough requests may succeed, you should consider updating your client tools.\n\n"
+      end
     end
   end
 
@@ -634,6 +643,12 @@ LOOKSGOOD
   end
 
 end
+
+# provide a hook for performing actions before rhc-* commands exit
+at_exit {
+  # ensure client tools are up to date
+  RHC::check_version
+}
 
 #
 # Config paths... /etc/openshift/express.conf or $GEM/conf/express.conf -> ~/.openshift/express.conf
