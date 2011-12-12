@@ -111,7 +111,7 @@ rhc_domain = user_info['user_info']['rhc_domain']
 
 puts "Checking available ports..."
 
-hosts_and_ports, hosts_and_ports_descriptions = RHC::list_ports(rhc_domain, namespace, app_name, app_uuid)
+hosts_and_ports, hosts_and_ports_descriptions = RHC::list_ports(rhc_domain, namespace, app_name, app_uuid, debug)
 
 if hosts_and_ports.length == 0
   puts
@@ -127,9 +127,9 @@ ssh_cmd = "ssh -N "
 hosts_and_ports.each { |port| ssh_cmd << "-L #{port}:#{port} " }
 ssh_cmd << "#{app_uuid}@#{app_name}-#{namespace}.#{rhc_domain}"
 
+puts ssh_cmd if debug
 puts
 puts "Use ctl + c to stop"
-puts ssh_cmd if debug
 
 begin
   exec ssh_cmd
