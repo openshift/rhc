@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.83.5
+Version:       0.83.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -98,6 +98,11 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/openshift/express.conf
 
 %changelog
+* Mon Dec 12 2011 Dan McPherson <dmcphers@redhat.com> 0.83.6-1
+- Now using popen3(ssh) for rhc-port-forward instead of Net::SSH - we don't
+  want to require additional gems (ffranz@redhat.com)
+- US1550: add threaddump command (wdecoste@localhost.localdomain)
+
 * Sun Dec 11 2011 Dan McPherson <dmcphers@redhat.com> 0.83.5-1
 - New client tool rhc-port-forward for SSH tunelling (ffranz@redhat.com)
 
