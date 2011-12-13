@@ -1,44 +1,44 @@
 .\" Process this file with
 .\" groff -man -Tascii rhc-user-info.1
-.\"
-.TH RHC_USER_INFO 1 "JANUARY 2011" Linux "User Manuals"
-.SH NAME
-rhc-user-info \- Displays information about a user on the rhcloud.com system
-.SH SYNOPSIS
-.B rhc-user-info [-p
+.\" 
+.TH "RHC_USER_INFO" "1" "JANUARY 2011" "Linux" "User Manuals"
+.SH "NAME"
+rhc\-user\-info \- Displays information about a user on the rhcloud.com system
+.SH "SYNOPSIS"
+.B rhc\-user\-info [\-p
 .I password
-.B ] [-a] [-i] [-d] [-h]
-.B [-l
+.B ] [\-a] [\-i] [\-d] [\-h]
+.B [\-l
 .I rhlogin
 .B ]
-.B [--config
+.B [\-\-config
 .I config_path
 .B ]
-.B [--timeout
+.B [\-\-timeout
 .I #
 .B ]
-.SH DESCRIPTION
-.B rhc-user-info
+.SH "DESCRIPTION"
+.B rhc\-user\-info
 displays information about a user on the rhcloud.com system.
-.SH OPTIONS
-.IP "-l|--rhlogin login"
+.SH "OPTIONS"
+.IP "\-l|\-\-rhlogin login"
 Red Hat login (RHN or OpenShift login with OpenShift Express access)
-.IP "-p|--password password"
+.IP "\-p|\-\-password password"
 RHLogin password
-.IP "-a|--apps"
+.IP "\-a|\-\-apps"
 List applications
-.IP "-i|--info"
+.IP "\-i|\-\-info"
 Show user information
-.IP -d|--debug
+.IP \-d|\-\-debug
 Enable debugging / verbose output
-.IP -h|--help
+.IP \-h|\-\-help
 Display help menu
-.IP --config
+.IP \-\-config
 Alternate full pathname for the config file
-.IP --timeout
+.IP \-\-timeout
 Timeout value, in seconds, for the connection (default is 10)
-.SH FILES
-.I <ruby_gem_dir>/gems/rhc-<version>/conf/express.conf
+.SH "FILES"
+.I <ruby_gem_dir>/gems/rhc\-<version>/conf/express.conf
 .RS
 The RubyGem system wide configuration file. See
 .BR express.conf (5)
@@ -56,17 +56,18 @@ Per user configuration file. See
 .BR express.conf (5)
 for further details.
 .RE
-.SH BUGS
+.SH "BUGS"
 Please contact the Red Hat OpenShift team.
 Forums: http://www.redhat.com/openshift/
 IRC: #openshift on irc.freenode.net
-.SH AUTHOR
+.SH "AUTHOR"
 Mike McGrath <mmcgrath@redhat.com>, Jim Jagielski <jimjag@redhat.com>
 .SH "SEE ALSO"
-.BR rhc-chk (1),
-.BR rhc-create-app (1),
-.BR rhc-ctl-app (1),
-.BR rhc-snapshot(1),
-.BR rhc-create-domain(1),
-.BR rhc-tail-files(1),
+.BR rhc\-chk (1),
+.BR rhc\-create\-app (1),
+.BR rhc\-ctl\-app (1),
+.BR rhc\-snapshot(1),
+.BR rhc\-create\-domain(1),
+.BR rhc\-tail\-files(1),
+.BR rhc\-port\-forward(1),
 .BR express.conf (5)

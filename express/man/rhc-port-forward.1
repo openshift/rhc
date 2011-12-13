@@ -3,7 +3,7 @@
 .\" 
 .TH "RHC_PORT_FORWARD" "1" "DECEMBER 2011" "Linux" "User Manuals"
 .SH "NAME"
-rhc\-port\-forward \- Forward ports from remote running applications in real\-time
+rhc\-port\-forward \- Securely forward ports from your application's remote running services to your local host
 .SH "SYNOPSIS"
 .B rhc\-port\-forward [\-p
 .I password
@@ -20,9 +20,32 @@ rhc\-port\-forward \- Forward ports from remote running applications in real\-ti
 .I application_name
 .SH "DESCRIPTION"
 .B rhc\-port\-forward
-connects to a remote running application, checks all
-relevant ports available for forwarding and forwards
-all ports found. Useful for development.
+
+.I SSH Port Forwarding, 
+sometimes called 
+.I SSH Tunneling,
+allows you to establish a secure connection between 
+a local computer and a remote machine through which services can be relayed.
+
+The 
+.I rhc\-port\-forward 
+tool uses port forwarding to make the ports from the services on OpenShift server 
+where your application is running available on your local machine so it can be used 
+just as if it was your machine's port. This port is then available to other programs
+on your local host, outside the SSH session.
+
+For example, let's say your application makes use of the 
+MySQL cartridge, which usually runs on port 3306. With 
+.I rhc\-port\-forward 
+you could connect to your application's database from a tool 
+running locally on your machine, and then perform SQL 
+operations on your database like it was running locally (connecting
+to a host like 
+.I 127.0.250.1:3306 
+for example).
+
+Note that the service will be forwarded locally on the same port number it
+is running on the remove server.
 .SH "OPTIONS"
 .IP "\-l|\-\-rhlogin login"
 Red Hat login (RHN or OpenShift login with OpenShift Express access)
@@ -38,6 +61,10 @@ Display help menu
 Alternate full pathname for the config file
 .IP \-\-timeout
 Timeout value, in seconds, for the connection (default is 10)
+.SH "EXAMPLE"
+Forwards ports of all services runing on the remote server to your local host:
+
+rhc\-port\-forward \-l login \-a application_name
 .SH "FILES"
 .I <ruby_gem_dir>/gems/rhc\-<version>/conf/express.conf
 .RS
