@@ -294,8 +294,6 @@ module RHC
     end
     exit_code = 1
     if response.content_type == 'application/json'
-      print "JSON response:"
-      $stdout.flush
       begin
         json_resp = JSON.parse(response.body)
         exit_code = print_json_body(json_resp)
