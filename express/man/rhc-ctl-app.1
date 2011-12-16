@@ -51,7 +51,7 @@ RHLogin password
 .IP "\-a|\-\-app application_name"
 Name of application to create
 .IP "\-c|\-\-command command"
-The command to send to remote server (start|stop|force\-stop|restart|reload|status|destroy|tidy|add\-alias|remove\-alias)
+The command to send to remote server (start|stop|force\-stop|restart|reload|status|destroy|tidy|add\-alias|remove\-alias|threaddump)
 .br 
 start \- Starts the application (includes embedded)
 .br 
@@ -72,6 +72,8 @@ tidy \- Garbage collects the git repo and empties log/tmp dirs
 add\-alias \- Add a custom domain name for the application
 .br 
 remove\-alias \- Remove a custom domain name for the application
+.br
+threaddump \- Trigger a thread dump for jbossas applications
 .IP "\-e|\-\-embed embed_action"
 The action to add or remove an embedded cartridge (add|remove|stop|start|restart|status|reload)\-$cartridge. Ex: add\-mysql\-5.1
 .br 
