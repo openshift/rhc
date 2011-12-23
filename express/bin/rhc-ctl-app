@@ -96,7 +96,7 @@ ssh_config_d = "#{ENV['HOME']}/.ssh/"
 if opt["embedded-list"]
     p_embedded_list
 end
-if opt["help"]
+if opt["help"] || 0 != ARGV.length 
     p_usage
 end
 
