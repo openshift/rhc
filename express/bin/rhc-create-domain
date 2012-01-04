@@ -84,7 +84,7 @@ ssh_pub_key_file_path = get_kpfile(ssh_key_file_path, opt['alter'])
 ssh_config = "#{ENV['HOME']}/.ssh/config"
 ssh_config_d = "#{ENV['HOME']}/.ssh/"
 
-if opt["help"]
+if opt["help"] || 0 != ARGV.length 
     p_usage
 end
 
