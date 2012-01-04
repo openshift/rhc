@@ -145,7 +145,7 @@ if opt['command'] and (opt['alias'] and !(opt['command'] =~ /-alias$/)) || ((opt
 end
 
 if opt["command"] == "threaddump"
-    print "NOTE: The threaddump command is only applicable to applications of type jbossas-7.0. The thread dump file will be available via 'rhc-tail-files -f #{opt['app']}/jbossas-7.0/stdout.log'"  
+    puts "NOTE: The threaddump command is only applicable to applications of type jbossas-7.0. The thread dump file will be available via 'rhc-tail-files -f #{opt['app']}/jbossas-7.0/stdout.log'"  
 end
 
 password = opt['password']
