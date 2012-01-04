@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.84.3
+Version:       0.84.4
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -98,6 +98,9 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/openshift/express.conf
 
 %changelog
+* Tue Jan 03 2012 Dan McPherson <dmcphers@redhat.com> 0.84.4-1
+- better formatting (dmcphers@redhat.com)
+
 * Fri Dec 16 2011 Dan McPherson <dmcphers@redhat.com> 0.84.3-1
 - update man page for threaddump (bdecoste@gmail.com)
 
