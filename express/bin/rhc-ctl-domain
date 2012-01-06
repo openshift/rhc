@@ -140,9 +140,11 @@ if opt['add-ssh-key'] || opt['update-ssh-key']
   if opt['ssh']
     if File.readable?(opt['ssh'])
       begin
-        ssh_key = File.open(opt['ssh']).gets.chomp.split(' ')[1]
+        ssh_keyfile_contents = File.open(opt['ssh']).gets.chomp.split(' ')
+        ssh_key = ssh_keyfile_contents[1]
+        ssh_key_type = ssh_keyfile_contents[0]
       rescue Exception => e
-        puts "Invalid public keyfile format! Please specify a valid user public keyfile #{opt['ssh']}"
+        puts "Invalid public keyfile format! Please specify a valid user public keyfile."
         exit 1
       end
     else
@@ -155,7 +157,9 @@ if opt['add-ssh-key'] || opt['update-ssh-key']
     # Use system for interaction
     system("ssh-keygen -t rsa -f '#{key_name}'")
     ssh_pub_key_file = Dir.pwd + '/' + key_name + '.pub'
-    ssh_key = File.open(ssh_pub_key_file).gets.chomp.split(' ')[1] 
+    ssh_keyfile_contents = File.open(ssh_pub_key_file).gets.chomp.split(' ')
+    ssh_key = ssh_keyfile_contents[1]
+    ssh_key_type = ssh_keyfile_contents[0]
   end
 end
 
@@ -166,6 +170,7 @@ if opt['add-ssh-key']
   data[:key_name] = opt['add-ssh-key']
   data[:ssh] = ssh_key
   data[:action] = 'add-key'
+  data[:key_type] = ssh_key_type
 elsif opt['remove-ssh-key']
   url = URI.parse("https://#{libra_server}/broker/ssh_keys")
   data[:key_name] = opt['remove-ssh-key']
@@ -175,6 +180,7 @@ elsif opt['update-ssh-key']
   data[:key_name] = opt['update-ssh-key']
   data[:ssh] = ssh_key
   data[:action] = 'update-key'
+  data[:key_type] = ssh_key_type
 elsif opt['destroy']
   url = URI.parse("https://#{libra_server}/broker/domain")
   data[:delete] = true
