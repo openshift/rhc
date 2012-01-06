@@ -165,6 +165,10 @@ module RHC
     check_field(namespace, 'namespace', DEFAULT_MAX_LENGTH)
   end
 
+  def self.check_key(keyname)
+    check_field(keyname, 'keyname', DEFAULT_MAX_LENGTH)
+  end
+
   def self.check_field(field, type, max=0)
     if field
       if field =~ /[^0-9a-zA-Z]/
@@ -241,6 +245,40 @@ module RHC
       exit 1
     end
     user_info
+  end
+
+  def self.get_ssh_keys(libra_server, rhlogin, password, net_http)
+    data = {'rhlogin' => rhlogin, 'action' => 'list-keys'}
+    if @mydebug
+      data[:debug] = true
+    end
+    print_post_data(data)
+    json_data = generate_json(data)
+
+    url = URI.parse("https://#{libra_server}/broker/ssh_keys")
+    response = http_post(net_http, url, json_data, password)
+
+    unless response.code == '200'
+      if response.code == '401'
+        puts "Invalid user credentials"
+        exit 97
+      else
+        print_response_err(response)
+      end
+      exit 1
+    end
+    begin
+      json_resp = JSON.parse(response.body)
+    rescue JSON::ParserError
+      exit 1
+    end
+    update_server_api_v(json_resp)
+    begin
+      ssh_keys = (JSON.parse(json_resp['data'].to_s))['keys']
+    rescue JSON::ParserError
+      exit 1
+    end
+    ssh_keys
   end
 
   def self.get_password

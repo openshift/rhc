@@ -1,0 +1,208 @@
+#!/usr/bin/env ruby
+# Copyright 2011 Red Hat, Inc.
+#
+# Permission is hereby granted, free of charge, to any person
+# obtaining a copy of this software and associated documentation files
+# (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge,
+# publish, distribute, sublicense, and/or sell copies of the Software,
+# and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT.  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+# BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+# ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+require 'rhc-common'
+
+#
+# print help
+#
+def p_usage
+
+  puts <<USAGE
+
+Usage: #{$0}
+Manage multiple keys for the registered rhcloud user.
+
+  rhc-user-mgmt -l <rhlogin> [-p <passwd>] (-a <key-name> [-k <ssh-pubkey>] | -r <key-name> | -u <key-name> [-k <ssh-pubkey>] | -e)
+
+  -l|--rhlogin         rhlogin      Red Hat login (RHN or OpenShift login with OpenShift Express access) (required)
+  -p|--password        password     RHLogin password (optional, will prompt)
+  -n|--namespace       namespace    Namespace for your application(s) (alphanumeric - max #{RHC::DEFAULT_MAX_LENGTH} chars) (required for destroying domain)
+  -a|--add-ssh-key     key-name     Add key to the user account
+  -r|--remove-ssh-key  key-name     Remove key from the user account
+  -u|--update-ssh-key  key-name     Update key for the user account
+  --destroy                         Destroys the domain and any added ssh keys
+  -k|--ssh             key-filepath SSH public key file path 
+  --config             path         Path of alternate config file
+  -d|--debug                        Print Debug info
+  -h|--help                         Show Usage info
+
+USAGE
+exit 255
+end
+
+begin
+    opts = GetoptLong.new(
+        ["--debug", "-d", GetoptLong::NO_ARGUMENT],
+        ["--help",  "-h", GetoptLong::NO_ARGUMENT],
+        ["--rhlogin",  "-l", GetoptLong::REQUIRED_ARGUMENT],
+        ["--password",  "-p", GetoptLong::REQUIRED_ARGUMENT],
+        ["--namespace",  "-n", GetoptLong::REQUIRED_ARGUMENT],
+        ["--add-ssh-key", "-a", GetoptLong::REQUIRED_ARGUMENT],
+        ["--remove-ssh-key", "-r", GetoptLong::REQUIRED_ARGUMENT],
+        ["--update-ssh-key", "-u", GetoptLong::REQUIRED_ARGUMENT],
+        ["--destroy", GetoptLong::NO_ARGUMENT],
+        ["--ssh", "-k", GetoptLong::REQUIRED_ARGUMENT],
+        ["--config", GetoptLong::REQUIRED_ARGUMENT]
+    )
+    
+    command_list = ['add-ssh-key', 'remove-ssh-key', 'update-ssh-key', 'destroy']
+    command_count = 0
+    opt = {}
+    opts.each do |o, a|
+        opt[o[2..-1]] = a.to_s
+        
+        # check to see if there are multiple commands
+        if command_list.include?(o[2..-1])
+            command_count += 1
+        end
+    end
+rescue Exception => e
+  #puts e.message
+  p_usage
+end
+
+# Validate for no command or multiple commands being specified
+if command_count == 0
+    puts "Missing command! You must specify the operation to perform."
+    p_usage
+elsif command_count > 1
+    puts "Multiple commands specified! You can only perform one operation at a time."
+    p_usage
+end
+
+# If provided a config path, check it
+check_cpath(opt)
+
+# Pull in configs from files
+libra_server = get_var('libra_server')
+debug = get_var('debug') == 'false' ? nil : get_var('debug')
+opt['rhlogin'] = get_var('default_rhlogin') unless opt['rhlogin']
+
+if opt['destroy'] && !RHC::check_namespace(opt['namespace'])
+    puts "Missing or invalid namespace! You must specify the namespace in order to destroy it."
+    p_usage
+end
+
+if opt['help']
+    p_usage
+end
+
+if opt['debug']
+    debug = true
+end
+RHC::debug(debug)
+
+# This is taken care of by the command_count validation performed earlier
+#if !opt['rhlogin'] || !(opt['add-key'] || opt['remove-key'] || opt['update-key'] || opt['list-keys']) || \
+#   (opt['add-key'] && (opt['remove-key'] || opt['update-key'] || opt['list-keys'])) || \
+#   (opt['remove-key'] && (opt['add-key'] || opt['update-key'] || opt['list-keys'])) || \
+#   (opt['update-key'] && (opt['add-key'] || opt['remove-key'] || opt['list-keys'])) || \
+#   (opt['list-keys'] && (opt['add-key'] || opt['remove-key'] || opt['update-key']))
+#    p_usage
+#end
+
+if !RHC::check_rhlogin(opt['rhlogin']) || \
+   (opt['add-ssh-key'] && !RHC::check_key(opt['add-ssh-key'])) || \
+   (opt['remove-ssh-key'] && !RHC::check_key(opt['remove-ssh-key'])) || \
+   (opt['update-ssh-key'] && !RHC::check_key(opt['update-ssh-key']))
+    p_usage
+end
+
+password = opt['password']
+if !password
+  password = RHC::get_password
+end
+
+#
+# Read user public ssh key
+if opt['add-ssh-key'] || opt['update-ssh-key']
+  if opt['ssh']
+    if File.readable?(opt['ssh'])
+      begin
+        ssh_key = File.open(opt['ssh']).gets.chomp.split(' ')[1]
+      rescue Exception => e
+        puts "Invalid public keyfile format! Please specify a valid user public keyfile #{opt['ssh']}"
+        exit 1
+      end
+    else
+      puts "Unable to read user public keyfile #{opt['ssh']}"
+      exit 1
+    end
+  else # create key
+    key_name = opt['add-ssh-key'] ? opt['add-ssh-key'] : opt['update-ssh-key']
+    puts "Generating ssh key pair for user '#{key_name}' in the dir '#{Dir.pwd}/'"
+    # Use system for interaction
+    system("ssh-keygen -t rsa -f '#{key_name}'")
+    ssh_pub_key_file = Dir.pwd + '/' + key_name + '.pub'
+    ssh_key = File.open(ssh_pub_key_file).gets.chomp.split(' ')[1] 
+  end
+end
+
+data = {}
+data[:rhlogin] = opt['rhlogin']
+if opt['add-ssh-key']
+  url = URI.parse("https://#{libra_server}/broker/ssh_keys")
+  data[:key_name] = opt['add-ssh-key']
+  data[:ssh] = ssh_key
+  data[:action] = 'add-key'
+elsif opt['remove-ssh-key']
+  url = URI.parse("https://#{libra_server}/broker/ssh_keys")
+  data[:key_name] = opt['remove-ssh-key']
+  data[:action] = 'remove-key'
+elsif opt['update-ssh-key']
+  url = URI.parse("https://#{libra_server}/broker/ssh_keys")
+  data[:key_name] = opt['update-ssh-key']
+  data[:ssh] = ssh_key
+  data[:action] = 'update-key'
+elsif opt['destroy']
+  url = URI.parse("https://#{libra_server}/broker/domain")
+  data[:delete] = true
+  data[:namespace] = opt['namespace']
+end
+
+RHC::print_post_data(data)
+json_data = RHC::generate_json(data)
+
+puts ""
+puts "URL: #{url}"
+puts ""
+puts "POST json_data: #{json_data}"
+puts ""
+response = RHC::http_post(@http, url, json_data, password)
+
+if response.code == '200'
+  begin
+    json_resp = JSON.parse(response.body)
+    RHC::update_server_api_v(json_resp)
+    RHC::print_response_success(json_resp)
+    puts "Success"
+    exit 0
+  rescue JSON::ParserError
+    RHC::print_response_err(response)
+  end
+else
+  RHC::print_response_err(response)
+end
+puts "Failure"
+exit 1

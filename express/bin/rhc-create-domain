@@ -216,11 +216,15 @@ else
     system("ssh-keygen -t rsa -f '#{ssh_key_file_path}'")
 end
 
-ssh_key = File.open(ssh_pub_key_file_path).gets.chomp.split(' ')[1]
+ssh_keyfile_contents = File.open(ssh_pub_key_file_path).gets.chomp.split(' ')
+ssh_key = ssh_keyfile_contents[1]
+ssh_key_type = ssh_keyfile_contents[0]
 
 data = {'namespace' => opt['namespace'],
         'rhlogin' => opt['rhlogin'],
-        'ssh' => ssh_key}
+        'ssh' => ssh_key,
+        'key_type' => ssh_key_type}
+
 if (opt['alter'])
   data[:alter] = true
   not_found_message = "A user with rhlogin '#{opt['rhlogin']}' does not have a registered domain.  Be sure to run rhc-create-domain without -a|--alter first."
