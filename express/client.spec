@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.84.4
+Version:       0.84.5
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -98,6 +98,12 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/openshift/express.conf
 
 %changelog
+* Fri Jan 06 2012 Dan McPherson <dmcphers@redhat.com> 0.84.5-1
+- specifying the ssh key type in the request to the controller
+  (abhgupta@redhat.com)
+- adding features for namespace deletion and user ssh key (additional keys)
+  management (abhgupta@redhat.com)
+
 * Tue Jan 03 2012 Dan McPherson <dmcphers@redhat.com> 0.84.4-1
 - better formatting (dmcphers@redhat.com)
 
