@@ -33,6 +33,6 @@ ARGV.each do|a|
   args += " #{a}"
 end
 
-system("./rhc-domain-info #{args} 2>&1")
+system("rhc-domain-info #{args} 2>&1")
 
 exit 0
