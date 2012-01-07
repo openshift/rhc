@@ -283,11 +283,18 @@ class Test3_SSH < Test::Unit::TestCase
     @@local_derived_ssh_pubkey = key_dump.to_s.strip.split(' ')[1]
 
     assert_not_nil @@local_derived_ssh_pubkey, error_for(:no_derive)
-
     assert_not_nil $user_info, error_for(:no_account) 
-    remote_ssh_pubkey = $user_info["user_info"]["ssh_key"]
 
-    assert_match @@local_derived_ssh_pubkey, remote_ssh_pubkey, error_for(:no_match_pub, @libra_kfile)
+    $remote_ssh_pubkeys = []
+    additional_ssh_keys = RHC::get_ssh_keys($libra_server, $rhlogin, $password, $http)
+    if additional_ssh_keys && additional_ssh_keys.kind_of?(Hash)
+      additional_ssh_keys.each do |name, key|
+        $remote_ssh_pubkeys.push(key)
+      end
+    end
+
+    $remote_ssh_pubkeys.push($user_info["user_info"]["ssh_key"])
+    assert $remote_ssh_pubkeys.include?(@@local_derived_ssh_pubkey), error_for(:no_match_pub, @libra_kfile)
   end
 
   def test_02_ssh_public_key
@@ -299,11 +306,8 @@ class Test3_SSH < Test::Unit::TestCase
 
     assert_not_nil @@local_ssh_pubkey, error_for(:no_pubkey, 'the remote key')
 
-    assert_not_nil $user_info, error_for(:no_account)
-    remote_ssh_pubkey = $user_info["user_info"]["ssh_key"]
-
     # Test public key and remote key
-    assert_match @@local_ssh_pubkey, remote_ssh_pubkey, error_for(:no_match_pub,@libra_kpfile)
+    assert $remote_ssh_pubkeys.include?(@@local_ssh_pubkey), error_for(:no_match_pub, @libra_kfile)
   ensure
     fp.close if fp
   end
@@ -317,7 +321,7 @@ class Test3_SSH < Test::Unit::TestCase
     # Make sure we can load keys from ssh-agent
     assert !loaded_keys.empty?, error_for(:no_keys_loaded)
     loaded_keys.map!{|key| key.split(' ')[1]}
-
+    
     assert_not_nil @@local_ssh_pubkey, error_for(:no_pubkey, 'the keys in ssh-agent')
     assert loaded_keys.include?(@@local_ssh_pubkey),error_for(:pubkey_not_loaded)
   end
