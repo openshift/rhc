@@ -118,6 +118,7 @@ if opt['info']
         puts "#{name} : #{key}"
         puts ""
       end
+      puts "Use rhc-ctl-domain for managing additional ssh keys"
     end
     
 end
