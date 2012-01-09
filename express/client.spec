@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.84.5
+Version:       0.84.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -100,6 +100,15 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/openshift/express.conf
 
 %changelog
+* Fri Jan 06 2012 Dan McPherson <dmcphers@redhat.com> 0.84.6-1
+- adding output comment to highlight command for user ssh key management
+  (abhgupta@redhat.com)
+- reverting a change that was made for local testing (abhgupta@redhat.com)
+- Merge branch 'master' of github.com:openshift/os-client-tools
+  (abhgupta@redhat.com)
+- ensuring rhc-chk does not fail if issued from a machine using a non-default
+  ssh key (abhgupta@redhat.com)
+
 * Fri Jan 06 2012 Dan McPherson <dmcphers@redhat.com> 0.84.5-1
 - specifying the ssh key type in the request to the controller
   (abhgupta@redhat.com)
