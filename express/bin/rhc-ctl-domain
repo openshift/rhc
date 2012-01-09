@@ -190,11 +190,14 @@ end
 RHC::print_post_data(data)
 json_data = RHC::generate_json(data)
 
-puts ""
-puts "URL: #{url}"
-puts ""
-puts "POST json_data: #{json_data}"
-puts ""
+if @mydebug
+  puts ""
+  puts "URL: #{url}"
+  puts ""
+  puts "POST json_data: #{json_data}"
+  puts ""
+end
+
 response = RHC::http_post(@http, url, json_data, password)
 
 if response.code == '200'
