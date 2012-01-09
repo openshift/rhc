@@ -84,6 +84,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/rhc-chk
 %{_bindir}/rhc-create-app
 %{_bindir}/rhc-create-domain
+%{_bindir}/rhc-ctl-domain
+%{_bindir}/rhc-domain-info
 %{_bindir}/rhc-user-info
 %{_bindir}/rhc-ctl-app
 %{_bindir}/rhc-snapshot
@@ -685,4 +687,3 @@ rm -rf $RPM_BUILD_ROOT
 
 * Tue May 31 2011 Matt Hicks <mhicks@redhat.com> 0.72.2-1
 - Bug 707488 (dmcphers@redhat.com)
-
