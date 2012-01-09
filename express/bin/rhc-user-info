@@ -24,8 +24,7 @@
 
 
 # print deprecation warning
-puts "!!!! WARNING !!!! WARNING !!!! WARNING !!!!"
-puts "This command is deprecated. Please use rhc-domain-info instead."
+puts "Warning: This command is deprecated. Please use rhc-domain-info instead."
 puts""
 
 args = ""
