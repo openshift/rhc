@@ -82,15 +82,6 @@ rescue Exception => e
   p_usage
 end
 
-# Validate for no command or multiple commands being specified
-if command_count == 0
-    puts "Missing command! You must specify the operation to perform."
-    p_usage
-elsif command_count > 1
-    puts "Multiple commands specified! You can only perform one operation at a time."
-    p_usage
-end
-
 # If provided a config path, check it
 check_cpath(opt)
 
@@ -98,11 +89,6 @@ check_cpath(opt)
 libra_server = get_var('libra_server')
 debug = get_var('debug') == 'false' ? nil : get_var('debug')
 opt['rhlogin'] = get_var('default_rhlogin') unless opt['rhlogin']
-
-if opt['destroy'] && !RHC::check_namespace(opt['namespace'])
-    puts "Missing or invalid namespace! You must specify the namespace in order to destroy it."
-    p_usage
-end
 
 if opt['help']
     p_usage
@@ -112,6 +98,21 @@ if opt['debug']
     debug = true
 end
 RHC::debug(debug)
+
+# Validate for no command or multiple commands being specified
+if command_count == 0
+    puts "Missing command! You must specify the operation to perform."
+    p_usage
+elsif command_count > 1
+    puts "Multiple commands specified! You can only perform one operation at a time."
+    p_usage
+end
+
+if opt['destroy'] && !RHC::check_namespace(opt['namespace'])
+    puts "Missing or invalid namespace! You must specify the namespace in order to destroy it."
+    p_usage
+end
+
 
 # This is taken care of by the command_count validation performed earlier
 #if !opt['rhlogin'] || !(opt['add-key'] || opt['remove-key'] || opt['update-key'] || opt['list-keys']) || \
@@ -189,14 +190,6 @@ end
 
 RHC::print_post_data(data)
 json_data = RHC::generate_json(data)
-
-if @mydebug
-  puts ""
-  puts "URL: #{url}"
-  puts ""
-  puts "POST json_data: #{json_data}"
-  puts ""
-end
 
 response = RHC::http_post(@http, url, json_data, password)
 
