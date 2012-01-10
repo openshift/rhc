@@ -99,23 +99,24 @@ opt['apps'] = true if not opt['info'] and not opt['apps']
 user_info = RHC::get_user_info(libra_server, opt['rhlogin'], password, @http, true)
 
 if opt['info']
-  ssh_keys = RHC::get_ssh_keys(libra_server, opt['rhlogin'], password, @http)
-end
+    ssh_keys = RHC::get_ssh_keys(libra_server, opt['rhlogin'], password, @http)
 
-if opt['info']
     puts "User Info"
     puts "========="
     puts "Namespace: #{user_info['user_info']['namespace']}"
     #puts "    UUID: #{user_info['user_info']['uuid']}"
     puts "  RHLogin: #{user_info['user_info']['rhlogin']}"
     puts "Primary SSH key: #{user_info['user_info']['ssh_key']}"
+    puts "Primary SSH key type: #{user_info['user_info']['ssh_type']}"  unless user_info['user_info']['ssh_type'].to_s.strip.length == 0
 
     if ssh_keys && ssh_keys.kind_of?(Hash)
       puts ""
-      puts "Additional SSH keys [<Key-Name> : <SSH pub key>]"
+      puts "Additional SSH keys"
       puts "==================="
-      ssh_keys.each do |name, key|
-        puts "#{name} : #{key}"
+      ssh_keys.each do |name, keyval|
+        puts "Name: #{name}"
+        puts " Key: #{keyval['key']}"
+        puts "Type: #{keyval['type']}"
         puts ""
       end
       puts "Use rhc-ctl-domain for managing additional ssh keys"
