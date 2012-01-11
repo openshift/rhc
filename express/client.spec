@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.84.9
+Version:       0.84.10
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -100,6 +100,14 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/openshift/express.conf
 
 %changelog
+* Wed Jan 11 2012 Dan McPherson <dmcphers@redhat.com> 0.84.10-1
+- Merge branch 'master' of github.com:openshift/os-client-tools
+  (abhgupta@redhat.com)
+- adding man files for the newly added CLI commands (abhgupta@redhat.com)
+- Remove output about threaddump command, this is handled by the cartridges now
+  (aboone@redhat.com)
+- Added test-unit dependency for Ruby 1.9 (fotios@redhat.com)
+
 * Tue Jan 10 2012 Dan McPherson <dmcphers@redhat.com> 0.84.9-1
 - adding more clarity to the help description for rhc-ctl-domain -a based on
   discussion with docs (abhgupta@redhat.com)
