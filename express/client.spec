@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.84.8
+Version:       0.84.9
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -100,6 +100,13 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/openshift/express.conf
 
 %changelog
+* Tue Jan 10 2012 Dan McPherson <dmcphers@redhat.com> 0.84.9-1
+- adding more clarity to the help description for rhc-ctl-domain -a based on
+  discussion with docs (abhgupta@redhat.com)
+- displaying SSH key type in rhc-domain-info (abhgupta@redhat.com)
+- placing validations after checking if --help is requested
+  (abhgupta@redhat.com)
+
 * Mon Jan 09 2012 Dan McPherson <dmcphers@redhat.com> 0.84.8-1
 - Changing the deprecation warning for rhc-user-info (abhgupta@redhat.com)
 - moving comments to debug mode (abhgupta@redhat.com)

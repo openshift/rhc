@@ -34,6 +34,9 @@ spec = Gem::Specification.new do |s|
     end
     end
     s.add_dependency('parseconfig')
+    if RUBY_VERSION.to_f == 1.9
+      s.add_dependency('test-unit')
+    end
 end
 
 # Define a :package task that bundles the gem

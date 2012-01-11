@@ -28,8 +28,14 @@ require 'rbconfig'
 require 'yaml'
 require 'tempfile'
 
+if RUBY_VERSION.to_f == 1.9
+  require 'rubygems'
+  gem     'test-unit'
+end
+
 require 'test/unit'
 require 'test/unit/ui/console/testrunner'
+
 
 #
 # print help
@@ -317,7 +323,7 @@ class Test3_SSH < Test::Unit::TestCase
   end
 
   def test_06_ssh_agent
-    loaded_keys = `ssh-add -L`.to_a
+    loaded_keys = `ssh-add -L`.lines.to_a
     # Make sure we can load keys from ssh-agent
     assert !loaded_keys.empty?, error_for(:no_keys_loaded)
     loaded_keys.map!{|key| key.split(' ')[1]}
