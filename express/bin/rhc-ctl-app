@@ -144,10 +144,6 @@ if opt['command'] and (opt['alias'] and !(opt['command'] =~ /-alias$/)) || ((opt
     p_usage
 end
 
-if opt["command"] == "threaddump"
-    puts "NOTE: The threaddump command is only applicable to applications of type jbossas-7.0. The thread dump file will be available via 'rhc-tail-files -f #{opt['app']}/jbossas-7.0/stdout.log'"  
-end
-
 password = opt['password']
 if !password
   password = RHC::get_password
