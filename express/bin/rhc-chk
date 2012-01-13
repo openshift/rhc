@@ -294,8 +294,8 @@ class Test3_SSH < Test::Unit::TestCase
     $remote_ssh_pubkeys = []
     additional_ssh_keys = RHC::get_ssh_keys($libra_server, $rhlogin, $password, $http)
     if additional_ssh_keys && additional_ssh_keys.kind_of?(Hash)
-      additional_ssh_keys.each do |name, key|
-        $remote_ssh_pubkeys.push(key)
+      additional_ssh_keys.each do |name, sshkey|
+        $remote_ssh_pubkeys.push(sshkey['key'])
       end
     end
 
