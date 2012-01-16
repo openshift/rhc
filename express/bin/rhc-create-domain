@@ -27,7 +27,7 @@ require 'rhc-common'
 # print help
 #
 def p_usage
-
+    rhlogin = get_var('default_rhlogin') ? "Default: #{get_var('default_rhlogin')}" : "required"
     puts <<USAGE
 
 Usage: #{$0}
@@ -37,14 +37,14 @@ Bind a registered rhcloud user to a domain in rhcloud.
         <id_rsa>.pub keys, then re-run with --alter
 
   -n|--namespace   namespace   Namespace for your application(s) (alphanumeric - max #{RHC::DEFAULT_MAX_LENGTH} chars) (required)
-  -l|--rhlogin     rhlogin     Red Hat login (RHN or OpenShift login with OpenShift Express access) (required)
+  -l|--rhlogin     rhlogin     Red Hat login (RHN or OpenShift login with OpenShift Express access) (#{rhlogin})
   -p|--password    password    RHLogin password (optional, will prompt)
   -a|--alter                   Alter namespace (will change urls) and/or ssh key
   -d|--debug                   Print Debug info
   -h|--help                    Show Usage info
   --config  path               Path of alternate config file
   --timeout #                  Timeout, in seconds, for connection
-
+  
 USAGE
 exit 255
 end
@@ -76,7 +76,7 @@ check_cpath(opt)
 # Pull in configs from files
 libra_server = get_var('libra_server')
 debug = get_var('debug') == 'false' ? nil : get_var('debug')
-
+opt['rhlogin'] = get_var('default_rhlogin') unless opt['rhlogin']
 
 ssh_key_file_path = get_kfile(false)
 ssh_pub_key_file_path = get_kpfile(ssh_key_file_path, opt['alter'])

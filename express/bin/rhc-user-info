@@ -29,6 +29,7 @@ puts""
 
 args = ""
 ARGV.each do|a|
+  if a.to_s.strip.length == 0; a = "'#{a}'" end
   args += " #{a}"
 end
 

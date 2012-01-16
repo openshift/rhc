@@ -27,7 +27,7 @@ require 'rhc-common'
 # print help
 #
 def p_usage
-
+  rhlogin = get_var('default_rhlogin') ? "Default: #{get_var('default_rhlogin')}" : "required"
   puts <<USAGE
 
 Usage: #{$0}
@@ -35,7 +35,7 @@ Manage multiple keys for the registered rhcloud user.
 
   rhc-ctl-domain -l <rhlogin> [-p <passwd>] (-a <key-name> [-k <ssh-pubkey>] | -r <key-name> | -u <key-name> [-k <ssh-pubkey>])
 
-  -l|--rhlogin         rhlogin      Red Hat login (RHN or OpenShift login with OpenShift Express access) (required)
+  -l|--rhlogin         rhlogin      Red Hat login (RHN or OpenShift login with OpenShift Express access) (#{rhlogin})
   -p|--password        password     RHLogin password (optional, will prompt)
   -n|--namespace       namespace    Namespace for your application(s) (alphanumeric - max #{RHC::DEFAULT_MAX_LENGTH} chars) (required for destroying domain)
   -a|--add-ssh-key     key-name     Add SSH key to the user account (key-name is the user-specified identifier for the key)
