@@ -25,11 +25,11 @@ default user to use (so other rhc-* commands don't have to explicitly specify
 username)
 
 
-rhc-user-info
+rhc-domain-info
 =============
 
-rhc-user-info has two modes, -i (for user info) and -a (for application info).
-when run with -a, rhc-user-info will display a list of running applications
+rhc-domain-info has two modes, -i (for user info) and -a (for application info).
+when run with -a, rhc-domain-info will display a list of running applications
 associated with that user.  When run with -i, just basic user info will be
 reported.
 
