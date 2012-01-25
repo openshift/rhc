@@ -104,7 +104,7 @@ app = opt['app']
 
 unless user_info['app_info'][app]
     puts
-    puts "Could not find app '#{opt['app']}'.  Please run rhc-user-info to get a list"
+    puts "Could not find app '#{opt['app']}'.  Please run rhc-domain-info to get a list"
     puts "of your current running applications"
     puts
     exit 101
