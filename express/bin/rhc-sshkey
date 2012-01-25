@@ -1,0 +1,245 @@
+#!/usr/bin/env ruby
+# Copyright 2011 Red Hat, Inc.
+#
+# Permission is hereby granted, free of charge, to any person
+# obtaining a copy of this software and associated documentation files
+# (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge,
+# publish, distribute, sublicense, and/or sell copies of the Software,
+# and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT.  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+# BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+# ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+
+require 'rhc-common'
+
+#
+# print help
+#
+def p_usage
+    rhlogin = get_var('default_rhlogin') ? "Default: #{get_var('default_rhlogin')}" : "required"
+    puts <<USAGE
+
+Usage: rhc sshkey [<args>]
+Create and manage an OpenShift Express application.
+
+List of commands
+  list                           Display all the SSH keys for the user account
+  add                            Add SSH key to the user account (key-name is the user-specified identifier for the key)
+  update                         Update SSH key for the user account
+  remove                         Remove SSH key from the user account
+
+List of arguments
+  -l|--rhlogin      rhlogin      Red Hat login (RHN or OpenShift login with OpenShift Express access) (#{rhlogin})
+  -p|--password     password     RHLogin password (optional, will prompt)
+  -i|--identifier   key-name     User-specified identifier for the key
+  -k|--ssh          key-filepath SSH public key filepath 
+  -d|--debug                     Print Debug info
+  -h|--help                      Show Usage info
+  --config          path         Path of alternate config file
+  --timeout         #            Timeout, in seconds, for connection
+
+USAGE
+exit 255
+end
+
+
+def validate_args(val_id=true)
+  # If provided a config path, check it
+  check_cpath($opt)
+  
+  # Pull in configs from files
+  $libra_server = get_var('libra_server')
+  debug = get_var('debug') == 'false' ? nil : get_var('debug')
+  
+  $opt['rhlogin'] = get_var('default_rhlogin') unless $opt['rhlogin']
+  p_usage if !RHC::check_rhlogin($opt['rhlogin'])
+  
+  debug = $opt["debug"] ? true : false
+  RHC::debug(debug)
+  
+  if val_id && !$opt['identifier']
+    puts "Key name is required"
+    p_usage
+  end
+  
+  RHC::timeout($opt["timeout"] ? $opt["timeout"] : get_var('timeout'))
+  $password = $opt['password'] ? $opt['password'] : RHC::get_password
+end
+
+def add_or_update_key(command)
+  validate_args(true)
+  
+  # Read user public ssh key
+  if $opt['ssh']
+    if File.readable?($opt['ssh'])
+      begin
+        ssh_keyfile_contents = File.open($opt['ssh']).gets.chomp.split(' ')
+        ssh_key = ssh_keyfile_contents[1]
+        ssh_key_type = ssh_keyfile_contents[0]
+      rescue Exception => e
+        puts "Invalid public keyfile format! Please specify a valid user public keyfile."
+        exit 1
+      end
+    else
+      puts "Unable to read user public keyfile #{$opt['ssh']}"
+      exit 1
+    end
+  else # create key
+    key_name = $opt['identifier']
+    puts "Generating ssh key pair for user '#{key_name}' in the dir '#{Dir.pwd}/'"
+    # Use system for interaction
+    system("ssh-keygen -t rsa -f '#{key_name}'")
+    ssh_pub_key_file = Dir.pwd + '/' + key_name + '.pub'
+    ssh_keyfile_contents = File.open(ssh_pub_key_file).gets.chomp.split(' ')
+    ssh_key = ssh_keyfile_contents[1]
+    ssh_key_type = ssh_keyfile_contents[0]
+  end
+
+  data = {}
+  data[:rhlogin] = $opt['rhlogin']
+  data[:key_name] = $opt['identifier']
+  data[:ssh] = ssh_key
+  data[:action] = 'add-key'
+  data[:key_type] = ssh_key_type
+
+  if command == 'add'
+    data[:action] = 'add-key'
+  elsif command == 'update'
+    data[:action] = 'update-key'
+  end
+
+  url = URI.parse("https://#{$libra_server}/broker/ssh_keys")
+  handle_key_mgmt_response(url, data, $password)
+end
+
+def remove_key
+  validate_args(false, true)
+
+  data = {}
+  data[:rhlogin] = $opt['rhlogin']
+  data[:key_name] = $opt['identifier']
+  data[:action] = 'remove-key'
+
+  url = URI.parse("https://#{$libra_server}/broker/ssh_keys")
+  handle_key_mgmt_response(url, data, $password)
+end
+
+def show_key_list
+  validate_args(false, true)
+  
+  ssh_keys = RHC::get_ssh_keys($libra_server, $opt['rhlogin'], $password, @http)
+
+  if ssh_keys && ssh_keys.kind_of?(Hash)
+    puts ""
+    puts "SSH keys"
+    puts "========"
+    ssh_keys.each do |name, keyval|
+      puts "Name: #{name}"
+      puts "Type: #{keyval['type']}"
+      puts " Key: #{keyval['key']}"
+      puts ""
+    end
+  end
+end
+
+def handle_key_mgmt_response(url, data, password)
+  RHC::print_post_data(data)
+  json_data = RHC::generate_json(data)
+  
+  response = RHC::http_post(@http, url, json_data, password)
+  
+  if response.code == '200'
+    begin
+      json_resp = JSON.parse(response.body)
+      RHC::update_server_api_v(json_resp)
+      RHC::print_response_success(json_resp)
+      puts "Success"
+      exit 0
+    rescue JSON::ParserError
+      RHC::print_response_err(response)
+    end
+  else
+    RHC::print_response_err(response)
+  end
+  puts "Failure"
+  exit 1
+end
+
+
+begin
+  argv_c = ARGV.clone
+  
+  if ARGV[0] =~ /^(add|update)$/
+    ARGV.shift
+    opts = GetoptLong.new(
+        ["--debug", "-d", GetoptLong::NO_ARGUMENT],
+        ["--help", "-h", GetoptLong::NO_ARGUMENT],
+        ["--rhlogin", "-l", GetoptLong::REQUIRED_ARGUMENT],
+        ["--password", "-p", GetoptLong::REQUIRED_ARGUMENT],
+        ["--identifier", "-i", GetoptLong::REQUIRED_ARGUMENT],
+        ["--ssh", "-k", GetoptLong::REQUIRED_ARGUMENT],
+        ["--config", GetoptLong::REQUIRED_ARGUMENT],
+        ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
+    )
+  elsif ARGV[0] =~ /^remove$/
+    ARGV.shift
+    opts = GetoptLong.new(
+        ["--debug", "-d", GetoptLong::NO_ARGUMENT],
+        ["--help",  "-h", GetoptLong::NO_ARGUMENT],
+        ["--rhlogin", "-l", GetoptLong::REQUIRED_ARGUMENT],
+        ["--password", "-p", GetoptLong::REQUIRED_ARGUMENT],
+        ["--identifier", "-i", GetoptLong::REQUIRED_ARGUMENT],
+        ["--config", GetoptLong::REQUIRED_ARGUMENT],
+        ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
+    )
+  elsif ARGV[0] =~ /^list$/
+    ARGV.shift
+    opts = GetoptLong.new(
+        ["--debug", "-d", GetoptLong::NO_ARGUMENT],
+        ["--help",  "-h", GetoptLong::NO_ARGUMENT],
+        ["--rhlogin", "-l", GetoptLong::REQUIRED_ARGUMENT],
+        ["--password", "-p", GetoptLong::REQUIRED_ARGUMENT],
+        ["--config", GetoptLong::REQUIRED_ARGUMENT],
+        ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
+    )
+  else
+    puts "Missing or invalid command!"
+    p_usage
+  end
+    
+  $opt = {}
+  opts.each do |o, a|
+    $opt[o[2..-1]] = a.to_s
+  end
+
+rescue Exception => e
+  p_usage
+end
+
+p_usage if $opt["help"]
+
+case argv_c[0]
+when "add", "update"
+  add_or_update_key(argv_c[0])
+when "remove"
+  remove_key
+when "list", nil
+  show_key_list
+else
+  puts "Missing or invalid command!"
+  p_usage
+end
+
+exit 0

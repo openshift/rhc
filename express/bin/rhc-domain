@@ -1,0 +1,337 @@
+#!/usr/bin/env ruby
+# Copyright 2011 Red Hat, Inc.
+#
+# Permission is hereby granted, free of charge, to any person
+# obtaining a copy of this software and associated documentation files
+# (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge,
+# publish, distribute, sublicense, and/or sell copies of the Software,
+# and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT.  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+# BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+# ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+
+require 'rhc-common'
+
+#
+# print help
+#
+def p_usage
+    rhlogin = get_var('default_rhlogin') ? "Default: #{get_var('default_rhlogin')}" : "required"
+    puts <<USAGE
+
+Usage: rhc domain [<command>] [<args>]
+Manage a domain in rhcloud for a registered rhcloud user.
+
+List of commands
+  create            Bind a registered rhcloud user to a domain in rhcloud.
+  show              Display information about a user
+  alter             Alter namespace (will change urls) and/or ssh key.
+  status            Run a simple check on local configs and credentials to confirm tools are properly setup.
+  destroy           Destroys the domain and any added ssh keys
+
+List of arguments
+  -l|--rhlogin      rhlogin      Red Hat login (RHN or OpenShift login with OpenShift Express access) (#{rhlogin})
+  -p|--password     password     RHLogin password (optional, will prompt)
+  -n|--namespace    namespace    Namespace for your application(s) (alphanumeric - max #{RHC::DEFAULT_MAX_LENGTH} chars) (required for creating or destroying domain)
+  -d|--debug                     Print Debug info
+  -h|--help                      Show Usage info
+  -a|--apps                      List applications for rhlogin (applicable with the 'show' command)
+  -i|--info                      Show user info (applicable with the 'show' command)
+  --config          path         Path of alternate config file
+  --timeout         #            Timeout, in seconds, for connection
+
+USAGE
+exit 255
+end
+
+
+def get_args()
+  args = ""
+  $opt.each do |o, a|
+    if a.to_s.strip.length == 0; a = "'#{a}'" end
+    args += " --#{o} #{a}"
+  end
+  puts "args: #{args}"
+  args
+end
+
+def validate_args(val_namespace=true, val_timeout=true)
+  # If provided a config path, check it
+  check_cpath($opt)
+  
+  # Pull in configs from files
+  $libra_server = get_var('libra_server')
+  debug = get_var('debug') == 'false' ? nil : get_var('debug')
+  
+  $opt['rhlogin'] = get_var('default_rhlogin') unless $opt['rhlogin']
+  p_usage if !RHC::check_rhlogin($opt['rhlogin'])
+  
+  p_usage if (val_namespace && !$opt["namespace"])
+  
+  debug = $opt["debug"] ? true : false
+  RHC::debug(debug)
+  
+  RHC::timeout($opt["timeout"] ? $opt["timeout"] : get_var('timeout')) if val_timeout
+  
+  $password = $opt['password'] ? $opt['password'] : RHC::get_password
+end
+
+def create_domain(alter=false)
+  validate_args()
+  
+  ssh_key_file_path = get_kfile(false)
+  ssh_pub_key_file_path = get_kpfile(ssh_key_file_path, alter)
+  
+  ssh_config = "#{ENV['HOME']}/.ssh/config"
+  ssh_config_d = "#{ENV['HOME']}/.ssh/"
+
+  # Check to see if a ssh_key_file_path exists, if not create it.
+  if File.readable?(ssh_key_file_path)
+      puts "OpenShift Express key found at #{ssh_key_file_path}.  Reusing..."
+  else
+      puts "Generating OpenShift Express ssh key to #{ssh_key_file_path}"
+      # Use system for interaction
+      system("ssh-keygen -t rsa -f '#{ssh_key_file_path}'")
+  end
+  
+  ssh_keyfile_contents = File.open(ssh_pub_key_file_path).gets.chomp.split(' ')
+  ssh_key = ssh_keyfile_contents[1]
+  ssh_key_type = ssh_keyfile_contents[0]
+  
+  data = {'namespace' => $opt['namespace'],
+          'rhlogin' => $opt['rhlogin'],
+          'ssh' => ssh_key,
+          'key_type' => ssh_key_type}
+  
+  if alter
+    data[:alter] = true
+    not_found_message = "A user with rhlogin '#{$opt['rhlogin']}' does not have a registered domain.  Be sure to run rhc-create-domain without -a|--alter first."
+    user_info = RHC::get_user_info($libra_server, $opt['rhlogin'], $password, @http, true, not_found_message)
+  end
+  if @mydebug
+    data[:debug] = true
+  end
+  RHC::print_post_data(data)
+  json_data = RHC::generate_json(data)
+  
+  url = URI.parse("https://#{$libra_server}/broker/domain")
+  response = RHC::http_post(@http, url, json_data, $password)
+  
+  if response.code == '200'
+      begin
+          json_resp = JSON.parse(response.body)
+          RHC::print_response_success(json_resp)
+          json_rhlogininfo = JSON.parse(json_resp['data'])
+          RHC::add_rhlogin_config(json_rhlogininfo['rhlogin'], json_rhlogininfo['uuid'])
+          RHC::add_ssh_config_host(json_rhlogininfo['rhc_domain'], ssh_key_file_path, ssh_config, ssh_config_d)
+      
+          if !alter
+                        puts <<EOF
+Creation successful
+
+You may now create an application.
+
+EOF
+          else
+              app_info = user_info['app_info']
+              dns_success = true
+              if !app_info.empty? && $opt['namespace'] != user_info['user_info']['namespace']
+                #
+                # Confirm that the host(s) exist in DNS
+                #
+                puts "Now your new domain name(s) are being propagated worldwide (this might take a minute)..."
+                # Allow DNS to propogate
+                sleep 15
+                app_info.each_key do |appname|
+                    fqdn = "#{appname}-#{opt['namespace']}.#{user_info['user_info']['rhc_domain']}"
+                    
+                    # Now start checking for DNS
+                    loop = 0
+                    sleep_time = 2
+                    while loop < RHC::MAX_RETRIES && !RHC::hostexist?(fqdn)
+                        sleep sleep_time
+                        loop+=1
+                        puts "  retry # #{loop} - Waiting for DNS: #{fqdn}"
+                        sleep_time = RHC::delay(sleep_time)
+                    end
+                    
+                    if loop >= RHC::MAX_RETRIES
+                        puts "Host could not be found: #{fqdn}"
+                        dns_success = false
+                    end
+                end
+                puts "You can use rhc-user-info to view any url changes.  Be sure to update any links"
+                puts "including the url in your local git config: <local_git_repo>/.git/config"
+              end
+              if dns_success
+                puts "Alteration successful."
+              else
+                puts "Alteration successful but at least one of the urls is still updating in DNS."
+              end
+              puts ""
+          end
+          exit 0
+      rescue JSON::ParserError
+          RHC::print_response_err(response)
+      end
+  else
+      RHC::print_response_err(response)
+  end
+  exit 1
+end
+
+def destroy_domain()
+  validate_args(true, false)
+
+  url = URI.parse("https://#{$libra_server}/broker/domain")
+  data[:rhlogin] = $opt['rhlogin']
+  data[:delete] = true
+  data[:namespace] = $opt['namespace']
+
+  RHC::print_post_data(data)
+  json_data = RHC::generate_json(data)
+  
+  response = RHC::http_post(@http, url, json_data, $password)
+  
+  if response.code == '200'
+    begin
+      json_resp = JSON.parse(response.body)
+      RHC::update_server_api_v(json_resp)
+      RHC::print_response_success(json_resp)
+      puts "Success"
+      exit 0
+    rescue JSON::ParserError
+      RHC::print_response_err(response)
+    end
+  else
+    RHC::print_response_err(response)
+  end
+  puts "Failure"
+  exit 1
+end
+
+def show_domain_info()
+  validate_args(false, true)
+  
+  $opt['info'] = true if not $opt['info'] and not $opt['apps']
+  user_info = RHC::get_user_info($libra_server, $opt['rhlogin'], $password, @http, true)
+  
+  if $opt['info']
+      ssh_keys = RHC::get_ssh_keys($libra_server, $opt['rhlogin'], $password, @http)
+  
+      puts "User Info"
+      puts "========="
+      puts "Namespace: #{user_info['user_info']['namespace']}"
+      #puts "    UUID: #{user_info['user_info']['uuid']}"
+      puts "  RHLogin: #{user_info['user_info']['rhlogin']}"
+      puts "Primary SSH key type: #{user_info['user_info']['ssh_type']}" unless user_info['user_info']['ssh_type'].to_s.strip.length == 0
+      puts "Primary SSH key: #{user_info['user_info']['ssh_key']}"
+  
+      if ssh_keys && ssh_keys.kind_of?(Hash)
+        puts ""
+        puts "Additional SSH keys"
+        puts "==================="
+        ssh_keys.each do |name, keyval|
+          puts "Name: #{name}"
+          puts " Key: #{keyval['key']}"
+          puts "Type: #{keyval['type']}"
+          puts ""
+        end
+        puts "Use rhc-ctl-domain for managing additional ssh keys"
+      end
+  end
+  
+  if $opt['apps']
+      puts "\n\n" if $opt['info']
+  
+      puts "Application Info"
+      puts "================"
+      unless user_info['app_info'].empty?
+        user_info['app_info'].each do |key, val|
+            puts key
+            puts "    Framework: #{val['framework']}"
+            puts "     Creation: #{val['creation_time']}"
+            puts "         UUID: #{val['uuid']}"
+            puts "      Git URL: ssh://#{val['uuid']}@#{key}-#{user_info['user_info']['namespace']}.#{user_info['user_info']['rhc_domain']}/~/git/#{key}.git/"
+            puts "   Public URL: http://#{key}-#{user_info['user_info']['namespace']}.#{user_info['user_info']['rhc_domain']}/"
+            if val['aliases'] && !val['aliases'].empty?
+              puts "      Aliases: #{val['aliases'].join(', ')}"
+            end
+            puts ""
+            puts " Embedded: "
+            if val['embedded'] && !val['embedded'].empty? 
+                val['embedded'].each do |embed_key, embed_val|
+                    if embed_val.has_key?('info') && !embed_val['info'].empty?
+                        puts "      #{embed_key} - #{embed_val['info']}"
+                    else
+                        puts "      #{embed_key}"
+                    end
+                end
+            else
+                puts "      None"
+            end
+            puts ""
+        end
+      else
+        puts "No applications found.  You can use rhc-create-app to create new applications."
+      end
+  end
+end
+
+
+begin
+  argv_c = ARGV.clone
+  ARGV.shift if ARGV[0] =~ /^(create|alter|status|show|destroy)$/
+  
+  opts = GetoptLong.new(
+      ["--debug", "-d", GetoptLong::NO_ARGUMENT],
+      ["--help",  "-h", GetoptLong::NO_ARGUMENT],
+      ["--rhlogin", "-l", GetoptLong::REQUIRED_ARGUMENT],
+      ["--password", "-p", GetoptLong::REQUIRED_ARGUMENT],
+      ["--namespace", "-n", GetoptLong::REQUIRED_ARGUMENT],
+      ["--apps",  "-a", GetoptLong::NO_ARGUMENT],
+      ["--info",  "-i", GetoptLong::NO_ARGUMENT],
+      ["--ssh", "-k", GetoptLong::REQUIRED_ARGUMENT],
+      ["--config", GetoptLong::REQUIRED_ARGUMENT],
+      ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
+  )
+  
+  $opt = {}
+  opts.each do |o, a|
+    $opt[o[2..-1]] = a.to_s
+  end
+rescue Exception => e
+  p_usage
+end
+
+p_usage if $opt["help"]
+
+case argv_c[0]
+when "create"
+  create_domain(false)
+when "alter"
+  create_domain(true)
+when "status"
+  system("rhc-chk #{get_args} 2>&1")
+when "show", nil
+  show_domain_info
+when "destroy"
+  destroy_domain
+else
+  puts "Missing or invalid command!"
+  p_usage
+end
+
+exit 0

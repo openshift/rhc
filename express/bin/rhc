@@ -1,0 +1,70 @@
+#!/usr/bin/env ruby
+# Copyright 2011 Red Hat, Inc.
+#
+# Permission is hereby granted, free of charge, to any person
+# obtaining a copy of this software and associated documentation files
+# (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge,
+# publish, distribute, sublicense, and/or sell copies of the Software,
+# and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT.  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+# BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+# ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+
+#
+# print help
+#
+def p_usage
+    puts <<USAGE
+
+Usage: rhc [<resource>] [<command>] [--help] [<args>]
+Command line tool for performing operations related to your rhcloud account.
+
+List of resources
+  domain             Manage the namespace for the registered rhcloud user.
+  app                Manage applications within the rhcloud account.
+  sshkey             Manage multiple keys for the registered rhcloud user.
+
+See 'rhc <resource> --help' for more applicable commands and argumments on a specific resource.
+
+USAGE
+exit 255
+end
+
+
+def get_args
+  ARGV.shift
+  args = ""
+  ARGV.each do|a|
+    if a.to_s.strip.length == 0; a = "'#{a}'" end
+    args += " #{a}"
+  end
+  args
+end
+
+case ARGV[0]
+when "domain"
+  system("rhc-domain #{get_args} 2>&1")
+when "app"
+  system("rhc-app #{get_args} 2>&1")
+when "sshkey"
+  system("rhc-sshkey #{get_args} 2>&1")
+when "-h", "--help", "help", nil
+  p_usage
+else
+  puts "Invalid rhc command: #{ARGV[0]}"
+  p_usage
+end
+
+exit 0

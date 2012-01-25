@@ -33,7 +33,7 @@ def p_usage
 Usage: #{$0}
 Manage multiple keys for the registered rhcloud user.
 
-  rhc-ctl-domain -l <rhlogin> [-p <passwd>] (-a <key-name> [-k <ssh-pubkey>] | -r <key-name> | -u <key-name> [-k <ssh-pubkey>])
+  rhc-ctl-domain [-l rhlogin] [-p password] [-d] [-h] [-n namespace] (-a key-name [-k ssh-pubkey] | -u key-name [-k ssh-pubkey] | -r key-name | --destroy)
 
   -l|--rhlogin         rhlogin      Red Hat login (RHN or OpenShift login with OpenShift Express access) (#{rhlogin})
   -p|--password        password     RHLogin password (optional, will prompt)

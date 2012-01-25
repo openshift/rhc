@@ -11,6 +11,7 @@ rescue LoadError
   rake_gempackage = true
 end
 
+task(:default).clear
 task :default => [:package]
 
 # Create the gem specification for packaging
@@ -24,7 +25,7 @@ spec = Gem::Specification.new do |s|
     s.description = %q{The client tools for the OpenShift Express platform that allow for application management.}
     s.files = FileList['lib/**/*.rb', 'bin/*', 'conf/*'].to_a
     s.files += %w(LICENSE README Rakefile)
-    s.executables = ['rhc-chk', 'rhc-create-app', 'rhc-create-domain', 'rhc-ctl-domain', 'rhc-ctl-app', 'rhc-snapshot', 'rhc-domain-info', 'rhc-user-info', 'rhc-tail-files', 'rhc-port-forward']
+    s.executables = ['rhc', 'rhc-domain', 'rhc-app', 'rhc-sshkey', 'rhc-chk', 'rhc-create-app', 'rhc-create-domain', 'rhc-ctl-domain', 'rhc-ctl-app', 'rhc-snapshot', 'rhc-domain-info', 'rhc-user-info', 'rhc-tail-files', 'rhc-port-forward']
     begin
     # Use Ruby version to target F13, RHEL5, Windows and OSX (assume no Xcode)
     if ENV['JSON_PURE'] or (RUBY_VERSION == "1.8.6" or RUBY_PLATFORM =~ /mswin/ or RUBY_PLATFORM =~ /darwin/)

@@ -63,7 +63,7 @@ begin
     end
 rescue Exception => e
   #puts e.message
-    p_usage
+  p_usage
 end
 
 # If provided a config path, check it

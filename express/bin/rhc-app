@@ -1,0 +1,540 @@
+#!/usr/bin/env ruby
+# Copyright 2011 Red Hat, Inc.
+#
+# Permission is hereby granted, free of charge, to any person
+# obtaining a copy of this software and associated documentation files
+# (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge,
+# publish, distribute, sublicense, and/or sell copies of the Software,
+# and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT.  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+# BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+# ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+
+require 'rhc-common'
+
+embed_mapper = { 'add' => 'configure', 'remove' => 'deconfigure' }
+
+#
+# print help
+#
+def p_usage
+    libra_server = get_var('libra_server')
+    rhlogin = get_var('default_rhlogin') ? "Default: #{get_var('default_rhlogin')}" : "required"
+    type_keys = RHC::get_cartridge_listing(nil, ', ', libra_server, @http, 'standalone', false)
+    puts <<USAGE
+
+Usage: rhc app [<command> | cartridge <cartridge-action>] [<args>]
+Create and manage an OpenShift Express application.
+
+List of commands
+  create                         Bind a registered rhcloud user to a domain in rhcloud.
+  show                           Display information about a user
+  start                          Starts the application (includes embedded)
+  stop                           Stops the application (includes embedded)
+  force-stop                     Stops all application processes
+  restart                        Restart the application
+  reload                         Reloads application configuration
+  status                         Returns application status
+  destroy                        Destroys the application
+  tidy                           Garbage collects the git repo and empties log/tmp dirs
+  add-alias                      Add a custom domain name for the application
+  remove-alias                   Remove a custom domain name for the application
+  threaddump                     Trigger a thread dump for jbossas applications
+  snapshot       [save|restore]  Saves/Restores an application snapshot to/from a tarball at the location specified using --filepath (default: ./$APPNAME.tar.gz)
+  cartridge      <action>        Manage an embedded cartridge
+
+List of cartridge actions
+  add                            Add an embedded application
+  remove                         Remove an embedded application
+  stop                           Stop the embedded application
+  start                          Start the embedded application
+  restart                        Restart the embedded application
+  status                         Returns embedded application status
+  reload                         Reloads embedded application configuration
+
+List of arguments
+  -l|--rhlogin      rhlogin      Red Hat login (RHN or OpenShift login with OpenShift Express access) (#{rhlogin})
+  -p|--password     password     RHLogin password (optional, will prompt)
+  -a|--app          application  Application name  (alphanumeric - max #{RHC::APP_NAME_MAX_LENGTH} chars) (required)
+  -t|--type         type         Type of app to create (#{type_keys}) (required for creating an application)
+  -c|--cartridge    cartridge    The embedded cartrige to manage (required for the cartridge command)
+  -r|--repo         path         Git Repo path (defaults to ./$app_name)
+  -n|--nogit                     Only create remote space, don't pull it locally
+  --no-dns                       Skip DNS check. Must be used in combination with --nogit
+  -d|--debug                     Print Debug info
+  -h|--help                      Show Usage info
+  -b|--bypass                    Bypass warnings (applicable to application creation only)
+  -f|--filepath     filepath     Applicable in case of snapshot, restore, and log command
+  -o|--opts         options      Options to pass to the server-side (linux based) tail command (applicable to log command only) (-f is implicit.  See the linux tail man page full list of options.) (Ex: --opts '-n 100')
+  --alias           alias        Specify server alias (when using add/remove-alias)
+  --config          path         Path of alternate config file
+  --timeout         #            Timeout, in seconds, for connection
+  --enable-jenkins  [name]       Indicates to create a Jenkins application (if not already available)
+                                 and embed the Jenkins client into this application.  The default 
+                                 name will be 'jenkins' if not specified. Note that --no-dns is ignored
+                                 for the creation of the Jenkins application.
+USAGE
+exit 255
+end
+
+
+def validate_args(val_type=true, val_cartridge=false, val_timeout=true)
+  # If provided a config path, check it
+  check_cpath($opt)
+  
+  # Pull in configs from files
+  $libra_server = get_var('libra_server')
+  debug = get_var('debug') == 'false' ? nil : get_var('debug')
+  
+  $opt['rhlogin'] = get_var('default_rhlogin') unless $opt['rhlogin']
+  p_usage if !RHC::check_rhlogin($opt['rhlogin'])
+  
+  p_usage if !RHC::check_app($opt['app'])
+  
+  if val_type && !$opt['type']
+    puts "Application Type is required"
+    p_usage
+  end
+  
+  if val_cartridge && !$opt['cartridge']
+    puts "Cartridge name is required"
+    p_usage
+  end
+  
+  debug = $opt["debug"] ? true : false
+  RHC::debug(debug)
+  
+  RHC::timeout($opt["timeout"] ? $opt["timeout"] : get_var('timeout')) if val_timeout
+  
+  $password = $opt['password'] ? $opt['password'] : RHC::get_password
+end
+
+def create_app
+  validate_args
+  
+  user_info = RHC::get_user_info($libra_server, $opt['rhlogin'], $password, @http, false)
+  app_info = user_info['app_info']
+  
+  if app_info[$opt['app']]
+    puts "An application named '#{$opt['app']}' in namespace '#{user_info['user_info']['namespace']}' already exists"
+    exit 255
+  end
+  
+  jenkins_app_name = nil
+  has_jenkins = false
+  if $opt['enable-jenkins']
+    app_info.each do |app_name, app|
+      if app['framework'] == 'jenkins-1.4'
+        jenkins_app_name = app_name
+        has_jenkins = true
+        puts "
+Found existing Jenkins application: #{jenkins_app_name}
+"
+        if !$opt['enable-jenkins'].empty?
+          puts "Ignoring specified Jenkins app name: #{$opt['enable-jenkins']}"
+        end
+      end
+    end
+    if !has_jenkins
+      if $opt['type'] =~ /^jenkins-/
+        has_jenkins = true
+        if $opt['no-dns']
+          puts "
+The --no-dns option can't be used in conjunction with --enable-jenkins 
+when creating a #{$opt['type']} application.  Either remove the --no-dns
+option or first install your #{$opt['type']} application with --no-dns
+and then use rhc-ctl-app to embed the Jenkins client. 
+"
+          exit 255
+        end
+        jenkins_app_name = $opt['app']
+        puts "
+The Jenkins client will be embedded into the Jenkins application 
+currently being created: '#{$opt['app']}'
+"
+      end
+    end
+    if !has_jenkins
+      if !$opt['enable-jenkins'].empty?
+        jenkins_app_name = $opt['enable-jenkins']
+      else
+        jenkins_app_name = 'jenkins'
+      end
+    
+      if !RHC::check_app(jenkins_app_name)
+          p_usage
+      end
+  
+      if jenkins_app_name == $opt['app']
+        puts "You must specify a different name for your application and Jenkins ('#{$opt['app']}')."
+        exit 100
+      end
+    
+      if app_info.has_key?(jenkins_app_name)
+        puts "You already have an application named '#{jenkins_app_name}'."
+        puts "In order to continue you'll need to specify a different name"
+        puts "with --enable-jenkins or destroy the existing application."
+        exit 100
+      end
+    end
+  end
+  
+  $opt['repo'] = $opt['app'] unless $opt['repo']
+  
+  if @mydebug
+    puts "
+    Found a bug? Post to the forum and we'll get right on it.
+        IRC: #openshift on freenode
+        Forums: https://www.redhat.com/openshift/forums
+    
+    "
+  end
+  
+  #
+  # Confirm local git repo exists
+  #
+  unless $opt['nogit']
+      if File.exists?($opt['repo'])
+          puts "We will not overwrite an existing git repo. Please remove:"
+          puts "  #{File.expand_path($opt['repo'])}"
+          puts "Then try again."
+          puts
+          exit 210
+      else
+          begin
+              # Create the parent directory for the git repo
+              @git_parent = File.expand_path($opt['repo'] + "/../")
+              FileUtils.mkdir_p(@git_parent)
+          rescue Exception => e
+              puts "Could not write to #{@git_parent}"
+              puts "Reason: #{e.message}"
+              puts
+              puts "Please re-run from a directory you have write access to or specify -r with a"
+              puts "path you have write access to"
+              puts
+              exit 211
+          end
+      end
+  end
+  
+  if jenkins_app_name && !has_jenkins
+    jenkins_app = RHC::create_app($libra_server, @http, user_info, jenkins_app_name, 'jenkins-1.4', $opt['rhlogin'], $password, nil, false, true, true)
+    available = RHC::check_app_available(@http, jenkins_app[:app_name], jenkins_app[:fqdn], jenkins_app[:health_check_path], jenkins_app[:result], jenkins_app[:git_url], nil, true)
+    if !available
+      puts "Unable to access your new Jenkins application."
+      exit 1
+    end
+  end
+  
+  #
+  # Create remote application space
+  #
+  main_app = RHC::create_app($libra_server, @http, user_info, $opt['app'], $opt['type'], $opt['rhlogin'], $password, $opt['repo'], $opt['no-dns'], $opt['nogit'], false)
+  if jenkins_app_name
+    puts "Now embedding the jenkins client into '#{$opt['app']}'..."
+    RHC::ctl_app($libra_server, @http, $opt['app'], $opt['rhlogin'], $password, 'configure', true, 'jenkins-client-1.4', nil, false)
+  end
+  
+  unless $opt['no-dns']
+    available = RHC::check_app_available(@http, main_app[:app_name], main_app[:fqdn], main_app[:health_check_path], main_app[:result], main_app[:git_url], $opt['repo'], $opt['nogit'])
+    if !available
+      puts "Unable to access your new application."
+      exit 1
+    end
+  end
+
+end
+
+def control_app(command)
+  validate_args(false)
+  
+  if ($opt['alias'] and !(command =~ /-alias$/)) || (command =~ /-alias$/ and ! $opt['alias'])
+    puts "When specifying alias make sure to use add-alias or remove-alias command"
+    p_usage
+  end
+  
+  if !$opt["bypass"] and command == "deconfigure"
+    # deconfigure is the actual hook called on 'destroy'
+    # destroy is used for clarity
+    puts <<WARNING
+!!!! WARNING !!!! WARNING !!!! WARNING !!!!
+You are about to destroy the #{$opt['app']} application.
+
+This is NOT reversible, all remote data for this application will be removed.
+WARNING
+
+    print "Do you want to destroy this application (y/n): "
+    begin
+      agree = gets.chomp
+      if agree != 'y'
+          puts "\n"
+          exit 217
+      end
+    rescue Interrupt
+      puts "\n"
+      exit 217
+    end
+  end
+
+  RHC::ctl_app($libra_server, @http, $opt['app'], $opt['rhlogin'], $password, command, false, nil, $opt['alias'])
+end
+
+def control_cartridge(command)
+  validate_args(false, true)
+  
+  # override command if it's in the mapper
+  command = embed_mapper[command] if embed_mapper[command]
+  framework = $opt['cartridge']
+  
+  RHC::ctl_app($libra_server, @http, $opt['app'], $opt['rhlogin'], $password, command, true, framework, $opt['alias'])
+end
+
+def show_embedded_list
+    libra_server = get_var('libra_server')
+    puts ""
+    puts "List of supported embedded cartridges:"
+    puts ""
+    type_keys = RHC::get_cartridge_listing(nil, ', ', libra_server, @http, 'embedded', false)
+    puts type_keys
+    puts ""
+    exit 255
+end
+
+def save_or_restore_snapshot(command)
+  validate_args(false, false, true)
+  
+  user_info = RHC::get_user_info($libra_server, $opt['rhlogin'], $password, @http, @mydebug, false)
+  
+  app = $opt['app']
+  $opt['filepath'] = "#{$opt['app']}.tar.gz" if command == 'save' and not $opt['filepath']
+  
+  unless user_info['app_info'][app]
+      puts
+      puts "Could not find app '#{app}'.  Please run rhc-user-info to get a list"
+      puts "of your current running applications"
+      puts
+      exit 101
+  end
+  
+  app_uuid = user_info['app_info'][app]['uuid']
+  namespace = user_info['user_info']['namespace']
+  rhc_domain = user_info['user_info']['rhc_domain']
+  if command == 'save'
+    ssh_cmd = "ssh #{app_uuid}@#{app}-#{namespace}.#{rhc_domain} 'snapshot' > #{$opt['filepath']}"
+    puts "Pulling down a snapshot to #{opt['save']}"
+  else
+    if File.exists? $opt['filepath']
+      `tar -tf #{$opt['filepath']} './*/#{app}'`
+      if $?.exitstatus != 0
+        puts "Archive at #{$opt['filepath']} does not contain the target application: ./*/#{app}"
+        puts "If you created this archive rather than exported with rhc-snapshot, be sure"
+        puts "the directory structure inside the archive starts with ./<app_uuid>/"
+        puts "i.e.: tar -czvf <app_name>.tar.gz ./<app_uuid>/"
+        exit 255
+      else
+        `tar -tf #{$opt['filepath']} './*/git'`
+        include_git = $?.exitstatus == 0
+        ssh_cmd = "cat #{$opt['filepath']} | ssh #{app_uuid}@#{app}-#{namespace}.#{rhc_domain} 'restore#{include_git ? ' INCLUDE_GIT' : ''}'"
+        puts "Restoring from snapshot #{opt['filepath']}"
+      end
+    else
+      puts "Archive not found: #{opt['filepath']}"
+      exit 255
+    end
+  end
+
+  puts 
+  puts ssh_cmd if @mydebug
+  output = `#{ssh_cmd}`
+  puts
+  if $?.exitstatus != 0
+      puts output
+      puts
+  if command == 'save'
+      puts "Error in trying to save snapshot.  You can try to save manually by running:"
+  else
+      puts "Error in trying to restore application from snapshot.  You can try to restore manually by running:"
+  end
+      puts
+      puts ssh_cmd
+      puts
+      exit 1
+  end
+  puts output if command == 'restore' && @mydebug
+end
+
+def show_logs
+  validate_args(false, false, true)
+
+  user_info = RHC::get_user_info(libra_server, opt['rhlogin'], password, @http, false)
+  app = $opt['app']
+  
+  unless user_info['app_info'][app]
+      puts
+      puts "Could not find app '#{$opt['app']}'.  Please run rhc-user-info to get a list"
+      puts "of your current running applications"
+      puts
+      exit 101
+  end
+  
+  $opt['files'] = "#{$opt['app']}/logs/*" unless $opt['files']
+  file_glob = "#{$opt['files']}"
+  app_uuid = user_info['app_info'][app]['uuid']
+  namespace = user_info['user_info']['namespace']
+  rhc_domain = user_info['user_info']['rhc_domain']
+  
+  # -t to force PTY and avoid daemons
+  # Red Hat Openshift: https://bugzilla.redhat.com/show_bug.cgi?id=726646
+  # OpenSSH https://bugzilla.mindrot.org/show_bug.cgi?id=396
+  ssh_cmd = "ssh -t #{app_uuid}@#{app}-#{namespace}.#{rhc_domain} 'tail#{$opt['opts'] ? ' --opts ' + Base64::encode64($opt['opts']).chomp : ''} #{file_glob}'"
+  
+  puts "Attempting to tail files: #{file_glob}"
+  puts "Use ctl + c to stop"
+  puts 
+  puts ssh_cmd if debug
+  begin
+    exec ssh_cmd
+  rescue SystemCallError
+    puts
+    puts "Error in trying to tail files.  You can tail manually by running:"
+    puts
+    puts ssh_cmd
+    puts
+    exit 1
+  end
+  # this should never happen
+  exit 1
+end
+
+
+begin
+  argv_c = ARGV.clone
+  
+  if ARGV[0] =~ /^create$/
+    ARGV.shift
+    opts = GetoptLong.new(
+        ["--debug", "-d", GetoptLong::NO_ARGUMENT],
+        ["--help",  "-h", GetoptLong::NO_ARGUMENT],
+        ["--rhlogin", "-l", GetoptLong::REQUIRED_ARGUMENT],
+        ["--password", "-p", GetoptLong::REQUIRED_ARGUMENT],
+        ["--no-dns", GetoptLong::NO_ARGUMENT],
+        ["--nogit", "-n", GetoptLong::NO_ARGUMENT],
+        ["--app",   "-a", GetoptLong::REQUIRED_ARGUMENT],
+        ["--repo",  "-r", GetoptLong::REQUIRED_ARGUMENT],
+        ["--type",  "-t", GetoptLong::REQUIRED_ARGUMENT],
+        ["--enable-jenkins", GetoptLong::OPTIONAL_ARGUMENT],
+        ["--config", GetoptLong::REQUIRED_ARGUMENT],
+        ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
+    )
+  elsif ARGV[0] =~ /^(show|start|stop|force-stop|restart|reload|status|destroy|tidy|add-alias|remove-alias|threaddump|destroy)$/
+    ARGV.shift
+    opts = GetoptLong.new(
+        ["--debug", "-d", GetoptLong::NO_ARGUMENT],
+        ["--help",  "-h", GetoptLong::NO_ARGUMENT],
+        ["--rhlogin", "-l", GetoptLong::REQUIRED_ARGUMENT],
+        ["--password", "-p", GetoptLong::REQUIRED_ARGUMENT],
+        ["--app",   "-a", GetoptLong::REQUIRED_ARGUMENT],
+        ["--alias", GetoptLong::REQUIRED_ARGUMENT],
+        ["--bypass", "-b", GetoptLong::NO_ARGUMENT],
+        ["--config", GetoptLong::REQUIRED_ARGUMENT],
+        ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
+    )
+  elsif ARGV[0] =~ /^cartridge$/
+    ARGV.shift
+    ARGV.shift if ARGV[0] =~ /^(add|remove|stop|start|restart|status|reload|list)$/
+    opts = GetoptLong.new(
+        ["--debug", "-d", GetoptLong::NO_ARGUMENT],
+        ["--help", "-h", GetoptLong::NO_ARGUMENT],
+        ["--rhlogin", "-l", GetoptLong::REQUIRED_ARGUMENT],
+        ["--password", "-p", GetoptLong::REQUIRED_ARGUMENT],
+        ["--app", "-a", GetoptLong::REQUIRED_ARGUMENT],
+        ["--cartridge", "-c", GetoptLong::REQUIRED_ARGUMENT],
+        ["--bypass", "-b", GetoptLong::NO_ARGUMENT],
+        ["--config", GetoptLong::REQUIRED_ARGUMENT],
+        ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
+    )
+  elsif ARGV[0] =~ /^log$/
+    ARGV.shift
+    opts = GetoptLong.new(
+        ["--debug", "-d", GetoptLong::NO_ARGUMENT],
+        ["--help", "-h", GetoptLong::NO_ARGUMENT],
+        ["--rhlogin", "-l", GetoptLong::REQUIRED_ARGUMENT],
+        ["--password", "-p", GetoptLong::REQUIRED_ARGUMENT],
+        ["--app", "-a", GetoptLong::REQUIRED_ARGUMENT],
+        ["--opts", "-o", GetoptLong::REQUIRED_ARGUMENT],
+        ["--filepath", "-f", GetoptLong::REQUIRED_ARGUMENT],
+        ["--config", GetoptLong::REQUIRED_ARGUMENT],
+        ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
+    )
+  elsif ARGV[0] =~ /^snapshot$/
+    ARGV.shift
+    opts = GetoptLong.new(
+        ["--debug", "-d", GetoptLong::NO_ARGUMENT],
+        ["--help", "-h", GetoptLong::NO_ARGUMENT],
+        ["--rhlogin", "-l", GetoptLong::REQUIRED_ARGUMENT],
+        ["--password", "-p", GetoptLong::REQUIRED_ARGUMENT],
+        ["--app", "-a", GetoptLong::REQUIRED_ARGUMENT],
+        ["--filepath", "-f", GetoptLong::REQUIRED_ARGUMENT],
+        ["--config", GetoptLong::REQUIRED_ARGUMENT],
+        ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
+    )
+  else
+    puts "Missing or invalid command!"
+    p_usage
+  end
+    
+  $opt = {}
+  opts.each do |o, a|
+    $opt[o[2..-1]] = a.to_s
+  end
+
+rescue Exception => e
+  p_usage
+end
+
+p_usage if $opt["help"]
+
+case argv_c[0]
+when "create"
+  create_app
+when "show"
+  puts "This command is not yet implemented! Use 'rhc domain show' instead."
+  exit 0
+when "start", "stop", "force-stop", "restart", "reload", "status", "tidy", "add-alias", "remove-alias", "threaddump", "destroy"
+  control_app(argv_c[0])
+when "log"
+  show_logs
+when "snapshot"
+  case argv_c[1]
+  when "save", "restore"
+    save_or_restore_snapshot(argv_c[1])
+  else
+    puts "Missing or invalid cartridge action!"
+  end
+when "cartridge"
+  case argv_c[1]
+  when "add", "remove", "start", "stop", "restart", "status", "reload"
+    control_cartridge(argv_c[1])
+  when "list", nil
+    show_embedded_list
+  else
+    puts "Missing or invalid cartridge action!"
+  end
+else
+  puts "Missing or invalid command!"
+  p_usage
+end
+
+exit 0
