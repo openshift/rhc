@@ -172,7 +172,7 @@ EOF
                         dns_success = false
                     end
                 end
-                puts "You can use rhc-user-info to view any url changes.  Be sure to update any links"
+                puts "You can use rhc-domain-info to view any url changes.  Be sure to update any links"
                 puts "including the url in your local git config: <local_git_repo>/.git/config"
               end
               if dns_success
