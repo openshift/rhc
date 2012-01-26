@@ -79,7 +79,7 @@ def validate_args(val_namespace=true, val_timeout=true)
   p_usage if !RHC::check_rhlogin($opt['rhlogin'])
   
   p_usage if (val_namespace && !$opt["namespace"])
-  
+
   debug = $opt["debug"] ? true : false
   RHC::debug(debug)
   
@@ -88,9 +88,12 @@ def validate_args(val_namespace=true, val_timeout=true)
   $password = $opt['password'] ? $opt['password'] : RHC::get_password
 end
 
-def create_domain(alter=false)
+def create_or_alter_domain(alter=false)
   validate_args()
   
+  # Convert the namespace to lowercase
+  $opt['namespace'] = $opt['namespace'].downcase
+
   ssh_key_file_path = get_kfile(false)
   ssh_pub_key_file_path = get_kpfile(ssh_key_file_path, alter)
   
@@ -344,9 +347,9 @@ p_usage if $opt["help"]
 
 case argv_c[0]
 when "create"
-  create_domain(false)
+  create_or_alter_domain(false)
 when "alter"
-  create_domain(true)
+  create_or_alter_domain(true)
 when "status"
   system("rhc-chk #{get_args} 2>&1")
 when "show", nil

@@ -103,7 +103,7 @@ def validate_args(val_type=true, val_cartridge=false, val_timeout=true)
   p_usage if !RHC::check_rhlogin($opt['rhlogin'])
   
   p_usage if !RHC::check_app($opt['app'])
-  
+
   if val_type && !$opt['type']
     puts "Application Type is required"
     p_usage
@@ -124,6 +124,12 @@ end
 
 def create_app
   validate_args
+  
+  # Convert the application name to lowercase
+  $opt['app'] = $opt['app'].downcase
+
+  # Convert the jenkins client application name to lowercase
+  $opt['enable-jenkins'] = $opt['enable-jenkins'].downcase if $opt['enable-jenkins']
   
   user_info = RHC::get_user_info($libra_server, $opt['rhlogin'], $password, @http, false)
   app_info = user_info['app_info']
