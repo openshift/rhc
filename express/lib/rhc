@@ -42,7 +42,7 @@ _rhc()
                 opts="create show start stop force-stop restart reload status destroy tidy add-alias remove-alias threaddump snapshot log cartridge"
                 ;;
             sshkey)
-                opts="create show start stop restart status reload add-alias remove-alias cartridge  destroy"
+                opts="add update remove list"
                 ;;
             *)
                 opts=""
