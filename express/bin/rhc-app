@@ -76,7 +76,7 @@ List of arguments
   --no-dns                       Skip DNS check. Must be used in combination with --nogit
   -d|--debug                     Print Debug info
   -h|--help                      Show Usage info
-  -b|--bypass                    Bypass warnings (applicable to application creation only)
+  -b|--bypass                    Bypass warnings (applicable to application destroying only)
   -f|--filepath     filepath     Applicable in case of snapshot, restore, and log command
   -o|--opts         options      Options to pass to the server-side (linux based) tail command (applicable to log command only) (-f is implicit.  See the linux tail man page full list of options.) (Ex: --opts '-n 100')
   --alias           alias        Specify server alias (when using add/remove-alias)
