@@ -75,6 +75,15 @@ mkdir -p .%{gemdir}
 gem install --install-dir $RPM_BUILD_ROOT/%{gemdir} --bindir $RPM_BUILD_ROOT/%{_bindir} --local -V --force --rdoc \
      pkg/rhc-%{version}.gem
 
+# Copy the bash autocompletion script and source it
+# Check if the bash completion directory is present
+if [ -d /etc/bash_completion.d ]
+then
+  cp -f lib/rhc /etc/bash_completion.d/rhc
+  . /etc/bash_completion.d/rhc
+fi
+
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
@@ -82,10 +91,10 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root,-)
 %doc doc/USAGE.txt
 %{_bindir}/rhc
-%{_bindir}/rhc-chk
 %{_bindir}/rhc-app
 %{_bindir}/rhc-domain
 %{_bindir}/rhc-sshkey
+%{_bindir}/rhc-chk
 %{_bindir}/rhc-create-app
 %{_bindir}/rhc-create-domain
 %{_bindir}/rhc-ctl-domain

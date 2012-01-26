@@ -53,6 +53,7 @@ List of commands
   remove-alias                   Remove a custom domain name for the application
   threaddump                     Trigger a thread dump for jbossas applications
   snapshot       [save|restore]  Saves/Restores an application snapshot to/from a tarball at the location specified using --filepath (default: ./$APPNAME.tar.gz)
+  log                            Tail the logs of an application
   cartridge      <action>        Manage an embedded cartridge
 
 List of cartridge actions
@@ -461,7 +462,6 @@ begin
         ["--password", "-p", GetoptLong::REQUIRED_ARGUMENT],
         ["--app", "-a", GetoptLong::REQUIRED_ARGUMENT],
         ["--cartridge", "-c", GetoptLong::REQUIRED_ARGUMENT],
-        ["--bypass", "-b", GetoptLong::NO_ARGUMENT],
         ["--config", GetoptLong::REQUIRED_ARGUMENT],
         ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
     )
@@ -480,6 +480,7 @@ begin
     )
   elsif ARGV[0] =~ /^snapshot$/
     ARGV.shift
+    ARGV.shift if ARGV[0] =~ /^(save|restore)$/
     opts = GetoptLong.new(
         ["--debug", "-d", GetoptLong::NO_ARGUMENT],
         ["--help", "-h", GetoptLong::NO_ARGUMENT],
