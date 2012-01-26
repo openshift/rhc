@@ -125,12 +125,6 @@ end
 def create_app
   validate_args
   
-  # Convert the application name to lowercase
-  $opt['app'] = $opt['app'].downcase
-
-  # Convert the jenkins client application name to lowercase
-  $opt['enable-jenkins'] = $opt['enable-jenkins'].downcase if $opt['enable-jenkins']
-  
   user_info = RHC::get_user_info($libra_server, $opt['rhlogin'], $password, @http, false)
   app_info = user_info['app_info']
   

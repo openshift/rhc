@@ -104,12 +104,6 @@ if !RHC::check_app(opt['app'])
     p_usage
 end
 
-# Convert the application name to lowercase
-opt['app'] = opt['app'].downcase
-
-# Convert the jenkins client application name to lowercase
-opt['enable-jenkins'] = opt['enable-jenkins'].downcase if opt['enable-jenkins']
-
 if !opt['type']
     puts 'Type is required'
     p_usage

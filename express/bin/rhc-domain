@@ -91,9 +91,6 @@ end
 def create_or_alter_domain(alter=false)
   validate_args()
   
-  # Convert the namespace to lowercase
-  $opt['namespace'] = $opt['namespace'].downcase
-
   ssh_key_file_path = get_kfile(false)
   ssh_pub_key_file_path = get_kpfile(ssh_key_file_path, alter)
   

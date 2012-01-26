@@ -99,9 +99,6 @@ if !RHC::check_namespace(opt['namespace'])
     p_usage
 end
 
-# Convert the namespace to lowercase
-opt['namespace'] = opt['namespace'].downcase
-
 if !RHC::check_rhlogin(opt['rhlogin'])
     p_usage
 end
