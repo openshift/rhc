@@ -56,10 +56,7 @@ _rhc()
                     create | alter | destroy)
                         opts="--debug --help --rhlogin --password --namespace --config --timeout"
                         ;;
-                    show)
-                        opts="--debug --help --rhlogin --password --apps --info --config --timeout"
-                        ;;
-                    status)
+                    show | status)
                         opts="--debug --help --rhlogin --password --config --timeout"
                         ;;
                     *)

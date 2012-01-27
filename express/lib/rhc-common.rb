@@ -274,7 +274,7 @@ module RHC
     end
     update_server_api_v(json_resp)
     begin
-      ssh_keys = (JSON.parse(json_resp['data'].to_s))['keys']
+      ssh_keys = (JSON.parse(json_resp['data'].to_s))
     rescue JSON::ParserError
       exit 1
     end

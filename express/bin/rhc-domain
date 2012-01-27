@@ -36,7 +36,7 @@ Manage a domain in rhcloud for a registered rhcloud user.
 
 List of commands
   create            Bind a registered rhcloud user to a domain in rhcloud.
-  show              Display information about a user
+  show              Display domain information and list the applications within the domain 
   alter             Alter namespace (will change urls) and/or ssh key.
   status            Run a simple check on local configs and credentials to confirm tools are properly setup.
   destroy           Destroys the domain and any added ssh keys
@@ -47,8 +47,6 @@ List of arguments
   -n|--namespace    namespace    Namespace for your application(s) (alphanumeric - max #{RHC::DEFAULT_MAX_LENGTH} chars) (required for creating or destroying domain)
   -d|--debug                     Print Debug info
   -h|--help                      Show Usage info
-  -a|--apps                      List applications for rhlogin (applicable with the 'show' command)
-  -i|--info                      Show user info (applicable with the 'show' command)
   --config          path         Path of alternate config file
   --timeout         #            Timeout, in seconds, for connection
 
@@ -225,68 +223,47 @@ end
 def show_domain_info()
   validate_args(false, true)
   
-  $opt['info'] = true if not $opt['info'] and not $opt['apps']
   user_info = RHC::get_user_info($libra_server, $opt['rhlogin'], $password, @http, true)
   
-  if $opt['info']
-      ssh_keys = RHC::get_ssh_keys($libra_server, $opt['rhlogin'], $password, @http)
-  
-      puts "User Info"
-      puts "========="
-      puts "Namespace: #{user_info['user_info']['namespace']}"
-      #puts "    UUID: #{user_info['user_info']['uuid']}"
-      puts "  RHLogin: #{user_info['user_info']['rhlogin']}"
-      puts "Primary SSH key type: #{user_info['user_info']['ssh_type']}" unless user_info['user_info']['ssh_type'].to_s.strip.length == 0
-      puts "Primary SSH key: #{user_info['user_info']['ssh_key']}"
-  
-      if ssh_keys && ssh_keys.kind_of?(Hash)
+  puts ""
+  puts "User Info"
+  puts "========="
+  puts "Namespace: #{user_info['user_info']['namespace']}"
+  #puts "    UUID: #{user_info['user_info']['uuid']}"
+  puts "  RHLogin: #{user_info['user_info']['rhlogin']}"
+
+  puts "\n\n" 
+
+  puts "Application Info"
+  puts "================"
+  unless user_info['app_info'].empty?
+    user_info['app_info'].each do |key, val|
+        puts key
+        puts "    Framework: #{val['framework']}"
+        puts "     Creation: #{val['creation_time']}"
+        puts "         UUID: #{val['uuid']}"
+        puts "      Git URL: ssh://#{val['uuid']}@#{key}-#{user_info['user_info']['namespace']}.#{user_info['user_info']['rhc_domain']}/~/git/#{key}.git/"
+        puts "   Public URL: http://#{key}-#{user_info['user_info']['namespace']}.#{user_info['user_info']['rhc_domain']}/"
+        if val['aliases'] && !val['aliases'].empty?
+          puts "      Aliases: #{val['aliases'].join(', ')}"
+        end
         puts ""
-        puts "Additional SSH keys"
-        puts "==================="
-        ssh_keys.each do |name, keyval|
-          puts "Name: #{name}"
-          puts " Key: #{keyval['key']}"
-          puts "Type: #{keyval['type']}"
-          puts ""
-        end
-        puts "Use 'rhc sshkey' for managing additional ssh keys"
-      end
-  end
-  
-  if $opt['apps']
-      puts "\n\n" if $opt['info']
-  
-      puts "Application Info"
-      puts "================"
-      unless user_info['app_info'].empty?
-        user_info['app_info'].each do |key, val|
-            puts key
-            puts "    Framework: #{val['framework']}"
-            puts "     Creation: #{val['creation_time']}"
-            puts "         UUID: #{val['uuid']}"
-            puts "      Git URL: ssh://#{val['uuid']}@#{key}-#{user_info['user_info']['namespace']}.#{user_info['user_info']['rhc_domain']}/~/git/#{key}.git/"
-            puts "   Public URL: http://#{key}-#{user_info['user_info']['namespace']}.#{user_info['user_info']['rhc_domain']}/"
-            if val['aliases'] && !val['aliases'].empty?
-              puts "      Aliases: #{val['aliases'].join(', ')}"
-            end
-            puts ""
-            puts " Embedded: "
-            if val['embedded'] && !val['embedded'].empty? 
-                val['embedded'].each do |embed_key, embed_val|
-                    if embed_val.has_key?('info') && !embed_val['info'].empty?
-                        puts "      #{embed_key} - #{embed_val['info']}"
-                    else
-                        puts "      #{embed_key}"
-                    end
+        puts " Embedded: "
+        if val['embedded'] && !val['embedded'].empty? 
+            val['embedded'].each do |embed_key, embed_val|
+                if embed_val.has_key?('info') && !embed_val['info'].empty?
+                    puts "      #{embed_key} - #{embed_val['info']}"
+                else
+                    puts "      #{embed_key}"
                 end
-            else
-                puts "      None"
             end
-            puts ""
+        else
+            puts "      None"
         end
-      else
-        puts "No applications found.  You can use 'rhc app create' to create new applications."
-      end
+        puts ""
+    end
+  else
+    puts "No applications found.  You can use 'rhc app create' to create new applications."
   end
 end
 
@@ -305,25 +282,13 @@ begin
         ["--config", GetoptLong::REQUIRED_ARGUMENT],
         ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
     )
-  elsif ARGV[0] =~ /^status$/
+  elsif ARGV[0] =~ /^(status|show)$/
     ARGV.shift
     opts = GetoptLong.new(
         ["--debug", "-d", GetoptLong::NO_ARGUMENT],
         ["--help",  "-h", GetoptLong::NO_ARGUMENT],
         ["--rhlogin", "-l", GetoptLong::REQUIRED_ARGUMENT],
         ["--password", "-p", GetoptLong::REQUIRED_ARGUMENT],
-        ["--config", GetoptLong::REQUIRED_ARGUMENT],
-        ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
-    )
-  elsif ARGV[0] =~ /^show$/
-    ARGV.shift
-    opts = GetoptLong.new(
-        ["--debug", "-d", GetoptLong::NO_ARGUMENT],
-        ["--help",  "-h", GetoptLong::NO_ARGUMENT],
-        ["--rhlogin", "-l", GetoptLong::REQUIRED_ARGUMENT],
-        ["--password", "-p", GetoptLong::REQUIRED_ARGUMENT],
-        ["--apps",  "-a", GetoptLong::NO_ARGUMENT],
-        ["--info",  "-i", GetoptLong::NO_ARGUMENT],
         ["--config", GetoptLong::REQUIRED_ARGUMENT],
         ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
     )

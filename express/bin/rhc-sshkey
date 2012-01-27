@@ -125,7 +125,7 @@ def add_or_update_key(command)
 end
 
 def remove_key
-  validate_args(false, true)
+  validate_args(true)
 
   data = {}
   data[:rhlogin] = $opt['rhlogin']
@@ -137,15 +137,24 @@ def remove_key
 end
 
 def show_key_list
-  validate_args(false, true)
+  validate_args(false)
   
   ssh_keys = RHC::get_ssh_keys($libra_server, $opt['rhlogin'], $password, @http)
+  additional_ssh_keys = ssh_keys['keys']
+  
+  puts ""
+  puts "SSH keys"
+  puts "========"
 
-  if ssh_keys && ssh_keys.kind_of?(Hash)
-    puts ""
-    puts "SSH keys"
-    puts "========"
-    ssh_keys.each do |name, keyval|
+  # first list the primary key
+  puts "Name: default"
+  puts "Type: #{ssh_keys['ssh_type']}"
+  puts " Key: #{ssh_keys['ssh_key']}"
+  puts ""
+    
+  # now list the additional keys
+  if additional_ssh_keys && additional_ssh_keys.kind_of?(Hash)
+    additional_ssh_keys.each do |name, keyval|
       puts "Name: #{name}"
       puts "Type: #{keyval['type']}"
       puts " Key: #{keyval['key']}"

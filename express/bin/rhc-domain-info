@@ -109,11 +109,11 @@ if opt['info']
     puts "Primary SSH key: #{user_info['user_info']['ssh_key']}"
     puts "Primary SSH key type: #{user_info['user_info']['ssh_type']}"  unless user_info['user_info']['ssh_type'].to_s.strip.length == 0
 
-    if ssh_keys && ssh_keys.kind_of?(Hash)
+    if ssh_keys['keys'] && ssh_keys['keys'].kind_of?(Hash)
       puts ""
       puts "Additional SSH keys"
       puts "==================="
-      ssh_keys.each do |name, keyval|
+      ssh_keys['keys'].each do |name, keyval|
         puts "Name: #{name}"
         puts " Key: #{keyval['key']}"
         puts "Type: #{keyval['type']}"
