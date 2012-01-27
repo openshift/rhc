@@ -78,7 +78,7 @@ def validate_args(val_namespace=true, val_timeout=true)
   $opt['rhlogin'] = get_var('default_rhlogin') unless $opt['rhlogin']
   p_usage if !RHC::check_rhlogin($opt['rhlogin'])
   
-  p_usage if (val_namespace && !$opt["namespace"])
+  p_usage if (val_namespace && !RHC::check_namespace($opt['namespace']))
 
   debug = $opt["debug"] ? true : false
   RHC::debug(debug)
@@ -117,7 +117,7 @@ def create_or_alter_domain(alter=false)
   
   if alter
     data[:alter] = true
-    not_found_message = "A user with rhlogin '#{$opt['rhlogin']}' does not have a registered domain.  Be sure to run rhc-create-domain without -a|--alter first."
+    not_found_message = "A user with rhlogin '#{$opt['rhlogin']}' does not have a registered domain.  Be sure to run 'rhc domain create' first."
     user_info = RHC::get_user_info($libra_server, $opt['rhlogin'], $password, @http, true, not_found_message)
   end
   if @mydebug
@@ -134,8 +134,8 @@ def create_or_alter_domain(alter=false)
           json_resp = JSON.parse(response.body)
           RHC::print_response_success(json_resp)
           json_rhlogininfo = JSON.parse(json_resp['data'])
-          RHC::add_rhlogin_config(json_rhlogininfo['rhlogin'], json_rhlogininfo['uuid'])
-          RHC::add_ssh_config_host(json_rhlogininfo['rhc_domain'], ssh_key_file_path, ssh_config, ssh_config_d)
+          add_rhlogin_config(json_rhlogininfo['rhlogin'], json_rhlogininfo['uuid'])
+          add_ssh_config_host(json_rhlogininfo['rhc_domain'], ssh_key_file_path, ssh_config, ssh_config_d)
       
           if !alter
                         puts <<EOF
@@ -172,7 +172,7 @@ EOF
                         dns_success = false
                     end
                 end
-                puts "You can use rhc-domain-info to view any url changes.  Be sure to update any links"
+                puts "You can use 'rhc domain show' to view any url changes.  Be sure to update any links"
                 puts "including the url in your local git config: <local_git_repo>/.git/config"
               end
               if dns_success
@@ -196,6 +196,7 @@ def destroy_domain()
   validate_args(true, false)
 
   url = URI.parse("https://#{$libra_server}/broker/domain")
+  data = {}
   data[:rhlogin] = $opt['rhlogin']
   data[:delete] = true
   data[:namespace] = $opt['namespace']
@@ -249,7 +250,7 @@ def show_domain_info()
           puts "Type: #{keyval['type']}"
           puts ""
         end
-        puts "Use rhc-ctl-domain for managing additional ssh keys"
+        puts "Use 'rhc sshkey' for managing additional ssh keys"
       end
   end
   
@@ -285,7 +286,7 @@ def show_domain_info()
             puts ""
         end
       else
-        puts "No applications found.  You can use rhc-create-app to create new applications."
+        puts "No applications found.  You can use 'rhc app create' to create new applications."
       end
   end
 end

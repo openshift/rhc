@@ -219,7 +219,7 @@ module RHC
         if not_found_message
           puts not_found_message
         else
-          puts "A user with rhlogin '#{rhlogin}' does not have a registered domain.  Be sure to run rhc-create-domain before using the other rhc tools."
+          puts "A user with rhlogin '#{rhlogin}' does not have a registered domain.  Be sure to run 'rhc domain create' before using the other rhc tools."
         end
         exit 99
       elsif response.code == '401'
@@ -320,7 +320,7 @@ module RHC
     rescue Exception => e
       puts "There was a problem communicating with the server. Response message: #{e.message}"
       puts "If you were disconnected it is possible the operation finished without being able to report success."
-      puts "You can use rhc-domain-info and rhc-ctl-app to learn about the status of your user and application(s)."
+      puts "You can use 'rhc domain show' and 'rhc app status' to learn about the status of your user and application(s)."
       exit 219
     end
   end
@@ -505,7 +505,7 @@ clone your git repository.
 If you can't get your application '#{app_name}' running in the browser, you can
 also try destroying and recreating the application as well using:
 
-  rhc-ctl-app -c destroy -a #{app_name} -l #{rhlogin}
+  rhc app destroy -a #{app_name} -l #{rhlogin}
 
 If this doesn't work for you, let us know in the forums or in IRC and we'll
 make sure to get you up and running.
@@ -736,94 +736,6 @@ LOOKSGOOD
     end
   end
   
-  
-  # Add a new namespace to configs
-  def self.add_rhlogin_config(rhlogin, uuid)
-      f = open(File.expand_path(config_path), 'a')
-      unless config.get_value('default_rhlogin')
-          f.puts("# Default rhlogin to use if none is specified")
-          f.puts("default_rhlogin=#{rhlogin}")
-          f.puts("")
-      end
-      f.close
-  end
-  
-  # Check / add new host to ~/.ssh/config
-  def self.add_ssh_config_host(rhc_domain, ssh_key_file_path, ssh_config, ssh_config_d)
-    
-    puts "Checking ~/.ssh/config"
-    ssh_key_file_name = File.basename(ssh_key_file_path)
-    if ssh_key_file_path =~ /^#{ENV['HOME']}/
-      ssh_key_file_path = ssh_key_file_path[ENV['HOME'].length..-1]
-      if ssh_key_file_path =~ /^\// || ssh_key_file_path =~ /^\\/
-        ssh_key_file_path = '~' + ssh_key_file_path
-      else
-        ssh_key_file_path = '~/' + ssh_key_file_path
-      end
-    end
-    if (ssh_key_file_name != 'id_rsa')
-      found = false
-  
-      begin
-          File.open(ssh_config, "r") do |sline|
-              while(line = sline.gets)
-                  if line.to_s.index("Host *.#{rhc_domain}") == 0
-                      found = true
-                      break
-                  end
-              end
-          end
-      rescue Errno::EACCES
-          puts "Could not read from #{ssh_config}"
-          puts "Reason: " + $!
-          puts
-          puts "Please correct this first.  Then run rerun."
-          puts
-          exit 213
-      rescue Errno::ENOENT
-          puts "Could not find #{ssh_config}.  This is ok, continuing"
-      end
-      if found
-          puts "Found #{rhc_domain} in ~/.ssh/config... No need to adjust"
-      else
-          puts "    Adding #{rhc_domain} to ~/.ssh/config"
-          begin
-              f = File.open(ssh_config, "a")
-              f.puts <<SSH
-  
-# Added by rhc-create-domain on #{`date`}
-Host *.#{rhc_domain}
-    IdentityFile #{ssh_key_file_path}
-    VerifyHostKeyDNS yes
-    StrictHostKeyChecking no
-    UserKnownHostsFile ~/.ssh/libra_known_hosts
-  
-SSH
-              f.close
-          rescue Errno::EACCES
-              puts "Could not write to #{ssh_config}"
-              puts "Reason: " + $!
-              puts
-              puts "Please correct this first.  Then run rerun."
-              puts
-              exit 214
-          rescue Errno::ENOENT
-              # Make directory and config if they do not exist
-              puts "Could not find directory: " + $!
-              puts "creating"
-              FileUtils.mkdir_p ssh_config_d
-              file = File.open(ssh_config, 'w')
-              file.close
-              retry
-          end
-      end
-  
-      File.chmod(0700, ssh_config_d)
-      File.chmod(0600, ssh_config)
-    end
-  end
-  
-
 end
 
 # provide a hook for performing actions before rhc-* commands exit
@@ -933,7 +845,7 @@ end
 def kfile_not_found
   puts <<KFILE_NOT_FOUND
 Your SSH keys are created either by running ssh-keygen (password optional)
-or by having the rhc-create-domain command do it for you.  If you created
+or by having the 'rhc domain create' command do it for you.  If you created
 them on your own (or want to use an existing keypair), be sure to paste
 your public key into the express console at http://www.openshift.com.
 The client tools use the value of 'ssh_key_file' in express.conf to find
@@ -977,4 +889,90 @@ def get_kpfile(kfile, check_exists=true)
     kfile_not_found
   end
   return kpfile
+end
+
+# Add a new namespace to configs
+def self.add_rhlogin_config(rhlogin, uuid)
+    f = open(File.expand_path(config_path), 'a')
+    unless config.get_value('default_rhlogin')
+        f.puts("# Default rhlogin to use if none is specified")
+        f.puts("default_rhlogin=#{rhlogin}")
+        f.puts("")
+    end
+    f.close
+end
+
+# Check / add new host to ~/.ssh/config
+def self.add_ssh_config_host(rhc_domain, ssh_key_file_path, ssh_config, ssh_config_d)
+  
+  puts "Checking ~/.ssh/config"
+  ssh_key_file_name = File.basename(ssh_key_file_path)
+  if ssh_key_file_path =~ /^#{ENV['HOME']}/
+    ssh_key_file_path = ssh_key_file_path[ENV['HOME'].length..-1]
+    if ssh_key_file_path =~ /^\// || ssh_key_file_path =~ /^\\/
+      ssh_key_file_path = '~' + ssh_key_file_path
+    else
+      ssh_key_file_path = '~/' + ssh_key_file_path
+    end
+  end
+  if (ssh_key_file_name != 'id_rsa')
+    found = false
+
+    begin
+        File.open(ssh_config, "r") do |sline|
+            while(line = sline.gets)
+                if line.to_s.index("Host *.#{rhc_domain}") == 0
+                    found = true
+                    break
+                end
+            end
+        end
+    rescue Errno::EACCES
+        puts "Could not read from #{ssh_config}"
+        puts "Reason: " + $!
+        puts
+        puts "Please correct this first.  Then run rerun."
+        puts
+        exit 213
+    rescue Errno::ENOENT
+        puts "Could not find #{ssh_config}.  This is ok, continuing"
+    end
+    if found
+        puts "Found #{rhc_domain} in ~/.ssh/config... No need to adjust"
+    else
+        puts "    Adding #{rhc_domain} to ~/.ssh/config"
+        begin
+            f = File.open(ssh_config, "a")
+            f.puts <<SSH
+
+# Added by 'rhc domain create' on #{`date`}
+Host *.#{rhc_domain}
+  IdentityFile #{ssh_key_file_path}
+  VerifyHostKeyDNS yes
+  StrictHostKeyChecking no
+  UserKnownHostsFile ~/.ssh/libra_known_hosts
+
+SSH
+            f.close
+        rescue Errno::EACCES
+            puts "Could not write to #{ssh_config}"
+            puts "Reason: " + $!
+            puts
+            puts "Please correct this first.  Then run rerun."
+            puts
+            exit 214
+        rescue Errno::ENOENT
+            # Make directory and config if they do not exist
+            puts "Could not find directory: " + $!
+            puts "creating"
+            FileUtils.mkdir_p ssh_config_d
+            file = File.open(ssh_config, 'w')
+            file.close
+            retry
+        end
+    end
+
+    File.chmod(0700, ssh_config_d)
+    File.chmod(0600, ssh_config)
+  end
 end

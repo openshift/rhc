@@ -156,7 +156,7 @@ Found existing Jenkins application: #{jenkins_app_name}
 The --no-dns option can't be used in conjunction with --enable-jenkins 
 when creating a #{$opt['type']} application.  Either remove the --no-dns
 option or first install your #{$opt['type']} application with --no-dns
-and then use rhc-ctl-app to embed the Jenkins client. 
+and then use 'rhc app cartridge add' to embed the Jenkins client. 
 "
           exit 255
         end
@@ -323,7 +323,7 @@ def save_or_restore_snapshot(command)
   
   unless user_info['app_info'][app]
       puts
-      puts "Could not find app '#{app}'.  Please run rhc-domain-info to get a list"
+      puts "Could not find app '#{app}'.  Please run 'rhc domain show' to get a list"
       puts "of your current running applications"
       puts
       exit 101
@@ -340,7 +340,7 @@ def save_or_restore_snapshot(command)
       `tar -tf #{$opt['filepath']} './*/#{app}'`
       if $?.exitstatus != 0
         puts "Archive at #{$opt['filepath']} does not contain the target application: ./*/#{app}"
-        puts "If you created this archive rather than exported with rhc-snapshot, be sure"
+        puts "If you created this archive rather than exported with 'rhc app snapshot', be sure"
         puts "the directory structure inside the archive starts with ./<app_uuid>/"
         puts "i.e.: tar -czvf <app_name>.tar.gz ./<app_uuid>/"
         exit 255
@@ -384,7 +384,7 @@ def show_logs
   
   unless user_info['app_info'][app]
       puts
-      puts "Could not find app '#{$opt['app']}'.  Please run rhc-domain-info to get a list"
+      puts "Could not find app '#{$opt['app']}'.  Please run 'rhc domain show' to get a list"
       puts "of your current running applications"
       puts
       exit 101
