@@ -79,8 +79,9 @@ gem install --install-dir $RPM_BUILD_ROOT/%{gemdir} --bindir $RPM_BUILD_ROOT/%{_
 # Check if the bash completion directory is present
 if [ -d /etc/bash_completion.d ]
 then
-  cp -f lib/rhc /etc/bash_completion.d/rhc
-  . /etc/bash_completion.d/rhc
+  mkdir -p "$RPM_BUILD_ROOT/etc/bash_completion.d/"
+  cp lib/rhc $RPM_BUILD_ROOT/etc/bash_completion.d/rhc
+  . $RPM_BUILD_ROOT/etc/bash_completion.d/rhc
 fi
 
 
@@ -111,6 +112,7 @@ rm -rf $RPM_BUILD_ROOT
 %{gemdir}/doc/rhc-%{version}
 %{gemdir}/specifications/rhc-%{version}.gemspec
 %config(noreplace) %{_sysconfdir}/openshift/express.conf
+%attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
 * Tue Jan 17 2012 Dan McPherson <dmcphers@redhat.com> 0.85.2-1
