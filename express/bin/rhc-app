@@ -24,7 +24,7 @@
 
 require 'rhc-common'
 
-embed_mapper = { 'add' => 'configure', 'remove' => 'deconfigure' }
+$embed_mapper = { 'add' => 'configure', 'remove' => 'deconfigure' }
 
 #
 # print help
@@ -265,6 +265,8 @@ def control_app(command)
     puts "When specifying alias make sure to use add-alias or remove-alias command"
     p_usage
   end
+
+  command = "deconfigure" if command == "destroy"
   
   if !$opt["bypass"] and command == "deconfigure"
     # deconfigure is the actual hook called on 'destroy'
@@ -296,7 +298,7 @@ def control_cartridge(command)
   validate_args(false, true)
   
   # override command if it's in the mapper
-  command = embed_mapper[command] if embed_mapper[command]
+  command = $embed_mapper[command] if $embed_mapper[command]
   framework = $opt['cartridge']
   
   RHC::ctl_app($libra_server, @http, $opt['app'], $opt['rhlogin'], $password, command, true, framework, $opt['alias'])
