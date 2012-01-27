@@ -63,7 +63,6 @@ def get_args()
     if a.to_s.strip.length == 0; a = "'#{a}'" end
     args += " --#{o} #{a}"
   end
-  puts "args: #{args}"
   args
 end
 

@@ -44,7 +44,7 @@ def p_usage
   rhlogin = get_var('default_rhlogin') ? "Default: #{get_var('default_rhlogin')}" : "required"
   puts <<USAGE
 
-Usage: #{$0}
+Usage: rhc domain status
 Run a simple check on local configs and credentials to confirm tools are
 properly setup.  Often run to troubleshoot connection issues.
 
@@ -455,7 +455,7 @@ $messages = YAML.load <<-EOF
   :no_connectivity: "Cannot connect to server, therefore most tests will not work\n FIX: Ensure that you are able to connect to %s"
   :no_account: You must have an account on the server in order to test SSH key matches
   :cant_connect: You need to be able to connect to the server in order to test authentication
-  :no_match_pub: "Local %s does not match remote pub key, SSH auth will not work\n FIX: Perhaps you should regenerate your public key, or run rhc-create-domain with -a to alter the remote key"
+  :no_match_pub: "Local %s does not match remote pub key, SSH auth will not work\n FIX: Perhaps you should regenerate your public key, or run 'rhc sshkey add' to add your new key"
   :_404: "The user %s does not have an account on this server\n FIX: Please ensure that you've entered the correct username"
   :no_pubkey: We were unable to read your public SSH key to compare to %s
   :_401: "Invalid user credentials for %s\n FIX: Please ensure you used the correct password"
