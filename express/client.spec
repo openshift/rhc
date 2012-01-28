@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.85.2
+Version:       0.85.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -113,6 +113,28 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Jan 27 2012 Dan McPherson <dmcphers@redhat.com> 0.85.3-1
+- minor fixe to rhc domain status command (abhgupta@redhat.com)
+- fixing self identified bugs as well as those identified by Dan
+  (abhgupta@redhat.com)
+- changes required due to ssh_key response structure change
+  (abhgupta@redhat.com)
+- changing message content to reflect new commands (abhgupta@redhat.com)
+- more fixes to the new wrapper commands (abhgupta@redhat.com)
+- fixing issues identified during self testing (abhgupta@redhat.com)
+- fixes to rhc rpm spec file (abhgupta@redhat.com)
+- rolling back change to convert application and namespace name to lowercase
+  (abhgupta@redhat.com)
+- converting application and namespace names to lowercase before passing to the
+  server (abhgupta@redhat.com)
+- correction in rhc app command usage description (abhgupta@redhat.com)
+- minor correction to auto completion bash script (abhgupta@redhat.com)
+- added bash completion script and other minor changes (abhgupta@redhat.com)
+- using rhc-domain-info consistently (abhgupta@redhat.com)
+- Merge branch 'master' of github.com:openshift/os-client-tools
+  (abhgupta@redhat.com)
+- new rhc command structure implemented (abhgupta@redhat.com)
+
 * Tue Jan 17 2012 Dan McPherson <dmcphers@redhat.com> 0.85.2-1
 - use rhc-domain-info consistently (dmcphers@redhat.com)
 - fix for bug 773144 (abhgupta@redhat.com)
