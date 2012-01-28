@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.85.3
+Version:       0.85.4
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -113,6 +113,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Jan 27 2012 Dan McPherson <dmcphers@redhat.com> 0.85.4-1
+- 
+
 * Fri Jan 27 2012 Dan McPherson <dmcphers@redhat.com> 0.85.3-1
 - minor fixe to rhc domain status command (abhgupta@redhat.com)
 - fixing self identified bugs as well as those identified by Dan
