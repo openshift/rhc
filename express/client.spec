@@ -103,7 +103,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/rhc-snapshot
 %{_bindir}/rhc-tail-files
 %{_bindir}/rhc-port-forward
-%{_mandir}/man1/rhc-*
+%{_mandir}/man1/rhc*
 %{_mandir}/man5/express*
 %{gemdir}/gems/rhc-%{version}/
 %{gemdir}/cache/rhc-%{version}.gem

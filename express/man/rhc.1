@@ -1,0 +1,56 @@
+.\" Process this file with
+.\" groff -man -Tascii rhc.1
+.\"
+.TH RHC 1 "JANUARY 2012" Linux "User Manuals"
+.SH NAME
+rhc \- Command line tool for performing operations related to your rhcloud account
+.SH SYNOPSIS
+.B rhc (<resource> | --help) [<command>] [<args>]
+
+.SH DESCRIPTION
+.B rhc
+Command line tool for performing operations related to your rhcloud account.
+
+.SH LIST OF RESOURCES
+.IP domain
+Manage a domain in rhcloud for a registered rhcloud user
+.IP app
+Create and manage an OpenShift Express application
+.IP sshkey
+Manage multiple keys for the registered rhcloud user
+.IP \-h|\-\-help|help
+Display help menu
+
+.SH FILES
+.I <ruby_gem_dir>/gems/rhc-<version>/conf/express.conf
+.RS
+The RubyGem system wide configuration file. See
+.BR express.conf (5)
+for further details.
+.RE
+.I /etc/openshift/express.conf
+.RS
+The system wide configuration file. See
+.BR express.conf (5)
+for further details.
+.RE
+.I ~/.openshift/express.conf
+.RS
+Per user configuration file. See
+.BR express.conf (5)
+for further details.
+.RE
+
+.SH BUGS
+Please contact the Red Hat OpenShift team.
+Forums: http://www.redhat.com/openshift/
+IRC: #openshift on irc.freenode.net
+
+.SH AUTHOR
+Mike McGrath <mmcgrath@redhat.com>, Jim Jagielski <jimjag@redhat.com>
+
+.SH "SEE ALSO"
+.BR rhc-app (1),
+.BR rhc-domain (1),
+.BR rhc-sshkey (1),
+.BR express.conf (5)
