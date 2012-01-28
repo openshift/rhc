@@ -58,7 +58,7 @@ end
 def get_args()
   args = ""
   $opt.each do |o, a|
-    if a.to_s.strip.length == 0; a = "'#{a}'" end
+    if a.length > 0 && a.to_s.strip.length == 0; a = "'#{a}'" end
     args += " --#{o} #{a}"
   end
   args
@@ -272,6 +272,13 @@ def show_domain_info()
   end
 end
 
+def check_domain_status
+  $opt['rhlogin'] = get_var('default_rhlogin') unless $opt['rhlogin']
+  p_usage if !RHC::check_rhlogin($opt['rhlogin'])
+
+  system("rhc-chk #{get_args} 2>&1")
+end
+
 
 begin
   argv_c = ARGV.clone
@@ -298,10 +305,16 @@ begin
         ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
     )
   else
-    puts "Missing or invalid command!" unless ARGV[0] =~ /^(help|-h|--help)$/
-    # just exit at this point
-    # printing the usage description will be handled in the rescue
-    exit 255
+    # if the user just enters "rhc domain", don't throw an error
+    # let it be handled by the "rhc domain show" command
+    if ARGV[0].to_s.strip.length == 0
+      opts = []
+    else
+      puts "Missing or invalid command!" unless ARGV[0] =~ /^(help|-h|--help)$/
+      # just exit at this point
+      # printing the usage description will be handled in the rescue
+      exit 255
+    end
   end
 
   $opt = {}
@@ -320,7 +333,7 @@ when "create"
 when "alter"
   create_or_alter_domain(true)
 when "status"
-  system("rhc-chk #{get_args} 2>&1")
+  check_domain_status
 when "show", nil
   show_domain_info
 when "destroy"

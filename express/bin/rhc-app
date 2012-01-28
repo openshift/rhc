@@ -265,7 +265,7 @@ def show_app
   app_found = false
   unless user_info['app_info'].empty?
     user_info['app_info'].each do |key, val|
-      if key == $opt['app'] && !app_found
+      if key == $opt['app']
         app_found = true
         puts ""
         puts "Application Info"
@@ -293,6 +293,10 @@ def show_app
             puts "      None"
         end
         puts ""
+        
+        # there should be a single application with the given app name
+        break
+        
       end
     end
   end
