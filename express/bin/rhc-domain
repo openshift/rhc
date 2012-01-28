@@ -37,7 +37,7 @@ Manage a domain in rhcloud for a registered rhcloud user.
 List of commands
   create            Bind a registered rhcloud user to a domain in rhcloud.
   show              Display domain information and list the applications within the domain 
-  alter             Alter namespace (will change urls) and/or ssh key.
+  alter             Alter namespace (will change urls).
   status            Run a simple check on local configs and credentials to confirm tools are properly setup.
   destroy           Destroys the domain and any added ssh keys
 
@@ -108,10 +108,15 @@ def create_or_alter_domain(alter=false)
   ssh_key_type = ssh_keyfile_contents[0]
   
   data = {'namespace' => $opt['namespace'],
-          'rhlogin' => $opt['rhlogin'],
-          'ssh' => ssh_key,
-          'key_type' => ssh_key_type}
+          'rhlogin' => $opt['rhlogin']}
   
+  # send the ssh key and key type only in case of domain creation
+  # key updates will be handled by the 'rhc sshkey update' command
+  if !alter
+    data[:ssh] = ssh_key
+    data[:key_type] = ssh_key_type
+  end
+
   if alter
     data[:alter] = true
     not_found_message = "A user with rhlogin '#{$opt['rhlogin']}' does not have a registered domain.  Be sure to run 'rhc domain create' first."
@@ -152,7 +157,7 @@ EOF
                 # Allow DNS to propogate
                 sleep 15
                 app_info.each_key do |appname|
-                    fqdn = "#{appname}-#{opt['namespace']}.#{user_info['user_info']['rhc_domain']}"
+                    fqdn = "#{appname}-#{$opt['namespace']}.#{user_info['user_info']['rhc_domain']}"
                     
                     # Now start checking for DNS
                     loop = 0
@@ -293,8 +298,10 @@ begin
         ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
     )
   else
-    puts "Missing or invalid command!"
-    p_usage
+    puts "Missing or invalid command!" unless ARGV[0] =~ /^(help|-h|--help)$/
+    # just exit at this point
+    # printing the usage description will be handled in the rescue
+    exit 255
   end
 
   $opt = {}
@@ -318,8 +325,10 @@ when "show", nil
   show_domain_info
 when "destroy"
   destroy_domain
+when "-h", "--help", "help", nil
+  p_usage
 else
-  puts "Missing or invalid command!"
+  puts "Invalid command!"
   p_usage
 end
 

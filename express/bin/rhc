@@ -28,7 +28,7 @@
 def p_usage
     puts <<USAGE
 
-Usage: rhc [<resource>] [<command>] [--help] [<args>]
+Usage: rhc (<resource> | --help) [<command>] [<args>]
 Command line tool for performing operations related to your rhcloud account.
 
 List of resources

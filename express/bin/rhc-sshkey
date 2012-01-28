@@ -224,8 +224,10 @@ begin
         ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
     )
   else
-    puts "Missing or invalid command!"
-    p_usage
+    puts "Missing or invalid command!" unless ARGV[0] =~ /^(help|-h|--help)$/
+    # just exit at this point
+    # printing the usage description will be handled in the rescue
+    exit 255
   end
     
   $opt = {}
@@ -246,8 +248,10 @@ when "remove"
   remove_key
 when "list", nil
   show_key_list
+when "-h", "--help", "help", nil
+  p_usage
 else
-  puts "Missing or invalid command!"
+  puts "Invalid command!"
   p_usage
 end
 

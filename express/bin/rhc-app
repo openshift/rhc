@@ -35,7 +35,7 @@ def p_usage
     type_keys = RHC::get_cartridge_listing(nil, ', ', libra_server, @http, 'standalone', false)
     puts <<USAGE
 
-Usage: rhc app [<command> | cartridge <cartridge-action>] [<args>]
+Usage: rhc app (<command> | cartridge <cartridge-action> | --help) [<args>]
 Create and manage an OpenShift Express application.
 
 List of commands
@@ -52,8 +52,8 @@ List of commands
   add-alias                      Add a custom domain name for the application
   remove-alias                   Remove a custom domain name for the application
   threaddump                     Trigger a thread dump for jbossas applications
+  tail                           Tail the logs of an application
   snapshot       [save|restore]  Saves/Restores an application snapshot to/from a tarball at the location specified using --filepath (default: ./$APPNAME.tar.gz)
-  log                            Tail the logs of an application
   cartridge      <action>        Manage an embedded cartridge
 
 List of cartridge actions
@@ -78,7 +78,7 @@ List of arguments
   -h|--help                      Show Usage info
   -b|--bypass                    Bypass warnings (applicable to application destroying only)
   -f|--filepath     filepath     Applicable in case of snapshot, restore, and log command
-  -o|--opts         options      Options to pass to the server-side (linux based) tail command (applicable to log command only) (-f is implicit.  See the linux tail man page full list of options.) (Ex: --opts '-n 100')
+  -o|--opts         options      Options to pass to the server-side (linux based) tail command (applicable to tail command only) (-f is implicit.  See the linux tail man page full list of options.) (Ex: --opts '-n 100')
   --alias           alias        Specify server alias (when using add/remove-alias)
   --config          path         Path of alternate config file
   --timeout         #            Timeout, in seconds, for connection
@@ -258,6 +258,54 @@ currently being created: '#{$opt['app']}'
 
 end
 
+def show_app
+  validate_args(false)
+  user_info = RHC::get_user_info($libra_server, $opt['rhlogin'], $password, @http, true)
+  
+  app_found = false
+  unless user_info['app_info'].empty?
+    user_info['app_info'].each do |key, val|
+      if key == $opt['app'] && !app_found
+        app_found = true
+        puts ""
+        puts "Application Info"
+        puts "================"
+        puts key
+        puts "    Framework: #{val['framework']}"
+        puts "     Creation: #{val['creation_time']}"
+        puts "         UUID: #{val['uuid']}"
+        puts "      Git URL: ssh://#{val['uuid']}@#{key}-#{user_info['user_info']['namespace']}.#{user_info['user_info']['rhc_domain']}/~/git/#{key}.git/"
+        puts "   Public URL: http://#{key}-#{user_info['user_info']['namespace']}.#{user_info['user_info']['rhc_domain']}/"
+        if val['aliases'] && !val['aliases'].empty?
+          puts "      Aliases: #{val['aliases'].join(', ')}"
+        end
+        puts ""
+        puts " Embedded: "
+        if val['embedded'] && !val['embedded'].empty? 
+            val['embedded'].each do |embed_key, embed_val|
+                if embed_val.has_key?('info') && !embed_val['info'].empty?
+                    puts "      #{embed_key} - #{embed_val['info']}"
+                else
+                    puts "      #{embed_key}"
+                end
+            end
+        else
+            puts "      None"
+        end
+        puts ""
+      end
+    end
+  end
+
+  if !app_found
+    puts
+    puts "Could not find app '#{$opt['app']}'.  Please run 'rhc domain show' to get a list"
+    puts "of your current running applications"
+    puts
+  end
+
+end
+
 def control_app(command)
   validate_args(false)
   
@@ -336,7 +384,7 @@ def save_or_restore_snapshot(command)
   rhc_domain = user_info['user_info']['rhc_domain']
   if command == 'save'
     ssh_cmd = "ssh #{app_uuid}@#{app}-#{namespace}.#{rhc_domain} 'snapshot' > #{$opt['filepath']}"
-    puts "Pulling down a snapshot to #{opt['save']}"
+    puts "Pulling down a snapshot to #{$opt['filepath']}"
   else
     if File.exists? $opt['filepath']
       `tar -tf #{$opt['filepath']} './*/#{app}'`
@@ -350,10 +398,10 @@ def save_or_restore_snapshot(command)
         `tar -tf #{$opt['filepath']} './*/git'`
         include_git = $?.exitstatus == 0
         ssh_cmd = "cat #{$opt['filepath']} | ssh #{app_uuid}@#{app}-#{namespace}.#{rhc_domain} 'restore#{include_git ? ' INCLUDE_GIT' : ''}'"
-        puts "Restoring from snapshot #{opt['filepath']}"
+        puts "Restoring from snapshot #{$opt['filepath']}"
       end
     else
-      puts "Archive not found: #{opt['filepath']}"
+      puts "Archive not found: #{$opt['filepath']}"
       exit 255
     end
   end
@@ -381,7 +429,7 @@ end
 def show_logs
   validate_args(false, false, true)
 
-  user_info = RHC::get_user_info(libra_server, opt['rhlogin'], password, @http, false)
+  user_info = RHC::get_user_info($libra_server, $opt['rhlogin'], $password, @http, false)
   app = $opt['app']
   
   unless user_info['app_info'][app]
@@ -392,8 +440,8 @@ def show_logs
       exit 101
   end
   
-  $opt['files'] = "#{$opt['app']}/logs/*" unless $opt['files']
-  file_glob = "#{$opt['files']}"
+  $opt['filepath'] = "#{$opt['app']}/logs/*" unless $opt['filepath']
+  file_glob = "#{$opt['filepath']}"
   app_uuid = user_info['app_info'][app]['uuid']
   namespace = user_info['user_info']['namespace']
   rhc_domain = user_info['user_info']['rhc_domain']
@@ -467,7 +515,7 @@ begin
         ["--config", GetoptLong::REQUIRED_ARGUMENT],
         ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
     )
-  elsif ARGV[0] =~ /^log$/
+  elsif ARGV[0] =~ /^tail$/
     ARGV.shift
     opts = GetoptLong.new(
         ["--debug", "-d", GetoptLong::NO_ARGUMENT],
@@ -494,8 +542,10 @@ begin
         ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
     )
   else
-    puts "Missing or invalid command!"
-    p_usage
+    puts "Missing or invalid command!" unless ARGV[0] =~ /^(help|-h|--help)$/
+    # just exit at this point
+    # printing the usage description will be handled in the rescue
+    exit 255
   end
     
   $opt = {}
@@ -513,18 +563,18 @@ case argv_c[0]
 when "create"
   create_app
 when "show"
-  puts "This command is not yet implemented! Use 'rhc domain show' instead."
-  exit 0
+  show_app
 when "start", "stop", "force-stop", "restart", "reload", "status", "tidy", "add-alias", "remove-alias", "threaddump", "destroy"
   control_app(argv_c[0])
-when "log"
+when "tail"
   show_logs
 when "snapshot"
   case argv_c[1]
   when "save", "restore"
     save_or_restore_snapshot(argv_c[1])
   else
-    puts "Missing or invalid cartridge action!"
+    puts "Missing or invalid snapshot action!"
+    p_usage
   end
 when "cartridge"
   case argv_c[1]
@@ -534,9 +584,12 @@ when "cartridge"
     show_embedded_list
   else
     puts "Missing or invalid cartridge action!"
+    p_usage
   end
+when "-h", "--help", "help", nil
+  p_usage
 else
-  puts "Missing or invalid command!"
+  puts "Invalid command!"
   p_usage
 end
 
