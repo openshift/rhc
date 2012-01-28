@@ -32,7 +32,7 @@ def p_usage
     puts <<USAGE
 
 Usage: rhc sshkey [<args>]
-Create and manage an OpenShift Express application.
+Manage multiple keys for the registered rhcloud user.
 
 List of commands
   list                           Display all the SSH keys for the user account
