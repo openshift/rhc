@@ -31,12 +31,12 @@ def p_usage
     rhlogin = get_var('default_rhlogin') ? "Default: #{get_var('default_rhlogin')}" : "required"
     puts <<USAGE
 
-Usage: rhc sshkey [<args>]
+Usage: rhc sshkey (<command> | --help) [<args>]
 Manage multiple keys for the registered rhcloud user.
 
 List of commands
   list                           Display all the SSH keys for the user account
-  add                            Add SSH key to the user account (key-name is the user-specified identifier for the key)
+  add                            Add SSH key to the user account
   update                         Update SSH key for the user account
   remove                         Remove SSH key from the user account
 

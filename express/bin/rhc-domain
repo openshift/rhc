@@ -31,7 +31,7 @@ def p_usage
     rhlogin = get_var('default_rhlogin') ? "Default: #{get_var('default_rhlogin')}" : "required"
     puts <<USAGE
 
-Usage: rhc domain [<command>] [<args>]
+Usage: rhc domain (<command> | --help) [<args>]
 Manage a domain in rhcloud for a registered rhcloud user.
 
 List of commands

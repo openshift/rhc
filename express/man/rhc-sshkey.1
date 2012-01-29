@@ -1,0 +1,74 @@
+.\" Process this file with
+.\" groff -man -Tascii rhc-sshkey.1
+.\" 
+.TH "RHC_SSHKEY" "1" "JANUARY 2011" "Linux" "User Manuals"
+.SH "NAME"
+rhc\-sshkey \- Manage multiple keys for the registered rhcloud user.
+
+.SH "SYNOPSIS"
+.B rhc sshkey (<command> | --help) [<args>]
+
+.SH "DESCRIPTION"
+.B rhc sshkey - Manage multiple keys for the registered rhcloud user.
+
+.SH LIST OF COMMANDS
+.IP list
+Display all the SSH keys for the user account
+.IP add
+Add SSH key to the user account 
+.IP update
+Update SSH key for the user account
+.IP remove
+Remove SSH key from the user account
+
+.SH "OPTIONS"
+.IP "\-l|\-\-rhlogin login"
+Red Hat login (RHN or OpenShift login with OpenShift Express access)
+.IP "\-p|\-\-password password"
+RHLogin password
+
+.IP "\-i|\-\-identifier key-name"
+User-specified identifier for the key
+.IP "\-k|\-\-ssh key-filepath" 
+SSH public key filepath 
+.IP \-d|\-\-debug
+Enable debugging / verbose output
+.IP \-h|\-\-help
+Display help menu
+.IP \-\-config
+Alternate full pathname for the config file
+.IP \-\-timeout
+Timeout value, in seconds, for the connection (default is 10)
+
+.SH "FILES"
+.I <ruby_gem_dir>/gems/rhc\-<version>/conf/express.conf
+.RS
+The RubyGem system wide configuration file. See
+.BR express.conf (5)
+for further details.
+.RE
+.I /etc/openshift/express.conf
+.RS
+The system wide configuration file. See
+.BR express.conf (5)
+for further details.
+.RE
+.I ~/.openshift/express.conf
+.RS
+Per user configuration file. See
+.BR express.conf (5)
+for further details.
+.RE
+
+.SH "BUGS"
+Please contact the Red Hat OpenShift team.
+Forums: http://www.redhat.com/openshift/
+IRC: #openshift on irc.freenode.net
+
+.SH "AUTHOR"
+Mike McGrath <mmcgrath@redhat.com>, Jim Jagielski <jimjag@redhat.com>
+
+.SH "SEE ALSO"
+.BR rhc-app (1),
+.BR rhc-domain (1),
+.BR express.conf (5)

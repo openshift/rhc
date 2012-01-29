@@ -57,6 +57,7 @@ List of commands
   cartridge      <action>        Manage an embedded cartridge
 
 List of cartridge actions
+  list                           List of supported embedded cartridges
   add                            Add an embedded application
   remove                         Remove an embedded application
   stop                           Stop the embedded application
