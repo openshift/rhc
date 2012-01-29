@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.85.4
+Version:       0.85.5
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -111,6 +111,12 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Jan 27 2012 Dan McPherson <dmcphers@redhat.com> 0.85.5-1
+- removing the check for bash completion directory in the spec file
+  (abhgupta@redhat.com)
+- added man file for top level rhc command (abhgupta@redhat.com)
+- corrected the command description in the usage text (abhgupta@redhat.com)
+
 * Fri Jan 27 2012 Dan McPherson <dmcphers@redhat.com> 0.85.4-1
 - 
 
