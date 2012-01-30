@@ -126,7 +126,7 @@ else
       puts "i.e.: tar -czvf <app_name>.tar.gz ./<app_uuid>/"
       exit 255
     else
-      `tar -tf #{opt['restore']} './*/git'`
+      `tar --wildcards -tf #{opt['restore']} './*/git'`
       include_git = $?.exitstatus == 0
       ssh_cmd = "cat #{opt['restore']} | ssh #{app_uuid}@#{app}-#{namespace}.#{rhc_domain} 'restore#{include_git ? ' INCLUDE_GIT' : ''}'"
       puts "Restoring from snapshot #{opt['restore']}"
