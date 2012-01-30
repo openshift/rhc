@@ -79,7 +79,6 @@ Red Hat login (RHN or OpenShift login with OpenShift Express access)
 RHLogin password
 .IP "\-a|\-\-app application_name"
 Name of application to create
-
 .IP \-c|\-\-cartridge
 Specify the embedded cartrige to add/manage (required for the cartridge command)
 .IP \-r|\-\-repo
@@ -90,7 +89,8 @@ Only create remote space, don't pull it locally (applicable to the create comman
 Skip DNS check. Must be used in combination with \-\-nogit
 .IP \-f|\-\-filepath
 Applicable in case of snapshot, restore, and log command
-.IP \-o|\-\-optsOptions to pass to the server-side (linux based) tail command (applicable to tail command only) (-f is implicit.  See the linux tail man page full list of options.) (Ex: --opts '-n 100')
+.IP \-o|\-\-opts
+Options to pass to the server-side (linux based) tail command (applicable to tail command only) (-f is implicit.  See the linux tail man page full list of options.) (Ex: --opts '-n 100')
 .IP \-b|\-\-bypass
 Bypass any TOS/SLA warnings and notifications
 .IP \-d|\-\-debug
