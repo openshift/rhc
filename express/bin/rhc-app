@@ -459,7 +459,7 @@ def show_logs
   puts "Attempting to tail files: #{file_glob}"
   puts "Use ctl + c to stop"
   puts 
-  puts ssh_cmd if debug
+  puts ssh_cmd if @mydebug
   begin
     exec ssh_cmd
   rescue SystemCallError
