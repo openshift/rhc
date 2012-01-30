@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.85.5
+Version:       0.85.7
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -111,6 +111,14 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Sun Jan 29 2012 Dan McPherson <dmcphers@redhat.com> 0.85.7-1
+- 
+
+* Sun Jan 29 2012 Dan McPherson <dmcphers@redhat.com> 0.85.6-1
+- Merge branch 'master' of github.com:openshift/os-client-tools
+  (abhgupta@redhat.com)
+- added man files for the new rhc wrapper commands (abhgupta@redhat.com)
+
 * Fri Jan 27 2012 Dan McPherson <dmcphers@redhat.com> 0.85.5-1
 - removing the check for bash completion directory in the spec file
   (abhgupta@redhat.com)
