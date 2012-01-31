@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.85.8
+Version:       0.85.9
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -111,6 +111,11 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Jan 30 2012 Dan McPherson <dmcphers@redhat.com> 0.85.9-1
+- Merge branch 'master' of github.com:openshift/os-client-tools
+  (dmcphers@redhat.com)
+- modification to the usage description (abhgupta@redhat.com)
+
 * Mon Jan 30 2012 Dan McPherson <dmcphers@redhat.com> 0.85.8-1
 - exiting with 1 instead of 0 in case rhc-domain-info returns an exit code
   other than 0 (abhgupta@redhat.com)
