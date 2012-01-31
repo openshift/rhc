@@ -129,7 +129,7 @@ _rhc()
 
     fi
 
-   COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+   if [ ${#opts[@]} -gt 0 ]; then COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) ); fi
    return 0
 }
-complete -F _rhc rhc
+complete -o default -F _rhc rhc
