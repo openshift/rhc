@@ -90,7 +90,7 @@ libra_server = get_var('libra_server')
 debug = get_var('debug') == 'false' ? nil : get_var('debug')
 opt['rhlogin'] = get_var('default_rhlogin') unless opt['rhlogin']
 
-if opt['help']
+if opt['help'] || 0 != ARGV.length
     p_usage
 end
 

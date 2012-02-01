@@ -77,7 +77,7 @@ rescue Exception => e
   p_usage
 end
 
-if $opt["help"]
+if $opt["help"] || 0 != ARGV.length
   p_usage
 end
 
