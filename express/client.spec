@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.85.10
+Version:       0.85.11
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -111,6 +111,16 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Feb 01 2012 Dan McPherson <dmcphers@redhat.com> 0.85.11-1
+- Merge branch 'master' of github.com:openshift/os-client-tools
+  (abhgupta@redhat.com)
+- fix for bug 786339 - added option -t in the rhc-app man page
+  (abhgupta@redhat.com)
+- Fix for BZ 690465 - Merge changes originally made by jhonce
+  (aboone@redhat.com)
+- rhc-create-app man page: wsgi -> python and rack -> ruby (BZ 786356)
+  (aboone@redhat.com)
+
 * Tue Jan 31 2012 Dan McPherson <dmcphers@redhat.com> 0.85.10-1
 - Merge branch 'master' of github.com:openshift/os-client-tools
   (abhgupta@redhat.com)
