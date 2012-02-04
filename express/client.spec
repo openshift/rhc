@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.85.12
+Version:       0.86.0
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
