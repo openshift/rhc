@@ -20,10 +20,10 @@ module Rhc
         end
       end
 
-      def add_domain(namespace, ssh)
+      def add_domain(namespace)
         url = @@end_point + @links['ADD_DOMAIN']['href']
         method =  @links['ADD_DOMAIN']['method']
-        payload = {:namespace => namespace, :ssh => ssh}
+        payload = {:namespace => namespace}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
         return send(request)
       end

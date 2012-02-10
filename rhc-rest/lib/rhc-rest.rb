@@ -2,7 +2,6 @@ require 'rubygems'
 require 'rest-client'
 require 'logger'
 require 'json'
-
 require File.dirname(__FILE__) + '/rhc-rest/exceptions/exceptions.rb'
 require File.dirname(__FILE__) + '/rhc-rest/application'
 require File.dirname(__FILE__) + '/rhc-rest/cartridge'
@@ -59,19 +58,18 @@ module Rhc
       when 'key'
         return Key.new(data)
       else
-        data
+      data
       end
     end
 
     def send(request)
       begin
-        begin
-          response = request.execute
-          #puts "#{response}"
-          return parse_response(response) unless response.nil? or response.code == 204
-        rescue RestClient::ExceptionWithResponse => e
-          process_error_response(e.response)
-        end
+        response = request.execute
+        #puts "#{response}"
+        return parse_response(response) unless response.nil? or response.code == 204
+      rescue RestClient::ExceptionWithResponse => e
+        #puts "#{e.response}"
+        process_error_response(e.response)
       rescue Exception => e
         raise ResourceAccessException.new("Failed to access resource: #{e.message}")
       end
@@ -85,6 +83,8 @@ module Rhc
       rescue Exception => e
       end
       case response.code
+      when 401
+        raise UnAuthorizedException.new("Not authenticated")
       when 404
         messages.each do |message|
           if message['severity'].upcase == "ERROR"
@@ -92,12 +92,11 @@ module Rhc
           end
         end
       when 422
+        puts "422"
         messages.each do |message|
-          messages.each do |message|
           if message['severity'].upcase == "ERROR"
             raise ValidationException.new(message['text'])
           end
-        end
         end
       when 400
         messages.each do |message|

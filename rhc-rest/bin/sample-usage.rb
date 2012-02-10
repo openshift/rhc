@@ -25,25 +25,33 @@ require '../lib/rhc-rest'
 
 if __FILE__ == $0
 
-end_point = "https://23.20.70.28/broker/rest"
+end_point = "https://50.17.0.137/broker/rest"
 username = "lnader"
 paswword = "xyz123"
 
 client = Rhc::Rest::Client.new(end_point, username, paswword)
 
+namespace="lnader"
+puts "Creating a domain"
+domain = client.add_domain(namespace)
 
 puts "Getting all cartridges..."
 client.cartridges.each do |cart|
-  puts "Cartridge: #{cart.name} (type: #{cart.type})"
+  puts "  #{cart.name} (type: #{cart.type})"
 end
+
+puts "Creating application appone"
+carts = client.find_cartridge("php-5.3")
+domain.add_application("appone", carts.first.name)
+
 
 puts "Getting all domains and applications..."
 client.domains.each do |domain|
-  puts "Domain: #{domain.namespace}"
+  puts "  Domain: #{domain.namespace}"
   domain.applications.each do |app|
-    puts "  Application: #{app.name}"
+    puts "    Application: #{app.name}"
     app.cartridges.each do |cart|
-      puts "    Cartridge #{cart.name} (#{cart.type})"
+      puts "      Cartridge #{cart.name} (#{cart.type})"
     end
   end
 end
@@ -58,36 +66,49 @@ if not apps.nil? and not apps.first.nil?
 end
 
 puts "Create new application named appthree..."
-carts = client.find_cartridge("php-5.3")
-app = client.domains.first.add_application("appthree", carts.first.name)
+app = client.domains.first.add_application("appthree", "php-5.3")
 puts "Adding MySQL cartridge to appthree"
 cartridge = app.add_cartridge("mysql-5.1")
 puts "Check to see if it was added"
 app.cartridges.each do |cart|
   puts "Cartridge #{cart.name} (#{cart.type})"
 end
+
 puts "Restart MySQL cartridge"
 cartridge.restart
-puts "Deleting MySql cartridge"
+puts "Deleting MySQL cartridge"
 cartridge.delete
 puts "Check to see if it was deleted"
-puts app.cartridges.size
+if app.cartridges.size == 0
+  puts "MySQL cartridge is deleted"
+end
 puts "Deleting appthree"
 app.delete
-end
-return
-puts "Getting all keys..."
-client.user.keys.each do |key|
-  puts "Key: #{key.name} (type: #{key.type}) #{key.content}"
 end
 
 puts "Adding, updating and deleting keys"
 key = client.user.add_key("newkey", "NEWKEYCONTENT", "ssh-rsa")
-puts "Added key: #{key.name} now changing it's name to 'renamed-newkey'"
-key.update({:name => "renamed-newkey", :content => key.content, :type => key.type})
-key.delete
 
-puts "Finding a key and deleting it"
-keys = client.user.find_key("newkey")
-keys.first.delete unless keys.first.nil?
+puts "Added key: #{key.name} now changing it's name to 'renamed-newkey'"
+key.update({:content => key.content, :type => key.type})
+
+puts "Getting all keys..."
+client.user.keys.each do |key|
+  puts "  Key: #{key.name} (type: #{key.type}) #{key.content}"
+end
+
+puts "Deleting key"
+begin
+  key.delete
+rescue Exception => e
+  puts e.message
+end
+
+puts 'Clean up domains and apps'
+client.domains.each do |domain|
+  domain.applications.each do |app|
+    app.delete
+  end
+  domain.delete
+end
 

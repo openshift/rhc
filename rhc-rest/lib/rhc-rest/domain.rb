@@ -40,11 +40,11 @@ module Rhc
       end
       alias :save :update
 
-      def destroy(force)
+      def destroy(force=false)
         url = @@end_point + @links['DELETE']['href']
         method =  @links['DELETE']['method']
         payload[:force] = force if force
-        request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
+        request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
         return send(request)
       end
       alias :delete :destroy
