@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.86.1
+Version:       0.86.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -111,6 +111,10 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Feb 08 2012 Dan McPherson <dmcphers@redhat.com> 0.86.2-1
+- Adding expose / conceal ports (mmcgrath@redhat.com)
+- remove use of broker_version (dmcphers@redhat.com)
+
 * Fri Feb 03 2012 Dan McPherson <dmcphers@redhat.com> 0.86.1-1
 - bump spec numbers and remove combo (dmcphers@redhat.com)
 

@@ -123,8 +123,8 @@ unless opt["embed"] or opt["command"]
 end
 
 if opt["command"]
-  unless opt["command"] =~ /^(start|stop|force-stop|restart|reload|status|destroy|tidy|add-alias|remove-alias|threaddump)$/
-    puts "Invalid command '#{opt["command"]}' specified.  Valid commands are (start|stop|force-stop|restart|reload|status|destroy|tidy|add-alias|remove-alias|threaddump)"
+  unless opt["command"] =~ /^(start|stop|force-stop|restart|reload|status|destroy|tidy|add-alias|remove-alias|threaddump|expose-port|conceal-port)$/
+    puts "Invalid command '#{opt["command"]}' specified.  Valid commands are (start|stop|force-stop|restart|reload|status|destroy|tidy|add-alias|remove-alias|threaddump|expose-port|conceal-port)"
     p_usage
   end
 elsif opt["embed"]
