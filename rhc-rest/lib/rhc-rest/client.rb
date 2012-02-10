@@ -8,11 +8,15 @@ module Rhc
         @password = password
         request = RestClient::Request.new(:url => @@end_point + "/api", :method => :get, :headers => @@headers, :username => @username, :password => password)
         begin
-          response = request.execute
-          result = JSON.parse(response)
-          @links = result['data']
-        rescue RestClient::ExceptionWithResponse => e
-          puts e.response
+          begin
+            response = request.execute
+            result = JSON.parse(response)
+            @links = send(request)
+          rescue RestClient::ExceptionWithResponse => e
+            puts e.response
+          end
+        rescue Exception => e
+          raise ResourceAccessException.new("Resource could not be accessed:#{e.message}")
         end
       end
 

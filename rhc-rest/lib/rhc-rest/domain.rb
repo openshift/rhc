@@ -1,4 +1,4 @@
-module Rhs
+module Rhc
   module Rest
     class Domain
       include Rest
@@ -13,25 +13,14 @@ module Rhs
         method =  @links['ADD_APPLICATION']['method']
         payload = {:name => name, :cartridge => cartridge}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
-        begin
-          response = request.execute
-          return parse_response(response)
-        rescue RestClient::ExceptionWithResponse => e
-          puts e.response
-        end
+        return send(request)
       end
 
       def applications
         url = @@end_point + @links['LIST_APPLICATIONS']['href']
         method =  @links['LIST_APPLICATIONS']['method']
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
-        begin
-          response = request.execute
-
-          return parse_response(response)
-        rescue RestClient::ExceptionWithResponse => e
-          puts e.response
-        end
+        return send(request)
       end
 
       def create(namespace, ssh)
@@ -39,12 +28,7 @@ module Rhs
         method =  @links['CREATE']['method']
         payload = {:namespace => namespace, :ssh => ssh}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
-        begin
-          response = request.execute
-          return parse_response(response)
-        rescue RestClient::ExceptionWithResponse => e
-          puts e.response
-        end
+        return send(request)
       end
 
       def update(args)
@@ -52,13 +36,7 @@ module Rhs
         method =  @links['UPDATE']['method']
         payload = args
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
-        begin
-          response = request.execute
-
-          return parse_response(response)
-        rescue RestClient::ExceptionWithResponse => e
-          puts e.response
-        end
+        return send(request)
       end
       alias :save :update
 
@@ -67,11 +45,7 @@ module Rhs
         method =  @links['DELETE']['method']
         payload[:force] = force if force
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
-        begin
-          request.execute
-        rescue RestClient::ExceptionWithResponse => e
-          puts e.response
-        end
+        return send(request)
       end
       alias :delete :destroy
     end

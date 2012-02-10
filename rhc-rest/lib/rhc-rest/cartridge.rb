@@ -14,12 +14,7 @@ module Rhc
         method =  @links['START']['method']
         payload = {:event=> "start"}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
-        begin
-          response = request.execute
-          return parse_response(response)
-        rescue RestClient::ExceptionWithResponse => e
-          puts e.response
-        end
+        return send(request)
       end
 
       def stop()
@@ -27,12 +22,7 @@ module Rhc
         method =  @links['STOP']['method']
         payload = {:event=> "stop"}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
-        begin
-          response = request.execute
-          return parse_response(response)
-        rescue RestClient::ExceptionWithResponse => e
-          puts e.response
-        end
+        return send(request)
       end
 
       def restart
@@ -40,13 +30,7 @@ module Rhc
         method =  @links['RESTART']['method']
         payload = {:event=> "restart"}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
-        begin
-          response = request.execute
-
-          return parse_response(response)
-        rescue RestClient::ExceptionWithResponse => e
-          puts e.response
-        end
+        return send(request)
       end
 
       def reload
@@ -54,24 +38,14 @@ module Rhc
         method =  @links['RESTART']['method']
         payload = {:event=> "reload"}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
-        begin
-          response = request.execute
-
-          return parse_response(response)
-        rescue RestClient::ExceptionWithResponse => e
-          puts e.response
-        end
+        return send(request)
       end
 
       def destroy
         url = @@end_point + @links['DELETE']['href']
         method =  @links['DELETE']['method']
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
-        begin
-          request.execute
-        rescue RestClient::ExceptionWithResponse => e
-          puts e.response
-        end
+        return send(request)
       end
       alias :delete :destroy
       alias :delete :destroy

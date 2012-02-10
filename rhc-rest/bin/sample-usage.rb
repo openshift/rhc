@@ -22,8 +22,6 @@
 # SOFTWARE.
 
 require '../lib/rhc-rest'
-require '../lib/rhc-rest/client'
-require '../lib/rhc-rest/domain'
 
 if __FILE__ == $0
 
@@ -32,6 +30,12 @@ username = "lnader"
 paswword = "xyz123"
 
 client = Rhc::Rest::Client.new(end_point, username, paswword)
+
+
+puts "Getting all cartridges..."
+client.cartridges.each do |cart|
+  puts "Cartridge: #{cart.name} (type: #{cart.type})"
+end
 
 puts "Getting all domains and applications..."
 client.domains.each do |domain|
@@ -44,17 +48,14 @@ client.domains.each do |domain|
   end
 end
 
-
-puts "Getting all cartridges..."
-client.cartridges.each do |cart|
-  puts "Cartridge: #{cart.name} (type: #{cart.type})"
-end
-
 puts "Find application=appone and restart it..."
 apps = client.find_application("appone")
 apps.first.restart
 
-client.find_application("appthree").first.delete
+apps = client.find_application("appthree")
+if not apps.nil? and not apps.first.nil?
+  apps.first.delete
+end
 
 puts "Create new application named appthree..."
 carts = client.find_cartridge("php-5.3")

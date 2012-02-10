@@ -13,24 +13,14 @@ module Rhc
         method =  @links['ADD_KEY']['method']
         payload = {:name => name, :type => type, :content => content}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
-        begin
-          response = request.execute
-          return parse_response(response)
-        rescue RestClient::ExceptionWithResponse => e
-          puts e.response
-        end
+        return send(request)
       end
 
       def keys
         url = @@end_point + @links['LIST_KEYS']['href']
         method =  @links['LIST_KEYS']['method']
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
-        begin
-          response = request.execute
-          return parse_response(response)
-        rescue RestClient::ExceptionWithResponse => e
-          puts e.response
-        end
+        return send(request)
       end
 
       def find_key(name)

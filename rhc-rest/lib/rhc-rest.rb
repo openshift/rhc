@@ -3,6 +3,14 @@ require 'rest-client'
 require 'logger'
 require 'json'
 
+require File.dirname(__FILE__) + '/rhc-rest/exceptions/exceptions.rb'
+require File.dirname(__FILE__) + '/rhc-rest/application'
+require File.dirname(__FILE__) + '/rhc-rest/cartridge'
+require File.dirname(__FILE__) + '/rhc-rest/client'
+require File.dirname(__FILE__) + '/rhc-rest/domain'
+require File.dirname(__FILE__) + '/rhc-rest/key'
+require File.dirname(__FILE__) + '/rhc-rest/user'
+
 @@end_point = ""
 @@headers = {:accept => :json}
 module Rhc
@@ -19,7 +27,7 @@ module Rhc
       when 'domains'
         domains = Array.new
         data.each do |domain_json|
-          domains.push(Rhc::Rest::Domain.new(domain_json))
+          domains.push(Domain.new(domain_json))
         end
         return domains
       when 'domain'
@@ -51,22 +59,21 @@ module Rhc
       when 'key'
         return Key.new(data)
       else
+        data
       end
     end
 
     def send(request)
-      puts "sending request"
       begin
         begin
-          puts "sending request"
           response = request.execute
-          puts "#{response}"
-          return parse_response(response) unless response.nil? or response.code == :no_content
+          #puts "#{response}"
+          return parse_response(response) unless response.nil? or response.code == 204
         rescue RestClient::ExceptionWithResponse => e
           process_error_response(e.response)
         end
       rescue Exception => e
-        puts e.message
+        raise ResourceAccessException.new("Failed to access resource: #{e.message}")
       end
     end
 
@@ -77,23 +84,39 @@ module Rhc
         messages = result['messages']
       rescue Exception => e
       end
-
       case response.code
       when 404
         messages.each do |message|
-          puts "ResourceNotFound  #{message['text'] }"
+          if message['severity'].upcase == "ERROR"
+            raise ResourceNotFoundException.new(message['text'])
+          end
         end
-        puts "ResourceNotFound Routing error"
       when 422
         messages.each do |message|
-          puts "ValidationException  #{message['text'] }"
+          messages.each do |message|
+          if message['severity'].upcase == "ERROR"
+            raise ValidationException.new(message['text'])
+          end
+        end
         end
       when 400
-        puts "ClientErrorException"
+        messages.each do |message|
+          if message['severity'].upcase == "ERROR"
+            raise ClientErrorException.new(message['text'])
+          end
+        end
       when 500
-        puts "ServerErrorException"
+        messages.each do |message|
+          if message['severity'].upcase == "ERROR"
+            raise ServerErrorException.new(message['text'])
+          end
+        end
       when 503
-        puts "ServiceUnavailableException"
+        messages.each do |message|
+          if message['severity'].upcase == "ERROR"
+            raise ServiceUnavailableException.new(message['text'])
+          end
+        end
       end
 
     end

@@ -15,23 +15,14 @@ module Rhc
         method =  @links['UPDATE']['method']
         payload = args
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
-        begin
-          response = request.execute
-          return parse_response(response)
-        rescue RestClient::ExceptionWithResponse => e
-          puts e.response
-        end
+        return send(request)
       end
 
       def destroy
         url = @@end_point + @links['DELETE']['href']
         method =  @links['DELETE']['method']
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
-        begin
-          request.execute
-        rescue RestClient::ExceptionWithResponse => e
-          puts e.response
-        end
+        return send(request)
       end
       alias :delete :destroy
     end

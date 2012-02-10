@@ -1,13 +1,10 @@
 module Rhc
   module Rest
     class BaseException < RuntimeError
-      attr_reader :error_code, :message
-      def initialize(messages)
-        if not messages.nil?
-          messages.each do |message|
-            message += message['text']
-          end
-        end
+      attr_reader :code
+      def initialize(msg=nil, code=nil)
+        super(msg)
+        @code = code
       end
     end
 
