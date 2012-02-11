@@ -25,9 +25,9 @@ require '../lib/rhc-rest'
 
 if __FILE__ == $0
 
-end_point = "https://50.17.0.137/broker/rest"
-username = "lnader"
-paswword = "xyz123"
+end_point = "https://<hostname>/broker/rest"
+username = "<rhlogin>"
+paswword = "<password>"
 
 client = Rhc::Rest::Client.new(end_point, username, paswword)
 
@@ -90,7 +90,7 @@ puts "Adding, updating and deleting keys"
 key = client.user.add_key("newkey", "NEWKEYCONTENT", "ssh-rsa")
 
 puts "Added key: #{key.name} now changing it's name to 'renamed-newkey'"
-key.update({:content => key.content, :type => key.type})
+key.update(key.type, "NEWKEYCONTENT123")
 
 puts "Getting all keys..."
 client.user.keys.each do |key|
