@@ -695,13 +695,14 @@ LOOKSGOOD
 
   end
   
-  def self.ctl_app(libra_server, net_http, app_name, rhlogin, password, action, embedded=false, framework=nil, server_alias=nil, print_result=true)
+  def self.ctl_app(libra_server, net_http, app_name, rhlogin, password, action, embedded=false, framework=nil, server_alias=nil, proxy_target=nil, print_result=true)
     data = {:action => action,
             :app_name => app_name,
             :rhlogin => rhlogin
            }
     
     data[:server_alias] = server_alias if server_alias
+    data[:proxy_target] = proxy_target if proxy_target
     if framework
       data[:cartridge] = framework
     end

@@ -128,7 +128,7 @@ puts
 puts ssh_cmd if debug
 begin
   if opt['files'] == 'system-messages'
-     RHC::ctl_app(libra_server, @http, opt['app'], opt['rhlogin'], password, 'system-messages', false, nil, nil)
+     RHC::ctl_app(libra_server, @http, opt['app'], opt['rhlogin'], password, 'system-messages', false, nil, nil, nil)
   else
      exec ssh_cmd
   end
