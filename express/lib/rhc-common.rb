@@ -43,7 +43,6 @@ module RHC
   PATTERN_VERSION=/\A\d+\.\d+\.\d+\z/
   @mytimeout = 10
   @mydebug = false
-  @@broker_version = "?.?.?"
   @@api_version = "?.?.?"
 
   # reset lines
@@ -59,8 +58,7 @@ module RHC
     'exit_code' => nil,
     'messages' => nil,
     'data' => nil,
-    'api' => nil,
-    'broker' => nil
+    'api' => nil
   }
 
   def self.timeout(val)
@@ -78,9 +76,6 @@ module RHC
   end
 
   def self.update_server_api_v(dict)
-    if !dict['broker'].nil? && (dict['broker'] =~ PATTERN_VERSION)
-      @@broker_version = dict['broker']
-    end
     if !dict['api'].nil? && (dict['api'] =~ PATTERN_VERSION)
       @@api_version = dict['api']
     end
@@ -386,9 +381,6 @@ module RHC
       end
       if json_resp['api']
         puts "API version:    #{json_resp['api']}"
-      end
-      if json_resp['broker']
-        puts "Broker version: #{json_resp['broker']}"
       end
     end
     if print_result && json_resp['result']
@@ -703,13 +695,14 @@ LOOKSGOOD
 
   end
   
-  def self.ctl_app(libra_server, net_http, app_name, rhlogin, password, action, embedded=false, framework=nil, server_alias=nil, print_result=true)
+  def self.ctl_app(libra_server, net_http, app_name, rhlogin, password, action, embedded=false, framework=nil, server_alias=nil, proxy_target=nil, print_result=true)
     data = {:action => action,
             :app_name => app_name,
             :rhlogin => rhlogin
            }
     
     data[:server_alias] = server_alias if server_alias
+    data[:proxy_target] = proxy_target if proxy_target
     if framework
       data[:cartridge] = framework
     end
@@ -734,8 +727,8 @@ LOOKSGOOD
     else
         print_response_err(response)
     end
+    JSON.parse(response.body)
   end
-  
 end
 
 # provide a hook for performing actions before rhc-* commands exit

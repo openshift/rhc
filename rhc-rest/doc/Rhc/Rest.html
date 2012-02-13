@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+
+<title>module Rhc::Rest - RDoc Documentation</title>
+
+<link type="text/css" media="screen" href="../rdoc.css" rel="stylesheet">
+
+<script type="text/javascript">
+  var rdoc_rel_prefix = "../";
+</script>
+
+<script type="text/javascript" charset="utf-8" src="../js/jquery.js"></script>
+<script type="text/javascript" charset="utf-8" src="../js/navigation.js"></script>
+<script type="text/javascript" charset="utf-8" src="../js/search_index.js"></script>
+<script type="text/javascript" charset="utf-8" src="../js/search.js"></script>
+<script type="text/javascript" charset="utf-8" src="../js/searcher.js"></script>
+<script type="text/javascript" charset="utf-8" src="../js/darkfish.js"></script>
+
+
+<body id="top" class="module">
+<nav id="metadata">
+  <nav id="home-section" class="section">
+  <h3 class="section-header">
+    <a href="../index.html">Home</a>
+    <a href="../table_of_contents.html#classes">Classes</a>
+    <a href="../table_of_contents.html#methods">Methods</a>
+  </h3>
+</nav>
+
+
+  <nav id="search-section" class="section project-section" class="initially-hidden">
+  <form action="#" method="get" accept-charset="utf-8">
+    <h3 class="section-header">
+      <input type="text" name="search" placeholder="Search" id="search-field"
+             title="Type to search, Up and Down to navigate, Enter to load">
+    </h3>
+  </form>
+
+  <ul id="search-results" class="initially-hidden"></ul>
+</nav>
+
+
+  <div id="file-metadata">
+    <nav id="file-list-section" class="section">
+  <h3 class="section-header">Defined In</h3>
+  <ul>
+    <li>lib/rhc-rest.rb
+    <li>lib/rhc-rest/version.rb
+    <li>lib/rhc-rest/application.rb
+    <li>lib/rhc-rest/cartridge.rb
+    <li>lib/rhc-rest/user.rb
+    <li>lib/rhc-rest/exceptions/exceptions.rb
+    <li>lib/rhc-rest/domain.rb
+    <li>lib/rhc-rest/key.rb
+    <li>lib/rhc-rest/client.rb
+  </ul>
+</nav>
+
+    
+  </div>
+
+  <div id="class-metadata">
+    
+    
+    
+    <!-- Method Quickref -->
+<nav id="method-list-section" class="section">
+  <h3 class="section-header">Methods</h3>
+
+  <ul class="link-list">
+    
+    <li><a href="#method-i-logger">#logger</a>
+    
+    <li><a href="#method-i-parse_response">#parse_response</a>
+    
+    <li><a href="#method-i-process_error_response">#process_error_response</a>
+    
+    <li><a href="#method-i-send">#send</a>
+    
+  </ul>
+</nav>
+
+  </div>
+
+  <div id="project-metadata">
+    <nav id="fileindex-section" class="section project-section">
+  <h3 class="section-header">Pages</h3>
+
+  <ul>
+  
+    <li class="file"><a href="../Gemfile.html">Gemfile</a>
+  
+    <li class="file"><a href="../Rakefile.html">Rakefile</a>
+  
+  </ul>
+</nav>
+
+    <nav id="classindex-section" class="section project-section">
+  <h3 class="section-header">Class and Module Index</h3>
+
+  <ul class="link-list">
+  
+    <li><a href="../Rhc.html">Rhc</a>
+  
+    <li><a href="../Rhc/Rest.html">Rhc::Rest</a>
+  
+    <li><a href="../Rhc/Rest/Application.html">Rhc::Rest::Application</a>
+  
+    <li><a href="../Rhc/Rest/BaseException.html">Rhc::Rest::BaseException</a>
+  
+    <li><a href="../Rhc/Rest/Cartridge.html">Rhc::Rest::Cartridge</a>
+  
+    <li><a href="../Rhc/Rest/Client.html">Rhc::Rest::Client</a>
+  
+    <li><a href="../Rhc/Rest/ClientErrorException.html">Rhc::Rest::ClientErrorException</a>
+  
+    <li><a href="../Rhc/Rest/Domain.html">Rhc::Rest::Domain</a>
+  
+    <li><a href="../Rhc/Rest/Key.html">Rhc::Rest::Key</a>
+  
+    <li><a href="../Rhc/Rest/RequestDeniedException.html">Rhc::Rest::RequestDeniedException</a>
+  
+    <li><a href="../Rhc/Rest/ResourceAccessException.html">Rhc::Rest::ResourceAccessException</a>
+  
+    <li><a href="../Rhc/Rest/ResourceNotFoundException.html">Rhc::Rest::ResourceNotFoundException</a>
+  
+    <li><a href="../Rhc/Rest/ServerErrorException.html">Rhc::Rest::ServerErrorException</a>
+  
+    <li><a href="../Rhc/Rest/ServiceUnavailableException.html">Rhc::Rest::ServiceUnavailableException</a>
+  
+    <li><a href="../Rhc/Rest/UnAuthorizedException.html">Rhc::Rest::UnAuthorizedException</a>
+  
+    <li><a href="../Rhc/Rest/User.html">Rhc::Rest::User</a>
+  
+    <li><a href="../Rhc/Rest/ValidationException.html">Rhc::Rest::ValidationException</a>
+  
+  </ul>
+</nav>
+
+  </div>
+</nav>
+
+<div id="documentation">
+  <h1 class="module">module Rhc::Rest</h1>
+
+  <div id="description" class="description">
+    
+  </div><!-- description -->
+
+  
+  
+  
+  <section id="5Buntitled-5D" class="documentation-section">
+    
+
+    
+
+    
+    <!-- Constants -->
+    <section id="constants-list" class="section">
+      <h3 class="section-header">Constants</h3>
+      <dl>
+      
+        <dt id="VERSION">VERSION
+        
+        <dd class="description">
+        
+      
+      </dl>
+    </section>
+    
+
+    
+
+    <!-- Methods -->
+    
+     <section id="public-instance-5Buntitled-5D-method-details" class="method-section section">
+      <h3 class="section-header">Public Instance Methods</h3>
+
+    
+      <div id="method-i-logger" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">logger</span><span
+            class="method-args">()</span>
+          <span class="method-click-advice">click to toggle source</span>
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+
+          
+          <div class="method-source-code" id="logger-source">
+            <pre><span class="ruby-comment"># File lib/rhc-rest.rb, line 39</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">logger</span>
+  <span class="ruby-keyword">if</span> <span class="ruby-keyword">defined?</span><span class="ruby-constant">Rails</span>.<span class="ruby-identifier">logger</span>
+    <span class="ruby-constant">Rails</span>.<span class="ruby-identifier">logger</span>
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-constant">Logger</span>.<span class="ruby-identifier">new</span>(<span class="ruby-constant">STDOUT</span>)
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- logger-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- logger-method -->
+
+    
+      <div id="method-i-parse_response" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">parse_response</span><span
+            class="method-args">(response)</span>
+          <span class="method-click-advice">click to toggle source</span>
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+
+          
+          <div class="method-source-code" id="parse_response-source">
+            <pre><span class="ruby-comment"># File lib/rhc-rest.rb, line 47</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">parse_response</span>(<span class="ruby-identifier">response</span>)
+  <span class="ruby-identifier">result</span> = <span class="ruby-constant">JSON</span>.<span class="ruby-identifier">parse</span>(<span class="ruby-identifier">response</span>)
+  <span class="ruby-identifier">type</span> = <span class="ruby-identifier">result</span>[<span class="ruby-string">'type'</span>]
+  <span class="ruby-identifier">data</span> = <span class="ruby-identifier">result</span>[<span class="ruby-string">'data'</span>]
+  <span class="ruby-keyword">case</span> <span class="ruby-identifier">type</span>
+  <span class="ruby-keyword">when</span> <span class="ruby-string">'domains'</span>
+    <span class="ruby-identifier">domains</span> = <span class="ruby-constant">Array</span>.<span class="ruby-identifier">new</span>
+    <span class="ruby-identifier">data</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">domain_json</span><span class="ruby-operator">|</span>
+      <span class="ruby-identifier">domains</span>.<span class="ruby-identifier">push</span>(<span class="ruby-constant">Domain</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">domain_json</span>))
+    <span class="ruby-keyword">end</span>
+    <span class="ruby-keyword">return</span> <span class="ruby-identifier">domains</span>
+  <span class="ruby-keyword">when</span> <span class="ruby-string">'domain'</span>
+    <span class="ruby-keyword">return</span> <span class="ruby-constant">Domain</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">data</span>)
+  <span class="ruby-keyword">when</span> <span class="ruby-string">'applications'</span>
+    <span class="ruby-identifier">apps</span> = <span class="ruby-constant">Array</span>.<span class="ruby-identifier">new</span>
+    <span class="ruby-identifier">data</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">app_json</span><span class="ruby-operator">|</span>
+      <span class="ruby-identifier">apps</span>.<span class="ruby-identifier">push</span>(<span class="ruby-constant">Application</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">app_json</span>))
+    <span class="ruby-keyword">end</span>
+    <span class="ruby-keyword">return</span> <span class="ruby-identifier">apps</span>
+  <span class="ruby-keyword">when</span> <span class="ruby-string">'application'</span>
+    <span class="ruby-keyword">return</span> <span class="ruby-constant">Application</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">data</span>)
+  <span class="ruby-keyword">when</span> <span class="ruby-string">'cartridges'</span>
+    <span class="ruby-identifier">carts</span> = <span class="ruby-constant">Array</span>.<span class="ruby-identifier">new</span>
+    <span class="ruby-identifier">data</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">cart_json</span><span class="ruby-operator">|</span>
+      <span class="ruby-identifier">carts</span>.<span class="ruby-identifier">push</span>(<span class="ruby-constant">Cartridge</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">cart_json</span>))
+    <span class="ruby-keyword">end</span>
+    <span class="ruby-keyword">return</span> <span class="ruby-identifier">carts</span>
+  <span class="ruby-keyword">when</span> <span class="ruby-string">'cartridge'</span>
+    <span class="ruby-keyword">return</span> <span class="ruby-constant">Cartridge</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">data</span>)
+  <span class="ruby-keyword">when</span> <span class="ruby-string">'user'</span>
+    <span class="ruby-keyword">return</span> <span class="ruby-constant">User</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">data</span>)
+  <span class="ruby-keyword">when</span> <span class="ruby-string">'keys'</span>
+    <span class="ruby-identifier">keys</span> = <span class="ruby-constant">Array</span>.<span class="ruby-identifier">new</span>
+    <span class="ruby-identifier">data</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">key_json</span><span class="ruby-operator">|</span>
+      <span class="ruby-identifier">keys</span>.<span class="ruby-identifier">push</span>(<span class="ruby-constant">Key</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">key_json</span>))
+    <span class="ruby-keyword">end</span>
+    <span class="ruby-keyword">return</span> <span class="ruby-identifier">keys</span>
+  <span class="ruby-keyword">when</span> <span class="ruby-string">'key'</span>
+    <span class="ruby-keyword">return</span> <span class="ruby-constant">Key</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">data</span>)
+  <span class="ruby-keyword">else</span>
+  <span class="ruby-identifier">data</span>
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- parse_response-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- parse_response-method -->
+
+    
+      <div id="method-i-process_error_response" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">process_error_response</span><span
+            class="method-args">(response)</span>
+          <span class="method-click-advice">click to toggle source</span>
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+
+          
+          <div class="method-source-code" id="process_error_response-source">
+            <pre><span class="ruby-comment"># File lib/rhc-rest.rb, line 104</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">process_error_response</span>(<span class="ruby-identifier">response</span>)
+  <span class="ruby-identifier">messages</span> = <span class="ruby-constant">Array</span>.<span class="ruby-identifier">new</span>
+  <span class="ruby-keyword">begin</span>
+    <span class="ruby-identifier">result</span> = <span class="ruby-constant">JSON</span>.<span class="ruby-identifier">parse</span>(<span class="ruby-identifier">response</span>)
+    <span class="ruby-identifier">messages</span> = <span class="ruby-identifier">result</span>[<span class="ruby-string">'messages'</span>]
+  <span class="ruby-keyword">rescue</span> <span class="ruby-constant">Exception</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">e</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">case</span> <span class="ruby-identifier">response</span>.<span class="ruby-identifier">code</span>
+  <span class="ruby-keyword">when</span> <span class="ruby-value">401</span>
+    <span class="ruby-identifier">raise</span> <span class="ruby-constant">UnAuthorizedException</span>.<span class="ruby-identifier">new</span>(<span class="ruby-string">&quot;Not authenticated&quot;</span>)
+  <span class="ruby-keyword">when</span> <span class="ruby-value">404</span>
+    <span class="ruby-identifier">messages</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">message</span><span class="ruby-operator">|</span>
+      <span class="ruby-keyword">if</span> <span class="ruby-identifier">message</span>[<span class="ruby-string">'severity'</span>].<span class="ruby-identifier">upcase</span> <span class="ruby-operator">==</span> <span class="ruby-string">&quot;ERROR&quot;</span>
+        <span class="ruby-identifier">raise</span> <span class="ruby-constant">ResourceNotFoundException</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">message</span>[<span class="ruby-string">'text'</span>])
+      <span class="ruby-keyword">end</span>
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">when</span> <span class="ruby-value">422</span>
+    <span class="ruby-identifier">puts</span> <span class="ruby-string">&quot;422&quot;</span>
+    <span class="ruby-identifier">messages</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">message</span><span class="ruby-operator">|</span>
+      <span class="ruby-keyword">if</span> <span class="ruby-identifier">message</span>[<span class="ruby-string">'severity'</span>].<span class="ruby-identifier">upcase</span> <span class="ruby-operator">==</span> <span class="ruby-string">&quot;ERROR&quot;</span>
+        <span class="ruby-identifier">raise</span> <span class="ruby-constant">ValidationException</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">message</span>[<span class="ruby-string">'text'</span>])
+      <span class="ruby-keyword">end</span>
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">when</span> <span class="ruby-value">400</span>
+    <span class="ruby-identifier">messages</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">message</span><span class="ruby-operator">|</span>
+      <span class="ruby-keyword">if</span> <span class="ruby-identifier">message</span>[<span class="ruby-string">'severity'</span>].<span class="ruby-identifier">upcase</span> <span class="ruby-operator">==</span> <span class="ruby-string">&quot;ERROR&quot;</span>
+        <span class="ruby-identifier">raise</span> <span class="ruby-constant">ClientErrorException</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">message</span>[<span class="ruby-string">'text'</span>])
+      <span class="ruby-keyword">end</span>
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">when</span> <span class="ruby-value">500</span>
+    <span class="ruby-identifier">messages</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">message</span><span class="ruby-operator">|</span>
+      <span class="ruby-keyword">if</span> <span class="ruby-identifier">message</span>[<span class="ruby-string">'severity'</span>].<span class="ruby-identifier">upcase</span> <span class="ruby-operator">==</span> <span class="ruby-string">&quot;ERROR&quot;</span>
+        <span class="ruby-identifier">raise</span> <span class="ruby-constant">ServerErrorException</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">message</span>[<span class="ruby-string">'text'</span>])
+      <span class="ruby-keyword">end</span>
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">when</span> <span class="ruby-value">503</span>
+    <span class="ruby-identifier">messages</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">message</span><span class="ruby-operator">|</span>
+      <span class="ruby-keyword">if</span> <span class="ruby-identifier">message</span>[<span class="ruby-string">'severity'</span>].<span class="ruby-identifier">upcase</span> <span class="ruby-operator">==</span> <span class="ruby-string">&quot;ERROR&quot;</span>
+        <span class="ruby-identifier">raise</span> <span class="ruby-constant">ServiceUnavailableException</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">message</span>[<span class="ruby-string">'text'</span>])
+      <span class="ruby-keyword">end</span>
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">end</span>
+
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- process_error_response-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- process_error_response-method -->
+
+    
+      <div id="method-i-send" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">send</span><span
+            class="method-args">(request)</span>
+          <span class="method-click-advice">click to toggle source</span>
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+
+          
+          <div class="method-source-code" id="send-source">
+            <pre><span class="ruby-comment"># File lib/rhc-rest.rb, line 91</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">send</span>(<span class="ruby-identifier">request</span>)
+  <span class="ruby-keyword">begin</span>
+    <span class="ruby-identifier">response</span> = <span class="ruby-identifier">request</span>.<span class="ruby-identifier">execute</span>
+    <span class="ruby-comment">#puts &quot;#{response}&quot;</span>
+    <span class="ruby-keyword">return</span> <span class="ruby-identifier">parse_response</span>(<span class="ruby-identifier">response</span>) <span class="ruby-keyword">unless</span> <span class="ruby-identifier">response</span>.<span class="ruby-identifier">nil?</span> <span class="ruby-keyword">or</span> <span class="ruby-identifier">response</span>.<span class="ruby-identifier">code</span> <span class="ruby-operator">==</span> <span class="ruby-value">204</span>
+  <span class="ruby-keyword">rescue</span> <span class="ruby-constant">RestClient</span><span class="ruby-operator">::</span><span class="ruby-constant">ExceptionWithResponse</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">e</span>
+  <span class="ruby-comment">#puts &quot;#{e.response}&quot;</span>
+    <span class="ruby-identifier">process_error_response</span>(<span class="ruby-identifier">e</span>.<span class="ruby-identifier">response</span>)
+  <span class="ruby-keyword">rescue</span> <span class="ruby-constant">Exception</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">e</span>
+    <span class="ruby-identifier">raise</span> <span class="ruby-constant">ResourceAccessException</span>.<span class="ruby-identifier">new</span>(<span class="ruby-node">&quot;Failed to access resource: #{e.message}&quot;</span>)
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- send-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- send-method -->
+
+    
+    </section><!-- public-instance-method-details -->
+  
+  </section><!-- 5Buntitled-5D -->
+
+</div><!-- documentation -->
+
+
+<footer id="validator-badges">
+  <p><a href="http://validator.w3.org/check/referer">[Validate]</a>
+  <p>Generated by <a href="https://github.com/rdoc/rdoc">RDoc</a> 3.12.
+  <p>Generated with the <a href="http://deveiate.org/projects/Darkfish-Rdoc/">Darkfish Rdoc Generator</a> 3.
+</footer>
+
