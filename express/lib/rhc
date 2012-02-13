@@ -117,7 +117,7 @@ _rhc()
                     cartridge)
                         case "${COMP_WORDS[3]}" in
                             add | remove | stop | start | restart | status | reload | list)
-                                opts="--debug --help --rhlogin --password -app --cartridge --config --timeout"
+                                opts="--debug --help --rhlogin --password --app --cartridge --config --timeout"
                                 ;;
                             *)
                                 ;;
