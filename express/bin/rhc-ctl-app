@@ -145,6 +145,11 @@ if opt['command'] and (opt['alias'] and !(opt['command'] =~ /-alias$/)) || ((opt
     p_usage
 end
 
+if opt['command'] and (opt['target'] and !(opt['command'] =~ /-port$/)) || ((opt['command'] =~ /-port$/) and ! opt['target'])
+    puts "When specifying target make sure to use -c expose-port or -c conceal-port"
+    p_usage
+end
+
 password = opt['password']
 if !password
   password = RHC::get_password
