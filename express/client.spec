@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.86.2
+Version:       0.86.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -111,6 +111,11 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Feb 13 2012 Dan McPherson <dmcphers@redhat.com> 0.86.3-1
+- The target option was intended to be optional. (rmillner@redhat.com)
+- Add '--target' option for expose/conceal port options. (rmillner@redhat.com)
+- bug 722828 (bdecoste@gmail.com)
+
 * Wed Feb 08 2012 Dan McPherson <dmcphers@redhat.com> 0.86.2-1
 - Adding expose / conceal ports (mmcgrath@redhat.com)
 - remove use of broker_version (dmcphers@redhat.com)
