@@ -38,12 +38,6 @@ module Rhc
         rescue Exception => e
           raise ResourceAccessException.new("Resource could not be accessed:#{e.message}")
         end
-        
-        #now authenticate since the api call does not require authentication
-        url = @@end_point + @links['GET_USER']['href']
-        method =  @links['GET_USER']['method']
-        request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
-        send(request)
       end
 
       #Add Domain
