@@ -22,18 +22,21 @@
 # SOFTWARE.
 
 require '../lib/rhc-rest'
+require 'base64'
+
 
 if __FILE__ == $0
+  
+end_point = ARGV[0]
+username = ARGV[1]
+password = ARGV[2]
 
-end_point = "https://<hostname>/broker/rest"
-username = "<rhlogin>"
-paswword = "<password>"
-
-client = Rhc::Rest::Client.new(end_point, username, paswword)
+client = Rhc::Rest::Client.new(end_point, username, password)
 
 namespace="lnader"
 puts "Creating a domain"
 domain = client.add_domain(namespace)
+puts "Domain created: #{domain.namespace}"
 
 puts "Getting all cartridges..."
 client.cartridges.each do |cart|
@@ -89,7 +92,7 @@ end
 puts "Adding, updating and deleting keys"
 key = client.user.add_key("newkey", "NEWKEYCONTENT", "ssh-rsa")
 
-puts "Added key: #{key.name} now changing it's name to 'renamed-newkey'"
+puts "Added key: #{key.name} updating key content"
 key.update(key.type, "NEWKEYCONTENT123")
 
 puts "Getting all keys..."

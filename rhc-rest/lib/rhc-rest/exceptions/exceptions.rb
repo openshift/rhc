@@ -64,11 +64,10 @@ module Rhc
 
     #Exceptions thrown in case of an HTTP 422 is received.
     class ValidationException < Rhc::Rest::ClientErrorException
-      attr_reader :error_code, :message, :attribute
-      def initialize(messages)
-        if not messages.nil?
-
-        end
+      attr_reader :attribute
+      def initialize(msg, attribute=nil)
+        super(msg)
+        @attribute = attribute
       end
     end
 
@@ -89,7 +88,7 @@ module Rhc
     #that authorization has been refused for those credentials. 
     class UnAuthorizedException < Rhc::Rest::ClientErrorException; end
 
-    #I/O Exceptions
+    #I/O Exceptions Connection timeouts, Unreachable host, etc
     class ResourceAccessException < Rhc::Rest::BaseException; end
 
   end
