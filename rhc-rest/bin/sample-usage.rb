@@ -30,10 +30,10 @@ if __FILE__ == $0
 end_point = ARGV[0]
 username = ARGV[1]
 password = ARGV[2]
+namespace = ARGV[3]
 
 client = Rhc::Rest::Client.new(end_point, username, password)
 
-namespace="lnader"
 puts "Creating a domain"
 domain = client.add_domain(namespace)
 puts "Domain created: #{domain.namespace}"
