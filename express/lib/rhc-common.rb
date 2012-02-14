@@ -726,8 +726,8 @@ LOOKSGOOD
     else
         print_response_err(response)
     end
+    JSON.parse(response.body)
   end
-  
 end
 
 # provide a hook for performing actions before rhc-* commands exit

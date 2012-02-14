@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.86.2
+Version:       0.86.5
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -111,6 +111,26 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Feb 13 2012 Dan McPherson <dmcphers@redhat.com> 0.86.5-1
+- Rolling back my changes to expose targetted proxy. Revert "Add '--target'
+  option for expose/conceal port options." (rmillner@redhat.com)
+- Rolling back my changes to expose targetted proxy. Revert "The target option
+  was intended to be optional." (rmillner@redhat.com)
+
+* Mon Feb 13 2012 Dan McPherson <dmcphers@redhat.com> 0.86.4-1
+- fix for bug 789928 (abhgupta@redhat.com)
+- Merge branch 'master' of github.com:openshift/os-client-tools
+  (abhgupta@redhat.com)
+- fix for bug 789928 (abhgupta@redhat.com)
+- Merge branch 'master' of github.com:openshift/os-client-tools
+  (mmcgrath@redhat.com)
+- return the json rep so it can be used (mmcgrath@redhat.com)
+
+* Mon Feb 13 2012 Dan McPherson <dmcphers@redhat.com> 0.86.3-1
+- The target option was intended to be optional. (rmillner@redhat.com)
+- Add '--target' option for expose/conceal port options. (rmillner@redhat.com)
+- bug 722828 (bdecoste@gmail.com)
+
 * Wed Feb 08 2012 Dan McPherson <dmcphers@redhat.com> 0.86.2-1
 - Adding expose / conceal ports (mmcgrath@redhat.com)
 - remove use of broker_version (dmcphers@redhat.com)
