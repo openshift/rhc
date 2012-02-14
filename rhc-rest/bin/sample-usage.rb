@@ -32,6 +32,11 @@ username = ARGV[1]
 password = ARGV[2]
 namespace = ARGV[3]
 
+if end_point.nil? or username.nil? or password.nil? or namespace.nil?
+  puts "Usage: https://<hostname>/broker/rest <username> <password> <namespace>"
+  exit 1
+end
+
 client = Rhc::Rest::Client.new(end_point, username, password)
 
 puts "Creating a domain"
