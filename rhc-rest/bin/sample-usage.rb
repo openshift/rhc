@@ -22,7 +22,6 @@
 # SOFTWARE.
 
 require '../lib/rhc-rest'
-require 'base64'
 
 
 if __FILE__ == $0
@@ -52,6 +51,12 @@ puts "Creating application appone"
 carts = client.find_cartridge("php-5.3")
 domain.add_application("appone", carts.first.name)
 
+puts "Try deleting domain with an application"
+begin
+  domain.delete
+rescue Exception => e
+  puts e.message
+end
 
 puts "Getting all domains and applications..."
 client.domains.each do |domain|
@@ -112,11 +117,8 @@ rescue Exception => e
   puts e.message
 end
 
-puts 'Clean up domains and apps'
+puts 'Clean up domains and apps by force deleting domain'
 client.domains.each do |domain|
-  domain.applications.each do |app|
-    app.delete
-  end
-  domain.delete
+  domain.delete(true)
 end
 
