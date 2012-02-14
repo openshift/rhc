@@ -65,8 +65,8 @@ module Rhc
         logger.debug "Deleting domain #{self.namespace}"
         url = @@end_point + @links['DELETE']['href']
         method =  @links['DELETE']['method']
-        payload[:force] = force if force
-        request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
+        payload = {:force => force}
+        request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
         return send(request)
       end
       alias :delete :destroy
