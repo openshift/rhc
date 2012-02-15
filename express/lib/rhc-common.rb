@@ -665,13 +665,19 @@ LOOKSGOOD
 
       stderr.each { |line|
         line = line.chomp
+
+        if line.downcase =~ /permission denied/
+          puts line
+          exit 1
+        end
+        
         if line.index(ip_and_port_simple_regex)
           hosts_and_ports_descriptions << line
         end
       }
 
     }
-
+    
     #hosts_and_ports_descriptions = stderr.gets.chomp.split(/\n/)
     #hosts_and_ports = stdout.gets.chomp.split(/\n/)
 
