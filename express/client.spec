@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.86.5
+Version:       0.86.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -111,6 +111,18 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Feb 15 2012 Dan McPherson <dmcphers@redhat.com> 0.86.6-1
+- Merge branch 'master' of github.com:openshift/os-client-tools
+  (abhgupta@redhat.com)
+- fix for bug 790795 (abhgupta@redhat.com)
+- Merge branch 'patch-1' of https://github.com/Qalthos/os-client-tools
+  (abhgupta@redhat.com)
+- Fixed some SSH key issues and improved error message specification
+  (fotios@redhat.com)
+- Fix for BZ786230 when account doesn't exist (fotios@redhat.com)
+- Tell tar to use the wildcard instead of looking for a folder called '*'.
+  (Qalthos@gmail.com)
+
 * Mon Feb 13 2012 Dan McPherson <dmcphers@redhat.com> 0.86.5-1
 - Rolling back my changes to expose targetted proxy. Revert "Add '--target'
   option for expose/conceal port options." (rmillner@redhat.com)
