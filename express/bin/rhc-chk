@@ -205,16 +205,29 @@ end
 #####################################################
 #                Tests start here                   #
 #####################################################
-#                                                   #                                                  
-#  Note: Tests and testcases are run alphabetically # 
-#                                                   #                                                  
+#                                                   #
+#  Note: Tests and testcases are run alphabetically #
+#                                                   #
 #####################################################
 
 def error_for(name,*args)
   if name.kind_of? String
     name = name.downcase.to_sym
   end
-  sprintf($messages[name],*args)
+  message = sprintf(get_message(:errors,name),*args)
+  solution = get_message(:solutions,name)
+  if solution
+    message << "\n" << sprintf(solution,*args)
+  end
+  message
+end
+
+def get_message(type,name)
+  val = $messages[type][name]
+  if val.is_a? Symbol
+    val = get_message(type,val)
+  end
+  val
 end
 
 class Test1_Connectivity < Test::Unit::TestCase
@@ -292,14 +305,13 @@ class Test3_SSH < Test::Unit::TestCase
     assert_not_nil $user_info, error_for(:no_account) 
 
     $remote_ssh_pubkeys = []
-    additional_ssh_keys = RHC::get_ssh_keys($libra_server, $rhlogin, $password, $http)
-    if additional_ssh_keys['keys'] && additional_ssh_keys['keys'].kind_of?(Hash)
-      additional_ssh_keys['keys'].each do |name, sshkey|
-        $remote_ssh_pubkeys.push(sshkey['key'])
-      end
-    end
+    ssh_keys = RHC::get_ssh_keys($libra_server, $rhlogin, $password, $http)
+    my_keys = [ssh_keys['ssh_key'], ssh_keys['keys'].values.map{|k| k['key']}].flatten
+    my_keys.delete_if{|x| x.length == 0 }
+    $remote_ssh_pubkeys = my_keys
 
-    $remote_ssh_pubkeys.push($user_info["user_info"]["ssh_key"])
+    # Ensure that the user has ssh keys
+    assert(!$remote_ssh_pubkeys.empty?, error_for(:no_remote_pub_keys ) )
     assert $remote_ssh_pubkeys.include?(@@local_derived_ssh_pubkey), error_for(:no_match_pub, @libra_kfile)
   end
 
@@ -328,7 +340,7 @@ class Test3_SSH < Test::Unit::TestCase
     # Make sure we can load keys from ssh-agent
     assert !loaded_keys.empty?, error_for(:no_keys_loaded)
     loaded_keys.map!{|key| key.split(' ')[1]}
-    
+
     assert_not_nil @@local_ssh_pubkey, error_for(:no_pubkey, 'the keys in ssh-agent')
     assert loaded_keys.include?(@@local_ssh_pubkey),error_for(:pubkey_not_loaded)
   end
@@ -367,7 +379,7 @@ class CheckRunner < Test::Unit::UI::Console::TestRunner
   def initialize(*args)
     super
     @output_level = 1
-    puts $messages[:started]
+    puts get_message(:status,:started)
   end
 
   def add_fault(fault)
@@ -403,9 +415,9 @@ class CheckRunner < Test::Unit::UI::Console::TestRunner
     $debuginfo['errors'] = @faults
 
     if @faults.empty?
-      print_underlined $messages[:passed]
+      print_underlined get_message(:status,:passed)
     else
-      print_underlined $messages[:failed]
+      print_underlined get_message(:status,:failed)
       @errors = []
       # Need to separate the failures from the errors
 
@@ -421,7 +433,7 @@ class CheckRunner < Test::Unit::UI::Console::TestRunner
       # Errors mean something in the test is broken, not just failed
       unless @errors.empty?
         @num = 0
-        print_underlined $messages[:error]
+        print_underlined get_message(:status,:error)
         @errors.each do |e| 
           lines = e.long_display.to_a[1..-1]
           puts "#{@num+=1}) #{lines.shift}"
@@ -446,24 +458,45 @@ Test::Unit::AutoRunner::RUNNERS[:console] = proc do |r|
   CheckRunner
 end
 
+############################
+#  The following are the error messages to be used for different tests
+#  You need to specify a value in :errors
+#  If there is a solution, it may also be specified in :solutions
+#
+#  Values in may be reused by specifying another symbol as the value
+#   for instance the following will use the solution for :bar as the solution for :foo
+#
+#   :solutions
+#     :foo: :bar
+############################
 $messages = YAML.load <<-EOF
 ---
+:status:
   :started: Analyzing system
   :passed: Congratulations, your system has passed all tests
   :failed: Your system did not pass all of the tests
   :error: Something went wrong, and not all tests completed
-  :no_derive: "We were unable to derive your public SSH key and compare it to the remote\n FIX: ???"
-  :no_connectivity: "Cannot connect to server, therefore most tests will not work\n FIX: Ensure that you are able to connect to %s"
+:errors:
+  :no_derive: "We were unable to derive your public SSH key and compare it to the remote"
+  :no_connectivity: "Cannot connect to server, therefore most tests will not work"
   :no_account: You must have an account on the server in order to test SSH key matches
   :cant_connect: You need to be able to connect to the server in order to test authentication
-  :no_match_pub: "Local %s does not match remote pub key, SSH auth will not work\n FIX: Perhaps you should regenerate your public key, or run 'rhc sshkey add' to add your new key"
-  :_404: "The user %s does not have an account on this server\n FIX: Please ensure that you've entered the correct username"
+  :no_match_pub: "Local %s does not match remote pub key, SSH auth will not work"
+  :_404: "The user %s does not have an account on this server"
   :no_pubkey: We were unable to read your public SSH key to compare to %s
-  :_401: "Invalid user credentials for %s\n FIX: Please ensure you used the correct password"
+  :_401: "Invalid user credentials for %s"
   :file_not_found: File %s does not exist, cannot check permissions
   :_other_http: "There was an error communicating with the server: %s"
-  :bad_permissions: "File %s has incorrect permissions %s\n FIX: Permissions should match %s"
+  :bad_permissions: "File %s has incorrect permissions %s"
   :no_keys_loaded: Either ssh-agent is not running or you do not have any keys loaded 
   :pubkey_not_loaded: Your public key is not loaded into a running ssh-agent
   :cant_ssh: "Cannot SSH into your app: %s"
-  EOF
+  :no_remote_pub_keys: "It appears you do not have any public ssh keys."
+:solutions:
+  :no_connectivity: "Ensure that you are able to connect to %s"
+  :no_match_pub: "Perhaps you should regenerate your public key, or run 'rhc sshkey add' to add your new key"
+  :_404: "Please ensure that you've entered the correct username or that you've created an account"
+  :_401: "Please ensure you used the correct password"
+  :bad_permissions: "Permissions should match %s"
+  :no_remote_pub_keys: "You should try to add your ssh-key by running 'rhc sshkey add'"
+EOF
