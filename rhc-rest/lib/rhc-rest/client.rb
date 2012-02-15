@@ -19,23 +19,24 @@
 # ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+require 'base64'
+
 module Rhc
   module Rest
     class Client
       include Rest
       def initialize(end_point, username, password)
         @@end_point = end_point
-        @username = username
-        @password = password
-        request = RestClient::Request.new(:url => @@end_point + "/api", :method => :get, :headers => @@headers, :username => @username, :password => password)
+        credentials = Base64.encode64("#{username}:#{password}")
+        @@headers["Authorization"] = "Basic #{credentials}"
+        #first get the API
+        request = RestClient::Request.new(:url => @@end_point + "/api", :method => :get, :headers => @@headers)
         begin
-          begin
-            response = request.execute
-            result = JSON.parse(response)
-            @links = send(request)
-          rescue RestClient::ExceptionWithResponse => e
-            puts e.response
-          end
+          response = request.execute
+          result = JSON.parse(response)
+          @links = send(request)
+        rescue RestClient::ExceptionWithResponse => e
+            logger.error "Failed to get API #{e.response}"
         rescue Exception => e
           raise ResourceAccessException.new("Resource could not be accessed:#{e.message}")
         end
@@ -75,7 +76,7 @@ module Rhc
 
       #Find Application by name
       def find_application(name)
-        ogger.debug "Finding application #{name}"
+        logger.debug "Finding application #{name}"
         filtered = Array.new
         domains.each do |domain|
         #TODO do a regex caomparison

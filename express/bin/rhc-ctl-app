@@ -71,7 +71,6 @@ begin
         ["--password",   "-p", GetoptLong::REQUIRED_ARGUMENT],
         ["--app",        "-a", GetoptLong::REQUIRED_ARGUMENT],
         ["--alias",      GetoptLong::REQUIRED_ARGUMENT],
-        ["--target",     GetoptLong::REQUIRED_ARGUMENT],
         ["--config", GetoptLong::REQUIRED_ARGUMENT],
         ["--command",    "-c", GetoptLong::REQUIRED_ARGUMENT],
         ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
@@ -189,4 +188,4 @@ else
     url = URI.parse("https://#{libra_server}/broker/cartridge")
 end
 
-RHC::ctl_app(libra_server, @http, opt['app'], opt['rhlogin'], password, action, opt['embed'], framework, opt['alias'], opt['target'])
+RHC::ctl_app(libra_server, @http, opt['app'], opt['rhlogin'], password, action, opt['embed'], framework, opt['alias'])

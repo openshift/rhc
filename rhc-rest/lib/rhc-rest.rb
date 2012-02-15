@@ -34,6 +34,7 @@ require File.dirname(__FILE__) + '/rhc-rest/user'
 
 @@end_point = ""
 @@headers = {:accept => :json}
+
 module Rhc
   module Rest
     def logger
@@ -90,7 +91,14 @@ module Rhc
 
     def send(request)
       begin
+        #puts request.headers
         response = request.execute
+        #set cookie
+        rh_sso = response.cookies['rh_sso']
+        #puts response.cookies
+        if not rh_sso.nil?
+          @@headers["cookie"] = "rh_sso=#{rh_sso}"
+        end
         #puts "#{response}"
         return parse_response(response) unless response.nil? or response.code == 204
       rescue RestClient::ExceptionWithResponse => e
@@ -107,21 +115,34 @@ module Rhc
         result = JSON.parse(response)
         messages = result['messages']
       rescue Exception => e
+        logger.debug "Response did not include a message from server"
       end
       case response.code
       when 401
         raise UnAuthorizedException.new("Not authenticated")
+      when 403
+        messages.each do |message|
+          if message['severity'].upcase == "ERROR"
+            raise RequestDeniedException.new(message['text'])
+          end
+        end
       when 404
         messages.each do |message|
           if message['severity'].upcase == "ERROR"
             raise ResourceNotFoundException.new(message['text'])
           end
         end
+      when 409
+        messages.each do |message|
+          if message['severity'].upcase == "ERROR"
+            raise ValidationException.new(message['text'])
+          end
+        end
       when 422
         puts "422"
         messages.each do |message|
           if message['severity'].upcase == "ERROR"
-            raise ValidationException.new(message['text'])
+            raise ValidationException.new(message['text'], message['attribute'])
           end
         end
       when 400

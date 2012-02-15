@@ -23,17 +23,24 @@
 
 require '../lib/rhc-rest'
 
+
 if __FILE__ == $0
+  
+end_point = ARGV[0]
+username = ARGV[1]
+password = ARGV[2]
+namespace = ARGV[3]
 
-end_point = "https://<hostname>/broker/rest"
-username = "<rhlogin>"
-paswword = "<password>"
+if end_point.nil? or username.nil? or password.nil? or namespace.nil?
+  puts "Usage: https://<hostname>/broker/rest <username> <password> <namespace>"
+  exit 1
+end
 
-client = Rhc::Rest::Client.new(end_point, username, paswword)
+client = Rhc::Rest::Client.new(end_point, username, password)
 
-namespace="lnader"
 puts "Creating a domain"
 domain = client.add_domain(namespace)
+puts "Domain created: #{domain.namespace}"
 
 puts "Getting all cartridges..."
 client.cartridges.each do |cart|
@@ -44,6 +51,12 @@ puts "Creating application appone"
 carts = client.find_cartridge("php-5.3")
 domain.add_application("appone", carts.first.name)
 
+puts "Try deleting domain with an application"
+begin
+  domain.delete
+rescue Exception => e
+  puts e.message
+end
 
 puts "Getting all domains and applications..."
 client.domains.each do |domain|
@@ -89,7 +102,7 @@ end
 puts "Adding, updating and deleting keys"
 key = client.user.add_key("newkey", "NEWKEYCONTENT", "ssh-rsa")
 
-puts "Added key: #{key.name} now changing it's name to 'renamed-newkey'"
+puts "Added key: #{key.name} updating key content"
 key.update(key.type, "NEWKEYCONTENT123")
 
 puts "Getting all keys..."
@@ -104,11 +117,8 @@ rescue Exception => e
   puts e.message
 end
 
-puts 'Clean up domains and apps'
+puts 'Clean up domains and apps by force deleting domain'
 client.domains.each do |domain|
-  domain.applications.each do |app|
-    app.delete
-  end
-  domain.delete
+  domain.delete(true)
 end
 
