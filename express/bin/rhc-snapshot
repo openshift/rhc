@@ -118,7 +118,7 @@ if opt['save']
   puts "Pulling down a snapshot to #{opt['save']}"
 else
   if File.exists? opt['restore']
-    `tar -tf #{opt['restore']} './*/#{app}'`
+    `tar --wildcards -tf #{opt['restore']} './*/#{app}'`
     if $?.exitstatus != 0
       puts "Archive at #{opt['restore']} does not contain the target application: ./*/#{app}"
       puts "If you created this archive rather than exported with rhc-snapshot, be sure"
