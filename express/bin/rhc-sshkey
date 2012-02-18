@@ -69,10 +69,7 @@ def validate_args(val_id=true)
   debug = $opt["debug"] ? true : false
   RHC::debug(debug)
   
-  if val_id && !$opt['identifier']
-    puts "Key name is required"
-    p_usage
-  end
+  p_usage if val_id && !RHC::check_key($opt['identifier'])
   
   RHC::timeout($opt["timeout"] ? $opt["timeout"] : get_var('timeout'))
   $password = $opt['password'] ? $opt['password'] : RHC::get_password

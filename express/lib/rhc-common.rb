@@ -161,13 +161,15 @@ module RHC
   end
 
   def self.check_key(keyname)
-    check_field(keyname, 'keyname', DEFAULT_MAX_LENGTH)
+    check_field(keyname, 'key name', DEFAULT_MAX_LENGTH, /[^0-9_a-zA-Z]/, 
+                'contains invalid characters! Only alpha-numeric characters and underscores allowed.')
   end
 
-  def self.check_field(field, type, max=0)
+  def self.check_field(field, type, max=0, val_regex=/[^0-9a-zA-Z]/, 
+                       regex_failed_error='contains non-alphanumeric characters!')
     if field
-      if field =~ /[^0-9a-zA-Z]/
-        puts "#{type} contains non-alphanumeric characters!"
+      if field =~ val_regex
+        puts "#{type} " + regex_failed_error
         return false
       end
       if max != 0 && field.length > max
