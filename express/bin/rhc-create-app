@@ -34,6 +34,7 @@ Create an OpenShift Express app.
 
   -a|--app   application     Application name  (alphanumeric - max #{RHC::APP_NAME_MAX_LENGTH} chars) (required)
   -t|--type  type            Type of app to create (#{type_keys}) (required)
+  -g|--gear-size size        The size of the gear for this app ([small|large], defaults to small)
   -l|--rhlogin  rhlogin      Red Hat login (RHN or OpenShift login with OpenShift Express access) (#{rhlogin})
   -p|--password  password    RHLogin password  (optional, will prompt)
   -r|--repo  path            Git Repo path (defaults to ./$app_name)
@@ -64,6 +65,7 @@ begin
         ["--repo",  "-r", GetoptLong::REQUIRED_ARGUMENT],
         ["--config", GetoptLong::REQUIRED_ARGUMENT],
         ["--type",  "-t", GetoptLong::REQUIRED_ARGUMENT],
+        ["--gear-size", "-g", GetoptLong::REQUIRED_ARGUMENT],
         ["--timeout", GetoptLong::REQUIRED_ARGUMENT],
         ["--enable-jenkins", GetoptLong::OPTIONAL_ARGUMENT]
     )
@@ -75,6 +77,7 @@ rescue Exception => e
   #puts e.message
     p_usage
 end
+
 
 # If provided a config path, check it
 check_cpath(opt)
@@ -111,6 +114,14 @@ end
 
 if !opt['rhlogin'] || !opt['app'] || !opt['type']
     p_usage
+end
+
+# right now small maps to std so alias here
+gear_size = opt['gear-size']
+if !gear_size
+    gear_size = 'std'
+elsif gear_size == 'small'
+    gear_size = 'std'
 end
 
 password = opt['password']
@@ -235,7 +246,7 @@ end
 #
 # Create remote application space
 #
-main_app = RHC::create_app(libra_server, @http, user_info, opt['app'], opt['type'], opt['rhlogin'], password, opt['repo'], opt['no-dns'], opt['nogit'], false)
+main_app = RHC::create_app(libra_server, @http, user_info, opt['app'], opt['type'], opt['rhlogin'], password, opt['repo'], opt['no-dns'], opt['nogit'], false, gear_size)
 if jenkins_app_name
   puts "Now embedding the jenkins client into '#{opt['app']}'..."
   RHC::ctl_app(libra_server, @http, opt['app'], opt['rhlogin'], password, 'configure', true, 'jenkins-client-1.4', nil, false)
