@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.87.1
+Version:       0.87.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -111,6 +111,11 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Feb 20 2012 Dan McPherson <dmcphers@redhat.com> 0.87.2-1
+- Merge branch 'master' of github.com:openshift/os-client-tools
+  (abhgupta@redhat.com)
+- allowing underscores in ssh key names (abhgupta@redhat.com)
+
 * Thu Feb 16 2012 Dan McPherson <dmcphers@redhat.com> 0.87.1-1
 - bump spec numbers (dmcphers@redhat.com)
 - Bugzilla ticket 768809: The jenkins command line option description breaks up
