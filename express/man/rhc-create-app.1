@@ -15,6 +15,9 @@ rhcloud.com
 .B [\-r
 .I local_repo_path
 .B ]
+.B [\-g
+.I gear_size
+.B ]
 .B [\-d] [\-h] [\-n]
 .B [\-\-config
 .I config_path
@@ -62,6 +65,8 @@ RHLogin password
 Name of application to create.  Applications will be created as <application_name>\-<namespace>.rhcloud.com (alphanumeric \- max 16 chars)
 .IP "\-r|\-\-repo repo_path"
 Local repo to create (must be empty)
+.IP "\-g|\-\-gear\-size gear_size"
+The amount of resources available to this application upon creation.  Currently small(default) and large are supported.
 .IP "\-t|\-\-type framework_type"
 Framework type to create.  Currently at least php\-5.3, python\-2.6, and ruby\-1.8 are supported. To obtain the full, most recent list, use the \-h flag.
 .IP \-d|\-\-debug
