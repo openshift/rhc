@@ -23,6 +23,24 @@
 
 require 'rhc-common'
 
+# FIXME: get better descriptions from runtime or docs team
+$gear_size_order = ['small', 'large']
+$valid_gear_sizes = { 'std' => 'standard gear size (not exposed in UI)',
+                     'small' => 'allocates the standard resources for your application (default)',
+                     'large' => 'allocates a larger chunk of resources for your application'
+                   }
+
+def p_valid_gear_sizes(invalid_gear_size)
+    puts "Invalid gear size #{invalid_gear_size}"
+    puts "Valid options are:"
+    puts ""
+    $gear_size_order.each do |gear_size|
+        puts "    #{gear_size} - #{$valid_gear_sizes[gear_size]}"
+    end
+
+    exit 255
+end
+
 def p_usage
     libra_server = get_var('libra_server')
     rhlogin = get_var('default_rhlogin') ? "Default: #{get_var('default_rhlogin')}" : "required"
@@ -122,6 +140,10 @@ if !gear_size
     gear_size = 'std'
 elsif gear_size == 'small'
     gear_size = 'std'
+else
+    if !$valid_gear_sizes.include? gear_size
+        p_valid_gear_sizes gear_size
+    end
 end
 
 password = opt['password']
