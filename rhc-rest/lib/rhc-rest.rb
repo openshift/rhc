@@ -116,6 +116,7 @@ module Rhc
         messages = result['messages']
       rescue Exception => e
         logger.debug "Response did not include a message from server"
+        #puts response
       end
       case response.code
       when 401
@@ -134,17 +135,23 @@ module Rhc
         end
       when 409
         messages.each do |message|
-          if message['severity'].upcase == "ERROR"
+          if message['severity'] and message['severity'].upcase == "ERROR"
             raise ValidationException.new(message['text'])
           end
         end
       when 422
-        puts "422"
+        #puts response
+        e = nil
         messages.each do |message|
-          if message['severity'].upcase == "ERROR"
-            raise ValidationException.new(message['text'], message['attribute'])
+          if message["field"]
+            if e and e.field ==message["field"]
+              e.message << " #{message["text"]}"
+            else
+              e = ValidationException.new(message["text"], message["field"])
+            end
           end
         end
+        raise e
       when 400
         messages.each do |message|
           if message['severity'].upcase == "ERROR"

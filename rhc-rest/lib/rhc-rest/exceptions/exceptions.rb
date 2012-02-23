@@ -24,8 +24,8 @@ module Rhc
   module Rest
     class BaseException < RuntimeError
       attr_reader :code
-      def initialize(msg=nil, code=nil)
-        super(msg)
+      def initialize(message=nil, code=nil)
+        super(message)
         @code = code
       end
     end
@@ -64,10 +64,10 @@ module Rhc
 
     #Exceptions thrown in case of an HTTP 422 is received.
     class ValidationException < Rhc::Rest::ClientErrorException
-      attr_reader :attribute
-      def initialize(msg, attribute=nil)
-        super(msg)
-        @attribute = attribute
+      attr_reader :field
+      def initialize(message, field=nil)
+        super(message)
+        @field = field
       end
     end
 

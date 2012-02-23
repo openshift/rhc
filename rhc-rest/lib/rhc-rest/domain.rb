@@ -51,7 +51,7 @@ module Rhc
 
       #Update Domain
       def update(new_namespace)
-        logger.debug "Updating domain #{self.namespace}"
+        logger.debug "Updating domain #{self.namespace} to #{new_namespace}"
         url = @@end_point + @links['UPDATE']['href']
         method =  @links['UPDATE']['method']
         payload = {:namespace => new_namespace}
