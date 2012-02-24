@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.87.3
+Version:       0.87.4
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -111,6 +111,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Feb 24 2012 Dan McPherson <dmcphers@redhat.com> 0.87.4-1
+- print out error message if invalid gear size is passed (johnp@redhat.com)
+
 * Tue Feb 21 2012 Dan McPherson <dmcphers@redhat.com> 0.87.3-1
 - Add show-port call. (rmillner@redhat.com)
 - update man page for rhc-create-app to reflect the -g option
