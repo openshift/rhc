@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.87.4
+Version:       0.87.5
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -111,6 +111,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Sat Feb 25 2012 Dan McPherson <dmcphers@redhat.com> 0.87.5-1
+- rename jboss 7.0 to jboss 7 (dmcphers@redhat.com)
+
 * Fri Feb 24 2012 Dan McPherson <dmcphers@redhat.com> 0.87.4-1
 - print out error message if invalid gear size is passed (johnp@redhat.com)
 
