@@ -56,10 +56,13 @@ end
 case ARGV[0]
 when "domain"
   system("rhc-domain #{get_args} 2>&1")
+  retcode = $?
 when "app"
   system("rhc-app #{get_args} 2>&1")
+  retcode = $?
 when "sshkey"
   system("rhc-sshkey #{get_args} 2>&1")
+  retcode = $?
 when "-h", "--help", "help", nil
   p_usage
 else
@@ -67,4 +70,4 @@ else
   p_usage
 end
 
-exit 0
+exit (retcode != 0 ? 1 : 0)
