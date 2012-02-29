@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.87.5
+Version:       0.87.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -111,6 +111,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Feb 28 2012 Dan McPherson <dmcphers@redhat.com> 0.87.6-1
+- Update w/ correct license and export doc (jim@jaguNET.com)
+
 * Sat Feb 25 2012 Dan McPherson <dmcphers@redhat.com> 0.87.5-1
 - rename jboss 7.0 to jboss 7 (dmcphers@redhat.com)
 
