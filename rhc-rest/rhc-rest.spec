@@ -1,6 +1,6 @@
 %define gemdir %(ruby -rubygems -e 'puts Gem::dir' 2>/dev/null)
 
-Summary:       Ruby bindings/client for Openshift REST API
+Summary:       Ruby bindings/client for OpenShift REST API
 Name:          rhc-rest
 Version:       0.0.2
 Release:       1%{?dist}
