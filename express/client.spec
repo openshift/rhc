@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.87.7
+Version:       0.87.8
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -111,6 +111,11 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Mar 02 2012 Dan McPherson <dmcphers@redhat.com> 0.87.8-1
+- fix case (dmcphers@redhat.com)
+- fix for bug 799375 - rhc app show now returns exit code 1 if app does not
+  exist (abhgupta@redhat.com)
+
 * Wed Feb 29 2012 Dan McPherson <dmcphers@redhat.com> 0.87.7-1
 - fix for bug 798674 - rhc wrapper commands now return the actual exit codes
   (abhgupta@redhat.com)
