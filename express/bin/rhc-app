@@ -308,6 +308,7 @@ def show_app
     puts "Could not find app '#{$opt['app']}'.  Please run 'rhc domain show' to get a list"
     puts "of your current running applications"
     puts
+    exit 1
   end
 
 end
