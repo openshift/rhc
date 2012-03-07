@@ -40,7 +40,7 @@ module Rhc
         logger.debug "Adding cartridge #{name}"
         url = @@end_point + @links['ADD_CARTRIDGE']['href']
         method =  @links['ADD_CARTRIDGE']['method']
-        payload = {:cartridge => name}
+        payload = {:name => name}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
         return send(request)
       end
