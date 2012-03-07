@@ -31,11 +31,14 @@ module Rhc
       end
 
       #Add Application to this domain
-      def add_application(name, cartridge)
+      def add_application(name, cartridge, scale=false)
         logger.debug "Adding application #{name} to domain #{self.namespace}"
         url = @@end_point + @links['ADD_APPLICATION']['href']
         method =  @links['ADD_APPLICATION']['method']
         payload = {:name => name, :cartridge => cartridge}
+        if scale
+          payload[:scale] = true
+        end
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
         return send(request)
       end

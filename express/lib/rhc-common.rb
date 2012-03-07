@@ -32,7 +32,6 @@ require 'parseconfig'
 require 'resolv'
 require 'uri'
 
-
 module RHC
 
   DEFAULT_MAX_LENGTH = 16
@@ -403,7 +402,7 @@ module RHC
       return resp.any?
   end
   
-  def self.create_app(libra_server, net_http, user_info, app_name, app_type, rhlogin, password, repo_dir=nil, no_dns=false, no_git=false, is_embedded_jenkins=false, gear_size='std')
+  def self.create_app(libra_server, net_http, user_info, app_name, app_type, rhlogin, password, repo_dir=nil, no_dns=false, no_git=false, is_embedded_jenkins=false, gear_size='std',scale=false)
     puts "Creating application: #{app_name}"
     
     data = {:cartridge => app_type,
@@ -415,12 +414,54 @@ module RHC
     if @mydebug
       data[:debug] = true
     end    
-    json_data = generate_json(data)
-    
-    url = URI.parse("https://#{libra_server}/broker/cartridge")
-    response = http_post(net_http, url, json_data, password)
-    
-    if response.code == '200'
+
+    # Need to use the new REST API for scaling apps
+    #  We'll need to then get the new application using the existing
+    #  API in order to access the rest of the logic in this function
+    if scale
+      $LOAD_PATH << File.expand_path(File.join(File.dirname(__FILE__),'..','..','rhc-rest','lib'))
+      require 'rhc-rest'
+      # Need to have a fake HTTPResponse object for passing to print_reponse_err
+      Struct.new('FakeResponse',:body,:code,:content_type)
+
+      # Can only support php right now
+      #  TODO: This logic should be checked by broker
+      print_response_err(Struct::FakeResponse.new("Can only create a scaling app of type php-5.3",403)) unless app_type == "php-5.3"
+
+      end_point = "https://#{libra_server}/broker/rest"
+      client = Rhc::Rest::Client.new(end_point, rhlogin, password)
+
+      domain = client.find_domain(user_info['user_info']['namespace']).first
+      # Catch errors
+      begin
+        application = domain.add_application(app_name,app_type,scale)
+
+        # Variables that are needed for the rest of the function
+        app_uuid = application.uuid
+        result = "Successfully created application: #{app_name}"
+
+        # Since health_check_path is not returned, we need to fudge it for now
+        health_check_path =
+          case app_type
+          when "php-5.3"
+            "health_check.php"
+          when "perl-5.10"
+            "health_check.pl"
+          when "diy-0.1", "ruby-1.8", "jenkins-1.4", "python-2.6", "haproxy-1.4", "jbossas-7", "nodejs-0.6"
+            "health"
+          end
+
+        puts "DEBUG: '#{app_name}' creation returned success." if @mydebug
+      rescue Rhc::Rest::ValidationException => e
+        print_response_err(Struct::FakeResponse.new(e.message,406))
+      end
+    else
+      json_data = generate_json(data)
+
+      url = URI.parse("https://#{libra_server}/broker/cartridge")
+      response = http_post(net_http, url, json_data, password)
+
+      if response.code == '200'
         json_resp = JSON.parse(response.body)
         print_response_success(json_resp)
         json_data = JSON.parse(json_resp['data'])
@@ -428,8 +469,9 @@ module RHC
         app_uuid = json_data['uuid']
         result = json_resp['result']
         puts "DEBUG: '#{app_name}' creation returned success." if @mydebug
-    else
+      else
         print_response_err(response)
+      end
     end
 
     #
@@ -442,12 +484,12 @@ module RHC
         destroy_app(libra_server, net_http, app_name, rhlogin, password)
       end
     end
-    
+
     namespace = user_info['user_info']['namespace']
     rhc_domain = user_info['user_info']['rhc_domain']
 
     fqdn = "#{app_name}-#{namespace}.#{rhc_domain}"
-    
+
     loop = 0
     #
     # Confirm that the host exists in DNS
