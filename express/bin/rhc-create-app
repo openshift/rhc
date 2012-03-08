@@ -135,12 +135,10 @@ if !opt['rhlogin'] || !opt['app'] || !opt['type']
     p_usage
 end
 
-# right now small maps to std so alias here
+# Default gear size is small
 gear_size = opt['gear-size']
 if !gear_size
-    gear_size = 'std'
-elsif gear_size == 'small'
-    gear_size = 'std'
+    gear_size = 'small'
 else
     if !$valid_gear_sizes.include? gear_size
         p_valid_gear_sizes gear_size

@@ -402,7 +402,7 @@ module RHC
       return resp.any?
   end
   
-  def self.create_app(libra_server, net_http, user_info, app_name, app_type, rhlogin, password, repo_dir=nil, no_dns=false, no_git=false, is_embedded_jenkins=false, gear_size='std',scale=false)
+  def self.create_app(libra_server, net_http, user_info, app_name, app_type, rhlogin, password, repo_dir=nil, no_dns=false, no_git=false, is_embedded_jenkins=false, gear_size='small',scale=false)
     puts "Creating application: #{app_name}"
     
     data = {:cartridge => app_type,
