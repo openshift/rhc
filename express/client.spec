@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.88.1
+Version:       0.88.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -111,6 +111,12 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Mar 08 2012 Dan McPherson <dmcphers@redhat.com> 0.88.2-1
+- Change std size to small (rmillner@redhat.com)
+- add medium gear size (rmillner@redhat.com)
+- Added some new REST API features to app creation (fotios@redhat.com)
+- rename raw to diy in the man pages (abhgupta@redhat.com)
+
 * Fri Mar 02 2012 Dan McPherson <dmcphers@redhat.com> 0.88.1-1
 - bumping spec version (dmcphers@redhat.com)
 
