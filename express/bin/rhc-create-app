@@ -24,10 +24,10 @@
 require 'rhc-common'
 
 # FIXME: get better descriptions from runtime or docs team
-$gear_size_order = ['small', 'large']
-$valid_gear_sizes = { 'std' => 'standard gear size (not exposed in UI)',
-                     'small' => 'allocates the standard resources for your application (default)',
-                     'large' => 'allocates a larger chunk of resources for your application'
+$gear_size_order = ['small', 'medium', 'large']
+$valid_gear_sizes = {'small'  => 'allocates the standard resources for your application (default)',
+                     'medium' => 'allocates a medium chunk of resources for your application',
+                     'large'  => 'allocates a larger chunk of resources for your application'
                    }
 
 def p_valid_gear_sizes(invalid_gear_size)
@@ -52,7 +52,7 @@ Create an OpenShift Express app.
 
   -a|--app   application     Application name  (alphanumeric - max #{RHC::APP_NAME_MAX_LENGTH} chars) (required)
   -t|--type  type            Type of app to create (#{type_keys}) (required)
-  -g|--gear-size size        The size of the gear for this app ([small|large], defaults to small)
+  -g|--gear-size size        The size of the gear for this app ([small|medium|large], defaults to small)
   -l|--rhlogin  rhlogin      Red Hat login (RHN or OpenShift login with OpenShift Express access) (#{rhlogin})
   -p|--password  password    RHLogin password  (optional, will prompt)
   -r|--repo  path            Git Repo path (defaults to ./$app_name)
