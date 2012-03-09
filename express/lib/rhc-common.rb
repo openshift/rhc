@@ -38,7 +38,7 @@ module RHC
   APP_NAME_MAX_LENGTH = 32
   MAX_RETRIES = 7
   DEFAULT_DELAY = 2
-  API = "1.1.2"
+  API = "1.1.3"
   PATTERN_VERSION=/\A\d+\.\d+\.\d+\z/
   @mytimeout = 10
   @mydebug = false
