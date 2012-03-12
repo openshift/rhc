@@ -250,7 +250,15 @@ currently being created: '#{$opt['app']}'
     RHC::ctl_app($libra_server, @http, $opt['app'], $opt['rhlogin'], $password, 'configure', true, 'jenkins-client-1.4', nil, false)
   end
   
-  unless $opt['no-dns']
+  if $opt['no-dns']
+    # In case of the no-dns option, the availability check is not made
+    # This also results in the git information and app creation result not being displayed
+    # Hence, for this case, we print out the git url and result here
+    puts "git url: #{main_app[:git_url]}"
+    if main_app[:result] && !main_app[:result].empty?
+      puts "#{main_app[:result]}"
+    end
+  else
     available = RHC::check_app_available(@http, main_app[:app_name], main_app[:fqdn], main_app[:health_check_path], main_app[:result], main_app[:git_url], $opt['repo'], $opt['nogit'])
     if !available
       puts "Unable to access your new application."
