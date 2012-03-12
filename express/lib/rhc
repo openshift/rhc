@@ -68,7 +68,7 @@ _rhc()
                     create)
                         opts="--debug --help --rhlogin --password --no-dns --nogit --app --repo --type --enable-jenkins --config --timeout"
                         ;;
-                    show | start | stop | force-stop | restart | reload | status | destroy | tidy | add-alias | remove-alias | threaddump | destroy | expose-port | conceal-port | show-port )
+                    show | start | stop | force-stop | restart | reload | status | destroy | tidy | add-alias | remove-alias | threaddump | destroy )
                         opts="--debug --help --rhlogin --password --app --alias --bypass --config --timeout"
                         ;;
                     tail)
