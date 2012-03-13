@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.88.3
+Version:       0.88.4
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       MIT
@@ -111,6 +111,14 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Mar 12 2012 Dan McPherson <dmcphers@redhat.com> 0.88.4-1
+- Modified flag for scaling (fotios@redhat.com)
+- fixing bug 800586 - printing git url in case of -no-git and no-dns option
+  (abhgupta@redhat.com)
+- The return values from expose and show-port are not being parsed by the API
+  and setup behind the scenes as part of scaling.  These commands were exposed
+  for testing and aren't needed any more. (rmillner@redhat.com)
+
 * Fri Mar 09 2012 Dan McPherson <dmcphers@redhat.com> 0.88.3-1
 - bump api version (dmcphers@redhat.com)
 
