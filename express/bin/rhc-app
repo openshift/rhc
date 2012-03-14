@@ -73,6 +73,7 @@ List of arguments
   -a|--app          application  Application name  (alphanumeric - max #{RHC::APP_NAME_MAX_LENGTH} chars) (required)
   -t|--type         type         Type of app to create (#{type_keys}) (required for creating an application)
   -c|--cartridge    cartridge    The embedded cartrige to manage (required for the cartridge command)
+  -g|--gear-size    size         The size of the gear for this app ([small|medium|large], defaults to small)
   -r|--repo         path         Git Repo path (defaults to ./$app_name)
   -n|--nogit                     Only create remote space, don't pull it locally
   --no-dns                       Skip DNS check. Must be used in combination with --nogit
@@ -193,6 +194,12 @@ currently being created: '#{$opt['app']}'
       end
     end
   end
+
+  $opt['gear-size']='small' unless $opt['gear-size']
+  if !['small','medium','large'].include? $opt['gear-size']
+    puts "Invalid gear size:  %s" % $opt['gear-size']
+    p_usage
+  end
   
   $opt['repo'] = $opt['app'] unless $opt['repo']
   
@@ -244,7 +251,7 @@ currently being created: '#{$opt['app']}'
   #
   # Create remote application space
   #
-  main_app = RHC::create_app($libra_server, @http, user_info, $opt['app'], $opt['type'], $opt['rhlogin'], $password, $opt['repo'], $opt['no-dns'], $opt['nogit'], false)
+  main_app = RHC::create_app($libra_server, @http, user_info, $opt['app'], $opt['type'], $opt['rhlogin'], $password, $opt['repo'], $opt['no-dns'], $opt['nogit'], false, $opt['gear-size'])
   if jenkins_app_name
     puts "Now embedding the jenkins client into '#{$opt['app']}'..."
     RHC::ctl_app($libra_server, @http, $opt['app'], $opt['rhlogin'], $password, 'configure', true, 'jenkins-client-1.4', nil, false)
@@ -494,6 +501,7 @@ begin
         ["--debug", "-d", GetoptLong::NO_ARGUMENT],
         ["--help",  "-h", GetoptLong::NO_ARGUMENT],
         ["--rhlogin", "-l", GetoptLong::REQUIRED_ARGUMENT],
+        ["--gear-size", "-g", GetoptLong::REQUIRED_ARGUMENT],
         ["--password", "-p", GetoptLong::REQUIRED_ARGUMENT],
         ["--no-dns", GetoptLong::NO_ARGUMENT],
         ["--nogit", "-n", GetoptLong::NO_ARGUMENT],
