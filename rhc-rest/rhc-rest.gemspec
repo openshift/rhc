@@ -6,7 +6,6 @@ Gem::Specification.new do |s|
   s.name        = "rhc-rest"
   s.version     = Rhc::Rest::VERSION
   s.authors     = ["Red Hat"]
-  s.license     = "ASL 2.0"
   s.email       = ["openshift@redhat.com"]
   s.homepage    = "http://www.openshift.com"
   s.summary     = %q{Ruby REST client for OpenShift REST API}
