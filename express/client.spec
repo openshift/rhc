@@ -5,7 +5,7 @@ Name:          rhc
 Version:       0.88.4
 Release:       1%{?dist}
 Group:         Network/Daemons
-License:       MIT
+License:       ASL 2.0
 URL:           http://openshift.redhat.com
 Source0:       rhc-%{version}.tar.gz
 
@@ -79,7 +79,8 @@ gem install --install-dir $RPM_BUILD_ROOT/%{gemdir} --bindir $RPM_BUILD_ROOT/%{_
 mkdir -p "$RPM_BUILD_ROOT/etc/bash_completion.d/"
 cp lib/rhc $RPM_BUILD_ROOT/etc/bash_completion.d/rhc
 
-
+cp LICENSE %{gemdir}
+cp COPYRIGHT %{gemdir}
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -87,6 +88,8 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root,-)
 %doc doc/USAGE.txt
+%doc LICENSE
+%doc COPYRIGHT
 %{_bindir}/rhc
 %{_bindir}/rhc-app
 %{_bindir}/rhc-domain
