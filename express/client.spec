@@ -79,8 +79,8 @@ gem install --install-dir $RPM_BUILD_ROOT/%{gemdir} --bindir $RPM_BUILD_ROOT/%{_
 mkdir -p "$RPM_BUILD_ROOT/etc/bash_completion.d/"
 cp lib/rhc $RPM_BUILD_ROOT/etc/bash_completion.d/rhc
 
-cp LICENSE %{gemdir}/gems/rhc-%{version}/LICENSE
-cp COPYRIGHT %{gemdir}/gems/rhc-%{version}/COPYRIGHT
+cp LICENSE $RPM_BUILD_ROOT/%{gemdir}/gems/rhc-%{version}/LICENSE
+cp COPYRIGHT $RPM_BUILD_ROOT/%{gemdir}/gems/rhc-%{version}/COPYRIGHT
 
 %clean
 rm -rf $RPM_BUILD_ROOT
