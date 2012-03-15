@@ -43,8 +43,8 @@ mkdir -p .%{gemdir}
 gem install --install-dir $RPM_BUILD_ROOT/%{gemdir} --bindir $RPM_BUILD_ROOT/%{_bindir} --local -V --force --rdoc \
      pkg/rhc-rest-%{version}.gem
 
-cp LICENSE %{gemdir}/gems/rhc-rest-%{version}/
-cp COPYRIGHT %{gemdir}/gems/rhc-rest-%{version}/
+cp LICENSE $RPM_BUILD_ROOT/%{gemdir}/gems/rhc-rest-%{version}/LICENSE
+cp COPYRIGHT $RPM_BUILD_ROOT/%{gemdir}/gems/rhc-rest-%{version}/COPYRIGHT
 
 %clean
 rm -rf $RPM_BUILD_ROOT
