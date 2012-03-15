@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.88.7
+Version:       0.88.8
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -114,6 +114,10 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Mar 14 2012 Dan McPherson <dmcphers@redhat.com> 0.88.8-1
+- Merge pull request #7 from jwhonce/master (jwhonce@gmail.com)
+- targeting LICENSE and COPYRIGHT (jhonce@redhat.com)
+
 * Wed Mar 14 2012 Dan McPherson <dmcphers@redhat.com> 0.88.7-1
 - Merge pull request #6 from jwhonce/master (jwhonce@gmail.com)
 - named target files (jhonce@redhat.com)
