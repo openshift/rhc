@@ -19,12 +19,13 @@ spec = Gem::Specification.new do |s|
     s.name = %q{rhc}
     s.version = /(Version: )(.*)/.match(File.read("client.spec"))[2]
     s.author = "Red Hat"
+    s.license = "ASL 2.0"
     s.email = %q{openshift@redhat.com}
     s.summary = %q{OpenShift Express Client Tools}
     s.homepage = %q{https://openshift.redhat.com/app/express}
     s.description = %q{The client tools for the OpenShift Express platform that allow for application management.}
     s.files = FileList['lib/**/*.rb', 'lib/rhc', 'bin/*', 'conf/*'].to_a
-    s.files += %w(LICENSE README Rakefile)
+    s.files += %w(LICENSE COPYRIGHT README Rakefile)
     s.executables = ['rhc', 'rhc-domain', 'rhc-app', 'rhc-sshkey', 'rhc-chk', 'rhc-create-app', 'rhc-create-domain', 'rhc-ctl-domain', 'rhc-ctl-app', 'rhc-snapshot', 'rhc-domain-info', 'rhc-user-info', 'rhc-tail-files', 'rhc-port-forward']
     begin
     # Use Ruby version to target F13, RHEL5, Windows and OSX (assume no Xcode)
