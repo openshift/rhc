@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.88.5
+Version:       0.88.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -114,6 +114,10 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Mar 14 2012 Dan McPherson <dmcphers@redhat.com> 0.88.6-1
+- Merge pull request #5 from jwhonce/master (jwhonce@gmail.com)
+- License and Copyright files targeted for wrong directory (jhonce@redhat.com)
+
 * Wed Mar 14 2012 Dan McPherson <dmcphers@redhat.com> 0.88.5-1
 - Updated Copyright and License files (jhonce@redhat.com)
 - Add gear-size option. (rmillner@redhat.com)
