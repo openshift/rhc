@@ -19,7 +19,6 @@ spec = Gem::Specification.new do |s|
     s.name = %q{rhc}
     s.version = /(Version: )(.*)/.match(File.read("client.spec"))[2]
     s.author = "Red Hat"
-    s.license = "ASL 2.0"
     s.email = %q{openshift@redhat.com}
     s.summary = %q{OpenShift Express Client Tools}
     s.homepage = %q{https://openshift.redhat.com/app/express}
