@@ -5,7 +5,7 @@ Name:          rhc-rest
 Version:       0.0.2
 Release:       1%{?dist}
 Group:         Network/Daemons
-License:       MIT
+License:       ASL 2.0
 URL:           http://openshift.redhat.com
 Source0:       rhc-rest-%{version}.tar.gz
 
@@ -43,12 +43,17 @@ mkdir -p .%{gemdir}
 gem install --install-dir $RPM_BUILD_ROOT/%{gemdir} --bindir $RPM_BUILD_ROOT/%{_bindir} --local -V --force --rdoc \
      pkg/rhc-rest-%{version}.gem
 
+cp LICENSE %{gemdir}
+cp COPYRIGHT %{gemdir}
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
 %doc doc/USAGE.txt
+%doc LICENSE
+%doc COPYRIGHT
 %{gemdir}/gems/rhc-rest-%{version}/
 %{gemdir}/cache/rhc-rest-%{version}.gem
 %{gemdir}/doc/rhc-rest-%{version}
