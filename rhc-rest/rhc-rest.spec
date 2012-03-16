@@ -13,10 +13,8 @@ BuildRoot:     %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 BuildRequires: rubygem-rake
 BuildRequires: rubygem-rspec
 Requires:      ruby >= 1.8.5
-Requires:      rest-client
+Requires:      rubygem-rest-client
 Requires:      rubygem-json
-
-Requires:      git
 
 BuildArch:     noarch
 
@@ -37,7 +35,7 @@ pwd
 rm -rf $RPM_BUILD_ROOT
 
 # Package the gem
-rake --trace package
+gem build %{gemname}.gemspec
 
 mkdir -p .%{gemdir}
 gem install --install-dir $RPM_BUILD_ROOT/%{gemdir} --bindir $RPM_BUILD_ROOT/%{_bindir} --local -V --force --rdoc \
@@ -51,7 +49,6 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-%doc doc/USAGE.txt
 %doc LICENSE
 %doc COPYRIGHT
 %{gemdir}/gems/rhc-rest-%{version}/
