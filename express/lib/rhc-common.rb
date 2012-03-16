@@ -402,9 +402,9 @@ module RHC
       # Need to have a fake HTTPResponse object for passing to print_reponse_err
       Struct.new('FakeResponse',:body,:code,:content_type)
 
-      # Can only support php right now
       #  TODO: This logic should be checked by broker
-      print_response_err(Struct::FakeResponse.new("Can only create a scaling app of type php-5.3",403)) unless app_type == "php-5.3"
+      unscalable = ['haproxy-1.4','jenkins-1.4','diy-0.1']
+      print_response_err(Struct::FakeResponse.new("Can not create a scaling app of type #{app_type}",403)) if unscalable.include?(app_type)
 
       end_point = "https://#{libra_server}/broker/rest"
       client = Rhc::Rest::Client.new(end_point, rhlogin, password)
