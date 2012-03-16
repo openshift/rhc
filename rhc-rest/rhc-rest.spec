@@ -2,7 +2,7 @@
 
 Summary:       Ruby bindings/client for OpenShift REST API
 Name:          rhc-rest
-Version:       0.0.2
+Version:       0.0.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -57,6 +57,9 @@ rm -rf $RPM_BUILD_ROOT
 %{gemdir}/specifications/rhc-rest-%{version}.gemspec
 
 %changelog
+* Fri Mar 16 2012 Lili Nader <lnader@redhat.com> 0.0.3-1
+- new package built with tito
+
 * Tue Feb 14 2012 Lili Nader <lnader@redhat.com> 0.0.2-1
 - new package built with tito
 
