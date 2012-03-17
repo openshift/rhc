@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.89.1
+Version:       0.89.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -114,6 +114,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Sat Mar 17 2012 Dan McPherson <dmcphers@redhat.com> 0.89.2-1
+- 
+
 * Sat Mar 17 2012 Dan McPherson <dmcphers@redhat.com> 0.89.1-1
 - bump spec number (dmcphers@redhat.com)
 - Changed allowed scalable types (fotios@redhat.com)
