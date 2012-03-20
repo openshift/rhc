@@ -2,7 +2,7 @@
 
 Summary:       Ruby bindings/client for OpenShift REST API
 Name:          rhc-rest
-Version:       0.0.4
+Version:       0.0.5
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -57,6 +57,9 @@ rm -rf $RPM_BUILD_ROOT
 %{gemdir}/specifications/rhc-rest-%{version}.gemspec
 
 %changelog
+* Tue Mar 20 2012 Lili Nader <lnader@redhat.com> 0.0.5-1
+- corrected version in gemspec (lnader@redhat.com)
+
 * Tue Mar 20 2012 Lili Nader <lnader@redhat.com> 0.0.4-1
 - corrected build error (lnader@redhat.com)
 
