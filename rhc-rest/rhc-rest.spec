@@ -35,7 +35,7 @@ pwd
 rm -rf $RPM_BUILD_ROOT
 
 # Package the gem
-gem build %{gemname}.gemspec
+gem build %{name}.gemspec
 
 mkdir -p .%{gemdir}
 gem install --install-dir $RPM_BUILD_ROOT/%{gemdir} --bindir $RPM_BUILD_ROOT/%{_bindir} --local -V --force --rdoc \
