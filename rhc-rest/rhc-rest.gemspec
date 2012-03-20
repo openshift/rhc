@@ -4,7 +4,7 @@ require "rhc-rest/version"
 
 Gem::Specification.new do |s|
   s.name        = "rhc-rest"
-  s.version     = Rhc::Rest::VERSION
+  s.version     = /(Version: )(.*)/.match(File.read("rhc-rest.spec"))[2].strip
   s.authors     = ["Red Hat"]
   s.email       = ["openshift@redhat.com"]
   s.homepage    = "http://www.openshift.com"
