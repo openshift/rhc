@@ -3,9 +3,9 @@
 .\" 
 .TH "RHC_PORT_FORWARD" "1" "DECEMBER 2011" "Linux" "User Manuals"
 .SH "NAME"
-rhc\-port\-forward \- Securely forward ports from your application's remote running services to your local host
+rhc port\-forward \- Securely forward ports from your application's remote running services to your local host
 .SH "SYNOPSIS"
-.B rhc\-port\-forward [\-p
+.B rhc port\-forward [\-p
 .I password
 .B ] [\-d] [\-h]
 .B [\-l
@@ -19,7 +19,7 @@ rhc\-port\-forward \- Securely forward ports from your application's remote runn
 .B ] \-a
 .I application_name
 .SH "DESCRIPTION"
-.B rhc\-port\-forward
+.B rhc port\-forward
 
 .I SSH Port Forwarding, 
 sometimes called 
@@ -28,7 +28,7 @@ allows you to establish a secure connection between
 a local computer and a remote machine through which services can be relayed.
 
 The 
-.I rhc\-port\-forward 
+.I rhc port\-forward 
 tool uses port forwarding to make the ports from the services on OpenShift server 
 where your application is running available on your local machine so it can be used 
 just as if it was your machine's port. This port is then available to other programs
@@ -36,7 +36,7 @@ on your local host, outside the SSH session.
 
 For example, let's say your application makes use of the 
 MySQL cartridge, which usually runs on port 3306. With 
-.I rhc\-port\-forward 
+.I rhc port\-forward 
 you could connect to your application's database from a tool 
 running locally on your machine, and then perform SQL 
 operations on your database like it was running locally (connecting
@@ -64,7 +64,7 @@ Timeout value, in seconds, for the connection (default is 10)
 .SH "EXAMPLE"
 Forwards ports of all services runing on the remote server to your local host:
 
-rhc\-port\-forward \-l login \-a application_name
+rhc port\-forward \-l login \-a application_name
 .SH "FILES"
 .I <ruby_gem_dir>/gems/rhc\-<version>/conf/express.conf
 .RS
