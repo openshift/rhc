@@ -1,4 +1,8 @@
+%global ruby_sitelib %(ruby -rrbconfig -e "puts Config::CONFIG['sitelibdir']")
 %define gemdir %(ruby -rubygems -e 'puts Gem::dir' 2>/dev/null)
+%global gemname rhc-rest
+%global geminstdir %{gemdir}/gems/%{gemname}-%{version}
+
 
 Summary:       Ruby bindings/client for OpenShift REST API
 Name:          rhc-rest
@@ -32,14 +36,13 @@ done
 
 %install
 pwd
-rm -rf $RPM_BUILD_ROOT
+rm -rf %{buildroot}
+mkdir -p %{buildroot}%{gemdir}
+mkdir -p %{buildroot}%{ruby_sitelib}
 
-# Package the gem
-gem build %{name}.gemspec
-
-mkdir -p .%{gemdir}
-gem install --install-dir $RPM_BUILD_ROOT/%{gemdir} --bindir $RPM_BUILD_ROOT/%{_bindir} --local -V --force --rdoc \
-     pkg/rhc-rest-%{version}.gem
+# Build and install into the rubygem structure
+gem build %{gemname}.gemspec
+gem install --local --install-dir %{buildroot}%{gemdir} --force %{gemname}-%{version}.gem
 
 cp LICENSE $RPM_BUILD_ROOT/%{gemdir}/gems/rhc-rest-%{version}/LICENSE
 cp COPYRIGHT $RPM_BUILD_ROOT/%{gemdir}/gems/rhc-rest-%{version}/COPYRIGHT
