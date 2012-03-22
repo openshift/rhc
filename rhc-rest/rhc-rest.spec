@@ -6,7 +6,7 @@
 
 Summary:       Ruby bindings/client for OpenShift REST API
 Name:          rhc-rest
-Version:       0.0.5
+Version:       0.0.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -35,29 +35,25 @@ do
 done
 
 %install
-pwd
 rm -rf %{buildroot}
 mkdir -p %{buildroot}%{gemdir}
 mkdir -p %{buildroot}%{ruby_sitelib}
 
 # Build and install into the rubygem structure
 gem build %{gemname}.gemspec
-gem install --local --install-dir %{buildroot}%{gemdir} --force %{gemname}-%{version}.gem
-
-cp LICENSE $RPM_BUILD_ROOT/%{gemdir}/gems/rhc-rest-%{version}/LICENSE
-cp COPYRIGHT $RPM_BUILD_ROOT/%{gemdir}/gems/rhc-rest-%{version}/COPYRIGHT
+gem install --local --install-dir %{buildroot}/%{gemdir} --force %{gemname}-%{version}.gem
 
 %clean
-rm -rf $RPM_BUILD_ROOT
+rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-%doc LICENSE
-%doc COPYRIGHT
 %{gemdir}/gems/rhc-rest-%{version}/
 %{gemdir}/cache/rhc-rest-%{version}.gem
 %{gemdir}/doc/rhc-rest-%{version}
 %{gemdir}/specifications/rhc-rest-%{version}.gemspec
+%doc LICENSE
+%doc COPYRIGHT
 
 %changelog
 * Tue Mar 20 2012 Lili Nader <lnader@redhat.com> 0.0.5-1

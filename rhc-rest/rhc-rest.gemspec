@@ -1,6 +1,9 @@
 # -*- encoding: utf-8 -*-
 $:.push File.expand_path("../lib", __FILE__)
 require "rhc-rest/version"
+bin_dir  = File.join("bin", "*")
+lib_dir  = File.join(File.join("lib", "**"), "*")
+doc_dir  = File.join(File.join("doc", "**"), "*")
 
 Gem::Specification.new do |s|
   s.name        = "rhc-rest"
@@ -13,12 +16,11 @@ Gem::Specification.new do |s|
 
   s.rubyforge_project = "rhc-rest"
 
-  s.files         = `git ls-files`.split("\n")
-  s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
-  s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
+  s.files         = Dir[lib_dir] + Dir[bin_dir] + Dir[doc_dir]
+  s.files         += %w(Rakefile rhc-rest.gemspec Gemfile rhc-rest.spec COPYRIGHT LICENSE)
   s.require_paths = ["lib"]
 
   # specify any dependencies here; for example:
-  s.add_runtime_dependency "json"
-  s.add_runtime_dependency "rest-client"
+  s.add_dependency("json")
+  s.add_dependency("rest-client")
 end
