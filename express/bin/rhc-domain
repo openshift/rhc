@@ -126,7 +126,7 @@ EOF
           else
               app_info = user_info['app_info']
               dns_success = true
-              if !app_info.empty? && $opt['namespace'] != user_info['user_info']['namespace']
+              if !app_info.empty? && $opt['namespace'] != user_info['user_info']['domains'][0]['namespace']
                 #
                 # Confirm that the host(s) exist in DNS
                 #
@@ -210,7 +210,7 @@ def show_domain_info()
   puts ""
   puts "User Info"
   puts "========="
-  puts "Namespace: #{user_info['user_info']['namespace']}"
+  puts "Namespace: #{user_info['user_info']['domains'][0]['namespace']}"
   #puts "    UUID: #{user_info['user_info']['uuid']}"
   puts "  RHLogin: #{user_info['user_info']['rhlogin']}"
 
@@ -224,8 +224,8 @@ def show_domain_info()
         puts "    Framework: #{val['framework']}"
         puts "     Creation: #{val['creation_time']}"
         puts "         UUID: #{val['uuid']}"
-        puts "      Git URL: ssh://#{val['uuid']}@#{key}-#{user_info['user_info']['namespace']}.#{user_info['user_info']['rhc_domain']}/~/git/#{key}.git/"
-        puts "   Public URL: http://#{key}-#{user_info['user_info']['namespace']}.#{user_info['user_info']['rhc_domain']}/"
+        puts "      Git URL: ssh://#{val['uuid']}@#{key}-#{user_info['user_info']['domains'][0]['namespace']}.#{user_info['user_info']['rhc_domain']}/~/git/#{key}.git/"
+        puts "   Public URL: http://#{key}-#{user_info['user_info']['domains'][0]['namespace']}.#{user_info['user_info']['rhc_domain']}/"
         if val['aliases'] && !val['aliases'].empty?
           puts "      Aliases: #{val['aliases'].join(', ')}"
         end

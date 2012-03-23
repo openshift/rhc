@@ -84,7 +84,7 @@ unless user_info['app_info'][app_name]
 end
 
 app_uuid = user_info['app_info'][app_name]['uuid']
-namespace = user_info['user_info']['namespace']
+namespace = user_info['user_info']['domains'][0]['namespace']
 rhc_domain = user_info['user_info']['rhc_domain']
 
 puts "Checking available ports..."

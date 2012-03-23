@@ -109,7 +109,7 @@ def create_app
   app_info = user_info['app_info']
   
   if app_info[$opt['app']]
-    puts "An application named '#{$opt['app']}' in namespace '#{user_info['user_info']['namespace']}' already exists"
+    puts "An application named '#{$opt['app']}' in namespace '#{user_info['user_info']['domains'][0]['namespace']}' already exists"
     exit 255
   end
   
@@ -268,8 +268,8 @@ def show_app
         puts "    Framework: #{val['framework']}"
         puts "     Creation: #{val['creation_time']}"
         puts "         UUID: #{val['uuid']}"
-        puts "      Git URL: ssh://#{val['uuid']}@#{key}-#{user_info['user_info']['namespace']}.#{user_info['user_info']['rhc_domain']}/~/git/#{key}.git/"
-        puts "   Public URL: http://#{key}-#{user_info['user_info']['namespace']}.#{user_info['user_info']['rhc_domain']}/"
+        puts "      Git URL: ssh://#{val['uuid']}@#{key}-#{user_info['user_info']['domains'][0]['namespace']}.#{user_info['user_info']['rhc_domain']}/~/git/#{key}.git/"
+        puts "   Public URL: http://#{key}-#{user_info['user_info']['domains'][0]['namespace']}.#{user_info['user_info']['rhc_domain']}/"
         if val['aliases'] && !val['aliases'].empty?
           puts "      Aliases: #{val['aliases'].join(', ')}"
         end
@@ -379,7 +379,7 @@ def save_or_restore_snapshot(command)
   end
   
   app_uuid = user_info['app_info'][app]['uuid']
-  namespace = user_info['user_info']['namespace']
+  namespace = user_info['user_info']['domains'][0]['namespace']
   rhc_domain = user_info['user_info']['rhc_domain']
   if command == 'save'
     ssh_cmd = "ssh #{app_uuid}@#{app}-#{namespace}.#{rhc_domain} 'snapshot' > #{$opt['filepath']}"
@@ -442,7 +442,7 @@ def show_logs
   $opt['filepath'] = "#{$opt['app']}/logs/*" unless $opt['filepath']
   file_glob = "#{$opt['filepath']}"
   app_uuid = user_info['app_info'][app]['uuid']
-  namespace = user_info['user_info']['namespace']
+  namespace = user_info['user_info']['domains'][0]['namespace']
   rhc_domain = user_info['user_info']['rhc_domain']
   
   # -t to force PTY and avoid daemons

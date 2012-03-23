@@ -235,7 +235,7 @@ EOF
         else
             app_info = user_info['app_info']
             dns_success = true
-            if !app_info.empty? && opt['namespace'] != user_info['user_info']['namespace']
+            if !app_info.empty? && opt['namespace'] != user_info['user_info']['domains'][0]['namespace']
               #
               # Confirm that the host(s) exist in DNS
               #

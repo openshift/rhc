@@ -328,7 +328,7 @@ class Test3_SSH < Test::Unit::TestCase
     host_template = "%s@%s-%s.%s"
     $user_info['app_info'].each do |k,v|
       uuid = v['uuid']
-      host = sprintf("%s-%s",k,$user_info['user_info']['namespace'])
+      host = sprintf("%s-%s",k,$user_info['user_info']['domains'][0]['namespace'])
       domain = $user_info['user_info']['rhc_domain']
       ssh_command = sprintf("ssh %s@%s.%s true &> /dev/null", uuid, host, domain)
       system(ssh_command)

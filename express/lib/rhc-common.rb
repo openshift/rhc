@@ -381,8 +381,8 @@ module RHC
   end
   
   def self.create_app(libra_server, net_http, user_info, app_name, app_type, rhlogin, password, repo_dir=nil, no_dns=false, no_git=false, is_embedded_jenkins=false, gear_size='small',scale=false)
-    puts "Creating application: #{app_name}"
-    
+    namespace = user_info['user_info']['domains'][0]['namespace']
+    puts "Creating application: #{app_name} in #{namespace}"
     data = {:cartridge => app_type,
             :action => 'configure',
             :node_profile => gear_size,
@@ -409,7 +409,8 @@ module RHC
       end_point = "https://#{libra_server}/broker/rest"
       client = Rhc::Rest::Client.new(end_point, rhlogin, password)
 
-      domain = client.find_domain(user_info['user_info']['namespace']).first
+      domain = client.find_domain(user_info['user_info']['domains'][0]['namespace']).first
+      namespace = domain.namespace
       # Catch errors
       begin
         application = domain.add_application(app_name,app_type,scale)
@@ -463,7 +464,6 @@ module RHC
       end
     end
 
-    namespace = user_info['user_info']['namespace']
     rhc_domain = user_info['user_info']['rhc_domain']
 
     fqdn = "#{app_name}-#{namespace}.#{rhc_domain}"
