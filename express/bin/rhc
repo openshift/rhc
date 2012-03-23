@@ -12,6 +12,7 @@ List of resources
   domain             Manage the namespace for the registered rhcloud user.
   app                Manage applications within the rhcloud account.
   sshkey             Manage multiple keys for the registered rhcloud user.
+  port-forward       Forward remote ports to the workstation
 
 See 'rhc <resource> --help' for more applicable commands and argumments on a specific resource.
 
@@ -39,6 +40,9 @@ when "app"
   retcode = $?
 when "sshkey"
   system("rhc-sshkey #{get_args} 2>&1")
+  retcode = $?
+when "port-forward"
+  system("rhc-port-forward #{get_args} 2>&1")
   retcode = $?
 when "-h", "--help", "help", nil
   p_usage
