@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.89.2
+Version:       0.89.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -114,6 +114,13 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Mar 26 2012 Dan McPherson <dmcphers@redhat.com> 0.89.3-1
+- Merge branch 'master' of github.com:openshift/os-client-tools
+  (lnader@redhat.com)
+- US1876 (lnader@redhat.com)
+- add -g option to rhc-app man page (johnp@redhat.com)
+- add rhc-port-forward to the rhc command (rhc port-forward) (johnp@redhat.com)
+
 * Sat Mar 17 2012 Dan McPherson <dmcphers@redhat.com> 0.89.2-1
 - 
 
