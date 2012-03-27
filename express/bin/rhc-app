@@ -228,7 +228,7 @@ currently being created: '#{$opt['app']}'
   #
   # Create remote application space
   #
-  main_app = RHC::create_app($libra_server, @http, user_info, $opt['app'], $opt['type'], $opt['rhlogin'], $password, $opt['repo'], $opt['no-dns'], $opt['nogit'], false, $opt['gear-size'])
+  main_app = RHC::create_app($libra_server, @http, user_info, $opt['app'], $opt['type'], $opt['rhlogin'], $password, $opt['repo'], $opt['no-dns'], $opt['nogit'], false, $opt['gear-size'], $opt['scaling'])
   if jenkins_app_name
     puts "Now embedding the jenkins client into '#{$opt['app']}'..."
     RHC::ctl_app($libra_server, @http, $opt['app'], $opt['rhlogin'], $password, 'configure', true, 'jenkins-client-1.4', nil, false)
@@ -486,6 +486,7 @@ begin
         ["--repo",  "-r", GetoptLong::REQUIRED_ARGUMENT],
         ["--type",  "-t", GetoptLong::REQUIRED_ARGUMENT],
         ["--enable-jenkins", GetoptLong::OPTIONAL_ARGUMENT],
+        ["--scaling", "-s", GetoptLong::OPTIONAL_ARGUMENT],
         ["--config", GetoptLong::REQUIRED_ARGUMENT],
         ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
     )
