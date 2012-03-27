@@ -14,7 +14,7 @@ def p_usage
     puts <<USAGE
 
 Usage: rhc app (<command> | cartridge <cartridge-action> | --help) [<args>]
-Create and manage an OpenShift Express application.
+Create and manage an OpenShift application.
 
 List of commands
   create                         Bind a registered rhcloud user to a domain in rhcloud.
@@ -45,7 +45,7 @@ List of cartridge actions
   reload                         Reloads embedded application configuration
 
 List of arguments
-  -l|--rhlogin      rhlogin      Red Hat login (RHN or OpenShift login with OpenShift Express access) (#{rhlogin})
+  -l|--rhlogin      rhlogin      Red Hat login (RHN or OpenShift login) (#{rhlogin})
   -p|--password     password     RHLogin password (optional, will prompt)
   -a|--app          application  Application name  (alphanumeric - max #{RHC::APP_NAME_MAX_LENGTH} chars) (required)
   -t|--type         type         Type of app to create (#{type_keys}) (required for creating an application)

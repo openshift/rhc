@@ -18,7 +18,7 @@ List of commands
   remove                         Remove SSH key from the user account
 
 List of arguments
-  -l|--rhlogin      rhlogin      Red Hat login (RHN or OpenShift login with OpenShift Express access) (#{rhlogin})
+  -l|--rhlogin      rhlogin      Red Hat login (RHN or OpenShift login) (#{rhlogin})
   -p|--password     password     RHLogin password (optional, will prompt)
   -i|--identifier   key-name     User-specified identifier for the key
   -k|--ssh          key-filepath SSH public key filepath 

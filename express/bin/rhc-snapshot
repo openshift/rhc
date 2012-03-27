@@ -11,7 +11,7 @@ def p_usage
 Usage: #{$0}
 Pull down application snapshot for a user
 
-  -l|--rhlogin   rhlogin    Red Hat login (RHN or OpenShift login with OpenShift Express access) (#{rhlogin})
+  -l|--rhlogin   rhlogin    Red Hat login (RHN or OpenShift login) (#{rhlogin})
   -a|--app                  Target application to snapshot (required)
   -r|--restore              Local path of the tarball to restore (restores git and application data folders found in archive)
   -s|--save                 Local path to save tarball (default: ./$APPNAME.tar.gz)

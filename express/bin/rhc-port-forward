@@ -11,7 +11,7 @@ def p_usage
 Usage: rhc port-forward
 Forward remote ports to the workstation
 
-  -l|--rhlogin   rhlogin    Red Hat login (RHN or OpenShift login with OpenShift Express access) (#{rhlogin})
+  -l|--rhlogin   rhlogin    Red Hat login (RHN or OpenShift login) (#{rhlogin})
   -a|--app                  Target application (required)
   -p|--password  password   RHLogin password (optional, will prompt)
   -d|--debug                Print Debug info

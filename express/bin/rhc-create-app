@@ -26,12 +26,12 @@ def p_usage
     puts <<USAGE
 
 Usage: #{$0}
-Create an OpenShift Express app.
+Create an OpenShift app.
 
   -a|--app   application     Application name  (alphanumeric - max #{RHC::APP_NAME_MAX_LENGTH} chars) (required)
   -t|--type  type            Type of app to create (#{type_keys}) (required)
   -g|--gear-size size        The size of the gear for this app ([small|medium|large], defaults to small)
-  -l|--rhlogin  rhlogin      Red Hat login (RHN or OpenShift login with OpenShift Express access) (#{rhlogin})
+  -l|--rhlogin  rhlogin      Red Hat login (RHN or OpenShift login) (#{rhlogin})
   -p|--password  password    RHLogin password  (optional, will prompt)
   -r|--repo  path            Git Repo path (defaults to ./$app_name)
   -n|--nogit                 Only create remote space, don't pull it locally

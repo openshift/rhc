@@ -11,7 +11,7 @@ Usage: #{$0}
 Control an OpenShift express app
 
   -a|--app   application   Application name  (alphanumeric) (required)
-  -l|--rhlogin rhlogin     Red Hat login (RHN or OpenShift login with OpenShift Express access) (#{rhlogin})
+  -l|--rhlogin rhlogin     Red Hat login (RHN or OpenShift login) (#{rhlogin})
   -p|--password password   RHLogin password  (optional, will prompt)
   -c|--command command     (start|stop|force-stop|restart|reload|status|destroy|tidy|add-alias|remove-alias|threaddump)
   -L|--embedded-list       List supported embedded cartridges
