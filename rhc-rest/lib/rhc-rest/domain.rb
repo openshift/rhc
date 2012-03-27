@@ -14,10 +14,12 @@ module Rhc
         url = @@end_point + @links['ADD_APPLICATION']['href']
         method =  @links['ADD_APPLICATION']['method']
         payload = {:name => name, :cartridge => cartridge}
+        timeout = nil
         if scale
+          timeout = 180 # 3 minute timeout for scalable app
           payload[:scale] = true
         end
-        request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
+        request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload, :timeout => timeout)
         return send(request)
       end
 
