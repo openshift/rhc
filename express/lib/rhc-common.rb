@@ -431,6 +431,8 @@ module RHC
           end
 
         puts "DEBUG: '#{app_name}' creation returned success." if @mydebug
+      rescue Rhc::Rest::ResourceAccessException => e
+        print_response_err(Struct::FakeResponse.new(e.message,e.code))
       rescue Rhc::Rest::ValidationException => e
         print_response_err(Struct::FakeResponse.new(e.message,406))
       end

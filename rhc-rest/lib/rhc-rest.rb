@@ -79,6 +79,8 @@ module Rhc
         end
         #puts "#{response}"
         return parse_response(response) unless response.nil? or response.code == 204
+      rescue RestClient::RequestTimeout
+        raise ResourceAccessException.new('Request Timed Out', 408)
       rescue RestClient::ExceptionWithResponse => e
       #puts "#{e.response}"
         process_error_response(e.response)
