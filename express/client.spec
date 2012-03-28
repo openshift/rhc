@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.89.7
+Version:       0.89.8
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -114,6 +114,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Mar 28 2012 Dan McPherson <dmcphers@redhat.com> 0.89.8-1
+- add scaling to rhc-app (rmillner@redhat.com)
+
 * Tue Mar 27 2012 Dan McPherson <dmcphers@redhat.com> 0.89.7-1
 - Clean up command help (rmillner@redhat.com)
 - Creating scalable apps was causing a timeout.  Needed to setup an exception
