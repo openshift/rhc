@@ -210,7 +210,11 @@ def show_domain_info()
   puts ""
   puts "User Info"
   puts "========="
-  puts "Namespace: #{user_info['user_info']['domains'][0]['namespace']}"
+  begin
+    puts "Namespace: #{user_info['user_info']['domains'][0]['namespace']}"
+  rescue NoMethodError
+    puts "Namespace: <No domains defined for this user>"
+  end
   #puts "    UUID: #{user_info['user_info']['uuid']}"
   puts "  RHLogin: #{user_info['user_info']['rhlogin']}"
 
