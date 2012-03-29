@@ -79,8 +79,8 @@ module Rhc
         end
         #puts "#{response}"
         return parse_response(response) unless response.nil? or response.code == 204
-      rescue RestClient::RequestTimeout
-        raise ResourceAccessException.new('Request Timed Out', 408)
+      rescue RestClient::RequestTimeout, RestClient::ServerBrokeConnection, RestClient::SSLCertificateNotVerified => e
+        raise ResourceAccessException.new("Failed to access resource: #{e.message}")
       rescue RestClient::ExceptionWithResponse => e
       #puts "#{e.response}"
         process_error_response(e.response)
@@ -150,6 +150,8 @@ module Rhc
             raise ServiceUnavailableException.new(message['text'])
           end
         end
+      else
+        raise ResourceAccessException.new("Server returned error code with no output: #{response.code}")
       end
 
     end
