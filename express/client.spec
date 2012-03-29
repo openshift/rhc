@@ -14,6 +14,7 @@ BuildRequires: rubygem-rake
 BuildRequires: rubygem-rspec
 Requires:      ruby >= 1.8.5
 Requires:      rubygem-parseconfig
+Requires:      rhc-rest
 
 %if 0%{?fedora} == 13
 %define jpure 1
