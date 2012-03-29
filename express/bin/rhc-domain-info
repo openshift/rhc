@@ -79,9 +79,18 @@ user_info = RHC::get_user_info(libra_server, opt['rhlogin'], password, @http, tr
 if opt['info']
     ssh_keys = RHC::get_ssh_keys(libra_server, opt['rhlogin'], password, @http)
 
+    domains = user_info['user_info']['domains']
+    num_domains = domains.length
+
     puts "User Info"
     puts "========="
-    puts "Namespace: #{user_info['user_info']['domains'][0]['namespace']}"
+    if num_domains == 0
+      puts "Namespace: No namespaces found. You can use 'rhc domain create -n <namespace>' to create a namespace for your applications."
+    elsif num_domains == 1
+      puts "Namespace: #{domains[0]['namespace']}"
+    else
+      domains.each_index { |i| puts "Namespace(#{i}): #{domains[i]['namespace']}" }
+    end
     #puts "    UUID: #{user_info['user_info']['uuid']}"
     puts "  RHLogin: #{user_info['user_info']['rhlogin']}"
     puts "Primary SSH key: #{user_info['user_info']['ssh_key']}"
