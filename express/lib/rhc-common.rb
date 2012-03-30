@@ -381,7 +381,12 @@ module RHC
   end
   
   def self.create_app(libra_server, net_http, user_info, app_name, app_type, rhlogin, password, repo_dir=nil, no_dns=false, no_git=false, is_embedded_jenkins=false, gear_size='small',scale=false)
-    namespace = user_info['user_info']['domains'][0]['namespace']
+    domains = user_info['user_info']['domains']
+    if domains.empty?
+      puts "Please create a domain with 'rhc domain create -n <namespace>' before creating applications."
+      return false
+    end
+    namespace = domains[0]['namespace']
     puts "Creating application: #{app_name} in #{namespace}"
     data = {:cartridge => app_type,
             :action => 'configure',

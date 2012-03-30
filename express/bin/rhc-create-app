@@ -246,6 +246,12 @@ end
 # Create remote application space
 #
 main_app = RHC::create_app(libra_server, @http, user_info, opt['app'], opt['type'], opt['rhlogin'], password, opt['repo'], opt['no-dns'], opt['nogit'], false, gear_size, opt['scaling'])
+
+if !main_app
+  puts "Create app failed"
+  exit 1
+end
+
 if jenkins_app_name
   puts "Now embedding the jenkins client into '#{opt['app']}'..."
   RHC::ctl_app(libra_server, @http, opt['app'], opt['rhlogin'], password, 'configure', true, 'jenkins-client-1.4', nil, false)
