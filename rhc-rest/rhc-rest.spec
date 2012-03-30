@@ -6,7 +6,7 @@
 
 Summary:       Ruby bindings/client for OpenShift REST API
 Name:          rhc-rest
-Version:       0.0.7
+Version:       0.0.8
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -56,6 +56,14 @@ rm -rf %{buildroot}
 %doc COPYRIGHT
 
 %changelog
+* Fri Mar 30 2012 Lili Nader <lnader@redhat.com> 0.0.8-1
+- Catch all to prevent trying to parse a null response on an http code we did
+  not expect. (rmillner@redhat.com)
+- Increase the timeout to 3 minutes on creating a scalable application.
+  (rmillner@redhat.com)
+- Creating scalable apps was causing a timeout.  Needed to setup an exception
+  to propagate that back to the end-user. (rmillner@redhat.com)
+
 * Wed Mar 21 2012 Lili Nader <lnader@redhat.com> 0.0.7-1
 - Get rhc-rest a building ... (ramr@redhat.com)
 - Fix to get rhc-rest building. (ramr@redhat.com)
