@@ -62,10 +62,7 @@ List of arguments
   --alias           alias        Specify server alias (when using add/remove-alias)
   --config          path         Path of alternate config file
   --timeout         #            Timeout, in seconds, for connection
-  --enable-jenkins  [name]       Indicates to create a Jenkins application (if not already available)
-                                 and embed the Jenkins client into this application.  The default 
-                                 name will be 'jenkins' if not specified. Note that --no-dns is ignored
-                                 for the creation of the Jenkins application.
+  --enable-jenkins  [name]       Indicates to create a Jenkins application (if not already available) and embed the Jenkins client into this application.  The default name will be 'jenkins' if not specified. Note that --no-dns is ignored for the creation of the Jenkins application.
 USAGE
 exit 255
 end
