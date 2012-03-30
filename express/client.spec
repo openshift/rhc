@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.89.9
+Version:       0.89.10
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -115,6 +115,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Mar 30 2012 Dan McPherson <dmcphers@redhat.com> 0.89.10-1
+- 
+
 * Thu Mar 29 2012 Dan McPherson <dmcphers@redhat.com> 0.89.9-1
 - add Requires dep on rhc-rest (johnp@redhat.com)
 - make --info work when there are no domains or multiple domains
