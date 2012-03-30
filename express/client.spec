@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.89.8
+Version:       0.89.9
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -115,6 +115,13 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Mar 29 2012 Dan McPherson <dmcphers@redhat.com> 0.89.9-1
+- add Requires dep on rhc-rest (johnp@redhat.com)
+- make --info work when there are no domains or multiple domains
+  (johnp@redhat.com)
+- handle empty domains and multiple domains (johnp@redhat.com)
+- Solve undefined method [] error. (rmillner@redhat.com)
+
 * Wed Mar 28 2012 Dan McPherson <dmcphers@redhat.com> 0.89.8-1
 - add scaling to rhc-app (rmillner@redhat.com)
 
