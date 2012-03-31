@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.89.10
+Version:       0.89.11
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -115,6 +115,10 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Sat Mar 31 2012 Dan McPherson <dmcphers@redhat.com> 0.89.11-1
+- remove newlines from help text (johnp@redhat.com)
+- error out on app create if domain isn't created yet (johnp@redhat.com)
+
 * Fri Mar 30 2012 Dan McPherson <dmcphers@redhat.com> 0.89.10-1
 - 
 
