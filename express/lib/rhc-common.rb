@@ -381,10 +381,14 @@ module RHC
   end
   
   def self.create_app(libra_server, net_http, user_info, app_name, app_type, rhlogin, password, repo_dir=nil, no_dns=false, no_git=false, is_embedded_jenkins=false, gear_size='small',scale=false)
+
+    # Need to have a fake HTTPResponse object for passing to print_reponse_err
+    Struct.new('FakeResponse',:body,:code,:content_type)
+
     domains = user_info['user_info']['domains']
     if domains.empty?
-      puts "Please create a domain with 'rhc domain create -n <namespace>' before creating applications."
-      return false
+      emessage = "Please create a domain with 'rhc domain create -n <namespace>' before creating applications."
+      print_response_err(Struct::FakeResponse.new(emessage,403))
     end
     namespace = domains[0]['namespace']
     puts "Creating application: #{app_name} in #{namespace}"
@@ -404,8 +408,6 @@ module RHC
     if scale
       $LOAD_PATH << File.expand_path(File.join(File.dirname(__FILE__),'..','..','rhc-rest','lib'))
       require 'rhc-rest'
-      # Need to have a fake HTTPResponse object for passing to print_reponse_err
-      Struct.new('FakeResponse',:body,:code,:content_type)
 
       #  TODO: This logic should be checked by broker
       unscalable = ['haproxy-1.4','jenkins-1.4','diy-0.1']
