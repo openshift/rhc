@@ -10,7 +10,7 @@ module Rhc
 
       #Add Application to this domain
       def add_application(name, cartridge, scale=false)
-        logger.debug "Adding application #{name} to domain #{self.id}"
+        logger.debug "Adding application #{name} to domain #{self.id}" if @mydebug
         url = @@end_point + @links['ADD_APPLICATION']['href']
         method =  @links['ADD_APPLICATION']['method']
         payload = {:name => name, :cartridge => cartridge}
@@ -25,7 +25,7 @@ module Rhc
 
       #Get all Application for this domain
       def applications
-        logger.debug "Getting all applications for domain #{self.id}"
+        logger.debug "Getting all applications for domain #{self.id}" if @mydebug
         url = @@end_point + @links['LIST_APPLICATIONS']['href']
         method =  @links['LIST_APPLICATIONS']['method']
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
@@ -34,7 +34,7 @@ module Rhc
 
       #Update Domain
       def update(new_id)
-        logger.debug "Updating domain #{self.id} to #{new_id}"
+        logger.debug "Updating domain #{self.id} to #{new_id}" if @mydebug
         url = @@end_point + @links['UPDATE']['href']
         method =  @links['UPDATE']['method']
         payload = {:domain_id => new_id}
@@ -45,7 +45,7 @@ module Rhc
 
       #Delete Domain
       def destroy(force=false)
-        logger.debug "Deleting domain #{self.id}"
+        logger.debug "Deleting domain #{self.id}" if @mydebug
         url = @@end_point + @links['DELETE']['href']
         method =  @links['DELETE']['method']
         payload = {:force => force}

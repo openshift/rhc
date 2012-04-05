@@ -16,7 +16,7 @@ module Rhc
 
       #Add Cartridge
       def add_cartridge(name)
-        logger.debug "Adding cartridge #{name}"
+        logger.debug "Adding cartridge #{name}" if @mydebug
         url = @@end_point + @links['ADD_CARTRIDGE']['href']
         method =  @links['ADD_CARTRIDGE']['method']
         payload = {:name => name}
@@ -26,7 +26,7 @@ module Rhc
 
       #Get all Cartridge for this applications
       def cartridges
-        logger.debug "Getting all cartridges for application #{self.name}"
+        logger.debug "Getting all cartridges for application #{self.name}" if @mydebug
         url = @@end_point + @links['LIST_CARTRIDGES']['href']
         method =  @links['LIST_CARTRIDGES']['method']
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
@@ -35,7 +35,7 @@ module Rhc
 
       #Start Application
       def start
-        logger.debug "Starting application #{self.name}"
+        logger.debug "Starting application #{self.name}" if @mydebug
         url = @@end_point + @links['START']['href']
         method =  @links['START']['method']
         payload = {:event=> "start"}
@@ -45,7 +45,7 @@ module Rhc
 
       #Stop  Application
       def stop(force=false)
-        logger.debug "Stopping application #{self.name} force-#{force}"
+        logger.debug "Stopping application #{self.name} force-#{force}" if @mydebug
         url = @@end_point + @links['STOP']['href']
         method =  @links['STOP']['method']
         if force
@@ -59,7 +59,7 @@ module Rhc
 
       #Restart Application
       def restart
-        logger.debug "Restarting application #{self.name}"
+        logger.debug "Restarting application #{self.name}" if @mydebug
         url = @@end_point + @links['RESTART']['href']
         method =  @links['RESTART']['method']
         payload = {:event=> "restart"}
@@ -69,7 +69,7 @@ module Rhc
 
       #Delete Application
       def destroy
-        logger.debug "Deleting application #{self.name}"
+        logger.debug "Deleting application #{self.name}" if @mydebug
         url = @@end_point + @links['DELETE']['href']
         method =  @links['DELETE']['method']
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)

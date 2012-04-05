@@ -11,7 +11,7 @@ module Rhc
 
       #Start Cartridge
       def start
-        logger.debug "Starting cartridge #{self.name}"
+        logger.debug "Starting cartridge #{self.name}" if @mydebug
         url = @@end_point + @links['START']['href']
         method =  @links['START']['method']
         payload = {:event=> "start"}
@@ -21,7 +21,7 @@ module Rhc
 
       #Stop Cartridge
       def stop()
-        logger.debug "Stopping cartridge #{self.name}"
+        logger.debug "Stopping cartridge #{self.name}" if @mydebug
         url = @@end_point + @links['STOP']['href']
         method =  @links['STOP']['method']
         payload = {:event=> "stop"}
@@ -31,7 +31,7 @@ module Rhc
 
       #Restart Cartridge
       def restart
-        logger.debug "Restarting cartridge #{self.name}"
+        logger.debug "Restarting cartridge #{self.name}" if @mydebug
         url = @@end_point + @links['RESTART']['href']
         method =  @links['RESTART']['method']
         payload = {:event=> "restart"}
@@ -41,7 +41,7 @@ module Rhc
 
       #Reload Cartridge
       def reload
-        logger.debug "Reloading cartridge #{self.name}"
+        logger.debug "Reloading cartridge #{self.name}" if @mydebug
         url = @@end_point + @links['RESTART']['href']
         method =  @links['RESTART']['method']
         payload = {:event=> "reload"}
@@ -51,7 +51,7 @@ module Rhc
 
       #Delete Cartridge
       def destroy
-        logger.debug "Deleting cartridge #{self.name}"
+        logger.debug "Deleting cartridge #{self.name}" if @mydebug
         url = @@end_point + @links['DELETE']['href']
         method =  @links['DELETE']['method']
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)

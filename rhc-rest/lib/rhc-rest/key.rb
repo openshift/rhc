@@ -12,7 +12,7 @@ module Rhc
 
       # Update Key
       def update(type, content)
-        logger.debug "Updating key #{self.name}"
+        logger.debug "Updating key #{self.name}" if @mydebug
         url = @@end_point + @links['UPDATE']['href']
         method =  @links['UPDATE']['method']
         payload = {:type => type, :content => content}
@@ -22,7 +22,7 @@ module Rhc
 
       #Delete Key
       def destroy
-        logger.debug "Deleting key #{self.name}"
+        logger.debug "Deleting key #{self.name}" if @mydebug
         url = @@end_point + @links['DELETE']['href']
         method =  @links['DELETE']['method']
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)

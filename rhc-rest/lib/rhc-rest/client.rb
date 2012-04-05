@@ -23,7 +23,7 @@ module Rhc
 
       #Add Domain
       def add_domain(id)
-        logger.debug "Adding domain #{id}"
+        logger.debug "Adding domain #{id}" if @mydebug
         url = @@end_point + @links['ADD_DOMAIN']['href']
         method =  @links['ADD_DOMAIN']['method']
         payload = {:id => id}
@@ -33,7 +33,7 @@ module Rhc
 
       #Get all Domain
       def domains
-        logger.debug "Getting all domains"
+        logger.debug "Getting all domains" if @mydebug
         url = @@end_point + @links['LIST_DOMAINS']['href']
         method =  @links['LIST_DOMAINS']['method']
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
@@ -42,7 +42,7 @@ module Rhc
 
       #Find Domain by namesapce
       def find_domain(id)
-        logger.debug "Finding domain #{id}"
+        logger.debug "Finding domain #{id}" if @mydebug
         filtered = Array.new
         domains.each do |domain|
         #TODO do a regex caomparison
@@ -55,7 +55,7 @@ module Rhc
 
       #Find Application by name
       def find_application(name)
-        logger.debug "Finding application #{name}"
+        logger.debug "Finding application #{name}" if @mydebug
         filtered = Array.new
         domains.each do |domain|
         #TODO do a regex caomparison
@@ -70,7 +70,7 @@ module Rhc
 
       #Get all Cartridge
       def cartridges
-        logger.debug "Getting all cartridges"
+        logger.debug "Getting all cartridges" if @mydebug
         url = @@end_point + @links['LIST_CARTRIDGES']['href']
         method =  @links['LIST_CARTRIDGES']['method']
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
@@ -79,7 +79,7 @@ module Rhc
 
       #Find Cartridge by name
       def find_cartridge(name)
-        logger.debug "Finding cartridge #{name}"
+        logger.debug "Finding cartridge #{name}" if @mydebug
         filtered = Array.new
         cartridges.each do |cart|
         #TODO do a regex caomparison
@@ -100,7 +100,7 @@ module Rhc
 
       #find Key by name
       def find_key(name)
-        logger.debug "Finding key #{name}"
+        logger.debug "Finding key #{name}" if @mydebug
         filtered = Array.new
         user.keys.each do |key|
         #TODO do a regex caomparison
@@ -113,7 +113,7 @@ module Rhc
 
       def logout
         #TODO logout
-        logger.debug "Logout/Close client"
+        logger.debug "Logout/Close client" if @mydebug
       end
       alias :close :logout
     end

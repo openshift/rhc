@@ -95,7 +95,7 @@ module Rhc
         result = JSON.parse(response)
         messages = result['messages']
       rescue Exception => e
-        logger.debug "Response did not include a message from server"
+        logger.debug "Response did not include a message from server" if @mydebug
         #puts response
       end
       case response.code
