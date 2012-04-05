@@ -29,18 +29,18 @@ if __FILE__ == $0
 end_point = ARGV[0]
 username = ARGV[1]
 password = ARGV[2]
-namespace = ARGV[3]
+domain_id = ARGV[3]
 
-if end_point.nil? or username.nil? or password.nil? or namespace.nil?
-  puts "Usage: https://<hostname>/broker/rest <username> <password> <namespace>"
+if end_point.nil? or username.nil? or password.nil? or domain_id.nil?
+  puts "Usage: https://<hostname>/broker/rest <username> <password> <domain_id>"
   exit 1
 end
 
 client = Rhc::Rest::Client.new(end_point, username, password)
 
 puts "Creating a domain"
-domain = client.add_domain(namespace)
-puts "Domain created: #{domain.namespace}"
+domain = client.add_domain(domain_id)
+puts "Domain created: #{domain.id}"
 
 puts "Getting all cartridges..."
 client.cartridges.each do |cart|
@@ -60,7 +60,7 @@ end
 
 puts "Getting all domains and applications..."
 client.domains.each do |domain|
-  puts "  Domain: #{domain.namespace}"
+  puts "  Domain: #{domain.id}"
   domain.applications.each do |app|
     puts "    Application: #{app.name}"
     app.cartridges.each do |cart|
