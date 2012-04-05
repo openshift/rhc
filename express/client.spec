@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.89.12
+Version:       0.90.0
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
