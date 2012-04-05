@@ -22,11 +22,11 @@ module Rhc
       end
 
       #Add Domain
-      def add_domain(namespace)
-        logger.debug "Adding domain #{namespace}"
+      def add_domain(id)
+        logger.debug "Adding domain #{id}"
         url = @@end_point + @links['ADD_DOMAIN']['href']
         method =  @links['ADD_DOMAIN']['method']
-        payload = {:namespace => namespace}
+        payload = {:id => id}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
         return send(request)
       end
@@ -41,12 +41,12 @@ module Rhc
       end
 
       #Find Domain by namesapce
-      def find_domain(namespace)
-        logger.debug "Finding domain #{namespace}"
+      def find_domain(id)
+        logger.debug "Finding domain #{id}"
         filtered = Array.new
         domains.each do |domain|
         #TODO do a regex caomparison
-          if domain.namespace == namespace
+          if domain.id == id
           filtered.push(domain)
           end
         end

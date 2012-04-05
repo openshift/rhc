@@ -246,7 +246,7 @@
         
         <div class="method-heading">
           <span class="method-name">add_domain</span><span
-            class="method-args">(namespace)</span>
+            class="method-args">(id)</span>
           <span class="method-click-advice">click to toggle source</span>
         </div>
         
@@ -259,11 +259,11 @@
           
           <div class="method-source-code" id="add_domain-source">
             <pre><span class="ruby-comment"># File lib/rhc-rest/client.rb, line 45</span>
-<span class="ruby-keyword">def</span> <span class="ruby-identifier">add_domain</span>(<span class="ruby-identifier">namespace</span>)
-  <span class="ruby-identifier">logger</span>.<span class="ruby-identifier">debug</span> <span class="ruby-node">&quot;Adding domain #{namespace}&quot;</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">add_domain</span>(<span class="ruby-identifier">id</span>)
+  <span class="ruby-identifier">logger</span>.<span class="ruby-identifier">debug</span> <span class="ruby-node">&quot;Adding domain #{id}&quot;</span>
   <span class="ruby-identifier">url</span> = <span class="ruby-identifier">@@end_point</span> <span class="ruby-operator">+</span> <span class="ruby-ivar">@links</span>[<span class="ruby-string">'ADD_DOMAIN'</span>][<span class="ruby-string">'href'</span>]
   <span class="ruby-identifier">method</span> =  <span class="ruby-ivar">@links</span>[<span class="ruby-string">'ADD_DOMAIN'</span>][<span class="ruby-string">'method'</span>]
-  <span class="ruby-identifier">payload</span> = {<span class="ruby-value">:namespace</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">namespace</span>}
+  <span class="ruby-identifier">payload</span> = {<span class="ruby-value">:id</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">id</span>}
   <span class="ruby-identifier">request</span> = <span class="ruby-constant">RestClient</span><span class="ruby-operator">::</span><span class="ruby-constant">Request</span>.<span class="ruby-identifier">new</span>(<span class="ruby-value">:url</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">url</span>, <span class="ruby-value">:method</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">method</span>, <span class="ruby-value">:headers</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">@@headers</span>, <span class="ruby-value">:payload</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">payload</span>)
   <span class="ruby-keyword">return</span> <span class="ruby-identifier">send</span>(<span class="ruby-identifier">request</span>)
 <span class="ruby-keyword">end</span></pre>
@@ -454,7 +454,7 @@
         
         <div class="method-heading">
           <span class="method-name">find_domain</span><span
-            class="method-args">(namespace)</span>
+            class="method-args">(id)</span>
           <span class="method-click-advice">click to toggle source</span>
         </div>
         
@@ -467,12 +467,12 @@
           
           <div class="method-source-code" id="find_domain-source">
             <pre><span class="ruby-comment"># File lib/rhc-rest/client.rb, line 64</span>
-<span class="ruby-keyword">def</span> <span class="ruby-identifier">find_domain</span>(<span class="ruby-identifier">namespace</span>)
-  <span class="ruby-identifier">logger</span>.<span class="ruby-identifier">debug</span> <span class="ruby-node">&quot;Finding domain #{namespace}&quot;</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">find_domain</span>(<span class="ruby-identifier">id</span>)
+  <span class="ruby-identifier">logger</span>.<span class="ruby-identifier">debug</span> <span class="ruby-node">&quot;Finding domain #{id}&quot;</span>
   <span class="ruby-identifier">filtered</span> = <span class="ruby-constant">Array</span>.<span class="ruby-identifier">new</span>
   <span class="ruby-identifier">domains</span>.<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">domain</span><span class="ruby-operator">|</span>
   <span class="ruby-comment">#TODO do a regex caomparison</span>
-    <span class="ruby-keyword">if</span> <span class="ruby-identifier">domain</span>.<span class="ruby-identifier">namespace</span> <span class="ruby-operator">==</span> <span class="ruby-identifier">namespace</span>
+    <span class="ruby-keyword">if</span> <span class="ruby-identifier">domain</span>.<span class="ruby-identifier">id</span> <span class="ruby-operator">==</span> <span class="ruby-identifier">id</span>
     <span class="ruby-identifier">filtered</span>.<span class="ruby-identifier">push</span>(<span class="ruby-identifier">domain</span>)
     <span class="ruby-keyword">end</span>
   <span class="ruby-keyword">end</span>
