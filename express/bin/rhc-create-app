@@ -31,6 +31,7 @@ Create an OpenShift app.
   -a|--app   application     Application name  (alphanumeric - max #{RHC::APP_NAME_MAX_LENGTH} chars) (required)
   -t|--type  type            Type of app to create (#{type_keys}) (required)
   -g|--gear-size size        The size of the gear for this app ([small|medium|large], defaults to small)
+  -s|--scaling               Enable scaling for this app
   -l|--rhlogin  rhlogin      Red Hat login (RHN or OpenShift login) (#{rhlogin})
   -p|--password  password    RHLogin password  (optional, will prompt)
   -r|--repo  path            Git Repo path (defaults to ./$app_name)
