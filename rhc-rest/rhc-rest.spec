@@ -6,7 +6,7 @@
 
 Summary:       Ruby bindings/client for OpenShift REST API
 Name:          rhc-rest
-Version:       0.0.8
+Version:       0.0.9
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -56,6 +56,15 @@ rm -rf %{buildroot}
 %doc COPYRIGHT
 
 %changelog
+* Mon Apr 09 2012 Lili Nader <lnader@redhat.com> 0.0.9-1
+- absolute URLs (lnader@redhat.com)
+- Made sure debugging output was only printed when @mydebug was specified
+  (fotios@redhat.com)
+- Ruby REST api changes:  - Make 'domain namespace' consistent across
+  domain/app objects. It will be referred as 'id' in domain objects and
+  'domain_id' in app objects. (rpenta@redhat.com)
+- update sample script for ruby REST api (rpenta@redhat.com)
+
 * Fri Mar 30 2012 Lili Nader <lnader@redhat.com> 0.0.8-1
 - Catch all to prevent trying to parse a null response on an http code we did
   not expect. (rmillner@redhat.com)
