@@ -9,15 +9,22 @@ module Rhc
       end
 
       #Add Application to this domain
+      # options
+      # cartrdige
+      # template
+      # scale
+      # node_profile
       def add_application(name, cartridge, scale=false)
         logger.debug "Adding application #{name} to domain #{self.id}" if @mydebug
-        url = @@end_point + @links['ADD_APPLICATION']['href']
+        url = @links['ADD_APPLICATION']['href']
         method =  @links['ADD_APPLICATION']['method']
-        payload = {:name => name, :cartridge => cartridge}
+        payload = {:name => name}
+        options.each do |key, value|
+          payload[key] = value
+        end
         timeout = nil
-        if scale
+        if options[:scale]
           timeout = 180 # 3 minute timeout for scalable app
-          payload[:scale] = true
         end
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload, :timeout => timeout)
         return send(request)
@@ -26,7 +33,7 @@ module Rhc
       #Get all Application for this domain
       def applications
         logger.debug "Getting all applications for domain #{self.id}" if @mydebug
-        url = @@end_point + @links['LIST_APPLICATIONS']['href']
+        url = @links['LIST_APPLICATIONS']['href']
         method =  @links['LIST_APPLICATIONS']['method']
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
         return send(request)
@@ -35,7 +42,7 @@ module Rhc
       #Update Domain
       def update(new_id)
         logger.debug "Updating domain #{self.id} to #{new_id}" if @mydebug
-        url = @@end_point + @links['UPDATE']['href']
+        url = @links['UPDATE']['href']
         method =  @links['UPDATE']['method']
         payload = {:domain_id => new_id}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
@@ -46,7 +53,7 @@ module Rhc
       #Delete Domain
       def destroy(force=false)
         logger.debug "Deleting domain #{self.id}" if @mydebug
-        url = @@end_point + @links['DELETE']['href']
+        url = @links['DELETE']['href']
         method =  @links['DELETE']['method']
         payload = {:force => force}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)

@@ -3,8 +3,9 @@ module Rhc
   module Rest
     class Application
       include Rest
-      attr_reader :domain_id, :name, :creation_time, :uuid, :aliases, :server_identity
+      attr_reader :domain_id, :name, :creation_time, :uuid, :aliases, :git_url, :app_url, :node_profile, :framework, :scalable, :health_check_path, :embedded
       def initialize(args)
+        #logger.debug args
         @domain_id = args[:domain_id] || args["domain_id"]
         @name = args[:name] || args["name"]
         @creation_time = args[:creation_time] || args["creation_time"]
@@ -17,7 +18,7 @@ module Rhc
       #Add Cartridge
       def add_cartridge(name)
         logger.debug "Adding cartridge #{name}" if @mydebug
-        url = @@end_point + @links['ADD_CARTRIDGE']['href']
+        url = @links['ADD_CARTRIDGE']['href']
         method =  @links['ADD_CARTRIDGE']['method']
         payload = {:name => name}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
@@ -27,7 +28,7 @@ module Rhc
       #Get all Cartridge for this applications
       def cartridges
         logger.debug "Getting all cartridges for application #{self.name}" if @mydebug
-        url = @@end_point + @links['LIST_CARTRIDGES']['href']
+        url = @links['LIST_CARTRIDGES']['href']
         method =  @links['LIST_CARTRIDGES']['method']
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
         return send(request)
@@ -36,7 +37,7 @@ module Rhc
       #Start Application
       def start
         logger.debug "Starting application #{self.name}" if @mydebug
-        url = @@end_point + @links['START']['href']
+        url = @links['START']['href']
         method =  @links['START']['method']
         payload = {:event=> "start"}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
@@ -46,7 +47,7 @@ module Rhc
       #Stop  Application
       def stop(force=false)
         logger.debug "Stopping application #{self.name} force-#{force}" if @mydebug
-        url = @@end_point + @links['STOP']['href']
+        url = @links['STOP']['href']
         method =  @links['STOP']['method']
         if force
           payload = {:event=> "force-stop"}
@@ -60,7 +61,7 @@ module Rhc
       #Restart Application
       def restart
         logger.debug "Restarting application #{self.name}" if @mydebug
-        url = @@end_point + @links['RESTART']['href']
+        url = @links['RESTART']['href']
         method =  @links['RESTART']['method']
         payload = {:event=> "restart"}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
@@ -70,7 +71,7 @@ module Rhc
       #Delete Application
       def destroy
         logger.debug "Deleting application #{self.name}" if @mydebug
-        url = @@end_point + @links['DELETE']['href']
+        url = @links['DELETE']['href']
         method =  @links['DELETE']['method']
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
         return send(request)

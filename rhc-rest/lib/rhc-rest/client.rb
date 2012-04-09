@@ -5,11 +5,11 @@ module Rhc
     class Client
       include Rest
       def initialize(end_point, username, password)
-        @@end_point = end_point
+        logger.debug "Connecting to #{end_point}"
         credentials = Base64.encode64("#{username}:#{password}")
         @@headers["Authorization"] = "Basic #{credentials}"
         #first get the API
-        request = RestClient::Request.new(:url => @@end_point + "/api", :method => :get, :headers => @@headers)
+        request = RestClient::Request.new(:url => end_point, :method => :get, :headers => @@headers)
         begin
           response = request.execute
           result = JSON.parse(response)
@@ -22,9 +22,9 @@ module Rhc
       end
 
       #Add Domain
-      def add_domain(id)
+      def add_domain(namespace)
         logger.debug "Adding domain #{id}" if @mydebug
-        url = @@end_point + @links['ADD_DOMAIN']['href']
+        url = @links['ADD_DOMAIN']['href']
         method =  @links['ADD_DOMAIN']['method']
         payload = {:id => id}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
@@ -34,7 +34,7 @@ module Rhc
       #Get all Domain
       def domains
         logger.debug "Getting all domains" if @mydebug
-        url = @@end_point + @links['LIST_DOMAINS']['href']
+        url = @links['LIST_DOMAINS']['href']
         method =  @links['LIST_DOMAINS']['method']
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
         return send(request)
@@ -71,7 +71,7 @@ module Rhc
       #Get all Cartridge
       def cartridges
         logger.debug "Getting all cartridges" if @mydebug
-        url = @@end_point + @links['LIST_CARTRIDGES']['href']
+        url = @links['LIST_CARTRIDGES']['href']
         method =  @links['LIST_CARTRIDGES']['method']
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
         return send(request)
@@ -92,7 +92,7 @@ module Rhc
 
       #Get User info
       def user
-        url = @@end_point + @links['GET_USER']['href']
+        url = @links['GET_USER']['href']
         method =  @links['GET_USER']['method']
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
         return send(request)

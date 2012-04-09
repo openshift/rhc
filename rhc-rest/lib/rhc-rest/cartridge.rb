@@ -12,7 +12,7 @@ module Rhc
       #Start Cartridge
       def start
         logger.debug "Starting cartridge #{self.name}" if @mydebug
-        url = @@end_point + @links['START']['href']
+        url = @links['START']['href']
         method =  @links['START']['method']
         payload = {:event=> "start"}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
@@ -22,7 +22,7 @@ module Rhc
       #Stop Cartridge
       def stop()
         logger.debug "Stopping cartridge #{self.name}" if @mydebug
-        url = @@end_point + @links['STOP']['href']
+        url = @links['STOP']['href']
         method =  @links['STOP']['method']
         payload = {:event=> "stop"}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
@@ -32,7 +32,7 @@ module Rhc
       #Restart Cartridge
       def restart
         logger.debug "Restarting cartridge #{self.name}" if @mydebug
-        url = @@end_point + @links['RESTART']['href']
+        url = @links['RESTART']['href']
         method =  @links['RESTART']['method']
         payload = {:event=> "restart"}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
@@ -42,7 +42,7 @@ module Rhc
       #Reload Cartridge
       def reload
         logger.debug "Reloading cartridge #{self.name}" if @mydebug
-        url = @@end_point + @links['RESTART']['href']
+        url = @links['RESTART']['href']
         method =  @links['RESTART']['method']
         payload = {:event=> "reload"}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
@@ -52,7 +52,7 @@ module Rhc
       #Delete Cartridge
       def destroy
         logger.debug "Deleting cartridge #{self.name}" if @mydebug
-        url = @@end_point + @links['DELETE']['href']
+        url = @links['DELETE']['href']
         method =  @links['DELETE']['method']
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
         return send(request)
