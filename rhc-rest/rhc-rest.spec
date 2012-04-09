@@ -6,7 +6,7 @@
 
 Summary:       Ruby bindings/client for OpenShift REST API
 Name:          rhc-rest
-Version:       0.0.9
+Version:       0.0.10
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -56,6 +56,9 @@ rm -rf %{buildroot}
 %doc COPYRIGHT
 
 %changelog
+* Mon Apr 09 2012 Lili Nader <lnader@redhat.com> 0.0.10-1
+- 
+
 * Mon Apr 09 2012 Lili Nader <lnader@redhat.com> 0.0.9-1
 - absolute URLs (lnader@redhat.com)
 - Made sure debugging output was only printed when @mydebug was specified
