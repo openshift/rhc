@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.90.0
+Version:       0.90.1
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -115,6 +115,11 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Apr 09 2012 Dan McPherson <dmcphers@redhat.com> 0.90.1-1
+- make sure $remote_ssh_pubkeys is an empty list, not nil (johnp@redhat.com)
+- Added scaling support to cli tools (fotios@redhat.com)
+- bump spec number (dmcphers@redhat.com)
+
 * Mon Apr 02 2012 Mike McGrath <mmcgrath@redhat.com> 0.89.12-1
 - create an error response instead of returning false (johnp@redhat.com)
 
