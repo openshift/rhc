@@ -22,7 +22,7 @@ module Rhc
       end
 
       #Add Domain
-      def add_domain(namespace)
+      def add_domain(id)
         logger.debug "Adding domain #{id}" if @mydebug
         url = @links['ADD_DOMAIN']['href']
         method =  @links['ADD_DOMAIN']['method']

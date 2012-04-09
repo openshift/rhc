@@ -14,7 +14,7 @@ module Rhc
       # template
       # scale
       # node_profile
-      def add_application(name, cartridge, scale=false)
+      def add_application(name, options)
         logger.debug "Adding application #{name} to domain #{self.id}" if @mydebug
         url = @links['ADD_APPLICATION']['href']
         method =  @links['ADD_APPLICATION']['method']

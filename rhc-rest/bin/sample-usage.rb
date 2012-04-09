@@ -35,9 +35,15 @@ if end_point.nil? or username.nil? or password.nil? or domain_id.nil?
   puts "Usage: https://<hostname>/broker/rest <username> <password> <domain_id>"
   exit 1
 end
-
+@mydebug =true
 client = Rhc::Rest::Client.new(end_point, username, password)
 
+client.domains.each do |domain|
+  domain.applications.each do |app|
+    app.delete
+  end
+  domain.delete
+end
 puts "Creating a domain"
 domain = client.add_domain(domain_id)
 puts "Domain created: #{domain.id}"
@@ -49,7 +55,7 @@ end
 
 puts "Creating application appone"
 carts = client.find_cartridge("php-5.3")
-domain.add_application("appone", carts.first.name)
+domain.add_application("appone", {:cartridge => carts.first.name})
 
 puts "Try deleting domain with an application"
 begin
@@ -79,7 +85,7 @@ if not apps.nil? and not apps.first.nil?
 end
 
 puts "Create new application named appthree..."
-app = client.domains.first.add_application("appthree", "php-5.3")
+app = client.domains.first.add_application("appthree", {:cartridge =>"php-5.3"})
 puts "Adding MySQL cartridge to appthree"
 cartridge = app.add_cartridge("mysql-5.1")
 puts "Check to see if it was added"
