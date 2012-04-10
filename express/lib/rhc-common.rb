@@ -411,7 +411,8 @@ module RHC
       client = Rhc::Rest::Client.new(end_point, rhlogin, password)
 
       domain = client.find_domain(user_info['user_info']['domains'][0]['namespace']).first
-      namespace = domain.namespace
+
+      namespace = domain.id
       # Catch errors
       begin
         application = domain.add_application(app_name,{:cartridge => app_type, :scale => scale})
