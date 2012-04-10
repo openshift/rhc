@@ -35,9 +35,11 @@ spec = Gem::Specification.new do |s|
     end
     end
     s.add_dependency('parseconfig')
-    if RUBY_VERSION.to_f == 1.9
-      s.add_dependency('test-unit')
-    end
+    s.add_dependency('rhc-rest', ">= 0.0.11")
+
+    # This should only affect 1.9 rubies, since it's already included in 1.8
+    # http://en.wikibooks.org/wiki/Ruby_Programming/RubyGems
+    s.extensions << 'ext/test_unit_conf.rb'
 end
 
 # Define a :package task that bundles the gem
