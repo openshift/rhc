@@ -39,7 +39,7 @@ spec = Gem::Specification.new do |s|
 
     # This should only affect 1.9 rubies, since it's already included in 1.8
     # http://en.wikibooks.org/wiki/Ruby_Programming/RubyGems
-    s.extensions << 'ext/test_unit_conf.rb'
+    s.extensions << 'ext/mkrf_conf.rb'
 end
 
 # Define a :package task that bundles the gem
