@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.90.1
+Version:       0.90.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -115,6 +115,21 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Apr 10 2012 Adam Miller <admiller@redhat.com> 0.90.2-1
+- API change in REST api - use domain.id instead of domain.namespace
+  (johnp@redhat.com)
+- corrected end_point in rhc client tools (lnader@redhat.com)
+- add port-forward to the list of autocomplete verbs for rhc (johnp@redhat.com)
+- Renaming gem extension so builder can find it (fotios@redhat.com)
+- initialize global $remote_ssh_pubkeys at the very top of first test
+  (johnp@redhat.com)
+- BZ809335: Added rhc-rest dependency to gemspec and made sure test-unit is
+  properly installed in 1.9 (fotios@redhat.com)
+- BZ810439: Fixed dependency for client tools to require latest version of rhc-
+  rest (fotios@redhat.com)
+- if gnutar exists use that (johnp@redhat.com)
+- bug fixes (lnader@redhat.com)
+
 * Mon Apr 09 2012 Dan McPherson <dmcphers@redhat.com> 0.90.1-1
 - make sure $remote_ssh_pubkeys is an empty list, not nil (johnp@redhat.com)
 - Added scaling support to cli tools (fotios@redhat.com)
