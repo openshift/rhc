@@ -6,6 +6,7 @@
 
 Summary:       Ruby bindings/client for OpenShift REST API
 Name:          rhc-rest
+# Make sure to update express/client.spec when increasing version number
 Version:       0.0.11
 Release:       1%{?dist}
 Group:         Network/Daemons
