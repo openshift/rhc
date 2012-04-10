@@ -407,7 +407,7 @@ module RHC
     #  We'll need to then get the new application using the existing
     #  API in order to access the rest of the logic in this function
     if scale
-      end_point = "https://#{libra_server}/broker/rest"
+      end_point = "https://#{libra_server}/broker/rest/api"
       client = Rhc::Rest::Client.new(end_point, rhlogin, password)
 
       domain = client.find_domain(user_info['user_info']['domains'][0]['namespace']).first
