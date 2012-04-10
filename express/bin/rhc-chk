@@ -273,13 +273,12 @@ class Test3_SSH < Test::Unit::TestCase
   end
 
   def test_01_ssh_private_key
+    $remote_ssh_pubkeys = []
     check_permissions(@libra_kfile, /[4-7]00/) # Needs to at least be readable by user and nobody else
 
     # Derive the public key from the private key
     key_dump = `ssh-keygen -f #{@libra_kfile} -y`
     @@local_derived_ssh_pubkey = key_dump.to_s.strip.split(' ')[1]
-
-    $remote_ssh_pubkeys = []
 
     assert_not_nil @@local_derived_ssh_pubkey, error_for(:no_derive)
     assert_not_nil $user_info, error_for(:no_account) 
