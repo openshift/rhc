@@ -46,6 +46,11 @@ rescue Exception => e
     p_usage
 end
 
+# check for gnutar - gnu tar is called tar on linux and cygwin but gnutar on
+#                    BSD based systems like MacOS X
+TAR_BIN = 'tar'
+TAR_BIN = '/usr/bin/gnutar' if File.executable?('/usr/bin/gnutar')
+
 # If provided a config path, check it
 check_cpath(opt)
 
@@ -96,7 +101,7 @@ if opt['save']
   puts "Pulling down a snapshot to #{opt['save']}"
 else
   if File.exists? opt['restore']
-    `tar --wildcards -tf #{opt['restore']} './*/#{app}'`
+    `#{TAR_BIN} --wildcards -tf #{opt['restore']} './*/#{app}'`
     if $?.exitstatus != 0
       puts "Archive at #{opt['restore']} does not contain the target application: ./*/#{app}"
       puts "If you created this archive rather than exported with rhc-snapshot, be sure"
@@ -104,7 +109,7 @@ else
       puts "i.e.: tar -czvf <app_name>.tar.gz ./<app_uuid>/"
       exit 255
     else
-      `tar --wildcards -tf #{opt['restore']} './*/git'`
+      `#{TAR_BIN} --wildcards -tf #{opt['restore']} './*/git'`
       include_git = $?.exitstatus == 0
       ssh_cmd = "cat #{opt['restore']} | ssh #{app_uuid}@#{app}-#{namespace}.#{rhc_domain} 'restore#{include_git ? ' INCLUDE_GIT' : ''}'"
       puts "Restoring from snapshot #{opt['restore']}"

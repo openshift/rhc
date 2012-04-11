@@ -9,6 +9,7 @@ require 'open3'
 require 'parseconfig'
 require 'resolv'
 require 'uri'
+require 'rhc-rest'
 
 module RHC
 
@@ -305,7 +306,9 @@ module RHC
       puts "Re-run with -d for more information."
     end
     exit_code = 1
-    if response.content_type == 'application/json'
+    if response.is_a?(Struct::FakeResponse)
+      print_response_message(response.body)
+    elsif response.content_type == 'application/json'
       begin
         json_resp = JSON.parse(response.body)
         exit_code = print_json_body(json_resp)
@@ -320,14 +323,18 @@ module RHC
 
   def self.print_response_messages(json_resp)
     messages = json_resp['messages']
-    if (messages && !messages.empty?)
+    print_response_message(messages)
+  end
+
+  def self.print_response_message(message)
+    if (message && !message.empty?)
       puts ''
       puts 'MESSAGES:'
-      puts messages
+      puts message
       puts ''
     end
   end
-
+  
   def self.print_response_success(json_resp, print_result=false)
     if @mydebug
       print "Response from server:"
@@ -406,21 +413,15 @@ module RHC
     #  We'll need to then get the new application using the existing
     #  API in order to access the rest of the logic in this function
     if scale
-      $LOAD_PATH << File.expand_path(File.join(File.dirname(__FILE__),'..','..','rhc-rest','lib'))
-      require 'rhc-rest'
-
-      #  TODO: This logic should be checked by broker
-      unscalable = ['haproxy-1.4','jenkins-1.4','diy-0.1']
-      print_response_err(Struct::FakeResponse.new("Can not create a scaling app of type #{app_type}",403)) if unscalable.include?(app_type)
-
-      end_point = "https://#{libra_server}/broker/rest"
+      end_point = "https://#{libra_server}/broker/rest/api"
       client = Rhc::Rest::Client.new(end_point, rhlogin, password)
 
       domain = client.find_domain(user_info['user_info']['domains'][0]['namespace']).first
-      namespace = domain.namespace
+
+      namespace = domain.id
       # Catch errors
       begin
-        application = domain.add_application(app_name,app_type,scale)
+        application = domain.add_application(app_name,{:cartridge => app_type, :scale => scale})
 
         # Variables that are needed for the rest of the function
         app_uuid = application.uuid
@@ -429,11 +430,11 @@ module RHC
         # Since health_check_path is not returned, we need to fudge it for now
         health_check_path =
           case app_type
-          when "php-5.3"
+          when /^php/
             "health_check.php"
-          when "perl-5.10"
+          when /^perl/
             "health_check.pl"
-          when "diy-0.1", "ruby-1.8", "jenkins-1.4", "python-2.6", "haproxy-1.4", "jbossas-7", "nodejs-0.6"
+          else
             "health"
           end
 
@@ -442,6 +443,13 @@ module RHC
         print_response_err(Struct::FakeResponse.new(e.message,e.code))
       rescue Rhc::Rest::ValidationException => e
         print_response_err(Struct::FakeResponse.new(e.message,406))
+      rescue Rhc::Rest::ServerErrorException => e 
+        if e.message =~ /^Failed to create application testscale due to:Scalable app cannot be of type/ 
+          puts "Can not create a scaling app of type #{app_type}, either disable scaling or choose another app type"
+          exit 1
+        else
+          raise e 
+        end
       end
     else
       json_data = generate_json(data)

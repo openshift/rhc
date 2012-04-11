@@ -51,6 +51,7 @@ List of arguments
   -t|--type         type         Type of app to create (#{type_keys}) (required for creating an application)
   -c|--cartridge    cartridge    The embedded cartrige to manage (required for the cartridge command)
   -g|--gear-size    size         The size of the gear for this app ([small|medium|large], defaults to small)
+  -s|--scaling                   Enable scaling for this app
   -r|--repo         path         Git Repo path (defaults to ./$app_name)
   -n|--nogit                     Only create remote space, don't pull it locally
   --no-dns                       Skip DNS check. Must be used in combination with --nogit

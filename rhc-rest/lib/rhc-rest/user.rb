@@ -10,7 +10,7 @@ module Rhc
 
       #Add Key for this user
       def add_key(name, content, type)
-        url = @@end_point + @links['ADD_KEY']['href']
+        url = @links['ADD_KEY']['href']
         method =  @links['ADD_KEY']['method']
         payload = {:name => name, :type => type, :content => content}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
@@ -19,7 +19,7 @@ module Rhc
 
       #Get all Key for this user
       def keys
-        url = @@end_point + @links['LIST_KEYS']['href']
+        url = @links['LIST_KEYS']['href']
         method =  @links['LIST_KEYS']['method']
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
         return send(request)

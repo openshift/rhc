@@ -8,7 +8,7 @@ _rhc()
     cur="${COMP_WORDS[COMP_CWORD]}"
 
     if [ $COMP_CWORD -eq 1 ]; then
-        opts="domain app sshkey help"
+        opts="domain app sshkey port-forward help"
         COMPREPLY=($(compgen -W "${opts}" -- ${cur}))
     elif [ $COMP_CWORD -eq 2 ]; then
         case "${COMP_WORDS[1]}" in
@@ -20,6 +20,9 @@ _rhc()
                 ;;
             sshkey)
                 opts="add update remove list"
+                ;;
+            port-forward)
+                opts="--debug --help --rhlogin --password --namespace --config --timeout --app"
                 ;;
             *)
                 opts=""

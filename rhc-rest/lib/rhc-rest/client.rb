@@ -5,11 +5,12 @@ module Rhc
     class Client
       include Rest
       def initialize(end_point, username, password)
-        @@end_point = end_point
+        logger.debug "Connecting to #{end_point}"
         credentials = Base64.encode64("#{username}:#{password}")
         @@headers["Authorization"] = "Basic #{credentials}"
         #first get the API
-        request = RestClient::Request.new(:url => @@end_point + "/api", :method => :get, :headers => @@headers)
+        RestClient.proxy = ENV['http_proxy']
+        request = RestClient::Request.new(:url => end_point, :method => :get, :headers => @@headers)
         begin
           response = request.execute
           result = JSON.parse(response)
@@ -22,31 +23,31 @@ module Rhc
       end
 
       #Add Domain
-      def add_domain(namespace)
-        logger.debug "Adding domain #{namespace}"
-        url = @@end_point + @links['ADD_DOMAIN']['href']
+      def add_domain(id)
+        logger.debug "Adding domain #{id}" if @mydebug
+        url = @links['ADD_DOMAIN']['href']
         method =  @links['ADD_DOMAIN']['method']
-        payload = {:namespace => namespace}
+        payload = {:id => id}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
         return send(request)
       end
 
       #Get all Domain
       def domains
-        logger.debug "Getting all domains"
-        url = @@end_point + @links['LIST_DOMAINS']['href']
+        logger.debug "Getting all domains" if @mydebug
+        url = @links['LIST_DOMAINS']['href']
         method =  @links['LIST_DOMAINS']['method']
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
         return send(request)
       end
 
       #Find Domain by namesapce
-      def find_domain(namespace)
-        logger.debug "Finding domain #{namespace}"
+      def find_domain(id)
+        logger.debug "Finding domain #{id}" if @mydebug
         filtered = Array.new
         domains.each do |domain|
         #TODO do a regex caomparison
-          if domain.namespace == namespace
+          if domain.id == id
           filtered.push(domain)
           end
         end
@@ -55,7 +56,7 @@ module Rhc
 
       #Find Application by name
       def find_application(name)
-        logger.debug "Finding application #{name}"
+        logger.debug "Finding application #{name}" if @mydebug
         filtered = Array.new
         domains.each do |domain|
         #TODO do a regex caomparison
@@ -70,8 +71,8 @@ module Rhc
 
       #Get all Cartridge
       def cartridges
-        logger.debug "Getting all cartridges"
-        url = @@end_point + @links['LIST_CARTRIDGES']['href']
+        logger.debug "Getting all cartridges" if @mydebug
+        url = @links['LIST_CARTRIDGES']['href']
         method =  @links['LIST_CARTRIDGES']['method']
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
         return send(request)
@@ -79,7 +80,7 @@ module Rhc
 
       #Find Cartridge by name
       def find_cartridge(name)
-        logger.debug "Finding cartridge #{name}"
+        logger.debug "Finding cartridge #{name}" if @mydebug
         filtered = Array.new
         cartridges.each do |cart|
         #TODO do a regex caomparison
@@ -92,7 +93,7 @@ module Rhc
 
       #Get User info
       def user
-        url = @@end_point + @links['GET_USER']['href']
+        url = @links['GET_USER']['href']
         method =  @links['GET_USER']['method']
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
         return send(request)
@@ -100,7 +101,7 @@ module Rhc
 
       #find Key by name
       def find_key(name)
-        logger.debug "Finding key #{name}"
+        logger.debug "Finding key #{name}" if @mydebug
         filtered = Array.new
         user.keys.each do |key|
         #TODO do a regex caomparison
@@ -113,7 +114,7 @@ module Rhc
 
       def logout
         #TODO logout
-        logger.debug "Logout/Close client"
+        logger.debug "Logout/Close client" if @mydebug
       end
       alias :close :logout
     end

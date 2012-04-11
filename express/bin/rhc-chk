@@ -273,6 +273,7 @@ class Test3_SSH < Test::Unit::TestCase
   end
 
   def test_01_ssh_private_key
+    $remote_ssh_pubkeys = []
     check_permissions(@libra_kfile, /[4-7]00/) # Needs to at least be readable by user and nobody else
 
     # Derive the public key from the private key
@@ -282,11 +283,10 @@ class Test3_SSH < Test::Unit::TestCase
     assert_not_nil @@local_derived_ssh_pubkey, error_for(:no_derive)
     assert_not_nil $user_info, error_for(:no_account) 
 
-    $remote_ssh_pubkeys = []
     ssh_keys = RHC::get_ssh_keys($libra_server, $rhlogin, $password, $http)
     my_keys = [ssh_keys['ssh_key'], ssh_keys['keys'].values.map{|k| k['key']}].flatten
     my_keys.delete_if{|x| x.length == 0 }
-    $remote_ssh_pubkeys = my_keys
+    $remote_ssh_pubkeys = my_keys unless my_keys.nil?
 
     # Ensure that the user has ssh keys
     assert(!$remote_ssh_pubkeys.empty?, error_for(:no_remote_pub_keys ) )
