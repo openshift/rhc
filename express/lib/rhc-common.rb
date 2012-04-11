@@ -306,7 +306,9 @@ module RHC
       puts "Re-run with -d for more information."
     end
     exit_code = 1
-    if response.content_type == 'application/json'
+    if response.is_a?(Struct::FakeResponse)
+      print_response_message(response.body)
+    elsif response.content_type == 'application/json'
       begin
         json_resp = JSON.parse(response.body)
         exit_code = print_json_body(json_resp)
@@ -321,14 +323,18 @@ module RHC
 
   def self.print_response_messages(json_resp)
     messages = json_resp['messages']
-    if (messages && !messages.empty?)
+    print_response_message(messages)
+  end
+
+  def self.print_response_message(message)
+    if (message && !message.empty?)
       puts ''
       puts 'MESSAGES:'
-      puts messages
+      puts message
       puts ''
     end
   end
-
+  
   def self.print_response_success(json_resp, print_result=false)
     if @mydebug
       print "Response from server:"
