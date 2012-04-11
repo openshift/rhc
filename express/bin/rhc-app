@@ -366,7 +366,7 @@ def save_or_restore_snapshot(command)
   user_info = RHC::get_user_info($libra_server, $opt['rhlogin'], $password, @http, @mydebug, false)
   
   app = $opt['app']
-  $opt['filepath'] = "#{$opt['app']}.tar.gz" if command == 'save' and not $opt['filepath']
+  $opt['filepath'] = "#{$opt['app']}.tar.gz" unless $opt['filepath']
   
   unless user_info['app_info'][app]
       puts
@@ -398,7 +398,7 @@ def save_or_restore_snapshot(command)
         puts "Restoring from snapshot #{$opt['filepath']}"
       end
     else
-      puts "Archive not found: #{$opt['filepath']}"
+      puts "Archive not found: #{$opt['filepath']} - you may specify a path to the archive using the -f option"
       exit 255
     end
   end
