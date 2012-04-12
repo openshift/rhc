@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.90.5
+Version:       0.90.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -115,6 +115,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Apr 12 2012 Mike McGrath <mmcgrath@redhat.com> 0.90.6-1
+- BZ810790: Fixed app scaling payload creation (fotios@redhat.com)
+
 * Wed Apr 11 2012 Mike McGrath <mmcgrath@redhat.com> 0.90.5-1
 - Struct::Fakeresponse was not defined in a couple of instances.
   (rmillner@redhat.com)
