@@ -306,7 +306,7 @@ module RHC
       puts "Re-run with -d for more information."
     end
     exit_code = 1
-    if response.is_a?(Struct::FakeResponse)
+    if response.class.inspect == "Struct::FakeResponse"
       print_response_message(response.body)
     elsif response.content_type == 'application/json'
       begin
