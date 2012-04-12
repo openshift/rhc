@@ -7,7 +7,7 @@
 Summary:       Ruby bindings/client for OpenShift REST API
 Name:          rhc-rest
 # Make sure to update express/client.spec and express/Rakefile when increasing version number
-Version:       0.0.11
+Version:       0.0.12
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -57,6 +57,17 @@ rm -rf %{buildroot}
 %doc COPYRIGHT
 
 %changelog
+* Thu Apr 12 2012 Mike McGrath <mmcgrath@redhat.com> 0.0.12-1
+- Update to ASL 2.0 License (jhonce@redhat.com)
+- Bug 810714 - Command Line Tools: Unable to create scalable application via
+  proxy (lnader@redhat.com)
+- Also noted to change Rakefile when bumping version (fotios@redhat.com)
+- BZ810439: Fixed dependency for client tools to require latest version of rhc-
+  rest (fotios@redhat.com)
+- changed permissions to 755 (lnader@redhat.com)
+- removed doc/created.rid (lnader@redhat.com)
+- remove +x (lnader@redhat.com)
+
 * Mon Apr 09 2012 Lili Nader <lnader@redhat.com> 0.0.11-1
 - bug fixes (lnader@redhat.com)
 
