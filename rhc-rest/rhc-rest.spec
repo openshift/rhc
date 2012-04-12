@@ -7,7 +7,7 @@
 Summary:       Ruby bindings/client for OpenShift REST API
 Name:          rhc-rest
 # Make sure to update express/client.spec and express/Rakefile when increasing version number
-Version:       0.0.12
+Version:       0.0.13
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -57,6 +57,9 @@ rm -rf %{buildroot}
 %doc COPYRIGHT
 
 %changelog
+* Thu Apr 12 2012 Mike McGrath <mmcgrath@redhat.com> 0.0.13-1
+- 
+
 * Thu Apr 12 2012 Mike McGrath <mmcgrath@redhat.com> 0.0.12-1
 - Update to ASL 2.0 License (jhonce@redhat.com)
 - Bug 810714 - Command Line Tools: Unable to create scalable application via
