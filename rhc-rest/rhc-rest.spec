@@ -7,7 +7,7 @@
 Summary:       Ruby bindings/client for OpenShift REST API
 Name:          rhc-rest
 # Make sure to update express/client.spec and express/Rakefile when increasing version number
-Version:       0.0.13
+Version:       0.0.14
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -57,6 +57,11 @@ rm -rf %{buildroot}
 %doc COPYRIGHT
 
 %changelog
+* Thu Apr 12 2012 Mike McGrath <mmcgrath@redhat.com> 0.0.14-1
+- Merge branch 'master' of github.com:openshift/os-client-tools
+  (mmcgrath@redhat.com)
+- BZ810790: Fixed app scaling payload creation (fotios@redhat.com)
+
 * Thu Apr 12 2012 Mike McGrath <mmcgrath@redhat.com> 0.0.13-1
 - 
 
