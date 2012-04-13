@@ -279,6 +279,7 @@ module RHC
     req.set_form_data({'json_data' => json_data, 'password' => password})
     http = http.new(url.host, url.port)
     http.open_timeout = @mytimeout
+    http.read_timeout = @mytimeout
     if url.scheme == "https"
       http.use_ssl = true
       http.verify_mode = OpenSSL::SSL::VERIFY_NONE
