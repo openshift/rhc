@@ -24,7 +24,7 @@ spec = Gem::Specification.new do |s|
     s.homepage = %q{https://openshift.redhat.com/app/express}
     s.description = %q{The client tools for the OpenShift Express platform that allow for application management.}
     s.files = FileList['lib/**/*.rb', 'lib/rhc', 'bin/*', 'conf/*'].to_a
-    s.files += %w(LICENSE COPYRIGHT README Rakefile)
+    s.files += %w(LICENSE COPYRIGHT README.md Rakefile)
     s.executables = ['rhc', 'rhc-domain', 'rhc-app', 'rhc-sshkey', 'rhc-chk', 'rhc-create-app', 'rhc-create-domain', 'rhc-ctl-domain', 'rhc-ctl-app', 'rhc-snapshot', 'rhc-domain-info', 'rhc-user-info', 'rhc-tail-files', 'rhc-port-forward']
     s.add_dependency('parseconfig')
     s.add_dependency('rhc-rest', ">= 0.0.11")
