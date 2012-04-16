@@ -7,7 +7,7 @@
 Summary:       Ruby bindings/client for OpenShift REST API
 Name:          rhc-rest
 # Make sure to update express/client.spec and express/Rakefile when increasing version number
-Version:       0.1.0
+Version:       0.1.1
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -57,6 +57,13 @@ rm -rf %{buildroot}
 %doc COPYRIGHT
 
 %changelog
+* Mon Apr 16 2012 Adam Miller <admiller@redhat.com> 0.1.1-1
+- rhc-rest now installs json 1.4.6 specifically instead of just installing the
+  latest (abhgupta@redhat.com)
+- bump spec number (dmcphers@redhat.com)
+- US2145: properly choosing json/json_pure based on installation environment
+  (fotios@redhat.com)
+
 * Thu Apr 12 2012 Mike McGrath <mmcgrath@redhat.com> 0.0.14-1
 - Merge branch 'master' of github.com:openshift/os-client-tools
   (mmcgrath@redhat.com)
