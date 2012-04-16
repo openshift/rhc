@@ -26,18 +26,13 @@ spec = Gem::Specification.new do |s|
     s.files = FileList['lib/**/*.rb', 'lib/rhc', 'bin/*', 'conf/*'].to_a
     s.files += %w(LICENSE COPYRIGHT README Rakefile)
     s.executables = ['rhc', 'rhc-domain', 'rhc-app', 'rhc-sshkey', 'rhc-chk', 'rhc-create-app', 'rhc-create-domain', 'rhc-ctl-domain', 'rhc-ctl-app', 'rhc-snapshot', 'rhc-domain-info', 'rhc-user-info', 'rhc-tail-files', 'rhc-port-forward']
-    begin
-    # Use Ruby version to target F13, RHEL5, Windows and OSX (assume no Xcode)
-    if ENV['JSON_PURE'] or (RUBY_VERSION == "1.8.6" or RUBY_PLATFORM =~ /mswin/ or RUBY_PLATFORM =~ /darwin/)
-        s.add_dependency('json_pure')
-    else
-        s.add_dependency('json')
-    end
-    end
     s.add_dependency('parseconfig')
     s.add_dependency('rhc-rest', ">= 0.0.11")
 
-    # This should only affect 1.9 rubies, since it's already included in 1.8
+
+    # Adding install time dependencies for
+    #   - test-unit (Ruby 1.9)
+    #   - json_pure (Ruby (Ruby 1.8.6, Windows, Mac) / json (everything else)
     # http://en.wikibooks.org/wiki/Ruby_Programming/RubyGems
     s.extensions << 'ext/mkrf_conf.rb'
 end

@@ -7,16 +7,11 @@ rescue NoMethodError
 end 
 inst = Gem::DependencyInstaller.new
 begin
-  if RUBY_VERSION > "1.9"
-    inst.install "test-unit"
-  end
-
   if ENV['JSON_PURE'] or (RUBY_VERSION == "1.8.6" or RUBY_PLATFORM =~ /mswin/ or RUBY_PLATFORM =~ /darwin/)
     inst.install('json_pure')
   else
     inst.install('json')
   end
-
 rescue
   exit(1)
 end 

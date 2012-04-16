@@ -445,7 +445,7 @@ module RHC
       rescue Rhc::Rest::ValidationException => e
         print_response_err(Struct::FakeResponse.new(e.message,406))
       rescue Rhc::Rest::ServerErrorException => e 
-        if e.message =~ /^Failed to create application testscale due to:Scalable app cannot be of type/ 
+        if e.message =~ /^Failed to create application .* due to:Scalable app cannot be of type/ 
           puts "Can not create a scaling app of type #{app_type}, either disable scaling or choose another app type"
           exit 1
         else

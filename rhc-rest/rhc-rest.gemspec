@@ -21,6 +21,6 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
 
   # specify any dependencies here; for example:
-  s.add_dependency("json")
+  s.extensions << 'ext/mkrf_conf.rb'
   s.add_dependency("rest-client")
 end
