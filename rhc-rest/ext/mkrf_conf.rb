@@ -10,7 +10,7 @@ begin
   if ENV['JSON_PURE'] or (RUBY_VERSION == "1.8.6" or RUBY_PLATFORM =~ /mswin/ or RUBY_PLATFORM =~ /darwin/)
     inst.install('json_pure')
   else
-    inst.install('json')
+    inst.install('json', '1.4.6')
   end
 rescue
   exit(1)
