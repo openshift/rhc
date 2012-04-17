@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # Copyright 2011 Red Hat, Inc.
 
-require 'lib/rhc-rest'
+require 'rhc-rest'
 require 'test/unit'
 
 class ApplicationTest < Test::Unit::TestCase

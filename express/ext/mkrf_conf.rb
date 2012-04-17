@@ -11,12 +11,11 @@ begin
     inst.install "test-unit"
   end
 
-# TODO: Get this working in the build
-#  if ENV['JSON_PURE'] or (RUBY_VERSION == "1.8.6" or RUBY_PLATFORM =~ /mswin/ or RUBY_PLATFORM =~ /darwin/)
-#    inst.install('json_pure')
-#  else
-#    inst.install('json')
-#  end
+  if ENV['JSON_PURE'] or (RUBY_VERSION == "1.8.6" or RUBY_PLATFORM =~ /mswin/ or RUBY_PLATFORM =~ /darwin/)
+    inst.install('json_pure')
+  else
+    inst.install('json')
+  end
 
 rescue
   exit(1)
