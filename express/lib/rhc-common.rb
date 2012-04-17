@@ -19,7 +19,7 @@ module RHC
   DEFAULT_DELAY = 2
   API = "1.1.3"
   PATTERN_VERSION=/\A\d+\.\d+\.\d+\z/
-  @read_timeout = 90
+  @read_timeout = 120
   @open_timeout = 10
   @mydebug = false
   @@api_version = "?.?.?"
