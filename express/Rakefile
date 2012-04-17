@@ -29,7 +29,17 @@ spec = Gem::Specification.new do |s|
     s.add_dependency('parseconfig')
     s.add_dependency('rhc-rest', ">= 0.0.11")
 
+    begin
+      # Use Ruby version to target F13, RHEL5, Windows and OSX (assume no Xcode)
+      if ENV['JSON_PURE'] or (RUBY_VERSION == "1.8.6" or RUBY_PLATFORM =~ /mswin/ or RUBY_PLATFORM =~ /darwin/)
+        s.add_dependency('json_pure')
+      else
+        s.add_dependency('json')
+      end
+    end
 
+    # TODO: This breaks the build, need to figure out a way around it
+    #       Luckily, the Ruby 1.9 test doesnt get triggered in the build, so we'll leave that
     # Adding install time dependencies for
     #   - test-unit (Ruby 1.9)
     #   - json_pure (Ruby (Ruby 1.8.6, Windows, Mac) / json (everything else)
