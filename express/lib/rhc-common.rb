@@ -20,7 +20,7 @@ module RHC
   API = "1.1.3"
   PATTERN_VERSION=/\A\d+\.\d+\.\d+\z/
   @read_timeout = 120
-  @open_timeout = 10
+  @open_timeout = 20
   @mydebug = false
   @@api_version = "?.?.?"
 
@@ -40,22 +40,28 @@ module RHC
     'api' => nil
   }
 
-  def self.timeout(val)
-    if val
-      @read_timeout = val.to_i
-      unless @read_timeout > 0 
-        puts 'Timeout must be specified as a number greater than 0'
-        exit 1
+  def self.timeout(*vals)
+    vals.each do |val|
+      if val
+        unless val.to_i > 0
+          puts 'Timeout must be specified as a number greater than 0'
+          exit 1
+        end
+        @read_timeout = [val.to_i, @read_timeout].max
+        return @read_timeout
       end
     end
   end
 
-  def self.connect_timeout(val)
-    if val
-      @connect_timeout = val.to_i
-      unless @connect_timeout > 0
-        puts 'Connect Timeout must be specified as a number greater than 0'
-        exit 1
+  def self.connect_timeout(*vals)
+    vals.each do |val|
+      if val
+        unless val.to_i > 0
+          puts 'Timeout must be specified as a number greater than 0'
+          exit 1
+        end
+        @connect_timeout = [val.to_i, @connect_timeout].max
+        return @connect_timeout
       end
     end
   end

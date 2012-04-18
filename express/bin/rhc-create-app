@@ -41,7 +41,6 @@ Create an OpenShift app.
   --no-dns                   Skip DNS check. Must be used in combination with --nogit
   --config  path             Path of alternate config file
   --timeout #                Timeout, in seconds, for the session
-  --connect-timeout #        Timeout, in seconds, to connect to the server
   --enable-jenkins [name]    Create a Jenkins application (see Note 1)
 
 Notes:
@@ -65,7 +64,6 @@ begin
         ["--type",  "-t", GetoptLong::REQUIRED_ARGUMENT],
         ["--gear-size", "-g", GetoptLong::REQUIRED_ARGUMENT],
         ["--timeout", GetoptLong::REQUIRED_ARGUMENT],
-        ["--connect-timeout", GetoptLong::REQUIRED_ARGUMENT],
         ["--enable-jenkins", GetoptLong::OPTIONAL_ARGUMENT],
         ["--scaling", "-s", GetoptLong::OPTIONAL_ARGUMENT]
     )
@@ -95,8 +93,8 @@ if opt["debug"]
 end
 RHC::debug(debug)
 
-RHC::timeout(opt['timeout'] ? opt['timeout'] : get_var('timeout'))
-RHC::connect_timeout(opt["connect-timeout"] ? opt["connect-timeout"] : get_var('connect-timeout'))
+RHC::timeout(opt['timeout'], get_var('timeout'))
+RHC::connect_timeout(opt["timeout"], get_var('connect-timeout'), get_var('timeout'))
 
 opt['rhlogin'] = get_var('default_rhlogin') unless opt['rhlogin']
 

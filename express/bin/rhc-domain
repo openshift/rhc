@@ -26,7 +26,6 @@ List of arguments
   -h|--help                      Show Usage info
   --config          path         Path of alternate config file
   --timeout         #            Timeout, in seconds, for the session
-  --connect-timeout #            Timeout, in seconds, to connect to the server
 
 USAGE
 exit 255
@@ -58,8 +57,8 @@ def validate_args(val_namespace=true, val_timeout=true)
   debug = $opt["debug"] ? true : false
   RHC::debug(debug)
   
-  RHC::timeout($opt["timeout"] ? $opt["timeout"] : get_var('timeout')) if val_timeout
-  RHC::connect_timeout($opt["connect-timeout"] ? $opt["connect-timeout"] : get_var('connect-timeout')) if val_timeout
+  RHC::timeout($opt["timeout"], get_var('timeout')) if val_timeout
+  RHC::connect_timeout($opt["timeout"], get_var('connect-timeout'), get_var('timeout')) if val_timeout
 
   $password = $opt['password'] ? $opt['password'] : RHC::get_password
 end
@@ -283,8 +282,7 @@ begin
         ["--password", "-p", GetoptLong::REQUIRED_ARGUMENT],
         ["--namespace", "-n", GetoptLong::REQUIRED_ARGUMENT],
         ["--config", GetoptLong::REQUIRED_ARGUMENT],
-        ["--timeout", GetoptLong::REQUIRED_ARGUMENT],
-        ["--connect-timeout", GetoptLong::REQUIRED_ARGUMENT]
+        ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
     )
   elsif ARGV[0] =~ /^(status|show)$/
     ARGV.shift
@@ -294,8 +292,7 @@ begin
         ["--rhlogin", "-l", GetoptLong::REQUIRED_ARGUMENT],
         ["--password", "-p", GetoptLong::REQUIRED_ARGUMENT],
         ["--config", GetoptLong::REQUIRED_ARGUMENT],
-        ["--timeout", GetoptLong::REQUIRED_ARGUMENT],
-        ["--connect-timeout", GetoptLong::REQUIRED_ARGUMENT]
+        ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
     )
   else
     # if the user just enters "rhc domain", don't throw an error
