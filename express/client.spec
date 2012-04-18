@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.91.2
+Version:       0.91.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -118,6 +118,11 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Apr 18 2012 Adam Miller <admiller@redhat.com> 0.91.3-1
+- Added logic from fotios to skip gems dep installer steps
+  (admiller@redhat.com)
+- Ignore gem dep solver, we use rpm for deps (admiller@redhat.com)
+
 * Wed Apr 18 2012 Adam Miller <admiller@redhat.com> 0.91.2-1
 - Fixed paths for new combined rhc package (fotios@redhat.com)
 - Moved rhc-rest files into express (fotios@redhat.com)
