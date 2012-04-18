@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.90.6
+Version:       0.90.7
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -115,6 +115,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Apr 18 2012 Dan McPherson <dmcphers@redhat.com> 0.90.7-1
+- 
+
 * Thu Apr 12 2012 Mike McGrath <mmcgrath@redhat.com> 0.90.6-1
 - BZ810790: Fixed app scaling payload creation (fotios@redhat.com)
 
