@@ -73,7 +73,8 @@ fi
 rake --trace package
 
 mkdir -p .%{gemdir}
-gem install --install-dir $RPM_BUILD_ROOT/%{gemdir} --bindir $RPM_BUILD_ROOT/%{_bindir} --local -V --force --rdoc \
+# Ignore dependencies here because these will be handled by rpm 
+gem install --install-dir $RPM_BUILD_ROOT/%{gemdir} --bindir $RPM_BUILD_ROOT/%{_bindir} --local -V --force --rdoc --ignore-dependencies \
      pkg/rhc-%{version}.gem
 
 # Copy the bash autocompletion script
