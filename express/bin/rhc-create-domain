@@ -21,7 +21,8 @@ Bind a registered rhcloud user to a domain in rhcloud.
   -d|--debug                   Print Debug info
   -h|--help                    Show Usage info
   --config  path               Path of alternate config file
-  --timeout #                  Timeout, in seconds, for connection
+  --timeout #                  Timeout, in seconds, for the session
+  --connect-timeout #          Timeout, in seconds, to connect to the server
   
 USAGE
 exit 255
@@ -36,7 +37,8 @@ begin
         ["--namespace", "-n", GetoptLong::REQUIRED_ARGUMENT],
         ["--config", GetoptLong::REQUIRED_ARGUMENT],
         ["--alter", "-a", GetoptLong::NO_ARGUMENT],
-        ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
+        ["--timeout", GetoptLong::REQUIRED_ARGUMENT],
+        ["--connect-timeout", GetoptLong::REQUIRED_ARGUMENT]
     )
     
     opt = {}
@@ -72,6 +74,7 @@ end
 RHC::debug(debug)
 
 RHC::timeout(opt["timeout"] ? opt["timeout"] : get_var('timeout'))
+RHC::connect_timeout(opt["connect-timeout"] ? opt["connect-timeout"] : get_var('connect-timeout'))
 
 if !RHC::check_namespace(opt['namespace'])
     p_usage

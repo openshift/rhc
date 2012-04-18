@@ -43,9 +43,18 @@ module RHC
   def self.timeout(val)
     if val
       @read_timeout = val.to_i
-      @open_timeout = @read_timeout
       unless @read_timeout > 0 
         puts 'Timeout must be specified as a number greater than 0'
+        exit 1
+      end
+    end
+  end
+
+  def self.connect_timeout(val)
+    if val
+      @connect_timeout = val.to_i
+      unless @connect_timeout > 0
+        puts 'Connect Timeout must be specified as a number greater than 0'
         exit 1
       end
     end

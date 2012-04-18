@@ -62,7 +62,8 @@ List of arguments
   -o|--opts         options      Options to pass to the server-side (linux based) tail command (applicable to tail command only) (-f is implicit.  See the linux tail man page full list of options.) (Ex: --opts '-n 100')
   --alias           alias        Specify server alias (when using add/remove-alias)
   --config          path         Path of alternate config file
-  --timeout         #            Timeout, in seconds, for connection
+  --timeout         #            Timeout, in seconds, for the session
+  --connect-timeout #            Timeout, in seconds, to connect to the server
   --enable-jenkins  [name]       Indicates to create a Jenkins application (if not already available) and embed the Jenkins client into this application.  The default name will be 'jenkins' if not specified. Note that --no-dns is ignored for the creation of the Jenkins application.
 USAGE
 exit 255
@@ -96,7 +97,8 @@ def validate_args(val_type=true, val_cartridge=false, val_timeout=true)
   RHC::debug(debug)
   
   RHC::timeout($opt["timeout"] ? $opt["timeout"] : get_var('timeout')) if val_timeout
-  
+  RHC::connect_timeout($opt["connect-timeout"] ? $opt["connect-timeout"] : get_var('connect-timeout')) if val_timeout
+
   $password = $opt['password'] ? $opt['password'] : RHC::get_password
 end
 
@@ -486,7 +488,8 @@ begin
         ["--enable-jenkins", GetoptLong::OPTIONAL_ARGUMENT],
         ["--scaling", "-s", GetoptLong::OPTIONAL_ARGUMENT],
         ["--config", GetoptLong::REQUIRED_ARGUMENT],
-        ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
+        ["--timeout", GetoptLong::REQUIRED_ARGUMENT],
+        ["--connect-timeout", GetoptLong::REQUIRED_ARGUMENT]
     )
   elsif ARGV[0] =~ /^(show|start|stop|force-stop|restart|reload|status|destroy|tidy|add-alias|remove-alias|threaddump|destroy)$/
     ARGV.shift
@@ -499,7 +502,8 @@ begin
         ["--alias", GetoptLong::REQUIRED_ARGUMENT],
         ["--bypass", "-b", GetoptLong::NO_ARGUMENT],
         ["--config", GetoptLong::REQUIRED_ARGUMENT],
-        ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
+        ["--timeout", GetoptLong::REQUIRED_ARGUMENT],
+        ["--connect-timeout", GetoptLong::REQUIRED_ARGUMENT]
     )
   elsif ARGV[0] =~ /^cartridge$/
     ARGV.shift
@@ -512,7 +516,8 @@ begin
         ["--app", "-a", GetoptLong::REQUIRED_ARGUMENT],
         ["--cartridge", "-c", GetoptLong::REQUIRED_ARGUMENT],
         ["--config", GetoptLong::REQUIRED_ARGUMENT],
-        ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
+        ["--timeout", GetoptLong::REQUIRED_ARGUMENT],
+        ["--connect-timeout", GetoptLong::REQUIRED_ARGUMENT]
     )
   elsif ARGV[0] =~ /^tail$/
     ARGV.shift
@@ -525,7 +530,8 @@ begin
         ["--opts", "-o", GetoptLong::REQUIRED_ARGUMENT],
         ["--filepath", "-f", GetoptLong::REQUIRED_ARGUMENT],
         ["--config", GetoptLong::REQUIRED_ARGUMENT],
-        ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
+        ["--timeout", GetoptLong::REQUIRED_ARGUMENT],
+        ["--connect-timeout", GetoptLong::REQUIRED_ARGUMENT]
     )
   elsif ARGV[0] =~ /^snapshot$/
     ARGV.shift
@@ -538,7 +544,8 @@ begin
         ["--app", "-a", GetoptLong::REQUIRED_ARGUMENT],
         ["--filepath", "-f", GetoptLong::REQUIRED_ARGUMENT],
         ["--config", GetoptLong::REQUIRED_ARGUMENT],
-        ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
+        ["--timeout", GetoptLong::REQUIRED_ARGUMENT],
+        ["--connect-timeout", GetoptLong::REQUIRED_ARGUMENT]
     )
   else
     puts "Missing or invalid command!" unless ARGV[0] =~ /^(help|-h|--help)$/
