@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.91.1
+Version:       0.91.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -115,6 +115,26 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Apr 18 2012 Adam Miller <admiller@redhat.com> 0.91.2-1
+- Fixed paths for new combined rhc package (fotios@redhat.com)
+- Moved rhc-rest files into express (fotios@redhat.com)
+- Make the timeout parameter specific to the session timeout and add a
+  connection timeout. (rmillner@redhat.com)
+- Following request in bugzilla ticket 813110; further increase the timeout to
+  120s. (rmillner@redhat.com)
+- The default read timeout is causing build/test failures and user-visible
+  bugs.  Increasing the read timeout default to 90s which is 30%% higher than
+  our current worst-case non-scalable app creation time. (rmillner@redhat.com)
+- Fixing extensions so the build will pass (fotios@redhat.com)
+- Update Rakefile with move (ccoleman@redhat.com)
+- Merge branch 'master' of github.com:openshift/os-client-tools
+  (dmcphers@redhat.com)
+- Add links to the getting started guide (ccoleman@redhat.com)
+- Update README.md with recent changes. (ccoleman@redhat.com)
+- US2145: properly choosing json/json_pure based on installation environment
+  (fotios@redhat.com)
+- Fixed error output for non-scalable apps (fotios@redhat.com)
+
 * Mon Apr 16 2012 Dan McPherson <dmcphers@redhat.com> 0.91.1-1
 - add read timeout (dmcphers@redhat.com)
 
