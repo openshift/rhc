@@ -20,7 +20,7 @@ module RHC
   API = "1.1.3"
   PATTERN_VERSION=/\A\d+\.\d+\.\d+\z/
   @read_timeout = 120
-  @open_timeout = 20
+  @connect_timeout = 20
   @mydebug = false
   @@api_version = "?.?.?"
 
@@ -295,7 +295,7 @@ module RHC
     puts "Contacting #{url.scheme}://#{url.host}" if @mydebug
     req.set_form_data({'json_data' => json_data, 'password' => password})
     http = http.new(url.host, url.port)
-    http.open_timeout = @open_timeout
+    http.open_timeout = @connect_timeout
     http.read_timeout = @read_timeout
     if url.scheme == "https"
       http.use_ssl = true
