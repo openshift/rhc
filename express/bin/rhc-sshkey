@@ -49,7 +49,7 @@ def validate_args(val_id=true)
   p_usage if val_id && !RHC::check_key($opt['identifier'])
   
   RHC::timeout($opt["timeout"], get_var('timeout'))
-  RHC::connect_timeout($opt["timeout"], get_var('connect-timeout'), get_var('timeout'))
+  RHC::connect_timeout($opt["timeout"], get_var('timeout'))
   $password = $opt['password'] ? $opt['password'] : RHC::get_password
 end
 

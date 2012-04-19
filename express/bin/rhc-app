@@ -96,7 +96,7 @@ def validate_args(val_type=true, val_cartridge=false, val_timeout=true)
   RHC::debug(debug)
   
   RHC::timeout($opt["timeout"], get_var('timeout')) if val_timeout
-  RHC::connect_timeout($opt["timeout"], get_var('connect-timeout'), get_var('timeout')) if val_timeout
+  RHC::connect_timeout($opt["timeout"], get_var('timeout')) if val_timeout
 
   $password = $opt['password'] ? $opt['password'] : RHC::get_password
 end

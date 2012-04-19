@@ -72,7 +72,7 @@ end
 RHC::debug(debug)
 
 RHC::timeout(opt["timeout"], get_var('timeout'))
-RHC::connect_timeout(opt["timeout"], get_var('connect-timeout'), get_var('timeout'))
+RHC::connect_timeout(opt["timeout"], get_var('timeout'))
 
 if !RHC::check_namespace(opt['namespace'])
     p_usage

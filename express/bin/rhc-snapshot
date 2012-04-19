@@ -68,7 +68,7 @@ end
 RHC::debug(debug)
 
 RHC::timeout(opt["timeout"], get_var('timeout'))
-RHC::connect_timeout(opt["timeout"], get_var('connect-timeout'), get_var('timeout'))
+RHC::connect_timeout(opt["timeout"], get_var('timeout'))
 
 opt["rhlogin"] = get_var('default_rhlogin') unless opt["rhlogin"]
 
