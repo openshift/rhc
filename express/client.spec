@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.91.3
+Version:       0.91.4
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -118,6 +118,14 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Apr 19 2012 Adam Miller <admiller@redhat.com> 0.91.4-1
+- It was decided that the connect-timeout parameter was extraneous.
+  (rmillner@redhat.com)
+- Mixed up variable names (rmillner@redhat.com)
+- After discussions; it was decided to just have one timeout parameter and a
+  connect_timeout config file option which can increase both timeouts from
+  their defaults. (rmillner@redhat.com)
+
 * Wed Apr 18 2012 Adam Miller <admiller@redhat.com> 0.91.3-1
 - Added logic from fotios to skip gems dep installer steps
   (admiller@redhat.com)
