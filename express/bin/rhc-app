@@ -7,7 +7,7 @@ $embed_mapper = { 'add' => 'configure', 'remove' => 'deconfigure' }
 #
 # print help
 #
-def p_usage
+def p_usage(exit_code = 255)
     libra_server = get_var('libra_server')
     rhlogin = get_var('default_rhlogin') ? "Default: #{get_var('default_rhlogin')}" : "required"
     type_keys = RHC::get_cartridge_listing(nil, ', ', libra_server, @http, 'standalone', false)
@@ -65,7 +65,7 @@ List of arguments
   --timeout         #            Timeout, in seconds, for the session
   --enable-jenkins  [name]       Indicates to create a Jenkins application (if not already available) and embed the Jenkins client into this application.  The default name will be 'jenkins' if not specified. Note that --no-dns is ignored for the creation of the Jenkins application.
 USAGE
-exit 255
+exit exit_code
 end
 
 
@@ -542,12 +542,17 @@ begin
         ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
     )
   else
-    puts "Missing or invalid command!" unless ARGV[0] =~ /^(help|-h|--help)$/
-    # just exit at this point
-    # printing the usage description will be handled in the rescue
-    exit 255
+    opts = GetoptLong.new(
+      ["--help",  "-h", GetoptLong::NO_ARGUMENT]
+    )
+    unless ARGV[0] =~ /^(help|-h|--help)$/
+      puts "Missing or invalid command!" unless ARGV[0] =~ /^(help|-h|--help)$/
+      #  just exit at this point
+      # printing the usage description will be handled in the rescue
+      exit 255
+    end
   end
-    
+
   $opt = {}
   opts.each do |o, a|
     $opt[o[2..-1]] = a.to_s
@@ -557,7 +562,7 @@ rescue Exception => e
   p_usage
 end
 
-p_usage if $opt["help"]
+p_usage 0 if $opt["help"]
 
 case argv_c[0]
 when "create"
@@ -587,7 +592,7 @@ when "cartridge"
     p_usage
   end
 when "-h", "--help", "help", nil
-  p_usage
+  p_usage 0
 else
   puts "Invalid command!"
   p_usage

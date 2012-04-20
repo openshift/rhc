@@ -10,8 +10,6 @@ ARGV.each do|a|
 end
 
 system("rhc-domain-info #{args} 2>&1")
-retcode = $?
+retcode = $?.exitstatus
 
-exit 1 if retcode != 0
-
-exit 0
+exit retcode

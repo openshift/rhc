@@ -3,7 +3,7 @@ require 'rhc-common'
 
 embed_mapper = { 'add' => 'configure', 'remove' => 'deconfigure' }
 
-def p_usage
+def p_usage(exit_code = 255)
     rhlogin = get_var('default_rhlogin') ? "Default: #{get_var('default_rhlogin')}" : "required"
     puts <<USAGE
 
@@ -24,7 +24,7 @@ Control an OpenShift express app
   --timeout #              Timeout, in seconds, for the session
 
 USAGE
-exit 255
+exit exit_code
 end
 
 def p_embedded_list
@@ -74,13 +74,11 @@ ssh_config_d = "#{ENV['HOME']}/.ssh/"
 if opt["embedded-list"]
     p_embedded_list
 end
-if opt["help"] || 0 != ARGV.length
-    p_usage
-end
+p_usage 0 if opt["help"]
+p_usage if 0 != ARGV.length
 
-if opt["debug"]
-    debug = true
-end
+debug = true if opt["debug"]
+
 RHC::debug(debug)
 
 RHC::timeout(opt["timeout"], get_var('timeout'))

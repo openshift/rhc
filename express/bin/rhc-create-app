@@ -19,7 +19,7 @@ def p_valid_gear_sizes(invalid_gear_size)
     exit 255
 end
 
-def p_usage
+def p_usage(error_code = 255)
     libra_server = get_var('libra_server')
     rhlogin = get_var('default_rhlogin') ? "Default: #{get_var('default_rhlogin')}" : "required"
     type_keys = RHC::get_cartridge_listing(nil, ', ', libra_server, @http, 'standalone', false)
@@ -47,7 +47,7 @@ Notes:
 1. Jenkins applications will have Jenkins embedded.  Their default name will be 'jenkins' if not specified and the '--no-dns' flag is ignored.
 
 USAGE
-exit 255
+exit error_code
 end
 
 begin
@@ -84,13 +84,12 @@ check_cpath(opt)
 libra_server = get_var('libra_server')
 debug = get_var('debug') == 'false' ? nil : get_var('debug')
 
-if opt["help"] || 0 != ARGV.length
-    p_usage
-end
+p_usage 0 if opt["help"]
 
-if opt["debug"]
-    debug = true
-end
+p_usage if 0 != ARGV.length
+
+debug = true if opt["debug"]
+
 RHC::debug(debug)
 
 RHC::timeout(opt['timeout'], get_var('timeout'))

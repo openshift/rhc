@@ -2,7 +2,7 @@
 #
 # print help
 #
-def p_usage
+def p_usage(exit_code = 255)
     puts <<USAGE
 
 Usage: rhc (<resource> | --help) [<command>] [<args>]
@@ -17,7 +17,7 @@ List of resources
 See 'rhc <resource> --help' for more applicable commands and argumments on a specific resource.
 
 USAGE
-exit 255
+exit exit_code
 end
 
 
@@ -34,21 +34,21 @@ end
 case ARGV[0]
 when "domain"
   system("rhc-domain #{get_args} 2>&1")
-  retcode = $?
+  retcode = $?.exitstatus
 when "app"
   system("rhc-app #{get_args} 2>&1")
-  retcode = $?
+  retcode = $?.exitstatus
 when "sshkey"
   system("rhc-sshkey #{get_args} 2>&1")
-  retcode = $?
+  retcode = $?.exitstatus
 when "port-forward"
   system("rhc-port-forward #{get_args} 2>&1")
-  retcode = $?
+  retcode = $?.exitstatus
 when "-h", "--help", "help", nil
-  p_usage
+  p_usage 0
 else
   puts "Invalid rhc command: #{ARGV[0]}"
   p_usage
 end
 
-exit (retcode != 0 ? 1 : 0)
+exit retcode

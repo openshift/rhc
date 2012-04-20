@@ -18,7 +18,7 @@ require 'test/unit/ui/console/testrunner'
 #
 # print help
 #
-def p_usage
+def p_usage(exit_code = 255)
   rhlogin = get_var('default_rhlogin') ? "Default: #{get_var('default_rhlogin')}" : "required"
   puts <<USAGE
 
@@ -34,7 +34,7 @@ properly setup.  Often run to troubleshoot connection issues.
   --timeout #               Timeout, in seconds, for the session
 
 USAGE
-exit 255
+exit exit_code
 end
 
 begin
@@ -55,10 +55,13 @@ rescue Exception => e
   p_usage
 end
 
-if $opt["help"] || 0 != ARGV.length
-  p_usage
+if $opt["help"]
+  p_usage 0
 end
 
+if 0 != ARGV.length
+  p_usage
+end
 
 # If provided a config path, check it
 check_cpath($opt)

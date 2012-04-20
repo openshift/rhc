@@ -4,7 +4,7 @@ require 'rhc-common'
 #
 # print help
 #
-def p_usage
+def p_usage(exit_code = 255)
     rhlogin = get_var('default_rhlogin') ? "Default: #{get_var('default_rhlogin')}" : "required"
     puts <<USAGE
 
@@ -28,7 +28,7 @@ List of arguments
   --timeout         #            Timeout, in seconds, for the session
 
 USAGE
-exit 255
+exit exit_code
 end
 
 
@@ -164,7 +164,7 @@ end
 
 begin
   argv_c = ARGV.clone
-  
+
   if ARGV[0] =~ /^(add|update)$/
     ARGV.shift
     opts = GetoptLong.new(
@@ -199,12 +199,17 @@ begin
         ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
     )
   else
-    puts "Missing or invalid command!" unless ARGV[0] =~ /^(help|-h|--help)$/
-    # just exit at this point
-    # printing the usage description will be handled in the rescue
-    exit 255
+    opts = GetoptLong.new(
+      ["--help",  "-h", GetoptLong::NO_ARGUMENT]
+    )
+    unless ARGV[0] =~ /^(help|-h|--help)$/
+      puts "Missing or invalid command!"
+      # just exit at this point
+      # printing the usage description will be handled in the rescue
+      exit 255
+    end
   end
-    
+
   $opt = {}
   opts.each do |o, a|
     $opt[o[2..-1]] = a.to_s
@@ -214,7 +219,7 @@ rescue Exception => e
   p_usage
 end
 
-p_usage if $opt["help"]
+p_usage 0 if $opt["help"]
 
 case argv_c[0]
 when "add", "update"
@@ -224,7 +229,7 @@ when "remove"
 when "list", nil
   show_key_list
 when "-h", "--help", "help", nil
-  p_usage
+  p_usage 0
 else
   puts "Invalid command!"
   p_usage

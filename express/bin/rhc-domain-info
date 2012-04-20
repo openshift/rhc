@@ -4,7 +4,7 @@ require 'rhc-common'
 #
 # print help
 #
-def p_usage
+def p_usage(error_code = 255)
     rhlogin = get_var('default_rhlogin') ? "Default: #{get_var('default_rhlogin')}" : "required"
     puts <<USAGE
 
@@ -21,7 +21,7 @@ Display information about a user
   --timeout #               Timeout, in seconds, for the session
 
 USAGE
-exit 255
+exit error_code
 end
 
 begin
@@ -51,13 +51,12 @@ check_cpath(opt)
 libra_server = get_var('libra_server')
 debug = get_var('debug') == 'false' ? nil : get_var('debug')
 
-if opt["help"] || 0 != ARGV.length
-    p_usage
-end
+p_usage 0 if opt["help"] 
 
-if opt["debug"]
-    debug = true
-end
+p_usage if 0 != ARGV.length
+
+debug = true if opt["debug"]
+
 RHC::debug(debug)
 
 RHC::timeout(opt["timeout"], get_var('timeout'))
