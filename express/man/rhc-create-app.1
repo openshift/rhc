@@ -58,7 +58,7 @@ created repo directory (specified by
 .BR master
 .SH "OPTIONS"
 .IP "\-l|\-\-rhlogin login"
-Red Hat login (RHN or OpenShift login with OpenShift Express access)
+Red Hat login (RHN or OpenShift login with OpenShift access)
 .IP "\-p|\-\-password password"
 RHLogin password
 .IP "\-a|\-\-app application_name"
@@ -66,7 +66,7 @@ Name of application to create.  Applications will be created as <application_nam
 .IP "\-r|\-\-repo repo_path"
 Local repo to create (must be empty)
 .IP "\-g|\-\-gear\-size gear_size"
-The amount of resources available to this application upon creation.  Currently small(default), medium and large are supported.
+The amount of resources available to this application upon creation.  Currently small (default), medium and large are supported.
 .IP "\-t|\-\-type framework_type"
 Framework type to create.  Currently at least php\-5.3, python\-2.6, and ruby\-1.8 are supported. To obtain the full, most recent list, use the \-h flag.
 .IP \-d|\-\-debug
@@ -78,7 +78,7 @@ Do not 'git clone' default git repo from server
 .IP \-\-config
 Alternate full pathname for the config file
 .IP \-\-timeout
-Timeout value, in seconds, for the connection (default is 10)
+Timeout value, in seconds, for client-server connections (default is 20), and for server read operations (default is 120). This option affects both timeout parameters, but cannot be used to specify a timeout less than the default. For example, --timeout 50 sets the connection timeout to 50 seconds, but has no affect on the read timeout.
 .IP \-\-no\-dns
 Skip the DNS checks for your new app.  Must be used in combination with \-\-nogit
 .IP "\-\-enable\-jenkins [name]"
@@ -116,7 +116,7 @@ for more information.
 .RE
 .I ~/.ssh/libra_id_rsa
 .RS
-SSH key created by rhc\-create\-domain to interact with OpenShift Express services
+SSH key created by rhc\-create\-domain to interact with OpenShift services
 see
 .BR ssh\-keygen (1)
 for more information
