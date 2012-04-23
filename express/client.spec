@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.91.5
+Version:       0.91.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -118,6 +118,10 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Apr 23 2012 Adam Miller <admiller@redhat.com> 0.91.6-1
+- added --scaling details, fixed some formatting, adding path arg to --config
+  (davido@redhat.com)
+
 * Fri Apr 20 2012 Adam Miller <admiller@redhat.com> 0.91.5-1
 - exit with exit code 0 is --help is invoked (johnp@redhat.com)
 - updated --timeout details, fixed typo, removed 'Express' (davido@redhat.com)
