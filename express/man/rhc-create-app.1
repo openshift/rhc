@@ -18,7 +18,7 @@ rhcloud.com
 .B [\-g
 .I gear_size
 .B ]
-.B [\-d] [\-h] [\-n]
+.B [\-d] [\-h] [\-n] [\-s]
 .B [\-\-config
 .I config_path
 .B ]
@@ -75,10 +75,12 @@ Enable debugging / verbose output
 Display help menu
 .IP \-n|\-\-nogit
 Do not 'git clone' default git repo from server
-.IP \-\-config
+.IP \-s|\-\-scaling
+Enable scaling for this application. This must be specified when you create the application. Scaled applications cannot be converted to non\-scaled applications. At least nodejs\-0.6, jbossas\-7, php\-5.3, perl\-5.10, python\-2.6, and ruby\-1.8 applications can be scaled. OpenShift currently only supports mysql\-5.1 as an embedded cartridge in scaled applications.
+.IP "\-\-config config_path"
 Alternate full pathname for the config file
 .IP \-\-timeout
-Timeout value, in seconds, for client-server connections (default is 20), and for server read operations (default is 120). This option affects both timeout parameters, but cannot be used to specify a timeout less than the default. For example, --timeout 50 sets the connection timeout to 50 seconds, but has no affect on the read timeout.
+Timeout value, in seconds, for client\-server connections (default is 20), and for server read operations (default is 120). This option affects both timeout parameters, but cannot be used to specify a timeout less than the default. For example, \-\-timeout 50 sets the connection timeout to 50 seconds, but has no affect on the read timeout.
 .IP \-\-no\-dns
 Skip the DNS checks for your new app.  Must be used in combination with \-\-nogit
 .IP "\-\-enable\-jenkins [name]"
