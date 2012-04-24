@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.91.7
+Version:       0.91.8
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -118,6 +118,13 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Apr 24 2012 Adam Miller <admiller@redhat.com> 0.91.8-1
+- Added ability to remove rhc-rest when this gem gets installed This should
+  prevent any conflicts between old rhc-rest and new libs/rhc-rest*
+  (fotios@redhat.com)
+- Added rake as a dependency, so extension building will succeed Added rescue
+  around native json installation and fallback to json_pure (fotios@redhat.com)
+
 * Tue Apr 24 2012 Adam Miller <admiller@redhat.com> 0.91.7-1
 - update scaling entry to include jenkins-client-1.4 as embedded cartridge
   (davido@redhat.com)
