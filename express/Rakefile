@@ -37,6 +37,19 @@ spec = Gem::Specification.new do |s|
     #   - json_pure (Ruby (Ruby 1.8.6, Windows, Mac) / json (everything else)
     # http://en.wikibooks.org/wiki/Ruby_Programming/RubyGems
     s.extensions << 'ext/mkrf_conf.rb'
+
+    # Leave this message for a few versions, or until we can 
+    #   figure out how to get it only displayed if rhc-rest 
+    #   is installed (taken care of in extension)
+    s.post_install_message = <<-MSG
+      ===================================================
+        rhc-rest is no longer needed as an external gem
+          - If it is installed, it will be removed
+          - Its libraries are now included in rhc
+            - Any applications requiring rhc-rest will 
+              still function as expected
+      ===================================================
+    MSG
 end
 
 # Define a :package task that bundles the gem
