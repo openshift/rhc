@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.91.6
+Version:       0.91.7
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -118,6 +118,10 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Apr 24 2012 Adam Miller <admiller@redhat.com> 0.91.7-1
+- update scaling entry to include jenkins-client-1.4 as embedded cartridge
+  (davido@redhat.com)
+
 * Mon Apr 23 2012 Adam Miller <admiller@redhat.com> 0.91.6-1
 - added --scaling details, fixed some formatting, adding path arg to --config
   (davido@redhat.com)
