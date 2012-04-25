@@ -33,9 +33,7 @@ unless ENV['RHC_RPMBUILD']
 
   # Remove rhc-rest if it's installed
   begin
-    rest = Gem::Specification.find_by_name('rhc-rest')
-    remove = Gem::Uninstaller.new('rhc-rest')
-    remove.uninstall
+    Gem::Uninstaller.new('rhc-rest').uninstall
 
     # This only gets printed if verbose is specified 
     #   TODO: Need to figure out how to get it always shown
@@ -48,9 +46,8 @@ unless ENV['RHC_RPMBUILD']
               still function as expected
       ===================================================
     MSG
-
-
-  rescue Gem::LoadError
+  rescue Gem::LoadError,Gem::InstallError
+    # This means that rhc-rest was not installed, not a problem
   end
 end
 
