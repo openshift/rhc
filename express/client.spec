@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.91.8
+Version:       0.91.9
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -118,6 +118,12 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Apr 25 2012 Adam Miller <admiller@redhat.com> 0.91.9-1
+- Removed finding rhc-rest before uninstalling since we can just catch the
+  uninstall error. This was causing problems on Ubuntu (fotios@redhat.com)
+- Changed JSON library checking for only install json_pure if native json fails
+  (fotios@redhat.com)
+
 * Tue Apr 24 2012 Adam Miller <admiller@redhat.com> 0.91.8-1
 - Added ability to remove rhc-rest when this gem gets installed This should
   prevent any conflicts between old rhc-rest and new libs/rhc-rest*
