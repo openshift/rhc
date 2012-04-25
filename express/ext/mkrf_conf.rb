@@ -16,16 +16,15 @@ unless ENV['RHC_RPMBUILD']
       inst.install "test-unit"
     end
 
-    if ENV['JSON_PURE'] or (RUBY_VERSION == "1.8.6" or RUBY_PLATFORM =~ /mswin/ or RUBY_PLATFORM =~ /darwin/)
+    # Attempt native json installation (unless JSON_PURE is specified)
+    #   - fall back to json_pure if it fails
+    #   - Known failure conditions
+    #     - Ubuntu: using ruby and not ruby-dev
+    begin
+      throw if ENV['JSON_PURE']
+      inst.install('json')
+    rescue
       inst.install('json_pure')
-    else
-      # rescue native json installation failure and fall back to json_pure
-      #   This may happen, for instance if an Ubuntu user does not have ruby-dev
-      begin
-        inst.install('json')
-      rescue
-        inst.install('json_pure')
-      end
     end
 
   rescue
