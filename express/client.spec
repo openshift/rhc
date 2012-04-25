@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.91.9
+Version:       0.91.10
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -118,6 +118,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Apr 25 2012 Adam Miller <admiller@redhat.com> 0.91.10-1
+- 
+
 * Wed Apr 25 2012 Adam Miller <admiller@redhat.com> 0.91.9-1
 - Removed finding rhc-rest before uninstalling since we can just catch the
   uninstall error. This was causing problems on Ubuntu (fotios@redhat.com)
