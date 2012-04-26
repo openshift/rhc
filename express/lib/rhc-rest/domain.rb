@@ -44,7 +44,7 @@ module Rhc
         logger.debug "Updating domain #{self.id} to #{new_id}" if @mydebug
         url = @links['UPDATE']['href']
         method =  @links['UPDATE']['method']
-        payload = {:domain_id => new_id}
+        payload = {:id => new_id}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
         return send(request)
       end
