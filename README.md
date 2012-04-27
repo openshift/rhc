@@ -14,8 +14,7 @@ comments.  For more information about OpenShift, visit https://openshift.redhat.
 or the OpenShift forum
 https://openshift.redhat.com/community/forums/openshift.
 
-Coding Standards
-----------------
+## Coding Standards
 We are following the GitHub Ruby styleguide (https://github.com/styleguide/ruby)
 
 If you use vim, we've included a .vimrc in the root of this project.
