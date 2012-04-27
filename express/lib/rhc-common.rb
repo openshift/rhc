@@ -816,12 +816,31 @@ _home_conf = File.expand_path('~/.openshift')
 
 cfg_opts = {
   :ssh_key_file => {
-    :comment => "SSH key file",
+    :comment => [
+      "SSH key file"
+    ],
     :default => "libra_id_rsa"
   },
   :default_rhlogin => {
-    :comment => "The default username to use",
+    :comment => [
+      "The default username to use"
+    ],
     :default => "user@email.com"
+  },
+  :timeout => {
+    :comment => [
+      "The default timeout for API actions (in seconds)",
+      "  There are 2 timeouts, and they are only affected if this value is larger than the default",
+      "    - connect timeout: How long to wait for a response from the server (default: 10)",
+      "    - complete timeout: How long to wait for a the server to complete an action (default: 120)"
+    ],
+    :default => 60
+  },
+  :debug => {
+    :comment => [
+      "Always show debugging output",
+    ],
+    :default => false
   }
 }
 
@@ -861,12 +880,9 @@ lines = cfg_opts.keys.map do |name|
   end
 
   # Create the string
-  "# %s\n%s%s = %s" % [
-    opts[:comment],
-    comment,
-    name,
-    val
-  ]
+  string = "# "
+  string << opts[:comment].join("\n# ")
+  string << ("\n%s%s = %s" % [ comment, name, val ])
 end
 
 # Copy the file before we mess with it
@@ -905,8 +921,6 @@ if state
   end
   puts ""
 end
-
-exit
 
 begin
   @global_config = ParseConfig.new(@config_path)
@@ -966,12 +980,17 @@ end
 #   3) $GEM/../conf/express.conf
 #
 def get_var(var)
-  v = nil
-  if !@opts_config.nil? && @opts_config.get_value(var)
-    v = @opts_config.get_value(var)
-  else
-    v = @local_config.get_value(var) ? @local_config.get_value(var) : @global_config.get_value(var)
-  end
+  v = case
+      when !@opts_config.nil? && @opts_config.get_value(var)
+        @opts_config.get_value(var)
+      when @local_config.get_value(var)
+        @local_config.get_value(var) 
+      when @global_config.get_value(var)
+        @global_config.get_value(var)
+      else
+        nil
+      end
+
   v
 end
 
