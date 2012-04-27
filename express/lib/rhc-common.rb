@@ -10,6 +10,8 @@ require 'parseconfig'
 require 'resolv'
 require 'uri'
 require 'rhc-rest'
+require 'digest/md5'
+require 'tempfile'
 
 module RHC
 
@@ -30,7 +32,7 @@ module RHC
   # "\e" is an alternative to "\033"
   # cf. http://en.wikipedia.org/wiki/ANSI_escape_code
   CLEAR_LINE = "\r" + "\e[0K"
-  
+
   DEBUG_INGORE_KEYS = {
     'result' => nil,
     'debug' => nil,
@@ -156,11 +158,11 @@ module RHC
   end
 
   def self.check_key(keyname)
-    check_field(keyname, 'key name', DEFAULT_MAX_LENGTH, /[^0-9_a-zA-Z]/, 
+    check_field(keyname, 'key name', DEFAULT_MAX_LENGTH, /[^0-9_a-zA-Z]/,
                 'contains invalid characters! Only alpha-numeric characters and underscores allowed.')
   end
 
-  def self.check_field(field, type, max=0, val_regex=/[^0-9a-zA-Z]/, 
+  def self.check_field(field, type, max=0, val_regex=/[^0-9a-zA-Z]/,
                        regex_failed_error='contains non-alphanumeric characters!')
     if field
       if field =~ val_regex
@@ -352,7 +354,7 @@ module RHC
       puts ''
     end
   end
-  
+
   def self.print_response_success(json_resp, print_result=false)
     if @mydebug
       print "Response from server:"
@@ -404,7 +406,7 @@ module RHC
       resp = dns.getresources(host, Resolv::DNS::Resource::IN::A)
       return resp.any?
   end
-  
+
   def self.create_app(libra_server, net_http, user_info, app_name, app_type, rhlogin, password, repo_dir=nil, no_dns=false, no_git=false, is_embedded_jenkins=false, gear_size='small',scale=false)
 
     # Need to have a fake HTTPResponse object for passing to print_reponse_err
@@ -425,7 +427,7 @@ module RHC
            }
     if @mydebug
       data[:debug] = true
-    end    
+    end
 
     # Need to use the new REST API for scaling apps
     #  We'll need to then get the new application using the existing
@@ -461,12 +463,12 @@ module RHC
         print_response_err(Struct::FakeResponse.new(e.message,e.code))
       rescue Rhc::Rest::ValidationException => e
         print_response_err(Struct::FakeResponse.new(e.message,406))
-      rescue Rhc::Rest::ServerErrorException => e 
-        if e.message =~ /^Failed to create application .* due to:Scalable app cannot be of type/ 
+      rescue Rhc::Rest::ServerErrorException => e
+        if e.message =~ /^Failed to create application .* due to:Scalable app cannot be of type/
           puts "Can not create a scaling app of type #{app_type}, either disable scaling or choose another app type"
           exit 1
         else
-          raise e 
+          raise e
         end
       end
     else
@@ -509,10 +511,10 @@ module RHC
     #
     unless no_dns
       puts "Now your new domain name is being propagated worldwide (this might take a minute)..."
-  
+
       # Allow DNS to propogate
       sleep 15
-  
+
       # Now start checking for DNS
       sleep_time = 2
       while loop < MAX_RETRIES && !hostexist?(fqdn)
@@ -523,12 +525,12 @@ module RHC
           sleep_time = delay(sleep_time)
       end
     end
-    
+
     # if we have executed print statements, then move to the next line
     if loop > 0
       puts
     end
-    
+
     # construct the Git URL
     git_url = "ssh://#{app_uuid}@#{app_name}-#{namespace}.#{rhc_domain}/~/git/#{app_name}.git/"
 
@@ -539,7 +541,7 @@ module RHC
         puts <<WARNING
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-WARNING: We weren't able to lookup your hostname (#{fqdn}) 
+WARNING: We weren't able to lookup your hostname (#{fqdn})
 in a reasonable amount of time.  This can happen periodically and will just
 take an extra minute or two to propagate depending on where you are in the
 world.  Once you are able to access your application in a browser, you can then
@@ -549,7 +551,7 @@ clone your git repository.
 
   Git Repository URL: #{git_url}
 
-  Git Clone command: 
+  Git Clone command:
     git clone #{git_url} #{repo_dir}
 
 If you can't get your application '#{app_name}' running in the browser, you can
@@ -568,14 +570,14 @@ make sure to get you up and running.
 WARNING
         exit 0
     end
-    
+
     #
     # Pull new repo locally
     #
-    
+
     unless no_git
         puts "Pulling new repo down" if @mydebug
-    
+
         puts "git clone --quiet #{git_url} #{repo_dir}" if @mydebug
         quiet = (@mydebug ? ' ' : '--quiet ')
         git_clone = %x<git clone #{quiet} #{git_url} #{repo_dir}>
@@ -586,7 +588,7 @@ WARNING
         end
     else
       if is_embedded_jenkins
-        # if this is a jenkins client application to be embedded, 
+        # if this is a jenkins client application to be embedded,
         # then print this message only in debug mode
         if @mydebug
           puts "
@@ -596,7 +598,7 @@ it isn't needed but you can always clone it later.
 
 "
         end
-      else         
+      else
         puts <<IMPORTANT
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -608,7 +610,7 @@ you clone the repo yourself.  See the git url below for more information.
 IMPORTANT
       end
     end
-    
+
     #
     # At this point, we need to register a handler to guarantee git
     # repo cleanup on any exceptions or calls to exit
@@ -646,7 +648,7 @@ IMPORTANT
           end
           $stdout.flush
           url = URI.parse("http://#{fqdn}/#{health_check_path}")
-          
+
           sleep(2.0)
           begin
             response = net_http.get_response(url)
@@ -686,7 +688,7 @@ LOOKSGOOD
       end
       return false
   end
-  
+
   def self.destroy_app(libra_server, net_http, app_name, rhlogin, password)
     json_data = generate_json(
                        {:action => 'deconfigure',
@@ -696,7 +698,7 @@ LOOKSGOOD
     url = URI.parse("https://#{libra_server}/broker/cartridge")
     http_post(net_http, url, json_data, password)
   end
-  
+
   # Runs rhc-list-ports on server to check available ports
   # :stderr return user-friendly port name, :stdout returns 127.0.0.1:8080 format
   def self.list_ports(rhc_domain, namespace, app_name, app_uuid, debug=true)
@@ -712,7 +714,7 @@ LOOKSGOOD
 
     puts ssh_cmd if debug
 
-    Open3.popen3(ssh_cmd) { |stdin, stdout, stderr| 
+    Open3.popen3(ssh_cmd) { |stdin, stdout, stderr|
 
       stdout.each { |line|
         line = line.chomp
@@ -728,26 +730,26 @@ LOOKSGOOD
           puts line
           exit 1
         end
-        
+
         if line.index(ip_and_port_simple_regex)
           hosts_and_ports_descriptions << line
         end
       }
 
     }
-    
+
     #hosts_and_ports_descriptions = stderr.gets.chomp.split(/\n/)
     #hosts_and_ports = stdout.gets.chomp.split(/\n/)
 
-    # Net::SSH.start(ssh_host, app_uuid) do |ssh| 
+    # Net::SSH.start(ssh_host, app_uuid) do |ssh|
 
     #   ssh.exec!("rhc-list-ports") do |channel, stream, data|
 
     #     array = data.split(/\n/)
 
-    #     if stream == :stderr 
+    #     if stream == :stderr
     #       hosts_and_ports_descriptions = array
-    #     elsif stream == :stdout 
+    #     elsif stream == :stdout
     #       hosts_and_ports = array
     #     end
 
@@ -758,22 +760,22 @@ LOOKSGOOD
     return hosts_and_ports, hosts_and_ports_descriptions
 
   end
-  
+
   def self.ctl_app(libra_server, net_http, app_name, rhlogin, password, action, embedded=false, framework=nil, server_alias=nil, print_result=true)
     data = {:action => action,
             :app_name => app_name,
             :rhlogin => rhlogin
            }
-    
+
     data[:server_alias] = server_alias if server_alias
     if framework
       data[:cartridge] = framework
     end
-    
+
     if @mydebug
       data[:debug] = true
     end
-    
+
     json_data = generate_json(data)
 
     url = nil
@@ -783,7 +785,7 @@ LOOKSGOOD
       url = URI.parse("https://#{libra_server}/broker/cartridge")
     end
     response = http_post(net_http, url, json_data, password)
-    
+
     if response.code == '200'
       json_resp = JSON.parse(response.body)
       print_response_success(json_resp, print_result || @mydebug)
@@ -812,24 +814,99 @@ _home_conf = File.expand_path('~/.openshift')
 @local_config_path = File.join(_home_conf, @conf_name)
 @config_path = File.exists?(_linux_cfg) ? _linux_cfg : _gem_cfg
 
+cfg_opts = {
+  :ssh_key_file => {
+    :comment => "SSH key file",
+    :default => "libra_id_rsa"
+  },
+  :default_rhlogin => {
+    :comment => "The default username to use",
+    :default => "user@email.com"
+  }
+}
+
 FileUtils.mkdir_p _home_conf unless File.directory?(_home_conf)
 local_config_path = File.expand_path(@local_config_path)
-if !File.exists? local_config_path
-  file = File.open(local_config_path, 'w')
-  begin
-    file.puts <<EOF
-# SSH key file
-#ssh_key_file = 'libra_id_rsa'
-EOF
 
-  ensure
-    file.close
+# Just touch the file so it exists
+FileUtils.touch(local_config_path)
+
+# Find all variables (even if they're commented out)
+file = File.open(local_config_path,"r")
+found = {}  # Store any vars we find
+file.readlines.each do |x|
+  if match = x.match(/^(?:# )?(\w+) =(.*)$/)
+    # Match the key and value
+    (key,val) = match[1,2].map{|y| y.strip }
+    # Also specify whether its a comment
+    found[key.to_sym] = {
+      :val => val,
+      :comment => (x =~ /^#/) ? true : false
+    }
+  end
+end
+file.close
+
+# See if any new variables are missing
+lines = cfg_opts.keys.map do |name|
+  opts = cfg_opts[name]
+
+  # The default values
+  (val,comment) = [opts[:default],"# "]
+
+  # Use stored values if they exist
+  if found[name] && !found[name][:comment]
+    val = found[name][:val]
+    comment = ""
+  end
+
+  # Create the string
+  "# %s\n%s%s = %s" % [
+    opts[:comment],
+    comment,
+    name,
+    val
+  ]
+end
+
+# Copy the file before we mess with it
+backup = Tempfile.new('express')
+backup.close
+FileUtils.cp(local_config_path,backup.path)
+
+# Overwrite the config file
+file = File.open(local_config_path,"w")
+file.puts lines.join("\n"*2)
+file.close
+
+# Get the old size so we can see if the file changes
+old_hash = Digest::MD5.file(backup.path).hexdigest
+old_size = File.size(backup.path)
+# Check the new size for comparison
+new_hash = Digest::MD5.file(local_config_path).hexdigest
+
+# Change state if we've added anything
+state = case
+        when old_size == 0
+          "Created"
+        when new_hash != old_hash
+          # Only save the backup if we actually change something
+          FileUtils.cp(backup.path,"#{local_config_path}.bak")
+          "Modified"
+        end
+
+if state
+  puts ""
+  puts "%s local config file: %s" % [state,local_config_path]
+  if state == "Modified"
+    puts "please take a look at express.conf, we may have added new variables or updated information"
+  else
+    puts "express.conf contains user configuration and can be transferred across clients."
   end
   puts ""
-  puts "Created local config file: " + local_config_path
-  puts "express.conf contains user configuration and can be transferred across clients."
-  puts ""
 end
+
+exit
 
 begin
   @global_config = ParseConfig.new(@config_path)
@@ -960,7 +1037,7 @@ end
 
 # Check / add new host to ~/.ssh/config
 def self.add_ssh_config_host(rhc_domain, ssh_key_file_path, ssh_config, ssh_config_d)
-  
+
   puts "Checking ~/.ssh/config"
   ssh_key_file_name = File.basename(ssh_key_file_path)
   if ssh_key_file_path =~ /^#{ENV['HOME']}/
