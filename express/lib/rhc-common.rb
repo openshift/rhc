@@ -4,7 +4,7 @@ require 'getoptlong'
 require 'json'
 require 'net/http'
 require 'net/https'
-#require 'net/ssh'
+require 'net/ssh'
 require 'open3'
 require 'parseconfig'
 require 'resolv'
@@ -1030,5 +1030,68 @@ SSH
 
     File.chmod(0700, ssh_config_d)
     File.chmod(0600, ssh_config)
+  end
+end
+
+# Public: Generate an SSH key and store it in ~/.ssh/id_rsa
+#
+# type - The String type RSA or DSS.
+# bits - The Integer value for number of bits.
+# comment - The String comment for the key
+#
+# Examples
+#
+#  generate_ssh_key_ruby()
+#  # => /home/user/.ssh/id_rsa.pub
+#
+# Returns nil on failure or public key location as a String on success
+def generate_ssh_key_ruby(type="RSA", bits = 1024, comment = "OpenShift-Key")
+  key = SSHKey.generate(:type => type,
+                        :bits => bits,
+                        :comment => comment)
+  home_dir=File.expand_path("~")
+  ssh_dir = "#{home_dir}/.ssh"
+  if File.exists?("#{ssh_dir}/id_rsa")
+    puts "SSH key already exists: #{ssh_dir}/id_rsa.  Reusing..."
+    return nil
+  else
+    Dir.mkdir(ssh_dir) unless File.exists?(ssh_dir)
+    File.open("#{ssh_dir}/blah/woot/id_rsa", 'w') {|f| f.write(key.private_key)}
+    File.open("#{ssh_dir}/id_rsa.pub", 'w') {|f| f.write(key.ssh_public_key)}
+  end
+  "#{ssh_dir}/id_rsa.pub"
+end
+
+# Public: Run ssh command on remote host
+#
+# host - The String of the remote hostname to ssh to.
+# username - The String username of the remote user to ssh as.
+# command - The String command to run on the remote host.
+#
+# Examples
+#
+#  ssh_ruby('myapp-t.rhcloud.com',
+#            '109745632b514e9590aa802ec015b074',
+#            'rhcsh tail -f $OPENSHIFT_LOG_DIR/*"')
+#  # => true
+#
+# Returns true on success
+def ssh_ruby(host, username, command)
+  Net::SSH.start(host, username) do |session|
+    session.open_channel do |channel|
+      channel.request_pty do |ch, success|
+        puts "pty could not be obtained" unless success
+      end
+
+      channel.on_data do |ch, data|
+        #puts "[#{file}] -> #{data}"
+        puts data
+      end
+      channel.exec command
+      #channel.exec "rhcsh tail -f $OPENSHIFT_LOG_DIR/*"
+      #channel.exec "ctl_all start"
+      #channel.exec "rhcsh top"
+    end
+    session.loop
   end
 end
