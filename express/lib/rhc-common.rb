@@ -11,6 +11,7 @@ require 'parseconfig'
 require 'resolv'
 require 'uri'
 require 'rhc-rest'
+require 'highline/import'
 
 module RHC
 
@@ -313,14 +314,10 @@ module RHC
   def self.get_password
     password = nil
     begin
-      print "Password: "
-      system "stty -echo"
-      password = gets.chomp
+      password = ask("Password: ") { |q| q.echo = "*"}
     rescue Interrupt
       puts "\n"
       exit 1
-    ensure
-      system "stty echo"
     end
     puts "\n"
     password
@@ -1247,11 +1244,11 @@ EOF
   puts "    #{local_config_path}"
   puts "    #{@home_dir}/.ssh/"
   puts ""
-  puts "What is your https://openshift.redhat.com/ username? "
-  username = gets.chomp
+  username = ask("https://openshift.redhat.com/ username: ") { |q|
+                 q.echo = true }
   $password = RHC::get_password
-  # Fix this
-  #libra_server = get_var('libra_server')
+  # FIXME: Fix this
+  #$libra_server = get_var('libra_server')
   $libra_server = 'openshift.redhat.com'
   # Confirm username / password works:
   user_info = RHC::get_user_info($libra_server, username, $password, @http, true)
@@ -1315,7 +1312,7 @@ EOF
 
   puts "Name your new key: "
   while((key_name = RHC::check_key(gets.chomp)) == false)
-    puts "Try again.  Name your key: "
+    print "Try again.  Name your key: "
   end
 
   if known_keys.include?(key_name)

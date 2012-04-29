@@ -33,6 +33,7 @@ spec = Gem::Specification.new do |s|
     s.add_dependency('rake')
     s.add_dependency('sshkey')
     s.add_dependency('net-ssh')
+    s.add_dependency('highline')
     if ENV['JSON_PURE']
       s.add_dependency('json_pure')
     else
