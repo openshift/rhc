@@ -1059,7 +1059,7 @@ end
 #
 # url - The Object URI::HTTPS
 # data - The Hash representation of the data response
-# password- The String password for the user
+# password - The String password for the user
 #
 # Examples
 #
@@ -1213,9 +1213,6 @@ def ssh_ruby(host, username, command)
         puts data
       end
       channel.exec command
-      #channel.exec "rhcsh tail -f $OPENSHIFT_LOG_DIR/*"
-      #channel.exec "ctl_all start"
-      #channel.exec "rhcsh top"
     end
     session.loop
   end
