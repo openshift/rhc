@@ -927,7 +927,7 @@ or by having the 'rhc domain create' command do it for you.  If you created
 them on your own (or want to use an existing keypair), be sure to paste
 your public key into the express console at http://www.openshift.com.
 The client tools use the value of 'ssh_key_file' in express.conf to find
-your key followed by the defaults of libra_id_rsa[.pub] and then
+your key followed by the defaults of id_rsa[.pub] and then
 id_rsa[.pub].
 KFILE_NOT_FOUND
 
@@ -943,7 +943,7 @@ def get_kfile(check_exists=true)
       kfile = File.expand_path(ssh_key_file)
     end
   else
-    kfile = "#{ENV['HOME']}/.ssh/libra_id_rsa"
+    kfile = "#{ENV['HOME']}/.ssh/id_rsa"
   end
   if check_exists && !File.exists?(kfile)
     if ssh_key_file
@@ -1180,8 +1180,12 @@ def generate_ssh_key_ruby(type="RSA", bits = 1024, comment = "OpenShift-Key")
     puts "SSH key already exists: #{ssh_dir}/id_rsa.  Reusing..."
     return nil
   else
-    Dir.mkdir(ssh_dir) unless File.exists?(ssh_dir)
+    unless File.exists?(ssh_dir)
+      Dir.mkdir(ssh_dir)
+      File.chmod(0700, ssh_dir)
+    end
     File.open("#{ssh_dir}/id_rsa", 'w') {|f| f.write(key.private_key)}
+    File.chmod(0600, "#{ssh_dir}/id_rsa")
     File.open("#{ssh_dir}/id_rsa.pub", 'w') {|f| f.write(key.ssh_public_key)}
   end
   "#{ssh_dir}/id_rsa.pub"
