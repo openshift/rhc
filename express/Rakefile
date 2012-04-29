@@ -31,6 +31,8 @@ spec = Gem::Specification.new do |s|
     s.add_dependency("rest-client")
     # This does not need to be added as a dep for the RPM since it is only needed in extension installation
     s.add_dependency('rake')
+    s.add_dependency('sshkey')
+    s.add_dependency('net-ssh')
 
     # Adding install time dependencies for
     #   - test-unit (Ruby 1.9)
