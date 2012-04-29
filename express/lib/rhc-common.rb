@@ -157,8 +157,8 @@ module RHC
   end
 
   def self.check_key(keyname)
-    check_field(keyname, 'key name', DEFAULT_MAX_LENGTH, /[^0-9_a-zA-Z]/, 
-                'contains invalid characters! Only alpha-numeric characters and underscores allowed.')
+    check_field(keyname, 'key name', DEFAULT_MAX_LENGTH, /[^0-9a-zA-Z]/, 
+                'contains invalid characters! Only alpha-numeric characters allowed.')
   end
 
   def self.check_field(field, type, max=0, val_regex=/[^0-9a-zA-Z]/, 
@@ -176,7 +176,7 @@ module RHC
       puts "#{type} is required"
       return false
     end
-    true
+    field
   end
 
   def self.print_post_data(h)
@@ -240,6 +240,27 @@ module RHC
     user_info
   end
 
+  # Public: Get a list of ssh keys
+  #
+  # type - The String type RSA or DSS.
+  # libra_server - The String DNS for the broker
+  # rhlogin - The String login name
+  # password - The String password for login
+  # net_http - The NET::HTTP Object to use
+  #
+  # Examples
+  #
+  #  RHC::get_ssh_keys('openshift.redhat.com',
+  #                    'mylogin@example.com',
+  #                    'mypassword',
+  #                    @http)
+  #  # => { "ssh_type" => "ssh-rsa",
+  #         "ssh_key" => "AAAAB3NzaC1yc2EAAAADAQAB....",
+  #         "fingerprint" => "ea:08:e3:c7:e3:c3:8e:6a:66:34:65:e4:56:f4:3e:ff"}
+  #
+  # FIXME!  Exits on failure!  Should return something instead
+  #
+  # Returns Hash on success or exits on failure
   def self.get_ssh_keys(libra_server, rhlogin, password, net_http)
     data = {'rhlogin' => rhlogin, 'action' => 'list-keys'}
     if @mydebug
@@ -270,6 +291,21 @@ module RHC
       ssh_keys = (JSON.parse(json_resp['data'].to_s))
     rescue JSON::ParserError
       exit 1
+    end
+
+    # Inject public fingerprint into key.
+    ssh_keys['fingerprint'] = \
+      Net::SSH::KeyFactory.load_data_public_key(
+        "#{ssh_keys['ssh_type']} #{ssh_keys['ssh_key']}").fingerprint
+
+    if ssh_keys['keys'] && ssh_keys['keys'].kind_of?(Hash)
+      ssh_keys['keys'].each do |name, keyval|
+        type = keyval['type']
+        key = keyval['key']
+        ssh_keys['keys'][name]['fingerprint'] = \
+          Net::SSH::KeyFactory.load_data_public_key(
+            "#{type} #{key}").fingerprint
+      end
     end
     ssh_keys
   end
@@ -809,13 +845,21 @@ at_exit {
 @conf_name = 'express.conf'
 _linux_cfg = '/etc/openshift/' + @conf_name
 _gem_cfg = File.join(File.expand_path(File.dirname(__FILE__) + "/../conf"), @conf_name)
-_home_conf = File.expand_path('~/.openshift')
-@local_config_path = File.join(_home_conf, @conf_name)
+@home_conf = File.expand_path('~/.openshift')
+@local_config_path = File.join(@home_conf, @conf_name)
 @config_path = File.exists?(_linux_cfg) ? _linux_cfg : _gem_cfg
 @home_dir=File.expand_path("~")
 
-FileUtils.mkdir_p _home_conf unless File.directory?(_home_conf)
 local_config_path = File.expand_path(@local_config_path)
+
+begin
+  @global_config = ParseConfig.new(@config_path)
+  @local_config = ParseConfig.new(File.expand_path(@local_config_path)) if \
+    File.exists?(@local_config_path)
+rescue Errno::EACCES => e
+  puts "Could not open config file: #{e.message}"
+  exit 253
+end
 
 #
 # Check for proxy environment
@@ -1011,7 +1055,108 @@ SSH
   end
 end
 
+# Public: Handle response message when updating keys
+#
+# url - The Object URI::HTTPS
+# data - The Hash representation of the data response
+# password- The String password for the user
+#
+# Examples
+#
+#  handle_key_mgmt_response(
+#                  URI.parse('https://openshift.redhat.com/broker/ssh_keys'),
+#                  {
+#                    :rhlogin=>"rhnlogin@example.com",
+#                    :key_name=>"default",
+#                    :action=>"update-key",
+#                    :ssh=>"AAAAB3NzaC1yc2EAAAADAQABAAAAgQCrXG5c.....",
+#                    :key_type=>"ssh-rsa"},
+#                  'mypass')
+#  # => nil
+#
+# Returns nil on Success and RHC::http object on failure
+def handle_key_mgmt_response(url, data, password)
+  RHC::print_post_data(data)
+  json_data = RHC::generate_json(data)
 
+  response = RHC::http_post(@http, url, json_data, password)
+
+  if response.code == '200'
+    begin
+      json_resp = JSON.parse(response.body)
+      RHC::update_server_api_v(json_resp)
+      RHC::print_response_success(json_resp)
+      puts "Success"
+      return
+    rescue JSON::ParserError
+      RHC::print_response_err(response)
+    end
+  else
+    RHC::print_response_err(response)
+  end
+  puts "Failure"
+  return response
+end
+
+# Public: Add or upload an ssh key
+#
+# type - The String type RSA or DSS.
+# command - The String value 'add' or 'update'
+# identifier - The String value to identify the key
+# pub_key_file_path - The String file path of the public key
+# rhlogin - The String login to the broker
+# password- The String password for the user
+#
+# Examples
+#
+#  generate_ssh_key_ruby('add', 'newkeyname', '~/.ssh/id_rsa',
+#                        'mylogin', 'mypass')
+#  # => /home/user/.ssh/id_rsa.pub
+#
+# Returns nil on success or HTTP object on failure
+def add_or_update_key(command, identifier, pub_key_file_path, rhlogin, password)
+
+  # Read user public ssh key
+  if pub_key_file_path
+    if File.readable?(pub_key_file_path)
+      begin
+        ssh_keyfile_contents = File.open(pub_key_file_path).gets.chomp.split(' ')
+        ssh_key = ssh_keyfile_contents[1]
+        ssh_key_type = ssh_keyfile_contents[0]
+      rescue Exception => e
+        puts "Invalid public keyfile format! Please specify a valid user public keyfile."
+        exit 1
+      end
+    else
+      puts "Unable to read user public keyfile #{pub_key_file_path}"
+      exit 1
+    end
+  else # create key
+    key_name = identifier
+    puts "Generating ssh key pair for user '#{key_name}' in the dir '#{Dir.pwd}/'"
+    # REMOVED in favor of generate_ssh_key_ruby: system("ssh-keygen -t rsa -f '#{key_name}'")
+    ssh_pub_key_file = generate_ssh_key_ruby()
+    ssh_keyfile_contents = File.open(ssh_pub_key_file).gets.chomp.split(' ')
+    ssh_key = ssh_keyfile_contents[1]
+    ssh_key_type = ssh_keyfile_contents[0]
+  end
+
+  data = {}
+  data[:rhlogin] = rhlogin
+  data[:key_name] = identifier
+  data[:ssh] = ssh_key
+  data[:action] = 'add-key'
+  data[:key_type] = ssh_key_type
+
+  if command == 'add'
+    data[:action] = 'add-key'
+  elsif command == 'update'
+    data[:action] = 'update-key'
+  end
+
+  url = URI.parse("https://#{$libra_server}/broker/ssh_keys")
+  handle_key_mgmt_response(url, data, password)
+end
 
 
 # Public: Generate an SSH key and store it in ~/.ssh/id_rsa
@@ -1103,13 +1248,14 @@ EOF
   puts ""
   puts "What is your https://openshift.redhat.com/ username? "
   username = gets.chomp
-  password = RHC::get_password
+  $password = RHC::get_password
   # Fix this
   #libra_server = get_var('libra_server')
-  libra_server = 'openshift.redhat.com'
+  $libra_server = 'openshift.redhat.com'
   # Confirm username / password works:
-  user_info = RHC::get_user_info(libra_server, username, password, @http, true)
+  user_info = RHC::get_user_info($libra_server, username, $password, @http, true)
   if !File.exists? local_config_path
+    FileUtils.mkdir_p @home_conf
     file = File.open(local_config_path, 'w')
     begin
       file.puts <<EOF
@@ -1117,7 +1263,7 @@ EOF
 default_rhlogin='#{username}'
 
 # Server API
-libra_server = '#{libra_server}'
+libra_server = '#{$libra_server}'
 EOF
 
     ensure
@@ -1129,13 +1275,9 @@ EOF
     puts ""
   end
 
-  begin
-    @global_config = ParseConfig.new(@config_path)
-    @local_config = ParseConfig.new(File.expand_path(@local_config_path))
-  rescue Errno::EACCES => e
-    puts "Could not open config file: #{e.message}"
-    exit 253
-  end
+  # Read in @local_config now that it exists (was skipped before because it did
+  # not exist
+  @local_config = ParseConfig.new(File.expand_path(@local_config_path))
 
   ##################################
   # Second take care of the ssh keys
@@ -1144,13 +1286,46 @@ EOF
   unless File.exists? "#{@home_dir}/.ssh/id_rsa"
     puts ""
     puts "No SSH Key has been found.  We're generating one for you."
-    file_path = generate_ssh_key_ruby()
-    puts "    Created: #{file_path}"
+    ssh_pub_key_file_path = generate_ssh_key_ruby()
+    puts "    Created: #{ssh_pub_key_file_path}"
     puts ""
   end
 
   # TODO: Name and upload new key
 
+  puts <<EOF
+Last step, we need to upload the newly generated public key to remote servers
+so it can be used.  First you need to name it.  For example "liliWork" or
+"laptop".  You can overwrite an existing key by naming it or pick a new
+name.
+
+Current Keys:
+EOF
+  ssh_keys = RHC::get_ssh_keys($libra_server, username, $password, @http)
+  additional_ssh_keys = ssh_keys['keys']
+  known_keys = ['default']
+  puts "    default - #{ssh_keys['fingerprint']}" 
+  if additional_ssh_keys && additional_ssh_keys.kind_of?(Hash)
+    additional_ssh_keys.each do |name, keyval|
+      puts "    #{name} - #{keyval['fingerprint']}"
+      known_keys.push(name)
+    end
+  end
+
+  puts "Name your new key: "
+  while((key_name = RHC::check_key(gets.chomp)) == false)
+    puts "Try again.  Name your key: "
+  end
+
+  if known_keys.include?(key_name)
+    puts ""
+    puts "Key already exists!  Updating.."
+    add_or_update_key('update', key_name, ssh_pub_key_file_path, username, $password)
+  else
+    puts ""
+    puts "Sending new key.."
+    add_or_update_key('add', key_name, ssh_pub_key_file_path, username, $password)
+  end
 end
 
 setup_wizard(local_config_path) unless File.exists? local_config_path
