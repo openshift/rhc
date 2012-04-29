@@ -5,6 +5,7 @@ require 'json'
 require 'net/http'
 require 'net/https'
 require 'net/ssh'
+require 'sshkey'
 require 'open3'
 require 'parseconfig'
 require 'resolv'
@@ -811,33 +812,10 @@ _gem_cfg = File.join(File.expand_path(File.dirname(__FILE__) + "/../conf"), @con
 _home_conf = File.expand_path('~/.openshift')
 @local_config_path = File.join(_home_conf, @conf_name)
 @config_path = File.exists?(_linux_cfg) ? _linux_cfg : _gem_cfg
+@home_dir=File.expand_path("~")
 
 FileUtils.mkdir_p _home_conf unless File.directory?(_home_conf)
 local_config_path = File.expand_path(@local_config_path)
-if !File.exists? local_config_path
-  file = File.open(local_config_path, 'w')
-  begin
-    file.puts <<EOF
-# SSH key file
-#ssh_key_file = 'libra_id_rsa'
-EOF
-
-  ensure
-    file.close
-  end
-  puts ""
-  puts "Created local config file: " + local_config_path
-  puts "express.conf contains user configuration and can be transferred across clients."
-  puts ""
-end
-
-begin
-  @global_config = ParseConfig.new(@config_path)
-  @local_config = ParseConfig.new(File.expand_path(@local_config_path))
-rescue Errno::EACCES => e
-  puts "Could not open config file: #{e.message}"
-  exit 253
-end
 
 #
 # Check for proxy environment
@@ -1033,6 +1011,9 @@ SSH
   end
 end
 
+
+
+
 # Public: Generate an SSH key and store it in ~/.ssh/id_rsa
 #
 # type - The String type RSA or DSS.
@@ -1049,14 +1030,13 @@ def generate_ssh_key_ruby(type="RSA", bits = 1024, comment = "OpenShift-Key")
   key = SSHKey.generate(:type => type,
                         :bits => bits,
                         :comment => comment)
-  home_dir=File.expand_path("~")
-  ssh_dir = "#{home_dir}/.ssh"
+  ssh_dir = "#{@home_dir}/.ssh"
   if File.exists?("#{ssh_dir}/id_rsa")
     puts "SSH key already exists: #{ssh_dir}/id_rsa.  Reusing..."
     return nil
   else
     Dir.mkdir(ssh_dir) unless File.exists?(ssh_dir)
-    File.open("#{ssh_dir}/blah/woot/id_rsa", 'w') {|f| f.write(key.private_key)}
+    File.open("#{ssh_dir}/id_rsa", 'w') {|f| f.write(key.private_key)}
     File.open("#{ssh_dir}/id_rsa.pub", 'w') {|f| f.write(key.ssh_public_key)}
   end
   "#{ssh_dir}/id_rsa.pub"
@@ -1095,3 +1075,82 @@ def ssh_ruby(host, username, command)
     session.loop
   end
 end
+
+# Public: Runs the setup wizard to make sure ~/.openshift and ~/.ssh are correct
+#
+# Examples
+#
+#  setup_wizard()
+#  # => true
+#
+# Returns nil on failure or true on success
+def setup_wizard(local_config_path)
+
+  ##############################################
+  # First take care of ~/.openshift/express.conf
+  ##############################################
+  puts <<EOF
+
+Starting Interactive Setup.
+
+It looks like you've not used OpenShift Express on this machine before.  We'll
+help get you setup with just a couple of questions.  You can skip this in the
+future by copying your config's around:
+
+EOF
+  puts "    #{local_config_path}"
+  puts "    #{@home_dir}/.ssh/"
+  puts ""
+  puts "What is your https://openshift.redhat.com/ username? "
+  username = gets.chomp
+  password = RHC::get_password
+  # Fix this
+  #libra_server = get_var('libra_server')
+  libra_server = 'openshift.redhat.com'
+  # Confirm username / password works:
+  user_info = RHC::get_user_info(libra_server, username, password, @http, true)
+  if !File.exists? local_config_path
+    file = File.open(local_config_path, 'w')
+    begin
+      file.puts <<EOF
+# Default user login
+default_rhlogin='#{username}'
+
+# Server API
+libra_server = '#{libra_server}'
+EOF
+
+    ensure
+      file.close
+    end
+    puts ""
+    puts "Created local config file: " + local_config_path
+    puts "express.conf contains user configuration and can be transferred across clients."
+    puts ""
+  end
+
+  begin
+    @global_config = ParseConfig.new(@config_path)
+    @local_config = ParseConfig.new(File.expand_path(@local_config_path))
+  rescue Errno::EACCES => e
+    puts "Could not open config file: #{e.message}"
+    exit 253
+  end
+
+  ##################################
+  # Second take care of the ssh keys
+  ##################################
+
+  unless File.exists? "#{@home_dir}/.ssh/id_rsa"
+    puts ""
+    puts "No SSH Key has been found.  We're generating one for you."
+    file_path = generate_ssh_key_ruby()
+    puts "    Created: #{file_path}"
+    puts ""
+  end
+
+  # TODO: Name and upload new key
+
+end
+
+setup_wizard(local_config_path) unless File.exists? local_config_path
