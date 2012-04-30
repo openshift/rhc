@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version:       0.91.11
+Version:       0.91.12
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -121,6 +121,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Sun Apr 29 2012 Dan McPherson <dmcphers@redhat.com> 0.91.12-1
+- add rake require and rhc-rest obsolete (dmcphers@redhat.com)
+
 * Fri Apr 27 2012 Adam Miller <admiller@redhat.com> 0.91.11-1
 - Fix for Bugz#812308 (kraman@gmail.com)
 
