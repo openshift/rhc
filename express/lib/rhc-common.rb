@@ -806,25 +806,144 @@ at_exit {
 # Config paths... /etc/openshift/express.conf or $GEM/conf/express.conf -> ~/.openshift/express.conf
 #
 # semi-private: Just in case we rename again :)
+
+def local_conf_dir
+  File.expand_path('~/.openshift')
+end
+
+def current_vars(path)
+  values = {}
+  File.foreach(path) do |line|
+    # We might want to keep commented out values in case the user changed them
+    if match = line.match(/^(?:#)?(\w+) =(.*)$/)
+    # Match the key and value
+    (key,val) = match[1,2].map{|y| y.strip }
+    # Also specify whether its a comment
+      values[key.to_sym] = {
+      :val => val,
+        :commented => (line =~ /^#/) ? true : false
+    }
+  end
+end
+  values
+end
+
+def combine_opts(old,new)
+  merged = {}
+
+  # Create the merged hash from the default vals
+  #   We need to move the default value into the val field
+  new.each do |k,v|
+    merged[k] = v
+    merged[k][:val] = v[:default]
+    merged[k][:commented] = true
+    merged[k].delete(:default)
+  end
+
+  # Merge any existing options
+  merged.merge!(old) do |key,oldval,newval|
+    oldval.merge(newval)
+  end
+
+  merged
+  end
+
+def to_config_array(hash)
+  lines = hash.keys.sort.map do |name|
+    opts = hash[name]
+  string = "# "
+  string << opts[:comment].join("\n# ")
+    string << "\n"
+    string << "#" if opts[:commented]
+    string << ("%s = %s" % [ name, opts[:val] ])
+  end
+end
+
+UNCHANGED = 0
+CREATED   = 1
+MODIFIED  = 2
+
+def write_config(lines,file)
+# Copy the file before we mess with it
+backup = Tempfile.new('express')
+backup.close
+  FileUtils.cp(file,backup.path)
+
+# Overwrite the config file
+  File.open(file,"w") do |file|
+file.puts lines.join("\n"*2)
+  end
+
+  # Return what changed
+  case
+  when File.size(backup.path) == 0
+    CREATED
+  when Digest::MD5.file(backup.path).hexdigest != Digest::MD5.file(file).hexdigest
+    FileUtils.cp(backup.path,"#{file}.bak")
+    MODIFIED
+  else
+    UNCHANGED
+  end
+end
+
+def create_local_config(file,default_opts)
+  # Make sure we're working with a full path
+  config = File.expand_path(file)
+
+  # Make sure the config directory exists
+  dir = File.dirname(config)
+  FileUtils.mkdir_p dir unless File.directory?(dir)
+
+  # Just touch the file so it exists
+  FileUtils.touch(config)
+
+  # Find all variables (even if they're commented out)
+  found = current_vars(config)
+
+  # Grab the default options and then overwrite them with anything from the local config
+  combined = combine_opts(found,default_opts)
+
+  # Write the hash to file
+  lines = to_config_array(combined)
+  state = write_config(lines,config)
+        end
+
+def config_file_message(state,file)
+  msgs = {
+    UNCHANGED => "",
+    CREATED   => "Created",
+    MODIFIED  => "Updated"
+  }
+  # Generate the correct message
+  retval = [] 
+  if state != UNCHANGED
+    retval << ""
+    retval << "%s local config file: %s" % [msgs[state],config]
+    case state
+    when MODIFIED
+      retval << "please take a look at express.conf, we may have added new variables or updated information"
+    when CREATED
+      retval << "express.conf contains user configuration and can be transferred across clients."
+  end
+    retval << ""
+  end
+  return retval.join("\n\t")
+end
+
 @opts_config_path = nil
 @conf_name = 'express.conf'
 _linux_cfg = '/etc/openshift/' + @conf_name
 _gem_cfg = File.join(File.expand_path(File.dirname(__FILE__) + "/../conf"), @conf_name)
-_home_conf = File.expand_path('~/.openshift')
-@local_config_path = File.join(_home_conf, @conf_name)
+@local_config_path = File.join(local_conf_dir, @conf_name)
 @config_path = File.exists?(_linux_cfg) ? _linux_cfg : _gem_cfg
 
-cfg_opts = {
+DEFAULT_OPTS = {
   :ssh_key_file => {
-    :comment => [
-      "SSH key file"
-    ],
+    :comment => [ "SSH key file" ],
     :default => "libra_id_rsa"
   },
   :default_rhlogin => {
-    :comment => [
-      "The default username to use"
-    ],
+    :comment => [ "The default username to use" ],
     :default => "user@email.com"
   },
   :timeout => {
@@ -837,90 +956,14 @@ cfg_opts = {
     :default => 60
   },
   :debug => {
-    :comment => [
-      "Always show debugging output",
-    ],
+    :comment => [ "Always show debugging output", ],
     :default => false
   }
 }
 
-FileUtils.mkdir_p _home_conf unless File.directory?(_home_conf)
-local_config_path = File.expand_path(@local_config_path)
-
-# Just touch the file so it exists
-FileUtils.touch(local_config_path)
-
-# Find all variables (even if they're commented out)
-file = File.open(local_config_path,"r")
-found = {}  # Store any vars we find
-file.readlines.each do |x|
-  if match = x.match(/^(?:# )?(\w+) =(.*)$/)
-    # Match the key and value
-    (key,val) = match[1,2].map{|y| y.strip }
-    # Also specify whether its a comment
-    found[key.to_sym] = {
-      :val => val,
-      :comment => (x =~ /^#/) ? true : false
-    }
-  end
-end
-file.close
-
-# See if any new variables are missing
-lines = cfg_opts.keys.map do |name|
-  opts = cfg_opts[name]
-
-  # The default values
-  (val,comment) = [opts[:default],"# "]
-
-  # Use stored values if they exist
-  if found[name] && !found[name][:comment]
-    val = found[name][:val]
-    comment = ""
-  end
-
-  # Create the string
-  string = "# "
-  string << opts[:comment].join("\n# ")
-  string << ("\n%s%s = %s" % [ comment, name, val ])
-end
-
-# Copy the file before we mess with it
-backup = Tempfile.new('express')
-backup.close
-FileUtils.cp(local_config_path,backup.path)
-
-# Overwrite the config file
-file = File.open(local_config_path,"w")
-file.puts lines.join("\n"*2)
-file.close
-
-# Get the old size so we can see if the file changes
-old_hash = Digest::MD5.file(backup.path).hexdigest
-old_size = File.size(backup.path)
-# Check the new size for comparison
-new_hash = Digest::MD5.file(local_config_path).hexdigest
-
-# Change state if we've added anything
-state = case
-        when old_size == 0
-          "Created"
-        when new_hash != old_hash
-          # Only save the backup if we actually change something
-          FileUtils.cp(backup.path,"#{local_config_path}.bak")
-          "Modified"
-        end
-
-if state
-  puts ""
-  puts "%s local config file: %s" % [state,local_config_path]
-  if state == "Modified"
-    puts "please take a look at express.conf, we may have added new variables or updated information"
-  else
-    puts "express.conf contains user configuration and can be transferred across clients."
-  end
-  puts ""
-end
+state = create_local_config(@local_config_path,DEFAULT_OPTS) 
+msg = config_file_message(state,@local_config_path)
+puts msg
 
 begin
   @global_config = ParseConfig.new(@config_path)
