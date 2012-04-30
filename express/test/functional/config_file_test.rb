@@ -1,3 +1,6 @@
+#!/usr/bin/env ruby
+# Copyright 2012 Red Hat, Inc.
+
 require 'test/unit'
 require 'rhc-common'
 require 'tempfile'
@@ -48,7 +51,7 @@ class TestConfigFile < Test::Unit::TestCase
 
   # Test how we merge existing config variables with the defaults
   def check_combine(old,new,correct)
-    combined = combine_opts(old,new)  
+    combined = combine_opts(old,new)
     assert_equal(correct,combined)
   end
 
@@ -58,7 +61,7 @@ class TestConfigFile < Test::Unit::TestCase
     old = @hashes[:empty]
     new = { :bar => hash[:default] }
 
-    # The correct value should just be the new hash, converted 
+    # The correct value should just be the new hash, converted
     correct = hash[:hash]
 
     check_combine(old,new,correct)
@@ -99,16 +102,16 @@ class TestConfigFile < Test::Unit::TestCase
     new = @hashes[:b]
     added = @hashes[:b]
 
-    # The correct value should be the old value with 
+    # The correct value should be the old value with
     #   - the new comment added to it
     #   - the second value added to it
-    correct = old 
+    correct = old
     correct[:bar] = added[:hash][:bar]
     correct[:foo][:comment] = new[:default][:comment]
 
     check_combine(
       old,
-      { 
+      {
         :foo => new[:hash][:bar],
         :bar => added[:default]
       },
@@ -166,9 +169,9 @@ class TestConfigFile < Test::Unit::TestCase
     # Make sure the format matches
     config = file.open.read
     assert_equal "#{lines.join("\n"*2)}\n",config
-  ensure 
+  ensure
     file.close
-  end 
+  end
 
   def test_writing_new_config
     file = Tempfile.new('foobar')
@@ -215,7 +218,7 @@ class TestConfigFile < Test::Unit::TestCase
       File.delete("#{file.path}.bak")
     rescue
     end
-  end 
+  end
 
   def test_writing_updated_config
     file = Tempfile.new('foobar')
@@ -246,7 +249,7 @@ class TestConfigFile < Test::Unit::TestCase
       File.delete("#{file.path}.bak")
     rescue
     end
-  end 
+  end
 
   # Tying it all together
   def test_full_workflow
