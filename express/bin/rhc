@@ -2,6 +2,10 @@
 #
 # print help
 #
+
+# Require rhc-common for wizard invocation
+require 'rhc-common'
+
 def p_usage(exit_code = 255)
     puts <<USAGE
 

@@ -31,12 +31,20 @@ spec = Gem::Specification.new do |s|
     s.add_dependency("rest-client")
     # This does not need to be added as a dep for the RPM since it is only needed in extension installation
     s.add_dependency('rake')
+    s.add_dependency('sshkey')
+    s.add_dependency('net-ssh')
+    s.add_dependency('highline')
+    if ENV['JSON_PURE']
+      s.add_dependency('json_pure')
+    else
+      s.add_dependency('json')
+    end
 
     # Adding install time dependencies for
     #   - test-unit (Ruby 1.9)
     #   - json_pure (Ruby (Ruby 1.8.6, Windows, Mac) / json (everything else)
     # http://en.wikibooks.org/wiki/Ruby_Programming/RubyGems
-    s.extensions << 'ext/mkrf_conf.rb'
+    #s.extensions << 'ext/mkrf_conf.rb'
 
     # Leave this message for a few versions, or until we can 
     #   figure out how to get it only displayed if rhc-rest 
