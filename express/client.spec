@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.92.2
+Version: 0.92.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -121,6 +121,29 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue May 01 2012 Adam Miller <admiller@redhat.com> 0.92.3-1
+- Revert "Merge pull request #10 from fotioslindiakos/config_file" - some
+  failing tests, will retry.  Be sure to resubmit pull request.
+  (ccoleman@redhat.com)
+- Merge pull request #10 from fotioslindiakos/config_file
+  (smarterclayton@gmail.com)
+- remove rhc-rest removal message (dmcphers@redhat.com)
+- Renamed REST based tests so they're not run via rake test (fotios@redhat.com)
+- Added documentation to the new functions in rhc-common (fotios@redhat.com)
+- Added tests for new config files. Also added a pseudo-fixtures file for
+  testing and a script to generate that YAML (fotios@redhat.com)
+- Broke config file generation down into multiple functions (fotios@redhat.com)
+- add rake require and rhc-rest obsolete (dmcphers@redhat.com)
+- Improved ~/.openshift/express.conf generation   - allows us to specify a hash
+  of config variables, comments, and default values   - checks the users
+  current configuration     - preserves modified settings     -
+  restores/updates comments (in case we change something)     - adds new
+  variables and removes deprecated ones     - saves the user's old config to
+  ~/.openshift/express.bak In response to
+  https://bugzilla.redhat.com/show_bug.cgi?id=816763 (fotios@redhat.com)
+- Improved config file generation for
+  https://bugzilla.redhat.com/show_bug.cgi?id=816763 (fotios@redhat.com)
+
 * Fri Apr 27 2012 Adam Miller <admiller@redhat.com> 0.92.2-1
 - Fix for Bugz#812308 (kraman@gmail.com)
 
