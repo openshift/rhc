@@ -47,14 +47,13 @@ check_cpath(opt)
 
 # Pull in configs from files
 libra_server = get_var('libra_server')
+debug = get_var('debug') == 'false' ? nil : get_var('debug')
 
 p_usage 0 if opt['help']
 
 p_usage if !opt['app'] || 0 != ARGV.length
 
-debug = $opt["debug"] ? 
-  true : 
-  get_var('debug') == 'true' ? true : false
+debug = true if opt['debug']
 
 RHC::debug(debug)
 

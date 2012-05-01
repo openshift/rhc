@@ -47,16 +47,14 @@ def validate_args(val_namespace=true, val_timeout=true)
   
   # Pull in configs from files
   $libra_server = get_var('libra_server')
+  debug = get_var('debug') == 'false' ? nil : get_var('debug')
   
   $opt['rhlogin'] = get_var('default_rhlogin') unless $opt['rhlogin']
   p_usage if !RHC::check_rhlogin($opt['rhlogin'])
   
   p_usage if (val_namespace && !RHC::check_namespace($opt['namespace']))
 
-  debug = $opt["debug"] ? 
-    true : 
-    get_var('debug') == 'true' ? true : false
-
+  debug = $opt["debug"] ? true : false
   RHC::debug(debug)
   
   RHC::timeout($opt["timeout"], get_var('timeout')) if val_timeout
