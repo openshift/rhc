@@ -10,6 +10,8 @@ require 'parseconfig'
 require 'resolv'
 require 'uri'
 require 'rhc-rest'
+require 'digest/md5'
+require 'tempfile'
 
 module RHC
 
@@ -804,32 +806,235 @@ at_exit {
 # Config paths... /etc/openshift/express.conf or $GEM/conf/express.conf -> ~/.openshift/express.conf
 #
 # semi-private: Just in case we rename again :)
+
+def local_conf_dir
+  File.expand_path('~/.openshift')
+end
+
+# Internal: Get the current variables from the configuration file
+#
+# path - the path to the config file
+#
+# Examples
+#
+#   current_vars('~/.openshift/express.conf')
+#   # => {
+#          :debug => {
+#            :val => "false",
+#            :commented => true
+#          },
+#          :default_rhlogin => {
+#            :val => "user@email.com",
+#            :commented => true
+#          }
+#        }
+#
+# Returns a hash of configuration variables. Each of those variables is a hash
+#   containing the val and whether it was commented out
+def current_vars(path)
+  values = {}
+  File.foreach(path) do |line|
+    # We might want to keep commented out values in case the user changed them
+    if match = line.match(/^(?:#)?(\w+) =(.*)$/)
+      # Match the key and value
+      (key,val) = match[1,2].map{|y| y.strip }
+      # Also specify whether its a comment
+      values[key.to_sym] = {
+        :val => val,
+        :commented => (line =~ /^#/) ? true : false
+      }
+    end
+  end
+  values
+end
+
+# Internal: Merge hashes of configuration variables
+#
+# old - the old variables (presumably from the config file)
+# new - the new variables (presumably DEFAULT_OPTS)
+#
+# Returns a hash with the values intelligently combined
+#   It should inherit any values set from the original config
+#   It should inherit whether a value was commented out
+#   It should always update the comment to match the new value
+def combine_opts(old,new)
+  merged = {}
+
+  # Create the merged hash from the default vals
+  #   We need to move the default value into the val field
+  new.each do |k,v|
+    merged[k] = v
+    # Set value and commented if they're not already set
+    merged[k][:val] ||= v[:default]
+    merged[k][:commented] ||= true
+    merged[k].delete(:default)
+  end
+
+  # Merge any existing options
+  merged.merge!(old) do |key,oldval,newval|
+    oldval.merge(newval)
+  end
+
+  merged
+end
+
+# Internal: Convert a hash of configuration variables into text for config file
+#
+# hash - the values to write
+#
+# Examples
+#
+#   to_config_array({
+#     :bar => {:val => "BAR", :commented => false, :comment => ["A variable"]},
+#     :foo => {:val => "FOO", :commented => true, :comment => ["A variable","Another line"]}
+#   })
+#   # => [
+#          "# A variable\nbar = BAR",
+#          "# A variable\n\tAnother line\n#foo = FOO",
+#        ]
+def to_config_array(hash)
+  lines = []
+  hash.sort_by{|k,v| k.to_s}.each do |name,opts|
+    string = "# "
+    string << opts[:comment].join("\n# ")
+    string << "\n"
+    string << "#" if opts[:commented]
+    string << ("%s = %s" % [ name, opts[:val] ])
+
+    lines << string
+  end
+  lines
+end
+
+# Internal: Write the configuration lines to a file. This will also make a
+# backup of the existing configuration file if any changes are made.
+#
+# lines - lines to write (presumably from to_config_array)
+# file  - the file to write to
+#
+# Returns the result of the operation. The values will be one of:
+#   CREATED   - if a new file is created
+#   MODIFIED  - if there is an existing file and it is modified
+#   UNCHANGED - if no changes are made to the existing file
+def write_config(lines,file)
+  # Copy the file before we mess with it
+  backup = Tempfile.new('express')
+  backup.close
+  FileUtils.cp(file,backup.path)
+
+  # Overwrite the config file
+  File.open(file,"w") do |f|
+    f.puts lines.join("\n"*2)
+  end
+
+  # Return what changed
+  case
+  when File.size(backup.path) == 0
+    CREATED
+  when Digest::MD5.file(backup.path).hexdigest != Digest::MD5.file(file).hexdigest
+    FileUtils.cp(backup.path,"#{file}.bak")
+    MODIFIED
+  else
+    UNCHANGED
+  end
+end
+
+# Internal: Create or update a local configuration based on options passed.
+#
+# file - the path to the configuration file to write
+# opts - the new options to add to the file
+#
+# Returns the state of the operation. This is the same as write_config
+#   (assuming nothing went
+def create_local_config(file,opts)
+  # Make sure we're working with a full path
+  config = File.expand_path(file)
+
+  # Make sure the config directory exists
+  dir = File.dirname(config)
+  FileUtils.mkdir_p dir unless File.directory?(dir)
+
+  # Just touch the file so it exists
+  FileUtils.touch(config)
+
+  # Find all variables (even if they're commented out)
+  found = current_vars(config)
+
+  # Grab the default options and then overwrite them with anything from the local config
+  combined = combine_opts(found,opts)
+
+  # Write the hash to file
+  lines = to_config_array(combined)
+  state = write_config(lines,config)
+end
+
+# Internal: Create the message for alerting the as to what happened to their
+# configuration files
+#
+# state - the state (either UNCHANGED, CREATED, or MODIFIED)
+# file  - the path to the config file
+#
+# Returns a string to tell the user what was changed
+def config_file_message(state,file)
+  msgs = {
+    UNCHANGED => "",
+    CREATED   => "Created",
+    MODIFIED  => "Updated"
+  }
+  # Generate the correct message
+  retval = []
+  if state != UNCHANGED
+    retval << ""
+    retval << "%s local config file: %s" % [msgs[state],file]
+    case state
+    when MODIFIED
+      retval << "please take a look at express.conf, we may have added new variables or updated information"
+    when CREATED
+      retval << "express.conf contains user configuration and can be transferred across clients."
+    end
+    retval << ""
+  end
+  return retval.join("\n\t")
+end
+
 @opts_config_path = nil
 @conf_name = 'express.conf'
 _linux_cfg = '/etc/openshift/' + @conf_name
 _gem_cfg = File.join(File.expand_path(File.dirname(__FILE__) + "/../conf"), @conf_name)
-_home_conf = File.expand_path('~/.openshift')
-@local_config_path = File.join(_home_conf, @conf_name)
+@local_config_path = File.join(local_conf_dir, @conf_name)
 @config_path = File.exists?(_linux_cfg) ? _linux_cfg : _gem_cfg
 
-FileUtils.mkdir_p _home_conf unless File.directory?(_home_conf)
-local_config_path = File.expand_path(@local_config_path)
-if !File.exists? local_config_path
-  file = File.open(local_config_path, 'w')
-  begin
-    file.puts <<EOF
-# SSH key file
-#ssh_key_file = 'libra_id_rsa'
-EOF
+UNCHANGED = 0
+CREATED   = 1
+MODIFIED  = 2
 
-  ensure
-    file.close
-  end
-  puts ""
-  puts "Created local config file: " + local_config_path
-  puts "express.conf contains user configuration and can be transferred across clients."
-  puts ""
-end
+DEFAULT_OPTS = {
+  :ssh_key_file => {
+    :comment => [ "SSH key file" ],
+    :default => "libra_id_rsa"
+  },
+  :default_rhlogin => {
+    :comment => [ "The default username to use" ],
+    :default => "user@email.com"
+  },
+  :timeout => {
+    :comment => [
+      "The default timeout for API actions (in seconds)",
+      "  There are 2 timeouts, and they are only affected if this value is larger than the default",
+      "    - connect timeout: How long to wait for a response from the server (default: 10)",
+      "    - complete timeout: How long to wait for a the server to complete an action (default: 120)"
+    ],
+      :default => 60
+  },
+  :debug => {
+    :comment => [ "Always show debugging output", ],
+    :default => false
+  }
+}
+
+state = create_local_config(@local_config_path,DEFAULT_OPTS)
+msg = config_file_message(state,@local_config_path)
+puts msg
 
 begin
   @global_config = ParseConfig.new(@config_path)
@@ -889,12 +1094,17 @@ end
 #   3) $GEM/../conf/express.conf
 #
 def get_var(var)
-  v = nil
-  if !@opts_config.nil? && @opts_config.get_value(var)
-    v = @opts_config.get_value(var)
+  v = case
+      when !@opts_config.nil? && @opts_config.get_value(var)
+        @opts_config.get_value(var)
+      when @local_config.get_value(var)
+        @local_config.get_value(var)
+      when @global_config.get_value(var)
+        @global_config.get_value(var)
   else
-    v = @local_config.get_value(var) ? @local_config.get_value(var) : @global_config.get_value(var)
+        nil
   end
+
   v
 end
 
