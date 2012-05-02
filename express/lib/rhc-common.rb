@@ -439,7 +439,7 @@ module RHC
       namespace = domain.id
       # Catch errors
       begin
-        application = domain.add_application(app_name,{:cartridge => app_type, :scale => true})
+        application = domain.add_application(app_name,{:cartridge => app_type, :scale => true, :gear_profile => gear_size})
 
         # Variables that are needed for the rest of the function
         app_uuid = application.uuid
