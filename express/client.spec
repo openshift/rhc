@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.92.4
+Version: 0.92.5
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -121,6 +121,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu May 03 2012 Adam Miller <admiller@redhat.com> 0.92.5-1
+- 
+
 * Thu May 03 2012 Adam Miller <admiller@redhat.com> 0.92.4-1
 - Fix for BugZ#817985. gear_profile was not being passed for scaled apps
   (kraman@gmail.com)
