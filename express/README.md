@@ -19,7 +19,6 @@ DEPENDENCIES:
 * openssh-clients
 * ruby (1.8.7 or later)
 * rubygems
-* json_pure gem (native json is fine too)
 * parseconfig gem
 
 Step 1:  Create a domain to under which your applications will live:
@@ -66,10 +65,3 @@ Installing git from MacPorts/HomeBrew/Fink/etc requires Xcode.
 Now obtain the client code, either via 'git clone' as above
 or via the rhc gem.
 
-json_pure gem:
-The client tools also make use of JSON as the data set for
-I/O, and therefore needs the json ruby gem. Unless you have
-Xcode installed, you will need to install json_pure, which
-is the 100% ruby version of the JSON gem. If you have Xcode,
-you can elect to install either json_pure or the native
-json gem.

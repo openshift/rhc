@@ -171,12 +171,12 @@ response = RHC::http_post(@http, url, json_data, password)
 
 if response.code == '200'
   begin
-    json_resp = JSON.parse(response.body)
+    json_resp = RHC::json_decode(response.body)
     RHC::update_server_api_v(json_resp)
     RHC::print_response_success(json_resp)
     puts "Success"
     exit 0
-  rescue JSON::ParserError
+  rescue Rhc::JsonError
     RHC::print_response_err(response)
   end
 else

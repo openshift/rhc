@@ -168,8 +168,8 @@ module TestBase
     return response
   ensure
     $debuginfo['fetches'] ||= []
-    body = JSON.parse(response.body)
-    body['data'] = body['data'] && body['data'] != '' ? JSON.parse(body['data']) : ''
+    body = RHC::json_decode(response.body)
+    body['data'] = body['data'] && body['data'] != '' ? RHC::json_decode(body['data']) : ''
     $debuginfo['fetches'] << {url.to_s => {
       'body' => body,
       'header' => response.instance_variable_get(:@header)
@@ -243,7 +243,7 @@ class Test2_Authentication < Test::Unit::TestCase
 
     data = {'rhlogin' => $rhlogin}
     response = fetch_url_json("/broker/userinfo", data)
-    resp_json = JSON.parse(response.body)
+    resp_json = RHC::json_decode(response.body)
 
     case response.code.to_i
     when 404
@@ -256,7 +256,7 @@ class Test2_Authentication < Test::Unit::TestCase
       assert false, error_for(:_other_http, resp_json['result'])
     end
 
-    $user_info = JSON.parse(resp_json['data'].to_s)
+    $user_info = RHC::json_decode(resp_json['data'].to_s)
   end
 end
 

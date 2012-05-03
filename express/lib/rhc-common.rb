@@ -1,7 +1,6 @@
 require 'rubygems'
 require 'fileutils'
 require 'getoptlong'
-require 'json'
 require 'net/http'
 require 'net/https'
 require 'net/ssh'
@@ -12,6 +11,7 @@ require 'resolv'
 require 'uri'
 require 'rhc-rest'
 require 'highline/import'
+require 'helpers'
 
 module RHC
 
@@ -89,10 +89,18 @@ module RHC
   def self.delay(time, adj=DEFAULT_DELAY)
     (time*=adj).to_int
   end
+  
+  def self.json_encode(data)
+    Rhc::Json.encode(data)
+  end
+
+  def self.json_decode(json)
+    Rhc::Json.decode(json)
+  end
 
   def self.generate_json(data)
       data['api'] = API
-      json = JSON.generate(data)
+      json = json_encode(data)
       json
   end
 
@@ -113,8 +121,8 @@ module RHC
       return []
     end
     begin
-      json_resp = JSON.parse(response.body)
-    rescue JSON::ParserError
+      json_resp = json_decode(response.body)
+    rescue Rhc::JsonError
       exit 1
     end
     update_server_api_v(json_resp)
@@ -122,8 +130,8 @@ module RHC
       print_response_success(json_resp)
     end
     begin
-      carts = (JSON.parse(json_resp['data']))['carts']
-    rescue JSON::ParserError
+      carts = (json_decode(json_resp['data']))['carts']
+    rescue Rhc::JsonError
       exit 1
     end
     carts
@@ -225,8 +233,8 @@ module RHC
       exit 1
     end
     begin
-      json_resp = JSON.parse(response.body)
-    rescue JSON::ParserError
+      json_resp = json_decode(response.body)
+    rescue Rhc::JsonError
       exit 1
     end
     update_server_api_v(json_resp)
@@ -234,8 +242,8 @@ module RHC
       print_response_success(json_resp)
     end
     begin
-      user_info = JSON.parse(json_resp['data'].to_s)
-    rescue JSON::ParserError
+      user_info = json_decode(json_resp['data'].to_s)
+    rescue Rhc::JsonError
       exit 1
     end
     user_info
@@ -283,14 +291,14 @@ module RHC
       exit 1
     end
     begin
-      json_resp = JSON.parse(response.body)
-    rescue JSON::ParserError
+      json_resp = json_decode(response.body)
+    rescue Rhc::JsonError
       exit 1
     end
     update_server_api_v(json_resp)
     begin
-      ssh_keys = (JSON.parse(json_resp['data'].to_s))
-    rescue JSON::ParserError
+      ssh_keys = (json_decode(json_resp['data'].to_s))
+    rescue Rhc::JsonError
       exit 1
     end
 
@@ -362,9 +370,9 @@ module RHC
       print_response_message(response.body)
     elsif response.content_type == 'application/json'
       begin
-        json_resp = JSON.parse(response.body)
+        json_resp = json_decode(response.body)
         exit_code = print_json_body(json_resp)
-      rescue JSON::ParserError
+      rescue Rhc::JsonError
         exit_code = 1
       end
     elsif @mydebug
@@ -510,9 +518,9 @@ module RHC
       response = http_post(net_http, url, json_data, password)
 
       if response.code == '200'
-        json_resp = JSON.parse(response.body)
+        json_resp = json_decode(response.body)
         print_response_success(json_resp)
-        json_data = JSON.parse(json_resp['data'])
+        json_data = json_decode(json_resp['data'])
         health_check_path = json_data['health_check_path']
         app_uuid = json_data['uuid']
         result = json_resp['result']
@@ -819,13 +827,14 @@ LOOKSGOOD
     response = http_post(net_http, url, json_data, password)
     
     if response.code == '200'
-      json_resp = JSON.parse(response.body)
+      json_resp = json_decode(response.body)
       print_response_success(json_resp, print_result || @mydebug)
     else
         print_response_err(response)
     end
-    JSON.parse(response.body)
+    json_decode(response.body)
   end
+
 end
 
 # provide a hook for performing actions before rhc-* commands exit
@@ -1080,12 +1089,12 @@ def handle_key_mgmt_response(url, data, password)
 
   if response.code == '200'
     begin
-      json_resp = JSON.parse(response.body)
+      json_resp = RHC::json_decode(response.body)
       RHC::update_server_api_v(json_resp)
       RHC::print_response_success(json_resp)
       puts "Success"
       return
-    rescue JSON::ParserError
+    rescue Rhc::JsonError
       RHC::print_response_err(response)
     end
   else
@@ -1324,6 +1333,8 @@ EOF
     puts "Sending new key.."
     add_or_update_key('add', key_name, ssh_pub_key_file_path, username, $password)
   end
+  
 end
 
 setup_wizard(local_config_path) unless File.exists? local_config_path
+
