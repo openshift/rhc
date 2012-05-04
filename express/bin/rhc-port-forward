@@ -110,8 +110,14 @@ puts
 puts "Use ctl + c to stop"
 
 begin
-  exec ssh_cmd
-rescue SystemCallError
+  Net::SSH.start(app_name + '-' + namespace + '.' + rhc_domain, app_uuid) do |ssh|
+    hosts_and_ports.each do |host_and_port|
+      host, port = host_and_port.split(/:/)
+      ssh.forward.remote(port.to_i, host, port.to_i)
+    end
+    ssh.loop { true }
+  end
+rescue SocketError
   puts
   puts "Error trying to forward ports.  You can try to forward manually by running:"
   puts
