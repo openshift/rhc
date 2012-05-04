@@ -1,12 +1,17 @@
 #!/usr/bin/env ruby
 # Copyright 2011 Red Hat, Inc.
 
-require 'rhc-rest'
-require 'test/unit'
+require 'test_helper'
 
 class ApplicationTest < Test::Unit::TestCase
-  
+  class << self
+    def startup
+      @@omit = true
+    end
+  end
   def setup
+    omit_if(@@omit,"Cannot run unless a devenv is specified")
+
     @random = rand(1000)
     end_point = "https://ec2-23-20-154-157.compute-1.amazonaws.com/broker/rest"
     username = "rhc-rest-test-#{@random}"
@@ -14,13 +19,15 @@ class ApplicationTest < Test::Unit::TestCase
     @client = Rhc::Rest::Client.new(end_point, username, password)
     @domains = []
   end
-  
+
   def teardown
-    @client.domains.each do |domain|
-      domain.delete(true)
+    if @client && @client.domains
+      @client.domains.each do |domain|
+        domain.delete(true)
+      end
     end
   end
-  
+
   def test_create_app
     domain_name = "rhcrest#{@random}"
     domain = @client.add_domain(domain_name)
@@ -34,7 +41,7 @@ class ApplicationTest < Test::Unit::TestCase
     assert apps.length == 1
     assert apps.first.name == "app"
   end
-=begin  
+=begin
   def test_create_scalable_app
     domain_name = "rhcrest#{@random}"
     domain = @client.add_domain(domain_name)
@@ -47,7 +54,7 @@ class ApplicationTest < Test::Unit::TestCase
     assert apps.length == 1
     assert apps.first.name == "app"
   end
-  
+
   def test_create_app_with_small_node
     domain_name = "rhcrest#{@random}"
     domain = @client.add_domain(domain_name)
@@ -59,9 +66,9 @@ class ApplicationTest < Test::Unit::TestCase
     apps = @client.find_application("app")
     assert apps.length == 1
     assert apps.first.name == "app"
-    
+
   end
-  
+
   def test_create_scalable_app_with_small_node
     domain_name = "rhcrest#{@random}"
     domain = @client.add_domain(domain_name)
@@ -75,6 +82,6 @@ class ApplicationTest < Test::Unit::TestCase
     assert apps.length == 1
     assert apps.first.name == "app"
   end
-=end  
-  
+=end
+
 end
