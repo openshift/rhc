@@ -90,8 +90,6 @@ ssh_host = "#{app_name}-#{namespace}.#{rhc_domain}"
 
 puts "Checking available ports..."
 
-# hosts_and_ports, hosts_and_ports_descriptions = RHC::list_ports(rhc_domain, namespace, app_name, app_uuid, debug)
-
 ip_and_port_simple_regex = /[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\:[0-9]{1,5}/
 
 hosts_and_ports = []
@@ -143,26 +141,32 @@ Net::SSH.start(ssh_host, app_uuid) do |ssh|
 
   puts "Use ctl + c to stop"
 
-  hosts_and_ports.each do |host_and_port|
-    host, port = host_and_port.split(/:/)
-    ssh.forward.local(host, port.to_i, host, port.to_i)
+  begin
+
+    hosts_and_ports.each do |host_and_port|
+      host, port = host_and_port.split(/:/)
+      ssh.forward.local(host, port.to_i, host, port.to_i)
+    end
+    ssh.loop { true }
+  
+  rescue Interrupt
+    puts
+    puts "Terminating..."
+    exit 0
+    
+  rescue Exception
+    puts
+    puts "Error trying to forward ports. You can try to forward manually by running:"
+    ssh_cmd = "ssh -N "
+    hosts_and_ports.each { |port| ssh_cmd << "-L #{port}:#{port} " }
+    ssh_cmd << "#{app_uuid}@#{app_name}-#{namespace}.#{rhc_domain}"
+    puts
+    puts ssh_cmd
+    puts
+    exit 1
   end
-  ssh.loop { true }
 
 end
-
-#begin
-#rescue SocketError
-#  ssh_cmd = "ssh -N "
-#  hosts_and_ports.each { |port| ssh_cmd << "-L #{port}:#{port} " }
-#  ssh_cmd << "#{app_uuid}@#{app_name}-#{namespace}.#{rhc_domain}"
-#  puts
-#  puts "Error trying to forward ports.  You can try to forward manually by running:"
-#  puts
-#  puts ssh_cmd
-#  puts
-#  exit 1
-#end
 
 # never
 exit 1
