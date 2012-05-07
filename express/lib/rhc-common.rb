@@ -697,7 +697,7 @@ LOOKSGOOD
     http_post(net_http, url, json_data, password)
   end
   
-  # Runs rhc-list-ports on server to check available ports
+# Runs rhc-list-ports on server to check available ports
   # :stderr return user-friendly port name, :stdout returns 127.0.0.1:8080 format
   def self.list_ports(rhc_domain, namespace, app_name, app_uuid, debug=true)
 
@@ -709,6 +709,7 @@ LOOKSGOOD
 
     hosts_and_ports = []
     hosts_and_ports_descriptions = []
+    scaled_uuids = []
 
     puts ssh_cmd if debug
 
@@ -716,24 +717,33 @@ LOOKSGOOD
 
       stdout.each { |line|
         line = line.chomp
-        if ip_and_port_simple_regex.match(line)
-          hosts_and_ports << line
+        if line.downcase =~ /scale/
+          scaled_uuid = line[5..-1]
+          scaled_uuids << scaled_uuid
+        else
+          if ip_and_port_simple_regex.match(line)
+            hosts_and_ports << line
+          end
         end
       }
 
       stderr.each { |line|
         line = line.chomp
-
         if line.downcase =~ /permission denied/
           puts line
           exit 1
         end
+        
         
         if line.index(ip_and_port_simple_regex)
           hosts_and_ports_descriptions << line
         end
       }
 
+    }
+
+    scaled_uuids.each { |uuid|
+      list_scaled_ports(rhc_domain, namespace, app_name, uuid, hosts_and_ports, hosts_and_ports_descriptions, debug)
     }
     
     #hosts_and_ports_descriptions = stderr.gets.chomp.split(/\n/)
@@ -756,6 +766,44 @@ LOOKSGOOD
     # end
 
     return hosts_and_ports, hosts_and_ports_descriptions
+
+  end
+
+  # Runs rhc-list-ports on server to check available ports
+  # :stderr return user-friendly port name, :stdout returns 127.0.0.1:8080 format
+  def self.list_scaled_ports(rhc_domain, namespace, app_name, app_uuid, hosts_and_ports, hosts_and_ports_descriptions, debug=true)
+
+    ip_and_port_simple_regex = /[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\:[0-9]{1,5}/
+
+    ssh_host = "#{app_name}-#{namespace}.#{rhc_domain}"
+
+    ssh_cmd = "ssh -t #{app_uuid}@#{ssh_host} 'rhc-list-ports'"
+
+    puts ssh_cmd if debug
+
+    Open3.popen3(ssh_cmd) { |stdin, stdout, stderr| 
+
+      stdout.each { |line|
+        line = line.chomp
+     
+        if ip_and_port_simple_regex.match(line)
+          hosts_and_ports << line
+        end
+      }
+
+      stderr.each { |line|
+        line = line.chomp
+
+        if line.downcase =~ /permission denied/
+          puts line
+          exit 1
+        end
+        
+        if line.index(ip_and_port_simple_regex)
+          hosts_and_ports_descriptions << line
+        end
+      }
+    }
 
   end
   
