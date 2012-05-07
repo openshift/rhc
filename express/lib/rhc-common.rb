@@ -739,68 +739,6 @@ LOOKSGOOD
     http_post(net_http, url, json_data, password)
   end
   
-  # Runs rhc-list-ports on server to check available ports
-  # :stderr return user-friendly port name, :stdout returns 127.0.0.1:8080 format
-  def self.list_ports(rhc_domain, namespace, app_name, app_uuid, debug=true)
-
-    ip_and_port_simple_regex = /[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\:[0-9]{1,5}/
-
-    ssh_host = "#{app_name}-#{namespace}.#{rhc_domain}"
-
-    ssh_cmd = "ssh -t #{app_uuid}@#{ssh_host} 'rhc-list-ports'"
-
-    hosts_and_ports = []
-    hosts_and_ports_descriptions = []
-
-    puts ssh_cmd if debug
-
-    Open3.popen3(ssh_cmd) { |stdin, stdout, stderr| 
-
-      stdout.each { |line|
-        line = line.chomp
-        if ip_and_port_simple_regex.match(line)
-          hosts_and_ports << line
-        end
-      }
-
-      stderr.each { |line|
-        line = line.chomp
-
-        if line.downcase =~ /permission denied/
-          puts line
-          exit 1
-        end
-        
-        if line.index(ip_and_port_simple_regex)
-          hosts_and_ports_descriptions << line
-        end
-      }
-
-    }
-    
-    #hosts_and_ports_descriptions = stderr.gets.chomp.split(/\n/)
-    #hosts_and_ports = stdout.gets.chomp.split(/\n/)
-
-    # Net::SSH.start(ssh_host, app_uuid) do |ssh| 
-
-    #   ssh.exec!("rhc-list-ports") do |channel, stream, data|
-
-    #     array = data.split(/\n/)
-
-    #     if stream == :stderr 
-    #       hosts_and_ports_descriptions = array
-    #     elsif stream == :stdout 
-    #       hosts_and_ports = array
-    #     end
-
-    #   end
-
-    # end
-
-    return hosts_and_ports, hosts_and_ports_descriptions
-
-  end
-  
   def self.ctl_app(libra_server, net_http, app_name, rhlogin, password, action, embedded=false, framework=nil, server_alias=nil, print_result=true)
     data = {:action => action,
             :app_name => app_name,
