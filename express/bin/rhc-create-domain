@@ -187,9 +187,9 @@ end
 #
 
 if File.readable?(ssh_key_file_path)
-    puts "OpenShift Express key found at #{ssh_key_file_path}.  Reusing..."
+    puts "OpenShift key found at #{ssh_key_file_path}.  Reusing..."
 else
-    puts "Generating OpenShift Express ssh key to #{ssh_key_file_path}"
+    puts "Generating OpenShift ssh key to #{ssh_key_file_path}"
     # Use system for interaction
     system("ssh-keygen -t rsa -f '#{ssh_key_file_path}'")
 end
