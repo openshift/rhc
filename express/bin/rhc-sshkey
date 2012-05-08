@@ -38,12 +38,13 @@ def validate_args(val_id=true)
   
   # Pull in configs from files
   $libra_server = get_var('libra_server')
-  debug = get_var('debug') == 'false' ? nil : get_var('debug')
   
   $opt['rhlogin'] = get_var('default_rhlogin') unless $opt['rhlogin']
   p_usage if !RHC::check_rhlogin($opt['rhlogin'])
   
-  debug = $opt["debug"] ? true : false
+  debug = $opt["debug"] ? true :
+    get_var('debug') == 'true' ? true : false
+
   RHC::debug(debug)
   
   p_usage if val_id && !RHC::check_key($opt['identifier'])

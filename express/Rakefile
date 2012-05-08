@@ -54,6 +54,7 @@ end
 CLEAN.include("pkg")
 
 Rake::TestTask.new(:test) do |t|
+  ENV['RAKE_TESTING'] = '1'
   t.libs << 'test'
   t.test_files = FileList['test/**/*_test.rb']
   t.verbose = true
