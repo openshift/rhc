@@ -1,0 +1,12 @@
+source :rubygems
+
+gem 'parseconfig'
+gem 'rest-client'
+gem 'rake'
+gem 'json'
+
+group :test do
+  gem 'rake'
+  gem 'bundler'
+  gem 'test-unit'
+end
