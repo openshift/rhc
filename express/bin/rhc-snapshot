@@ -96,21 +96,42 @@ end
 app_uuid = user_info['app_info'][app]['uuid']
 namespace = user_info['user_info']['domains'][0]['namespace']
 rhc_domain = user_info['user_info']['rhc_domain']
+
 if opt['save']
+
   ssh_cmd = "ssh #{app_uuid}@#{app}-#{namespace}.#{rhc_domain} 'snapshot' > #{opt['save']}"
   puts "Pulling down a snapshot to #{opt['save']}"
+  puts ssh_cmd if debug
+  puts 
+
+  begin
+    Net::SSH.start("#{app}-#{namespace}.#{rhc_domain}", app_uuid) do |ssh|
+      file = File.new($opt['filepath'], "w")
+      ssh.exec! "snapshot" do |channel, stream, data|
+        if stream == :stdout
+          file.write(data)
+        end
+      end
+      file.close
+    end
+  rescue Exception
+    puts "Error in trying to save snapshot.  You can try to save manually by running:"
+    puts
+    puts ssh_cmd
+    puts
+    exit 1
+  end
+
 else
   if File.exists? opt['restore']
-    `#{TAR_BIN} --wildcards -tf #{opt['restore']} './*/#{app}'`
-    if $?.exitstatus != 0
+    if ! Rhc::Tar.contains opt['restore'], './*/' + app
       puts "Archive at #{opt['restore']} does not contain the target application: ./*/#{app}"
       puts "If you created this archive rather than exported with rhc-snapshot, be sure"
       puts "the directory structure inside the archive starts with ./<app_uuid>/"
       puts "i.e.: tar -czvf <app_name>.tar.gz ./<app_uuid>/"
       exit 255
     else
-      `#{TAR_BIN} --wildcards -tf #{opt['restore']} './*/git'`
-      include_git = $?.exitstatus == 0
+      include_git = Rhc::Tar.contains opt['restore'], './*/git'
       ssh_cmd = "cat #{opt['restore']} | ssh #{app_uuid}@#{app}-#{namespace}.#{rhc_domain} 'restore#{include_git ? ' INCLUDE_GIT' : ''}'"
       puts "Restoring from snapshot #{opt['restore']}"
     end
@@ -120,23 +141,20 @@ else
   end
 end
 
-
-puts 
-puts ssh_cmd if debug
 output = `#{ssh_cmd}`
 puts
 if $?.exitstatus != 0
-    puts output
-    puts
-if opt['save']
+  puts output
+  puts
+  if opt['save']
     puts "Error in trying to save snapshot.  You can try to save manually by running:"
-else
+  else
     puts "Error in trying to restore snapshot.  You can try to restore manually by running:"
-end
-    puts
-    puts ssh_cmd
-    puts
-    exit 1
+  end
+  puts
+  puts ssh_cmd
+  puts
+  exit 1
 end
 puts output if opt['restore'] && debug
 exit 0

@@ -380,6 +380,7 @@ def save_or_restore_snapshot(command)
   app_uuid = user_info['app_info'][app]['uuid']
   namespace = user_info['user_info']['domains'][0]['namespace']
   rhc_domain = user_info['user_info']['rhc_domain']
+  
   if command == 'save'
     ssh_cmd = "ssh #{app_uuid}@#{app}-#{namespace}.#{rhc_domain} 'snapshot' > #{$opt['filepath']}"
     puts "Pulling down a snapshot to #{$opt['filepath']}"
@@ -406,22 +407,34 @@ def save_or_restore_snapshot(command)
 
   puts 
   puts ssh_cmd if @mydebug
-  output = `#{ssh_cmd}`
+
+  Net::SSH.start("#{app}-#{namespace}.#{rhc_domain}", app_uuid) do |ssh|
+    file = File.new($opt['filepath'], "w")
+    ssh.exec! "snapshot" do |channel, stream, data|
+      if stream == :stdout
+        file.write(data)
+      end
+    end
+    file.close
+  end
+
+  #result = ssh_ruby("#{app}-#{namespace}.#{rhc_domain}", app_uuid, "'snapshot' > #{$opt['filepath']}")
+  #output = `#{ssh_cmd}`
   puts
-  if $?.exitstatus != 0
-      puts output
-      puts
-  if command == 'save'
-      puts "Error in trying to save snapshot.  You can try to save manually by running:"
-  else
-      puts "Error in trying to restore application from snapshot.  You can try to restore manually by running:"
-  end
-      puts
-      puts ssh_cmd
-      puts
-      exit 1
-  end
-  puts output if command == 'restore' && @mydebug
+  #if $?.exitstatus != 0
+  #    puts output
+  #    puts
+  #if command == 'save'
+  #    puts "Error in trying to save snapshot.  You can try to save manually by running:"
+  #else
+  #    puts "Error in trying to restore application from snapshot.  You can try to restore manually by running:"
+  #end
+  #    puts
+  #    puts ssh_cmd
+  #    puts
+  #    exit 1
+  #end
+  #puts output if command == 'restore' && @mydebug
 end
 
 def show_logs
@@ -447,17 +460,26 @@ def show_logs
   # -t to force PTY and avoid daemons
   # Red Hat OpenShift: https://bugzilla.redhat.com/show_bug.cgi?id=726646
   # OpenSSH https://bugzilla.mindrot.org/show_bug.cgi?id=396
-  ssh_cmd = "ssh -t #{app_uuid}@#{app}-#{namespace}.#{rhc_domain} 'tail#{$opt['opts'] ? ' --opts ' + Base64::encode64($opt['opts']).chomp : ''} #{file_glob}'"
+  remote_cmd = "tail#{opt['opts'] ? ' --opts ' + Base64::encode64(opt['opts']).chomp : ''} #{file_glob}"
+  ssh_cmd = "ssh -t #{app_uuid}@#{app}-#{namespace}.#{rhc_domain} '#{remote_cmd}'"
 
   puts "Attempting to tail files: #{file_glob}"
   puts "Use ctl + c to stop"
-  puts 
-  puts ssh_cmd if @mydebug
+  puts ssh_cmd if @mydebugs
+
   begin
-    exec ssh_cmd
-  rescue SystemCallError
+    if opt['files'] == 'system-messages'
+       RHC::ctl_app(libra_server, @http, opt['app'], opt['rhlogin'], password,
+                    'system-messages', false, nil, nil)
+    else
+       ssh_ruby("#{app}-#{namespace}.#{rhc_domain}", app_uuid, remote_cmd)
+    end
+  rescue SocketError => e
     puts
-    puts "Error in trying to tail files.  You can tail manually by running:"
+    puts "Could not connect: #{e.message}"
+    puts
+    puts "DEBUG: #{e.debug}" if @mydebugs
+    puts "You can try to run this manually if you have ssh installed: "
     puts
     puts ssh_cmd
     puts

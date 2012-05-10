@@ -1,6 +1,25 @@
+require 'rubygems'
 require 'vendor/okjson'
+require 'zlib'
+require 'archive/tar/minitar'
+include Archive::Tar
 
 module Rhc
+
+  class Tar
+
+  def self.contains(tar_gz, search)
+    search = /#{search.to_s}/ if ! search.is_a?(Regexp)
+    tgz = Zlib::GzipReader.new(File.open(tar_gz, 'rb'))
+    Minitar::Reader.new(tgz).each_entry do |file|
+      if file.full_name =~ search
+        return true
+      end
+    end
+    false
+  end
+
+  end
 
   class Json
 
