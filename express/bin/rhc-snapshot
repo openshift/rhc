@@ -46,11 +46,6 @@ rescue Exception => e
     p_usage
 end
 
-# check for gnutar - gnu tar is called tar on linux and cygwin but gnutar on
-#                    BSD based systems like MacOS X
-TAR_BIN = 'tar'
-TAR_BIN = '/usr/bin/gnutar' if File.executable?('/usr/bin/gnutar')
-
 # If provided a config path, check it
 check_cpath(opt)
 
@@ -98,66 +93,11 @@ namespace = user_info['user_info']['domains'][0]['namespace']
 rhc_domain = user_info['user_info']['rhc_domain']
 
 if opt['save']
-
-  ssh_cmd = "ssh #{app_uuid}@#{app}-#{namespace}.#{rhc_domain} 'snapshot' > #{opt['save']}"
-  puts "Pulling down a snapshot to #{opt['save']}"
-  puts ssh_cmd if debug
-  puts 
-
-  begin
-    Net::SSH.start("#{app}-#{namespace}.#{rhc_domain}", app_uuid) do |ssh|
-      file = File.new(opt['save'], "w")
-      ssh.exec! "snapshot" do |channel, stream, data|
-        if stream == :stdout
-          file.write(data)
-        end
-      end
-      file.close
-    end
-  rescue Exception => e
-    puts e.message if debug
-    puts "Error in trying to save snapshot.  You can try to save manually by running:"
-    puts
-    puts ssh_cmd
-    puts
-    exit 1
-  end
-
+  status = RHC.snapshot_create rhc_domain, namespace, app, app_uuid, opt['save'], debug
+  exit status if ! status
 else
-  if File.exists? opt['restore']
-    if ! Rhc::Tar.contains opt['restore'], './*/' + app
-      puts "Archive at #{opt['restore']} does not contain the target application: ./*/#{app}"
-      puts "If you created this archive rather than exported with rhc-snapshot, be sure"
-      puts "the directory structure inside the archive starts with ./<app_uuid>/"
-      puts "i.e.: tar -czvf <app_name>.tar.gz ./<app_uuid>/"
-      exit 255
-    else
-      include_git = Rhc::Tar.contains opt['restore'], './*/git'
-      ssh_cmd = "cat #{opt['restore']} | ssh #{app_uuid}@#{app}-#{namespace}.#{rhc_domain} 'restore#{include_git ? ' INCLUDE_GIT' : ''}'"
-      puts "Restoring from snapshot #{opt['restore']}"
-    end
-  else
-    puts "Archive not found: #{opt['restore']}"
-    exit 255
-  end
+  status = RHC.snapshot_restore rhc_domain, namespace, app, app_uuid, opt['restore'], debug
+  exit status if ! status
 end
-
-output = `#{ssh_cmd}`
-puts
-if $?.exitstatus != 0
-  puts output
-  puts
-  if opt['save']
-    puts "Error in trying to save snapshot.  You can try to save manually by running:"
-  else
-    puts "Error in trying to restore snapshot.  You can try to restore manually by running:"
-  end
-  puts
-  puts ssh_cmd
-  puts
-  exit 1
-end
-
-puts output if opt['restore'] && debug
 
 exit 0

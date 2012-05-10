@@ -773,6 +773,92 @@ LOOKSGOOD
     json_decode(response.body)
   end
 
+  def self.snapshot_create(rhc_domain, namespace, app_name, app_uuid, filename, debug=false)
+    ssh_cmd = "ssh #{app_uuid}@#{app_name}-#{namespace}.#{rhc_domain} 'snapshot' > #{filename}"
+    puts "Pulling down a snapshot to #{filename}..."
+    puts ssh_cmd if debug
+    puts 
+
+    begin
+      Net::SSH.start("#{app_name}-#{namespace}.#{rhc_domain}", app_uuid) do |ssh|
+        file = File.new(filename, 'w')
+        ssh.exec! "snapshot" do |channel, stream, data|
+          if stream == :stdout
+            file.write(data)
+          end
+        end
+        file.close
+      end
+    rescue Exception => e
+      puts e.message if debug
+      puts "Error in trying to save snapshot.  You can try to save manually by running:"
+      puts
+      puts ssh_cmd
+      puts
+      return 1
+    end
+    true
+  end
+
+  def self.snapshot_restore(rhc_domain, namespace, app_name, app_uuid, filename, debug=false)
+    if File.exists? filename
+
+      if ! Rhc::Tar.contains filename, './*/' + app_name
+
+        puts "Archive at #{filename} does not contain the target application: ./*/#{app_name}"
+        puts "If you created this archive rather than exported with rhc-snapshot, be sure"
+        puts "the directory structure inside the archive starts with ./<app_uuid>/"
+        puts "i.e.: tar -czvf <app_name>.tar.gz ./<app_uuid>/"
+        return 255
+
+      else
+
+        include_git = Rhc::Tar.contains filename, './*/git'
+
+        ssh_cmd = "cat #{filename} | ssh #{app_uuid}@#{app_name}-#{namespace}.#{rhc_domain} 'restore#{include_git ? ' INCLUDE_GIT' : ''}'"
+        puts "Restoring from snapshot #{filename}..."
+        puts ssh_cmd if debug
+        puts 
+
+        begin
+          ssh = Net::SSH.start("#{app_name}-#{namespace}.#{rhc_domain}", app_uuid)
+          ssh.open_channel do |channel|
+            channel.exec("restore#{include_git ? ' INCLUDE_GIT' : ''}") do |ch, success|
+              channel.on_data do |ch, data|
+                puts data
+              end
+              channel.on_extended_data do |ch, type, data|
+                puts data
+              end
+              channel.on_close do |ch|
+                puts "Terminating..."
+              end
+              file = File.new(filename, 'r')
+              while (line = file.gets)
+                channel.send_data line
+              end
+              file.close
+              channel.eof!
+            end
+          end
+          ssh.loop
+        rescue Exception => e
+          puts e.message if debug
+          puts "Error in trying to restore snapshot.  You can try to restore manually by running:"
+          puts
+          puts ssh_cmd
+          puts
+          return 1
+        end
+
+      end
+    else
+      puts "Archive not found: #{filename}"
+      return 255
+    end
+    true
+  end
+
 end
 
 # provide a hook for performing actions before rhc-* commands exit
