@@ -1,24 +1,6 @@
 #!/usr/bin/env ruby
 require 'rhc-common'
 
-# FIXME: get better descriptions from runtime or docs team
-#$gear_size_order = ['small', 'medium', 'large']
-$gear_size_order = ['small', 'medium']
-$valid_gear_sizes = {'small'  => 'allocates the standard resources for your application (default)',
-                     'medium' => 'allocates a medium chunk of resources for your application'
-                   }
-
-def p_valid_gear_sizes(invalid_gear_size)
-    puts "Invalid gear size #{invalid_gear_size}"
-    puts "Valid options are:"
-    puts ""
-    $gear_size_order.each do |gear_size|
-        puts "    #{gear_size} - #{$valid_gear_sizes[gear_size]}"
-    end
-
-    exit 255
-end
-
 def p_usage(error_code = 255)
     libra_server = get_var('libra_server')
     rhlogin = get_var('default_rhlogin') ? "Default: #{get_var('default_rhlogin')}" : "required"
@@ -116,13 +98,8 @@ end
 
 # Default gear size is small
 gear_size = opt['gear-size']
-if !gear_size
-    gear_size = 'small'
-else
-    if !$valid_gear_sizes.include? gear_size
-        p_valid_gear_sizes gear_size
-    end
-end
+gear_size = 'small' if !gear_size
+
 
 password = opt['password']
 if !password
