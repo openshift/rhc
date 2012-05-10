@@ -172,10 +172,6 @@ currently being created: '#{$opt['app']}'
   end
 
   $opt['gear-size']='small' unless $opt['gear-size']
-  if !['small','medium'].include? $opt['gear-size']
-    puts "Invalid gear size:  %s" % $opt['gear-size']
-    p_usage
-  end
   
   $opt['repo'] = $opt['app'] unless $opt['repo']
   
