@@ -106,7 +106,7 @@ if opt['save']
 
   begin
     Net::SSH.start("#{app}-#{namespace}.#{rhc_domain}", app_uuid) do |ssh|
-      file = File.new($opt['filepath'], "w")
+      file = File.new(opt['save'], "w")
       ssh.exec! "snapshot" do |channel, stream, data|
         if stream == :stdout
           file.write(data)
@@ -114,7 +114,8 @@ if opt['save']
       end
       file.close
     end
-  rescue Exception
+  rescue Exception => e
+    puts e.message if debug
     puts "Error in trying to save snapshot.  You can try to save manually by running:"
     puts
     puts ssh_cmd
@@ -156,5 +157,7 @@ if $?.exitstatus != 0
   puts
   exit 1
 end
+
 puts output if opt['restore'] && debug
+
 exit 0
