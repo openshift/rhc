@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.93.0
+Version: 0.93.1
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -121,6 +121,12 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu May 10 2012 Adam Miller <admiller@redhat.com> 0.93.1-1
+- Merge pull request #18 from rmillner/master (ccoleman@redhat.com)
+- bumping spec versions (admiller@redhat.com)
+- Let the broker dictate what valid gear sizes are for the user.
+  (rmillner@redhat.com)
+
 * Wed May 09 2012 Adam Miller <admiller@redhat.com> 0.92.10-1
 - Removed large gear size, only small and medium for now (ffranz@redhat.com)
 
