@@ -15,6 +15,7 @@ BuildRequires: rubygem-rspec
 Requires:      ruby >= 1.8.5
 Requires:      rubygem-parseconfig
 Requires:      rubygem-rest-client
+Requires:      rubygem-archive-tar-minitar
 Requires:      git
 
 BuildArch:     noarch

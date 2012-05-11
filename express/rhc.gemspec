@@ -15,11 +15,11 @@ Gem::Specification.new do |s|
     s.executables = ['rhc', 'rhc-domain', 'rhc-app', 'rhc-sshkey', 'rhc-chk', 'rhc-create-app', 'rhc-create-domain', 'rhc-ctl-domain', 'rhc-ctl-app', 'rhc-snapshot', 'rhc-domain-info', 'rhc-user-info', 'rhc-tail-files', 'rhc-port-forward']
     s.add_dependency('parseconfig')
     s.add_dependency("rest-client")
+    s.add_dependency('archive-tar-minitar')
     # This does not need to be added as a dep for the RPM since it is only needed in extension installation
     s.add_dependency('rake')
     s.add_dependency('sshkey')
     s.add_dependency('net-ssh')
-    s.add_dependency('archive-tar-minitar')
 
     # Leave this message for a few versions, or until we can 
     #   figure out how to get it only displayed if rhc-rest 

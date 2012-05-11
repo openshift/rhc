@@ -1,6 +1,7 @@
 require 'rubygems'
 require 'vendor/okjson'
-require 'zlib'
+require 'stringio'
+require 'vendor/pr/zlib'
 require 'archive/tar/minitar'
 include Archive::Tar
 
@@ -15,7 +16,8 @@ module Rhc
   class Tar
     def self.contains(tar_gz, search)
       search = /#{search.to_s}/ if ! search.is_a?(Regexp)
-      tgz = Zlib::GzipReader.new(File.open(tar_gz, 'rb'))
+      file = File.open(tar_gz)
+      tgz = Rhc::Vendor::Zlib::GzipReader.new(file)
       Minitar::Reader.new(tgz).each_entry do |file|
         if file.full_name =~ search
           return true
