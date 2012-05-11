@@ -1,22 +1,8 @@
-#!/usr/bin/ruby
-
+# -*- encoding: utf-8 -*-
 require 'rubygems'
-require 'rake'
-require 'rake/clean'
-require 'rake/testtask'
+$:.push File.expand_path("../lib", __FILE__)
 
-begin
-  require 'rubygems/package_task'
-rescue LoadError
-  require 'rake/gempackagetask'
-  rake_gempackage = true
-end
-
-task(:default).clear
-task :default => [:package]
-
-# Create the gem specification for packaging
-spec = Gem::Specification.new do |s|
+Gem::Specification.new do |s|
     s.name = %q{rhc}
     s.version = /(Version: )(.*)/.match(File.read("client.spec"))[2]
     s.author = "Red Hat"
@@ -47,24 +33,4 @@ spec = Gem::Specification.new do |s|
               still function as expected
       ===================================================
     MSG
-end
-
-# Define a :package task that bundles the gem
-if rake_gempackage
-  Rake::GemPackageTask.new(spec) do |pkg, args|
-    pkg.need_tar = false
-  end
-else
-  Gem::PackageTask.new(spec) do |pkg, args|
-    pkg.need_tar = false
-  end
-end
-
-# Add the 'pkg' directory to the clean task
-CLEAN.include("pkg")
-
-Rake::TestTask.new(:test) do |t|
-  t.libs << 'test'
-  t.test_files = FileList['test/**/*_test.rb']
-  t.verbose = true
 end

@@ -10,7 +10,6 @@ require 'parseconfig'
 require 'resolv'
 require 'uri'
 require 'rhc-rest'
-require 'highline/import'
 require 'helpers'
 
 module RHC
@@ -322,7 +321,7 @@ module RHC
   def self.get_password
     password = nil
     begin
-      password = ask("Password: ") { |q| q.echo = "*"}
+      password = ask("Password: ", true)
     rescue Interrupt
       puts "\n"
       exit 1
@@ -950,6 +949,15 @@ def get_var(var)
   v
 end
 
+def ask(prompt, password=false)
+  if password
+    return Rhc::Input.ask_for_password prompt
+  else
+    print prompt unless prompt.nil?
+    return $stdin.gets.to_s.chomp
+  end
+end
+
 def kfile_not_found
   puts <<KFILE_NOT_FOUND
 Your SSH keys are created either by running ssh-keygen (password optional)
@@ -1277,8 +1285,7 @@ EOF
   puts "    #{local_config_path}"
   puts "    #{@home_dir}/.ssh/"
   puts ""
-  username = ask("https://openshift.redhat.com/ username: ") { |q|
-                 q.echo = true }
+  username = ask("https://openshift.redhat.com/ username: ")
   $password = RHC::get_password
   # FIXME: Fix this
   #$libra_server = get_var('libra_server')

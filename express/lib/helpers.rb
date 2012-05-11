@@ -6,19 +6,23 @@ include Archive::Tar
 
 module Rhc
 
-  class Tar
-
-  def self.contains(tar_gz, search)
-    search = /#{search.to_s}/ if ! search.is_a?(Regexp)
-    tgz = Zlib::GzipReader.new(File.open(tar_gz, 'rb'))
-    Minitar::Reader.new(tgz).each_entry do |file|
-      if file.full_name =~ search
-        return true
-      end
-    end
-    false
+  class Platform
+    def self.jruby? ; RUBY_PLATFORM =~ /java/i end
+    def self.windows? ; RUBY_PLATFORM =~ /win(32|dows|ce)|djgpp|(ms|cyg|bcc)win|mingw32/i end
+    def self.unix? ; !jruby? && !windows? end
   end
 
+  class Tar
+    def self.contains(tar_gz, search)
+      search = /#{search.to_s}/ if ! search.is_a?(Regexp)
+      tgz = Zlib::GzipReader.new(File.open(tar_gz, 'rb'))
+      Minitar::Reader.new(tgz).each_entry do |file|
+        if file.full_name =~ search
+          return true
+        end
+      end
+      false
+    end
   end
 
   class Json
@@ -64,5 +68,57 @@ module Rhc
   end
 
   class JsonError < ::StandardError; end
+
+  class Input
+
+    def self.ask_for_password_on_unix(prompt = "Password: ")
+      raise 'Could not ask for password because there is no interactive terminal (tty)' unless $stdin.tty?
+      $stdout.print prompt unless prompt.nil?
+      $stdout.flush
+      raise 'Could not disable echo to ask for password securely' unless system 'stty -echo'
+      password = $stdin.gets
+      password.chomp! if password
+      password
+    ensure
+      raise 'Could not re-enable echo while asking for password' unless system 'stty echo'
+    end
+
+    def self.ask_for_password_on_windows(prompt = "Password: ")
+      raise 'Could not ask for password because there is no interactive terminal (tty)' unless $stdin.tty?
+      require 'Win32API'
+      char = nil
+      password = ''
+      $stdout.print prompt unless prompt.nil?
+      $stdout.flush
+      while char = Win32API.new("crtdll", "_getch", [ ], "L").Call do
+        break if char == 10 || char == 13 # return or newline
+        if char == 127 || char == 8 # backspace and delete
+          password.slice!(-1, 1)
+        else
+          password << char.chr
+        end
+      end
+      puts
+      password
+    end
+
+    def self.ask_for_password_on_jruby(prompt = "Password: ")
+      raise 'Could not ask for password because there is no interactive terminal (tty)' unless $stdin.tty?
+      require 'java'
+      include_class 'java.lang.System'
+      include_class 'java.io.Console'
+      $stdout.print prompt unless prompt.nil?
+      $stdout.flush
+      java.lang.String.new(System.console().readPassword(prompt));
+    end
+
+    def self.ask_for_password(prompt = "Password: ")
+      %w|windows unix jruby|.each do |platform|
+        eval "return ask_for_password_on_#{platform}(prompt) if Rhc::Platform.#{platform}?"
+      end
+      raise "Could not read password on unknown Ruby platform: #{RUBY_DESCRIPTION}"
+    end
+
+  end
 
 end

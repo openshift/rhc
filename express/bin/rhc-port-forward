@@ -154,8 +154,9 @@ Net::SSH.start(ssh_host, app_uuid) do |ssh|
     puts "Terminating..."
     exit 0
     
-  rescue Exception
+  rescue Exception => e
     puts
+    puts e.message if debug
     puts "Error trying to forward ports. You can try to forward manually by running:"
     ssh_cmd = "ssh -N "
     hosts_and_ports.each { |port| ssh_cmd << "-L #{port}:#{port} " }
