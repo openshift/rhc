@@ -23,7 +23,6 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency      'parseconfig'
   s.add_runtime_dependency      'commander',    '>= 4.0'
   s.add_runtime_dependency      'rest-client',  '>= 1.6'
-  s.add_development_dependency  'test-unit',    '>= 2.2'
   s.add_development_dependency  'webmock',      '>= 1.6'
   s.add_development_dependency  'rspec',        '~> 1.3'
 
