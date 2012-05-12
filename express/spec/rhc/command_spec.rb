@@ -4,9 +4,8 @@ require 'rhc/commands/base'
 describe RHC::Commands::Base do
 
   describe '#inherited' do
-    before { new_command_runner }
 
-    let(:instance) { i = subject.new; i.should_receive(:run).and_return(1); i }
+    let(:instance) { subject.new }
 
     context 'when dynamically instantiating without an object name' do
       subject { const_for(Class.new(RHC::Commands::Base) { def run; 1; end }) }
@@ -19,7 +18,7 @@ describe RHC::Commands::Base do
       
       it("should register itself") { expect { subject }.to change(commands, :length).by(1) }
       it("should have an object name") { subject.object_name.should == 'test' }
-      it { should_run 'test' }
+      it { expects_running('test').should call(:run).on(instance).with(no_args) }
     end
 
     context 'when statically defined' do
@@ -34,7 +33,29 @@ describe RHC::Commands::Base do
       
       it("should register itself") { expect { subject }.to change(commands, :length).by(1) }
       it("should have an object name of the class") { subject.object_name.should == 'static' }
-      it { should_run 'static' }
+      it("invokes the right method") { expects_running('static').should call(:run).on(instance).with(no_args) }
+    end
+
+    context 'when statically defined with no default method' do
+      subject do 
+        Kernel.module_eval do 
+          class Static < RHC::Commands::Base
+            def test; 1; end
+            def execute; 1; end
+          end
+        end
+        Static
+      end
+      
+      it("should register itself") { expect { subject }.to change(commands, :length).by(2) }
+      it("should have an object name of the class") { subject.object_name.should == 'static' }
+      
+      context 'and when test is called' do
+        it { expects_running('static', 'test').should call(:test).on(instance).with(no_args) }
+      end
+      context 'and when test is called' do
+        it { expects_running('static', 'execute').should call(:execute).on(instance).with(no_args) }
+      end
     end
   end
 end

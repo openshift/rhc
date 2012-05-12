@@ -35,13 +35,16 @@ module ClassSpecHelpers
     Commander::Runner.instance
   end
 
-  def should_run *args
+  #
+  # 
+  #
+  def expects_running *args
     mock_terminal
-    new_command_runner(*args) do
-      instance
-      subject.should_receive(:new).and_return(instance)
-    end.run!
-    @output.string
+    r = new_command_runner args do
+      instance #ensure instance is created before subject :new is mocked
+      subject.should_receive(:new).any_number_of_times.and_return(instance)
+    end
+    lambda { r.run!; @output }
   end
 
   def mock_terminal
@@ -75,11 +78,33 @@ module ExitCodeMatchers
   end  
 end
 
-Spec::Runner.configure do |config|
-  config.include(ExitCodeMatchers)
+module CommanderInvocationMatchers
+  Spec::Matchers.define :call do |method|
+    chain :on do |object|
+      @object = object
+    end
+    chain :with do |args|
+      @args = args
+    end
+
+    match do |block|
+      e = @object.should_receive(method)
+      e.with(@args) if @args
+      begin
+        block.call
+        true
+      rescue SystemExit => e
+        false
+      end
+    end
+    description do
+      "expect block to invoke '#{method}' on #{@object} with #{@args}"
+    end    
+  end  
 end
 
-
-Spec::Runner.configure do |c|
-  c.include ClassSpecHelpers
+Spec::Runner.configure do |config|
+  config.include(ExitCodeMatchers)
+  config.include(CommanderInvocationMatchers)
+  config.include(ClassSpecHelpers)
 end
