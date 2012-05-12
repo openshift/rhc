@@ -3,6 +3,30 @@ require 'rhc/commands/base'
 
 describe RHC::Commands::Base do
 
+  describe '#object_name' do
+    subject { described_class }
+    its(:object_name) { should == 'base' }
+
+    context 'when the class is at the root' do
+      subject do 
+        Kernel.module_eval do 
+          class StaticRootClass < RHC::Commands::Base; def run; 1; end; end
+        end
+        StaticRootClass
+      end
+      its(:object_name) { should == 'staticrootclass' }
+    end
+    context 'when the class is nested in a module' do
+      subject do 
+        Kernel.module_eval do 
+          module Nested; class StaticRootClass < RHC::Commands::Base; def run; 1; end; end; end
+        end
+        Nested::StaticRootClass
+      end
+      its(:object_name) { should == 'staticrootclass' }
+    end
+  end
+
   describe '#inherited' do
 
     let(:instance) { subject.new }
@@ -24,11 +48,13 @@ describe RHC::Commands::Base do
     context 'when statically defined' do
       subject do 
         Kernel.module_eval do 
-          class Static < RHC::Commands::Base
-            def run(args, options); 1; end
+          module Nested
+            class Static < RHC::Commands::Base
+              def run(args, options); 1; end
+            end
           end
         end
-        Static
+        Nested::Static
       end
       
       it("should register itself") { expect { subject }.to change(commands, :length).by(1) }

@@ -11,9 +11,6 @@ class RHC::Commands::Base
   end
 
   protected
-    include Commander::UI
-    include Commander::UI::AskForClass
-    include Commander::Delegates
     include RHC::Helpers
 
     class InvalidCommand < StandardError ; end
@@ -41,7 +38,9 @@ class RHC::Commands::Base
 
     def self.object_name(value=nil)
       @object_name ||= begin
-          value ||= self.name unless !self.name || self.name.empty?
+          value ||= if self.name && !self.name.empty?
+            self.name.split('::').last
+          end
           value.to_s.downcase if value
         end
     end
