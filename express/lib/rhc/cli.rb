@@ -1,4 +1,9 @@
-require 'commander/import'
+require 'commander'
+require 'commander/delegates'
+
+include Commander::UI
+include Commander::UI::AskForClass
+include Commander::Delegates
 
 program :name,        'rhc'
 program :version,     '0.0.0' #FIXME pull from versions.rb
