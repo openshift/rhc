@@ -1,4 +1,4 @@
-OpenShift Command Line Tools (RHC)
+OpenShift Command Line Tools (RHC) [![Build Status](https://secure.travis-ci.org/openshift/os-client-tools.png)](http://travis-ci.org/openshift/os-client-tools)
 ========
 
 This is the source repository for the OpenShift command line tools.
