@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby
+$:.unshift File.join(File.dirname(__FILE__), *%w[.. lib])
 
-require 'test/unit'
-require 'rhc-rest'
+# Load support files
+Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each { |f| require f }

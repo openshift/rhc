@@ -1,8 +1,10 @@
-#!/usr/bin/env ruby
-
 require 'rubygems'
 require 'rake'
 require 'rake/testtask'
+
+# Run tests by default
+task(:default).clear
+task :default => [:test]
 
 desc 'Runs test:units, test:functionals, test:integration together'
 task :test do

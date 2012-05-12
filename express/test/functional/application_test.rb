@@ -1,24 +1,7 @@
-#!/usr/bin/env ruby
-# Copyright 2011 Red Hat, Inc.
-
-require 'test_helper'
+require File.expand_path('../../test_helper', __FILE__)
 
 class ApplicationTest < Test::Unit::TestCase
-  class << self
-    def startup
-      @@omit = true
-    end
-  end
-  def setup
-    omit_if(@@omit,"Cannot run unless a devenv is specified")
-
-    @random = rand(1000)
-    end_point = "https://ec2-23-20-154-157.compute-1.amazonaws.com/broker/rest"
-    username = "rhc-rest-test-#{@random}"
-    password = "xyz123"
-    @client = Rhc::Rest::Client.new(end_point, username, password)
-    @domains = []
-  end
+  setup :with_devenv
 
   def teardown
     if @client && @client.domains
