@@ -15,6 +15,9 @@ def define_test_command
 end
 
 module ClassSpecHelpers
+
+  include Commander::Delegates
+
   def const_for(obj=nil)
     if obj
       Object.const_set(const_for, obj)

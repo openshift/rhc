@@ -1,0 +1,2 @@
+class RHC::Client
+end

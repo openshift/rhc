@@ -6,6 +6,9 @@ require 'rest-client'
 require 'logger'
 
 module RHC
+  module Commands; end
+
+  autoload :Helpers,  'rhc/helpers'
 end
 
 # Replace me with proper autoloads on the module RHC

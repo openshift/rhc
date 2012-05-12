@@ -1,17 +1,17 @@
-require 'commander'
+require 'commander/runner'
 require 'commander/delegates'
+require 'rhc/commands'
 
-include Commander::UI
-include Commander::UI::AskForClass
-include Commander::Delegates
+module RHC:CLI
 
-program :name,        'rhc'
-program :version,     '0.0.0' #FIXME pull from versions.rb
-program :description, 'Command line interface for OpenShift.'
+  include Commander::Delegates
 
-module RHC
-  module CLI
-  end
-  module Commands
+  def start(args)
+    program :name,        'rhc'
+    program :version,     '0.0.0' #FIXME pull from versions.rb
+    program :description, 'Command line interface for OpenShift.'
+
+    RHC::Commands.load
+    Commander::Runner.new(args).run!
   end
 end

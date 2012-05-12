@@ -1,0 +1,3 @@
+module RHC::Helpers
+
+end

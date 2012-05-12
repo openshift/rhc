@@ -1,8 +1,20 @@
-require 'rhc/cli'
+require 'commander'
+require 'commander/delegates'
+require 'rhc/helpers'
 
 class RHC::Commands::Base
 
+  attr_reader :args, :options
+
+  def initialize(args=[], options={})
+    @args, @options = args, options
+  end
+
   protected
+    include Commander::UI
+    include Commander::UI::AskForClass
+    include Commander::Delegates
+    include RHC::Helpers
 
     class InvalidCommand < StandardError ; end
 
@@ -20,8 +32,10 @@ class RHC::Commands::Base
       name = [method_name]
       name.unshift(self.object_name).compact!
       raise InvalidCommand, "Either object_name must be set or a non default method defined" if name.empty?
-      command name.join(' ') do |c|
-        c.when_called self, method
+      Commander::Runner.instance.command name.join(' ') do |c|
+        c.when_called do |args, options|
+          self.new(args, options).send(method)
+        end
       end
     end
 

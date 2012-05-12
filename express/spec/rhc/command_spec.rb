@@ -4,6 +4,8 @@ require 'rhc/commands/base'
 describe RHC::Commands::Base do
 
   describe '#inherited' do
+    before { new_command_runner }
+
     let(:instance) { i = subject.new; i.should_receive(:run).and_return(1); i }
 
     context 'when dynamically instantiating without an object name' do
