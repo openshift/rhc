@@ -5,6 +5,15 @@ require 'webmock/rspec'
 begin
   require 'simplecov'
   SimpleCov.start
+
+  original_stderr = $stderr
+  at_exit do
+    SimpleCov.result.format!
+    if SimpleCov.result.covered_percent < 100
+      original_stderr.puts "Coverage not 100%, build failed."
+      exit 1
+    end
+  end
 rescue
 end
 
