@@ -7,7 +7,7 @@ module RHC
       self
     end
     def self.fail_me
-      puts 'i fail'
+      #puts 'i fail'
     end
     def self.add(opts)
       commands[opts[:name]] = opts
