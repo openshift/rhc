@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   #s.version     = Rhc::VERSION
 
   s.authors      = %q{Red Hat}
-  s.email        = %q{openshift@redhat.com}
+  s.email        = %q{dev@openshift.redhat.com}
   s.summary      = %q{OpenShift Client Tools}
   s.homepage     = %q{https://github.com/openshift/os-client-tools}
   s.description  = %q{The client tools for the OpenShift platform that allow for application management.}
@@ -21,8 +21,10 @@ Gem::Specification.new do |s|
 
   s.add_dependency              'rake'                    # required only for extension support
   s.add_runtime_dependency      'parseconfig'
+  s.add_runtime_dependency      'commander',    '>= 4.0'
   s.add_runtime_dependency      'rest-client',  '>= 1.6'
-  s.add_development_dependency  'test-unit',    '>= 2.2'
+  s.add_development_dependency  'webmock',      '>= 1.6'
+  s.add_development_dependency  'rspec',        '~> 1.3'
 
   # Adding install time dependencies for
   #   - test-unit (Ruby 1.9)

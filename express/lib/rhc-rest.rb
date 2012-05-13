@@ -1,7 +1,7 @@
 require 'rubygems'
 require 'rest-client'
 require 'logger'
-require 'json'
+#require 'json'
 require 'rhc-rest/exceptions/exceptions'
 require 'rhc-rest/application'
 require 'rhc-rest/cartridge'
