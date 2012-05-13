@@ -1,18 +1,24 @@
-require 'rubygems'
+#require 'rubygems'
 #require 'spec'
 require 'webmock/rspec'
+
+begin
+  require 'simplecov'
+  SimpleCov.start
+rescue
+end
+
 #include 'mocha'
 require 'rhc/cli'
 
 include WebMock::API
 
-def define_test_command
-  Class.new(RHC::Commands::Base) do
-    def run
-      1      
-    end
+module Commander::UI
+  alias :enable_paging_old :enable_paging
+  def enable_paging
   end
 end
+
 
 module ClassSpecHelpers
 
@@ -43,6 +49,7 @@ module ClassSpecHelpers
     r = new_command_runner args do
       instance #ensure instance is created before subject :new is mocked
       subject.should_receive(:new).any_number_of_times.and_return(instance)
+      RHC::Commands.to_commander 
     end
     lambda { r.run!; @output }
   end
@@ -50,6 +57,7 @@ module ClassSpecHelpers
   def mock_terminal
     @input = StringIO.new
     @output = StringIO.new
+    $stderr = (@error = StringIO.new)
     $terminal = HighLine.new @input, @output
   end
 end
@@ -62,6 +70,8 @@ module ExitCodeMatchers
         block.call
       rescue SystemExit => e
         actual = e.status
+      else
+        actual = 0
       end
       actual and actual == code
     end

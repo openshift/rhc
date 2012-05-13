@@ -30,6 +30,7 @@ describe RHC::Commands::Base do
   describe '#inherited' do
 
     let(:instance) { subject.new }
+    let(:commands) { RHC::Commands.send(:commands) }
 
     context 'when dynamically instantiating without an object name' do
       subject { const_for(Class.new(RHC::Commands::Base) { def run; 1; end }) }

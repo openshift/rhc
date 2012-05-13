@@ -3,7 +3,7 @@ require 'rhc/commands/base'
 module RHC::Commands
   class Status < Base
     def run
-      puts 'Status, homies'
+      say 'Check server status'
     end
   end
 end

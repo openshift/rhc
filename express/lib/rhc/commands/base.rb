@@ -29,11 +29,11 @@ class RHC::Commands::Base
       name = [method_name]
       name.unshift(self.object_name).compact!
       raise InvalidCommand, "Either object_name must be set or a non default method defined" if name.empty?
-      Commander::Runner.instance.command name.join(' ') do |c|
-        c.when_called do |args, options|
-          self.new(args, options).send(method)
-        end
-      end
+      RHC::Commands.add({
+        :name => name.join(' '),
+        :class => self,
+        :method => method,
+      });
     end
 
     def self.object_name(value=nil)
