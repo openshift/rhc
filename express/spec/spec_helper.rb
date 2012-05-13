@@ -8,10 +8,14 @@ begin
 
   original_stderr = $stderr
   at_exit do
-    SimpleCov.result.format!
-    if SimpleCov.result.covered_percent < 100
-      original_stderr.puts "Coverage not 100%, build failed."
-      exit 1
+    begin
+      SimpleCov.result.format!
+      if SimpleCov.result.covered_percent < 100
+        original_stderr.puts "Coverage not 100%, build failed."
+        exit 1
+      end
+    rescue
+      puts "No coverage check, older Ruby"
     end
   end
 rescue
