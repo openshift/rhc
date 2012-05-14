@@ -17,6 +17,7 @@ List of resources
   app                Manage applications within the rhcloud account.
   sshkey             Manage multiple keys for the registered rhcloud user.
   port-forward       Forward remote ports to the workstation
+  status             Display information about the status of the service.
 
 See 'rhc <resource> --help' for more applicable commands and argumments on a specific resource.
 USAGE
@@ -48,6 +49,14 @@ when "sshkey"
 when "port-forward"
   system("rhc-port-forward #{get_args} 2>&1")
   retcode = $?.exitstatus
+when "status"
+  begin
+    require 'rhc/cli'
+    RHC::CLI.start(ARGV)
+    retcode = 0
+  rescue SystemExit => e
+    retcode = e.status
+  end
 when "-h", "--help", "help", nil
   p_usage 0
 else
