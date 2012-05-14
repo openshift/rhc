@@ -20,6 +20,9 @@ Gem::Specification.new do |s|
   s.require_path = 'lib'
 
   s.add_dependency              'rake'                    # required only for extension support
+  s.add_dependency              'sshkey'
+  s.add_dependency              'net-ssh'
+  s.add_dependency              'archive-tar-minitar'
   s.add_runtime_dependency      'parseconfig'
   s.add_runtime_dependency      'rest-client',  '>= 1.6'
   s.add_development_dependency  'test-unit',    '>= 2.2'
@@ -29,4 +32,3 @@ Gem::Specification.new do |s|
   #   - json_pure (Ruby (Ruby 1.8.6, Windows, Mac) / json (everything else)
   # http://en.wikibooks.org/wiki/Ruby_Programming/RubyGems
   s.extensions << 'ext/mkrf_conf.rb'
-end

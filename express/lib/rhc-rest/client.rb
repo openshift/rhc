@@ -13,7 +13,7 @@ module Rhc
         request = RestClient::Request.new(:url => end_point, :method => :get, :headers => @@headers)
         begin
           response = request.execute
-          result = JSON.parse(response)
+          result = Rhc::Json.decode(response)
           @links = send(request)
         rescue RestClient::ExceptionWithResponse => e
             logger.error "Failed to get API #{e.response}"

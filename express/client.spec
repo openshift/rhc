@@ -16,22 +16,9 @@ Requires:      ruby >= 1.8.5
 Requires:      rubygem-parseconfig
 Requires:      rubygem-rest-client
 Requires:      rubygem-rake
-
-Obsoletes:     rhc-rest
-
-%if 0%{?fedora} == 13
-%define jpure 1
-%endif
-%ifos darwin
-%define jpure 1
-%endif
-
-%if 0%{?jpure} == 1
-Requires:      rubygem-json_pure
-%else
-Requires:      rubygem-json
-%endif
+Requires:      rubygem-archive-tar-minitar
 Requires:      git
+Obsoletes:     rhc-rest
 
 BuildArch:     noarch
 

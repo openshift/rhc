@@ -1,15 +1,16 @@
 require 'rubygems'
 require 'fileutils'
 require 'getoptlong'
-require 'json'
 require 'net/http'
 require 'net/https'
-#require 'net/ssh'
+require 'net/ssh'
+require 'sshkey'
 require 'open3'
 require 'parseconfig'
 require 'resolv'
 require 'uri'
 require 'rhc-rest'
+require 'helpers'
 
 module RHC
 
@@ -87,10 +88,18 @@ module RHC
   def self.delay(time, adj=DEFAULT_DELAY)
     (time*=adj).to_int
   end
+  
+  def self.json_encode(data)
+    Rhc::Json.encode(data)
+  end
+
+  def self.json_decode(json)
+    Rhc::Json.decode(json)
+  end
 
   def self.generate_json(data)
       data['api'] = API
-      json = JSON.generate(data)
+      json = json_encode(data)
       json
   end
 
@@ -111,8 +120,8 @@ module RHC
       return []
     end
     begin
-      json_resp = JSON.parse(response.body)
-    rescue JSON::ParserError
+      json_resp = json_decode(response.body)
+    rescue Rhc::JsonError
       exit 1
     end
     update_server_api_v(json_resp)
@@ -120,8 +129,8 @@ module RHC
       print_response_success(json_resp)
     end
     begin
-      carts = (JSON.parse(json_resp['data']))['carts']
-    rescue JSON::ParserError
+      carts = (json_decode(json_resp['data']))['carts']
+    rescue Rhc::JsonError
       exit 1
     end
     carts
@@ -156,8 +165,8 @@ module RHC
   end
 
   def self.check_key(keyname)
-    check_field(keyname, 'key name', DEFAULT_MAX_LENGTH, /[^0-9_a-zA-Z]/, 
-                'contains invalid characters! Only alpha-numeric characters and underscores allowed.')
+    check_field(keyname, 'key name', DEFAULT_MAX_LENGTH, /[^0-9a-zA-Z]/, 
+                'contains invalid characters! Only alpha-numeric characters allowed.')
   end
 
   def self.check_field(field, type, max=0, val_regex=/[^0-9a-zA-Z]/, 
@@ -175,7 +184,7 @@ module RHC
       puts "#{type} is required"
       return false
     end
-    true
+    field
   end
 
   def self.print_post_data(h)
@@ -223,8 +232,8 @@ module RHC
       exit 1
     end
     begin
-      json_resp = JSON.parse(response.body)
-    rescue JSON::ParserError
+      json_resp = json_decode(response.body)
+    rescue Rhc::JsonError
       exit 1
     end
     update_server_api_v(json_resp)
@@ -232,13 +241,34 @@ module RHC
       print_response_success(json_resp)
     end
     begin
-      user_info = JSON.parse(json_resp['data'].to_s)
-    rescue JSON::ParserError
+      user_info = json_decode(json_resp['data'].to_s)
+    rescue Rhc::JsonError
       exit 1
     end
     user_info
   end
 
+  # Public: Get a list of ssh keys
+  #
+  # type - The String type RSA or DSS.
+  # libra_server - The String DNS for the broker
+  # rhlogin - The String login name
+  # password - The String password for login
+  # net_http - The NET::HTTP Object to use
+  #
+  # Examples
+  #
+  #  RHC::get_ssh_keys('openshift.redhat.com',
+  #                    'mylogin@example.com',
+  #                    'mypassword',
+  #                    @http)
+  #  # => { "ssh_type" => "ssh-rsa",
+  #         "ssh_key" => "AAAAB3NzaC1yc2EAAAADAQAB....",
+  #         "fingerprint" => "ea:08:e3:c7:e3:c3:8e:6a:66:34:65:e4:56:f4:3e:ff"}
+  #
+  # FIXME!  Exits on failure!  Should return something instead
+  #
+  # Returns Hash on success or exits on failure
   def self.get_ssh_keys(libra_server, rhlogin, password, net_http)
     data = {'rhlogin' => rhlogin, 'action' => 'list-keys'}
     if @mydebug
@@ -260,15 +290,30 @@ module RHC
       exit 1
     end
     begin
-      json_resp = JSON.parse(response.body)
-    rescue JSON::ParserError
+      json_resp = json_decode(response.body)
+    rescue Rhc::JsonError
       exit 1
     end
     update_server_api_v(json_resp)
     begin
-      ssh_keys = (JSON.parse(json_resp['data'].to_s))
-    rescue JSON::ParserError
+      ssh_keys = (json_decode(json_resp['data'].to_s))
+    rescue Rhc::JsonError
       exit 1
+    end
+
+    # Inject public fingerprint into key.
+    ssh_keys['fingerprint'] = \
+      Net::SSH::KeyFactory.load_data_public_key(
+        "#{ssh_keys['ssh_type']} #{ssh_keys['ssh_key']}").fingerprint
+
+    if ssh_keys['keys'] && ssh_keys['keys'].kind_of?(Hash)
+      ssh_keys['keys'].each do |name, keyval|
+        type = keyval['type']
+        key = keyval['key']
+        ssh_keys['keys'][name]['fingerprint'] = \
+          Net::SSH::KeyFactory.load_data_public_key(
+            "#{type} #{key}").fingerprint
+      end
     end
     ssh_keys
   end
@@ -276,14 +321,10 @@ module RHC
   def self.get_password
     password = nil
     begin
-      print "Password: "
-      system "stty -echo"
-      password = gets.chomp
+      password = ask("Password: ", true)
     rescue Interrupt
       puts "\n"
       exit 1
-    ensure
-      system "stty echo"
     end
     puts "\n"
     password
@@ -328,9 +369,9 @@ module RHC
       print_response_message(response.body)
     elsif response.content_type == 'application/json'
       begin
-        json_resp = JSON.parse(response.body)
+        json_resp = json_decode(response.body)
         exit_code = print_json_body(json_resp)
-      rescue JSON::ParserError
+      rescue Rhc::JsonError
         exit_code = 1
       end
     elsif @mydebug
@@ -476,9 +517,9 @@ module RHC
       response = http_post(net_http, url, json_data, password)
 
       if response.code == '200'
-        json_resp = JSON.parse(response.body)
+        json_resp = json_decode(response.body)
         print_response_success(json_resp)
-        json_data = JSON.parse(json_resp['data'])
+        json_data = json_decode(json_resp['data'])
         health_check_path = json_data['health_check_path']
         app_uuid = json_data['uuid']
         result = json_resp['result']
@@ -697,79 +738,7 @@ LOOKSGOOD
     http_post(net_http, url, json_data, password)
   end
   
-# Runs rhc-list-ports on server to check available ports
-  # :stderr return user-friendly port name, :stdout returns 127.0.0.1:8080 format
-  def self.list_ports(rhc_domain, namespace, app_name, app_uuid, debug=true)
-
-    ip_and_port_simple_regex = /[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\:[0-9]{1,5}/
-
-    ssh_host = "#{app_name}-#{namespace}.#{rhc_domain}"
-
-    ssh_cmd = "ssh -t #{app_uuid}@#{ssh_host} 'rhc-list-ports'"
-
-    hosts_and_ports = []
-    hosts_and_ports_descriptions = []
-    scaled_uuids = []
-
-    puts ssh_cmd if debug
-
-    Open3.popen3(ssh_cmd) { |stdin, stdout, stderr| 
-
-      stdout.each { |line|
-        line = line.chomp
-        if line.downcase =~ /scale/
-          scaled_uuid = line[5..-1]
-          scaled_uuids << scaled_uuid
-        else
-          if ip_and_port_simple_regex.match(line)
-            hosts_and_ports << line
-          end
-        end
-      }
-
-      stderr.each { |line|
-        line = line.chomp
-        if line.downcase =~ /permission denied/
-          puts line
-          exit 1
-        end
-        
-        
-        if line.index(ip_and_port_simple_regex)
-          hosts_and_ports_descriptions << line
-        end
-      }
-
-    }
-
-    scaled_uuids.each { |uuid|
-      list_scaled_ports(rhc_domain, namespace, app_name, uuid, hosts_and_ports, hosts_and_ports_descriptions, debug)
-    }
-    
-    #hosts_and_ports_descriptions = stderr.gets.chomp.split(/\n/)
-    #hosts_and_ports = stdout.gets.chomp.split(/\n/)
-
-    # Net::SSH.start(ssh_host, app_uuid) do |ssh| 
-
-    #   ssh.exec!("rhc-list-ports") do |channel, stream, data|
-
-    #     array = data.split(/\n/)
-
-    #     if stream == :stderr 
-    #       hosts_and_ports_descriptions = array
-    #     elsif stream == :stdout 
-    #       hosts_and_ports = array
-    #     end
-
-    #   end
-
-    # end
-
-    return hosts_and_ports, hosts_and_ports_descriptions
-
-  end
-
-  # Runs rhc-list-ports on server to check available ports
+  # Runs rhc-list-ports on server to check available ports. Does NOT handle scaled app uuid's
   # :stderr return user-friendly port name, :stdout returns 127.0.0.1:8080 format
   def self.list_scaled_ports(rhc_domain, namespace, app_name, app_uuid, hosts_and_ports, hosts_and_ports_descriptions, debug=true)
 
@@ -777,33 +746,39 @@ LOOKSGOOD
 
     ssh_host = "#{app_name}-#{namespace}.#{rhc_domain}"
 
-    ssh_cmd = "ssh -t #{app_uuid}@#{ssh_host} 'rhc-list-ports'"
+    puts "Checking scaled app #{app_uuid}..." if debug
 
-    puts ssh_cmd if debug
+    Net::SSH.start(ssh_host, app_uuid) do |ssh|
 
-    Open3.popen3(ssh_cmd) { |stdin, stdout, stderr| 
+      ssh.exec! "rhc-list-ports" do |channel, stream, data|
 
-      stdout.each { |line|
-        line = line.chomp
-     
-        if ip_and_port_simple_regex.match(line)
-          hosts_and_ports << line
+        if stream == :stderr
+
+          data.each { |line|
+            line = line.chomp
+
+            if line.downcase =~ /permission denied/
+              puts line
+              exit 1
+            end
+            
+            if line.index(ip_and_port_simple_regex)
+              hosts_and_ports_descriptions << line
+            end
+          }
+
+        else
+
+          data.each { |line|
+            line = line.chomp
+            if ip_and_port_simple_regex.match(line)
+              hosts_and_ports << line
+            end
+          }
+
         end
-      }
-
-      stderr.each { |line|
-        line = line.chomp
-
-        if line.downcase =~ /permission denied/
-          puts line
-          exit 1
-        end
-        
-        if line.index(ip_and_port_simple_regex)
-          hosts_and_ports_descriptions << line
-        end
-      }
-    }
+      end
+    end
 
   end
   
@@ -833,13 +808,100 @@ LOOKSGOOD
     response = http_post(net_http, url, json_data, password)
     
     if response.code == '200'
-      json_resp = JSON.parse(response.body)
+      json_resp = json_decode(response.body)
       print_response_success(json_resp, print_result || @mydebug)
     else
         print_response_err(response)
     end
-    JSON.parse(response.body)
+    json_decode(response.body)
   end
+
+  def self.snapshot_create(rhc_domain, namespace, app_name, app_uuid, filename, debug=false)
+    ssh_cmd = "ssh #{app_uuid}@#{app_name}-#{namespace}.#{rhc_domain} 'snapshot' > #{filename}"
+    puts "Pulling down a snapshot to #{filename}..."
+    puts ssh_cmd if debug
+    puts 
+
+    begin
+      Net::SSH.start("#{app_name}-#{namespace}.#{rhc_domain}", app_uuid) do |ssh|
+        file = File.new(filename, 'w')
+        ssh.exec! "snapshot" do |channel, stream, data|
+          if stream == :stdout
+            file.write(data)
+          end
+        end
+        file.close
+      end
+    rescue Exception => e
+      puts e.message if debug
+      puts "Error in trying to save snapshot.  You can try to save manually by running:"
+      puts
+      puts ssh_cmd
+      puts
+      return 1
+    end
+    true
+  end
+
+  def self.snapshot_restore(rhc_domain, namespace, app_name, app_uuid, filename, debug=false)
+    if File.exists? filename
+
+      if ! Rhc::Tar.contains filename, './*/' + app_name
+
+        puts "Archive at #{filename} does not contain the target application: ./*/#{app_name}"
+        puts "If you created this archive rather than exported with rhc-snapshot, be sure"
+        puts "the directory structure inside the archive starts with ./<app_uuid>/"
+        puts "i.e.: tar -czvf <app_name>.tar.gz ./<app_uuid>/"
+        return 255
+
+      else
+
+        include_git = Rhc::Tar.contains filename, './*/git'
+
+        ssh_cmd = "cat #{filename} | ssh #{app_uuid}@#{app_name}-#{namespace}.#{rhc_domain} 'restore#{include_git ? ' INCLUDE_GIT' : ''}'"
+        puts "Restoring from snapshot #{filename}..."
+        puts ssh_cmd if debug
+        puts 
+
+        begin
+          ssh = Net::SSH.start("#{app_name}-#{namespace}.#{rhc_domain}", app_uuid)
+          ssh.open_channel do |channel|
+            channel.exec("restore#{include_git ? ' INCLUDE_GIT' : ''}") do |ch, success|
+              channel.on_data do |ch, data|
+                puts data
+              end
+              channel.on_extended_data do |ch, type, data|
+                puts data
+              end
+              channel.on_close do |ch|
+                puts "Terminating..."
+              end
+              file = File.new(filename, 'r')
+              while (line = file.gets)
+                channel.send_data line
+              end
+              file.close
+              channel.eof!
+            end
+          end
+          ssh.loop
+        rescue Exception => e
+          puts e.message if debug
+          puts "Error in trying to restore snapshot.  You can try to restore manually by running:"
+          puts
+          puts ssh_cmd
+          puts
+          return 1
+        end
+
+      end
+    else
+      puts "Archive not found: #{filename}"
+      return 255
+    end
+    true
+  end
+
 end
 
 # provide a hook for performing actions before rhc-* commands exit
@@ -856,32 +918,17 @@ at_exit {
 @conf_name = 'express.conf'
 _linux_cfg = '/etc/openshift/' + @conf_name
 _gem_cfg = File.join(File.expand_path(File.dirname(__FILE__) + "/../conf"), @conf_name)
-_home_conf = File.expand_path('~/.openshift')
-@local_config_path = File.join(_home_conf, @conf_name)
+@home_conf = File.expand_path('~/.openshift')
+@local_config_path = File.join(@home_conf, @conf_name)
 @config_path = File.exists?(_linux_cfg) ? _linux_cfg : _gem_cfg
+@home_dir=File.expand_path("~")
 
-FileUtils.mkdir_p _home_conf unless File.directory?(_home_conf)
 local_config_path = File.expand_path(@local_config_path)
-if !File.exists? local_config_path
-  file = File.open(local_config_path, 'w')
-  begin
-    file.puts <<EOF
-# SSH key file
-#ssh_key_file = 'libra_id_rsa'
-EOF
-
-  ensure
-    file.close
-  end
-  puts ""
-  puts "Created local config file: " + local_config_path
-  puts "express.conf contains user configuration and can be transferred across clients."
-  puts ""
-end
 
 begin
   @global_config = ParseConfig.new(@config_path)
-  @local_config = ParseConfig.new(File.expand_path(@local_config_path))
+  @local_config = ParseConfig.new(File.expand_path(@local_config_path)) if \
+    File.exists?(@local_config_path)
 rescue Errno::EACCES => e
   puts "Could not open config file: #{e.message}"
   exit 253
@@ -946,6 +993,15 @@ def get_var(var)
   v
 end
 
+def ask(prompt, password=false)
+  if password
+    return Rhc::Input.ask_for_password prompt
+  else
+    print prompt unless prompt.nil?
+    return $stdin.gets.to_s.chomp
+  end
+end
+
 def kfile_not_found
   puts <<KFILE_NOT_FOUND
 Your SSH keys are created either by running ssh-keygen (password optional)
@@ -953,7 +1009,7 @@ or by having the 'rhc domain create' command do it for you.  If you created
 them on your own (or want to use an existing keypair), be sure to paste
 your public key into the express console at http://www.openshift.com.
 The client tools use the value of 'ssh_key_file' in express.conf to find
-your key followed by the defaults of libra_id_rsa[.pub] and then
+your key followed by the defaults of id_rsa[.pub] and then
 id_rsa[.pub].
 KFILE_NOT_FOUND
 
@@ -969,7 +1025,7 @@ def get_kfile(check_exists=true)
       kfile = File.expand_path(ssh_key_file)
     end
   else
-    kfile = "#{ENV['HOME']}/.ssh/libra_id_rsa"
+    kfile = "#{ENV['HOME']}/.ssh/id_rsa"
   end
   if check_exists && !File.exists?(kfile)
     if ssh_key_file
@@ -1080,3 +1136,280 @@ SSH
     File.chmod(0600, ssh_config)
   end
 end
+
+# Public: Handle response message when updating keys
+#
+# url - The Object URI::HTTPS
+# data - The Hash representation of the data response
+# password - The String password for the user
+#
+# Examples
+#
+#  handle_key_mgmt_response(
+#                  URI.parse('https://openshift.redhat.com/broker/ssh_keys'),
+#                  {
+#                    :rhlogin=>"rhnlogin@example.com",
+#                    :key_name=>"default",
+#                    :action=>"update-key",
+#                    :ssh=>"AAAAB3NzaC1yc2EAAAADAQABAAAAgQCrXG5c.....",
+#                    :key_type=>"ssh-rsa"},
+#                  'mypass')
+#  # => nil
+#
+# Returns nil on Success and RHC::http object on failure
+def handle_key_mgmt_response(url, data, password)
+  RHC::print_post_data(data)
+  json_data = RHC::generate_json(data)
+
+  response = RHC::http_post(@http, url, json_data, password)
+
+  if response.code == '200'
+    begin
+      json_resp = RHC::json_decode(response.body)
+      RHC::update_server_api_v(json_resp)
+      RHC::print_response_success(json_resp)
+      puts "Success"
+      return
+    rescue Rhc::JsonError
+      RHC::print_response_err(response)
+    end
+  else
+    RHC::print_response_err(response)
+  end
+  puts "Failure"
+  return response
+end
+
+# Public: Add or upload an ssh key
+#
+# type - The String type RSA or DSS.
+# command - The String value 'add' or 'update'
+# identifier - The String value to identify the key
+# pub_key_file_path - The String file path of the public key
+# rhlogin - The String login to the broker
+# password- The String password for the user
+#
+# Examples
+#
+#  generate_ssh_key_ruby('add', 'newkeyname', '~/.ssh/id_rsa',
+#                        'mylogin', 'mypass')
+#  # => /home/user/.ssh/id_rsa.pub
+#
+# Returns nil on success or HTTP object on failure
+def add_or_update_key(command, identifier, pub_key_file_path, rhlogin, password)
+
+  # Read user public ssh key
+  if pub_key_file_path
+    if File.readable?(pub_key_file_path)
+      begin
+        ssh_keyfile_contents = File.open(pub_key_file_path).gets.chomp.split(' ')
+        ssh_key = ssh_keyfile_contents[1]
+        ssh_key_type = ssh_keyfile_contents[0]
+      rescue Exception => e
+        puts "Invalid public keyfile format! Please specify a valid user public keyfile."
+        exit 1
+      end
+    else
+      puts "Unable to read user public keyfile #{pub_key_file_path}"
+      exit 1
+    end
+  else # create key
+    key_name = identifier
+    puts "Generating ssh key pair for user '#{key_name}' in the dir '#{Dir.pwd}/'"
+    # REMOVED in favor of generate_ssh_key_ruby: system("ssh-keygen -t rsa -f '#{key_name}'")
+    ssh_pub_key_file = generate_ssh_key_ruby()
+    ssh_keyfile_contents = File.open(ssh_pub_key_file).gets.chomp.split(' ')
+    ssh_key = ssh_keyfile_contents[1]
+    ssh_key_type = ssh_keyfile_contents[0]
+  end
+
+  data = {}
+  data[:rhlogin] = rhlogin
+  data[:key_name] = identifier
+  data[:ssh] = ssh_key
+  data[:action] = 'add-key'
+  data[:key_type] = ssh_key_type
+
+  if command == 'add'
+    data[:action] = 'add-key'
+  elsif command == 'update'
+    data[:action] = 'update-key'
+  end
+
+  url = URI.parse("https://#{$libra_server}/broker/ssh_keys")
+  handle_key_mgmt_response(url, data, password)
+end
+
+
+# Public: Generate an SSH key and store it in ~/.ssh/id_rsa
+#
+# type - The String type RSA or DSS.
+# bits - The Integer value for number of bits.
+# comment - The String comment for the key
+#
+# Examples
+#
+#  generate_ssh_key_ruby()
+#  # => /home/user/.ssh/id_rsa.pub
+#
+# Returns nil on failure or public key location as a String on success
+def generate_ssh_key_ruby(type="RSA", bits = 1024, comment = "OpenShift-Key")
+  key = SSHKey.generate(:type => type,
+                        :bits => bits,
+                        :comment => comment)
+  ssh_dir = "#{@home_dir}/.ssh"
+  if File.exists?("#{ssh_dir}/id_rsa")
+    puts "SSH key already exists: #{ssh_dir}/id_rsa.  Reusing..."
+    return nil
+  else
+    unless File.exists?(ssh_dir)
+      Dir.mkdir(ssh_dir)
+      File.chmod(0700, ssh_dir)
+    end
+    File.open("#{ssh_dir}/id_rsa", 'w') {|f| f.write(key.private_key)}
+    File.chmod(0600, "#{ssh_dir}/id_rsa")
+    File.open("#{ssh_dir}/id_rsa.pub", 'w') {|f| f.write(key.ssh_public_key)}
+  end
+  "#{ssh_dir}/id_rsa.pub"
+end
+
+# Public: Run ssh command on remote host
+#
+# host - The String of the remote hostname to ssh to.
+# username - The String username of the remote user to ssh as.
+# command - The String command to run on the remote host.
+#
+# Examples
+#
+#  ssh_ruby('myapp-t.rhcloud.com',
+#            '109745632b514e9590aa802ec015b074',
+#            'rhcsh tail -f $OPENSHIFT_LOG_DIR/*"')
+#  # => true
+#
+# Returns true on success
+def ssh_ruby(host, username, command)
+  Net::SSH.start(host, username) do |session|
+    session.open_channel do |channel|
+      channel.request_pty do |ch, success|
+        puts "pty could not be obtained" unless success
+      end
+
+      channel.on_data do |ch, data|
+        #puts "[#{file}] -> #{data}"
+        puts data
+      end
+      channel.exec command
+    end
+    session.loop
+  end
+end
+
+# Public: Runs the setup wizard to make sure ~/.openshift and ~/.ssh are correct
+#
+# Examples
+#
+#  setup_wizard()
+#  # => true
+#
+# Returns nil on failure or true on success
+def setup_wizard(local_config_path)
+
+  ##############################################
+  # First take care of ~/.openshift/express.conf
+  ##############################################
+  puts <<EOF
+
+Starting Interactive Setup.
+
+It looks like you've not used OpenShift Express on this machine before.  We'll
+help get you setup with just a couple of questions.  You can skip this in the
+future by copying your config's around:
+
+EOF
+  puts "    #{local_config_path}"
+  puts "    #{@home_dir}/.ssh/"
+  puts ""
+  username = ask("https://openshift.redhat.com/ username: ")
+  $password = RHC::get_password
+  # FIXME: Fix this
+  #$libra_server = get_var('libra_server')
+  $libra_server = 'openshift.redhat.com'
+  # Confirm username / password works:
+  user_info = RHC::get_user_info($libra_server, username, $password, @http, true)
+  if !File.exists? local_config_path
+    FileUtils.mkdir_p @home_conf
+    file = File.open(local_config_path, 'w')
+    begin
+      file.puts <<EOF
+# Default user login
+default_rhlogin='#{username}'
+
+# Server API
+libra_server = '#{$libra_server}'
+EOF
+
+    ensure
+      file.close
+    end
+    puts ""
+    puts "Created local config file: " + local_config_path
+    puts "express.conf contains user configuration and can be transferred across clients."
+    puts ""
+  end
+
+  # Read in @local_config now that it exists (was skipped before because it did
+  # not exist
+  @local_config = ParseConfig.new(File.expand_path(@local_config_path))
+
+  ##################################
+  # Second take care of the ssh keys
+  ##################################
+
+  unless File.exists? "#{@home_dir}/.ssh/id_rsa"
+    puts ""
+    puts "No SSH Key has been found.  We're generating one for you."
+    ssh_pub_key_file_path = generate_ssh_key_ruby()
+    puts "    Created: #{ssh_pub_key_file_path}"
+    puts ""
+  end
+
+  # TODO: Name and upload new key
+
+  puts <<EOF
+Last step, we need to upload the newly generated public key to remote servers
+so it can be used.  First you need to name it.  For example "liliWork" or
+"laptop".  You can overwrite an existing key by naming it or pick a new
+name.
+
+Current Keys:
+EOF
+  ssh_keys = RHC::get_ssh_keys($libra_server, username, $password, @http)
+  additional_ssh_keys = ssh_keys['keys']
+  known_keys = ['default']
+  puts "    default - #{ssh_keys['fingerprint']}" 
+  if additional_ssh_keys && additional_ssh_keys.kind_of?(Hash)
+    additional_ssh_keys.each do |name, keyval|
+      puts "    #{name} - #{keyval['fingerprint']}"
+      known_keys.push(name)
+    end
+  end
+
+  puts "Name your new key: "
+  while((key_name = RHC::check_key(gets.chomp)) == false)
+    print "Try again.  Name your key: "
+  end
+
+  if known_keys.include?(key_name)
+    puts ""
+    puts "Key already exists!  Updating.."
+    add_or_update_key('update', key_name, ssh_pub_key_file_path, username, $password)
+  else
+    puts ""
+    puts "Sending new key.."
+    add_or_update_key('add', key_name, ssh_pub_key_file_path, username, $password)
+  end
+  
+end
+
+setup_wizard(local_config_path) unless File.exists? local_config_path
+
