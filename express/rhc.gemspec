@@ -28,10 +28,4 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency      'rest-client',  '>= 1.6'
   s.add_development_dependency  'webmock',      '>= 1.6'
   s.add_development_dependency  'rspec',        '~> 1.3'
-
-  # Adding install time dependencies for
-  #   - test-unit (Ruby 1.9)
-  #   - json_pure (Ruby (Ruby 1.8.6, Windows, Mac) / json (everything else)
-  # http://en.wikibooks.org/wiki/Ruby_Programming/RubyGems
-  s.extensions << 'ext/mkrf_conf.rb'
 end
