@@ -5,7 +5,7 @@ rvm:
 gemfile: express/Gemfile
 after_install: gem list
 before_script: cd express
-script: bundle exec rake test
+script: bundle exec rake spec
 notifications:
   email:
     recipients:

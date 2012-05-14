@@ -12,11 +12,15 @@ Source0:       rhc-%{version}.tar.gz
 BuildRoot:     %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 BuildRequires: rubygem-rake
 BuildRequires: rubygem-rspec
+BuildRequires: rubygem-webmock
 Requires:      ruby >= 1.8.5
 Requires:      rubygem-parseconfig
 Requires:      rubygem-rest-client
 Requires:      rubygem-rake
+Requires:      rubygem-sshkey
+Requires:      rubygem-net-ssh
 Requires:      rubygem-archive-tar-minitar
+Requires:      rubygem-commander
 Requires:      git
 Obsoletes:     rhc-rest
 
@@ -64,9 +68,7 @@ rake --trace package
 
 mkdir -p .%{gemdir}
 # Ignore dependencies here because these will be handled by rpm 
-## Add in ENV variable because the extensions are still causing build failures
-##      -- in ext/mkrf_conf.rb fotios added logic to fix this with an ENV var
-RHC_RPMBUILD=1 gem install --install-dir $RPM_BUILD_ROOT/%{gemdir} --bindir $RPM_BUILD_ROOT/%{_bindir} --local -V --force --rdoc --ignore-dependencies \
+gem install --install-dir $RPM_BUILD_ROOT/%{gemdir} --bindir $RPM_BUILD_ROOT/%{_bindir} --local -V --force --rdoc --ignore-dependencies \
      pkg/rhc-%{version}.gem
 
 # Copy the bash autocompletion script
