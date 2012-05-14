@@ -670,7 +670,7 @@ To make changes to '#{app_name}', you must first clone it with:
       git clone #{git_url}
 
 LOOKSGOOD
-                puts "Then run 'git push' to update your OpenShift Express space."
+                puts "Then run 'git push' to update your OpenShift space."
               end
             end
             if result && !result.empty?

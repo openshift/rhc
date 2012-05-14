@@ -1,4 +1,4 @@
-# OpenShift Command Line Tools (RHC)
+# OpenShift Command Line Tools (RHC) [![Build Status](https://secure.travis-ci.org/openshift/os-client-tools.png)](http://travis-ci.org/openshift/os-client-tools)
 
 The OpenShift command line tools allow you to manage your OpenShift
 applications from the command line.  The [Getting Started

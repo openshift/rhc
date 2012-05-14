@@ -50,7 +50,7 @@ List of arguments
   -a|--app          application  Application name  (alphanumeric - max #{RHC::APP_NAME_MAX_LENGTH} chars) (required)
   -t|--type         type         Type of app to create (#{type_keys}) (required for creating an application)
   -c|--cartridge    cartridge    The embedded cartrige to manage (required for the cartridge command)
-  -g|--gear-size    size         The size of the gear for this app ([small|medium|large], defaults to small)
+  -g|--gear-size    size         The size of the gear for this app ([small|medium], defaults to small)
   -s|--scaling                   Enable scaling for this app
   -r|--repo         path         Git Repo path (defaults to ./$app_name)
   -n|--nogit                     Only create remote space, don't pull it locally
@@ -172,10 +172,6 @@ currently being created: '#{$opt['app']}'
   end
 
   $opt['gear-size']='small' unless $opt['gear-size']
-  if !['small','medium','large'].include? $opt['gear-size']
-    puts "Invalid gear size:  %s" % $opt['gear-size']
-    p_usage
-  end
   
   $opt['repo'] = $opt['app'] unless $opt['repo']
   

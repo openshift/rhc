@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.92.8
+Version: 0.93.1
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -84,7 +84,7 @@ RHC_RPMBUILD=1 gem install --install-dir $RPM_BUILD_ROOT/%{gemdir} --bindir $RPM
 
 # Copy the bash autocompletion script
 mkdir -p "$RPM_BUILD_ROOT/etc/bash_completion.d/"
-cp lib/rhc $RPM_BUILD_ROOT/etc/bash_completion.d/rhc
+cp autocomplete/rhc $RPM_BUILD_ROOT/etc/bash_completion.d/rhc
 
 cp LICENSE $RPM_BUILD_ROOT/%{gemdir}/gems/rhc-%{version}/LICENSE
 cp COPYRIGHT $RPM_BUILD_ROOT/%{gemdir}/gems/rhc-%{version}/COPYRIGHT
@@ -121,6 +121,18 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu May 10 2012 Adam Miller <admiller@redhat.com> 0.93.1-1
+- Merge pull request #18 from rmillner/master (ccoleman@redhat.com)
+- bumping spec versions (admiller@redhat.com)
+- Let the broker dictate what valid gear sizes are for the user.
+  (rmillner@redhat.com)
+
+* Wed May 09 2012 Adam Miller <admiller@redhat.com> 0.92.10-1
+- Removed large gear size, only small and medium for now (ffranz@redhat.com)
+
+* Tue May 08 2012 Adam Miller <admiller@redhat.com> 0.92.9-1
+- Bug 819739 (dmcphers@redhat.com)
+
 * Mon May 07 2012 Adam Miller <admiller@redhat.com> 0.92.8-1
 - TA2025 (bdecoste@gmail.com)
 
