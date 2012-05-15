@@ -1411,4 +1411,6 @@ EOF
   
 end
 
-
+def default_setup_wizard
+  setup_wizard(@local_config_path) unless File.exists? @local_config_path
+end
