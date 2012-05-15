@@ -1411,5 +1411,4 @@ EOF
   
 end
 
-setup_wizard(local_config_path) unless File.exists? local_config_path
 

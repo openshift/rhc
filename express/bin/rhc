@@ -36,6 +36,9 @@ def get_args
   args
 end
 
+puts "******************************** #{local_config_path}"
+setup_wizard(local_config_path) unless File.exists? local_config_path or ARGV.include?('--noprompt')
+
 case ARGV[0]
 when "domain"
   system("rhc-domain #{get_args} 2>&1")
