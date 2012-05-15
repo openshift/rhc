@@ -219,9 +219,9 @@ response = RHC::http_post(@http, url, json_data, password)
 
 if response.code == '200'
     begin
-        json_resp = JSON.parse(response.body)
+        json_resp = RHC::json_decode(response.body)
         RHC::print_response_success(json_resp)
-        json_rhlogininfo = JSON.parse(json_resp['data'])
+        json_rhlogininfo = RHC::json_decode(json_resp['data'])
         add_rhlogin_config(json_rhlogininfo['rhlogin'], json_rhlogininfo['uuid'])
         add_ssh_config_host(json_rhlogininfo['rhc_domain'], ssh_key_file_path, ssh_config, ssh_config_d)
     
@@ -271,7 +271,7 @@ EOF
             puts ""
         end
         exit 0
-    rescue JSON::ParserError
+    rescue Rhc::JsonError
         RHC::print_response_err(response)
     end
 else

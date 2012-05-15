@@ -54,52 +54,6 @@ def validate_args(val_id=true)
   $password = $opt['password'] ? $opt['password'] : RHC::get_password
 end
 
-def add_or_update_key(command)
-  validate_args(true)
-  
-  # Read user public ssh key
-  if $opt['ssh']
-    if File.readable?($opt['ssh'])
-      begin
-        ssh_keyfile_contents = File.open($opt['ssh']).gets.chomp.split(' ')
-        ssh_key = ssh_keyfile_contents[1]
-        ssh_key_type = ssh_keyfile_contents[0]
-      rescue Exception => e
-        puts "Invalid public keyfile format! Please specify a valid user public keyfile."
-        exit 1
-      end
-    else
-      puts "Unable to read user public keyfile #{$opt['ssh']}"
-      exit 1
-    end
-  else # create key
-    key_name = $opt['identifier']
-    puts "Generating ssh key pair for user '#{key_name}' in the dir '#{Dir.pwd}/'"
-    # Use system for interaction
-    system("ssh-keygen -t rsa -f '#{key_name}'")
-    ssh_pub_key_file = Dir.pwd + '/' + key_name + '.pub'
-    ssh_keyfile_contents = File.open(ssh_pub_key_file).gets.chomp.split(' ')
-    ssh_key = ssh_keyfile_contents[1]
-    ssh_key_type = ssh_keyfile_contents[0]
-  end
-
-  data = {}
-  data[:rhlogin] = $opt['rhlogin']
-  data[:key_name] = $opt['identifier']
-  data[:ssh] = ssh_key
-  data[:action] = 'add-key'
-  data[:key_type] = ssh_key_type
-
-  if command == 'add'
-    data[:action] = 'add-key'
-  elsif command == 'update'
-    data[:action] = 'update-key'
-  end
-
-  url = URI.parse("https://#{$libra_server}/broker/ssh_keys")
-  handle_key_mgmt_response(url, data, $password)
-end
-
 def remove_key
   validate_args(true)
 
@@ -123,45 +77,23 @@ def show_key_list
   puts "========"
 
   # first list the primary key
-  puts "Name: default"
-  puts "Type: #{ssh_keys['ssh_type']}"
-  puts " Key: #{ssh_keys['ssh_key']}"
+  puts "       Name: default"
+  puts "       Type: #{ssh_keys['ssh_type']}"
+  puts "Fingerprint: #{ssh_keys['fingerprint']}"
+  #puts "        Key: #{ssh_keys['ssh_key']}"
   puts ""
     
   # now list the additional keys
   if additional_ssh_keys && additional_ssh_keys.kind_of?(Hash)
     additional_ssh_keys.each do |name, keyval|
-      puts "Name: #{name}"
-      puts "Type: #{keyval['type']}"
-      puts " Key: #{keyval['key']}"
+      puts "       Name: #{name}"
+      puts "       Type: #{keyval['type']}"
+      puts "Fingerprint: #{keyval['fingerprint']}"
+      #puts "        Key: #{keyval['key']}"
       puts ""
     end
   end
 end
-
-def handle_key_mgmt_response(url, data, password)
-  RHC::print_post_data(data)
-  json_data = RHC::generate_json(data)
-  
-  response = RHC::http_post(@http, url, json_data, password)
-  
-  if response.code == '200'
-    begin
-      json_resp = JSON.parse(response.body)
-      RHC::update_server_api_v(json_resp)
-      RHC::print_response_success(json_resp)
-      puts "Success"
-      exit 0
-    rescue JSON::ParserError
-      RHC::print_response_err(response)
-    end
-  else
-    RHC::print_response_err(response)
-  end
-  puts "Failure"
-  exit 1
-end
-
 
 begin
   argv_c = ARGV.clone
@@ -224,7 +156,9 @@ p_usage 0 if $opt["help"]
 
 case argv_c[0]
 when "add", "update"
-  add_or_update_key(argv_c[0])
+  validate_args(true)
+  add_or_update_key(argv_c[0], $opt['identifier'], $opt['ssh'],
+                    $opt['rhlogin'], $password)
 when "remove"
   remove_key
 when "list", nil
