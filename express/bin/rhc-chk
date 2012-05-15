@@ -14,7 +14,6 @@ end
 require 'test/unit'
 require 'test/unit/ui/console/testrunner'
 
-
 #
 # print help
 #
@@ -168,8 +167,8 @@ module TestBase
     return response
   ensure
     $debuginfo['fetches'] ||= []
-    body = JSON.parse(response.body)
-    body['data'] = body['data'] && body['data'] != '' ? JSON.parse(body['data']) : ''
+    body = RHC::json_decode(response.body)
+    body['data'] = body['data'] && body['data'] != '' ? RHC::json_decode(body['data']) : ''
     $debuginfo['fetches'] << {url.to_s => {
       'body' => body,
       'header' => response.instance_variable_get(:@header)
@@ -243,7 +242,7 @@ class Test2_Authentication < Test::Unit::TestCase
 
     data = {'rhlogin' => $rhlogin}
     response = fetch_url_json("/broker/userinfo", data)
-    resp_json = JSON.parse(response.body)
+    resp_json = RHC::json_decode(response.body)
 
     case response.code.to_i
     when 404
@@ -256,7 +255,7 @@ class Test2_Authentication < Test::Unit::TestCase
       assert false, error_for(:_other_http, resp_json['result'])
     end
 
-    $user_info = JSON.parse(resp_json['data'].to_s)
+    $user_info = RHC::json_decode(resp_json['data'].to_s)
   end
 end
 
@@ -282,7 +281,7 @@ class Test3_SSH < Test::Unit::TestCase
     check_permissions(@libra_kfile, /[4-7]00/) # Needs to at least be readable by user and nobody else
 
     # Derive the public key from the private key
-    key_dump = `ssh-keygen -f #{@libra_kfile} -y`
+    key_dump = SSHKey.new(File.read(@libra_kfile)).ssh_public_key
     @@local_derived_ssh_pubkey = key_dump.to_s.strip.split(' ')[1]
 
     assert_not_nil @@local_derived_ssh_pubkey, error_for(:no_derive)

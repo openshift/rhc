@@ -98,21 +98,25 @@ rhc_domain = user_info['user_info']['rhc_domain']
 # Red Hat OpenShift: https://bugzilla.redhat.com/show_bug.cgi?id=726646
 # OpenSSH https://bugzilla.mindrot.org/show_bug.cgi?id=396
 
-ssh_cmd = "ssh -t #{app_uuid}@#{app}-#{namespace}.#{rhc_domain} 'tail#{opt['opts'] ? ' --opts ' + Base64::encode64(opt['opts']).chomp : ''} #{file_glob}'"
+remote_cmd = "tail#{opt['opts'] ? ' --opts ' + Base64::encode64(opt['opts']).chomp : ''} #{file_glob}"
+ssh_cmd = "ssh -t #{app_uuid}@#{app}-#{namespace}.#{rhc_domain} '#{remote_cmd}'"
 
 puts "Attempting to tail files: #{file_glob}"
 puts "Use ctl + c to stop"
-puts 
 puts ssh_cmd if debug
 begin
   if opt['files'] == 'system-messages'
-     RHC::ctl_app(libra_server, @http, opt['app'], opt['rhlogin'], password, 'system-messages', false, nil, nil)
+     RHC::ctl_app(libra_server, @http, opt['app'], opt['rhlogin'], password,
+                  'system-messages', false, nil, nil)
   else
-     exec ssh_cmd
+     ssh_ruby("#{app}-#{namespace}.#{rhc_domain}", app_uuid, remote_cmd)
   end
-rescue SystemCallError
+rescue SocketError => e
   puts
-  puts "Error in trying to tail files.  You can tail manually by running:"
+  puts "Could not connect: #{e.message}"
+  puts
+  puts "DEBUG: #{e.debug}" if debug
+  puts "You can try to run this manually if you have ssh installed: "
   puts
   puts ssh_cmd
   puts
