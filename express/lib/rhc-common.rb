@@ -11,6 +11,7 @@ require 'resolv'
 require 'uri'
 require 'rhc-rest'
 require 'helpers'
+require 'rhc/config'
 
 module RHC
 
@@ -911,30 +912,6 @@ at_exit {
 }
 
 #
-# Config paths... /etc/openshift/express.conf or $GEM/conf/express.conf -> ~/.openshift/express.conf
-#
-# semi-private: Just in case we rename again :)
-@opts_config_path = nil
-@conf_name = 'express.conf'
-_linux_cfg = '/etc/openshift/' + @conf_name
-_gem_cfg = File.join(File.expand_path(File.dirname(__FILE__) + "/../conf"), @conf_name)
-@home_conf = File.expand_path('~/.openshift')
-@local_config_path = File.join(@home_conf, @conf_name)
-@config_path = File.exists?(_linux_cfg) ? _linux_cfg : _gem_cfg
-@home_dir=File.expand_path("~")
-
-local_config_path = File.expand_path(@local_config_path)
-
-begin
-  @global_config = ParseConfig.new(@config_path)
-  @local_config = ParseConfig.new(File.expand_path(@local_config_path)) if \
-    File.exists?(@local_config_path)
-rescue Errno::EACCES => e
-  puts "Could not open config file: #{e.message}"
-  exit 253
-end
-
-#
 # Check for proxy environment
 #
 if ENV['http_proxy']
@@ -947,51 +924,6 @@ else
   @http = Net::HTTP
 end
 
-
-#
-# Support funcs
-#
-def check_cpath(opts)
-  if !opts["config"].nil?
-    @opts_config_path = opts["config"]
-    if !File.readable?(File.expand_path(@opts_config_path))
-      puts "Could not open config file: #{@opts_config_path}"
-      exit 253
-    else
-      begin
-        @opts_config = ParseConfig.new(File.expand_path(@opts_config_path))
-      rescue Errno::EACCES => e
-        puts "Could not open config file (#{@opts_config_path}): #{e.message}"
-        exit 253
-      end
-    end
-  end
-end
-
-def config_path
-  return @opts_config_path ? @opts_config_path : @local_config_path
-end
-
-def config
-  return @opts_config ? @opts_config : @local_config
-end
-
-#
-# Check for local var in
-#   0) --config path file
-#   1) ~/.openshift/express.conf
-#   2) /etc/openshift/express.conf
-#   3) $GEM/../conf/express.conf
-#
-def get_var(var)
-  v = nil
-  if !@opts_config.nil? && @opts_config.get_value(var)
-    v = @opts_config.get_value(var)
-  else
-    v = @local_config.get_value(var) ? @local_config.get_value(var) : @global_config.get_value(var)
-  end
-  v
-end
 
 def ask(prompt, password=false)
   if password
@@ -1053,6 +985,7 @@ end
 
 # Add a new namespace to configs
 def self.add_rhlogin_config(rhlogin, uuid)
+    config_path = RHC::Config.local_config_path
     f = open(File.expand_path(config_path), 'a')
     unless config.get_value('default_rhlogin')
         f.puts("# Default rhlogin to use if none is specified")
@@ -1411,6 +1344,11 @@ EOF
   
 end
 
+# Public: legacy convinience function for getting config keys
+def get_var(key)
+  RHC::Config.get_value(key)
+end
+
 def default_setup_wizard
-  setup_wizard(@local_config_path) unless File.exists? @local_config_path
+  setup_wizard(RHC::Config.local_config_path) if RHC::Config.should_run_wizard?
 end
