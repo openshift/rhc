@@ -76,7 +76,7 @@ if !password
   password = RHC::get_password
 end
 
-user_info = RHC::get_user_info(libra_server, opt['rhlogin'], password, @http, false)
+user_info = RHC::get_user_info(libra_server, opt['rhlogin'], password, RHC::Config.default_proxy, false)
 
 app = opt['app']
 
@@ -106,7 +106,7 @@ puts "Use ctl + c to stop"
 puts ssh_cmd if debug
 begin
   if opt['files'] == 'system-messages'
-     RHC::ctl_app(libra_server, @http, opt['app'], opt['rhlogin'], password,
+     RHC::ctl_app(libra_server, RHC::Config.default_proxy, opt['app'], opt['rhlogin'], password,
                   'system-messages', false, nil, nil)
   else
      ssh_ruby("#{app}-#{namespace}.#{rhc_domain}", app_uuid, remote_cmd)

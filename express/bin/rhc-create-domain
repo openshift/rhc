@@ -206,7 +206,7 @@ data = {'namespace' => opt['namespace'],
 if (opt['alter'])
   data[:alter] = true
   not_found_message = "A user with rhlogin '#{opt['rhlogin']}' does not have a registered domain.  Be sure to run rhc-create-domain without -a|--alter first."
-  user_info = RHC::get_user_info(libra_server, opt['rhlogin'], password, @http, true, not_found_message)
+  user_info = RHC::get_user_info(libra_server, opt['rhlogin'], password, RHC::Config.default_proxy, true, not_found_message)
 end
 if debug
   data[:debug] = true
@@ -215,7 +215,7 @@ RHC::print_post_data(data)
 json_data = RHC::generate_json(data)
 
 url = URI.parse("https://#{libra_server}/broker/domain")
-response = RHC::http_post(@http, url, json_data, password)
+response = RHC::http_post(RHC::Config.default_proxy, url, json_data, password)
 
 if response.code == '200'
     begin

@@ -167,7 +167,7 @@ end
 RHC::print_post_data(data)
 json_data = RHC::generate_json(data)
 
-response = RHC::http_post(@http, url, json_data, password)
+response = RHC::http_post(RHC::Config.default_proxy, url, json_data, password)
 
 if response.code == '200'
   begin

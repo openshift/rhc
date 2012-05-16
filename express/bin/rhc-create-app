@@ -4,7 +4,7 @@ require 'rhc-common'
 def p_usage(error_code = 255)
     libra_server = get_var('libra_server')
     rhlogin = get_var('default_rhlogin') ? "Default: #{get_var('default_rhlogin')}" : "required"
-    type_keys = RHC::get_cartridge_listing(nil, ', ', libra_server, @http, 'standalone', false)
+    type_keys = RHC::get_cartridge_listing(nil, ', ', libra_server, RHC::Config.default_proxy, 'standalone', false)
     puts <<USAGE
 
 Usage: #{$0}
@@ -106,7 +106,7 @@ if !password
   password = RHC::get_password
 end
 
-user_info = RHC::get_user_info(libra_server, opt['rhlogin'], password, @http, false)
+user_info = RHC::get_user_info(libra_server, opt['rhlogin'], password, RHC::Config.default_proxy, false)
 app_info = user_info['app_info']
 
 if app_info[opt['app']]
@@ -212,8 +212,8 @@ unless opt['nogit']
 end
 
 if jenkins_app_name && !has_jenkins
-  jenkins_app = RHC::create_app(libra_server, @http, user_info, jenkins_app_name, 'jenkins-1.4', opt['rhlogin'], password, nil, false, true, true)
-  available = RHC::check_app_available(@http, jenkins_app[:app_name], jenkins_app[:fqdn], jenkins_app[:health_check_path], jenkins_app[:result], jenkins_app[:git_url], nil, true)
+  jenkins_app = RHC::create_app(libra_server, RHC::Config.default_proxy, user_info, jenkins_app_name, 'jenkins-1.4', opt['rhlogin'], password, nil, false, true, true)
+  available = RHC::check_app_available(RHC::Config.default_proxy, jenkins_app[:app_name], jenkins_app[:fqdn], jenkins_app[:health_check_path], jenkins_app[:result], jenkins_app[:git_url], nil, true)
   if !available
     puts "Unable to access your new Jenkins application."
     exit 1
@@ -223,7 +223,7 @@ end
 #
 # Create remote application space
 #
-main_app = RHC::create_app(libra_server, @http, user_info, opt['app'], opt['type'], opt['rhlogin'], password, opt['repo'], opt['no-dns'], opt['nogit'], false, gear_size, opt['scaling'])
+main_app = RHC::create_app(libra_server, RHC::Config.default_proxy, user_info, opt['app'], opt['type'], opt['rhlogin'], password, opt['repo'], opt['no-dns'], opt['nogit'], false, gear_size, opt['scaling'])
 
 if !main_app
   puts "Create app failed"
@@ -232,11 +232,11 @@ end
 
 if jenkins_app_name
   puts "Now embedding the jenkins client into '#{opt['app']}'..."
-  RHC::ctl_app(libra_server, @http, opt['app'], opt['rhlogin'], password, 'configure', true, 'jenkins-client-1.4', nil, false)
+  RHC::ctl_app(libra_server, RHC::Config.default_proxy, opt['app'], opt['rhlogin'], password, 'configure', true, 'jenkins-client-1.4', nil, false)
 end
 
 unless opt['no-dns']
-  available = RHC::check_app_available(@http, main_app[:app_name], main_app[:fqdn], main_app[:health_check_path], main_app[:result], main_app[:git_url], opt['repo'], opt['nogit'])
+  available = RHC::check_app_available(RHC::Config.default_proxy, main_app[:app_name], main_app[:fqdn], main_app[:health_check_path], main_app[:result], main_app[:git_url], opt['repo'], opt['nogit'])
   if !available
     puts "Unable to access your new application."
     exit 1

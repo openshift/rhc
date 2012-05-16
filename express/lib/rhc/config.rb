@@ -6,6 +6,7 @@ module RHC
     @@global_config = nil
     @@local_config = nil
     @@opts_config = nil
+    @@default_proxy = nil
 
     @@defaults.add('libra_server', 'openshift.redhat.com')
 
@@ -103,6 +104,24 @@ module RHC
 
     def self.home_dir
       @@home_dir
+    end
+
+    def self.default_proxy
+      #
+      # Check for proxy environment
+      #
+      if @@default_proxy.nil?
+        if ENV['http_proxy']
+          if ENV['http_proxy']!~/^(\w+):\/\// then
+            ENV['http_proxy']="http://" + ENV['http_proxy']
+          end
+          proxy_uri=URI.parse(ENV['http_proxy'])
+          @@default_proxy = Net::HTTP::Proxy(proxy_uri.host, proxy_uri.port, proxy_uri.user, proxy_uri.password)
+        else
+          @@default_proxy = Net::HTTP
+        end
+      end
+      @@default_proxy
     end
   end
 end

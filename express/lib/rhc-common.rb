@@ -263,7 +263,7 @@ module RHC
   #  RHC::get_ssh_keys('openshift.redhat.com',
   #                    'mylogin@example.com',
   #                    'mypassword',
-  #                    @http)
+  #                    RHC::Config.default_proxy)
   #  # => { "ssh_type" => "ssh-rsa",
   #         "ssh_key" => "AAAAB3NzaC1yc2EAAAADAQAB....",
   #         "fingerprint" => "ea:08:e3:c7:e3:c3:8e:6a:66:34:65:e4:56:f4:3e:ff"}
@@ -332,12 +332,12 @@ module RHC
     password
   end
 
-  def self.http_post(net_http, url, json_data, password)
+  def self.http_post(http, url, json_data, password)
     req = http::Post.new(url.path)
 
     puts "Contacting #{url.scheme}://#{url.host}" if @mydebug
     req.set_form_data({'json_data' => json_data, 'password' => password})
-    http = net_http.new(url.host, url.port)
+    http = http.new(url.host, url.port)
     http.open_timeout = @connect_timeout
     http.read_timeout = @read_timeout
     if url.scheme == "https"
@@ -912,20 +912,6 @@ at_exit {
   RHC::check_version
 }
 
-#
-# Check for proxy environment
-#
-if ENV['http_proxy']
-  if ENV['http_proxy']!~/^(\w+):\/\// then
-    ENV['http_proxy']="http://" + ENV['http_proxy']
-  end
-  proxy_uri=URI.parse(ENV['http_proxy'])
-  @http = Net::HTTP::Proxy(proxy_uri.host, proxy_uri.port, proxy_uri.user, proxy_uri.password)
-else
-  @http = Net::HTTP
-end
-
-
 def ask(prompt, password=false)
   if password
     return Rhc::Input.ask_for_password prompt
@@ -1095,7 +1081,7 @@ def handle_key_mgmt_response(url, data, password)
   RHC::print_post_data(data)
   json_data = RHC::generate_json(data)
 
-  response = RHC::http_post(@http, url, json_data, password)
+  response = RHC::http_post(RHC::Config.default_proxy, url, json_data, password)
 
   if response.code == '200'
     begin
