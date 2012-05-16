@@ -12,6 +12,7 @@ require 'uri'
 require 'rhc-rest'
 require 'helpers'
 require 'rhc/config'
+require 'rhc/wizard'
 
 module RHC
 
@@ -331,12 +332,12 @@ module RHC
     password
   end
 
-  def self.http_post(http, url, json_data, password)
+  def self.http_post(net_http, url, json_data, password)
     req = http::Post.new(url.path)
 
     puts "Contacting #{url.scheme}://#{url.host}" if @mydebug
     req.set_form_data({'json_data' => json_data, 'password' => password})
-    http = http.new(url.host, url.port)
+    http = net_http.new(url.host, url.port)
     http.open_timeout = @connect_timeout
     http.read_timeout = @read_timeout
     if url.scheme == "https"
@@ -1028,8 +1029,8 @@ def self.add_ssh_config_host(rhc_domain, ssh_key_file_path, ssh_config, ssh_conf
         puts
         exit 213
     rescue Errno::ENOENT
-        puts "Could not find #{ssh_config}.  This is ok, continuing"
     end
+        puts "Could not find #{ssh_config}.  This is ok, continuing"
     if found
         puts "Found #{rhc_domain} in ~/.ssh/config... No need to adjust"
     else
@@ -1237,118 +1238,23 @@ def ssh_ruby(host, username, command)
   end
 end
 
-# Public: Runs the setup wizard to make sure ~/.openshift and ~/.ssh are correct
-#
-# Examples
-#
-#  setup_wizard()
-#  # => true
-#
-# Returns nil on failure or true on success
-def setup_wizard(local_config_path)
-
-  ##############################################
-  # First take care of ~/.openshift/express.conf
-  ##############################################
-  puts <<EOF
-
-Starting Interactive Setup.
-
-It looks like you've not used OpenShift Express on this machine before.  We'll
-help get you setup with just a couple of questions.  You can skip this in the
-future by copying your config's around:
-
-EOF
-  puts "    #{local_config_path}"
-  puts "    #{@home_dir}/.ssh/"
-  puts ""
-  username = ask("https://openshift.redhat.com/ username: ")
-  $password = RHC::get_password
-  # FIXME: Fix this
-  #$libra_server = get_var('libra_server')
-  $libra_server = 'openshift.redhat.com'
-  # Confirm username / password works:
-  user_info = RHC::get_user_info($libra_server, username, $password, @http, true)
-  if !File.exists? local_config_path
-    FileUtils.mkdir_p @home_conf
-    file = File.open(local_config_path, 'w')
-    begin
-      file.puts <<EOF
-# Default user login
-default_rhlogin='#{username}'
-
-# Server API
-libra_server = '#{$libra_server}'
-EOF
-
-    ensure
-      file.close
-    end
-    puts ""
-    puts "Created local config file: " + local_config_path
-    puts "express.conf contains user configuration and can be transferred across clients."
-    puts ""
-  end
-
-  # Read in @local_config now that it exists (was skipped before because it did
-  # not exist
-  @local_config = ParseConfig.new(File.expand_path(@local_config_path))
-
-  ##################################
-  # Second take care of the ssh keys
-  ##################################
-
-  unless File.exists? "#{@home_dir}/.ssh/id_rsa"
-    puts ""
-    puts "No SSH Key has been found.  We're generating one for you."
-    ssh_pub_key_file_path = generate_ssh_key_ruby()
-    puts "    Created: #{ssh_pub_key_file_path}"
-    puts ""
-  end
-
-  # TODO: Name and upload new key
-
-  puts <<EOF
-Last step, we need to upload the newly generated public key to remote servers
-so it can be used.  First you need to name it.  For example "liliWork" or
-"laptop".  You can overwrite an existing key by naming it or pick a new
-name.
-
-Current Keys:
-EOF
-  ssh_keys = RHC::get_ssh_keys($libra_server, username, $password, @http)
-  additional_ssh_keys = ssh_keys['keys']
-  known_keys = ['default']
-  puts "    default - #{ssh_keys['fingerprint']}" 
-  if additional_ssh_keys && additional_ssh_keys.kind_of?(Hash)
-    additional_ssh_keys.each do |name, keyval|
-      puts "    #{name} - #{keyval['fingerprint']}"
-      known_keys.push(name)
-    end
-  end
-
-  puts "Name your new key: "
-  while((key_name = RHC::check_key(gets.chomp)) == false)
-    print "Try again.  Name your key: "
-  end
-
-  if known_keys.include?(key_name)
-    puts ""
-    puts "Key already exists!  Updating.."
-    add_or_update_key('update', key_name, ssh_pub_key_file_path, username, $password)
-  else
-    puts ""
-    puts "Sending new key.."
-    add_or_update_key('add', key_name, ssh_pub_key_file_path, username, $password)
-  end
-  
-end
 
 # Public: legacy convinience function for getting config keys
 def get_var(key)
   RHC::Config.get_value(key)
 end
 
+# Public: convinience function for running the wizard
+#
+# Returns: false if wizard did not need to run
+#          true if wizard ran successfuly
+#          nil of there was an error
+#
 def default_setup_wizard
-  setup_wizard(RHC::Config.local_config_path) if RHC::Config.should_run_wizard?
+  if RHC::Config.should_run_wizard?
+    w = RHC::Wizard.new(RHC::Config.local_config_path) 
+    return w.run
+  end
+
+  false
 end

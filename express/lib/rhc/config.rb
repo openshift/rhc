@@ -16,10 +16,10 @@ module RHC
     @@conf_name = 'express.conf'
     _linux_cfg = '/etc/openshift/' + @@conf_name
     _gem_cfg = File.join(File.expand_path(File.dirname(__FILE__) + "/../../conf"), @@conf_name)
-    home_conf = File.expand_path('~/.openshift')
-    @@local_config_path = File.join(home_conf, @@conf_name)
+    @@home_conf_path = File.expand_path('~/.openshift')
+    @@local_config_path = File.join(@@home_conf_path, @@conf_name)
     config_path = File.exists?(_linux_cfg) ? _linux_cfg : _gem_cfg
-    home_dir=File.expand_path("~")
+    @@home_dir=File.expand_path("~")
 
     begin
       @@global_config = ParseConfig.new(config_path)
@@ -46,9 +46,18 @@ module RHC
       @@defaults.add('default_rhlogin', username)
     end
 
+    def self.set_local_config(confpath)
+      begin
+        @@local_config = ParseConfig.new(File.expand_path(confpath))
+      rescue Errno::EACCES => e
+        puts "Could not open config file: #{e.message}"
+        exit 253
+      end
+    end
+
     def self.set_opts_config(confpath)
       begin
-        @@opts_config = ParseConfig.new(confpath)
+        @@opts_config = ParseConfig.new(File.expand_path(confpath))
       rescue Errno::EACCES => e
         puts "Could not open config file: #{e.message}"
         exit 253
@@ -86,6 +95,14 @@ module RHC
 
     def self.local_config_path
       @@local_config_path
+    end
+
+    def self.home_conf_path
+      @@home_conf_path
+    end
+
+    def self.home_dir
+      @@home_dir
     end
   end
 end
