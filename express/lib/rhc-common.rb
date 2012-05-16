@@ -987,7 +987,7 @@ end
 def self.add_rhlogin_config(rhlogin, uuid)
     config_path = RHC::Config.local_config_path
     f = open(File.expand_path(config_path), 'a')
-    unless config.get_value('default_rhlogin')
+    unless RHC::Config.get_value('default_rhlogin')
         f.puts("# Default rhlogin to use if none is specified")
         f.puts("default_rhlogin=#{rhlogin}")
         f.puts("")
