@@ -738,50 +738,6 @@ LOOKSGOOD
     http_post(net_http, url, json_data, password)
   end
   
-  # Runs rhc-list-ports on server to check available ports. Does NOT handle scaled app uuid's
-  # :stderr return user-friendly port name, :stdout returns 127.0.0.1:8080 format
-  def self.list_scaled_ports(rhc_domain, namespace, app_name, app_uuid, hosts_and_ports, hosts_and_ports_descriptions, debug=true)
-
-    ip_and_port_simple_regex = /[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\:[0-9]{1,5}/
-
-    ssh_host = "#{app_name}-#{namespace}.#{rhc_domain}"
-
-    puts "Checking scaled app #{app_uuid}..." if debug
-
-    Net::SSH.start(ssh_host, app_uuid) do |ssh|
-
-      ssh.exec! "rhc-list-ports" do |channel, stream, data|
-
-        if stream == :stderr
-
-          data.each { |line|
-            line = line.chomp
-
-            if line.downcase =~ /permission denied/
-              puts line
-              exit 1
-            end
-            
-            if line.index(ip_and_port_simple_regex)
-              hosts_and_ports_descriptions << line
-            end
-          }
-
-        else
-
-          data.each { |line|
-            line = line.chomp
-            if ip_and_port_simple_regex.match(line)
-              hosts_and_ports << line
-            end
-          }
-
-        end
-      end
-    end
-
-  end
-  
   def self.ctl_app(libra_server, net_http, app_name, rhlogin, password, action, embedded=false, framework=nil, server_alias=nil, print_result=true)
     data = {:action => action,
             :app_name => app_name,
