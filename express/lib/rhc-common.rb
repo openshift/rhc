@@ -5,10 +5,10 @@ require 'net/http'
 require 'net/https'
 require 'net/ssh'
 require 'sshkey'
-require 'open3'
 require 'parseconfig'
 require 'resolv'
 require 'uri'
+require 'highline/import'
 require 'rhc-rest'
 require 'helpers'
 require 'rhc/config'
@@ -323,7 +323,7 @@ module RHC
   def self.get_password
     password = nil
     begin
-      password = ask("Password: ", true)
+      password = ask_password
     rescue Interrupt
       puts "\n"
       exit 1
@@ -740,50 +740,6 @@ LOOKSGOOD
     http_post(net_http, url, json_data, password)
   end
   
-  # Runs rhc-list-ports on server to check available ports. Does NOT handle scaled app uuid's
-  # :stderr return user-friendly port name, :stdout returns 127.0.0.1:8080 format
-  def self.list_scaled_ports(rhc_domain, namespace, app_name, app_uuid, hosts_and_ports, hosts_and_ports_descriptions, debug=true)
-
-    ip_and_port_simple_regex = /[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\:[0-9]{1,5}/
-
-    ssh_host = "#{app_name}-#{namespace}.#{rhc_domain}"
-
-    puts "Checking scaled app #{app_uuid}..." if debug
-
-    Net::SSH.start(ssh_host, app_uuid) do |ssh|
-
-      ssh.exec! "rhc-list-ports" do |channel, stream, data|
-
-        if stream == :stderr
-
-          data.each { |line|
-            line = line.chomp
-
-            if line.downcase =~ /permission denied/
-              puts line
-              exit 1
-            end
-            
-            if line.index(ip_and_port_simple_regex)
-              hosts_and_ports_descriptions << line
-            end
-          }
-
-        else
-
-          data.each { |line|
-            line = line.chomp
-            if ip_and_port_simple_regex.match(line)
-              hosts_and_ports << line
-            end
-          }
-
-        end
-      end
-    end
-
-  end
-  
   def self.ctl_app(libra_server, net_http, app_name, rhlogin, password, action, embedded=false, framework=nil, server_alias=nil, print_result=true)
     data = {:action => action,
             :app_name => app_name,
@@ -912,13 +868,91 @@ at_exit {
   RHC::check_version
 }
 
-def ask(prompt, password=false)
-  if password
-    return Rhc::Input.ask_for_password prompt
-  else
-    print prompt unless prompt.nil?
-    return $stdin.gets.to_s.chomp
+#
+# Config paths... /etc/openshift/express.conf or $GEM/conf/express.conf -> ~/.openshift/express.conf
+#
+# semi-private: Just in case we rename again :)
+@opts_config_path = nil
+@conf_name = 'express.conf'
+_linux_cfg = '/etc/openshift/' + @conf_name
+_gem_cfg = File.join(File.expand_path(File.dirname(__FILE__) + "/../conf"), @conf_name)
+@home_conf = File.expand_path('~/.openshift')
+@local_config_path = File.join(@home_conf, @conf_name)
+@config_path = File.exists?(_linux_cfg) ? _linux_cfg : _gem_cfg
+@home_dir=File.expand_path("~")
+
+local_config_path = File.expand_path(@local_config_path)
+
+begin
+  @global_config = ParseConfig.new(@config_path)
+  @local_config = ParseConfig.new(File.expand_path(@local_config_path)) if \
+    File.exists?(@local_config_path)
+rescue Errno::EACCES => e
+  puts "Could not open config file: #{e.message}"
+  exit 253
+end
+
+#
+# Check for proxy environment
+#
+if ENV['http_proxy']
+  if ENV['http_proxy']!~/^(\w+):\/\// then
+    ENV['http_proxy']="http://" + ENV['http_proxy']
   end
+  proxy_uri=URI.parse(ENV['http_proxy'])
+  @http = Net::HTTP::Proxy(proxy_uri.host, proxy_uri.port, proxy_uri.user, proxy_uri.password)
+else
+  @http = Net::HTTP
+end
+
+
+#
+# Support funcs
+#
+def check_cpath(opts)
+  if !opts["config"].nil?
+    @opts_config_path = opts["config"]
+    if !File.readable?(File.expand_path(@opts_config_path))
+      puts "Could not open config file: #{@opts_config_path}"
+      exit 253
+    else
+      begin
+        @opts_config = ParseConfig.new(File.expand_path(@opts_config_path))
+      rescue Errno::EACCES => e
+        puts "Could not open config file (#{@opts_config_path}): #{e.message}"
+        exit 253
+      end
+    end
+  end
+end
+
+def config_path
+  return @opts_config_path ? @opts_config_path : @local_config_path
+end
+
+def config
+  return @opts_config ? @opts_config : @local_config
+end
+
+#
+# Check for local var in
+#   0) --config path file
+#   1) ~/.openshift/express.conf
+#   2) /etc/openshift/express.conf
+#   3) $GEM/../conf/express.conf
+#
+def get_var(var)
+  v = nil
+  if !@opts_config.nil? && @opts_config.get_value(var)
+    v = @opts_config.get_value(var)
+  else
+    v = @local_config.get_value(var) ? @local_config.get_value(var) : @global_config.get_value(var)
+  end
+  v
+end
+
+def ask_password
+  return ask("Password: ") { |q| q.echo = '*' }
 end
 
 def kfile_not_found
@@ -1224,6 +1258,63 @@ def ssh_ruby(host, username, command)
   end
 end
 
+# Public: Runs the setup wizard to make sure ~/.openshift and ~/.ssh are correct
+#
+# Examples
+#
+#  setup_wizard()
+#  # => true
+#
+# Returns nil on failure or true on success
+def setup_wizard(local_config_path)
+
+  ##############################################
+  # First take care of ~/.openshift/express.conf
+  ##############################################
+  puts <<EOF
+
+Starting Interactive Setup.
+
+It looks like you've not used OpenShift Express on this machine before.  We'll
+help get you setup with just a couple of questions.  You can skip this in the
+future by copying your config's around:
+
+EOF
+  puts "    #{local_config_path}"
+  puts "    #{@home_dir}/.ssh/"
+  puts ""
+  username = ask("https://openshift.redhat.com/ username: "){ |q|
+                 q.echo = true }
+  $password = RHC::get_password
+  # FIXME: Fix this
+  #$libra_server = get_var('libra_server')
+  $libra_server = 'openshift.redhat.com'
+  # Confirm username / password works:
+  user_info = RHC::get_user_info($libra_server, username, $password, @http, true)
+  if !File.exists? local_config_path
+    FileUtils.mkdir_p @home_conf
+    file = File.open(local_config_path, 'w')
+    begin
+      file.puts <<EOF
+# Default user login
+default_rhlogin='#{username}'
+
+# Server API
+libra_server = '#{$libra_server}'
+EOF
+
+    ensure
+      file.close
+    end
+    puts ""
+    puts "Created local config file: " + local_config_path
+    puts "express.conf contains user configuration and can be transferred across clients."
+    puts ""
+  end
+
+  # Read in @local_config now that it exists (was skipped before because it did
+  # not exist
+  @local_config = ParseConfig.new(File.expand_path(@local_config_path))
 
 # Public: legacy convinience function for getting config keys
 def get_var(key)
