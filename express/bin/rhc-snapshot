@@ -47,7 +47,7 @@ rescue Exception => e
 end
 
 # If provided a config path, check it
-check_cpath(opt)
+RHC::Config.check_cpath(opt)
 
 # Pull in configs from files
 libra_server = get_var('libra_server')
@@ -75,7 +75,7 @@ if !password
   password = RHC::get_password
 end
 
-user_info = RHC::get_user_info(libra_server, opt['rhlogin'], password, @http, debug, false)
+user_info = RHC::get_user_info(libra_server, opt['rhlogin'], password, RHC::Config.default_proxy, debug, false)
 
 app = opt['app']
 opt['save'] = "#{opt['app']}.tar.gz" unless opt['save'] || opt['restore']

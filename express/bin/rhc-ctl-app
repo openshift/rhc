@@ -32,7 +32,7 @@ def p_embedded_list
     puts ""
     puts "List of supported embedded cartridges:"
     puts ""
-    type_keys = RHC::get_cartridge_listing(nil, ', ', libra_server, @http, 'embedded', false)
+    type_keys = RHC::get_cartridge_listing(nil, ', ', libra_server, RHC::Config.default_proxy, 'embedded', false)
     puts type_keys
     puts ""
     exit 255
@@ -63,7 +63,7 @@ rescue Exception => e
 end
 
 # If provided a config path, check it
-check_cpath(opt)
+RHC::Config.check_cpath(opt)
 
 # Pull in configs from files
 libra_server = get_var('libra_server')
@@ -165,4 +165,4 @@ else
     url = URI.parse("https://#{libra_server}/broker/cartridge")
 end
 
-RHC::ctl_app(libra_server, @http, opt['app'], opt['rhlogin'], password, action, opt['embed'], framework, opt['alias'])
+RHC::ctl_app(libra_server, RHC::Config.default_proxy, opt['app'], opt['rhlogin'], password, action, opt['embed'], framework, opt['alias'])

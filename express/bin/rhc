@@ -36,6 +36,9 @@ def get_args
   args
 end
 
+
+default_setup_wizard unless ARGV.include?('--noprompt')
+
 case ARGV[0]
 when "domain"
   system("rhc-domain #{get_args} 2>&1")

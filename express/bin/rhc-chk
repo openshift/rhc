@@ -63,7 +63,7 @@ if 0 != ARGV.length
 end
 
 # If provided a config path, check it
-check_cpath($opt)
+RHC::Config.check_cpath($opt)
 
 # Need to store the config information so tests can use it
 #  since they are technically new objects

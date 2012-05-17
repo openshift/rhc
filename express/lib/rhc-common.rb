@@ -11,6 +11,8 @@ require 'uri'
 require 'highline/import'
 require 'rhc-rest'
 require 'helpers'
+require 'rhc/config'
+require 'rhc/wizard'
 
 module RHC
 
@@ -261,7 +263,7 @@ module RHC
   #  RHC::get_ssh_keys('openshift.redhat.com',
   #                    'mylogin@example.com',
   #                    'mypassword',
-  #                    @http)
+  #                    RHC::Config.default_proxy)
   #  # => { "ssh_type" => "ssh-rsa",
   #         "ssh_key" => "AAAAB3NzaC1yc2EAAAADAQAB....",
   #         "fingerprint" => "ea:08:e3:c7:e3:c3:8e:6a:66:34:65:e4:56:f4:3e:ff"}
@@ -1004,8 +1006,9 @@ end
 
 # Add a new namespace to configs
 def self.add_rhlogin_config(rhlogin, uuid)
+    config_path = RHC::Config.local_config_path
     f = open(File.expand_path(config_path), 'a')
-    unless config.get_value('default_rhlogin')
+    unless RHC::Config.get_value('default_rhlogin')
         f.puts("# Default rhlogin to use if none is specified")
         f.puts("default_rhlogin=#{rhlogin}")
         f.puts("")
@@ -1046,8 +1049,8 @@ def self.add_ssh_config_host(rhc_domain, ssh_key_file_path, ssh_config, ssh_conf
         puts
         exit 213
     rescue Errno::ENOENT
-        puts "Could not find #{ssh_config}.  This is ok, continuing"
     end
+        puts "Could not find #{ssh_config}.  This is ok, continuing"
     if found
         puts "Found #{rhc_domain} in ~/.ssh/config... No need to adjust"
     else
@@ -1112,7 +1115,7 @@ def handle_key_mgmt_response(url, data, password)
   RHC::print_post_data(data)
   json_data = RHC::generate_json(data)
 
-  response = RHC::http_post(@http, url, json_data, password)
+  response = RHC::http_post(RHC::Config.default_proxy, url, json_data, password)
 
   if response.code == '200'
     begin
@@ -1313,55 +1316,22 @@ EOF
   # not exist
   @local_config = ParseConfig.new(File.expand_path(@local_config_path))
 
-  ##################################
-  # Second take care of the ssh keys
-  ##################################
-
-  unless File.exists? "#{@home_dir}/.ssh/id_rsa"
-    puts ""
-    puts "No SSH Key has been found.  We're generating one for you."
-    ssh_pub_key_file_path = generate_ssh_key_ruby()
-    puts "    Created: #{ssh_pub_key_file_path}"
-    puts ""
-  end
-
-  # TODO: Name and upload new key
-
-  puts <<EOF
-Last step, we need to upload the newly generated public key to remote servers
-so it can be used.  First you need to name it.  For example "liliWork" or
-"laptop".  You can overwrite an existing key by naming it or pick a new
-name.
-
-Current Keys:
-EOF
-  ssh_keys = RHC::get_ssh_keys($libra_server, username, $password, @http)
-  additional_ssh_keys = ssh_keys['keys']
-  known_keys = ['default']
-  puts "    default - #{ssh_keys['fingerprint']}" 
-  if additional_ssh_keys && additional_ssh_keys.kind_of?(Hash)
-    additional_ssh_keys.each do |name, keyval|
-      puts "    #{name} - #{keyval['fingerprint']}"
-      known_keys.push(name)
-    end
-  end
-
-  puts "Name your new key: "
-  while((key_name = RHC::check_key(gets.chomp)) == false)
-    print "Try again.  Name your key: "
-  end
-
-  if known_keys.include?(key_name)
-    puts ""
-    puts "Key already exists!  Updating.."
-    add_or_update_key('update', key_name, ssh_pub_key_file_path, username, $password)
-  else
-    puts ""
-    puts "Sending new key.."
-    add_or_update_key('add', key_name, ssh_pub_key_file_path, username, $password)
-  end
-  
+# Public: legacy convinience function for getting config keys
+def get_var(key)
+  RHC::Config.get_value(key)
 end
 
-setup_wizard(local_config_path) unless File.exists? local_config_path
+# Public: convinience function for running the wizard
+#
+# Returns: false if wizard did not need to run
+#          true if wizard ran successfuly
+#          nil of there was an error
+#
+def default_setup_wizard
+  if RHC::Config.should_run_wizard?
+    w = RHC::Wizard.new(RHC::Config.local_config_path) 
+    return w.run
+  end
 
+  false
+end

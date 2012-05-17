@@ -45,7 +45,7 @@ rescue Exception => e
 end
 
 # If provided a config path, check it
-check_cpath(opt)
+RHC::Config.check_cpath(opt)
 
 # Pull in configs from files
 libra_server = get_var('libra_server')
@@ -74,10 +74,10 @@ if !password
 end
 
 opt['apps'] = true if not opt['info'] and not opt['apps']
-user_info = RHC::get_user_info(libra_server, opt['rhlogin'], password, @http, true)
+user_info = RHC::get_user_info(libra_server, opt['rhlogin'], password, RHC::Config.default_proxy, true)
 
 if opt['info']
-    ssh_keys = RHC::get_ssh_keys(libra_server, opt['rhlogin'], password, @http)
+    ssh_keys = RHC::get_ssh_keys(libra_server, opt['rhlogin'], password, RHC::Config.default_proxy)
 
     domains = user_info['user_info']['domains']
     num_domains = domains.length

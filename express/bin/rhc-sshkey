@@ -34,7 +34,7 @@ end
 
 def validate_args(val_id=true)
   # If provided a config path, check it
-  check_cpath($opt)
+  RHC::Config.check_cpath($opt)
   
   # Pull in configs from files
   $libra_server = get_var('libra_server')
@@ -68,7 +68,7 @@ end
 def show_key_list
   validate_args(false)
   
-  ssh_keys = RHC::get_ssh_keys($libra_server, $opt['rhlogin'], $password, @http)
+  ssh_keys = RHC::get_ssh_keys($libra_server, $opt['rhlogin'], $password, RHC::Config.default_proxy)
   additional_ssh_keys = ssh_keys['keys']
   
   puts ""
