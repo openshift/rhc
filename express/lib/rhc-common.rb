@@ -1190,7 +1190,7 @@ def add_or_update_key(command, identifier, pub_key_file_path, rhlogin, password)
     data[:action] = 'update-key'
   end
 
-  url = URI.parse("https://#{$libra_server}/broker/ssh_keys")
+  url = URI.parse("https://#{RHC::Config.get_value('libra_server')}/broker/ssh_keys")
   handle_key_mgmt_response(url, data, password)
 end
 
@@ -1211,7 +1211,7 @@ def generate_ssh_key_ruby(type="RSA", bits = 1024, comment = "OpenShift-Key")
   key = SSHKey.generate(:type => type,
                         :bits => bits,
                         :comment => comment)
-  ssh_dir = "#{@home_dir}/.ssh"
+  ssh_dir = "#{RHC::Config.home_dir}/.ssh"
   if File.exists?("#{ssh_dir}/id_rsa")
     puts "SSH key already exists: #{ssh_dir}/id_rsa.  Reusing..."
     return nil
