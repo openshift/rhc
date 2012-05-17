@@ -165,7 +165,6 @@ Net::SSH.start(ssh_host, app_uuid) do |ssh|
         end
       end
     end
-    #RHC.list_scaled_ports(rhc_domain, namespace, app_name, uuid, hosts_and_ports, hosts_and_ports_descriptions, debug)
   }
 
   if hosts_and_ports.length == 0
@@ -182,11 +181,13 @@ Net::SSH.start(ssh_host, app_uuid) do |ssh|
 
   begin
 
-    hosts_and_ports.each do |host_and_port|
-      host, port = host_and_port.split(/:/)
-      ssh.forward.local(host, port.to_i, host, port.to_i)
+    Net::SSH.start(ssh_host, app_uuid) do |ssh|
+      hosts_and_ports.each do |host_and_port|
+        host, port = host_and_port.split(/:/)
+        ssh.forward.local(host, port.to_i, host, port.to_i)
+      end
+      ssh.loop { true }
     end
-    ssh.loop { true }
   
   rescue Interrupt
     puts
