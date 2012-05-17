@@ -1258,64 +1258,6 @@ def ssh_ruby(host, username, command)
   end
 end
 
-# Public: Runs the setup wizard to make sure ~/.openshift and ~/.ssh are correct
-#
-# Examples
-#
-#  setup_wizard()
-#  # => true
-#
-# Returns nil on failure or true on success
-def setup_wizard(local_config_path)
-
-  ##############################################
-  # First take care of ~/.openshift/express.conf
-  ##############################################
-  puts <<EOF
-
-Starting Interactive Setup.
-
-It looks like you've not used OpenShift Express on this machine before.  We'll
-help get you setup with just a couple of questions.  You can skip this in the
-future by copying your config's around:
-
-EOF
-  puts "    #{local_config_path}"
-  puts "    #{@home_dir}/.ssh/"
-  puts ""
-  username = ask("https://openshift.redhat.com/ username: "){ |q|
-                 q.echo = true }
-  $password = RHC::get_password
-  # FIXME: Fix this
-  #$libra_server = get_var('libra_server')
-  $libra_server = 'openshift.redhat.com'
-  # Confirm username / password works:
-  user_info = RHC::get_user_info($libra_server, username, $password, @http, true)
-  if !File.exists? local_config_path
-    FileUtils.mkdir_p @home_conf
-    file = File.open(local_config_path, 'w')
-    begin
-      file.puts <<EOF
-# Default user login
-default_rhlogin='#{username}'
-
-# Server API
-libra_server = '#{$libra_server}'
-EOF
-
-    ensure
-      file.close
-    end
-    puts ""
-    puts "Created local config file: " + local_config_path
-    puts "express.conf contains user configuration and can be transferred across clients."
-    puts ""
-  end
-
-  # Read in @local_config now that it exists (was skipped before because it did
-  # not exist
-  @local_config = ParseConfig.new(File.expand_path(@local_config_path))
-
 # Public: legacy convinience function for getting config keys
 def get_var(key)
   RHC::Config.get_value(key)
