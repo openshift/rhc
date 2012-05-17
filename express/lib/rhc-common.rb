@@ -5,10 +5,10 @@ require 'net/http'
 require 'net/https'
 require 'net/ssh'
 require 'sshkey'
-require 'open3'
 require 'parseconfig'
 require 'resolv'
 require 'uri'
+require 'highline/import'
 require 'rhc-rest'
 require 'helpers'
 
@@ -321,7 +321,7 @@ module RHC
   def self.get_password
     password = nil
     begin
-      password = ask("Password: ", true)
+      password = ask_password
     rescue Interrupt
       puts "\n"
       exit 1
@@ -949,13 +949,8 @@ def get_var(var)
   v
 end
 
-def ask(prompt, password=false)
-  if password
-    return Rhc::Input.ask_for_password prompt
-  else
-    print prompt unless prompt.nil?
-    return $stdin.gets.to_s.chomp
-  end
+def ask_password
+  return ask("Password: ") { |q| q.echo = '*' }
 end
 
 def kfile_not_found
@@ -1285,7 +1280,8 @@ EOF
   puts "    #{local_config_path}"
   puts "    #{@home_dir}/.ssh/"
   puts ""
-  username = ask("https://openshift.redhat.com/ username: ")
+  username = ask("https://openshift.redhat.com/ username: "){ |q|
+                 q.echo = true }
   $password = RHC::get_password
   # FIXME: Fix this
   #$libra_server = get_var('libra_server')
