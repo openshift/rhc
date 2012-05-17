@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.93.1
+Version: 0.93.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -110,6 +110,73 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu May 17 2012 Adam Miller <admiller@redhat.com> 0.93.2-1
+- [wizard] check if sshkey is uploaded and if not upload it (johnp@redhat.com)
+- remove merge artifact (johnp@redhat.com)
+- caught some more places to convert to the Config module (johnp@redhat.com)
+- Merges Windows bug fixes (ffranz@redhat.com)
+- Back to highline for user input, use * echo on password input
+  (ffranz@redhat.com)
+- Fixes bz 816644 (ffranz@redhat.com)
+- get default_proxy from the Config singlton instead of as a magic var
+  (johnp@redhat.com)
+- break out wizard to its own module (root@dhcp-100-2-224.bos.redhat.com)
+- Increased timeout when creating scaled apps (ffranz@redhat.com)
+- Fixed port forwarding for scaled apps (bz 816644) (ffranz@redhat.com)
+- fixed typo (johnp@redhat.com)
+- use new Config module (johnp@redhat.com)
+- add new config module (johnp@redhat.com)
+- quick fix - add --noprompt switch to bypass first run wizard
+  (johnp@redhat.com)
+- Temporary commit to build (johnp@redhat.com)
+- Remove native extension builds and update the spec with the necessary RPMs
+  (ccoleman@redhat.com)
+- Newer versions of rspec are loading empty specs (ccoleman@redhat.com)
+- Using commander create command infrastructure for registration and a simple
+  'status' command With RSpec, ensure 100%% code coverage and make <100%% of
+  required code being covered by tests fail build Add an example 'status'
+  command that demonstrates registration for simple testing, and add it to
+  'rhc' (ccoleman@redhat.com)
+- Fixes rhc.gemspec (typo during previous merge) (ffranz@redhat.com)
+- Merging windows branch (ffranz@redhat.com)
+- Add travis build indicator to express/README.md (ccoleman@redhat.com)
+- Exclude Gemfile.lock (ccoleman@redhat.com)
+- Use a core gemspec file with the appropriate content Change Rake to default
+  to :test over :package Add a simple RHC module Move autocomplete rhc script
+  out of lib directory and into autocomplete/ (ccoleman@redhat.com)
+- Refactored Rakefile to pull from tasks/*.rake Added more rake test tasks
+  (like test:functionals) Added dependencies into Gemfile so Travis will
+  install them Added requirement for gem version of test-unit so we can omit
+  tests gracefully Added omission code to domain and application tests for now
+  Merge changes to remove domain name (fotios@redhat.com)
+- Validates the snapshot .tar.gz file locally (ffranz@redhat.com)
+- Removed native zlib requirement, added vendored pure Ruby zlib (rbzlib)
+  (ffranz@redhat.com)
+- Removed highline gem, using our own prompt solution (ffranz@redhat.com)
+- Ported rhc app snapshot to pure ruby, unified code with rhc-snapshot
+  (ffranz@redhat.com)
+- Ported rhc-snapshot to minitar (ffranz@redhat.com)
+- Ported tar command to pure ruby using minitar and zlib ruby
+  (ffranz@redhat.com)
+- Improved error handling and capturing sigint (ffranz@redhat.com)
+- Port checking and port forwarding now working with Net::SSH
+  (ffranz@redhat.com)
+- Forwarding ports through net::ssh (todo: convert list_ports also)
+  (ffranz@redhat.com)
+- Completely removed json gems in favour of vendored okjson.rb
+  (ffranz@redhat.com)
+- Added highline dep :( but passwords work properly in windows now
+  (mmcgrath@redhat.com)
+- removed s.extensions because it caused the gem to get flagged as native this
+  causes issues in windows (mmcgrath@redhat.com)
+- Added new deps (Mike McGrath)
+- replacing libra_id_rsa with standard id_rsa (Mike McGrath)
+- remove openssh dep on tail-files and use Net::SSH instead (Mike McGrath)
+- Wizard now supports uploading keys (among others, see full commit message)
+  (builder@example.com)
+- Added initial wizard, still needs work (mmcgrath@redhat.com)
+- Startred adding native ruby ssh bindings (mmcgrath@redhat.com)
+
 * Thu May 10 2012 Adam Miller <admiller@redhat.com> 0.93.1-1
 - Merge pull request #18 from rmillner/master (ccoleman@redhat.com)
 - bumping spec versions (admiller@redhat.com)
