@@ -121,9 +121,11 @@ Net::SSH.start(ssh_host, app_uuid) do |ssh|
 
       data.each { |line|
         line = line.chomp
+
         if line.downcase =~ /scale/
           scaled_uuid = line[5..-1]
           scaled_uuids << scaled_uuid
+
         else
           if ip_and_port_simple_regex.match(line)
             hosts_and_ports << line
@@ -135,8 +137,34 @@ Net::SSH.start(ssh_host, app_uuid) do |ssh|
 
   end
 
-  scaled_uuids.each { |uuid|
-    list_scaled_ports(rhc_domain, namespace, app_name, uuid, hosts_and_ports, hosts_and_ports_descriptions, debug)
+  scaled_uuids.each { |scaled_uuid|
+    
+    puts "Using #{scaled_uuid}@#{ssh_host} (scaled instance)..." if debug
+
+    Net::SSH.start(ssh_host, scaled_uuid) do |ssh|
+
+      ssh.exec! "rhc-list-ports" do |channel, stream, data|
+        if stream == :stderr
+          data.each { |line|
+            line = line.chomp
+            if line.downcase =~ /permission denied/
+              puts line
+              exit 1
+            end
+            if line.index(ip_and_port_simple_regex)
+              hosts_and_ports_descriptions << line
+            end
+          }
+        else
+          data.each { |line|
+            line = line.chomp
+            if ip_and_port_simple_regex.match(line)
+              hosts_and_ports << line
+            end
+          }
+        end
+      end
+    end
   }
 
   if hosts_and_ports.length == 0
@@ -153,11 +181,13 @@ Net::SSH.start(ssh_host, app_uuid) do |ssh|
 
   begin
 
-    hosts_and_ports.each do |host_and_port|
-      host, port = host_and_port.split(/:/)
-      ssh.forward.local(host, port.to_i, host, port.to_i)
+    Net::SSH.start(ssh_host, app_uuid) do |ssh|
+      hosts_and_ports.each do |host_and_port|
+        host, port = host_and_port.split(/:/)
+        ssh.forward.local(host, port.to_i, host, port.to_i)
+      end
+      ssh.loop { true }
     end
-    ssh.loop { true }
   
   rescue Interrupt
     puts

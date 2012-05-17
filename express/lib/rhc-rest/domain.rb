@@ -24,7 +24,7 @@ module Rhc
         end
         timeout = nil
         if options[:scale]
-          timeout = 180 # 3 minute timeout for scalable app
+          timeout = 300 # 5 minute timeout for scalable app
         end
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload, :timeout => timeout)
         return send(request)
