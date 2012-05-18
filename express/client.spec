@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.93.2
+Version: 0.93.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -110,6 +110,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri May 18 2012 Adam Miller <admiller@redhat.com> 0.93.3-1
+- [wizard] use highline say and ask for input and output (johnp@redhat.com)
+
 * Thu May 17 2012 Adam Miller <admiller@redhat.com> 0.93.2-1
 - [wizard] check if sshkey is uploaded and if not upload it (johnp@redhat.com)
 - remove merge artifact (johnp@redhat.com)
