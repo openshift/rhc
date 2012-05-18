@@ -1,4 +1,5 @@
 require 'rhc-common'
+require 'helpers'
 
 module RHC
   class Wizard
@@ -29,7 +30,7 @@ module RHC
     private
 
     def login_stage
-      puts <<EOF
+      say <<EOF
 
 Starting Interactive Setup.
 
@@ -38,9 +39,9 @@ help get you setup with just a couple of questions.  You can skip this in the
 future by copying your config's around:
 
 EOF
-      puts "    #{@config_path}"
-      puts "    #{RHC::Config.home_dir}/.ssh/"
-      puts ""
+      say "    #{@config_path}"
+      say "    #{RHC::Config.home_dir}/.ssh/\n\n"
+
       @username = ask("https://openshift.redhat.com/ username: ")
       @password = RHC::get_password
       @libra_server = get_var('libra_server')
@@ -65,10 +66,10 @@ EOF
         ensure
           file.close
         end
-        puts ""
-        puts "Created local config file: " + @config_path
-        puts "express.conf contains user configuration and can be transferred across clients."
-        puts ""
+        say ""
+        say "Created local config file: " + @config_path
+        say "express.conf contains user configuration and can be transferred across clients."
+        say ""
         true
       end
 
@@ -81,11 +82,11 @@ EOF
       @ssh_priv_key_file_path = "#{RHC::Config.home_dir}/.ssh/id_rsa"
       @ssh_pub_key_file_path = "#{RHC::Config.home_dir}/.ssh/id_rsa.pub"
       unless File.exists? @ssh_priv_key_file_path
-        puts ""
-        puts "No SSH Key has been found.  We're generating one for you."
+        say ""
+        say "No SSH Key has been found.  We're generating one for you."
         @ssh_pub_key_file_path = generate_ssh_key_ruby()
-        puts "    Created: #{@ssh_pub_key_file_path}"
-        puts ""
+        say "    Created: #{@ssh_pub_key_file_path}"
+        say ""
       end
       true
     end
@@ -109,7 +110,7 @@ EOF
       additional_ssh_keys = @ssh_keys['keys']
       known_keys = ['default']
 
-      puts <<EOF
+      say <<EOF
 
 Last step, we need to upload your public key to remote servers
 so it can be used.  First you need to name it.  For example "liliWork" or
@@ -121,24 +122,23 @@ Current Keys:
 EOF
       if additional_ssh_keys && additional_ssh_keys.kind_of?(Hash)
         additional_ssh_keys.each do |name, keyval|
-          puts "   #{name} - #{keyval['fingerprint']}"
+          say "   #{name} - #{keyval['fingerprint']}"
           known_keys.push(name)
         end
       end
 
-      puts ""
-      puts "Name your new key: "
-      while((key_name = RHC::check_key($stdin.gets.chomp)) == false)
-        print "Try again.  Name your key: "
+      say ""
+      while((key_name = RHC::check_key(ask "Name your key:")) == false)
+        say "Try again."
       end
 
       if known_keys.include?(key_name)
-        puts ""
-        puts "Key already exists!  Updating.."
+        say ""
+        say "Key already exists!  Updating.."
         add_or_update_key('update', key_name, @ssh_pub_key_file_path, @username, @password)
       else
-        puts ""
-        puts "Sending new key.."
+        say ""
+        say "Sending new key.."
         add_or_update_key('add', key_name, @ssh_pub_key_file_path, @username, @password)
       end
       true
@@ -146,17 +146,14 @@ EOF
 
     def upload_ssh_key_stage
       unless ssh_key_uploaded?
-        print "Your public ssh key needs to be uloaded to the server.  Would you like us to upload it for you? (yes/no) "
-        while(!['y', 'n', 'yes', 'no'].include?(upload = $stdin.gets.chomp.downcase))
-          print "Please enter yes or no.  Would you like to upload your public ssh key? "
-        end
+        upload = agree "Your public ssh key needs to be uloaded to the server.  Would you like us to upload it for you? (yes/no) "
 
-        if ['y', 'yes'].include? upload
+        if upload
           upload_ssh_key
         else
-          puts ""
-          puts "You can upload your ssh key at a later time using the 'rhc sshkey' command"
-          puts ""
+          say ""
+          say "You can upload your ssh key at a later time using the 'rhc sshkey' command"
+          say ""
         end
       end
       true
