@@ -2,16 +2,24 @@ require 'rhc-common'
 require 'helpers'
 require 'highline/system_extensions'
 
+# ruby 1.8 -> 1.9 magic
+begin
+  require 'ftools'
+rescue LoadError
+  require 'fileutils'
+end
+
 module RHC
   class Wizard
     include HighLine::SystemExtensions
 
-    @@stages = [:login_stage,
+    @@stages = [:greeting_stage,
+                :login_stage,
                 :create_config_stage,
                 :config_ssh_key_stage,
                 :upload_ssh_key_stage,
                 :install_client_tools_stage,
-                :run_intital_command_stage]
+                :finalize_stage]
 
     def initialize(config_path)
       @config_path = config_path
@@ -37,7 +45,7 @@ module RHC
 
     private
 
-    def login_stage
+    def greeting_stage
       say <<EOF
 
 Starting Interactive Setup.
@@ -46,9 +54,13 @@ It looks like you've not used OpenShift Express on this machine before.  We'll
 help get you setup with just a couple of questions.  You can skip this in the
 future by copying your config's around:
 
+    #{@config_path}
+    #{RHC::Config.home_dir}/.ssh/
+
 EOF
-      say "    #{@config_path}"
-      say "    #{RHC::Config.home_dir}/.ssh/\n\n"
+    end
+
+    def login_stage
 
       @username = ask("https://openshift.redhat.com/ username: ")
       @password = RHC::get_password
@@ -203,7 +215,7 @@ EOF
       true
     end
 
-    def run_intital_command_stage
+    def finalize_stage
       say <<EOF
 Thank you for setting up your system.  We will now execute your original
 command (rhc #{ARGV.join(" ")})
@@ -335,6 +347,46 @@ EOF
     def has_dbus_send?
       bus = ENV['DBUS_SESSION_BUS_ADDRESS']
       exe? 'dbus-send' and !bus.nil? and bus.length > 0
+    end
+  end
+
+  class RerunWizard < Wizard
+    def initialize(config_path)
+      super
+    end
+
+    def greeting_stage
+      say <<EOF
+
+Starting Interactive Setup.
+
+We'll help get you setup with just a couple of questions.  You can skip this in
+the future by copying your config's around:
+
+    #{@config_path}
+    #{RHC::Config.home_dir}/.ssh/
+
+EOF
+      true
+    end
+
+    def create_config_stage
+      if File.exists? @config_path
+        backup = "#{@config_path}.bak"
+        say "Configuration file #{@config_path} already exists,"
+        say "backing up to #{backup}\n\n"
+        File.cp(@config_path, backup)
+      end
+      super
+      true
+    end
+
+    def finalize_stage
+      say <<EOF
+Thank you for setting up your system.  You can rerun this at any time by
+calling 'rhc setup'.
+EOF
+      true
     end
   end
 end
