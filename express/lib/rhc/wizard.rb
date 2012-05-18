@@ -10,7 +10,8 @@ module RHC
                 :create_config_stage,
                 :config_ssh_key_stage,
                 :upload_ssh_key_stage,
-                :install_client_tools_stage]
+                :install_client_tools_stage,
+                :run_intital_command_stage]
 
     def initialize(config_path)
       @config_path = config_path
@@ -183,23 +184,30 @@ EOF
     #  TortoiseGIT (Windows Explorer integration)
     #
     def install_client_tools_stage
-      say <<EOF
-
-We will now check to see if you have the necessary client tools installed.
-
-EOF
       if Rhc::Platform.windows?
         windows_install
       else
         # we use command line tools for dbus since the dbus gem is not cross
         # platform and compiles itself on the host system when installed
+        say <<EOF
+
+We will now check to see if you have the necessary client tools installed.
+
+EOF
         if has_dbus_send?
           package_kit_install
         else
           generic_unix_install_check
         end
-        true
       end
+      true
+    end
+
+    def run_intital_command_stage
+      say <<EOF
+Thank you for setting up your system.  We will now execute your original
+command (#{ARGV.join(" "))}
+EOF
     end
 
     def dbus_send_session_method(name, service, obj_path, iface, stringafied_params, wait_for_reply=true)
@@ -259,7 +267,7 @@ EOF
       begin
         git_installed = package_kit_method('IsInstalled', 'Query', 'string:git string:')
         if git_installed
-          say "found"
+          say "found\n\n"
         else
           say "needs to be installed"
           install = agree "Would you like to launch the system installer? (yes/no) "
@@ -291,6 +299,27 @@ You will need to manually install git for full OpenShift functionality.
 
 EOF
       end
+    end
+
+    def windows_install
+      # Finding windows executables is hard since they can get installed
+      # in non standard directories.  Punt on this for now and simply
+      # print out urls and some instructions
+      say <<EOF
+In order to full interact with OpenShift you will need to install and configure
+a git client.
+
+Documentation for installing the client tools can be found at
+https://openshift.redhat.com/app/getting_started#install_client_tools
+
+We recommend these applications:
+
+  * Git for Windows - a basic git command line and GUI client
+    https://github.com/msysgit/msysgit/wiki/InstallMSysGit
+  * TortoiseGit - git client that integrates into the file explorer
+    http://code.google.com/p/tortoisegit/
+
+EOF
     end
 
     def exe?(executable)
