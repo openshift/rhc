@@ -206,7 +206,7 @@ EOF
     def run_intital_command_stage
       say <<EOF
 Thank you for setting up your system.  We will now execute your original
-command (#{ARGV.join(" "))}
+command (rhc #{ARGV.join(" ")})
 EOF
     end
 
