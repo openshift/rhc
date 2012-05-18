@@ -128,7 +128,7 @@ EOF
 
     def upload_ssh_key
       additional_ssh_keys = @ssh_keys['keys']
-      known_keys = ['default']
+      known_keys = []
 
       say <<EOF
 
@@ -138,18 +138,30 @@ so it can be used.  First you need to name it.  For example "liliWork" or
 name.
 
 Current Keys:
-   default - #{@ssh_keys['fingerprint']}
+
 EOF
+      if @ssh_keys['fingerprint'].nil?
+        say "    None"
+      else
+        known_key << 'default'
+        say "    default - #{@ssh_keys['fingerprint']}"
+      end
+
       if additional_ssh_keys && additional_ssh_keys.kind_of?(Hash)
         additional_ssh_keys.each do |name, keyval|
-          say "   #{name} - #{keyval['fingerprint']}"
+          say "    #{name} - #{keyval['fingerprint']}"
           known_keys.push(name)
         end
       end
 
-      say ""
-      while((key_name = RHC::check_key(ask "Name your key:")) == false)
-        say "Try again."
+      say "\n"
+      if @ssh_keys['fingerprint'].nil?
+        key_name = "default"
+        say "You don't have any keys setup yet so uploading as your default key"
+      else
+        while((key_name = RHC::check_key(ask "Name your key:")) == false)
+          say "Try again."
+        end
       end
 
       if known_keys.include?(key_name)
