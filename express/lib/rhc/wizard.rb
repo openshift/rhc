@@ -58,6 +58,7 @@ future by copying your config's around:
     #{RHC::Config.home_dir}/.ssh/
 
 EOF
+      true
     end
 
     def login_stage
