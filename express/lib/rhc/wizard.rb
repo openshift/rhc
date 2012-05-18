@@ -1,9 +1,16 @@
 require 'rhc-common'
 require 'helpers'
+require 'highline/system_extensions'
 
 module RHC
   class Wizard
-    @@stages = [:login_stage, :create_config_stage, :config_ssh_key_stage, :upload_ssh_key_stage]
+    include HighLine::SystemExtensions
+
+    @@stages = [:login_stage,
+                :create_config_stage,
+                :config_ssh_key_stage,
+                :upload_ssh_key_stage,
+                :install_client_tools_stage]
 
     def initialize(config_path)
       @config_path = config_path
@@ -146,7 +153,7 @@ EOF
 
     def upload_ssh_key_stage
       unless ssh_key_uploaded?
-        upload = agree "Your public ssh key needs to be uloaded to the server.  Would you like us to upload it for you? (yes/no) "
+        upload = agree "Your public ssh key needs to be uploaded to the server.  Would you like us to upload it for you? (yes/no) "
 
         if upload
           upload_ssh_key
@@ -157,6 +164,148 @@ EOF
         end
       end
       true
+    end
+
+    ##
+    # Attempts install various tools if they aren't currently installed on the
+    # users system.  If we can't automate the install, alert the user that they
+    # should manually install them
+    #
+    # On Unix we rely on PackageKit (which mostly just covers modern Linux flavors
+    # such as Fedora, Suse, Debian and Ubuntu). On Windows we will give instructions
+    # and links for the tools they should install
+    #
+    # Unix Tools:
+    #  git
+    #
+    # Windows Tools:
+    #  msysgit (Git for Windows)
+    #  TortoiseGIT (Windows Explorer integration)
+    #
+    def install_client_tools_stage
+      say <<EOF
+
+We will now check to see if you have the necessary client tools installed.
+
+EOF
+      if Rhc::Platform.windows?
+        windows_install
+      else
+        # we use command line tools for dbus since the dbus gem is not cross
+        # platform and compiles itself on the host system when installed
+        if has_dbus_send?
+          package_kit_install
+        else
+          generic_unix_install_check
+        end
+        true
+      end
+    end
+
+    def dbus_send_session_method(name, service, obj_path, iface, stringafied_params, wait_for_reply=true)
+      method = "#{iface}.#{name}"
+      print_reply = ""
+      print_reply = "--print-reply" if wait_for_reply
+      cmd = "dbus-send --session #{print_reply} --type=method_call \
+            --dest=#{service} #{obj_path} #{method} #{stringafied_params}"
+      output = `#{cmd}`
+
+      throw output if output.start_with?('Error')
+
+      # parse the output
+      results = []
+      output.each_with_index do |line, i|
+        if i != 0 # discard first line
+          param_type, value = line.chomp.split(" ", 2)
+
+          case param_type
+          when "boolean"
+            results << (value == 'true')
+          when "string"
+            results << value
+          else
+            puts "unknown type #{param_type} - treating as string"
+            results << value
+          end
+        end
+      end
+
+      if results.length == 0
+        return nil
+      elsif results.length == 1
+        return results[0]
+      else
+        return results
+      end
+    end
+
+    ##
+    # calls package kit methods using dbus_send
+    #
+    # name - method name
+    # iface - either 'Query' or 'Modify'
+    # stringafied_params - string of params in the format of dbus-send
+    #  e.g. "int32:10 string:'hello world'"
+    #
+    def package_kit_method(name, iface, stringafied_params, wait_for_reply=true)
+      service = "org.freedesktop.PackageKit"
+      obj_path = "/org/freedesktop/PackageKit"
+      full_iface = "org.freedesktop.PackageKit.#{iface}"
+      dbus_send_session_method name, service, obj_path, full_iface, stringafied_params, wait_for_reply
+    end
+
+    def package_kit_install
+      say "Checking for git ... "
+      begin
+        git_installed = package_kit_method('IsInstalled', 'Query', 'string:git string:')
+        if git_installed
+          say "found"
+        else
+          say "needs to be installed"
+          install = agree "Would you like to launch the system installer? (yes/no) "
+          if install
+            package_kit_method('InstallPackageNames', 'Modify', 'uint32:0 array:string:"git" string:', false)
+            say <<EOF
+You may safely continue while the installer is running or you can wait until it
+has finished.  Press any key to continue:
+EOF
+            get_character
+            say "\n"
+          end
+        end
+      rescue StandardError => e
+        puts e.to_s
+      end
+    end
+
+    def generic_unix_install_check
+      say "Checking for git ... "
+      if has_git?
+        say "found"
+      else
+        say "needs to be installed"
+        say <<EOF
+
+Automated installation of client tools is not supported for your platform.
+You will need to manually install git for full OpenShift functionality.
+
+EOF
+      end
+    end
+
+    def exe?(executable)
+      ENV['PATH'].split(File::PATH_SEPARATOR).any? do |directory|
+        File.executable?(File.join(directory, executable.to_s))
+      end
+    end
+
+    def has_git?
+      exe? 'git'
+    end
+
+    def has_dbus_send?
+      bus = ENV['DBUS_SESSION_BUS_ADDRESS']
+      exe? 'dbus-send' and !bus.nil? and bus.length > 0
     end
   end
 end
