@@ -149,16 +149,20 @@ EOF
         key_name = "default"
         say "You don't have any keys setup yet so uploading as your default key"
       else
-        while((key_name = RHC::check_key(ask "Name your key:")) == false)
-          say "Try again."
+        key = SSHKey.new File.read(@ssh_priv_key_file_path)
+        fingerprint = key.md5_fingerprint
+        pubkey_default_name = fingerprint[0, 12].gsub(/[^0-9a-zA-Z]/,'')
+        key_name =  ask("Provide a name for this key: ") do |q|
+          q.default = pubkey_default_name
+          q.validate = lambda { |p| RHC::check_key(p) }
         end
       end
 
       if known_keys.include?(key_name)
-        say "\nKey already exists!  Updating.."
+        say "\nKey already exists!  Updating key #{key_name} .. "
         add_or_update_key('update', key_name, @ssh_pub_key_file_path, @username, @password)
       else
-        say "\nSending new key.."
+        say "\nSending new key #{key_name} .. "
         add_or_update_key('add', key_name, @ssh_pub_key_file_path, @username, @password)
       end
       true
