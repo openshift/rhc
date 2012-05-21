@@ -37,7 +37,7 @@ def get_args
 end
 
 
-default_setup_wizard unless ARGV.include?('--noprompt')
+wizard_run = default_setup_wizard unless ARGV.include?('--noprompt')
 
 case ARGV[0]
 when "domain"
@@ -60,6 +60,12 @@ when "status"
   rescue SystemExit => e
     retcode = e.status
   end
+when "setup"
+  exit 0 if wizard_run
+  w = RHC::RerunWizard.new(RHC::Config.local_config_path) 
+  success = w.run
+  retcode = 0
+  retcode = 1 unless success
 when "-h", "--help", "help", nil
   p_usage 0
 else

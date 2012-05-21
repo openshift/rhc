@@ -304,9 +304,14 @@ end
     end
 
     # Inject public fingerprint into key.
-    ssh_keys['fingerprint'] = \
-      Net::SSH::KeyFactory.load_data_public_key(
-        "#{ssh_keys['ssh_type']} #{ssh_keys['ssh_key']}").fingerprint
+    begin
+      ssh_keys['fingerprint'] = \
+        Net::SSH::KeyFactory.load_data_public_key(
+          "#{ssh_keys['ssh_type']} #{ssh_keys['ssh_key']}").fingerprint
+    rescue Net::SSH::Exception
+      # key invalid, do nothing
+      # this happens if the user does not have a default key
+    end
 
     if ssh_keys['keys'] && ssh_keys['keys'].kind_of?(Hash)
       ssh_keys['keys'].each do |name, keyval|
