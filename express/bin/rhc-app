@@ -70,6 +70,7 @@ end
 
 
 def validate_args(val_type=true, val_cartridge=false, val_timeout=true)
+
   # If provided a config path, check it
   RHC::Config.check_cpath($opt)
   
@@ -92,7 +93,7 @@ def validate_args(val_type=true, val_cartridge=false, val_timeout=true)
     p_usage
   end
   
-  debug = $opt["debug"] ? true : false
+  debug = $opt.has_key? 'debug'
   RHC::debug(debug)
   
   RHC::timeout($opt["timeout"], get_var('timeout')) if val_timeout
@@ -359,7 +360,7 @@ end
 
 def save_or_restore_snapshot(command)
   validate_args(false, false, true)
-  
+
   user_info = RHC::get_user_info($libra_server, $opt['rhlogin'], $password, RHC::Config.default_proxy, @mydebug, false)
   
   app = $opt['app']
