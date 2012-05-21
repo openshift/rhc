@@ -16,18 +16,21 @@ module Rhc
   class Tar
     def self.contains(tar_gz, search)
       search = /#{search.to_s}/ if ! search.is_a?(Regexp)
-      file = File.open(tar_gz)
       begin
-        tgz = Rhc::Vendor::Zlib::GzipReader.new(file)
+        gzip = Rhc::Vendor::Zlib::GzipReader.new(File.open(tar_gz, 'rb'))
       rescue Rhc::Vendor::Zlib::GzipFile::Error
         return false
       end
-      Minitar::Reader.new(tgz).each_entry do |file|
+      contains = false
+      tar = Minitar::Reader.new(gzip)
+      tar.each_entry do |file|
         if file.full_name =~ search
-          return true
+          contains = true
         end
       end
-      false
+      tar.close
+      gzip.close
+      contains
     end
   end
 
