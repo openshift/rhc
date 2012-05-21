@@ -46,24 +46,19 @@ module RHC
     private
 
     def greeting_stage
-      say <<EOF
+      say "\nStarting Interactive Setup for OpenShift's command line interface\n\n"
+      say "It looks like you've not used OpenShift on this machine " \
+          "before.  We'll help get you setup with just a couple of questions. " \
+          "You can skip this in the future by copying your config's around: \n\n"
+      say "#{@config_path}"
+      say "#{RHC::Config.home_dir}/.ssh/\n\n"
 
-Starting Interactive Setup.
-
-It looks like you've not used OpenShift Express on this machine before.  We'll
-help get you setup with just a couple of questions.  You can skip this in the
-future by copying your config's around:
-
-    #{@config_path}
-    #{RHC::Config.home_dir}/.ssh/
-
-EOF
       true
     end
 
     def login_stage
 
-      @username = ask("https://openshift.redhat.com/ username: ")
+      @username = ask("To connect to https://openshift.redhat.com enter your OpenShift login (email or Red Hat login id): ")
       @password = RHC::get_password
       @libra_server = get_var('libra_server')
       # Confirm username / password works:
@@ -87,10 +82,9 @@ EOF
         ensure
           file.close
         end
-        say ""
+        say "\n"
         say "Created local config file: " + @config_path
-        say "express.conf contains user configuration and can be transferred across clients."
-        say ""
+        say "express.conf contains user configuration and can be transferred across clients.\n\n"
         true
       end
 
@@ -103,11 +97,9 @@ EOF
       @ssh_priv_key_file_path = "#{RHC::Config.home_dir}/.ssh/id_rsa"
       @ssh_pub_key_file_path = "#{RHC::Config.home_dir}/.ssh/id_rsa.pub"
       unless File.exists? @ssh_priv_key_file_path
-        say ""
         say "No SSH Key has been found.  We're generating one for you."
         @ssh_pub_key_file_path = generate_ssh_key_ruby()
-        say "    Created: #{@ssh_pub_key_file_path}"
-        say ""
+        say "    Created: #{@ssh_pub_key_file_path}\n\n"
       end
       true
     end
@@ -131,20 +123,17 @@ EOF
       additional_ssh_keys = @ssh_keys['keys']
       known_keys = []
 
-      say <<EOF
+      say '\nWe need to upload your public key to remote servers so it can be ' \
+          'used.  First you need to name it.  For example "liliWork" or ' \
+          '"laptop".  You can overwrite an existing key by naming it or ' \
+          'pick a new name.\n\n'
 
-Last step, we need to upload your public key to remote servers
-so it can be used.  First you need to name it.  For example "liliWork" or
-"laptop".  You can overwrite an existing key by naming it or pick a new
-name.
+      say 'Current Keys:'
 
-Current Keys:
-
-EOF
       if @ssh_keys['fingerprint'].nil?
         say "    None"
       else
-        known_key << 'default'
+        known_keys << 'default'
         say "    default - #{@ssh_keys['fingerprint']}"
       end
 
@@ -166,12 +155,10 @@ EOF
       end
 
       if known_keys.include?(key_name)
-        say ""
-        say "Key already exists!  Updating.."
+        say "\nKey already exists!  Updating.."
         add_or_update_key('update', key_name, @ssh_pub_key_file_path, @username, @password)
       else
-        say ""
-        say "Sending new key.."
+        say "\nSending new key.."
         add_or_update_key('add', key_name, @ssh_pub_key_file_path, @username, @password)
       end
       true
@@ -184,9 +171,8 @@ EOF
         if upload
           upload_ssh_key
         else
-          say ""
-          say "You can upload your ssh key at a later time using the 'rhc sshkey' command"
-          say ""
+          say "\n"
+          say "You can upload your ssh key at a later time using the 'rhc sshkey' command\n\n"
         end
       end
       true
@@ -214,11 +200,7 @@ EOF
       else
         # we use command line tools for dbus since the dbus gem is not cross
         # platform and compiles itself on the host system when installed
-        say <<EOF
-
-We will now check to see if you have the necessary client tools installed.
-
-EOF
+        say "We will now check to see if you have the necessary client tools installed.\n\n"
         if has_dbus_send?
           package_kit_install
         else
@@ -229,10 +211,9 @@ EOF
     end
 
     def finalize_stage
-      say <<EOF
-Thank you for setting up your system.  We will now execute your original
-command (rhc #{ARGV.join(" ")})
-EOF
+      say "Thank you for setting up your system.  You can rerun this at any " \
+          "time by calling 'rhc setup'. We will now execute your original " \
+          "command (rhc #{ARGV.join(" ")})"
     end
 
     def dbus_send_session_method(name, service, obj_path, iface, stringafied_params, wait_for_reply=true)
@@ -294,14 +275,13 @@ EOF
         if git_installed
           say "found\n\n"
         else
-          say "needs to be installed"
+          say "needs to be installed\n\n"
           install = agree "Would you like to launch the system installer? (yes/no) "
           if install
             package_kit_method('InstallPackageNames', 'Modify', 'uint32:0 array:string:"git" string:', false)
-            say <<EOF
-You may safely continue while the installer is running or you can wait until it
-has finished.  Press any key to continue:
-EOF
+            say "You may safely continue while the installer is running or " \
+                "you can wait until it has finished.  Press any key to continue:"
+
             get_character
             say "\n"
           end
@@ -314,15 +294,12 @@ EOF
     def generic_unix_install_check
       say "Checking for git ... "
       if has_git?
-        say "found"
+        say "found\n\n"
       else
-        say "needs to be installed"
-        say <<EOF
-
-Automated installation of client tools is not supported for your platform.
-You will need to manually install git for full OpenShift functionality.
-
-EOF
+        say "needs to be installed\n\n"
+        say "Automated installation of client tools is not supported for " \
+            "your platform. You will need to manually install git for full " \
+            "OpenShift functionality."
       end
     end
 
@@ -331,18 +308,14 @@ EOF
       # in non standard directories.  Punt on this for now and simply
       # print out urls and some instructions
       say <<EOF
-In order to full interact with OpenShift you will need to install and configure
-a git client.
+In order to full interact with OpenShift you will need to install and configure a git client.
 
-Documentation for installing the client tools can be found at
-https://openshift.redhat.com/app/getting_started#install_client_tools
+Documentation for installing the client tools can be found at https://openshift.redhat.com/app/getting_started#install_client_tools
 
 We recommend these applications:
 
-  * Git for Windows - a basic git command line and GUI client
-    https://github.com/msysgit/msysgit/wiki/InstallMSysGit
-  * TortoiseGit - git client that integrates into the file explorer
-    http://code.google.com/p/tortoisegit/
+  * Git for Windows - a basic git command line and GUI client https://github.com/msysgit/msysgit/wiki/InstallMSysGit
+  * TortoiseGit - git client that integrates into the file explorer http://code.google.com/p/tortoisegit/
 
 EOF
     end
@@ -369,25 +342,21 @@ EOF
     end
 
     def greeting_stage
-      say <<EOF
+      say "Starting Interactive Setup for OpenShift's command line interface\n\n"
+      say "We'll help get you setup with just a couple of questions. " \
+          "You can skip this in the future by copying your config's around:\n\n"
 
-Starting Interactive Setup.
+      say "    #{@config_path}"
+      say "    #{RHC::Config.home_dir}/.ssh/\n\n"
 
-We'll help get you setup with just a couple of questions.  You can skip this in
-the future by copying your config's around:
-
-    #{@config_path}
-    #{RHC::Config.home_dir}/.ssh/
-
-EOF
       true
     end
 
     def create_config_stage
       if File.exists? @config_path
         backup = "#{@config_path}.bak"
-        say "Configuration file #{@config_path} already exists,"
-        say "backing up to #{backup}\n\n"
+        say "Configuration file #{@config_path} already exists, " \
+            "backing up to #{backup}\n\n"
         File.cp(@config_path, backup)
       end
       super
@@ -395,10 +364,8 @@ EOF
     end
 
     def finalize_stage
-      say <<EOF
-Thank you for setting up your system.  You can rerun this at any time by
-calling 'rhc setup'.
-EOF
+      say "Thank you for setting up your system.  You can rerun this at any time " \
+          "by calling 'rhc setup'."
       true
     end
   end
