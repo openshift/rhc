@@ -204,7 +204,7 @@ EOF
       else
         # we use command line tools for dbus since the dbus gem is not cross
         # platform and compiles itself on the host system when installed
-        say "We will now check to see if you have the necessary client tools installed.\n\n"
+        say "\nWe will now check to see if you have the necessary client tools installed.\n\n"
         if has_dbus_send?
           package_kit_install
         else
@@ -226,9 +226,9 @@ EOF
       print_reply = "--print-reply" if wait_for_reply
       cmd = "dbus-send --session #{print_reply} --type=method_call \
             --dest=#{service} #{obj_path} #{method} #{stringafied_params}"
-      output = `#{cmd}`
+      output = `#{cmd} 2>&1`
 
-      throw output if output.start_with?('Error')
+      throw output if output.start_with?('Error') and !$?.success?
 
       # parse the output
       results = []
@@ -290,13 +290,13 @@ EOF
             say "\n"
           end
         end
-      rescue StandardError => e
-        puts e.to_s
+      rescue
+        generic_unix_install_check false
       end
     end
 
-    def generic_unix_install_check
-      say "Checking for git ... "
+    def generic_unix_install_check(show_action=true)
+      say "Checking for git ... " if show_action
       if has_git?
         say "found\n\n"
       else
