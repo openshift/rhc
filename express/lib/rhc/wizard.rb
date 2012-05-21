@@ -19,6 +19,7 @@ module RHC
                 :config_ssh_key_stage,
                 :upload_ssh_key_stage,
                 :install_client_tools_stage,
+                :config_namespace_stage,
                 :finalize_stage]
 
     def initialize(config_path)
@@ -63,6 +64,7 @@ module RHC
       @libra_server = get_var('libra_server')
       # Confirm username / password works:
       user_info = RHC::get_user_info(@libra_server, @username, @password, RHC::Config.default_proxy, true)
+
       true
     end
 
@@ -204,7 +206,7 @@ EOF
       else
         # we use command line tools for dbus since the dbus gem is not cross
         # platform and compiles itself on the host system when installed
-        say "\nWe will now check to see if you have the necessary client tools installed.\n\n"
+        say "We will now check to see if you have the necessary client tools installed.\n\n"
         if has_dbus_send?
           package_kit_install
         else
@@ -214,10 +216,67 @@ EOF
       true
     end
 
+    def config_namespace_stage
+      say "Checking for your namespace ... "
+      user_info = RHC::get_user_info(@libra_server, @username, @password, RHC::Config.default_proxy, true)
+      domains = user_info['user_info']['domains']
+      if domains.length == 0
+        say "not found\n\n"
+        ask_for_namespace
+      else
+        say "found namespace:"
+        domains.each { |d| say "    #{d['namespace']}" }
+        say "\n"
+      end
+
+      true
+    end
+
     def finalize_stage
       say "Thank you for setting up your system.  You can rerun this at any " \
           "time by calling 'rhc setup'. We will now execute your original " \
           "command (rhc #{ARGV.join(" ")})"
+      true
+    end
+
+    def config_namespace(namespace)
+      # skip if string is empty
+      if namespace.nil? or namespace.chomp.length == 0
+        say "Skipping! You may create a domain using 'rhc domain create'\n\n"
+        return true
+      end
+
+      # use REST API directly for now
+      end_point = "https://#{@libra_server}/broker/rest/api"
+      begin
+        client = Rhc::Rest::Client.new(end_point, @username, @password)
+        domain = client.add_domain(namespace)
+
+        say "Your domain name '#{domain.id}' has been successfully created \n\n"
+      rescue Rhc::Rest::ValidationException => e
+        say "#{e.to_s}\n\n"
+        return false
+      end
+
+      true
+    end
+
+    def ask_for_namespace
+      say "Your namespace is unique to your account and is the suffix of the " \
+          "public URLs we assign to your applications. You may configure your " \
+          "namespace here or leave it blank and use 'rhc domain create' to " \
+          "create a namespace later.  You will not be able to create " \
+          "applications without first creating a namespace.\n\n"
+
+      namespace = ask "Please enter a namespace or leave this blank if you wish to skip this step:" do |q|
+        q.validate = lambda { |p| RHC::check_namespace p }
+      end
+
+      while !config_namespace namespace do
+        namespace = ask "Please enter a namespace or leave this blank if you wish to skip this step:" do |q|
+          q.validate = lambda { |p| RHC::check_namespace p }
+        end
+      end
     end
 
     def dbus_send_session_method(name, service, obj_path, iface, stringafied_params, wait_for_reply=true)
