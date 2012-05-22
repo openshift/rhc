@@ -131,10 +131,10 @@ EOF
       additional_ssh_keys = @ssh_keys['keys']
       known_keys = []
 
-      say '\nWe need to upload your public key to remote servers so it can be ' \
-          'used.  First you need to name it.  For example "liliWork" or ' \
-          '"laptop".  You can overwrite an existing key by naming it or ' \
-          'pick a new name.\n\n'
+      say "\nWe need to upload your public key to remote servers so it can be " \
+          "used.  First you need to name it.  For example \"liliWork\" or " \
+          "\"laptop\".  You can overwrite an existing key by naming it or " \
+          "pick a new name.\n\n"
 
       say 'Current Keys:'
 
@@ -239,10 +239,11 @@ EOF
     end
 
     def show_app_info_stage
-      say "Checking for applications .. "
+      say "Checking for applications ... "
       user_info = RHC::get_user_info(@libra_server, @username, @password, RHC::Config.default_proxy, true)
       apps = user_info['app_info']
       if !apps.nil? and !apps.empty?
+        say "found"
         apps.each do |app_name, app_info|
           app_url = nil
           unless user_info['user_info']['domains'].empty?
@@ -255,6 +256,7 @@ EOF
             say "    * #{app_name} - #{app_url}"
           end
         end
+        say "\n"
       else
         say "none found\n\n"
         say "Here is a list of the types of application " \
