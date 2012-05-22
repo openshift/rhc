@@ -80,8 +80,7 @@ module RHC
     def create_config_stage
       if !File.exists? @config_path
         FileUtils.mkdir_p File.dirname(@config_path)
-        file = File.open(@config_path, 'w')
-        begin
+        File.open(@config_path, 'w') do |file|
           file.puts <<EOF
 # Default user login
 default_rhlogin='#{@username}'
@@ -90,8 +89,6 @@ default_rhlogin='#{@username}'
 libra_server = '#{@libra_server}'
 EOF
 
-        ensure
-          file.close
         end
         say "\n"
         say "Created local config file: " + @config_path
