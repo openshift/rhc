@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.93.4
+Version: 0.93.5
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -110,6 +110,10 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue May 22 2012 Adam Miller <admiller@redhat.com> 0.93.5-1
+- Merge pull request #28 from fabianofranz/master (contact@fabianofranz.com)
+- Fixed rspec tests (ffranz@redhat.com)
+
 * Tue May 22 2012 Adam Miller <admiller@redhat.com> 0.93.4-1
 - Fixes an issue related to leaving a file open when reading snapshot files
   (ffranz@redhat.com)
