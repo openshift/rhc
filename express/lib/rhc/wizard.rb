@@ -20,6 +20,7 @@ module RHC
                 :upload_ssh_key_stage,
                 :install_client_tools_stage,
                 :config_namespace_stage,
+                :show_app_info_stage,
                 :finalize_stage]
 
     def initialize(config_path)
@@ -64,6 +65,11 @@ module RHC
       @libra_server = get_var('libra_server')
       # Confirm username / password works:
       user_info = RHC::get_user_info(@libra_server, @username, @password, RHC::Config.default_proxy, true)
+
+      # instantiate a REST client that stages can use
+      # TODO: use only REST calls in the wizard
+      end_point = "https://#{@libra_server}/broker/rest/api"
+      @rest_client = Rhc::Rest::Client.new(end_point, @username, @password)
 
       true
     end
@@ -232,6 +238,38 @@ EOF
       true
     end
 
+    def show_app_info_stage
+      say "Checking for applications .. "
+      user_info = RHC::get_user_info(@libra_server, @username, @password, RHC::Config.default_proxy, true)
+      apps = user_info['app_info']
+      if !apps.nil? and !apps.empty?
+        apps.each do |app_name, app_info|
+          app_url = nil
+          unless user_info['user_info']['domains'].empty?
+            app_url = "http://#{app_name}-#{user_info['user_info']['domains'][0]['namespace']}.#{user_info['user_info']['rhc_domain']}/"
+          end
+
+          if app_url.nil?
+            say "    * #{app_name} - no public url (you need to add a namespace)"
+          else
+            say "    * #{app_name} - #{app_url}"
+          end
+        end
+      else
+        say "none found\n\n"
+        say "Here is a list of the types of application " \
+            "you can create: "
+
+        application_types = RHC::get_cartridges_list @libra_server, RHC::Config.default_proxy
+        application_types.each do |cart|
+          say "    * #{cart} - rhc app create -t #{cart} -a <app name>"
+        end
+        say "\n"
+      end
+
+      true
+    end
+
     def finalize_stage
       say "Thank you for setting up your system.  You can rerun this at any " \
           "time by calling 'rhc setup'. We will now execute your original " \
@@ -246,11 +284,9 @@ EOF
         return true
       end
 
-      # use REST API directly for now
-      end_point = "https://#{@libra_server}/broker/rest/api"
+
       begin
-        client = Rhc::Rest::Client.new(end_point, @username, @password)
-        domain = client.add_domain(namespace)
+        domain = @rest_client.add_domain(namespace)
 
         say "Your domain name '#{domain.id}' has been successfully created \n\n"
       rescue Rhc::Rest::ValidationException => e
