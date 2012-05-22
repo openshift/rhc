@@ -2,8 +2,11 @@
 # FIXME Remove rubygems from requirements, ensure library is correct
 
 # Only require external gem dependencies here
-require 'rest-client'
+require 'rest_client'
 require 'logger'
+
+# Extend core methods
+require 'rhc/core_ext'
 
 module RHC
   module Commands; end
