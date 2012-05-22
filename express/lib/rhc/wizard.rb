@@ -428,7 +428,8 @@ EOF
     end
 
     def has_git?
-      exe? 'git'
+      %x{ git --version }
+      $?.success?
     end
 
     def has_dbus_send?
