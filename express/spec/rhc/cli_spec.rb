@@ -37,16 +37,10 @@ describe RHC::CLI do
 
     context 'with "app"' do
       let(:arguments) { ['app'] }
-      it { expect { run }.should exit_with_code(0) }
-      it('should contain a stub message') { run_output.should =~ /Missing or invalid command/ }
+      it { expect { run }.should exit_with_code(1) }
+      it('should contain a stub message') { run_output.should =~ /invalid command/ }
     end
 
-    context 'with "domain show"' do
-      let(:arguments) { ['domain show'] }
-      it { expect { run }.should exit_with_code(0) }
-      it('should contain a stub message') { run_output.should =~ /User Info/ }
-      it('should contain a stub message') { run_output.should =~ /Application Info/ }
-    end
   end
 
   describe '#set_terminal' do
