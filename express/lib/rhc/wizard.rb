@@ -60,9 +60,12 @@ module RHC
 
     def login_stage
 
-      @username = ask("To connect to https://openshift.redhat.com enter your OpenShift login (email or Red Hat login id): ")
+      @username = ask("To connect to #{@libra_server} enter your OpenShift login (email or Red Hat login id): ")
       @password = RHC::get_password
       @libra_server = get_var('libra_server')
+      # if not set, set to default
+      @libra_server = @libra_server ?  @libra_server : "openshift.redhat.com"
+
       # Confirm username / password works:
       user_info = RHC::get_user_info(@libra_server, @username, @password, RHC::Config.default_proxy, true)
 
@@ -411,7 +414,7 @@ EOF
       say <<EOF
 In order to full interact with OpenShift you will need to install and configure a git client.
 
-Documentation for installing the client tools can be found at https://openshift.redhat.com/app/getting_started#install_client_tools
+Documentation for installing the client tools can be found at https://#{@libra_server}/app/getting_started#install_client_tools
 
 We recommend these applications:
 
