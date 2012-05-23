@@ -48,6 +48,10 @@ module RHC
 
     private
 
+    def stages
+      @@stages
+    end
+
     def greeting_stage
       paragraph do
         say "Starting Interactive Setup for OpenShift's command line interface"

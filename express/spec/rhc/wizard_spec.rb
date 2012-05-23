@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'fakefs/spec_helpers'
+require 'rhc/wizard'
 
 describe RHC::Wizard do
   before(:each) do
@@ -8,9 +9,17 @@ describe RHC::Wizard do
 
   context "First run of rhc" do
     include FakeFS::SpecHelpers
+    before(:all) do
+      @wizard = FirstRunWizardDriver.new
+    end
 
     it "should print out first run greeting" do
-
+      @wizard.run_next_stage
+      @output.seek(0)
+      greeting = @output.read
+      greeting.count("\n").should == 8
+      greeting.should match(Regexp.escape("It looks like you've not used OpenShift on this machine"))
+      greeting.should match(Regexp.escape(" #{@config_url} "))
     end
 
     it "should ask for login and hide password input" do
@@ -21,7 +30,7 @@ describe RHC::Wizard do
 
     end
 
-    it "should write out generated ssh keys" do
+    it "should write ount generated ssh keys" do
 
     end
 
@@ -212,5 +221,56 @@ describe RHC::Wizard do
     it "should show a thank you message" do
 
     end
+  end
+
+  module WizardDriver
+    def initialize
+      super '/home/mock_user/.openshift/openshift.conf'
+      @libra_server = 'mock.openshift.redhat.com'
+      @mock_user = 'mock_user@foo.bar'
+      @mock_git_installed = true
+      @mock_package_kit_installed = false
+      @current_wizard_stage = nil
+    end
+
+    def run_next_stage
+      if @current_wizard_stage.nil?
+        @current_wizard_stage = 0
+      else
+        return false if @current_wizard_stage >= stages.length + 1
+        @current_wizard_stage += 1
+      end
+
+      self.send stages[@current_wizard_stage]
+    end
+
+    def setup_mock_config
+      FileUtils.mkdir_p File.dirname(@config_path)
+      File.open(@config_path, "w") do |file|
+        file.puts <<EOF
+# Default user login
+default_rhlogin='#{@mock_user}'
+
+# Server API
+libra_server = '#{@libra_server}'
+EOF
+      end
+    end
+
+    def has_git?
+      @mock_git_installed
+    end
+
+    def has_package_kit?
+      @mock_package_kit_installed
+    end
+  end
+
+  class FirstRunWizardDriver < RHC::Wizard
+    include WizardDriver
+  end
+
+  class RerunWizardDriver < RHC::RerunWizard
+    include WizardDriver
   end
 end
