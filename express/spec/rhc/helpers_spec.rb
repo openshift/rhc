@@ -150,6 +150,7 @@ describe RHC::Helpers do
       paragraph { say "section" }
     end
   end
+end
 
 describe Object do
   context 'present?' do
