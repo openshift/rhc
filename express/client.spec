@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.93.3
+Version: 0.93.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -110,6 +110,30 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue May 22 2012 Adam Miller <admiller@redhat.com> 0.93.6-1
+- Implement simple server status command 'rhc server' and helpers to support it
+  (ccoleman@redhat.com)
+
+* Tue May 22 2012 Adam Miller <admiller@redhat.com> 0.93.5-1
+- Merge pull request #28 from fabianofranz/master (contact@fabianofranz.com)
+- Fixed rspec tests (ffranz@redhat.com)
+
+* Tue May 22 2012 Adam Miller <admiller@redhat.com> 0.93.4-1
+- Fixes an issue related to leaving a file open when reading snapshot files
+  (ffranz@redhat.com)
+- Merge remote-tracking branch 'upstream/master' (ffranz@redhat.com)
+- Fixed tar and gzip bugs on windows, fixed port forwarding bugs on windows
+  (ffranz@redhat.com)
+- [wizard] all stages must return true to continue processing
+  (johnp@redhat.com)
+- [wizard] handle case where the user has no ssh keys, even 'default'
+  (johnp@redhat.com)
+- [wizard] add ability to rerun by calling rhc setup (johnp@redhat.com)
+- [wizard] fix print out of command (johnp@redhat.com)
+- [wizard] add windows stage which prints out client tool info
+  (johnp@redhat.com)
+- [wizard] add the package check and install phase (johnp@redhat.com)
+
 * Fri May 18 2012 Adam Miller <admiller@redhat.com> 0.93.3-1
 - [wizard] use highline say and ask for input and output (johnp@redhat.com)
 

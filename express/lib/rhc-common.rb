@@ -71,7 +71,7 @@ module RHC
 
   def self.debug(bool)
     @mydebug = bool
-  end
+end
 
   def self.update_server_api_v(dict)
     if !dict['api'].nil? && (dict['api'] =~ PATTERN_VERSION)
@@ -780,6 +780,7 @@ LOOKSGOOD
   end
 
   def self.snapshot_create(rhc_domain, namespace, app_name, app_uuid, filename, debug=false)
+
     ssh_cmd = "ssh #{app_uuid}@#{app_name}-#{namespace}.#{rhc_domain} 'snapshot' > #{filename}"
     puts "Pulling down a snapshot to #{filename}..."
     puts ssh_cmd if debug
@@ -787,16 +788,18 @@ LOOKSGOOD
 
     begin
       Net::SSH.start("#{app_name}-#{namespace}.#{rhc_domain}", app_uuid) do |ssh|
-        file = File.new(filename, 'w')
+        file = File.new(filename, "wb")
         ssh.exec! "snapshot" do |channel, stream, data|
           if stream == :stdout
             file.write(data)
+          else
+            puts data if debug
           end
         end
         file.close
       end
     rescue Exception => e
-      puts e.message if debug
+      puts e.message
       puts "Error in trying to save snapshot.  You can try to save manually by running:"
       puts
       puts ssh_cmd
@@ -839,7 +842,7 @@ LOOKSGOOD
               channel.on_close do |ch|
                 puts "Terminating..."
               end
-              file = File.new(filename, 'r')
+              file = File.new(filename, 'rb')
               while (line = file.gets)
                 channel.send_data line
               end

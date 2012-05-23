@@ -24,6 +24,7 @@ class ApplicationTest < Test::Unit::TestCase
     assert apps.length == 1
     assert apps.first.name == "app"
   end
+
 =begin
   def test_create_scalable_app
     domain_name = "rhcrest#{@random}"

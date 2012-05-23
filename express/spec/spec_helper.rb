@@ -4,7 +4,15 @@ require 'webmock/rspec'
 
 begin
   require 'simplecov'
-  SimpleCov.start
+  SimpleCov.start do
+    add_filter 'lib/vendor/'
+    add_filter 'lib/rhc-rest.rb'
+    add_filter 'lib/rhc-common.rb'
+    add_filter 'lib/helpers.rb'
+    add_filter 'lib/rhc-rest/' #temporary
+    add_filter 'lib/rhc/wizard.rb' #temporary
+    add_filter 'lib/rhc/config.rb' #temporary
+  end
 
   original_stderr = $stderr
   at_exit do
@@ -72,6 +80,20 @@ module ClassSpecHelpers
     @output = StringIO.new
     $stderr = (@error = StringIO.new)
     $terminal = HighLine.new @input, @output
+  end
+
+  def run
+    #Commander::Runner.instance_variable_set :"@singleton", nil
+    mock_terminal
+    RHC::CLI.start(arguments)
+    "#{@output.string}\n#{$stderr.string}"
+  end
+  def run_output
+    run
+  rescue SystemExit => e
+    "#{@output.string}\n#{$stderr.string}#{e}"
+  else
+    "#{@output.string}\n#{$stderr.string}"
   end
 end
 

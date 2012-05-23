@@ -14,20 +14,23 @@ module Rhc
   end
 
   class Tar
-    def self.contains(tar_gz, search)
+    def self.contains(filename, search)
       search = /#{search.to_s}/ if ! search.is_a?(Regexp)
-      file = File.open(tar_gz)
+      contains = false
       begin
-        tgz = Rhc::Vendor::Zlib::GzipReader.new(file)
+        Rhc::Vendor::Zlib::GzipReader.open(filename) do |gzip|
+          tar = Minitar::Reader.new(gzip)
+          tar.each_entry do |entry|
+            if entry.full_name =~ search
+              contains = true
+            end
+          end
+          tar.close
+        end
       rescue Rhc::Vendor::Zlib::GzipFile::Error
         return false
       end
-      Minitar::Reader.new(tgz).each_entry do |file|
-        if file.full_name =~ search
-          return true
-        end
-      end
-      false
+      contains
     end
   end
 

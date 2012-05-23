@@ -102,6 +102,10 @@ Net::SSH.start(ssh_host, app_uuid) do |ssh|
 
   ssh.exec! "rhc-list-ports" do |channel, stream, data|
 
+    if data.is_a?(String) 
+      data = data.split '\n'
+    end
+
     if stream == :stderr
 
       data.each { |line|
@@ -144,6 +148,9 @@ Net::SSH.start(ssh_host, app_uuid) do |ssh|
     Net::SSH.start(ssh_host, scaled_uuid) do |ssh|
 
       ssh.exec! "rhc-list-ports" do |channel, stream, data|
+        if data.is_a?(String) 
+          data = data.split '\n'
+        end
         if stream == :stderr
           data.each { |line|
             line = line.chomp

@@ -1,3 +1,4 @@
+require 'rhc'
 require 'commander'
 require 'commander/runner'
 require 'commander/delegates'
@@ -31,7 +32,7 @@ module RHC
       program :description, 'Command line interface for OpenShift.'
 
       RHC::Commands.load.to_commander
-      run!
+      exit(run! || 0)
     end
   end
 end
