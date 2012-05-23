@@ -1,4 +1,6 @@
 # From Rails core_ext/object.rb
+require 'rhc/json'
+
 class Object
   def present?
     !blank?
@@ -8,6 +10,6 @@ class Object
   end
 
   def to_json
-    Rhc::Vendor::OkJson.encode(self)
+    RHC::Json.encode(self)
   end
 end

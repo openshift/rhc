@@ -10,9 +10,11 @@ require 'resolv'
 require 'uri'
 require 'highline/import'
 require 'rhc-rest'
-require 'helpers'
+require 'rhc/helpers'
 require 'rhc/config'
 require 'rhc/wizard'
+require 'rhc/targz'
+require 'rhc/json'
 
 module RHC
 
@@ -92,11 +94,11 @@ end
   end
   
   def self.json_encode(data)
-    Rhc::Json.encode(data)
+    RHC::Json.encode(data)
   end
 
   def self.json_decode(json)
-    Rhc::Json.decode(json)
+    RHC::Json.decode(json)
   end
 
   def self.generate_json(data)
@@ -123,7 +125,7 @@ end
     end
     begin
       json_resp = json_decode(response.body)
-    rescue Rhc::JsonError
+    rescue RHC::JsonError
       exit 1
     end
     update_server_api_v(json_resp)
@@ -132,7 +134,7 @@ end
     end
     begin
       carts = (json_decode(json_resp['data']))['carts']
-    rescue Rhc::JsonError
+    rescue RHC::JsonError
       exit 1
     end
     carts
@@ -235,7 +237,7 @@ end
     end
     begin
       json_resp = json_decode(response.body)
-    rescue Rhc::JsonError
+    rescue RHC::JsonError
       exit 1
     end
     update_server_api_v(json_resp)
@@ -244,7 +246,7 @@ end
     end
     begin
       user_info = json_decode(json_resp['data'].to_s)
-    rescue Rhc::JsonError
+    rescue RHC::JsonError
       exit 1
     end
     user_info
@@ -293,13 +295,13 @@ end
     end
     begin
       json_resp = json_decode(response.body)
-    rescue Rhc::JsonError
+    rescue RHC::JsonError
       exit 1
     end
     update_server_api_v(json_resp)
     begin
       ssh_keys = (json_decode(json_resp['data'].to_s))
-    rescue Rhc::JsonError
+    rescue RHC::JsonError
       exit 1
     end
 
@@ -378,7 +380,7 @@ end
       begin
         json_resp = json_decode(response.body)
         exit_code = print_json_body(json_resp)
-      rescue Rhc::JsonError
+      rescue RHC::JsonError
         exit_code = 1
       end
     elsif @mydebug
@@ -788,15 +790,15 @@ LOOKSGOOD
 
     begin
       Net::SSH.start("#{app_name}-#{namespace}.#{rhc_domain}", app_uuid) do |ssh|
-        file = File.new(filename, "wb")
-        ssh.exec! "snapshot" do |channel, stream, data|
-          if stream == :stdout
-            file.write(data)
-          else
-            puts data if debug
+        File.new(filename, "wb") do |file|
+          ssh.exec! "snapshot" do |channel, stream, data|
+            if stream == :stdout
+              file.write(data)
+            else
+              puts data if debug
+            end
           end
         end
-        file.close
       end
     rescue Exception => e
       puts e.message
@@ -812,7 +814,7 @@ LOOKSGOOD
   def self.snapshot_restore(rhc_domain, namespace, app_name, app_uuid, filename, debug=false)
     if File.exists? filename
 
-      if ! Rhc::Tar.contains filename, './*/' + app_name
+      if ! RHC::TarGz.contains filename, './*/' + app_name
 
         puts "Archive at #{filename} does not contain the target application: ./*/#{app_name}"
         puts "If you created this archive rather than exported with rhc-snapshot, be sure"
@@ -822,7 +824,7 @@ LOOKSGOOD
 
       else
 
-        include_git = Rhc::Tar.contains filename, './*/git'
+        include_git = RHC::TarGz.contains filename, './*/git'
 
         ssh_cmd = "cat #{filename} | ssh #{app_uuid}@#{app_name}-#{namespace}.#{rhc_domain} 'restore#{include_git ? ' INCLUDE_GIT' : ''}'"
         puts "Restoring from snapshot #{filename}..."
@@ -1132,7 +1134,7 @@ def handle_key_mgmt_response(url, data, password)
       RHC::print_response_success(json_resp)
       puts "Success"
       return
-    rescue Rhc::JsonError
+    rescue RHC::JsonError
       RHC::print_response_err(response)
     end
   else
