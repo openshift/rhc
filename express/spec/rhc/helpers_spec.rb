@@ -64,6 +64,12 @@ describe RHC::Helpers do
       @output.seek(last_pos)
       @output.read.should == "\nsection\n\nsection\n\n"
     end
+
+    it "should show two line with one space between even though an outside newline was printed" do
+      @tests.outside_newline
+      @output.seek(0)
+      @output.read.should == "section 1\n\nsection 2\n"
+    end
   end
 
   class HelperTests
@@ -112,6 +118,12 @@ describe RHC::Helpers do
       section { output }
       section(:top => 1) { output_no_breaks }
       section(:bottom => 1) { output }
+      section(:top => 1) { output }
+    end
+
+    def outside_newline
+      section(:bottom => -1) { output }
+      say "\n"
       section(:top => 1) { output }
     end
 
