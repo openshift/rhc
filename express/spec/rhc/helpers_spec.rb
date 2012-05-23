@@ -3,6 +3,19 @@ require 'rhc/helpers'
 require 'rhc/core_ext'
 
 describe RHC::Helpers do
+  subject do 
+    Class.new(Object) do
+      include RHC::Helpers
+    end.new
+  end
+
+  its(:openshift_server) { should == 'openshift.redhat.com' }
+
+  context 'with LIBRA_SERVER environment variable' do
+    before { ENV['LIBRA_SERVER'] = 'test.com' }
+    its(:openshift_server) { should == 'test.com' }
+    after { ENV['LIBRA_SERVER'] = nil }
+  end
 end
 
 describe Object do
@@ -21,5 +34,4 @@ describe Object do
     specify('string') { 'a'.blank?.should be_false }
     specify('empty string') { ''.blank?.should be_true }
   end
-
 end
