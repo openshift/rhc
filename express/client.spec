@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.93.5
+Version: 0.93.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -110,6 +110,10 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue May 22 2012 Adam Miller <admiller@redhat.com> 0.93.6-1
+- Implement simple server status command 'rhc server' and helpers to support it
+  (ccoleman@redhat.com)
+
 * Tue May 22 2012 Adam Miller <admiller@redhat.com> 0.93.5-1
 - Merge pull request #28 from fabianofranz/master (contact@fabianofranz.com)
 - Fixed rspec tests (ffranz@redhat.com)
