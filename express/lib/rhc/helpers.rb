@@ -51,7 +51,7 @@ module RHC::Helpers
     end
 
     until top_margin >= top
-      say "tm: #{top_margin} top: #{top} sbl: #{@@section_bottom_last}\n"
+      say "\n"
       top_margin += 1
     end
 
