@@ -201,6 +201,6 @@ Return JSON String (exit_code non-zero is failure):
 
 Data JSON:
 {
-    "carts":["php-5.3", "ruby-1.8", "python-2.6", "perl-5.10", "jbossas-7"]
+    "carts":["php-5.3", "ruby-1.8", "python-2.6", "perl-5.10", "jbossas-7", "jbosseap-6.0"]
 }
 

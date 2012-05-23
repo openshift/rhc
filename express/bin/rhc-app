@@ -29,7 +29,7 @@ List of commands
   tidy                           Garbage collects the git repo and empties log/tmp dirs
   add-alias                      Add a custom domain name for the application
   remove-alias                   Remove a custom domain name for the application
-  threaddump                     Trigger a thread dump for jbossas applications
+  threaddump                     Trigger a thread dump for jbossas, jbosseap, and ruby applications
   tail                           Tail the logs of an application
   snapshot       [save|restore]  Saves/Restores an application snapshot to/from a tarball at the location specified using --filepath (default: ./$APPNAME.tar.gz)
   cartridge      <action>        Manage an embedded cartridge
