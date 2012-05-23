@@ -1,5 +1,5 @@
 require 'rhc-common'
-require 'helpers'
+require 'rhc/helpers'
 require 'highline/system_extensions'
 
 # ruby 1.8 -> 1.9 magic
@@ -12,6 +12,7 @@ end
 module RHC
   class Wizard
     include HighLine::SystemExtensions
+    include RHC::Helpers
 
     @@stages = [:greeting_stage,
                 :login_stage,
@@ -19,6 +20,8 @@ module RHC
                 :config_ssh_key_stage,
                 :upload_ssh_key_stage,
                 :install_client_tools_stage,
+                :config_namespace_stage,
+                :show_app_info_stage,
                 :finalize_stage]
 
     def initialize(config_path)
@@ -46,36 +49,51 @@ module RHC
     private
 
     def greeting_stage
-      say <<EOF
+      paragraph do
+        say "Starting Interactive Setup for OpenShift's command line interface"
+      end
 
-Starting Interactive Setup.
+      paragraph do
+        say "It looks like you've not used OpenShift on this machine " \
+          "before.  We'll help get you setup with just a couple of questions. " \
+          "You can skip this in the future by copying your config's around:"
+      end
 
-It looks like you've not used OpenShift Express on this machine before.  We'll
-help get you setup with just a couple of questions.  You can skip this in the
-future by copying your config's around:
+      paragraph do
+        say "#{@config_path}"
+        say "#{RHC::Config.home_dir}/.ssh/"
+      end
 
-    #{@config_path}
-    #{RHC::Config.home_dir}/.ssh/
-
-EOF
       true
     end
 
     def login_stage
 
-      @username = ask("https://openshift.redhat.com/ username: ")
-      @password = RHC::get_password
+      # get_password adds an extra untracked newline so set :bottom to -1
+      section(:top => 1, :bottom => -1) do
+        @username = ask("To connect to #{@libra_server} enter your OpenShift login (email or Red Hat login id): ")
+        @password = RHC::get_password
+      end
+
       @libra_server = get_var('libra_server')
+      # if not set, set to default
+      @libra_server = @libra_server ?  @libra_server : "openshift.redhat.com"
+
       # Confirm username / password works:
       user_info = RHC::get_user_info(@libra_server, @username, @password, RHC::Config.default_proxy, true)
+
+      # instantiate a REST client that stages can use
+      # TODO: use only REST calls in the wizard
+      end_point = "https://#{@libra_server}/broker/rest/api"
+      @rest_client = Rhc::Rest::Client.new(end_point, @username, @password)
+
       true
     end
 
     def create_config_stage
       if !File.exists? @config_path
         FileUtils.mkdir_p File.dirname(@config_path)
-        file = File.open(@config_path, 'w')
-        begin
+        File.open(@config_path, 'w') do |file|
           file.puts <<EOF
 # Default user login
 default_rhlogin='#{@username}'
@@ -84,13 +102,13 @@ default_rhlogin='#{@username}'
 libra_server = '#{@libra_server}'
 EOF
 
-        ensure
-          file.close
         end
-        say ""
-        say "Created local config file: " + @config_path
-        say "express.conf contains user configuration and can be transferred across clients."
-        say ""
+
+        paragraph do
+          say "Created local config file: " + @config_path
+          say "express.conf contains user configuration and can be transferred across clients."
+        end
+
         true
       end
 
@@ -103,11 +121,13 @@ EOF
       @ssh_priv_key_file_path = "#{RHC::Config.home_dir}/.ssh/id_rsa"
       @ssh_pub_key_file_path = "#{RHC::Config.home_dir}/.ssh/id_rsa.pub"
       unless File.exists? @ssh_priv_key_file_path
-        say ""
-        say "No SSH Key has been found.  We're generating one for you."
+        paragraph do
+          say "No SSH Key has been found.  We're generating one for you."
+        end
         @ssh_pub_key_file_path = generate_ssh_key_ruby()
-        say "    Created: #{@ssh_pub_key_file_path}"
-        say ""
+        paragraph do
+          say "    Created: #{@ssh_pub_key_file_path}\n\n"
+        end
       end
       true
     end
@@ -131,62 +151,75 @@ EOF
       additional_ssh_keys = @ssh_keys['keys']
       known_keys = []
 
-      say <<EOF
-
-Last step, we need to upload your public key to remote servers
-so it can be used.  First you need to name it.  For example "liliWork" or
-"laptop".  You can overwrite an existing key by naming it or pick a new
-name.
-
-Current Keys:
-
-EOF
-      if @ssh_keys['fingerprint'].nil?
-        say "    None"
-      else
-        known_key << 'default'
-        say "    default - #{@ssh_keys['fingerprint']}"
+      paragraph do
+        say "We need to upload your public key to remote servers so it can be " \
+            "used.  First you need to name it.  For example \"liliWork\" or " \
+            "\"laptop\".  You can overwrite an existing key by naming it or " \
+            "pick a new name."
       end
 
-      if additional_ssh_keys && additional_ssh_keys.kind_of?(Hash)
-        additional_ssh_keys.each do |name, keyval|
-          say "    #{name} - #{keyval['fingerprint']}"
-          known_keys.push(name)
+      section(:top => 1) { say 'Current Keys:' }
+      if @ssh_keys['fingerprint'].nil?
+        section(:bottom => 1) { say "    None" }
+      else
+        known_keys << 'default'
+        section do
+          say "    default - #{@ssh_keys['fingerprint']}"
         end
       end
 
-      say "\n"
+      if additional_ssh_keys && additional_ssh_keys.kind_of?(Hash)
+        section(:bottom => 1) do
+          additional_ssh_keys.each do |name, keyval|
+            say "    #{name} - #{keyval['fingerprint']}"
+            known_keys.push(name)
+          end
+        end
+      end
+
       if @ssh_keys['fingerprint'].nil?
         key_name = "default"
-        say "You don't have any keys setup yet so uploading as your default key"
+        paragraph do
+          say "You don't have any keys setup yet so uploading as your default key"
+        end
       else
-        while((key_name = RHC::check_key(ask "Name your key:")) == false)
-          say "Try again."
+        key = SSHKey.new File.read(@ssh_priv_key_file_path)
+        fingerprint = key.md5_fingerprint
+        pubkey_default_name = fingerprint[0, 12].gsub(/[^0-9a-zA-Z]/,'')
+        paragraph do
+          key_name =  ask("Provide a name for this key: ") do |q|
+            q.default = pubkey_default_name
+            q.validate = lambda { |p| RHC::check_key(p) }
+          end
         end
       end
 
       if known_keys.include?(key_name)
-        say ""
-        say "Key already exists!  Updating.."
-        add_or_update_key('update', key_name, @ssh_pub_key_file_path, @username, @password)
+        section do
+          say "Key already exists!  Updating key #{key_name} .. "
+          add_or_update_key('update', key_name, @ssh_pub_key_file_path, @username, @password)
+        end
       else
-        say ""
-        say "Sending new key.."
-        add_or_update_key('add', key_name, @ssh_pub_key_file_path, @username, @password)
+        section do
+          say "Sending new key #{key_name} .. "
+          add_or_update_key('add', key_name, @ssh_pub_key_file_path, @username, @password)
+        end
       end
       true
     end
 
     def upload_ssh_key_stage
       unless ssh_key_uploaded?
-        upload = agree "Your public ssh key needs to be uploaded to the server.  Would you like us to upload it for you? (yes/no) "
+        section do
+          upload = agree "Your public ssh key needs to be uploaded to the server.  Would you like us to upload it for you? (yes/no) "
+        end
 
         if upload
           upload_ssh_key
         else
-          say ""
-          say "You can upload your ssh key at a later time using the 'rhc sshkey' command"
-          say ""
+          paragraph do
+            say "You can upload your ssh key at a later time using the 'rhc sshkey' command"
+          end
         end
       end
       true
@@ -209,16 +242,14 @@ EOF
     #  TortoiseGIT (Windows Explorer integration)
     #
     def install_client_tools_stage
-      if Rhc::Platform.windows?
+      if windows?
         windows_install
       else
         # we use command line tools for dbus since the dbus gem is not cross
         # platform and compiles itself on the host system when installed
-        say <<EOF
-
-We will now check to see if you have the necessary client tools installed.
-
-EOF
+        paragraph do
+          say "We will now check to see if you have the necessary client tools installed."
+        end
         if has_dbus_send?
           package_kit_install
         else
@@ -228,11 +259,113 @@ EOF
       true
     end
 
+    def config_namespace_stage
+      paragraph do
+        say "Checking for your namespace ... "
+        user_info = RHC::get_user_info(@libra_server, @username, @password, RHC::Config.default_proxy, true)
+        domains = user_info['user_info']['domains']
+        if domains.length == 0
+          say "not found"
+          ask_for_namespace
+        else
+          say "found namespace:"
+          domains.each { |d| say "    #{d['namespace']}" }
+        end
+      end
+
+      true
+    end
+
+    def show_app_info_stage
+      section do
+        say "Checking for applications ... "
+      end
+      user_info = RHC::get_user_info(@libra_server, @username, @password, RHC::Config.default_proxy, true)
+      apps = user_info['app_info']
+      if !apps.nil? and !apps.empty?
+        section(:bottom => 1) do
+          say "found"
+          apps.each do |app_name, app_info|
+            app_url = nil
+            unless user_info['user_info']['domains'].empty?
+              app_url = "http://#{app_name}-#{user_info['user_info']['domains'][0]['namespace']}.#{user_info['user_info']['rhc_domain']}/"
+            end
+
+            if app_url.nil?
+              say "    * #{app_name} - no public url (you need to add a namespace)"
+            else
+              say "    * #{app_name} - #{app_url}"
+            end
+          end
+        end
+      else
+        section(:bottom => 1) { say "none found" }
+        paragraph do
+          say "Here is a list of the types of application " \
+              "you can create: "
+
+          application_types = RHC::get_cartridges_list @libra_server, RHC::Config.default_proxy
+          application_types.each do |cart|
+            say "    * #{cart} - rhc app create -t #{cart} -a <app name>"
+          end
+        end
+      end
+
+      true
+    end
+
     def finalize_stage
-      say <<EOF
-Thank you for setting up your system.  We will now execute your original
-command (rhc #{ARGV.join(" ")})
-EOF
+      paragraph do
+        say "Thank you for setting up your system.  You can rerun this at any " \
+            "time by calling 'rhc setup'. We will now execute your original " \
+            "command (rhc #{ARGV.join(" ")})"
+      end
+      true
+    end
+
+    def config_namespace(namespace)
+      # skip if string is empty
+      paragraph do
+        if namespace.nil? or namespace.chomp.length == 0
+          say "Skipping! You may create a domain using 'rhc domain create'"
+          return true
+        end
+
+
+        begin
+          domain = @rest_client.add_domain(namespace)
+
+          say "Your domain name '#{domain.id}' has been successfully created"
+        rescue Rhc::Rest::ValidationException => e
+          say "#{e.to_s}"
+          return false
+        end
+      end
+      true
+    end
+
+    def ask_for_namespace
+      paragraph do
+        say "Your namespace is unique to your account and is the suffix of the " \
+            "public URLs we assign to your applications. You may configure your " \
+            "namespace here or leave it blank and use 'rhc domain create' to " \
+            "create a namespace later.  You will not be able to create " \
+            "applications without first creating a namespace."
+      end
+
+      paragraph do
+        namespace = ask "Please enter a namespace or leave this blank if you wish to skip this step:" do |q|
+          q.validate = lambda { |p| RHC::check_namespace p }
+        end
+      end
+
+      while !config_namespace namespace do
+        paragraph do
+          namespace = ask "Please enter a namespace or leave this blank if you wish to skip this step:" do |q|
+            q.validate = lambda { |p| RHC::check_namespace p }
+          end
+        end
+      end
     end
 
     def dbus_send_session_method(name, service, obj_path, iface, stringafied_params, wait_for_reply=true)
@@ -241,9 +374,9 @@ EOF
       print_reply = "--print-reply" if wait_for_reply
       cmd = "dbus-send --session #{print_reply} --type=method_call \
             --dest=#{service} #{obj_path} #{method} #{stringafied_params}"
-      output = `#{cmd}`
+      output = `#{cmd} 2>&1`
 
-      throw output if output.start_with?('Error')
+      throw output if output.start_with?('Error') and !$?.success?
 
       # parse the output
       results = []
@@ -288,41 +421,44 @@ EOF
     end
 
     def package_kit_install
-      say "Checking for git ... "
+      section(:top => 1) do
+        say "Checking for git ... "
+      end
+
       begin
         git_installed = package_kit_method('IsInstalled', 'Query', 'string:git string:')
         if git_installed
-          say "found\n\n"
+          section(:bottom => 1) { say "found" }
         else
-          say "needs to be installed"
-          install = agree "Would you like to launch the system installer? (yes/no) "
+          section(:bottom => 1) { say "needs to be installed" }
+          section do
+            install = agree "Would you like to install git with the system installer? (yes/no) "
+          end
           if install
             package_kit_method('InstallPackageNames', 'Modify', 'uint32:0 array:string:"git" string:', false)
-            say <<EOF
-You may safely continue while the installer is running or you can wait until it
-has finished.  Press any key to continue:
-EOF
-            get_character
-            say "\n"
+            paragraph do
+              say "You may safely continue while the installer is running or " \
+                  "you can wait until it has finished.  Press any key to continue:"
+              get_character
+            end
           end
         end
-      rescue StandardError => e
-        puts e.to_s
+      rescue
+        generic_unix_install_check false
       end
     end
 
-    def generic_unix_install_check
-      say "Checking for git ... "
+    def generic_unix_install_check(show_action=true)
+      section(:top => 1) { say "Checking for git ... " } if show_action
       if has_git?
-        say "found"
+        section(:bottom => 1) { say "found" }
       else
-        say "needs to be installed"
-        say <<EOF
-
-Automated installation of client tools is not supported for your platform.
-You will need to manually install git for full OpenShift functionality.
-
-EOF
+        section(:bottom => 1) { say "needs to be installed" }
+        paragraph do
+          say "Automated installation of client tools is not supported for " \
+              "your platform. You will need to manually install git for full " \
+              "OpenShift functionality."
+        end
       end
     end
 
@@ -331,18 +467,14 @@ EOF
       # in non standard directories.  Punt on this for now and simply
       # print out urls and some instructions
       say <<EOF
-In order to full interact with OpenShift you will need to install and configure
-a git client.
+In order to full interact with OpenShift you will need to install and configure a git client.
 
-Documentation for installing the client tools can be found at
-https://openshift.redhat.com/app/getting_started#install_client_tools
+Documentation for installing the client tools can be found at https://#{@libra_server}/app/getting_started#install_client_tools
 
 We recommend these applications:
 
-  * Git for Windows - a basic git command line and GUI client
-    https://github.com/msysgit/msysgit/wiki/InstallMSysGit
-  * TortoiseGit - git client that integrates into the file explorer
-    http://code.google.com/p/tortoisegit/
+  * Git for Windows - a basic git command line and GUI client https://github.com/msysgit/msysgit/wiki/InstallMSysGit
+  * TortoiseGit - git client that integrates into the file explorer http://code.google.com/p/tortoisegit/
 
 EOF
     end
@@ -354,7 +486,8 @@ EOF
     end
 
     def has_git?
-      exe? 'git'
+      %x{ git --version }
+      $?.success?
     end
 
     def has_dbus_send?
@@ -369,25 +502,30 @@ EOF
     end
 
     def greeting_stage
-      say <<EOF
+      paragraph do
+        say "Starting Interactive Setup for OpenShift's command line interface"
+      end
 
-Starting Interactive Setup.
+      paragraph do
+        say "We'll help get you setup with just a couple of questions. " \
+            "You can skip this in the future by copying your config's around:"
+      end
 
-We'll help get you setup with just a couple of questions.  You can skip this in
-the future by copying your config's around:
+      paragraph do
+        say "    #{@config_path}"
+        say "    #{RHC::Config.home_dir}/.ssh/"
+      end
 
-    #{@config_path}
-    #{RHC::Config.home_dir}/.ssh/
-
-EOF
       true
     end
 
     def create_config_stage
       if File.exists? @config_path
         backup = "#{@config_path}.bak"
-        say "Configuration file #{@config_path} already exists,"
-        say "backing up to #{backup}\n\n"
+        paragraph do
+          say "Configuration file #{@config_path} already exists, " \
+              "backing up to #{backup}"
+        end
         File.cp(@config_path, backup)
       end
       super
@@ -395,10 +533,10 @@ EOF
     end
 
     def finalize_stage
-      say <<EOF
-Thank you for setting up your system.  You can rerun this at any time by
-calling 'rhc setup'.
-EOF
+      paragraph do
+        say "Thank you for setting up your system.  You can rerun this at any time " \
+            "by calling 'rhc setup'."
+      end
       true
     end
   end
