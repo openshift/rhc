@@ -72,16 +72,17 @@ module RHC
     end
 
     def login_stage
+      if @libra_server.nil?
+        @libra_server = get_var('libra_server')
+        # if not set, set to default
+        @libra_server = @libra_server ?  @libra_server : "openshift.redhat.com"
+      end
 
       # get_password adds an extra untracked newline so set :bottom to -1
       section(:top => 1, :bottom => -1) do
         @username = ask("To connect to #{@libra_server} enter your OpenShift login (email or Red Hat login id): ")
         @password = RHC::get_password
       end
-
-      @libra_server = get_var('libra_server')
-      # if not set, set to default
-      @libra_server = @libra_server ?  @libra_server : "openshift.redhat.com"
 
       # Confirm username / password works:
       user_info = RHC::get_user_info(@libra_server, @username, @password, RHC::Config.default_proxy, true)
