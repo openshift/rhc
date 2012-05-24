@@ -1225,7 +1225,7 @@ def generate_ssh_key_ruby(type="RSA", bits = 1024, comment = "OpenShift-Key")
     return nil
   else
     unless File.exists?(ssh_dir)
-      Dir.mkdir(ssh_dir)
+      FileUtil.mkdir_p(ssh_dir)
       File.chmod(0700, ssh_dir)
     end
     File.open("#{ssh_dir}/id_rsa", 'w') {|f| f.write(key.private_key)}
