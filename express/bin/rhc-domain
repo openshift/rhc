@@ -163,7 +163,7 @@ EOF
               puts ""
           end
           exit 0
-      rescue Rhc::JsonError
+      rescue RHC::JsonError
           RHC::print_response_err(response)
       end
   else
@@ -193,7 +193,7 @@ def destroy_domain()
       RHC::print_response_success(json_resp)
       puts "Success"
       exit 0
-    rescue Rhc::JsonError
+    rescue RHC::JsonError
       RHC::print_response_err(response)
     end
   else
