@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'fakefs/spec_helpers'
+require 'fakefs/safe'
 require 'rhc/wizard'
 require 'parseconfig'
 require 'rhc/config'
@@ -22,10 +22,13 @@ class FakeFS::File
 end
 
 describe RHC::Wizard do
-  include FakeFS::SpecHelpers
-
-  before(:each) do
+  before(:all) do
     mock_terminal
+    FakeFS.activate!
+  end
+
+  after(:all) do
+    FakeFS.deactivate!
   end
 
   context "First run of rhc" do
@@ -77,7 +80,10 @@ describe RHC::Wizard do
     end
 
     it "should upload ssh keys" do
-
+      @wizard.stub_ssh_keys
+      # don't upload
+      $terminal.write_line('no')
+      @wizard.run_next_stage
     end
 
     it "should check for client tools" do
@@ -98,7 +104,7 @@ describe RHC::Wizard do
   end
 
   context "Repeat run of rhc setup without anything set" do
-    include FakeFS::SpecHelpers
+
 
     it "should print out repeat run greeting" do
 
@@ -138,7 +144,6 @@ describe RHC::Wizard do
   end
 
   context "Repeat run of rhc setup with config set" do
-    include FakeFS::SpecHelpers
 
     it "should print out repeat run greeting" do
 
@@ -174,7 +179,6 @@ describe RHC::Wizard do
   end
 
   context "Repeat run of rhc setup with config and ssh keys set" do
-    include FakeFS::SpecHelpers
 
     it "should print out repeat run greeting" do
 
@@ -206,7 +210,6 @@ describe RHC::Wizard do
   end
 
   context "Repeat run of rhc setup with everything set" do
-    include FakeFS::SpecHelpers
 
     it "should print out repeat run greeting" do
 
@@ -238,7 +241,6 @@ describe RHC::Wizard do
   end
 
   context "Repeat run of rhc setup with everything set but platform set to Windows" do
-    include FakeFS::SpecHelpers
 
     it "should print out repeat run greeting" do
 
@@ -369,6 +371,16 @@ describe RHC::Wizard do
       }
 
       stub_request(:get, "https://mock_user%40foo.bar:password@mock.openshift.redhat.com/broker/rest/api").to_return(:status => 200, :body => RHC::json_encode(body), :headers => {})
+    end
+
+    def stub_ssh_keys
+      # TODO: add ssh keys if requests
+      data = {:ssh_key => "",
+              :keys => []
+             }
+
+      data = RHC::json_encode(data)
+      stub_request(:post, "https://#{@libra_server}/broker/ssh_keys").to_return(:status => 200, :body => RHC::json_encode({:data => data}))
     end
 
     def setup_mock_config
