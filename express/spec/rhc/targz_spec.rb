@@ -25,7 +25,7 @@ describe RHC::TarGz do
     subject { File.expand_path('../assets/targz_sample.tar.gz', __FILE__) }
     it('should be able to handle the same file') {
       threads = []
-      100.times {
+      30.times {
         threads << Thread.new { Thread.current['result'] = RHC::TarGz.contains(subject, /foo/) }
       }
       threads.each { |thread| thread.join }
