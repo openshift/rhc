@@ -26,64 +26,53 @@ describe RHC::Helpers do
   context "Formatter" do
     it "should print out a section without any line breaks" do
       @tests.section_no_breaks
-      @output.seek(0)
-      @output.read.should == "section 1 "
+      $terminal.read.should == "section 1 "
     end
 
     it "should print out a section with trailing line break" do
       @tests.section_one_break
-      @output.seek(0)
-      @output.read.should == "section 1\n"
+      $terminal.read.should == "section 1\n"
     end
 
     it "should print out 2 sections with matching bottom and top margins generating one space between" do
       @tests.sections_equal_bottom_top
-      @output.seek(0)
-      @output.read.should == "section 1\n\nsection 2\n"
+      $terminal.read.should == "section 1\n\nsection 2\n"
     end
 
     it "should print out 2 sections with larger bottom margin generating two spaces between" do
       @tests.sections_larger_bottom
-      @output.seek(0)
-      @output.read.should == "section 1\n\n\nsection 2\n"
+      $terminal.read.should == "section 1\n\n\nsection 2\n"
     end
 
     it "should print out 2 sections with larger top margin generating two spaces between" do
       @tests.sections_larger_top
-      @output.seek(0)
-      @output.read.should == "section 1\n\n\nsection 2\n"
+      $terminal.read.should == "section 1\n\n\nsection 2\n"
     end
 
     it "should print out 4 sections with the middle two on the same line and a space between the lines" do
       @tests.sections_four_on_three_lines
-      @output.seek(0)
-      @output.read.should == "section 1\n\nsection 2 section 3\n\nsection 4\n"
+      $terminal.read.should == "section 1\n\nsection 2 section 3\n\nsection 4\n"
     end
 
     it "should show the equivilance of paragaph to section(:top => 1, :bottom => 1)" do
       @tests.section_1_1
-      last_pos = @output.pos - 1
-      @output.seek(0)
-      section_1_1 = @output.read
+      section_1_1 = $terminal.read
+      @tests.reset
       @tests.section_paragraph
-      pos = @output.pos
-      @output.seek(last_pos)
-      last_pos = pos - 1
-      paragraph = @output.read
+      paragraph = $terminal.read
 
       section_1_1.should == paragraph
 
+      @tests.reset
       @tests.section_1_1
       @tests.section_paragraph
 
-      @output.seek(last_pos)
-      @output.read.should == "\nsection\n\nsection\n\n"
+      $terminal.read.should == "\nsection\n\nsection\n\n"
     end
 
     it "should show two line with one space between even though an outside newline was printed" do
       @tests.outside_newline
-      @output.seek(0)
-      @output.read.should == "section 1\n\nsection 2\n"
+      $terminal.read.should == "section 1\n\nsection 2\n"
     end
   end
 
@@ -148,6 +137,11 @@ describe RHC::Helpers do
 
     def section_paragraph
       paragraph { say "section" }
+    end
+
+    # call section without output to reset spacing to 0
+    def reset
+      section {}
     end
   end
 end

@@ -18,6 +18,7 @@ List of resources
   sshkey             Manage multiple keys for the registered rhcloud user.
   port-forward       Forward remote ports to the workstation
   server             Display information about the status of the service.
+  setup              Run the setup wizard to configure your account.
 
 See 'rhc <resource> --help' for more applicable commands and argumments on a specific resource.
 USAGE
