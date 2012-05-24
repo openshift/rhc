@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.93.6
+Version: 0.93.7
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -110,6 +110,29 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed May 23 2012 Adam Miller <admiller@redhat.com> 0.93.7-1
+- Improved rspec syntax (ffranz@redhat.com)
+- Removed deprecated herpers, added specific .rb for json and targz helpers,
+  json and targz tests (ffranz@redhat.com)
+- Merge pull request #29 from J5/master (ccoleman@redhat.com)
+- Merge pull request #31 from bdecoste/master (contact@fabianofranz.com)
+- US2307 (bdecoste@gmail.com)
+- fix (johnp@redhat.com)
+- Merge remote-tracking branch 'origin/master' into j5 (johnp@redhat.com)
+- [tests] check for section(:bottom => -1) senario (johnp@redhat.com)
+- [wizard] test coverage for formatter helpers (johnp@redhat.com)
+- Add RHC::Helpers test for environment variables (ccoleman@redhat.com)
+- [wizard] add formatting helpers to get rid of \n (johnp@redhat.com)
+- [wizard] change git test (johnp@redhat.com)
+- [wizard] use File.open do end blocks (johnp@redhat.com)
+- [wizard] use @libra_server instead of hardcoding urls (johnp@redhat.com)
+- [wizard] output formatting fixes (johnp@redhat.com)
+- [wizard] add an application info stage (johnp@redhat.com)
+- [wizard] namespace creation stage added (root@dhcp-100-2-224.bos.redhat.com)
+- [wizard] fallback if using PackageKit fails (johnp@redhat.com)
+- [wizard] add default name for ssh key based on fingerprint (johnp@redhat.com)
+- [wizard] reformat output and add better worded prompts (johnp@redhat.com)
+
 * Tue May 22 2012 Adam Miller <admiller@redhat.com> 0.93.6-1
 - Implement simple server status command 'rhc server' and helpers to support it
   (ccoleman@redhat.com)
