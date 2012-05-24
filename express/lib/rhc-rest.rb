@@ -8,7 +8,7 @@ require 'rhc-rest/client'
 require 'rhc-rest/domain'
 require 'rhc-rest/key'
 require 'rhc-rest/user'
-require 'helpers'
+require 'rhc/helpers'
 
 @@end_point = ""
 @@headers = {:accept => :json}
@@ -24,7 +24,7 @@ module Rhc
     end
 
     def parse_response(response)
-      result = Rhc::Json.decode(response)
+      result = RHC::Json.decode(response)
       type = result['type']
       data = result['data']
       case type
@@ -92,7 +92,7 @@ module Rhc
     def process_error_response(response)
       messages = Array.new
       begin
-        result = Rhc::Json.decode(response)
+        result = RHC::Json.decode(response)
         messages = result['messages']
       rescue Exception => e
         logger.debug "Response did not include a message from server" if @mydebug
