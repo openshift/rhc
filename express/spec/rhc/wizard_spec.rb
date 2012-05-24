@@ -25,11 +25,15 @@ describe RHC::Wizard do
       # queue up input
       $terminal.write_line "#{@wizard.mock_user}"
       $terminal.write_line "password"
+
+      @wizard.stub_user_info
+      @wizard.stub_rest_api
+
       @wizard.run_next_stage
 
       output = $terminal.read
       output.should match("OpenShift login")
-      output.should end_with("*******\n\n")
+      output.should =~ /(#{Regexp.escape("Password: ********\n")})$/
     end
 
     it "should write out a config" do
@@ -250,6 +254,83 @@ describe RHC::Wizard do
       end
 
       self.send stages[@current_wizard_stage]
+    end
+
+    def stub_user_info
+      data = {:ssh_key => "",
+              :ssh_key_type => "",
+              :rhlogin => @mock_user,
+             }
+
+      data = RHC::json_encode(data)
+      stub_request(:post, "https://#{@libra_server}/broker/userinfo").to_return(:status => 200, :body => RHC::json_encode({:data => data}), :headers => {})
+    end
+
+    def stub_rest_api
+      body = {
+        "data" => {
+          "LIST_ESTIMATES" => {
+            "optional_params" => [],
+            "rel" => "List available estimates",
+            "method" => "GET",
+            "href" => "https => //@{libra_server}/broker/rest/estimates",
+            "required_params" => []
+          },
+          "API" => {"optional_params" => [],
+            "rel" => "API entry point",
+            "method" => "GET",
+            "href" => "https => //#{libra_server}/broker/rest/api",
+            "required_params" => []
+          },
+          "LIST_CARTRIDGES" => {
+            "optional_params" => [],
+            "rel" => "List cartridges",
+            "method" => "GET","href" => "https => //@{libra_server}/broker/rest/cartridges",
+            "required_params" => []
+          },
+          "GET_USER" => {
+            "optional_params" => [],
+            "rel" => "Get user information",
+            "method" => "GET",
+            "href" => "https => //#{libra_server}/broker/rest/user",
+            "required_params" => []
+          },
+          "LIST_DOMAINS" => {
+            "optional_params" => [],
+            "rel" => "List domains",
+            "method" => "GET",
+            "href" => "https => //@libra_server/broker/rest/domains",
+            "required_params" => []
+          },
+          "LIST_TEMPLATES" => {
+            "optional_params" => [],
+            "rel" => "List application templates",
+            "method" => "GET",
+            "href" => "https => //@{libra_server}/broker/rest/application_template",
+            "required_params" => []
+          },
+          "ADD_DOMAIN" => {
+            "optional_params" => [],
+            "rel" => "Create new domain",
+            "method" => "POST",
+            "href" => "https => //@{libra_server}/broker/rest/domains",
+            "required_params" => [
+              {"description" => "Name of the domain",
+               "valid_options" => [],
+               "type" => "string",
+               "name" => "id"
+              }
+            ]
+          }
+        },
+        "version" => "1.0",
+        "type" => "links",
+        "supported_api_versions" => ["1.0"],
+        "messages" => [],
+        "status" => "ok"
+      }
+
+      stub_request(:get, "https://mock_user%40foo.bar:password@mock.openshift.redhat.com/broker/rest/api").to_return(:status => 200, :body => RHC::json_encode(body), :headers => {})
     end
 
     def setup_mock_config
