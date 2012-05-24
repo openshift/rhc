@@ -57,7 +57,7 @@ describe RHC::Wizard do
     end
 
     it "should write out a config" do
-      File.exists? (@wizard.config_path).should be false
+      File.exists?(@wizard.config_path).should be false
       @wizard.run_next_stage
       File.readable?(@wizard.config_path).should be true
       cp = ParseConfig.new @wizard.config_path
@@ -65,7 +65,18 @@ describe RHC::Wizard do
       cp.get_value("libra_server").should == @wizard.libra_server
     end
 
-    it "should write ount generated ssh keys" do
+    it "should write out generated ssh keys" do
+      @wizard.setup_mock_ssh
+      private_key_file = File.join(@wizard.ssh_dir, "id_rsa")
+      public_key_file = File.join(@wizard.ssh_dir, "id_rsa.pub")
+      File.exists?(private_key_file).should be false
+      File.exists?(public_key_file).should be false
+      @wizard.run_next_stage
+      File.exists?(private_key_file).should be true
+      File.exists?(public_key_file).should be true
+    end
+
+    it "should upload ssh keys" do
 
     end
 
@@ -259,9 +270,11 @@ describe RHC::Wizard do
   end
 
   module WizardDriver
-    attr_accessor :mock_user, :libra_server, :config_path
+    attr_accessor :mock_user, :libra_server, :config_path, :ssh_dir
     def initialize
+      RHC::Config.home_dir = '/home/mock_user'
       super '/home/mock_user/.openshift/openshift.conf'
+      @ssh_dir = "#{RHC::Config.home_dir}/.ssh/"
       @libra_server = 'mock.openshift.redhat.com'
       @mock_user = 'mock_user@foo.bar'
       @mock_git_installed = true
@@ -368,6 +381,13 @@ default_rhlogin='#{@mock_user}'
 # Server API
 libra_server = '#{@libra_server}'
 EOF
+      end
+    end
+
+    def setup_mock_ssh(add_ssh_key=false)
+      FileUtils.mkdir_p @ssh_dir
+      if add_ssh_key
+        #TODO: add and ssh key to the directory
       end
     end
 
