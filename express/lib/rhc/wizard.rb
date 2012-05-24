@@ -215,6 +215,7 @@ EOF
 
     def upload_ssh_key_stage
       unless ssh_key_uploaded?
+        upload = false
         section do
           upload = agree "Your public ssh key needs to be uploaded to the server.  Would you like us to upload it for you? (yes/no) "
         end
