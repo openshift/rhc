@@ -2,12 +2,22 @@ require 'spec_helper'
 require 'fakefs/spec_helpers'
 require 'rhc/wizard'
 require 'parseconfig'
+require 'rhc/config'
 
 # monkey patch ParseConfig so it works with fakefs
 # TODO: if this is useful elsewhere move to helpers
 class ParseConfig
   def open(*args)
     File.open *args
+  end
+end
+
+# chmod isn't implemented in the released fakefs gem
+# but is in git.  Once the git version is released we
+# should remove this and actively check permissions
+class FakeFS::File
+  def self.chmod(*args)
+    # noop
   end
 end
 
