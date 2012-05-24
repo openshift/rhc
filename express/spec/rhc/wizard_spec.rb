@@ -15,15 +15,21 @@ describe RHC::Wizard do
 
     it "should print out first run greeting" do
       @wizard.run_next_stage
-      @output.seek(0)
-      greeting = @output.read
+      greeting = $terminal.read
       greeting.count("\n").should == 8
       greeting.should match(Regexp.escape("It looks like you've not used OpenShift on this machine"))
-      greeting.should match(Regexp.escape(" #{@config_url} "))
+      greeting.should match(Regexp.escape("\n#{@wizard.config_path}\n"))
     end
 
     it "should ask for login and hide password input" do
+      # queue up input
+      $terminal.write_line "#{@wizard.mock_user}"
+      $terminal.write_line "password"
+      @wizard.run_next_stage
 
+      output = $terminal.read
+      output.should match("OpenShift login")
+      output.should end_with("*******\n\n")
     end
 
     it "should write out a config" do
@@ -224,6 +230,7 @@ describe RHC::Wizard do
   end
 
   module WizardDriver
+    attr_accessor :mock_user, :libra_server, :config_path
     def initialize
       super '/home/mock_user/.openshift/openshift.conf'
       @libra_server = 'mock.openshift.redhat.com'
@@ -231,6 +238,7 @@ describe RHC::Wizard do
       @mock_git_installed = true
       @mock_package_kit_installed = false
       @current_wizard_stage = nil
+      @platform_windows = false
     end
 
     def run_next_stage
@@ -263,6 +271,10 @@ EOF
 
     def has_package_kit?
       @mock_package_kit_installed
+    end
+
+    def windows?
+      @platform_windows
     end
   end
 
