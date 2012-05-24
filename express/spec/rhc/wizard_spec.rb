@@ -1,14 +1,24 @@
 require 'spec_helper'
 require 'fakefs/spec_helpers'
 require 'rhc/wizard'
+require 'parseconfig'
+
+# monkey patch ParseConfig so it works with fakefs
+# TODO: if this is useful elsewhere move to helpers
+class ParseConfig
+  def open(*args)
+    File.open *args
+  end
+end
 
 describe RHC::Wizard do
+  include FakeFS::SpecHelpers
+
   before(:each) do
     mock_terminal
   end
 
   context "First run of rhc" do
-    include FakeFS::SpecHelpers
     before(:all) do
       @wizard = FirstRunWizardDriver.new
     end
@@ -37,7 +47,12 @@ describe RHC::Wizard do
     end
 
     it "should write out a config" do
-
+      File.exists? (@wizard.config_path).should be false
+      @wizard.run_next_stage
+      File.readable?(@wizard.config_path).should be true
+      cp = ParseConfig.new @wizard.config_path
+      cp.get_value("default_rhlogin").should == @wizard.mock_user
+      cp.get_value("libra_server").should == @wizard.libra_server
     end
 
     it "should write ount generated ssh keys" do
