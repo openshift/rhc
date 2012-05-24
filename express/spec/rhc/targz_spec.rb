@@ -10,4 +10,9 @@ describe RHC::TarGz do
     it('should contain the right files') { RHC::TarGz.contains(subject, /bar/).should be_false }
   end
 
+  context 'with invalid .tar.gz file' do
+    subject { File.expand_path('../assets/foo.txt', __FILE__) }
+    it('should never contains') { RHC::TarGz.contains(subject, /bar/).should be_false }
+  end
+
 end

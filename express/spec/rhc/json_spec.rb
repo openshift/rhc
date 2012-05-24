@@ -22,6 +22,9 @@ describe RHC::Json do
     it('should encode to proper json') { subject.should == '{"key":"value"}'  }
     it('should encode and decode to the same hash') { RHC::Json.decode(subject).should == {"key" => "value"} }
     it('should decode and encode to the same string') { RHC::Json.encode(RHC::Json.decode('{"x":"y"}')).should == '{"x":"y"}' }
+    it('should decode symbol keys') { RHC::Json.decode('{"key":"ok"}', {:symbolize_keys => true}).has_key?(:key).should be_true }
+    it('should decode symbol keys') { RHC::Json.decode('{"key":"ok"}', {:symbolize_keys => true})[:key].should == "ok" }
+    it('should encode symbol keys') { RHC::Json.encode({:key => "ok"}).should == '{"key":"ok"}' }
   end
 
 end
