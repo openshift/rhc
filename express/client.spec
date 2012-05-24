@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.93.7
+Version: 0.93.8
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -110,6 +110,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed May 23 2012 Adam Miller <admiller@redhat.com> 0.93.8-1
+- Improved coverage (ffranz@redhat.com)
+
 * Wed May 23 2012 Adam Miller <admiller@redhat.com> 0.93.7-1
 - Improved rspec syntax (ffranz@redhat.com)
 - Removed deprecated herpers, added specific .rb for json and targz helpers,
