@@ -75,11 +75,48 @@ module ClassSpecHelpers
     lambda { r.run!; @output }
   end
 
+  class MockHighLineTerminal < HighLine
+    def initialize(input, output)
+      super
+      @last_read_pos = 0
+    end
+
+    ##
+    # read
+    #
+    # seeks to the last read in the IO stream and reads
+    # the data from that position so we don't repeat
+    # reads or get empty data due to writes moving
+    # the caret to the end of the stream
+    def read
+      @output.seek(@last_read_pos)
+      result = @output.read
+      @last_read_pos = @output.pos
+      result
+    end
+
+    ##
+    # write_line
+    #
+    # writes a line of data to the end of the
+    # input stream appending a newline so
+    # highline knows to stop processing and then
+    # resets the caret position to the last read
+    def write_line(str)
+      reset_pos = @input.pos
+      # seek end so we don't overwrite anything
+      @input.seek(0, IO::SEEK_END)
+      result = @input.write "#{str}\n"
+      @input.seek(reset_pos)
+      result
+    end
+  end
+
   def mock_terminal
     @input = StringIO.new
     @output = StringIO.new
     $stderr = (@error = StringIO.new)
-    $terminal = HighLine.new @input, @output
+    $terminal = MockHighLineTerminal.new @input, @output
   end
 
   def run
