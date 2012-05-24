@@ -17,10 +17,11 @@ module RHC
     @@conf_name = 'express.conf'
     _linux_cfg = '/etc/openshift/' + @@conf_name
     _gem_cfg = File.join(File.expand_path(File.dirname(__FILE__) + "/../../conf"), @@conf_name)
-    @@home_conf_path = File.expand_path('~/.openshift')
-    @@local_config_path = File.join(@@home_conf_path, @@conf_name)
+
     config_path = File.exists?(_linux_cfg) ? _linux_cfg : _gem_cfg
-    @@home_dir=File.expand_path("~")
+    @@home_dir = File.expand_path("~")
+    @@home_conf_path = File.join(@@home_dir, '.openshift')
+    @@local_config_path = File.join(@@home_conf_path, @@conf_name)
 
     begin
       @@global_config = ParseConfig.new(config_path)
@@ -28,6 +29,13 @@ module RHC
     rescue Errno::EACCES => e
       puts "Could not open config file: #{e.message}"
       exit 253
+    end
+
+    # used for tests
+    def self.home_dir=(home_dir)
+      @@home_dir=home_dir
+      @@home_conf_path = File.join(@@home_dir, '.openshift')
+      @@local_config_path = File.join(@@home_conf_path, @@conf_name)
     end
 
     def self.get_value(key)
