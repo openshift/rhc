@@ -1,5 +1,5 @@
 require 'rubygems'
-require 'vendor/okjson'
+require 'rhc/vendor/okjson'
 
 module RHC
 
@@ -7,12 +7,12 @@ module RHC
 
 		def self.decode(string, options={})
 		  string = string.read if string.respond_to?(:read)
-		  result = Rhc::Vendor::OkJson.decode(string)
+		  result = RHC::Vendor::OkJson.decode(string)
 		  options[:symbolize_keys] ? symbolize_keys(result) : result
 		end
 
 		def self.encode(object, options={})
-		  Rhc::Vendor::OkJson.valenc(stringify_keys(object))
+		  RHC::Vendor::OkJson.valenc(stringify_keys(object))
 		end
 
 		def self.symbolize_keys(object)

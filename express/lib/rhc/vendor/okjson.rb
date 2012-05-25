@@ -27,7 +27,7 @@ require 'stringio'
 # Some parts adapted from
 # http://golang.org/src/pkg/json/decode.go and
 # http://golang.org/src/pkg/utf8/utf8.go
-module Rhc
+module RHC
   module Vendor
     module OkJson
       extend self
