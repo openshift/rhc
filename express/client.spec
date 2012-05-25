@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.93.10
+Version: 0.93.11
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -110,6 +110,28 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu May 24 2012 Adam Miller <admiller@redhat.com> 0.93.11-1
+- Merge pull request #34 from J5/master (ccoleman@redhat.com)
+- add rhc setup to help docs (johnp@redhat.com)
+- [wizard] fix scoping issue uncovered in tests (johnp@redhat.com)
+- [tests] add ssh_key upload stage tests (johnp@redhat.com)
+- [tests] implement create ssh key tests (johnp@redhat.com)
+- [tests] implement File.chmod as a noop for FakeFS (johnp@redhat.com)
+- allow home_dir to be set in the configs so it can be set for tests
+  (johnp@redhat.com)
+- use FileUtil instead of Dir so it works with FakeFS (johnp@redhat.com)
+- [tests] implement the write config stage checks (johnp@redhat.com)
+- [tests] stub out some http requests in wizard tests (johnp@redhat.com)
+- [tests] use the more reliable terminal IO api (johnp@redhat.com)
+- [tests] utilize the new mock terminal IO api (johnp@redhat.com)
+- [tests] move libra_server def up (johnp@redhat.com)
+- [tests] require fakefs (johnp@redhat.com)
+- [tests] make it easier to read and write the mock terminal streams
+  (johnp@redhat.com)
+- make WizardDriver a mixin and allow it to access the stages array
+  (johnp@redhat.com)
+- [tests] stub out wizzard tests (johnp@redhat.com)
+
 * Thu May 24 2012 Adam Miller <admiller@redhat.com> 0.93.10-1
 - 
 
