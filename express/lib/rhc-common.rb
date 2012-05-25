@@ -790,7 +790,7 @@ LOOKSGOOD
 
     begin
       Net::SSH.start("#{app_name}-#{namespace}.#{rhc_domain}", app_uuid) do |ssh|
-        File.new(filename, "wb") do |file|
+        File.open(filename, 'wb') do |file|
           ssh.exec! "snapshot" do |channel, stream, data|
             if stream == :stdout
               file.write(data)
@@ -844,11 +844,11 @@ LOOKSGOOD
               channel.on_close do |ch|
                 puts "Terminating..."
               end
-              file = File.new(filename, 'rb')
-              while (line = file.gets)
-                channel.send_data line
+              File.open(filename, 'rb') do |file|
+                while (line = file.gets)
+                  channel.send_data line
+                end
               end
-              file.close
               channel.eof!
             end
           end

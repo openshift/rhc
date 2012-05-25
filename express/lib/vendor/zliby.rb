@@ -601,7 +601,7 @@ class GzipReader < GzipFile
 	class << self
 
 		def open filename
-			io = File.open filename
+			io = File.open filename, 'rb'
 			gz = self.new io
 			if block_given? then yield gz else gz end
 		end
