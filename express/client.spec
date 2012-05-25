@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.93.11
+Version: 0.93.12
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -110,6 +110,21 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri May 25 2012 Adam Miller <admiller@redhat.com> 0.93.12-1
+- Removed vendored libs from coverage reports (ffranz@redhat.com)
+- Merge pull request #37 from fabianofranz/master (ccoleman@redhat.com)
+- workaround for bug #816338 - no longer get redefine warning
+  (johnp@redhat.com)
+- Vendored libs reorganized (ffranz@redhat.com)
+- Fixes BZ 823853 and 824312 (ffranz@redhat.com)
+- catch NotImplementedError which is raised for invalid key types
+  (johnp@redhat.com)
+- typo fix s/FileUtil/FileUtils (johnp@redhat.com)
+- [wizard] some more scoping issues (johnp@redhat.com)
+- 30 threads testing tar.gz file reads (ffranz@redhat.com)
+- Removed pr-zlib in favour of zliby to solve pr-zlib multithreading bug, added
+  more rspec tests (ffranz@redhat.com)
+
 * Thu May 24 2012 Adam Miller <admiller@redhat.com> 0.93.11-1
 - Merge pull request #34 from J5/master (ccoleman@redhat.com)
 - add rhc setup to help docs (johnp@redhat.com)
