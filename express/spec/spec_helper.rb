@@ -5,10 +5,10 @@ require 'webmock/rspec'
 begin
   require 'simplecov'
   SimpleCov.start do
-    add_filter 'lib/vendor/'
     add_filter 'lib/rhc-rest.rb'
     add_filter 'lib/rhc-common.rb'
     add_filter 'lib/helpers.rb'
+    add_filter 'lib/rhc/vendor/'
     add_filter 'lib/rhc-rest/' #temporary
     add_filter 'lib/rhc/wizard.rb' #temporary
     add_filter 'lib/rhc/config.rb' #temporary
