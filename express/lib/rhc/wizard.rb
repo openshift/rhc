@@ -359,6 +359,7 @@ EOF
             "applications without first creating a namespace."
       end
 
+      namespace = nil
       paragraph do
         namespace = ask "Please enter a namespace or leave this blank if you wish to skip this step:" do |q|
           q.validate = lambda { |p| RHC::check_namespace p }
@@ -437,6 +438,7 @@ EOF
           section(:bottom => 1) { say "found" }
         else
           section(:bottom => 1) { say "needs to be installed" }
+          install = false
           section do
             install = agree "Would you like to install git with the system installer? (yes/no) "
           end
