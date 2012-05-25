@@ -10,7 +10,7 @@ module RHC
     extend self
 
     def decode_json(s)
-      Rhc::Vendor::OkJson.decode(s)
+      RHC::Vendor::OkJson.decode(s)
     end
 
     def date(s)

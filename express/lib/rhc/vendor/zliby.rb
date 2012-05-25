@@ -1,6 +1,6 @@
 require 'stringio'
 
-module Rhc
+module RHC
 module Vendor
 module Zlib
 
