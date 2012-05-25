@@ -459,7 +459,13 @@ end
   def self.create_app(libra_server, net_http, user_info, app_name, app_type, rhlogin, password, repo_dir=nil, no_dns=false, no_git=false, is_embedded_jenkins=false, gear_size='small',scale=false)
 
     # Need to have a fake HTTPResponse object for passing to print_reponse_err
-    Struct.new('FakeResponse',:body,:code,:content_type)
+    # May already be initialized if called from another piece of code
+    # FIXME: remove this requirement when refactoring rhc
+    begin
+      Struct::FakeResponse
+    rescue NameError
+      Struct.new('FakeResponse',:body,:code,:content_type)
+    end
 
     domains = user_info['user_info']['domains']
     if domains.empty?
