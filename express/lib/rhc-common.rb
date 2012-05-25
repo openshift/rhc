@@ -311,6 +311,7 @@ end
         Net::SSH::KeyFactory.load_data_public_key(
           "#{ssh_keys['ssh_type']} #{ssh_keys['ssh_key']}").fingerprint
     rescue Net::SSH::Exception
+    rescue NotImplementedError
       # key invalid, do nothing
       # this happens if the user does not have a default key
     end
