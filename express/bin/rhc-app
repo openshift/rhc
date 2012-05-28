@@ -248,6 +248,16 @@ currently being created: '#{$opt['app']}'
 
 end
 
+def get_args(l)
+  l.shift
+  args = ""
+  l.each do|a|
+    if (a.to_s.strip.length == 0 || a.to_s.strip.match(/\s/) ); a = "'#{a}'" end    
+    args += " #{a}"
+  end
+  args
+end
+
 def show_app
   validate_args(false)
   user_info = RHC::get_user_info($libra_server, $opt['rhlogin'], $password, RHC::Config.default_proxy, true)
@@ -388,63 +398,6 @@ def save_or_restore_snapshot(command)
 
 end
 
-def show_logs
-  validate_args(false, false, true)
-
-  user_info = RHC::get_user_info($libra_server, $opt['rhlogin'], $password, RHC::Config.default_proxy, false)
-  app = $opt['app']
-  
-  unless user_info['app_info'][app]
-      puts
-      puts "Could not find app '#{$opt['app']}'.  Please run 'rhc domain show' to get a list"
-      puts "of your current running applications"
-      puts
-      exit 101
-  end
-  
-  $opt['filepath'] = "#{$opt['app']}/logs/*" unless $opt['filepath']
-  file_glob = "#{$opt['filepath']}"
-  app_uuid = user_info['app_info'][app]['uuid']
-  namespace = user_info['user_info']['domains'][0]['namespace']
-  rhc_domain = user_info['user_info']['rhc_domain']
-  
-  # -t to force PTY and avoid daemons
-  # Red Hat OpenShift: https://bugzilla.redhat.com/show_bug.cgi?id=726646
-  # OpenSSH https://bugzilla.mindrot.org/show_bug.cgi?id=396
-  remote_cmd = "tail#{$opt['opts'] ? ' --opts ' + Base64::encode64($opt['opts']).chomp : ''} #{file_glob}"
-  ssh_cmd = "ssh -t #{app_uuid}@#{app}-#{namespace}.#{rhc_domain} '#{remote_cmd}'"
-
-  puts "Attempting to tail files: #{file_glob}"
-  puts "Use ctl + c to stop"
-  puts ssh_cmd if @mydebugs
-
-  begin
-    if $opt['files'] == 'system-messages'
-       RHC::ctl_app(libra_server, RHC::Config.default_proxy, $opt['app'], $opt['rhlogin'], password,
-                    'system-messages', false, nil, nil)
-    else
-       ssh_ruby("#{app}-#{namespace}.#{rhc_domain}", app_uuid, remote_cmd)
-    end
-  rescue Interrupt
-    puts
-    puts "Terminating..."
-    exit 0
-  rescue SocketError => e
-    puts
-    puts "Could not connect: #{e.message}"
-    puts
-    puts "DEBUG: #{e.debug}" if @mydebugs
-    puts "You can try to run this manually if you have ssh installed: "
-    puts
-    puts ssh_cmd
-    puts
-    exit 1
-  end
-  # this should never happen
-  exit 1
-end
-
-
 begin
   argv_c = ARGV.clone
   
@@ -542,37 +495,38 @@ end
 p_usage 0 if $opt["help"]
 
 case argv_c[0]
-when "create"
-  create_app
-when "show"
-  show_app
-when "start", "stop", "force-stop", "restart", "reload", "status", "tidy", "add-alias", "remove-alias", "threaddump", "destroy"
-  control_app(argv_c[0])
-when "tail"
-  show_logs
-when "snapshot"
-  case argv_c[1]
-  when "save", "restore"
-    save_or_restore_snapshot(argv_c[1])
+  when "create"
+    create_app
+  when "show"
+    show_app
+  when "start", "stop", "force-stop", "restart", "reload", "status", "tidy", "add-alias", "remove-alias", "threaddump", "destroy"
+    control_app(argv_c[0])
+  when "tail"
+    system("rhc-tail-files #{get_args argv_c} 2>&1")
+    exit $?.exitstatus
+  when "snapshot"
+    case argv_c[1]
+    when "save", "restore"
+      save_or_restore_snapshot(argv_c[1])
+    else
+      puts "Missing or invalid snapshot action!"
+      p_usage
+    end
+  when "cartridge"
+    case argv_c[1]
+    when "add", "remove", "start", "stop", "restart", "status", "reload"
+      control_cartridge(argv_c[1])
+    when "list", nil
+      show_embedded_list
+    else
+      puts "Missing or invalid cartridge action!"
+      p_usage
+    end
+  when "-h", "--help", "help", nil
+    p_usage 0
   else
-    puts "Missing or invalid snapshot action!"
+    puts "Invalid command!"
     p_usage
-  end
-when "cartridge"
-  case argv_c[1]
-  when "add", "remove", "start", "stop", "restart", "status", "reload"
-    control_cartridge(argv_c[1])
-  when "list", nil
-    show_embedded_list
-  else
-    puts "Missing or invalid cartridge action!"
-    p_usage
-  end
-when "-h", "--help", "help", nil
-  p_usage 0
-else
-  puts "Invalid command!"
-  p_usage
 end
 
 exit 0
