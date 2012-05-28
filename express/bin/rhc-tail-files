@@ -111,6 +111,10 @@ begin
   else
      ssh_ruby("#{app}-#{namespace}.#{rhc_domain}", app_uuid, remote_cmd)
   end
+rescue Interrupt
+    puts
+    puts "Terminating..."
+    exit 0
 rescue SocketError => e
   puts
   puts "Could not connect: #{e.message}"
