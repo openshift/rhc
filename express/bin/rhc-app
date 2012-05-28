@@ -411,7 +411,7 @@ def show_logs
   # -t to force PTY and avoid daemons
   # Red Hat OpenShift: https://bugzilla.redhat.com/show_bug.cgi?id=726646
   # OpenSSH https://bugzilla.mindrot.org/show_bug.cgi?id=396
-  remote_cmd = "tail#{opt['opts'] ? ' --opts ' + Base64::encode64(opt['opts']).chomp : ''} #{file_glob}"
+  remote_cmd = "tail#{$opt['opts'] ? ' --opts ' + Base64::encode64($opt['opts']).chomp : ''} #{file_glob}"
   ssh_cmd = "ssh -t #{app_uuid}@#{app}-#{namespace}.#{rhc_domain} '#{remote_cmd}'"
 
   puts "Attempting to tail files: #{file_glob}"
@@ -419,8 +419,8 @@ def show_logs
   puts ssh_cmd if @mydebugs
 
   begin
-    if opt['files'] == 'system-messages'
-       RHC::ctl_app(libra_server, RHC::Config.default_proxy, opt['app'], opt['rhlogin'], password,
+    if $opt['files'] == 'system-messages'
+       RHC::ctl_app(libra_server, RHC::Config.default_proxy, $opt['app'], $opt['rhlogin'], password,
                     'system-messages', false, nil, nil)
     else
        ssh_ruby("#{app}-#{namespace}.#{rhc_domain}", app_uuid, remote_cmd)
