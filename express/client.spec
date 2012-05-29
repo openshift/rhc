@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.93.13
+Version: 0.93.14
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -110,6 +110,11 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue May 29 2012 Adam Miller <admiller@redhat.com> 0.93.14-1
+- Merge pull request #44 from fabianofranz/master (johnp@redhat.com)
+- Explanatory comment (ffranz@redhat.com)
+- Fixes BZ 823854 (ffranz@redhat.com)
+
 * Tue May 29 2012 Adam Miller <admiller@redhat.com> 0.93.13-1
 - fix cmp typo (s/=/==) (johnp@redhat.com)
 - make sure we check for uncaught signals if retcode is nil (johnp@redhat.com)
