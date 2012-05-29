@@ -136,5 +136,13 @@ module RHC
     def jruby? ; RUBY_PLATFORM =~ /java/i end
     def windows? ; RUBY_PLATFORM =~ /win(32|dows|ce)|djgpp|(ms|cyg|bcc)win|mingw32/i end
     def unix? ; !jruby? && !windows? end
+
   end
+end
+
+# mock for windows
+if defined?(UNIXServer) != 'constant' or UNIXServer.class != Class
+  #:nocov:
+  class UNIXServer; end 
+  #:nocov:
 end
