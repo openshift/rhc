@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.93.12
+Version: 0.93.13
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -110,6 +110,19 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue May 29 2012 Adam Miller <admiller@redhat.com> 0.93.13-1
+- fix cmp typo (s/=/==) (johnp@redhat.com)
+- make sure we check for uncaught signals if retcode is nil (johnp@redhat.com)
+- remove generation of .ssh/config since we default to id_rsa now
+  (johnp@redhat.com)
+- add the server option to the rhc manpage (johnp@redhat.com)
+- autocomplete rhc server and rhc setup (johnp@redhat.com)
+- Removed duplicated code for rhc app tail and rhc-tail-files
+  (ffranz@redhat.com)
+- Fixed BZ 823448 (ffranz@redhat.com)
+- Merge pull request #40 from fabianofranz/master (contact@fabianofranz.com)
+- Fixes BZ 823441 (ffranz@redhat.com)
+
 * Fri May 25 2012 Adam Miller <admiller@redhat.com> 0.93.12-1
 - Removed vendored libs from coverage reports (ffranz@redhat.com)
 - Merge pull request #37 from fabianofranz/master (ccoleman@redhat.com)
