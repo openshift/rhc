@@ -74,4 +74,11 @@ else
   p_usage
 end
 
+if retcode = nil
+  retcode = 1
+
+  # return codes for uncaught signals are 128 + the signal code
+  retcode = 128 + $?.termsig if $?.signaled? and !$?.termsig.nil?
+end
+
 exit retcode
