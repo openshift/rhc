@@ -74,7 +74,7 @@ else
   p_usage
 end
 
-if retcode = nil
+if retcode == nil
   retcode = 1
 
   # return codes for uncaught signals are 128 + the signal code
