@@ -102,8 +102,8 @@ Net::SSH.start(ssh_host, app_uuid) do |ssh|
 
   ssh.exec! "rhc-list-ports" do |channel, stream, data|
 
-    if data.is_a?(String) 
-      data = data.split '\n'
+    if RHC::Helpers.windows?
+      data = data.split /\n/
     end
 
     if stream == :stderr
@@ -148,8 +148,8 @@ Net::SSH.start(ssh_host, app_uuid) do |ssh|
     Net::SSH.start(ssh_host, scaled_uuid) do |ssh|
 
       ssh.exec! "rhc-list-ports" do |channel, stream, data|
-        if data.is_a?(String) 
-          data = data.split '\n'
+        if RHC::Helpers.windows?
+          data = data.split /\n/
         end
         if stream == :stderr
           data.each { |line|
@@ -184,11 +184,10 @@ Net::SSH.start(ssh_host, app_uuid) do |ssh|
 
   hosts_and_ports_descriptions.each { |description| puts "Binding #{description}..." }
 
-  puts "Use ctl + c to stop"
-
   begin
 
     Net::SSH.start(ssh_host, app_uuid) do |ssh|
+      puts "Use ctl + c to stop"
       hosts_and_ports.each do |host_and_port|
         host, port = host_and_port.split(/:/)
         ssh.forward.local(host, port.to_i, host, port.to_i)
