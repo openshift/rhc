@@ -4,8 +4,11 @@ require 'rhc/vendor/zliby'
 require 'archive/tar/minitar'
 include Archive::Tar
 
-TAR_BIN = 'tar'
-TAR_BIN = '/usr/bin/gnutar' if File.executable?('/usr/bin/gnutar')
+if File.executable?('/usr/bin/gnutar') then
+  TAR_BIN = '/usr/bin/gnutar'
+else
+  TAR_BIN = 'tar'
+end
 
 module RHC
 
