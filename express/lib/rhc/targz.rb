@@ -4,26 +4,36 @@ require 'rhc/vendor/zliby'
 require 'archive/tar/minitar'
 include Archive::Tar
 
+TAR_BIN = 'tar'
+TAR_BIN = '/usr/bin/gnutar' if File.executable?('/usr/bin/gnutar')
+
 module RHC
 
 	module TarGz
 
-    def self.contains(filename, search)
+    def self.contains(filename, search, force_ruby=false)
+      
       return false if ! (File.file? filename and File.basename(filename).downcase =~ /.\.tar\.gz$/i)
-      search = /#{search.to_s}/ if ! search.is_a?(Regexp)
+
       contains = false
-      begin
-        RHC::Vendor::Zlib::GzipReader.open(filename) do |gz|
-          Minitar::Reader.open gz do |tar|
-            tar.each_entry do |entry|
-              if entry.full_name =~ search
-                contains = true
+      if RHC::Helpers.windows? or force_ruby then
+        search = /#{search.to_s}/ if ! search.is_a?(Regexp)
+        begin
+          RHC::Vendor::Zlib::GzipReader.open(filename) do |gz|
+            Minitar::Reader.open gz do |tar|
+              tar.each_entry do |entry|
+                if entry.full_name =~ search
+                  contains = true
+                end
               end
             end
           end
+        rescue RHC::Vendor::Zlib::GzipFile::Error
+          return false
         end
-      rescue RHC::Vendor::Zlib::GzipFile::Error
-        return false
+      else
+        `#{TAR_BIN} --wildcards -tf #{filename} '#{search.to_s}'`
+        contains = $?.exitstatus == 0
       end
       contains
     end
