@@ -11,12 +11,12 @@ module RHC
 
 	module TarGz
 
-    def self.contains(filename, search)
+    def self.contains(filename, search, force_ruby=false)
       
       return false if ! (File.file? filename and File.basename(filename).downcase =~ /.\.tar\.gz$/i)
 
       contains = false
-      if RHC::Helpers.windows? then
+      if RHC::Helpers.windows? or force_ruby then
         search = /#{search.to_s}/ if ! search.is_a?(Regexp)
         begin
           RHC::Vendor::Zlib::GzipReader.open(filename) do |gz|
