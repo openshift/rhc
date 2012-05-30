@@ -139,10 +139,3 @@ module RHC
 
   end
 end
-
-# mock for windows
-if defined?(UNIXServer) != 'constant' or UNIXServer.class != Class
-  #:nocov:
-  class UNIXServer; end 
-  #:nocov:
-end

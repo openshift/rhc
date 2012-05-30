@@ -83,6 +83,12 @@ unless user_info['app_info'][app_name]
     exit 101
 end
 
+
+# mock for windows
+if defined?(UNIXServer) != 'constant' or UNIXServer.class != Class
+  class UNIXServer; end 
+end
+
 app_uuid = user_info['app_info'][app_name]['uuid']
 namespace = user_info['user_info']['domains'][0]['namespace']
 rhc_domain = user_info['user_info']['rhc_domain']
