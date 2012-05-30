@@ -1,6 +1,7 @@
 require 'rhc-common'
 require 'rhc/helpers'
 require 'highline/system_extensions'
+require 'net/ssh'
 
 # ruby 1.8 -> 1.9 magic
 begin
@@ -141,8 +142,8 @@ EOF
       @ssh_keys = RHC::get_ssh_keys(@libra_server, @username, @password, RHC::Config.default_proxy)
       additional_ssh_keys = @ssh_keys['keys']
 
-      localkey = SSHKey.new File.read(@ssh_priv_key_file_path)
-      local_fingerprint = localkey.md5_fingerprint
+      localkey = Net::SSH::KeyFactory.load_public_key(@ssh_pub_key_file_path)
+      local_fingerprint = localkey.fingerprint
 
       return true if @ssh_keys['fingerprint'] == local_fingerprint
       additional_ssh_keys.each do |name, keyval|
@@ -188,8 +189,20 @@ EOF
           say "You don't have any keys setup yet so uploading as your default key"
         end
       else
-        key = SSHKey.new File.read(@ssh_priv_key_file_path)
-        fingerprint = key.md5_fingerprint
+        key = nil
+        begin
+          key = Net::SSH::KeyFactory.load_public_key(@ssh_pub_key_file_path)
+        rescue Net::SSH::Exception
+        rescue NotImplementedError
+          paragraph do
+            say "Your ssh public key at #{@ssh_pub_key_file_path} can not be read. " \
+                "The setup can not continue until you manually remove or fix both of your " \
+                "public and private keys id_rsa keys."
+            end
+          return false
+        end
+
+        fingerprint = key.fingerprint
         pubkey_default_name = fingerprint[0, 12].gsub(/[^0-9a-zA-Z]/,'')
         paragraph do
           key_name =  ask("Provide a name for this key: ") do |q|
