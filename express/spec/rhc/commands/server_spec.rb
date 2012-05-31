@@ -1,7 +1,12 @@
 require 'spec_helper'
 require 'rhc/commands/server'
+require 'rhc/config'
 
 describe RHC::Commands::Server do
+  before(:each) do
+    RHC::Config.initialize
+  end
+
   describe 'run' do
     let(:arguments) { ['server'] }
 
