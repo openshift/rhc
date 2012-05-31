@@ -310,6 +310,11 @@ end
       ssh_keys['fingerprint'] = \
         Net::SSH::KeyFactory.load_data_public_key(
           "#{ssh_keys['ssh_type']} #{ssh_keys['ssh_key']}").fingerprint
+    rescue NoMethodError 
+      #older net/ssh (mac for example)
+      tempfile = `mktemp /tmp/openshift.XXXXXXXX`
+      `echo "#{ssh_keys['ssh_type']} #{ssh_keys['ssh_key']}" > #{tempfile}`
+      ssh_keys['fingerprint'] = `ssh-keygen -lf #{tempfile}`.split(' ')[1]
     rescue Net::SSH::Exception
     rescue NotImplementedError
       # key invalid, do nothing
@@ -320,10 +325,17 @@ end
       ssh_keys['keys'].each do |name, keyval|
         type = keyval['type']
         key = keyval['key']
-        ssh_keys['keys'][name]['fingerprint'] = \
-          Net::SSH::KeyFactory.load_data_public_key(
-            "#{type} #{key}").fingerprint
-      end
+        begin
+          ssh_keys['keys'][name]['fingerprint'] = \
+            Net::SSH::KeyFactory.load_data_public_key(
+              "#{type} #{key}").fingerprint
+        rescue NoMethodError
+          #older net/ssh (mac for example)
+          tempfile = `mktemp /tmp/openshift.XXXXXXXX`
+          `echo "#{type} #{key}" > #{tempfile}`
+          ssh_keys['keys'][name]['fingerprint'] = `ssh-keygen -lf #{tempfile}`.split(' ')[1]
+        end
+end
     end
     ssh_keys
   end
