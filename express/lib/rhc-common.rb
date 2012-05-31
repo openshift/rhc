@@ -796,13 +796,26 @@ LOOKSGOOD
     puts 
 
     begin
-      Net::SSH.start("#{app_name}-#{namespace}.#{rhc_domain}", app_uuid) do |ssh|
-        File.open(filename, 'wb') do |file|
-          ssh.exec! "snapshot" do |channel, stream, data|
-            if stream == :stdout
-              file.write(data)
-            else
-              puts data if debug
+
+      if ! RHC::Helpers.windows?
+        output = `#{ssh_cmd}`
+        if $?.exitstatus != 0
+          puts output
+          puts "Error in trying to save snapshot.  You can try to save manually by running:"
+          puts
+          puts ssh_cmd
+          puts
+          return 1
+        end
+      else
+        Net::SSH.start("#{app_name}-#{namespace}.#{rhc_domain}", app_uuid) do |ssh|
+          File.open(filename, 'wb') do |file|
+            ssh.exec! "snapshot" do |channel, stream, data|
+              if stream == :stdout
+                file.write(data)
+              else
+                puts data if debug
+              end
             end
           end
         end
@@ -839,27 +852,39 @@ LOOKSGOOD
         puts 
 
         begin
-          ssh = Net::SSH.start("#{app_name}-#{namespace}.#{rhc_domain}", app_uuid)
-          ssh.open_channel do |channel|
-            channel.exec("restore#{include_git ? ' INCLUDE_GIT' : ''}") do |ch, success|
-              channel.on_data do |ch, data|
-                puts data
-              end
-              channel.on_extended_data do |ch, type, data|
-                puts data
-              end
-              channel.on_close do |ch|
-                puts "Terminating..."
-              end
-              File.open(filename, 'rb') do |file|
-                while (line = file.gets)
-                  channel.send_data line
-                end
-              end
-              channel.eof!
+          if ! RHC::Helpers.windows?
+            output = `#{ssh_cmd}`
+            if $?.exitstatus != 0
+              puts output
+              puts "Error in trying to restore snapshot.  You can try to restore manually by running:"
+              puts
+              puts ssh_cmd
+              puts
+              return 1
             end
+          else
+            ssh = Net::SSH.start("#{app_name}-#{namespace}.#{rhc_domain}", app_uuid)
+            ssh.open_channel do |channel|
+              channel.exec("restore#{include_git ? ' INCLUDE_GIT' : ''}") do |ch, success|
+                channel.on_data do |ch, data|
+                  puts data
+                end
+                channel.on_extended_data do |ch, type, data|
+                  puts data
+                end
+                channel.on_close do |ch|
+                  puts "Terminating..."
+                end
+                File.open(filename, 'rb') do |file|
+                  while (line = file.gets)
+                    channel.send_data line
+                  end
+                end
+                channel.eof!
+              end
+            end
+            ssh.loop
           end
-          ssh.loop
         rescue Exception => e
           puts e.message if debug
           puts "Error in trying to restore snapshot.  You can try to restore manually by running:"
