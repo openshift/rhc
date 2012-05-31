@@ -185,7 +185,7 @@ EOF
       if @ssh_keys['fingerprint'].nil?
         key_name = "default"
         paragraph do
-          say "Since you do not have any keys associated with your OpenShift account, " \ 
+          say "Since you do not have any keys associated with your OpenShift account, " \
               "your new key will be uploaded as the default key"
         end
       else
