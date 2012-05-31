@@ -1,4 +1,4 @@
-%define gemdir %(ruby -rubygems -e 'puts Gem::dir' 2>/dev/null)
+Requires: ruby(abi) = 1.9.1
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
@@ -10,17 +10,25 @@ URL:           http://openshift.redhat.com
 Source0:       rhc-%{version}.tar.gz
 
 BuildRoot:     %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
+BuildRequires: rubygem-devel
 BuildRequires: rubygem-rake
 BuildRequires: rubygem-rspec
 BuildRequires: rubygem-webmock
-Requires:      ruby >= 1.8.5
+BuildRequires: ruby-irb
+Requires:      ruby(abi) = %{rubyabi}
+Requires:      ruby(rubygems)
 Requires:      rubygem-parseconfig
 Requires:      rubygem-rest-client
-#Requires:      rubygem-rake
+Requires:      rubygem-rake
 Requires:      rubygem-sshkey
 Requires:      rubygem-net-ssh
 Requires:      rubygem-archive-tar-minitar
 Requires:      rubygem-commander
+
+BuildArch:     noarch
+Provides:      rubygem(%{gem_name}) = %{version}
+
+
 Requires:      git
 Obsoletes:     rhc-rest
 
@@ -30,53 +38,40 @@ BuildArch:     noarch
 Provides OpenShift client libraries
 
 %prep
-%setup -q
+gem unpack %{SOURCE0}
+%setup -q -D -T -n  %{gem_name}-%{version}
+
+gem spec %{SOURCE0} -l --ruby > %{gem_name}.gemspec
+
+# Modify the gemspec if necessary with a patch or sed
+# Also apply patches to code if necessary
+%patch0 -p1
 
 %build
-for f in bin/rhc*
-do
-  ruby -c $f
-done
+mkdir -p .%{gem_dir}
 
-for f in lib/*.rb
-do
-  ruby -c $f
-done
+# Create the gem as gem install only works on a gem file
+gem build %{gem_name}.gemspec
+
+export CONFIGURE_ARGS="--with-cflags='%{optflags}'"
+# gem install compiles any C extensions and installs into a directory
+# We set that to be a local directory so that we can move it into the
+# buildroot in install
+gem install -V \
+        --local \
+        --install-dir ./%{gem_dir} \
+        --bindir ./%{_bindir} \
+        --force \
+        --rdoc \
+        %{gem_name}-%{version}.gem
 
 %install
-pwd
-rm -rf $RPM_BUILD_ROOT
+mkdir -p %{buildroot}%{gem_dir}
+cp -a ./%{gem_dir}/* %{buildroot}%{gem_dir}/
 
-mkdir -p "$RPM_BUILD_ROOT/usr/share/man/man1/"
-mkdir -p "$RPM_BUILD_ROOT/usr/share/man/man5/"
-
-for f in man/*
-do
-  len=`expr length $f`
-  manSection=`expr substr $f $len $len`
-  cp $f "$RPM_BUILD_ROOT/usr/share/man/man${manSection}/"
-done
-
-mkdir -p $RPM_BUILD_ROOT/etc/openshift
-if [ ! -f "$RPM_BUILD_ROOT/etc/openshift/express.conf" ]
-then
-  cp "conf/express.conf" $RPM_BUILD_ROOT/etc/openshift/
-fi
-
-# Package the gem
-rake --trace package
-
-mkdir -p .%{gemdir}
-# Ignore dependencies here because these will be handled by rpm 
-gem install --install-dir $RPM_BUILD_ROOT/%{gemdir} --bindir $RPM_BUILD_ROOT/%{_bindir} --local -V --force --rdoc --ignore-dependencies \
-     pkg/rhc-%{version}.gem
-
-# Copy the bash autocompletion script
-mkdir -p "$RPM_BUILD_ROOT/etc/bash_completion.d/"
-cp autocomplete/rhc $RPM_BUILD_ROOT/etc/bash_completion.d/rhc
-
-cp LICENSE $RPM_BUILD_ROOT/%{gemdir}/gems/rhc-%{version}/LICENSE
-cp COPYRIGHT $RPM_BUILD_ROOT/%{gemdir}/gems/rhc-%{version}/COPYRIGHT
+# If there were programs installed:
+mkdir -p %{buildroot}%{_bindir}
+cp -a ./%{_bindir}/* %{buildroot}%{_bindir}
 
 %clean
 rm -rf $RPM_BUILD_ROOT
