@@ -1,35 +1,36 @@
-Requires: ruby(abi) = 1.9.1
+%global gem_name rhc
+%global gitversion git-0.b96a25d
+%global rubyabi 1.9.1
 
 Summary:       Multi-tenant cloud management system client tools
-Name:          rhc
-Version: 0.93.16
+Name:          rubygem-%{gem_name}
+Version:       0.93.17
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
 URL:           http://openshift.redhat.com
-Source0:       rhc-%{version}.tar.gz
+Source0:       %{gem_name}-%{version}.gem
 
 BuildRoot:     %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
-BuildRequires: rubygem-devel
-BuildRequires: rubygem-rake
-BuildRequires: rubygem-rspec
-BuildRequires: rubygem-webmock
+BuildRequires: rubygems-devel
+BuildRequires: rubygem(rake)
+BuildRequires: rubygem(rspec)
+BuildRequires: rubygem(webmock)
 BuildRequires: ruby-irb
+Requires:      git
 Requires:      ruby(abi) = %{rubyabi}
 Requires:      ruby(rubygems)
-Requires:      rubygem-parseconfig
-Requires:      rubygem-rest-client
-Requires:      rubygem-rake
-Requires:      rubygem-sshkey
-Requires:      rubygem-net-ssh
-Requires:      rubygem-archive-tar-minitar
-Requires:      rubygem-commander
+Requires:      rubygem(parseconfig)
+Requires:      rubygem(rest-client)
+Requires:      rubygem(rake)
+Requires:      rubygem(sshkey)
+Requires:      rubygem(net-ssh)
+Requires:      rubygem(archive-tar-minitar)
+Requires:      rubygem(commander)
 
 BuildArch:     noarch
 Provides:      rubygem(%{gem_name}) = %{version}
 
-
-Requires:      git
 Obsoletes:     rhc-rest
 
 BuildArch:     noarch
@@ -43,14 +44,9 @@ gem unpack %{SOURCE0}
 
 gem spec %{SOURCE0} -l --ruby > %{gem_name}.gemspec
 
-# Modify the gemspec if necessary with a patch or sed
-# Also apply patches to code if necessary
-%patch0 -p1
-
 %build
 mkdir -p .%{gem_dir}
 
-# Create the gem as gem install only works on a gem file
 gem build %{gem_name}.gemspec
 
 export CONFIGURE_ARGS="--with-cflags='%{optflags}'"
@@ -73,12 +69,15 @@ cp -a ./%{gem_dir}/* %{buildroot}%{gem_dir}/
 mkdir -p %{buildroot}%{_bindir}
 cp -a ./%{_bindir}/* %{buildroot}%{_bindir}
 
+mkdir -p %{buildroot}%{_sysconfdir}/openshift
+cp -a ./%{gem_instdir}/conf/express.conf %{buildroot}%{_sysconfdir}/openshift/
+
 %clean
-rm -rf $RPM_BUILD_ROOT
+rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-%doc doc/USAGE.txt
+#%doc doc/USAGE.txt
 %doc LICENSE
 %doc COPYRIGHT
 %{_bindir}/rhc
@@ -95,16 +94,17 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/rhc-snapshot
 %{_bindir}/rhc-tail-files
 %{_bindir}/rhc-port-forward
-%{_mandir}/man1/rhc*
-%{_mandir}/man5/express*
-%{gemdir}/gems/rhc-%{version}/
-%{gemdir}/cache/rhc-%{version}.gem
-%{gemdir}/doc/rhc-%{version}
-%{gemdir}/specifications/rhc-%{version}.gemspec
+%{gem_dir}/gems/%{gem_name}-%{version}/
+%{gem_dir}/cache/%{gem_name}-%{version}.gem
+%{gem_dir}/doc/%{gem_name}-%{version}
+%{gem_dir}/specifications/%{gem_name}-%{version}.gemspec
 %config(noreplace) %{_sysconfdir}/openshift/express.conf
-%attr(0644,-,-) /etc/bash_completion.d/rhc
+#%attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu May 31 2012 Wesley Hearn <whearn@redhat.com> 0.93.17-1
+- new package built with tito
+
 * Wed May 30 2012 Adam Miller <admiller@redhat.com> 0.93.16-1
 - Merge pull request #49 from fabianofranz/master (contact@fabianofranz.com)
 - Removed warning on Mac platform (ffranz@redhat.com)
