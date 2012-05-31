@@ -143,8 +143,12 @@ EOF
       @ssh_keys = RHC::get_ssh_keys(@libra_server, @username, @password, RHC::Config.default_proxy)
       additional_ssh_keys = @ssh_keys['keys']
 
-      localkey = Net::SSH::KeyFactory.load_public_key(@ssh_pub_key_file_path)
-      local_fingerprint = localkey.fingerprint
+      local_fingerprint = nil
+      begin
+        local_fingerprint = Net::SSH::KeyFactory.load_public_key(@ssh_pub_key_file_path).fingerprint
+      rescue NoMethodError #older net/ssh (mac for example)
+        local_fingerprint = `ssh-keygen -lf #{@ssh_pub_key_file_path}`.split(' ')[1]
+      end
 
       return true if @ssh_keys['fingerprint'] == local_fingerprint
       additional_ssh_keys.each do |name, keyval|
@@ -189,11 +193,21 @@ EOF
               "your new key will be uploaded as the default key"
         end
       else
-        key = nil
+        key_fingerprint = nil
+        key_valid = true
         begin
-          key = Net::SSH::KeyFactory.load_public_key(@ssh_pub_key_file_path)
+          key_fingerprint = Net::SSH::KeyFactory.load_public_key(@ssh_pub_key_file_path).fingerprint
+        rescue NoMethodError #older net/ssh (mac for example)
+          key_fingerprint = `ssh-keygen -lf #{@ssh_pub_key_file_path}`.split(' ')[1]
+          if $?.exitstatus != 0
+            key_valid = false
+          end
         rescue Net::SSH::Exception
         rescue NotImplementedError
+          key_valid = false
+        end
+
+        if ! key_valid
           paragraph do
             say "Your ssh public key at #{@ssh_pub_key_file_path} can not be read. " \
                 "The setup can not continue until you manually remove or fix both of your " \
@@ -202,8 +216,7 @@ EOF
           return false
         end
 
-        fingerprint = key.fingerprint
-        pubkey_default_name = fingerprint[0, 12].gsub(/[^0-9a-zA-Z]/,'')
+        pubkey_default_name = key_fingerprint[0, 12].gsub(/[^0-9a-zA-Z]/,'')
         paragraph do
           key_name =  ask("Provide a name for this key: ") do |q|
             q.default = pubkey_default_name
