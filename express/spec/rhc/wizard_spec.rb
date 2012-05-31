@@ -40,7 +40,7 @@ describe RHC::Wizard do
       @wizard.run_next_stage
       greeting = $terminal.read
       greeting.count("\n").should == 8
-      greeting.should match(Regexp.escape("It looks like you've not used OpenShift on this machine"))
+      greeting.should match(Regexp.escape("It looks like you have not configured or used OpenShift client tools on this computer."))
       greeting.should match(Regexp.escape("\n#{@wizard.config_path}\n"))
     end
 
