@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.93.16
+Version: 0.93.17
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -110,6 +110,23 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu May 31 2012 Adam Miller <admiller@redhat.com> 0.93.17-1
+- Added a fallback for ssh keys fingerprint handling to the setup wizard
+  (related to BZ 824318) (ffranz@redhat.com)
+- Merge pull request #53 from J5/master (contact@fabianofranz.com)
+- extra space caused line continuation to fail (johnp@redhat.com)
+- bug #826788, 826814 - fix wording (johnp@redhat.com)
+- Merge pull request #51 from fabianofranz/master (johnp@redhat.com)
+- Fixes BZ 824318, workaround for older net/ssh versions (usually Mac platform)
+  (ffranz@redhat.com)
+- fixes bz 826853 - del old config file to make sure new one gets created
+  (johnp@redhat.com)
+- make spec tests pass again (johnp@redhat.com)
+- add ENV['LIBRA_SERVER'] to config options (johnp@redhat.com)
+- bz 822833 - make commands read from correct configs (johnp@redhat.com)
+- Totally reverted snapshot create and restore to native when not on windows
+  (ffranz@redhat.com)
+
 * Wed May 30 2012 Adam Miller <admiller@redhat.com> 0.93.16-1
 - Merge pull request #49 from fabianofranz/master (contact@fabianofranz.com)
 - Removed warning on Mac platform (ffranz@redhat.com)
