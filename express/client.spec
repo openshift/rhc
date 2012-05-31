@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.93.15
+Version: 0.93.16
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -110,6 +110,15 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed May 30 2012 Adam Miller <admiller@redhat.com> 0.93.16-1
+- Merge pull request #49 from fabianofranz/master (contact@fabianofranz.com)
+- Removed warning on Mac platform (ffranz@redhat.com)
+- use SSH::Net to load public ssh fingerprint (johnp@redhat.com)
+- Fixes BZ 824741 (ffranz@redhat.com)
+- Fixed coverage (ffranz@redhat.com)
+- Fixed coverage tests (ffranz@redhat.com)
+- Fixes BZ 824312, back to native tar if not on windows (ffranz@redhat.com)
+
 * Tue May 29 2012 Adam Miller <admiller@redhat.com> 0.93.15-1
 - 
 
