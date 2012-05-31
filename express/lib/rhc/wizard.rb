@@ -59,9 +59,10 @@ module RHC
       end
 
       paragraph do
-        say "It looks like you've not used OpenShift on this machine " \
-          "before.  We'll help get you setup with just a couple of questions. " \
-          "You can skip this in the future by copying your config's around:"
+        say "It looks like you have not configured or used OpenShift " \
+            "client tools on this computer. " \
+            "We'll help you configure the client tools with a few quick questions. " \
+            "You can skip this in the future by copying your configuration files to other machines you use to manage your OpenShift account:"
       end
 
       paragraph do
@@ -112,7 +113,7 @@ EOF
 
         paragraph do
           say "Created local config file: " + @config_path
-          say "express.conf contains user configuration and can be transferred across clients."
+          say "The express.conf file contains user configuration, and can be transferred to different computers."
         end
 
         true
@@ -128,7 +129,7 @@ EOF
       @ssh_pub_key_file_path = "#{RHC::Config.home_dir}/.ssh/id_rsa.pub"
       unless File.exists? @ssh_priv_key_file_path
         paragraph do
-          say "No SSH Key has been found.  We're generating one for you."
+          say "No SSH keys were found. We will generate a pair of keys for you."
         end
         @ssh_pub_key_file_path = generate_ssh_key_ruby()
         paragraph do
@@ -158,10 +159,8 @@ EOF
       known_keys = []
 
       paragraph do
-        say "We need to upload your public key to remote servers so it can be " \
-            "used.  First you need to name it.  For example \"liliWork\" or " \
-            "\"laptop\".  You can overwrite an existing key by naming it or " \
-            "pick a new name."
+        say "You can enter a name for your key, or leave it blank to use the default name. " \
+            "Using the same name as an existing key will overwrite the old key."
       end
 
       section(:top => 1) { say 'Current Keys:' }
@@ -186,7 +185,8 @@ EOF
       if @ssh_keys['fingerprint'].nil?
         key_name = "default"
         paragraph do
-          say "You don't have any keys setup yet so uploading as your default key"
+          say "Since you do not have any keys associated with your OpenShift account, " \ 
+              "your new key will be uploaded as the default key"
         end
       else
         key = nil
@@ -230,7 +230,7 @@ EOF
       unless ssh_key_uploaded?
         upload = false
         section do
-          upload = agree "Your public ssh key needs to be uploaded to the server.  Would you like us to upload it for you? (yes/no) "
+          upload = agree "Your public ssh key must be uploaded to the OpenShift server.  Would you like us to upload it for you? (yes/no) "
         end
 
         if upload
@@ -320,7 +320,7 @@ EOF
       else
         section(:bottom => 1) { say "none found" }
         paragraph do
-          say "Here is a list of the types of application " \
+          say "Below is a list of the types of application " \
               "you can create: "
 
           application_types = RHC::get_cartridges_list @libra_server, RHC::Config.default_proxy
@@ -335,8 +335,9 @@ EOF
 
     def finalize_stage
       paragraph do
-        say "Thank you for setting up your system.  You can rerun this at any " \
-            "time by calling 'rhc setup'. We will now execute your original " \
+        say "The OpenShift client tools have been configured on your computer.  " \
+            "You can run this setup wizard at any time by using the command 'rhc setup' " \
+            "We will now execute your original " \
             "command (rhc #{ARGV.join(" ")})"
       end
       true
@@ -346,7 +347,7 @@ EOF
       # skip if string is empty
       paragraph do
         if namespace.nil? or namespace.chomp.length == 0
-          say "Skipping! You may create a domain using 'rhc domain create'"
+          say "Skipping! You may create a namespace using 'rhc domain create'"
           return true
         end
 
@@ -488,11 +489,11 @@ EOF
       # in non standard directories.  Punt on this for now and simply
       # print out urls and some instructions
       say <<EOF
-In order to full interact with OpenShift you will need to install and configure a git client.
+In order to fully interact with OpenShift you will need to install and configure a git client if you have not already done so.
 
-Documentation for installing the client tools can be found at https://#{@libra_server}/app/getting_started#install_client_tools
+Documentation for installing other tools you will need for OpenShift can be found at https://#{@libra_server}/app/getting_started#install_client_tools
 
-We recommend these applications:
+We recommend these free applications:
 
   * Git for Windows - a basic git command line and GUI client https://github.com/msysgit/msysgit/wiki/InstallMSysGit
   * TortoiseGit - git client that integrates into the file explorer http://code.google.com/p/tortoisegit/
