@@ -2,34 +2,40 @@ require 'parseconfig'
 
 module RHC
   module Config
-    @@defaults = ParseConfig.new()
-    @@global_config = nil
-    @@local_config = nil
-    @@opts_config = nil
-    @@default_proxy = nil
+    def self.initialize
+      @@defaults = ParseConfig.new()
+      @@global_config = nil
+      @@local_config = nil
+      @@opts_config = nil
+      @@default_proxy = nil
+      @@env_config = ParseConfig.new()
 
-    @@defaults.add('libra_server', 'openshift.redhat.com')
+      @@defaults.add('libra_server', 'openshift.redhat.com')
+      @@env_config.add('libra_server', ENV['LIBRA_SERVER']) if ENV['LIBRA_SERVER']
 
-    #
-    # Config paths... /etc/openshift/express.conf or $GEM/conf/express.conf -> ~/.openshift/express.conf
-    #
+      #
+      # Config paths... /etc/openshift/express.conf or $GEM/conf/express.conf -> ~/.openshift/express.conf
+      #
 
-    @@conf_name = 'express.conf'
-    _linux_cfg = '/etc/openshift/' + @@conf_name
-    _gem_cfg = File.join(File.expand_path(File.dirname(__FILE__) + "/../../conf"), @@conf_name)
+      @@conf_name = 'express.conf'
+      _linux_cfg = '/etc/openshift/' + @@conf_name
+      _gem_cfg = File.join(File.expand_path(File.dirname(__FILE__) + "/../../conf"), @@conf_name)
 
-    config_path = File.exists?(_linux_cfg) ? _linux_cfg : _gem_cfg
-    @@home_dir = File.expand_path("~")
-    @@home_conf_path = File.join(@@home_dir, '.openshift')
-    @@local_config_path = File.join(@@home_conf_path, @@conf_name)
+      config_path = File.exists?(_linux_cfg) ? _linux_cfg : _gem_cfg
+      @@home_dir = File.expand_path("~")
+      @@home_conf_path = File.join(@@home_dir, '.openshift')
+      @@local_config_path = File.join(@@home_conf_path, @@conf_name)
 
-    begin
-      @@global_config = ParseConfig.new(config_path)
-      @@local_config = ParseConfig.new(File.expand_path(@@local_config_path)) if File.exists?(@@local_config_path)
-    rescue Errno::EACCES => e
-      puts "Could not open config file: #{e.message}"
-      exit 253
+      begin
+        @@global_config = ParseConfig.new(config_path)
+        @@local_config = ParseConfig.new(File.expand_path(@@local_config_path)) if File.exists?(@@local_config_path)
+      rescue Errno::EACCES => e
+        puts "Could not open config file: #{e.message}"
+        exit 253
+      end
     end
+
+    self.initialize
 
     # used for tests
     def self.home_dir=(home_dir)
@@ -40,7 +46,7 @@ module RHC
 
     def self.get_value(key)
       # evaluate in cascading order
-      configs = [@@opts_config, @@local_config, @@global_config, @@defaults]
+      configs = [@@opts_config, @@env_config, @@local_config, @@global_config, @@defaults]
       result = nil
       configs.each do |conf|
         result = conf.get_value(key) if !conf.nil?

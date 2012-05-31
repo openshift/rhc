@@ -1,4 +1,5 @@
 require 'commander/user_interaction'
+require 'rhc/config'
 
 module RHC
   module Helpers
@@ -28,7 +29,7 @@ module RHC
     end
 
     def openshift_server
-      ENV['LIBRA_SERVER'] || 'openshift.redhat.com'
+      RHC::Config.get_value('libra_server')
     end
 
     def success(*args)

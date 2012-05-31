@@ -2,10 +2,12 @@ require 'spec_helper'
 require 'rhc/helpers'
 require 'rhc/core_ext'
 require 'highline/import'
+require 'rhc/config'
 
 describe RHC::Helpers do
   before(:each) do
     mock_terminal
+    RHC::Config.initialize
     @tests = HelperTests.new()
   end
 
@@ -18,7 +20,11 @@ describe RHC::Helpers do
   its(:openshift_server) { should == 'openshift.redhat.com' }
 
   context 'with LIBRA_SERVER environment variable' do
-    before { ENV['LIBRA_SERVER'] = 'test.com' }
+    before do
+      ENV['LIBRA_SERVER'] = 'test.com'
+      # need to reinit config to pick up env var
+      RHC::Config.initialize
+    end
     its(:openshift_server) { should == 'test.com' }
     after { ENV['LIBRA_SERVER'] = nil }
   end

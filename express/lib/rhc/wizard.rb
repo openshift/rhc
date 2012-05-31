@@ -548,6 +548,7 @@ EOF
               "backing up to #{backup}"
         end
         File.cp(@config_path, backup)
+        File.delete(@config_path)
       end
       super
       true
