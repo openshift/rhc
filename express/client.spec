@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.93.17
+Version: 0.93.18
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -110,6 +110,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu May 31 2012 Adam Miller <admiller@redhat.com> 0.93.18-1
+- 
+
 * Thu May 31 2012 Adam Miller <admiller@redhat.com> 0.93.17-1
 - Added a fallback for ssh keys fingerprint handling to the setup wizard
   (related to BZ 824318) (ffranz@redhat.com)
