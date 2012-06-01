@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.94.0
+Version: 0.94.1
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -110,6 +110,12 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Jun 01 2012 Adam Miller <admiller@redhat.com> 0.94.1-1
+- bumping spec versions (admiller@redhat.com)
+- Fixed code coverage (:nocov:) (ffranz@redhat.com)
+- fix bug #827582 - Wizard's git check returns a false negitive on RHEL6
+  (johnp@redhat.com)
+
 * Thu May 31 2012 Adam Miller <admiller@redhat.com> 0.93.18-1
 - 
 
