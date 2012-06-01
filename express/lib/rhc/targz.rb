@@ -5,7 +5,9 @@ require 'archive/tar/minitar'
 include Archive::Tar
 
 if File.executable?('/usr/bin/gnutar') then
+  #:nocov:
   TAR_BIN = '/usr/bin/gnutar'
+  #:nocov:
 else
   TAR_BIN = 'tar'
 end
