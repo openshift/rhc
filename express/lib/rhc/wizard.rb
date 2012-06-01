@@ -461,7 +461,8 @@ EOF
 
       begin
         git_installed = package_kit_method('IsInstalled', 'Query', 'string:git string:')
-        if git_installed
+        # double check due to slight differences in older platforms
+        if git_installed or has_git?
           section(:bottom => 1) { say "found" }
         else
           section(:bottom => 1) { say "needs to be installed" }
