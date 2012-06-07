@@ -8,7 +8,7 @@ require 'tempfile'
 
 if RUBY_VERSION.to_f == 1.9
   require 'rubygems'
-  gem     'test-unit'
+  gem     'test-unit'#, '~> 1.2.3'
 end
 
 require 'test/unit'
