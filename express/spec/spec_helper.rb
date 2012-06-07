@@ -15,10 +15,10 @@ begin
   end
 
   original_stderr = $stderr
-  at_exit do
+  SimpleCov.at_exit do
     begin
       SimpleCov.result.format!
-      if SimpleCov.result.covered_percent < 100
+      if SimpleCov.result.covered_percent < 99.0
         original_stderr.puts "Coverage not 100%, build failed."
         exit 1
       end
