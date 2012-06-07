@@ -8,7 +8,7 @@ require 'tempfile'
 
 if RUBY_VERSION.to_f == 1.9
   require 'rubygems'
-  gem     'test-unit'
+  gem     'test-unit'#, '~> 1.2.3'
 end
 
 require 'test/unit'
@@ -318,7 +318,8 @@ class Test3_SSH < Test::Unit::TestCase
   end
 
   def test_06_ssh_agent
-    loaded_keys = `ssh-add -L`.lines.to_a
+    loaded_keys = `ssh-add -L`
+    loaded_keys = loaded_keys.send(loaded_keys.respond_to?(:lines) ? :lines : :to_s).to_a
     # Make sure we can load keys from ssh-agent
     assert !loaded_keys.empty?, error_for(:no_keys_loaded)
     loaded_keys.map!{|key| key.split(' ')[1]}
@@ -380,7 +381,7 @@ class CheckRunner < Test::Unit::UI::Console::TestRunner
   end
 
   def render_message(message)
-    lines = message.to_a
+    lines = message.send(message.respond_to?(:lines) ? :lines : :to_s).to_a
     message = [] 
     @num ||= 0
     message << "#{@num+=1}) #{lines.shift.strip}"
@@ -417,7 +418,8 @@ class CheckRunner < Test::Unit::UI::Console::TestRunner
         @num = 0
         print_underlined get_message(:status,:error)
         @errors.each do |e| 
-          lines = e.long_display.to_a[1..-1]
+          display = e.long_display
+          lines = display.send(message.respond_to?(:lines) ? :lines : :to_s).to_a[1..-1]
           puts "#{@num+=1}) #{lines.shift}"
           lines.each{|l| puts "\t#{l}"}
         end 
