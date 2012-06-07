@@ -19,11 +19,11 @@ Gem::Specification.new do |s|
   s.executables  = Dir['bin/*'].map{ |f| File.basename(f) }
   s.require_path = 'lib'
 
-  s.add_dependency              'rake'                    # required only for extension support
+  s.add_dependency              'rake'                   # required only for extension support
   s.add_dependency              'sshkey'
   s.add_dependency              'net-ssh'
   s.add_dependency              'archive-tar-minitar'
-  s.add_dependency              'test-unit',    '~> 1.2.3' # used by rhc domain status in ruby 1.9
+  s.add_dependency              'test-unit'              # used by rhc domain status in ruby 1.9
   s.add_runtime_dependency      'parseconfig'
   s.add_runtime_dependency      'commander',    '>= 4.0'
   s.add_runtime_dependency      'rest-client',  '>= 1.6'
