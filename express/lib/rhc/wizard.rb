@@ -2,13 +2,7 @@ require 'rhc-common'
 require 'rhc/helpers'
 require 'highline/system_extensions'
 require 'net/ssh'
-
-# ruby 1.8 -> 1.9 magic
-begin
-  require 'ftools'
-rescue LoadError
-  require 'fileutils'
-end
+require 'fileutils'
 
 module RHC
   class Wizard
@@ -562,8 +556,8 @@ EOF
           say "Configuration file #{@config_path} already exists, " \
               "backing up to #{backup}"
         end
-        File.cp(@config_path, backup)
-        File.delete(@config_path)
+        FileUtils.cp(@config_path, backup)
+        FileUtils.rm(@config_path)
       end
       super
       true
