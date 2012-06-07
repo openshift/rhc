@@ -123,12 +123,10 @@ module Rhc
         #puts response
         e = nil
         messages.each do |message|
-          if message["field"]
-            if e and e.field ==message["field"]
-              e.message << " #{message["text"]}"
-            else
-              e = ValidationException.new(message["text"], message["field"])
-            end
+          if e and e.field == message["field"]
+            e.message << " #{message["text"]}"
+          else
+            e = ValidationException.new(message["text"], message["field"], message["code"])
           end
         end
         raise e

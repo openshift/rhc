@@ -43,8 +43,8 @@ module Rhc
     #Exceptions thrown in case of an HTTP 422 is received.
     class ValidationException < Rhc::Rest::ClientErrorException
       attr_reader :field
-      def initialize(message, field=nil)
-        super(message)
+      def initialize(message, field=nil, error_code=nil)
+        super(message, error_code)
         @field = field
       end
     end
