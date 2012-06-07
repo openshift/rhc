@@ -4,7 +4,7 @@ require 'getoptlong'
 require 'net/http'
 require 'net/https'
 require 'net/ssh'
-require 'sshkey'
+require 'rhc/vendor/sshkey'
 require 'parseconfig'
 require 'resolv'
 require 'uri'
@@ -1187,9 +1187,9 @@ end
 #
 # Returns nil on failure or public key location as a String on success
 def generate_ssh_key_ruby(type="RSA", bits = 1024, comment = "OpenShift-Key")
-  key = SSHKey.generate(:type => type,
-                        :bits => bits,
-                        :comment => comment)
+  key = RHC::Vendor::SSHKey.generate(:type => type,
+                                     :bits => bits,
+                                     :comment => comment)
   ssh_dir = "#{RHC::Config.home_dir}/.ssh"
   if File.exists?("#{ssh_dir}/id_rsa")
     puts "SSH key already exists: #{ssh_dir}/id_rsa.  Reusing..."
