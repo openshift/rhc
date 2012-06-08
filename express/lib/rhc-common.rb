@@ -531,14 +531,8 @@ end
       rescue Rhc::Rest::ResourceAccessException => e
         print_response_err(Struct::FakeResponse.new(e.message,e.code))
       rescue Rhc::Rest::ValidationException => e
-        print_response_err(Struct::FakeResponse.new(e.message,406))
-      rescue Rhc::Rest::ServerErrorException => e 
-        if e.message =~ /^Failed to create application .* due to:Scalable app cannot be of type/ 
-          puts "Can not create a scaling app of type #{app_type}, either disable scaling or choose another app type"
-          exit 1
-        else
-          raise e 
-        end
+        validation_error_code = (e.code.nil?) ? 406 : e.code
+        print_response_err(Struct::FakeResponse.new(e.message, validation_error_code))
       end
     else
       json_data = generate_json(data)
