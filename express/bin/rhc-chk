@@ -415,7 +415,7 @@ class CheckRunner < Test::Unit::UI::Console::TestRunner
         print_underlined get_message(:status,:error)
         @errors.each do |e| 
           display = e.long_display
-          lines = display.send(message.respond_to?(:lines) ? :lines : :to_s).to_a[1..-1]
+          lines = display.send(display.respond_to?(:lines) ? :lines : :to_s).to_a[1..-1]
           puts "#{@num+=1}) #{lines.shift}"
           lines.each{|l| puts "\t#{l}"}
         end 
