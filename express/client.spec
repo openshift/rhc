@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.94.2
+Version: 0.94.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -109,6 +109,20 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Jun 08 2012 Adam Miller <admiller@redhat.com> 0.94.3-1
+- Merge pull request #61 from J5/master (ccoleman@redhat.com)
+- fix traceback when checking for git and it is not installed
+  (johnp@redhat.com)
+- Bug fixes for 790459 and 808440 (abhgupta@redhat.com)
+- change wordage for key read warning (johnp@redhat.com)
+- Fix dealing with invalid ssh keys (indicate the key can not be read)
+  (johnp@redhat.com)
+- use the vendor version of SSHKey (johnp@redhat.com)
+- fix typo s/message/display (johnp@redhat.com)
+- [fix bug 829858] we don't need to check for a .ssh/config file
+  (johnp@redhat.com)
+- [fix bug 829903] Don't run setup when --help is specified (johnp@redhat.com)
+
 * Fri Jun 08 2012 Adam Miller <admiller@redhat.com> 0.94.2-1
 - fix another merge issue (johnp@redhat.com)
 - fix merge issue by adding back Requires: rubygem-test-unit (johnp@redhat.com)
