@@ -16,6 +16,7 @@ BuildRequires: rubygem-webmock
 Requires:      ruby >= 1.8.5
 Requires:      rubygem-parseconfig
 Requires:      rubygem-rest-client
+Requires:      rubygem-test-unit
 Requires:      rubygem-net-ssh
 Requires:      rubygem-archive-tar-minitar
 Requires:      rubygem-commander
