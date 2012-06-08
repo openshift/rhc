@@ -5,6 +5,7 @@ require 'net/https'
 require 'rbconfig'
 require 'yaml'
 require 'tempfile'
+require 'rhc/vendor/sshkey'
 
 if RUBY_VERSION.to_f == 1.9
   require 'rubygems'
@@ -281,7 +282,7 @@ class Test3_SSH < Test::Unit::TestCase
     check_permissions(@libra_kfile, /[4-7]00/) # Needs to at least be readable by user and nobody else
 
     # Derive the public key from the private key
-    key_dump = SSHKey.new(File.read(@libra_kfile)).ssh_public_key
+    key_dump = RHC::Vendor::SSHKey.new(File.read(@libra_kfile)).ssh_public_key
     @@local_derived_ssh_pubkey = key_dump.to_s.strip.split(' ')[1]
 
     assert_not_nil @@local_derived_ssh_pubkey, error_for(:no_derive)
