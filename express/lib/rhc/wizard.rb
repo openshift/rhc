@@ -520,7 +520,11 @@ EOF
     end
 
     def has_git?
-      %x{ git --version }
+      begin
+        %x{ git --version }
+      rescue
+      end
+
       $?.success?
     rescue
       false
