@@ -76,7 +76,9 @@ module RHC
 
       # get_password adds an extra untracked newline so set :bottom to -1
       section(:top => 1, :bottom => -1) do
-        @username = ask("To connect to #{@libra_server} enter your OpenShift login (email or Red Hat login id): ")
+        @username = ask("To connect to #{@libra_server} enter your OpenShift login (email or Red Hat login id): ") do |q|
+          q.default = RHC::Config.get_value('default_rhlogin')
+        end
         @password = RHC::get_password
       end
 
