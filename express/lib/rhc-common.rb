@@ -315,10 +315,9 @@ end
       tempfile = `mktemp /tmp/openshift.XXXXXXXX`
       `echo "#{ssh_keys['ssh_type']} #{ssh_keys['ssh_key']}" > #{tempfile}`
       ssh_keys['fingerprint'] = `ssh-keygen -lf #{tempfile}`.split(' ')[1]
-    rescue Net::SSH::Exception
-    rescue NotImplementedError
-      # key invalid, do nothing
-      # this happens if the user does not have a default key
+    rescue Net::SSH::Exception, NotImplementedError
+      # Could be a new unsupported key type or invalid data on the server
+      ssh_keys['fingerprint'] = 'Key type is not recognized.  Please check this key is valid.'
     end
 
     if ssh_keys['keys'] && ssh_keys['keys'].kind_of?(Hash)
@@ -334,8 +333,11 @@ end
           tempfile = `mktemp /tmp/openshift.XXXXXXXX`
           `echo "#{type} #{key}" > #{tempfile}`
           ssh_keys['keys'][name]['fingerprint'] = `ssh-keygen -lf #{tempfile}`.split(' ')[1]
+        rescue NotImplementedError, Net::SSH::Exception
+          # Could be a new unsupported key type or invalid data on the server
+          ssh_keys['keys'][name]['fingerprint'] = 'Key type is not recognized.  Please check this key is valid.'
         end
-end
+      end
     end
     ssh_keys
   end
