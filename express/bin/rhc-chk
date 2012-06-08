@@ -313,10 +313,6 @@ class Test3_SSH < Test::Unit::TestCase
     fp.close if fp
   end
 
-  def test_05_ssh_config
-    check_permissions('~/.ssh/config',/600/)
-  end
-
   def test_06_ssh_agent
     loaded_keys = `ssh-add -L`
     loaded_keys = loaded_keys.send(loaded_keys.respond_to?(:lines) ? :lines : :to_s).to_a
