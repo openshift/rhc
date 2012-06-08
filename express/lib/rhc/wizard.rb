@@ -404,7 +404,7 @@ EOF
             --dest=#{service} #{obj_path} #{method} #{stringafied_params}"
       output = `#{cmd} 2>&1`
 
-      throw output if output.start_with?('Error') and !$?.success?
+      raise output if output.start_with?('Error') and !$?.success?
 
       # parse the output
       results = []
@@ -518,6 +518,8 @@ EOF
     def has_git?
       %x{ git --version }
       $?.success?
+    rescue
+      false
     end
 
     def has_dbus_send?
