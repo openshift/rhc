@@ -120,6 +120,10 @@ module RHC
       @@home_dir
     end
 
+    def self.default_rhlogin
+      get_value('default_rhlogin')
+    end
+
     def self.default_proxy
       #
       # Check for proxy environment
