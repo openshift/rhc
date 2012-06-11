@@ -22,6 +22,7 @@ Requires:      rubygem-archive-tar-minitar
 Requires:      rubygem-commander
 Requires:      git
 Obsoletes:     rhc-rest
+Provides:      rubygem-rhc
 
 BuildArch:     noarch
 
