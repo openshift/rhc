@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.93.18
+Version: 0.93.19
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -109,6 +109,37 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Jun 12 2012 Dan McPherson <dmcphers@redhat.com> 0.93.19-1
+- fix traceback when checking for git and it is not installed
+  (johnp@redhat.com)
+- change wordage for key read warning (johnp@redhat.com)
+- Fix dealing with invalid ssh keys (indicate the key can not be read)
+  (johnp@redhat.com)
+- use the vendor version of SSHKey (johnp@redhat.com)
+- fix typo s/message/display (johnp@redhat.com)
+- [fix bug 829858] we don't need to check for a .ssh/config file
+  (johnp@redhat.com)
+- [fix bug 829903] Don't run setup when --help is specified (johnp@redhat.com)
+- fix another merge issue (johnp@redhat.com)
+- fix merge issue by adding back Requires: rubygem-test-unit (johnp@redhat.com)
+- move sshkey into the vendor module (johnp@redhat.com)
+- use FileUtils as it works for all versions of ruby >= 1.8.7
+  (johnp@redhat.com)
+- Pull sshkey module into the source tree since it is small (johnp@redhat.com)
+- Update client spec to require rubygem-test-unit, and relax version
+  requirements (ccoleman@redhat.com)
+- Off by one bug in simplecov, temporarily reduce percentage by 1 because
+  coverage report is 100%% green (ccoleman@redhat.com)
+- Allow users with bigdecimal as a system gem to run tests (crack requires
+  bigdecimal implicitly) (ccoleman@redhat.com)
+- Fix to_a bugs in Ruby 1.9 (behavior change, code was not forward compatible)
+  (ccoleman@redhat.com)
+- Bug 829764 - Add test-unit 1.2.3 as a firm dependency by the gem
+  (ccoleman@redhat.com)
+- Fixed code coverage (:nocov:) (ffranz@redhat.com)
+- fix bug #827582 - Wizard's git check returns a false negitive on RHEL6
+  (johnp@redhat.com)
+
 * Thu May 31 2012 Adam Miller <admiller@redhat.com> 0.93.18-1
 - 
 
