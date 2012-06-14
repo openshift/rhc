@@ -197,10 +197,11 @@ def error_for(name,*args)
   if name.kind_of? String
     name = name.downcase.to_sym
   end
-  message = sprintf(get_message(:errors,name),*args)
+
+  message = sprintf(get_message(:errors,name),*(args.shift || ''))
   solution = get_message(:solutions,name)
   if solution
-    message << "\n" << sprintf(solution,*args)
+    message << "\n" << sprintf(solution,*(args.shift || ''))
   end
   message
 end
@@ -211,6 +212,43 @@ def get_message(type,name)
     val = get_message(type,val)
   end
   val
+end
+
+# This test tries to make sure we have the keys unlocked before testing 
+#   to ensure nicer workflow
+class Test0_SSH_Keys_Unlocked < Test::Unit::TestCase
+  include TestBase
+  
+  def test_ssh_quick
+    begin
+      # Get user info from OpenShift
+      data = {'rhlogin' => $rhlogin}
+      response = fetch_url_json("/broker/userinfo", data)
+      resp_json = RHC::json_decode(response.body)
+      user_info = RHC::json_decode(resp_json['data'].to_s)
+
+      # Get any keys Net::SSH thinks we'll need
+      $ssh = Net::SSH
+      needed_keys = 
+      user_info['app_info'].map do |name,opts|
+        host = "%s-%s.%s" % [
+          name,
+          user_info['user_info']['namespace'],
+          user_info['user_info']['rhc_domain']
+        ]
+        $ssh.configuration_for(host)[:keys].map{|f| File.expand_path(f)}
+      end.compact.flatten
+
+      agent_keys = Net::SSH::Authentication::Agent.connect.identities.map{|x| x.comment }
+      missing_keys = needed_keys - agent_keys
+
+      unless missing_keys.empty?
+        $stderr.puts "\n  NOTE: These tests may require you to unlock one or more of your SSH keys \n\n"
+      end
+    rescue
+    end
+  end
+
 end
 
 class Test1_Connectivity < Test::Unit::TestCase
@@ -265,8 +303,6 @@ end
 #
 class Test3_SSH < Test::Unit::TestCase
 
-  @@local_derived_ssh_pubkey = nil
-  @@local_ssh_pubkey = nil
 
   include TestBase
 
@@ -277,64 +313,94 @@ class Test3_SSH < Test::Unit::TestCase
     end
   end
 
-  def test_01_ssh_private_key
-    $remote_ssh_pubkeys = []
-    check_permissions(@libra_kfile, /[4-7]00/) # Needs to at least be readable by user and nobody else
+  def require_login(test)
+    flunk(error_for(:no_account,test)) if $user_info.nil?
+  end
 
-    # Derive the public key from the private key
-    key_dump = RHC::Vendor::SSHKey.new(File.read(@libra_kfile)).ssh_public_key
-    @@local_derived_ssh_pubkey = key_dump.to_s.strip.split(' ')[1]
-
-    assert_not_nil @@local_derived_ssh_pubkey, error_for(:no_derive)
-    assert_not_nil $user_info, error_for(:no_account) 
+  def require_remote_keys(test)
+    require_login(test)
+    @@remote_pub_keys ||= (
 
     ssh_keys = RHC::get_ssh_keys($libra_server, $rhlogin, $password, $http)
     my_keys = [ssh_keys['ssh_key'], ssh_keys['keys'].values.map{|k| k['key']}].flatten
     my_keys.delete_if{|x| x.length == 0 }
-    $remote_ssh_pubkeys = my_keys unless my_keys.nil?
-
-    # Ensure that the user has ssh keys
-    assert(!$remote_ssh_pubkeys.empty?, error_for(:no_remote_pub_keys ) )
-    assert $remote_ssh_pubkeys.include?(@@local_derived_ssh_pubkey), error_for(:no_match_pub, @libra_kfile)
+      my_keys
+    )
+    flunk(error_for(:no_remote_pub_keys,test)) if @@remote_pub_keys.nil?
   end
 
-  def test_02_ssh_public_key
-    check_permissions(@libra_kpfile, /.../) # Any permissions are OK
+  def require_agent_keys(fatal = true)
+    @@agent_keys ||= (
+      begin
+        Net::SSH::Authentication::Agent.connect.identities
+      rescue
+        nil
+      end
+    )
+    flunk(error_for(:no_keys_loaded)) if (fatal && @@agent_keys.nil?)
+  end
 
-    # Store the public key
+  def agent_key_names
+    @@agent_keys.map{|x| File.expand_path(x.comment) }
+  end
+
+  def agent_key_fingerprints
+    @@agent_keys.map{|x| x.to_s.split("\n")[1..-2].join('') }
+  end
+
+  def libra_public_key
+    @@local_ssh_pubkey ||= (
     fp = File.open(@libra_kpfile)
-    @@local_ssh_pubkey = fp.gets.split(' ')[1]
-
-    assert_not_nil @@local_ssh_pubkey, error_for(:no_pubkey, 'the remote key')
-
-    # Test public key and remote key
-    assert_not_nil $user_info, error_for(:no_account) 
-    assert $remote_ssh_pubkeys.include?(@@local_ssh_pubkey), error_for(:no_match_pub, @libra_kfile)
+      fp.gets.split(' ')[1]
+    )
   ensure
     fp.close if fp
   end
 
-  def test_06_ssh_agent
-    loaded_keys = `ssh-add -L`
-    loaded_keys = loaded_keys.send(loaded_keys.respond_to?(:lines) ? :lines : :to_s).to_a
-    # Make sure we can load keys from ssh-agent
-    assert !loaded_keys.empty?, error_for(:no_keys_loaded)
-    loaded_keys.map!{|key| key.split(' ')[1]}
-
-    assert_not_nil @@local_ssh_pubkey, error_for(:no_pubkey, 'the keys in ssh-agent')
-    assert loaded_keys.include?(@@local_ssh_pubkey),error_for(:pubkey_not_loaded)
+  def test_01_local_files
+    [
+      [@libra_kfile, /[4-7]00/], # Needs to at least be readable by user and nobody else
+      [@libra_kpfile, /.../], # Any permissions are OK
+    ].each do |args|
+      continue_test{check_permissions(*args)}
+    end
   end
 
-  def test_07_ssh_connect
-    assert_not_nil $user_info, error_for(:no_account)
-    host_template = "%s@%s-%s.%s"
+  def test_02_ssh_agent
+    require_agent_keys
+
+    assert agent_key_names.include?(File.expand_path(@libra_kfile)) ,error_for(:pubkey_not_loaded, ": #{@libra_kpfile}")
+  end
+
+  def test_03_remote_ssh_keys
+    require_remote_keys("whether you have a valid key loaded in your agent")
+    require_agent_keys(false)
+
+    assert !(@@remote_pub_keys & [agent_key_fingerprints,libra_public_key].flatten).empty? ,error_for(:pubkey_not_loaded," ")
+  end
+
+  def test_04_ssh_connect
+    require_login("connecting to your applications")
+
+    host_template = "%%s-%s.%s" % [
+      $user_info['user_info']['domains'][0]['namespace'],
+      $user_info['user_info']['rhc_domain']
+    ]
     $user_info['app_info'].each do |k,v|
       uuid = v['uuid']
-      host = sprintf("%s-%s",k,$user_info['user_info']['domains'][0]['namespace'])
-      domain = $user_info['user_info']['rhc_domain']
-      ssh_command = sprintf("ssh %s@%s.%s true &> /dev/null", uuid, host, domain)
-      system(ssh_command)
-      continue_test{ assert_equal $?, 0, error_for(:cant_ssh, host) }
+      hostname = host_template % k
+      timeout = 10
+      begin
+        @ssh = Net::SSH.start(hostname,uuid,{:timeout => timeout})
+      rescue Timeout::Error
+        if timeout < 30
+          timeout += 10
+          retry
+        end
+      ensure
+        continue_test{ assert_not_nil @ssh, error_for(:cant_ssh, hostname) }
+        @ssh.close if @ssh
+      end
     end
   end
 
@@ -346,7 +412,7 @@ class Test3_SSH < Test::Unit::TestCase
 
     perms = sprintf('%o',File.stat(file).mode)[-3..-1]
 
-    assert_match permission, perms, error_for(:bad_permissions,file,perms,permission.source)
+    assert_match permission, perms, error_for(:bad_permissions,[file,perms],permission.source)
   end
 end
 
@@ -460,7 +526,7 @@ $messages = YAML.load <<-EOF
 :errors:
   :no_derive: "We were unable to derive your public SSH key and compare it to the remote"
   :no_connectivity: "Cannot connect to server, therefore most tests will not work"
-  :no_account: You must have an account on the server in order to test SSH key matches
+  :no_account: "You must have an account on the server in order to test: %s"
   :cant_connect: You need to be able to connect to the server in order to test authentication
   :no_match_pub: "Local %s does not match remote pub key, SSH auth will not work"
   :_404: "The user %s does not have an account on this server"
@@ -470,9 +536,9 @@ $messages = YAML.load <<-EOF
   :_other_http: "There was an error communicating with the server: %s"
   :bad_permissions: "File %s has incorrect permissions %s"
   :no_keys_loaded: Either ssh-agent is not running or you do not have any keys loaded 
-  :pubkey_not_loaded: Your public key is not loaded into a running ssh-agent
+  :pubkey_not_loaded: "Your public key is not loaded into a running ssh-agent%s"
   :cant_ssh: "Cannot SSH into your app: %s"
-  :no_remote_pub_keys: "It appears you do not have any public ssh keys."
+  :no_remote_pub_keys: "You do not have any public keys associated with your OpenShift account. Cannot test: %s"
 :solutions:
   :no_connectivity: "Ensure that you are able to connect to %s"
   :no_match_pub: "Perhaps you should regenerate your public key, or run 'rhc sshkey add' to add your new key"
@@ -480,4 +546,6 @@ $messages = YAML.load <<-EOF
   :_401: "Please ensure you used the correct password"
   :bad_permissions: "Permissions should match %s"
   :no_remote_pub_keys: "You should try to add your ssh-key by running 'rhc sshkey add'"
+  :pubkey_not_loaded: If this is your only error, your connection may still work, depending on your SSH configuration
+  :no_keys_loaded: If this is your only error, your connection may still work, depending on your SSH configuration
 EOF
