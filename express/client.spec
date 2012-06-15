@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.94.3
+Version: 0.94.4
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -110,6 +110,19 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Jun 15 2012 Adam Miller <admiller@redhat.com> 0.94.4-1
+- parseconfig 1.0.2 breaks our config module so specify < 1.0
+  (johnp@redhat.com)
+- fix traceback when checking for git and it is not installed
+  (johnp@redhat.com)
+- Do fast check for git (path) before slow check (package_kit)
+  (ccoleman@redhat.com)
+- Bug 831682 - Remove rake from core dependencies (ccoleman@redhat.com)
+- add an accessor to config for default_rhlogin (johnp@redhat.com)
+- Provide rubygem-rhc so we don't clash with f17 packages (johnp@redhat.com)
+- [fix bug 830260] defaults to previously entered username in setup
+  (johnp@redhat.com)
+
 * Fri Jun 08 2012 Adam Miller <admiller@redhat.com> 0.94.3-1
 - Merge pull request #61 from J5/master (ccoleman@redhat.com)
 - fix traceback when checking for git and it is not installed
