@@ -449,6 +449,9 @@ EOF
       full_iface = "org.freedesktop.PackageKit.#{iface}"
       dbus_send_session_method name, service, obj_path, full_iface, stringafied_params, wait_for_reply
     end
+    def package_kit_git_installed?
+      package_kit_method('IsInstalled', 'Query', 'string:git string:')
+    end
 
     def package_kit_install
       section(:top => 1) do
@@ -456,9 +459,8 @@ EOF
       end
 
       begin
-        git_installed = package_kit_method('IsInstalled', 'Query', 'string:git string:')
         # double check due to slight differences in older platforms
-        if git_installed or has_git?
+        if has_git? or package_kit_git_installed?
           section(:bottom => 1) { say "found" }
         else
           section(:bottom => 1) { say "needs to be installed" }
