@@ -1,14 +1,15 @@
-require 'parseconfig'
+require 'rhc/vendor/parseconfig'
+require 'rhc/core_ext'
 
 module RHC
   module Config
     def self.initialize
-      @@defaults = ParseConfig.new()
+      @@defaults = RHC::Vendor::ParseConfig.new()
       @@global_config = nil
       @@local_config = nil
       @@opts_config = nil
       @@default_proxy = nil
-      @@env_config = ParseConfig.new()
+      @@env_config = RHC::Vendor::ParseConfig.new()
 
       @@defaults.add('libra_server', 'openshift.redhat.com')
       @@env_config.add('libra_server', ENV['LIBRA_SERVER']) if ENV['LIBRA_SERVER']
@@ -27,8 +28,8 @@ module RHC
       @@local_config_path = File.join(@@home_conf_path, @@conf_name)
 
       begin
-        @@global_config = ParseConfig.new(config_path)
-        @@local_config = ParseConfig.new(File.expand_path(@@local_config_path)) if File.exists?(@@local_config_path)
+        @@global_config = RHC::Vendor::ParseConfig.new(config_path)
+        @@local_config = RHC::Vendor::ParseConfig.new(File.expand_path(@@local_config_path)) if File.exists?(@@local_config_path)
       rescue Errno::EACCES => e
         puts "Could not open config file: #{e.message}"
         exit 253
@@ -44,16 +45,20 @@ module RHC
       @@local_config_path = File.join(@@home_conf_path, @@conf_name)
     end
 
-    def self.get_value(key)
+    def self.[](key)
       # evaluate in cascading order
       configs = [@@opts_config, @@env_config, @@local_config, @@global_config, @@defaults]
       result = nil
       configs.each do |conf|
-        result = conf.get_value(key) if !conf.nil?
+        result = conf[key] if !conf.nil?
         break if !result.nil?
       end
 
       result
+    end
+
+    def self.get_value(key)
+      self[key]
     end
 
     # Public: configures the default user for this session
@@ -63,7 +68,7 @@ module RHC
 
     def self.set_local_config(confpath)
       begin
-        @@local_config = ParseConfig.new(File.expand_path(confpath))
+        @@local_config = RHC::Vendor::ParseConfig.new(File.expand_path(confpath))
       rescue Errno::EACCES => e
         puts "Could not open config file: #{e.message}"
         exit 253
@@ -72,7 +77,7 @@ module RHC
 
     def self.set_opts_config(confpath)
       begin
-        @@opts_config = ParseConfig.new(File.expand_path(confpath))
+        @@opts_config = RHC::Vendor::ParseConfig.new(File.expand_path(confpath))
       rescue Errno::EACCES => e
         puts "Could not open config file: #{e.message}"
         exit 253
