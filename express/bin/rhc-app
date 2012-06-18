@@ -17,10 +17,10 @@ Usage: rhc app (<command> | cartridge <cartridge-action> | --help) [<args>]
 Create and manage an OpenShift application.
 
 List of commands
-  create                         Bind a registered rhcloud user to a domain in rhcloud.
+  create                         Create a new application on OpenShift
   show                           Display information about a user
-  start                          Starts the application (includes embedded)
-  stop                           Stops the application (includes embedded)
+  start                          Starts the application (includes all cartridges)
+  stop                           Stops the application (includes all cartridges)
   force-stop                     Stops all application processes
   restart                        Restart the application
   reload                         Reloads application configuration
@@ -32,17 +32,17 @@ List of commands
   threaddump                     Trigger a thread dump for jbossas, jbosseap, and ruby applications
   tail                           Tail the logs of an application
   snapshot       [save|restore]  Saves/Restores an application snapshot to/from a tarball at the location specified using --filepath (default: ./$APPNAME.tar.gz)
-  cartridge      <action>        Manage an embedded cartridge
+  cartridge      <action>        Manage a cartridge runningin this application
 
 List of cartridge actions
   list                           List of supported embedded cartridges
-  add                            Add an embedded application
-  remove                         Remove an embedded application
-  stop                           Stop the embedded application
-  start                          Start the embedded application
-  restart                        Restart the embedded application
-  status                         Returns embedded application status
-  reload                         Reloads embedded application configuration
+  add                            Add a cartridge to this application
+  remove                         Remove a cartridge from this application
+  stop                           Stop a cartridge
+  start                          Start a cartridge
+  restart                        Restart a cartridge
+  status                         Returns cartridge status
+  reload                         Reloads cartridge configuration
 
 List of arguments
   -l|--rhlogin      rhlogin      Red Hat login (RHN or OpenShift login) (#{rhlogin})
@@ -63,7 +63,7 @@ List of arguments
   --alias           alias        Specify server alias (when using add/remove-alias)
   --config          path         Path of alternate config file
   --timeout         #            Timeout, in seconds, for the session
-  --enable-jenkins  [name]       Indicates to create a Jenkins application (if not already available) and embed the Jenkins client into this application.  The default name will be 'jenkins' if not specified. Note that --no-dns is ignored for the creation of the Jenkins application.
+  --enable-jenkins  [name]       Enables builds for your application with Jenkins.  You may optionally specify the name of the Jenkins application that is created (default: 'jenkins').  Note that --no-dns is ignored for the creation of the Jenkins application.
 USAGE
 exit exit_code
 end
