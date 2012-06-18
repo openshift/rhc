@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.94.4
+Version: 0.94.5
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -110,6 +110,20 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Jun 18 2012 Adam Miller <admiller@redhat.com> 0.94.5-1
+- Merge pull request #65 from J5/master (ccoleman@redhat.com)
+- add missing parseconfig.rb (johnp@redhat.com)
+- Merge pull request #64 from J5/master (ccoleman@redhat.com)
+- vendor parseconfig and remove monkey patches (johnp@redhat.com)
+- remove some more unused parseconfig code (johnp@redhat.com)
+- remove some stale code that must have crept back in from a merge
+  (johnp@redhat.com)
+- monkey patch parseconfig to remove deprication warnings (johnp@redhat.com)
+- only run wizard if a valid command is issued (johnp@redhat.com)
+- Improved SSH checks (fotios@redhat.com)
+- Bug 831459 - Use the correct RbConfig version depending on Ruby version
+  (ccoleman@redhat.com)
+
 * Fri Jun 15 2012 Adam Miller <admiller@redhat.com> 0.94.4-1
 - parseconfig 1.0.2 breaks our config module so specify < 1.0
   (johnp@redhat.com)
