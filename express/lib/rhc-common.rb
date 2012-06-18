@@ -956,49 +956,12 @@ else
 end
 
 
-#
-# Support funcs
-#
-def check_cpath(opts)
-  if !opts["config"].nil?
-    @opts_config_path = opts["config"]
-    if !File.readable?(File.expand_path(@opts_config_path))
-      puts "Could not open config file: #{@opts_config_path}"
-      exit 253
-    else
-      begin
-        @opts_config = ParseConfig.new(File.expand_path(@opts_config_path))
-      rescue Errno::EACCES => e
-        puts "Could not open config file (#{@opts_config_path}): #{e.message}"
-        exit 253
-      end
-    end
-  end
-end
-
 def config_path
   return @opts_config_path ? @opts_config_path : @local_config_path
 end
 
 def config
   return @opts_config ? @opts_config : @local_config
-end
-
-#
-# Check for local var in
-#   0) --config path file
-#   1) ~/.openshift/express.conf
-#   2) /etc/openshift/express.conf
-#   3) $GEM/../conf/express.conf
-#
-def get_var(var)
-  v = nil
-  if !@opts_config.nil? && @opts_config.get_value(var)
-    v = @opts_config.get_value(var)
-  else
-    v = @local_config.get_value(var) ? @local_config.get_value(var) : @global_config.get_value(var)
-  end
-  v
 end
 
 def ask_password
