@@ -5,7 +5,6 @@ require 'net/http'
 require 'net/https'
 require 'net/ssh'
 require 'rhc/vendor/sshkey'
-require 'parseconfig'
 require 'resolv'
 require 'uri'
 require 'highline/import'
@@ -933,15 +932,6 @@ _gem_cfg = File.join(File.expand_path(File.dirname(__FILE__) + "/../conf"), @con
 
 local_config_path = File.expand_path(@local_config_path)
 
-begin
-  @global_config = ParseConfig.new(@config_path)
-  @local_config = ParseConfig.new(File.expand_path(@local_config_path)) if \
-    File.exists?(@local_config_path)
-rescue Errno::EACCES => e
-  puts "Could not open config file: #{e.message}"
-  exit 253
-end
-
 #
 # Check for proxy environment
 #
@@ -956,49 +946,12 @@ else
 end
 
 
-#
-# Support funcs
-#
-def check_cpath(opts)
-  if !opts["config"].nil?
-    @opts_config_path = opts["config"]
-    if !File.readable?(File.expand_path(@opts_config_path))
-      puts "Could not open config file: #{@opts_config_path}"
-      exit 253
-    else
-      begin
-        @opts_config = ParseConfig.new(File.expand_path(@opts_config_path))
-      rescue Errno::EACCES => e
-        puts "Could not open config file (#{@opts_config_path}): #{e.message}"
-        exit 253
-      end
-    end
-  end
-end
-
 def config_path
   return @opts_config_path ? @opts_config_path : @local_config_path
 end
 
 def config
   return @opts_config ? @opts_config : @local_config
-end
-
-#
-# Check for local var in
-#   0) --config path file
-#   1) ~/.openshift/express.conf
-#   2) /etc/openshift/express.conf
-#   3) $GEM/../conf/express.conf
-#
-def get_var(var)
-  v = nil
-  if !@opts_config.nil? && @opts_config.get_value(var)
-    v = @opts_config.get_value(var)
-  else
-    v = @local_config.get_value(var) ? @local_config.get_value(var) : @global_config.get_value(var)
-  end
-  v
 end
 
 def ask_password
@@ -1058,7 +1011,7 @@ end
 def self.add_rhlogin_config(rhlogin, uuid)
     config_path = RHC::Config.local_config_path
     f = open(File.expand_path(config_path), 'a')
-    unless RHC::Config.get_value('default_rhlogin')
+    unless RHC::Config['default_rhlogin']
         f.puts("# Default rhlogin to use if none is specified")
         f.puts("default_rhlogin=#{rhlogin}")
         f.puts("")
@@ -1165,7 +1118,7 @@ def add_or_update_key(command, identifier, pub_key_file_path, rhlogin, password)
     data[:action] = 'update-key'
   end
 
-  url = URI.parse("https://#{RHC::Config.get_value('libra_server')}/broker/ssh_keys")
+  url = URI.parse("https://#{RHC::Config['libra_server']}/broker/ssh_keys")
   handle_key_mgmt_response(url, data, password)
 end
 
@@ -1235,7 +1188,7 @@ end
 
 # Public: legacy convinience function for getting config keys
 def get_var(key)
-  RHC::Config.get_value(key)
+  RHC::Config[key]
 end
 
 # Public: convinience function for running the wizard
