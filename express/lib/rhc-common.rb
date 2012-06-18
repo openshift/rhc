@@ -5,7 +5,6 @@ require 'net/http'
 require 'net/https'
 require 'net/ssh'
 require 'rhc/vendor/sshkey'
-require 'parseconfig'
 require 'resolv'
 require 'uri'
 require 'highline/import'
@@ -932,15 +931,6 @@ _gem_cfg = File.join(File.expand_path(File.dirname(__FILE__) + "/../conf"), @con
 @home_dir=File.expand_path("~")
 
 local_config_path = File.expand_path(@local_config_path)
-
-begin
-  @global_config = ParseConfig.new(@config_path)
-  @local_config = ParseConfig.new(File.expand_path(@local_config_path)) if \
-    File.exists?(@local_config_path)
-rescue Errno::EACCES => e
-  puts "Could not open config file: #{e.message}"
-  exit 253
-end
 
 #
 # Check for proxy environment
