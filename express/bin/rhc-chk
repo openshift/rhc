@@ -105,7 +105,7 @@ end
 $debuginfo = {
   'environment' => {
     'Ruby Version' => RUBY_VERSION,
-    "host_alias" => Config::CONFIG['host_alias']
+    "host_alias" => (Object.const_get(defined?(RbConfig) ? :RbConfig : :Config))::CONFIG['host_alias'],
   },
   'options' => {
     "Command Line" => $opt,
