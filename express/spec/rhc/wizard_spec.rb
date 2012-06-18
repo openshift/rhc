@@ -3,6 +3,7 @@ require 'fakefs/safe'
 require 'rhc/wizard'
 require 'parseconfig'
 require 'rhc/config'
+require 'rhc/core_ext'
 
 # monkey patch ParseConfig so it works with fakefs
 # TODO: if this is useful elsewhere move to helpers
@@ -64,8 +65,8 @@ describe RHC::Wizard do
       @wizard.run_next_stage
       File.readable?(@wizard.config_path).should be true
       cp = ParseConfig.new @wizard.config_path
-      cp.get_value("default_rhlogin").should == @wizard.mock_user
-      cp.get_value("libra_server").should == @wizard.libra_server
+      cp["default_rhlogin"].should == @wizard.mock_user
+      cp["libra_server"].should == @wizard.libra_server
     end
 
     it "should write out generated ssh keys" do

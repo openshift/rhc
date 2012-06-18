@@ -1,4 +1,5 @@
 require 'parseconfig'
+require 'rhc/core_ext'
 
 module RHC
   module Config
@@ -44,16 +45,20 @@ module RHC
       @@local_config_path = File.join(@@home_conf_path, @@conf_name)
     end
 
-    def self.get_value(key)
+    def self.[](key)
       # evaluate in cascading order
       configs = [@@opts_config, @@env_config, @@local_config, @@global_config, @@defaults]
       result = nil
       configs.each do |conf|
-        result = conf.get_value(key) if !conf.nil?
+        result = conf[key] if !conf.nil?
         break if !result.nil?
       end
 
       result
+    end
+
+    def self.get_value(key)
+      self[key]
     end
 
     # Public: configures the default user for this session

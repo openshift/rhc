@@ -1058,7 +1058,7 @@ end
 def self.add_rhlogin_config(rhlogin, uuid)
     config_path = RHC::Config.local_config_path
     f = open(File.expand_path(config_path), 'a')
-    unless RHC::Config.get_value('default_rhlogin')
+    unless RHC::Config['default_rhlogin']
         f.puts("# Default rhlogin to use if none is specified")
         f.puts("default_rhlogin=#{rhlogin}")
         f.puts("")
@@ -1165,7 +1165,7 @@ def add_or_update_key(command, identifier, pub_key_file_path, rhlogin, password)
     data[:action] = 'update-key'
   end
 
-  url = URI.parse("https://#{RHC::Config.get_value('libra_server')}/broker/ssh_keys")
+  url = URI.parse("https://#{RHC::Config['libra_server']}/broker/ssh_keys")
   handle_key_mgmt_response(url, data, password)
 end
 
@@ -1235,7 +1235,7 @@ end
 
 # Public: legacy convinience function for getting config keys
 def get_var(key)
-  RHC::Config.get_value(key)
+  RHC::Config[key]
 end
 
 # Public: convinience function for running the wizard
