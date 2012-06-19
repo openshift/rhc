@@ -11,6 +11,12 @@ class FakeFS::File
   def self.chmod(*args)
     # noop
   end
+
+  def self.executable?(path)
+    # if the file exists we will assume it is executable
+    # for testing purposes
+    self.exists?(path)
+  end
 end
 
 describe RHC::Wizard do
@@ -87,6 +93,9 @@ describe RHC::Wizard do
 
     it "should ask for a namespace" do
       @wizard.stub_user_info
+      $terminal.write_line("thisnamespaceistoobigandhastoomanycharacterstobevalid")
+
+      $terminal.write_line("invalidnamespace")
       $terminal.write_line("testnamespace")
       @wizard.run_next_stage
       output = $terminal.read
@@ -396,19 +405,24 @@ describe RHC::Wizard do
       cp["libra_server"].should == @wizard.libra_server
     end
 
-    it "should check for ssh keys and find they are uploaded" do
+    it "should check for ssh keys, not find it on the server and update existing key" do
       key_data = @wizard.get_mock_key_data
+      key_data['keys'].delete('73ce2cc1')
       RHC.stub(:get_ssh_keys) do
         key_data
       end
 
       @wizard.run_next_stage # key config is pretty much a noop here
 
+      @wizard.set_expected_key_name_and_action('default', 'update')
+      $terminal.write_line('yes')
+      $terminal.write_line('default')
+
       # run the key check stage
       @wizard.run_next_stage
 
       output = $terminal.read
-      output.should_not match("ssh key must be uploaded")
+      output.should match("Updating key default")
     end
 
     it "should check for client tools and find them" do
@@ -450,11 +464,11 @@ describe RHC::Wizard do
 
     end
 
-    it "should ask password input (not login)" do
+    it "should ask password input" do
 
     end
 
-    it "should check for ssh keys and find they are uploaded" do
+    it "should check for ssh keys and decline uploading them" do
 
     end
 
@@ -462,7 +476,7 @@ describe RHC::Wizard do
 
     end
 
-    it "should show namespace" do
+    it "should ask for namespace and decline entering one" do
 
     end
 
@@ -482,6 +496,7 @@ describe RHC::Wizard do
     end
 
     it "should run" do
+      @wizard.libra_server = nil
       @wizard.stub_rhc_client_new
       @wizard.stub_user_info
       @wizard.setup_mock_ssh
@@ -497,6 +512,13 @@ describe RHC::Wizard do
       $terminal.write_line("testnamespace")
 
       @wizard.run().should be_true
+    end
+
+    it "should fail" do
+      @wizard.stub_rhc_client_new
+      @wizard.stub_user_info
+      @wizard.stub(:login_stage) { nil }
+      @wizard.run().should be_nil
     end
   end
 
@@ -517,7 +539,7 @@ describe RHC::Wizard do
       end
 
       def add_domain(domain_name)
-        raise "Error: domain name should be '#{@domain_name}' but got '#{domain_name}'" if domain_name != @domain_name
+        raise Rhc::Rest::ValidationException.new("Error: domain name should be '#{@domain_name}' but got '#{domain_name}'") if domain_name != @domain_name
 
         MockDomain.new(domain_name)
       end
@@ -592,10 +614,6 @@ EOF
 
     def has_git?
       @mock_git_installed
-    end
-
-    def has_dbus_send?
-      @mock_package_kit_installed
     end
 
     def windows?
