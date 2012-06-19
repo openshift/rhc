@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.94.6
+Version: 0.94.7
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -110,6 +110,18 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Jun 19 2012 Adam Miller <admiller@redhat.com> 0.94.7-1
+- Merge pull request #68 from J5/master (ccoleman@redhat.com)
+- [bug 831771] require highline 1.5.1 (johnp@redhat.com)
+- Merge pull request #66 from smarterclayton/handle_interrupts_gracefully
+  (johnp@redhat.com)
+- Bug 825766 - Catch any interrupts that have escaped all command execution
+  (ccoleman@redhat.com)
+- [bug 826472] namespace isn't in config file, don't update when altering
+  namespace (johnp@redhat.com)
+- update wizard spec tests (johnp@redhat.com)
+- [bug 828324]exit 0 on success for rhc app cartridge list (johnp@redhat.com)
+
 * Tue Jun 19 2012 Adam Miller <admiller@redhat.com> 0.94.6-1
 - Fixup RHC requires so that only one module is requiring Rubygems, also ensure
   requires are not circular (ccoleman@redhat.com)
