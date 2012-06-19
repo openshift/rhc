@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.94.5
+Version: 0.94.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -110,6 +110,10 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Jun 19 2012 Adam Miller <admiller@redhat.com> 0.94.6-1
+- Fixup RHC requires so that only one module is requiring Rubygems, also ensure
+  requires are not circular (ccoleman@redhat.com)
+
 * Mon Jun 18 2012 Adam Miller <admiller@redhat.com> 0.94.5-1
 - Merge pull request #65 from J5/master (ccoleman@redhat.com)
 - add missing parseconfig.rb (johnp@redhat.com)
