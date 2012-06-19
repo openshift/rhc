@@ -473,6 +473,31 @@ describe RHC::Wizard do
     it "should show a thank you message" do
 
     end
+
+  end
+
+  context "Do a complete run through the wizard" do
+    before(:all) do
+      @wizard = FirstRunWizardDriver.new
+    end
+
+    it "should run" do
+      @wizard.stub_rhc_client_new
+      @wizard.stub_user_info
+      @wizard.setup_mock_ssh
+      @wizard.set_expected_key_name_and_action('default', 'add')
+
+      RHC.stub(:get_ssh_keys) { {"keys" => [], "fingerprint" => nil} }
+      mock_carts = ['ruby', 'python', 'jbosseap']
+      RHC.stub(:get_cartridges_list) { mock_carts }
+
+      $terminal.write_line "#{@wizard.mock_user}"
+      $terminal.write_line "password"
+      $terminal.write_line('yes')
+      $terminal.write_line("testnamespace")
+
+      @wizard.run().should be_true
+    end
   end
 
   module WizardDriver
