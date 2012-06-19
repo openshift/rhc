@@ -92,19 +92,6 @@ if !password
 end
 
 #
-# Add a new namespace to configs
-#
-def add_rhlogin_config(rhlogin, uuid)
-    f = open(File.expand_path(config_path), 'a')
-    unless config['default_rhlogin']
-        f.puts("# Default rhlogin to use if none is specified")
-        f.puts("default_rhlogin=#{rhlogin}")
-        f.puts("")
-    end
-    f.close
-end
-
-#
 # Check to see if a ssh_key_file_path exists, if not create it.
 #
 
@@ -143,8 +130,6 @@ if response.code == '200'
     begin
         json_resp = RHC::json_decode(response.body)
         RHC::print_response_success(json_resp)
-        json_rhlogininfo = RHC::json_decode(json_resp['data'])
-        add_rhlogin_config(json_rhlogininfo['rhlogin'], json_rhlogininfo['uuid'])
         if opt['alter'] != ''
             puts <<EOF
 Creation successful
