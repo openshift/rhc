@@ -365,7 +365,10 @@ def show_embedded_list
     type_keys = RHC::get_cartridge_listing(nil, ', ', libra_server, RHC::Config.default_proxy, 'embedded', false)
     puts type_keys
     puts ""
-    exit 255
+
+    # we should always get something back unless there was an error
+    exit 255 if type_keys.length == 0
+    exit 0
 end
 
 def save_or_restore_snapshot(command)
