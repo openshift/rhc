@@ -41,55 +41,59 @@ def run_setup_wizard_if_needed
   default_setup_wizard unless ARGV.include?('--noprompt')
 end
 
-case ARGV[0]
-when "domain"
-  run_setup_wizard_if_needed
-  system("rhc-domain #{get_args} 2>&1")
-  retcode = $?.exitstatus
-when "app"
-  run_setup_wizard_if_needed
-  system("rhc-app #{get_args} 2>&1")
-  retcode = $?.exitstatus
-when "sshkey"
-  run_setup_wizard_if_needed
-  system("rhc-sshkey #{get_args} 2>&1")
-  retcode = $?.exitstatus
-when "port-forward"
-  run_setup_wizard_if_needed
-  system("rhc-port-forward #{get_args} 2>&1")
-  retcode = $?.exitstatus
-when "server"
-  run_setup_wizard_if_needed
-  begin
-    require 'rhc/cli'
-    RHC::CLI.start(ARGV)
+begin
+  case ARGV[0]
+  when "domain"
+    run_setup_wizard_if_needed
+    system("rhc-domain #{get_args} 2>&1")
+    retcode = $?.exitstatus
+  when "app"
+    run_setup_wizard_if_needed
+    system("rhc-app #{get_args} 2>&1")
+    retcode = $?.exitstatus
+  when "sshkey"
+    run_setup_wizard_if_needed
+    system("rhc-sshkey #{get_args} 2>&1")
+    retcode = $?.exitstatus
+  when "port-forward"
+    run_setup_wizard_if_needed
+    system("rhc-port-forward #{get_args} 2>&1")
+    retcode = $?.exitstatus
+  when "server"
+    run_setup_wizard_if_needed
+    begin
+      require 'rhc/cli'
+      RHC::CLI.start(ARGV)
+      retcode = 0
+    rescue SystemExit => e
+      retcode = e.status
+    end
+  when "setup"
+    if ARGV.include?('--help') or ARGV.include?('-h') or ARGV.include?('help')
+      puts "Usage: rhc setup"
+      puts "Runs the setup wizard to configure your account"
+      exit 0
+    end
+
+    w = RHC::RerunWizard.new(RHC::Config.local_config_path) 
+    success = w.run
     retcode = 0
-  rescue SystemExit => e
-    retcode = e.status
-  end
-when "setup"
-  if ARGV.include?('--help') or ARGV.include?('-h') or ARGV.include?('help')
-    puts "Usage: rhc setup"
-    puts "Runs the setup wizard to configure your account"
-    exit 0
+    retcode = 1 unless success
+  when "-h", "--help", "help", nil
+    p_usage 0
+  else
+    puts "Invalid rhc command: #{ARGV[0]}"
+    p_usage
   end
 
-  w = RHC::RerunWizard.new(RHC::Config.local_config_path) 
-  success = w.run
-  retcode = 0
-  retcode = 1 unless success
-when "-h", "--help", "help", nil
-  p_usage 0
-else
-  puts "Invalid rhc command: #{ARGV[0]}"
-  p_usage
+  if retcode == nil
+    retcode = 1
+
+    # return codes for uncaught signals are 128 + the signal code
+    retcode = 128 + $?.termsig if $?.signaled? and !$?.termsig.nil?
+  end
+
+  exit retcode
+rescue Interrupt
+  exit 128 + 2 #INT
 end
-
-if retcode == nil
-  retcode = 1
-
-  # return codes for uncaught signals are 128 + the signal code
-  retcode = 128 + $?.termsig if $?.signaled? and !$?.termsig.nil?
-end
-
-exit retcode
