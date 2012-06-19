@@ -1,4 +1,3 @@
-require 'rubygems'
 require 'rest-client'
 require 'logger'
 require 'rhc-rest/exceptions/exceptions'
@@ -8,7 +7,6 @@ require 'rhc-rest/client'
 require 'rhc-rest/domain'
 require 'rhc-rest/key'
 require 'rhc-rest/user'
-require 'rhc/helpers'
 
 @@end_point = ""
 @@headers = {:accept => :json}

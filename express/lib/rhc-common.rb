@@ -1,4 +1,4 @@
-require 'rubygems'
+require 'rubygems' # Will eventually be removed when this file is deprecated
 require 'fileutils'
 require 'getoptlong'
 require 'net/http'

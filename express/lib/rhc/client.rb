@@ -1,3 +1,5 @@
+require 'rhc/helpers'
+
 class RHC::Client
   def initialize() #auth info
   end

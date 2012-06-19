@@ -1,4 +1,5 @@
 require 'base64'
+require 'rhc/json'
 
 module Rhc
   module Rest

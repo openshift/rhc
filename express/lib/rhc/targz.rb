@@ -1,4 +1,3 @@
-require 'rubygems'
 require 'stringio'
 require 'rhc/vendor/zliby'
 require 'archive/tar/minitar'
