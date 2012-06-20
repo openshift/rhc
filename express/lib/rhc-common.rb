@@ -624,7 +624,7 @@ also try destroying and recreating the application as well using:
 If this doesn't work for you, let us know in the forums or in IRC and we'll
 make sure to get you up and running.
 
-  Forums: https://www.redhat.com/openshift/forums/express
+  Forums: https://openshift.redhat.com/community/forums/openshift
 
   IRC: #openshift (on Freenode)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -671,7 +671,7 @@ We recommend you wait a few minutes then clone your git repository manually.
 If this doesn't work for you, let us know in the forums or in IRC and we'll
 make sure to get you up and running.
 
-  Forums: https://www.redhat.com/openshift/forums/express
+  Forums: https://openshift.redhat.com/community/forums/openshift
 
   IRC: #openshift (on Freenode)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
