@@ -589,7 +589,6 @@ describe RHC::Wizard do
       @wizard.run().should be_true
 
       output = $terminal.read
-      puts output
       output.should match("You may safely continue while the installer is running")
     end
   end
