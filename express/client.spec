@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.94.7
+Version: 0.94.8
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -110,6 +110,13 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Jun 20 2012 Adam Miller <admiller@redhat.com> 0.94.8-1
+- Improved style (ffranz@redhat.com)
+- Minor message improvements (ffranz@redhat.com)
+- Fixed wrong forum URL everywhere (ffranz@redhat.com)
+- Fixes BZ 826769 - will not fail app create and will show a message when the
+  Windows Winsock bug is detected (ffranz@redhat.com)
+
 * Tue Jun 19 2012 Adam Miller <admiller@redhat.com> 0.94.7-1
 - Merge pull request #68 from J5/master (ccoleman@redhat.com)
 - [bug 831771] require highline 1.5.1 (johnp@redhat.com)
