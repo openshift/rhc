@@ -427,7 +427,7 @@ EOF
           when "string"
             results << value
           else
-            puts "unknown type #{param_type} - treating as string"
+            say "unknown type #{param_type} - treating as string"
             results << value
           end
         end
