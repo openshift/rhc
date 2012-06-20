@@ -596,7 +596,7 @@ describe RHC::Wizard do
   context "Check odds and ends" do
     it "should call dbus_send_session_method and get multiple return values" do
       wizard = FirstRunWizardDriver.new
-      wizard.stub(:exe_cmd) do |cmd|
+      wizard.stub(:dbus_send_exec) do |cmd|
         "\\nboolean true\\nboolean false\\nstring hello\\nother world\\n"
       end
       results = wizard.send(:dbus_send_session_method, "test", "foo.bar", "bar/baz", "alpha.Beta", "")
@@ -605,7 +605,7 @@ describe RHC::Wizard do
 
     it "should call dbus_send_session_method and get one return value" do
       wizard = FirstRunWizardDriver.new
-      wizard.stub(:exe_cmd) do |cmd|
+      wizard.stub(:dbus_send_exec) do |cmd|
         "\\nstring hello world\\n"
       end
       results = wizard.send(:dbus_send_session_method, "test", "foo.bar", "bar/baz", "alpha.Beta", "")
@@ -614,14 +614,14 @@ describe RHC::Wizard do
 
     it "should cause has_git? to catch an exception and return false" do
       wizard = FirstRunWizardDriver.new
-      wizard.stub(:exe_cmd){ raise "Fake Exception" }
+      wizard.stub(:git_version_exec){ raise "Fake Exception" }
       wizard.send(:has_git?).should be_false
     end
 
     it "should cause package_kit_install to catch exception and call generic_unix_install_check" do
       wizard = RerunWizardDriver.new
       wizard.setup_mock_package_kit(false)
-      wizard.stub(:exe_cmd) do |cmd|
+      wizard.stub(:dbus_send_exec) do |cmd|
         "Error: mock error" if cmd.start_with?("dbus-send")
       end
       wizard.send(:package_kit_install)
@@ -647,7 +647,6 @@ describe RHC::Wizard do
       wizard = RerunWizardDriver.new
       wizard.ssh_keys = wizard.get_mock_key_data
       @fallback_run = false
-      # stub exe_cmd to get ssh_keygen_fallback coverage
       wizard.stub(:ssh_keygen_fallback) do
         @fallback_run = true
         "fingerprint AA:BB:CC:DD:EE:FF"

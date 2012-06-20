@@ -41,11 +41,6 @@ module RHC
       true
     end
 
-    # used during testing so we can stub it out
-    def exe_cmd(cmd)
-      `#{cmd} 2>&1`
-    end
-
     private
 
     def stages
@@ -406,13 +401,21 @@ EOF
       end
     end
 
-    def dbus_send_session_method(name, service, obj_path, iface, stringafied_params, wait_for_reply=true)
+
+    def dbus_send_exec(name, service, obj_path, iface, stringafied_params, wait_for_reply)
+      # :nocov: dbus_send_exec is not safe to run on a test system
       method = "#{iface}.#{name}"
       print_reply = ""
       print_reply = "--print-reply" if wait_for_reply
+
       cmd = "dbus-send --session #{print_reply} --type=method_call \
             --dest=#{service} #{obj_path} #{method} #{stringafied_params}"
-      output = exe_cmd(cmd)
+      `cmd 2>&1`
+      # :nocov:
+    end
+
+    def dbus_send_session_method(name, service, obj_path, iface, stringafied_params, wait_for_reply=true)
+      output = dbus_send_exec(name, service, obj_path, iface, stringafied_params, wait_for_reply)
       raise output if output.start_with?('Error') and !$?.success?
 
       # parse the output
@@ -526,9 +529,12 @@ EOF
       end
     end
 
-    def has_git?
-      exe_cmd("git --version")
+    def git_version_exec
+      `git --version 2>&1`
+    end
 
+    def has_git?
+      git_version_exec
       $?.success?
     rescue
       false
