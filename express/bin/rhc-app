@@ -180,7 +180,7 @@ currently being created: '#{$opt['app']}'
     puts "
     Found a bug? Post to the forum and we'll get right on it.
         IRC: #openshift on freenode
-        Forums: https://www.redhat.com/openshift/forums
+        Forums: https://openshift.redhat.com/community/forums/openshift
     
     "
   end
