@@ -648,7 +648,11 @@ describe RHC::Wizard do
       wizard = RerunWizardDriver.new
       wizard.ssh_keys = wizard.get_mock_key_data
       @fallback_run = false
-      wizard.stub(:ssh_keygen_fallback) { @fallback_run = true }
+      # stub exe_cmd to get ssh_keygen_fallback coverage
+      wizard.stub(:exe_cmd) do
+        @fallback_run = true
+        "fingerprint AA:BB:CC:DD:EE:FF"
+      end
       $?.stub(:exitstatus) { 255 }
       Net::SSH::KeyFactory.stub(:load_public_key) { raise NoMethodError }
 
@@ -659,10 +663,10 @@ describe RHC::Wizard do
       @fallback_run.should be_true
     end
 
-    it "should cause upload_ssh_key to catch NotImplemented and return false" do
+    it "should cause upload_ssh_key to catch NotImplementedError and return false" do
       wizard = RerunWizardDriver.new
       wizard.ssh_keys = wizard.get_mock_key_data
-      Net::SSH::KeyFactory.stub(:load_public_key) { raise NoMethodError }
+      Net::SSH::KeyFactory.stub(:load_public_key) { raise NotImplementedError }
 
       wizard.send(:upload_ssh_key).should be_false
 

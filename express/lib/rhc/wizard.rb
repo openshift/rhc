@@ -207,8 +207,7 @@ EOF
           if $?.exitstatus != 0
             key_valid = false
           end
-        rescue Net::SSH::Exception
-        rescue NotImplementedError
+        rescue Net::SSH::Exception, NotImplementedError
           key_valid = false
         end
 

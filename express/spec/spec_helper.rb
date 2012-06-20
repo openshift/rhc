@@ -10,7 +10,6 @@ begin
     add_filter 'lib/helpers.rb'
     add_filter 'lib/rhc/vendor/'
     add_filter 'lib/rhc-rest/' #temporary
-    add_filter 'lib/rhc/wizard.rb' #temporary
     add_filter 'lib/rhc/config.rb' #temporary
   end
 
