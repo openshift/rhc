@@ -41,6 +41,11 @@ module RHC
       true
     end
 
+    # used during testing so we can stub it out
+    def exe_cmd(cmd)
+      `#{cmd} 2>&1`
+    end
+
     private
 
     def stages
@@ -404,13 +409,12 @@ EOF
       print_reply = "--print-reply" if wait_for_reply
       cmd = "dbus-send --session #{print_reply} --type=method_call \
             --dest=#{service} #{obj_path} #{method} #{stringafied_params}"
-      output = `#{cmd} 2>&1`
-
+      output = exe_cmd(cmd)
       raise output if output.start_with?('Error') and !$?.success?
 
       # parse the output
       results = []
-      output.each_with_index do |line, i|
+      output.split('\n').each_with_index do |line, i|
         if i != 0 # discard first line
           param_type, value = line.chomp.split(" ", 2)
 

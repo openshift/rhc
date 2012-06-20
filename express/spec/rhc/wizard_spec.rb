@@ -533,10 +533,6 @@ describe RHC::Wizard do
       output.should match("test2 - no public url")
     end
 
-    it "should show a thank you message" do
-
-    end
-
   end
 
   context "Do a complete run through the wizard" do
@@ -567,6 +563,26 @@ describe RHC::Wizard do
       @wizard.stub_user_info
       @wizard.stub(:login_stage) { nil }
       @wizard.run().should be_nil
+    end
+  end
+
+  context "Check odds and ends" do
+    it "should call dbus_send_session_method and get multiple return values" do
+      wizard = FirstRunWizardDriver.new
+      wizard.stub(:exe_cmd) do |cmd|
+        "\\nboolean true\\nboolean false\\nstring hello\\nother world\\n"
+      end
+      results = wizard.send(:dbus_send_session_method, "test", "foo.bar", "bar/baz", "alpha.Beta", "")
+      results.should == [true, false, "hello", "world"]
+    end
+
+    it "should call dbus_send_session_method and get one return value" do
+      wizard = FirstRunWizardDriver.new
+      wizard.stub(:exe_cmd) do |cmd|
+        "\\nstring hello world\\n"
+      end
+      results = wizard.send(:dbus_send_session_method, "test", "foo.bar", "bar/baz", "alpha.Beta", "")
+      results.should == "hello world"
     end
   end
 
