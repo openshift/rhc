@@ -564,6 +564,34 @@ describe RHC::Wizard do
       @wizard.stub(:login_stage) { nil }
       @wizard.run().should be_nil
     end
+
+    it "should cover package kit install steps" do
+      @wizard.libra_server = nil
+      @wizard.stub_rhc_client_new
+      @wizard.stub_user_info
+      @wizard.setup_mock_ssh
+      @wizard.setup_mock_package_kit(false)
+
+      RHC.stub(:get_ssh_keys) { {"keys" => [], "fingerprint" => nil} }
+      mock_carts = ['ruby', 'python', 'jbosseap']
+      RHC.stub(:get_cartridges_list) { mock_carts }
+      # we need to do this because get_character does not get caught
+      # by our mock terminal
+      @wizard.stub(:get_character) {ask ""}
+
+      $terminal.write_line ""
+      $terminal.write_line "password"
+      $terminal.write_line("no")
+      $terminal.write_line("yes")
+      $terminal.write_line("")
+      $terminal.write_line("")
+
+      @wizard.run().should be_true
+
+      output = $terminal.read
+      puts output
+      output.should match("You may safely continue while the installer is running")
+    end
   end
 
   context "Check odds and ends" do
@@ -589,6 +617,19 @@ describe RHC::Wizard do
       wizard = FirstRunWizardDriver.new
       wizard.stub(:exe_cmd){ raise "Fake Exception" }
       wizard.send(:has_git?).should be_false
+    end
+
+    it "should cause package_kit_install to catch exception and call generic_unix_install_check" do
+      wizard = RerunWizardDriver.new
+      wizard.setup_mock_package_kit(false)
+      wizard.stub(:exe_cmd) do |cmd|
+        "Error: mock error" if cmd.start_with?("dbus-send")
+      end
+      wizard.send(:package_kit_install)
+
+      output = $terminal.read
+      output.should match("Checking for git ... needs to be installed")
+      output.should match("Automated installation of client tools is not supported")
     end
   end
 
