@@ -644,9 +644,45 @@ WARNING
         quiet = (@mydebug ? ' ' : '--quiet ')
         git_clone = %x<git clone #{quiet} #{git_url} #{repo_dir}>
         if $?.exitstatus != 0
-            puts "Error in git clone"
-            puts git_clone
-            exit 216
+
+          if RHC::Helpers.windows? 
+
+            `nslookup #{app_name}-#{namespace}.#{rhc_domain}`
+            windows_nslookup = $?.exitstatus == 0
+            `ping #{app_name}-#{namespace}.#{rhc_domain} -n 2`
+            windows_ping = $?.exitstatus == 0
+            
+            if windows_nslookup and ! windows_ping # this is related to BZ #826769
+              puts <<WINSOCKISSUE
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+WARNING: We weren't able to lookup your hostname (#{fqdn}) 
+in a reasonable amount of time.  This can happen periodically and will just
+take up to 10 extra minutes to propagate depending on where you are in the
+world. This may also be related to an issue with Winsock on Windows [1][2]. 
+We recommend you wait a few minutes then clone your git repository manually.
+
+  Git Clone command: 
+    git clone #{git_url} #{repo_dir}
+
+[1] http://support.microsoft.com/kb/299357
+[2] http://support.microsoft.com/kb/811259
+
+If this doesn't work for you, let us know in the forums or in IRC and we'll
+make sure to get you up and running.
+
+  Forums: https://www.redhat.com/openshift/forums/express
+
+  IRC: #openshift (on Freenode)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+WINSOCKISSUE
+              exit 0
+            end
+          end
+          puts "Error in git clone"
+          puts git_clone
+          exit 216
         end
     else
       if is_embedded_jenkins
