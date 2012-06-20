@@ -652,7 +652,7 @@ WARNING
             `ping #{app_name}-#{namespace}.#{rhc_domain} -n 2`
             windows_ping = $?.exitstatus == 0
             
-            if windows_nslookup and ! windows_ping # this is related to BZ #826769
+            if windows_nslookup and !windows_ping # this is related to BZ #826769
               puts <<WINSOCKISSUE
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
