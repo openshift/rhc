@@ -12,6 +12,9 @@ class FakeFS::File
     # noop
   end
 
+  # Epic fail - FakeFS manages to redefine this to '/'
+  PATH_SEPARATOR = ":"
+
   def self.executable?(path)
     # if the file exists we will assume it is executable
     # for testing purposes
@@ -86,6 +89,7 @@ describe RHC::Wizard do
     end
 
     it "should check for client tools" do
+      @wizard.setup_mock_has_git(true)
       @wizard.run_next_stage
       output = $terminal.read
       output.should match("Checking for git \.\.\. found")
@@ -175,7 +179,7 @@ describe RHC::Wizard do
     end
 
     it "should check for client tools and print they need to be installed" do
-      @wizard.has_git(false)
+      @wizard.setup_mock_has_git(false)
       @wizard.run_next_stage
       output = $terminal.read
       output.should match("Checking for git \.\.\. needs to be installed")
@@ -267,7 +271,9 @@ describe RHC::Wizard do
       output.should match("|#{short_name}|")
     end
 
-    it "should check for client tools and find them" do
+    it "should check for client tools via package kit and find them" do
+      @wizard.setup_mock_package_kit(true)
+
       @wizard.run_next_stage
       output = $terminal.read
       output.should match("Checking for git \.\.\. found")
@@ -345,6 +351,7 @@ describe RHC::Wizard do
     end
 
     it "should check for client tools and find them" do
+      @wizard.setup_mock_has_git(true)
       @wizard.run_next_stage
       output = $terminal.read
       output.should match("Checking for git \.\.\. found")
@@ -426,6 +433,7 @@ describe RHC::Wizard do
     end
 
     it "should check for client tools and find them" do
+      @wizard.setup_mock_has_git(true)
       @wizard.run_next_stage
       output = $terminal.read
       output.should match("Checking for git \.\.\. found")
@@ -500,7 +508,6 @@ describe RHC::Wizard do
       @wizard.stub_rhc_client_new
       @wizard.stub_user_info
       @wizard.setup_mock_ssh
-      @wizard.set_expected_key_name_and_action('default', 'add')
 
       RHC.stub(:get_ssh_keys) { {"keys" => [], "fingerprint" => nil} }
       mock_carts = ['ruby', 'python', 'jbosseap']
@@ -508,8 +515,8 @@ describe RHC::Wizard do
 
       $terminal.write_line "#{@wizard.mock_user}"
       $terminal.write_line "password"
-      $terminal.write_line('yes')
-      $terminal.write_line("testnamespace")
+      $terminal.write_line('no')
+      $terminal.write_line("")
 
       @wizard.run().should be_true
     end
@@ -552,7 +559,6 @@ describe RHC::Wizard do
       @ssh_dir = "#{RHC::Config.home_dir}/.ssh/"
       @libra_server = 'mock.openshift.redhat.com'
       @mock_user = 'mock_user@foo.bar'
-      @mock_git_installed = true
       @mock_package_kit_installed = false
       @current_wizard_stage = nil
       @platform_windows = false
@@ -608,12 +614,23 @@ EOF
       end
     end
 
-    def has_git(bool)
-      @mock_git_installed = bool
+    def setup_mock_package_kit(bool)
+      ENV['PATH'] = '/usr/bin' unless ENV['PATH']
+      ENV['DBUS_SESSION_BUS_ADDRESS'] = "present" unless ENV['DBUS_SESSION_BUS_ADDRESS']
+      unless File.exists?('/usr/bin/dbus-send')
+        FileUtils.mkdir_p '/usr/bin/'
+        File.open('/usr/bin/dbus-send', 'w') { |f| f.write('dummy') }
+      end
+
+      setup_mock_has_git(false)
+
+      self.stub(:dbus_send_session_method) do |name|
+        bool
+      end
     end
 
-    def has_git?
-      @mock_git_installed
+    def setup_mock_has_git(bool)
+      self.stub(:"has_git?") { bool }
     end
 
     def windows?
