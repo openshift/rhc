@@ -603,7 +603,7 @@ end
         puts <<WARNING
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-WARNING: We weren't able to lookup your hostname (#{fqdn}) 
+WARNING: We were unable to lookup your hostname (#{fqdn}) 
 in a reasonable amount of time.  This can happen periodically and will just
 take an extra minute or two to propagate depending on where you are in the
 world.  Once you are able to access your application in a browser, you can then
@@ -656,7 +656,7 @@ WARNING
               puts <<WINSOCKISSUE
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-WARNING: We weren't able to lookup your hostname (#{fqdn}) 
+WARNING: We were unable to lookup your hostname (#{fqdn}) 
 in a reasonable amount of time.  This can happen periodically and will just
 take up to 10 extra minutes to propagate depending on where you are in the
 world. This may also be related to an issue with Winsock on Windows [1][2]. 
