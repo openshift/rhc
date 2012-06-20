@@ -467,29 +467,70 @@ describe RHC::Wizard do
   end
 
   context "Repeat run of rhc setup with everything set but platform set to Windows" do
-
-    it "should print out repeat run greeting" do
-
+    before(:all) do
+      @wizard = RerunWizardDriver.new
+      @wizard.windows = true
+      @wizard.run_next_stage
     end
 
     it "should ask password input" do
+      @wizard.stub_rhc_client_new
+      # queue up input
+      $terminal.write_line "#{@wizard.mock_user}"
+      $terminal.write_line "password"
 
+      @wizard.stub_user_info
+
+      @wizard.run_next_stage
+
+      output = $terminal.read
+      output.should match("OpenShift login")
+      output.should =~ /(#{Regexp.escape("Password: ********\n")})$/
+    end
+
+    it "should write out a config" do
+      File.exists?(@wizard.config_path).should be false
+      @wizard.run_next_stage
+      File.readable?(@wizard.config_path).should be true
+      cp = RHC::Vendor::ParseConfig.new @wizard.config_path
+      cp["default_rhlogin"].should == @wizard.mock_user
+      cp["libra_server"].should == @wizard.libra_server
     end
 
     it "should check for ssh keys and decline uploading them" do
-
+      @wizard.setup_mock_ssh
+      @wizard.run_next_stage
+      RHC.stub(:get_ssh_keys) { {"keys" => [], "fingerprint" => nil} }
+      $terminal.write_line('no')
+      @wizard.run_next_stage
+      output = $terminal.read
+      output.should match("rhc sshkey")
     end
 
     it "should print out windows client tool info" do
-
+      @wizard.run_next_stage
+      output = $terminal.read
+      output.should match("Git for Windows")
     end
 
     it "should ask for namespace and decline entering one" do
-
+      @wizard.stub_user_info
+      $terminal.write_line("")
+      @wizard.run_next_stage
+      output = $terminal.read
+      output.should match("rhc domain create")
     end
 
-    it "should list apps" do
-
+    it "should list apps without domain" do
+      @wizard.stub_user_info([],
+                             {"test1" => {},
+                              "test2" => {}
+                             }
+                            )
+      @wizard.run_next_stage
+      output = $terminal.read
+      output.should match("test1 - no public url")
+      output.should match("test2 - no public url")
     end
 
     it "should show a thank you message" do
@@ -559,7 +600,6 @@ describe RHC::Wizard do
       @ssh_dir = "#{RHC::Config.home_dir}/.ssh/"
       @libra_server = 'mock.openshift.redhat.com'
       @mock_user = 'mock_user@foo.bar'
-      @mock_package_kit_installed = false
       @current_wizard_stage = nil
       @platform_windows = false
     end
@@ -624,13 +664,17 @@ EOF
 
       setup_mock_has_git(false)
 
-      self.stub(:dbus_send_session_method) do |name|
+      self.stub(:dbus_send_session_method) do
         bool
       end
     end
 
     def setup_mock_has_git(bool)
       self.stub(:"has_git?") { bool }
+    end
+
+    def windows=(bool)
+      @platform_windows = bool
     end
 
     def windows?
