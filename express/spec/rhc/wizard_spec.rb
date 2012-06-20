@@ -584,6 +584,12 @@ describe RHC::Wizard do
       results = wizard.send(:dbus_send_session_method, "test", "foo.bar", "bar/baz", "alpha.Beta", "")
       results.should == "hello world"
     end
+
+    it "should cause has_git? to catch an exception and return false" do
+      wizard = FirstRunWizardDriver.new
+      wizard.stub(:exe_cmd){ raise "Fake Exception" }
+      wizard.send(:has_git?).should be_false
+    end
   end
 
   module WizardDriver

@@ -524,10 +524,7 @@ EOF
     end
 
     def has_git?
-      begin
-        %x{ git --version }
-      rescue
-      end
+      exe_cmd("git --version")
 
       $?.success?
     rescue
