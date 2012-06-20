@@ -141,7 +141,7 @@ EOF
     end
 
     def ssh_keygen_fallback(ssh_pub_key_file_path)
-      exe_cmd("ssh-keygen -lf #{ssh_pub_key_file_path}").split(' ')[1]
+      `ssh-keygen -lf #{ssh_pub_key_file_path} 2>&1`.split(' ')[1]
     end
 
     def ssh_key_uploaded?

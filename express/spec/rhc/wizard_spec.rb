@@ -648,7 +648,7 @@ describe RHC::Wizard do
       wizard.ssh_keys = wizard.get_mock_key_data
       @fallback_run = false
       # stub exe_cmd to get ssh_keygen_fallback coverage
-      wizard.stub(:exe_cmd) do
+      wizard.stub(:ssh_keygen_fallback) do
         @fallback_run = true
         "fingerprint AA:BB:CC:DD:EE:FF"
       end
