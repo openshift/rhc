@@ -140,6 +140,10 @@ EOF
       true
     end
 
+    def ssh_keygen_fallback(ssh_pub_key_file_path)
+      exe_cmd("ssh-keygen -lf #{ssh_pub_key_file_path}").split(' ')[1]
+    end
+
     def ssh_key_uploaded?
       @ssh_keys = RHC::get_ssh_keys(@libra_server, @username, @password, RHC::Config.default_proxy)
       additional_ssh_keys = @ssh_keys['keys']
@@ -148,7 +152,7 @@ EOF
       begin
         local_fingerprint = Net::SSH::KeyFactory.load_public_key(@ssh_pub_key_file_path).fingerprint
       rescue NoMethodError #older net/ssh (mac for example)
-        local_fingerprint = `ssh-keygen -lf #{@ssh_pub_key_file_path}`.split(' ')[1]
+        local_fingerprint = ssh_keygen_fallback @ssh_pub_key_file_path
       end
 
       return true if @ssh_keys['fingerprint'] == local_fingerprint
@@ -199,7 +203,7 @@ EOF
         begin
           key_fingerprint = Net::SSH::KeyFactory.load_public_key(@ssh_pub_key_file_path).fingerprint
         rescue NoMethodError #older net/ssh (mac for example)
-          key_fingerprint = `ssh-keygen -lf #{@ssh_pub_key_file_path}`.split(' ')[1]
+          key_fingerprint = ssh_keygen_fallback @ssh_pub_key_file_path
           if $?.exitstatus != 0
             key_valid = false
           end

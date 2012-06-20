@@ -631,6 +631,44 @@ describe RHC::Wizard do
       output.should match("Checking for git ... needs to be installed")
       output.should match("Automated installation of client tools is not supported")
     end
+
+    it "should cause ssh_key_upload? to catch NoMethodError and call the fallback to get the fingerprint" do
+      wizard = RerunWizardDriver.new
+      Net::SSH::KeyFactory.stub(:load_public_key) { raise NoMethodError }
+      @fallback_run = false
+      wizard.stub(:ssh_keygen_fallback) { @fallback_run = true }
+      RHC.stub(:get_ssh_keys) { {"keys" => [], "fingerprint" => nil} }
+
+      wizard.send(:ssh_key_uploaded?)
+
+      @fallback_run.should be_true
+    end
+
+    it "should cause upload_ssh_key to catch NoMethodError and call the fallback to get the fingerprint" do
+      wizard = RerunWizardDriver.new
+      wizard.ssh_keys = wizard.get_mock_key_data
+      @fallback_run = false
+      wizard.stub(:ssh_keygen_fallback) { @fallback_run = true }
+      $?.stub(:exitstatus) { 255 }
+      Net::SSH::KeyFactory.stub(:load_public_key) { raise NoMethodError }
+
+      wizard.send(:upload_ssh_key).should be_false
+
+      output = $terminal.read
+      output.should match("Your ssh public key at .* can not be read")
+      @fallback_run.should be_true
+    end
+
+    it "should cause upload_ssh_key to catch NotImplemented and return false" do
+      wizard = RerunWizardDriver.new
+      wizard.ssh_keys = wizard.get_mock_key_data
+      Net::SSH::KeyFactory.stub(:load_public_key) { raise NoMethodError }
+
+      wizard.send(:upload_ssh_key).should be_false
+
+      output = $terminal.read
+      output.should match("Your ssh public key at .* can not be read")
+    end
   end
 
   module WizardDriver
@@ -761,6 +799,10 @@ EOF
       fingerprint = Net::SSH::KeyFactory.load_public_key(@ssh_pub_key_file_path).fingerprint
       short_name = fingerprint[0, 12].gsub(/[^0-9a-zA-Z]/,'')
       return fingerprint, short_name
+    end
+
+    def ssh_keys=(data)
+      @ssh_keys = data
     end
 
     def get_mock_key_data
