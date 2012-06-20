@@ -4,6 +4,33 @@ require 'webmock/rspec'
 
 begin
   require 'simplecov'
+
+  # monkey patch to get correct coverage count
+  class SimpleCov::Result
+    def missed_lines
+      return @missed_lines if defined? @missed_lines
+      @missed_lines = 0
+      @files.each do |file|
+        line = 0
+        in_nocov = false
+
+        original_result[file.filename].each do |line_result|
+          line += 1
+          if in_nocov
+            in_nocov = false if file.src[line - 1].match("#[ ]*:nocov:")
+          else
+            if file.src[line - 1].match("#[ ]*:nocov:")
+              in_nocov = true
+            else
+              @missed_lines += 1 if line_result == 0
+            end
+          end
+        end
+      end
+      @missed_lines
+    end
+  end
+
   SimpleCov.start do
     add_filter 'lib/rhc-rest.rb'
     add_filter 'lib/rhc-common.rb'
