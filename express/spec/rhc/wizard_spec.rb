@@ -672,6 +672,21 @@ describe RHC::Wizard do
       output = $terminal.read
       output.should match("Your ssh public key at .* can not be read")
     end
+
+    it "should match ssh key fallback fingerprint to net::ssh fingerprint" do
+      # we need to write to a live file system so ssh-keygen can find it
+      FakeFS.deactivate!
+      wizard = RerunWizardDriver.new
+      Dir.mktmpdir do |dir|
+        wizard.setup_mock_ssh_keys(dir)
+        pub_ssh = File.join dir, "id_rsa.pub"
+        fallback_fingerprint = wizard.send :ssh_keygen_fallback, pub_ssh
+        internal_fingerprint, short_name = wizard.get_key_fingerprint pub_ssh
+
+        fallback_fingerprint.should == internal_fingerprint
+      end
+      FakeFS.activate!
+    end
   end
 
   module WizardDriver
@@ -796,10 +811,10 @@ EOF
       true
     end
 
-    def get_key_fingerprint
+    def get_key_fingerprint(path=@ssh_pub_key_file_path)
       # returns the fingerprint and the short name used as the default
       # key name
-      fingerprint = Net::SSH::KeyFactory.load_public_key(@ssh_pub_key_file_path).fingerprint
+      fingerprint = Net::SSH::KeyFactory.load_public_key(path).fingerprint
       short_name = fingerprint[0, 12].gsub(/[^0-9a-zA-Z]/,'')
       return fingerprint, short_name
     end
@@ -818,11 +833,8 @@ EOF
          "fingerprint" => "0f:97:4b:82:87:bb:c6:dc:40:a3:c1:bc:bb:55:1e:fa"}
     end
 
-    def setup_mock_ssh_keys
-      private_key_file = File.join(@ssh_dir, "id_rsa")
-      public_key_file = File.join(@ssh_dir, "id_rsa.pub")
-      File.open(private_key_file, 'w') do |f|
-        f.write <<EOF
+    def priv_key
+      <<EOF
 -----BEGIN RSA PRIVATE KEY-----
 MIICWwIBAAKBgQDIXpBBs7g93z/5JqW5IJNJR8bG6DWhpL2vR2ROEfzGqDHLZ+Xb
 saS/Ogc3nZNSav3juHWdiBFIc0unPpLdwmXtcL3tjN52CJqPgU/W0q061fL/tk77
@@ -839,13 +851,20 @@ MMFKWlCIEEtimqRaSQJAPVA1E7AiEvfUv0kRT73tDf4p/BRJ7p2YwjxrGpDBQhG1
 YI+4NOhWtAG3Uips++8RhvmLjv8y+TNKU31J1EJmYA==
 -----END RSA PRIVATE KEY-----
 EOF
-      end
+    end
 
-      File.open(public_key_file, 'w') do |f|
-        f.write <<EOF
+    def pub_key
+      <<EOF
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAgQDIXpBBs7g93z/5JqW5IJNJR8bG6DWhpL2vR2ROEfzGqDHLZ+XbsaS/Ogc3nZNSav3juHWdiBFIc0unPpLdwmXtcL3tjN52CJqPgU/W0q061fL/tk77fFqW2upluo0ZRZQdPc3vTI3tWWZcpyE2LPHHUOI3KN+lRqxgw0Y6z/3Sfw== OpenShift-Key
 EOF
-      end
+    end
+
+    def setup_mock_ssh_keys(dir=@ssh_dir)
+      private_key_file = File.join(dir, "id_rsa")
+      public_key_file = File.join(dir, "id_rsa.pub")
+      File.open(private_key_file, 'w') { |f| f.write priv_key }
+
+      File.open(public_key_file, 'w') { |f| f.write pub_key }
     end
   end
 
