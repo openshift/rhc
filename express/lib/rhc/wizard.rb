@@ -135,6 +135,10 @@ EOF
       true
     end
 
+    def ssh_keygen_fallback(ssh_pub_key_file_path)
+      `ssh-keygen -lf #{ssh_pub_key_file_path} 2>&1`.split(' ')[1]
+    end
+
     def ssh_key_uploaded?
       @ssh_keys = RHC::get_ssh_keys(@libra_server, @username, @password, RHC::Config.default_proxy)
       additional_ssh_keys = @ssh_keys['keys']
@@ -143,7 +147,7 @@ EOF
       begin
         local_fingerprint = Net::SSH::KeyFactory.load_public_key(@ssh_pub_key_file_path).fingerprint
       rescue NoMethodError #older net/ssh (mac for example)
-        local_fingerprint = `ssh-keygen -lf #{@ssh_pub_key_file_path}`.split(' ')[1]
+        local_fingerprint = ssh_keygen_fallback @ssh_pub_key_file_path
       end
 
       return true if @ssh_keys['fingerprint'] == local_fingerprint
@@ -194,12 +198,11 @@ EOF
         begin
           key_fingerprint = Net::SSH::KeyFactory.load_public_key(@ssh_pub_key_file_path).fingerprint
         rescue NoMethodError #older net/ssh (mac for example)
-          key_fingerprint = `ssh-keygen -lf #{@ssh_pub_key_file_path}`.split(' ')[1]
+          key_fingerprint = ssh_keygen_fallback @ssh_pub_key_file_path
           if $?.exitstatus != 0
             key_valid = false
           end
-        rescue Net::SSH::Exception
-        rescue NotImplementedError
+        rescue Net::SSH::Exception, NotImplementedError
           key_valid = false
         end
 
@@ -398,19 +401,26 @@ EOF
       end
     end
 
-    def dbus_send_session_method(name, service, obj_path, iface, stringafied_params, wait_for_reply=true)
+
+    def dbus_send_exec(name, service, obj_path, iface, stringafied_params, wait_for_reply)
+      # :nocov: dbus_send_exec is not safe to run on a test system
       method = "#{iface}.#{name}"
       print_reply = ""
       print_reply = "--print-reply" if wait_for_reply
+
       cmd = "dbus-send --session #{print_reply} --type=method_call \
             --dest=#{service} #{obj_path} #{method} #{stringafied_params}"
-      output = `#{cmd} 2>&1`
+      `cmd 2>&1`
+      # :nocov:
+    end
 
+    def dbus_send_session_method(name, service, obj_path, iface, stringafied_params, wait_for_reply=true)
+      output = dbus_send_exec(name, service, obj_path, iface, stringafied_params, wait_for_reply)
       raise output if output.start_with?('Error') and !$?.success?
 
       # parse the output
       results = []
-      output.each_with_index do |line, i|
+      output.split('\n').each_with_index do |line, i|
         if i != 0 # discard first line
           param_type, value = line.chomp.split(" ", 2)
 
@@ -420,7 +430,7 @@ EOF
           when "string"
             results << value
           else
-            puts "unknown type #{param_type} - treating as string"
+            say "unknown type #{param_type} - treating as string"
             results << value
           end
         end
@@ -519,12 +529,12 @@ EOF
       end
     end
 
-    def has_git?
-      begin
-        %x{ git --version }
-      rescue
-      end
+    def git_version_exec
+      `git --version 2>&1`
+    end
 
+    def has_git?
+      git_version_exec
       $?.success?
     rescue
       false
