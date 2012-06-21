@@ -695,7 +695,7 @@ describe RHC::Wizard do
     attr_accessor :mock_user, :libra_server, :config_path, :ssh_dir
     def initialize
       RHC::Config.home_dir = '/home/mock_user'
-      super '/home/mock_user/.openshift/openshift.conf'
+      super '/home/mock_user/.openshift/express.conf'
       @ssh_dir = "#{RHC::Config.home_dir}/.ssh/"
       @libra_server = 'mock.openshift.redhat.com'
       @mock_user = 'mock_user@foo.bar'
@@ -744,6 +744,9 @@ default_rhlogin='#{rhlogin}'
 libra_server = '#{@libra_server}'
 EOF
       end
+
+      # reload config
+      RHC::Config.home_dir = '/home/mock_user'
     end
 
     def setup_mock_ssh(add_ssh_key=false)

@@ -28,7 +28,7 @@ module RHC
       @@local_config_path = File.join(@@home_conf_path, @@conf_name)
 
       begin
-        @@global_config = RHC::Vendor::ParseConfig.new(config_path)
+        @@global_config = RHC::Vendor::ParseConfig.new(config_path) if File.exists?(config_path)
         @@local_config = RHC::Vendor::ParseConfig.new(File.expand_path(@@local_config_path)) if File.exists?(@@local_config_path)
       rescue Errno::EACCES => e
         puts "Could not open config file: #{e.message}"
@@ -43,6 +43,8 @@ module RHC
       @@home_dir=home_dir
       @@home_conf_path = File.join(@@home_dir, '.openshift')
       @@local_config_path = File.join(@@home_conf_path, @@conf_name)
+      @@local_config = nil
+      @@local_config = RHC::Vendor::ParseConfig.new(File.expand_path(@@local_config_path)) if File.exists?(@@local_config_path)
     end
 
     def self.[](key)
