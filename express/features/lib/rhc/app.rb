@@ -14,6 +14,7 @@ module RHCHelper
   #
   class App 
     extend Persistable
+    extend Runnable
     include Dnsruby
     include Loggable
     include Commandify
@@ -36,17 +37,13 @@ module RHCHelper
       @embed = []
     end
 
-    def self.create_unique(type, prefix="test")
-      end_point = "https://openshift.redhat.com/broker/rest/api"
-      username = ENV['RHC_USERNAME']
-      password = ENV['RHC_PASSWORD']
-      namespace = ENV['RHC_NAMESPACE']
-      raise "Username not found in environment (RHC_USERNAME)" unless username
-      raise "Password not found in environment (RHC_PASSWORD)" unless password
-      raise "Namespace not found in environment (RHC_NAMESPACE)" unless namespace
+    def self.rhc_setup
+      run("rhc setup", nil, [$username, $password, 'yes', ""])
+    end
 
+    def self.create_unique(type, prefix="test")
       # Get a REST client to verify the application name
-      client = Rhc::Rest::Client.new(end_point, username, password)
+      client = Rhc::Rest::Client.new($end_point, $username, $password)
 
       # Cleanup all test applications
       test_names = []
@@ -65,7 +62,7 @@ module RHCHelper
         next if test_names.index(name)
 
         # Create the app
-        app = App.new(namespace, username, type, name, password)
+        app = App.new($namespace, $username, type, name, $password)
         app.persist
         return app
       end

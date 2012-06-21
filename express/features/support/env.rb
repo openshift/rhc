@@ -6,17 +6,16 @@ require 'rhc-rest'
 puts "Cleaning up environment before beginning"
 FileUtils.rm_rf RHCHelper::TEMP_DIR
 
-end_point = "https://openshift.redhat.com/broker/rest/api"
-username = ENV['RHC_RHLOGIN']
-password = ENV['RHC_PWD']
-namespace = ENV['RHC_NAMESPACE']
-unless username && password && namespace
-  puts "ERROR - Environment not setup"
-  exit 1
-end
+$username = ENV['RHC_USERNAME']
+$password = ENV['RHC_PASSWORD']
+$namespace = ENV['RHC_NAMESPACE']
+$end_point = ENV['RHC_ENDPOINT'] || "https://openshift.redhat.com/broker/rest/api"
+raise "Username not found in environment (RHC_USERNAME)" unless $username
+raise "Password not found in environment (RHC_PASSWORD)" unless $password
+raise "Namespace not found in environment (RHC_NAMESPACE)" unless $namespace
 
 # Cleanup all test applications
-client = Rhc::Rest::Client.new(end_point, username, password)
+client = Rhc::Rest::Client.new($end_point, $username, $password)
 client.domains.each do |domain|
   domain.applications.each do |app|
     if app.name.start_with?("test")

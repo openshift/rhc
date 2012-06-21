@@ -5,7 +5,7 @@ module RHCHelper
   module Runnable
     include Loggable
 
-    def run(cmd, arg=nil)
+    def run(cmd, arg=nil, input=[])
       logger.info("Running: #{cmd}")
 
       exit_code = -1
@@ -14,6 +14,7 @@ module RHCHelper
       # Don't let a command run more than 5 minutes
       Timeout::timeout(500) do
         pid, stdin, stdout, stderr = Open4::popen4 cmd
+        input.each {|line| stdin.puts line}
         stdin.close
 
         # Block until the command finishes

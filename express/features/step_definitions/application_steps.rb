@@ -1,4 +1,5 @@
 require 'fileutils'
+require 'rhc/config'
 
 include RHCHelper
 
