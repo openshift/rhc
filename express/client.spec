@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.95.1
+Version: 0.95.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -110,6 +110,33 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Jun 21 2012 Adam Miller <admiller@redhat.com> 0.95.2-1
+- Merge pull request #72 from J5/master (ccoleman@redhat.com)
+- [simplecov] simpler coverage fix (johnp@redhat.com)
+- Merge pull request #69 from J5/master (ccoleman@redhat.com)
+- [simplecov] use the same regex for nocov as simplecov uses (johnp@redhat.com)
+- Merge pull request #71 from xiy/master (ccoleman@redhat.com)
+- Make line enumeration in rhc-port-forward compatible with both ruby 1.8 and
+  1.9. (xiy3x0@gmail.com)
+- [simplecov] monkey patch to correctly ignore :nocov: lines (johnp@redhat.com)
+- [rspec] make stub methods less generic (johnp@redhat.com)
+- [rspec] make sure we our internal ssh fingerprint methods match out fallback
+  (johnp@redhat.com)
+- [rspec] stub out ssh_keygen_fallback instead of exe_cmd (johnp@redhat.com)
+- [rspec] silence output during tests by using highline's "say" instead of
+  "puts" (johnp@redhat.com)
+- remove debug output (johnp@redhat.com)
+- [rspec] 100%% wizard coverage (johnp@redhat.com)
+- [rspec] get coverage for ssh-keygen fallback (johnp@redhat.com)
+- [rspec] more package kit code path coverage (johnp@redhat.com)
+- [rspec] cover has_git? error condition (johnp@redhat.com)
+- [rcov] cover the dbus_send_session_method method (johnp@redhat.com)
+- [rspec wizard] add windows codepath check (johnp@redhat.com)
+- [rspec] mock package kit (johnp@redhat.com)
+- [rspec] small changes to get better test coverage (johnp@redhat.com)
+- [rspec] add a test that runs through the whole wizard in one go
+  (johnp@redhat.com)
+
 * Wed Jun 20 2012 Adam Miller <admiller@redhat.com> 0.95.1-1
 - bump_minor_versions for sprint 14 (admiller@redhat.com)
 - Removing --noprompt from ARGV after we're done with it since the other
