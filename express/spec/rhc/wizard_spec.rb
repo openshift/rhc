@@ -11,6 +11,15 @@ class FakeFS::File
   def self.chmod(*args)
     # noop
   end
+
+  # Epic fail - FakeFS manages to redefine this to '/'
+  PATH_SEPARATOR = ":"
+
+  def self.executable?(path)
+    # if the file exists we will assume it is executable
+    # for testing purposes
+    self.exists?(path)
+  end
 end
 
 describe RHC::Wizard do
@@ -80,6 +89,7 @@ describe RHC::Wizard do
     end
 
     it "should check for client tools" do
+      @wizard.setup_mock_has_git(true)
       @wizard.run_next_stage
       output = $terminal.read
       output.should match("Checking for git \.\.\. found")
@@ -87,6 +97,9 @@ describe RHC::Wizard do
 
     it "should ask for a namespace" do
       @wizard.stub_user_info
+      $terminal.write_line("thisnamespaceistoobigandhastoomanycharacterstobevalid")
+
+      $terminal.write_line("invalidnamespace")
       $terminal.write_line("testnamespace")
       @wizard.run_next_stage
       output = $terminal.read
@@ -166,7 +179,7 @@ describe RHC::Wizard do
     end
 
     it "should check for client tools and print they need to be installed" do
-      @wizard.has_git(false)
+      @wizard.setup_mock_has_git(false)
       @wizard.run_next_stage
       output = $terminal.read
       output.should match("Checking for git \.\.\. needs to be installed")
@@ -258,7 +271,9 @@ describe RHC::Wizard do
       output.should match("|#{short_name}|")
     end
 
-    it "should check for client tools and find them" do
+    it "should check for client tools via package kit and find them" do
+      @wizard.setup_mock_package_kit(true)
+
       @wizard.run_next_stage
       output = $terminal.read
       output.should match("Checking for git \.\.\. found")
@@ -336,6 +351,7 @@ describe RHC::Wizard do
     end
 
     it "should check for client tools and find them" do
+      @wizard.setup_mock_has_git(true)
       @wizard.run_next_stage
       output = $terminal.read
       output.should match("Checking for git \.\.\. found")
@@ -396,22 +412,28 @@ describe RHC::Wizard do
       cp["libra_server"].should == @wizard.libra_server
     end
 
-    it "should check for ssh keys and find they are uploaded" do
+    it "should check for ssh keys, not find it on the server and update existing key" do
       key_data = @wizard.get_mock_key_data
+      key_data['keys'].delete('73ce2cc1')
       RHC.stub(:get_ssh_keys) do
         key_data
       end
 
       @wizard.run_next_stage # key config is pretty much a noop here
 
+      @wizard.set_expected_key_name_and_action('default', 'update')
+      $terminal.write_line('yes')
+      $terminal.write_line('default')
+
       # run the key check stage
       @wizard.run_next_stage
 
       output = $terminal.read
-      output.should_not match("ssh key must be uploaded")
+      output.should match("Updating key default")
     end
 
     it "should check for client tools and find them" do
+      @wizard.setup_mock_has_git(true)
       @wizard.run_next_stage
       output = $terminal.read
       output.should match("Checking for git \.\.\. found")
@@ -445,33 +467,224 @@ describe RHC::Wizard do
   end
 
   context "Repeat run of rhc setup with everything set but platform set to Windows" do
-
-    it "should print out repeat run greeting" do
-
+    before(:all) do
+      @wizard = RerunWizardDriver.new
+      @wizard.windows = true
+      @wizard.run_next_stage
     end
 
-    it "should ask password input (not login)" do
+    it "should ask password input" do
+      @wizard.stub_rhc_client_new
+      # queue up input
+      $terminal.write_line "#{@wizard.mock_user}"
+      $terminal.write_line "password"
 
+      @wizard.stub_user_info
+
+      @wizard.run_next_stage
+
+      output = $terminal.read
+      output.should match("OpenShift login")
+      output.should =~ /(#{Regexp.escape("Password: ********\n")})$/
     end
 
-    it "should check for ssh keys and find they are uploaded" do
+    it "should write out a config" do
+      File.exists?(@wizard.config_path).should be false
+      @wizard.run_next_stage
+      File.readable?(@wizard.config_path).should be true
+      cp = RHC::Vendor::ParseConfig.new @wizard.config_path
+      cp["default_rhlogin"].should == @wizard.mock_user
+      cp["libra_server"].should == @wizard.libra_server
+    end
 
+    it "should check for ssh keys and decline uploading them" do
+      @wizard.setup_mock_ssh
+      @wizard.run_next_stage
+      RHC.stub(:get_ssh_keys) { {"keys" => [], "fingerprint" => nil} }
+      $terminal.write_line('no')
+      @wizard.run_next_stage
+      output = $terminal.read
+      output.should match("rhc sshkey")
     end
 
     it "should print out windows client tool info" do
-
+      @wizard.run_next_stage
+      output = $terminal.read
+      output.should match("Git for Windows")
     end
 
-    it "should show namespace" do
-
+    it "should ask for namespace and decline entering one" do
+      @wizard.stub_user_info
+      $terminal.write_line("")
+      @wizard.run_next_stage
+      output = $terminal.read
+      output.should match("rhc domain create")
     end
 
-    it "should list apps" do
-
+    it "should list apps without domain" do
+      @wizard.stub_user_info([],
+                             {"test1" => {},
+                              "test2" => {}
+                             }
+                            )
+      @wizard.run_next_stage
+      output = $terminal.read
+      output.should match("test1 - no public url")
+      output.should match("test2 - no public url")
     end
 
-    it "should show a thank you message" do
+  end
 
+  context "Do a complete run through the wizard" do
+    before(:all) do
+      @wizard = FirstRunWizardDriver.new
+    end
+
+    it "should run" do
+      @wizard.libra_server = nil
+      @wizard.stub_rhc_client_new
+      @wizard.stub_user_info
+      @wizard.setup_mock_ssh
+
+      RHC.stub(:get_ssh_keys) { {"keys" => [], "fingerprint" => nil} }
+      mock_carts = ['ruby', 'python', 'jbosseap']
+      RHC.stub(:get_cartridges_list) { mock_carts }
+
+      $terminal.write_line "#{@wizard.mock_user}"
+      $terminal.write_line "password"
+      $terminal.write_line('no')
+      $terminal.write_line("")
+
+      @wizard.run().should be_true
+    end
+
+    it "should fail" do
+      @wizard.stub_rhc_client_new
+      @wizard.stub_user_info
+      @wizard.stub(:login_stage) { nil }
+      @wizard.run().should be_nil
+    end
+
+    it "should cover package kit install steps" do
+      @wizard.libra_server = nil
+      @wizard.stub_rhc_client_new
+      @wizard.stub_user_info
+      @wizard.setup_mock_ssh
+      @wizard.setup_mock_package_kit(false)
+
+      RHC.stub(:get_ssh_keys) { {"keys" => [], "fingerprint" => nil} }
+      mock_carts = ['ruby', 'python', 'jbosseap']
+      RHC.stub(:get_cartridges_list) { mock_carts }
+      # we need to do this because get_character does not get caught
+      # by our mock terminal
+      @wizard.stub(:get_character) {ask ""}
+
+      $terminal.write_line ""
+      $terminal.write_line "password"
+      $terminal.write_line("no")
+      $terminal.write_line("yes")
+      $terminal.write_line("")
+      $terminal.write_line("")
+
+      @wizard.run().should be_true
+
+      output = $terminal.read
+      output.should match("You may safely continue while the installer is running")
+    end
+  end
+
+  context "Check odds and ends" do
+    it "should call dbus_send_session_method and get multiple return values" do
+      wizard = FirstRunWizardDriver.new
+      wizard.stub(:dbus_send_exec) do |cmd|
+        "\\nboolean true\\nboolean false\\nstring hello\\nother world\\n"
+      end
+      results = wizard.send(:dbus_send_session_method, "test", "foo.bar", "bar/baz", "alpha.Beta", "")
+      results.should == [true, false, "hello", "world"]
+    end
+
+    it "should call dbus_send_session_method and get one return value" do
+      wizard = FirstRunWizardDriver.new
+      wizard.stub(:dbus_send_exec) do |cmd|
+        "\\nstring hello world\\n"
+      end
+      results = wizard.send(:dbus_send_session_method, "test", "foo.bar", "bar/baz", "alpha.Beta", "")
+      results.should == "hello world"
+    end
+
+    it "should cause has_git? to catch an exception and return false" do
+      wizard = FirstRunWizardDriver.new
+      wizard.stub(:git_version_exec){ raise "Fake Exception" }
+      wizard.send(:has_git?).should be_false
+    end
+
+    it "should cause package_kit_install to catch exception and call generic_unix_install_check" do
+      wizard = RerunWizardDriver.new
+      wizard.setup_mock_package_kit(false)
+      wizard.stub(:dbus_send_exec) do |cmd|
+        "Error: mock error" if cmd.start_with?("dbus-send")
+      end
+      wizard.send(:package_kit_install)
+
+      output = $terminal.read
+      output.should match("Checking for git ... needs to be installed")
+      output.should match("Automated installation of client tools is not supported")
+    end
+
+    it "should cause ssh_key_upload? to catch NoMethodError and call the fallback to get the fingerprint" do
+      wizard = RerunWizardDriver.new
+      Net::SSH::KeyFactory.stub(:load_public_key) { raise NoMethodError }
+      @fallback_run = false
+      wizard.stub(:ssh_keygen_fallback) { @fallback_run = true }
+      RHC.stub(:get_ssh_keys) { {"keys" => [], "fingerprint" => nil} }
+
+      wizard.send(:ssh_key_uploaded?)
+
+      @fallback_run.should be_true
+    end
+
+    it "should cause upload_ssh_key to catch NoMethodError and call the fallback to get the fingerprint" do
+      wizard = RerunWizardDriver.new
+      wizard.ssh_keys = wizard.get_mock_key_data
+      @fallback_run = false
+      wizard.stub(:ssh_keygen_fallback) do
+        @fallback_run = true
+        "fingerprint AA:BB:CC:DD:EE:FF"
+      end
+      $?.stub(:exitstatus) { 255 }
+      Net::SSH::KeyFactory.stub(:load_public_key) { raise NoMethodError }
+
+      wizard.send(:upload_ssh_key).should be_false
+
+      output = $terminal.read
+      output.should match("Your ssh public key at .* can not be read")
+      @fallback_run.should be_true
+    end
+
+    it "should cause upload_ssh_key to catch NotImplementedError and return false" do
+      wizard = RerunWizardDriver.new
+      wizard.ssh_keys = wizard.get_mock_key_data
+      Net::SSH::KeyFactory.stub(:load_public_key) { raise NotImplementedError }
+
+      wizard.send(:upload_ssh_key).should be_false
+
+      output = $terminal.read
+      output.should match("Your ssh public key at .* can not be read")
+    end
+
+    it "should match ssh key fallback fingerprint to net::ssh fingerprint" do
+      # we need to write to a live file system so ssh-keygen can find it
+      FakeFS.deactivate!
+      wizard = RerunWizardDriver.new
+      Dir.mktmpdir do |dir|
+        wizard.setup_mock_ssh_keys(dir)
+        pub_ssh = File.join dir, "id_rsa.pub"
+        fallback_fingerprint = wizard.send :ssh_keygen_fallback, pub_ssh
+        internal_fingerprint, short_name = wizard.get_key_fingerprint pub_ssh
+
+        fallback_fingerprint.should == internal_fingerprint
+      end
+      FakeFS.activate!
     end
   end
 
@@ -492,7 +705,7 @@ describe RHC::Wizard do
       end
 
       def add_domain(domain_name)
-        raise "Error: domain name should be '#{@domain_name}' but got '#{domain_name}'" if domain_name != @domain_name
+        raise Rhc::Rest::ValidationException.new("Error: domain name should be '#{@domain_name}' but got '#{domain_name}'") if domain_name != @domain_name
 
         MockDomain.new(domain_name)
       end
@@ -505,8 +718,6 @@ describe RHC::Wizard do
       @ssh_dir = "#{RHC::Config.home_dir}/.ssh/"
       @libra_server = 'mock.openshift.redhat.com'
       @mock_user = 'mock_user@foo.bar'
-      @mock_git_installed = true
-      @mock_package_kit_installed = false
       @current_wizard_stage = nil
       @platform_windows = false
     end
@@ -561,16 +772,27 @@ EOF
       end
     end
 
-    def has_git(bool)
-      @mock_git_installed = bool
+    def setup_mock_package_kit(bool)
+      ENV['PATH'] = '/usr/bin' unless ENV['PATH']
+      ENV['DBUS_SESSION_BUS_ADDRESS'] = "present" unless ENV['DBUS_SESSION_BUS_ADDRESS']
+      unless File.exists?('/usr/bin/dbus-send')
+        FileUtils.mkdir_p '/usr/bin/'
+        File.open('/usr/bin/dbus-send', 'w') { |f| f.write('dummy') }
+      end
+
+      setup_mock_has_git(false)
+
+      self.stub(:dbus_send_session_method) do
+        bool
+      end
     end
 
-    def has_git?
-      @mock_git_installed
+    def setup_mock_has_git(bool)
+      self.stub(:"has_git?") { bool }
     end
 
-    def has_dbus_send?
-      @mock_package_kit_installed
+    def windows=(bool)
+      @platform_windows = bool
     end
 
     def windows?
@@ -588,12 +810,16 @@ EOF
       true
     end
 
-    def get_key_fingerprint
+    def get_key_fingerprint(path=@ssh_pub_key_file_path)
       # returns the fingerprint and the short name used as the default
       # key name
-      fingerprint = Net::SSH::KeyFactory.load_public_key(@ssh_pub_key_file_path).fingerprint
+      fingerprint = Net::SSH::KeyFactory.load_public_key(path).fingerprint
       short_name = fingerprint[0, 12].gsub(/[^0-9a-zA-Z]/,'')
       return fingerprint, short_name
+    end
+
+    def ssh_keys=(data)
+      @ssh_keys = data
     end
 
     def get_mock_key_data
@@ -606,11 +832,8 @@ EOF
          "fingerprint" => "0f:97:4b:82:87:bb:c6:dc:40:a3:c1:bc:bb:55:1e:fa"}
     end
 
-    def setup_mock_ssh_keys
-      private_key_file = File.join(@ssh_dir, "id_rsa")
-      public_key_file = File.join(@ssh_dir, "id_rsa.pub")
-      File.open(private_key_file, 'w') do |f|
-        f.write <<EOF
+    def priv_key
+      <<EOF
 -----BEGIN RSA PRIVATE KEY-----
 MIICWwIBAAKBgQDIXpBBs7g93z/5JqW5IJNJR8bG6DWhpL2vR2ROEfzGqDHLZ+Xb
 saS/Ogc3nZNSav3juHWdiBFIc0unPpLdwmXtcL3tjN52CJqPgU/W0q061fL/tk77
@@ -627,13 +850,20 @@ MMFKWlCIEEtimqRaSQJAPVA1E7AiEvfUv0kRT73tDf4p/BRJ7p2YwjxrGpDBQhG1
 YI+4NOhWtAG3Uips++8RhvmLjv8y+TNKU31J1EJmYA==
 -----END RSA PRIVATE KEY-----
 EOF
-      end
+    end
 
-      File.open(public_key_file, 'w') do |f|
-        f.write <<EOF
+    def pub_key
+      <<EOF
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAgQDIXpBBs7g93z/5JqW5IJNJR8bG6DWhpL2vR2ROEfzGqDHLZ+XbsaS/Ogc3nZNSav3juHWdiBFIc0unPpLdwmXtcL3tjN52CJqPgU/W0q061fL/tk77fFqW2upluo0ZRZQdPc3vTI3tWWZcpyE2LPHHUOI3KN+lRqxgw0Y6z/3Sfw== OpenShift-Key
 EOF
-      end
+    end
+
+    def setup_mock_ssh_keys(dir=@ssh_dir)
+      private_key_file = File.join(dir, "id_rsa")
+      public_key_file = File.join(dir, "id_rsa.pub")
+      File.open(private_key_file, 'w') { |f| f.write priv_key }
+
+      File.open(public_key_file, 'w') { |f| f.write pub_key }
     end
   end
 

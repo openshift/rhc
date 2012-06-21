@@ -176,15 +176,15 @@ end
                        regex_failed_error='contains non-alphanumeric characters!')
     if field
       if field =~ val_regex
-        puts "#{type} " + regex_failed_error
+        say "#{type} " + regex_failed_error
         return false
       end
       if max != 0 && field.length > max
-        puts "maximum #{type} size is #{max} characters"
+        say "maximum #{type} size is #{max} characters"
         return false
       end
     else
-      puts "#{type} is required"
+      say "#{type} is required"
       return false
     end
     field
