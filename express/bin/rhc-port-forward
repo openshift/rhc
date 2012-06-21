@@ -86,7 +86,7 @@ end
 
 # mock for windows
 if defined?(UNIXServer) != 'constant' or UNIXServer.class != Class
-  class UNIXServer; end 
+  class UNIXServer; end
 end
 
 app_uuid = user_info['app_info'][app_name]['uuid']
@@ -109,20 +109,20 @@ Net::SSH.start(ssh_host, app_uuid) do |ssh|
   ssh.exec! "rhc-list-ports" do |channel, stream, data|
 
     # data comes from a linux server so it is a one-line string for windows, we need to split \n manually
-    if RHC::Helpers.windows? 
+    if RHC::Helpers.windows?
       data = data.split /\n/
     end
 
     if stream == :stderr
 
-      data.each { |line|
+      data.lines { |line|
         line = line.chomp
 
         if line.downcase =~ /permission denied/
           puts line
           exit 1
         end
-        
+
         if line.index(ip_and_port_simple_regex)
           hosts_and_ports_descriptions << line
         end
@@ -130,7 +130,7 @@ Net::SSH.start(ssh_host, app_uuid) do |ssh|
 
     else
 
-      data.each { |line|
+      data.lines { |line|
         line = line.chomp
 
         if line.downcase =~ /scale/
@@ -149,7 +149,7 @@ Net::SSH.start(ssh_host, app_uuid) do |ssh|
   end
 
   scaled_uuids.each { |scaled_uuid|
-    
+
     puts "Using #{scaled_uuid}@#{ssh_host} (scaled instance)..." if debug
 
     Net::SSH.start(ssh_host, scaled_uuid) do |ssh|
@@ -202,12 +202,12 @@ Net::SSH.start(ssh_host, app_uuid) do |ssh|
       end
       ssh.loop { true }
     end
-  
+
   rescue Interrupt
     puts
     puts "Terminating..."
     exit 0
-    
+
   rescue Exception => e
     puts
     puts e.message if debug
