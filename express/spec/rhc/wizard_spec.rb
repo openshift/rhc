@@ -1,26 +1,7 @@
 require 'spec_helper'
-require 'fakefs/safe'
 require 'rhc/wizard'
 require 'rhc/vendor/parseconfig'
 require 'rhc/config'
-
-# chmod isn't implemented in the released fakefs gem
-# but is in git.  Once the git version is released we
-# should remove this and actively check permissions
-class FakeFS::File
-  def self.chmod(*args)
-    # noop
-  end
-
-  # Epic fail - FakeFS manages to redefine this to '/'
-  PATH_SEPARATOR = ":"
-
-  def self.executable?(path)
-    # if the file exists we will assume it is executable
-    # for testing purposes
-    self.exists?(path)
-  end
-end
 
 describe RHC::Wizard do
   before(:all) do

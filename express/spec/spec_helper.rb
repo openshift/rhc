@@ -41,6 +41,26 @@ begin
 rescue
 end
 
+require 'fakefs/safe'
+
+# chmod isn't implemented in the released fakefs gem
+# but is in git.  Once the git version is released we
+# should remove this and actively check permissions
+class FakeFS::File
+  def self.chmod(*args)
+    # noop
+  end
+
+  # Epic fail - FakeFS manages to redefine this to '/'
+  PATH_SEPARATOR = ":"
+
+  def self.executable?(path)
+    # if the file exists we will assume it is executable
+    # for testing purposes
+    self.exists?(path)
+  end
+end
+
 #include 'mocha'
 require 'rhc/cli'
 
