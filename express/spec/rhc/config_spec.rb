@@ -1,9 +1,11 @@
 require 'spec_helper'
 require 'rhc/config'
+require 'net/http'
 
 describe RHC::Config do
   before(:all) do
     ENV['LIBRA_SERVER'] = nil
+    ENV['http_proxy'] = nil
     mock_terminal
     FakeFS.activate!
   end
@@ -72,11 +74,13 @@ describe RHC::Config do
     it "should have global and local config" do
       ConfigHelper.write_out_config(ConfigHelper.global_config_path, "global.openshift.redhat.com",
                                                                      "global@redhat.com")
-      ConfigHelper.write_out_config(File.join(ConfigHelper.home_dir,'.openshift/express.conf'),
+      ConfigHelper.write_out_config(File.join(ConfigHelper.home_dir,'.openshift', 'express.conf'),
                                               "local.openshift.redhat.com","local@redhat.com")
       RHC::Config.initialize
       RHC::Config.home_dir = ConfigHelper.home_dir
 
+      RHC::Config.home_conf_path.should == File.join(ConfigHelper.home_dir, '.openshift')
+      RHC::Config.local_config_path.should == File.join(ConfigHelper.home_dir, '.openshift', 'express.conf')
       RHC::Config.has_global_config?.should be_true
       RHC::Config.has_local_config?.should be_true
       RHC::Config.has_opts_config?.should be_false
@@ -86,7 +90,7 @@ describe RHC::Config do
       ConfigHelper.write_out_config(ConfigHelper.global_config_path, "global.openshift.redhat.com",
                                                                      "global@redhat.com",
                                                                      {"random_value" => "12"})
-      ConfigHelper.write_out_config(File.join(ConfigHelper.home_dir,'.openshift/express.conf'),
+      ConfigHelper.write_out_config(File.join(ConfigHelper.home_dir,'.openshift', 'express.conf'),
                                               "local.openshift.redhat.com",
                                               "local@redhat.com",
                                               {"random_value" => 11})
@@ -102,7 +106,7 @@ describe RHC::Config do
     it "should fallback to the default or global if not set in config" do
       ConfigHelper.write_out_config(ConfigHelper.global_config_path, nil,
                                                                      "global@redhat.com")
-      ConfigHelper.write_out_config(File.join(ConfigHelper.home_dir,'.openshift/express.conf'),
+      ConfigHelper.write_out_config(File.join(ConfigHelper.home_dir,'.openshift', 'express.conf'),
                                               nil,
                                               nil,
                                               {"random_value" => 11})
@@ -121,13 +125,13 @@ describe RHC::Config do
       ConfigHelper.write_out_config(ConfigHelper.global_config_path, "global.openshift.redhat.com",
                                                                      "global@redhat.com",
                                                                      {"random_value" => "12"})
-      ConfigHelper.write_out_config(File.join(ConfigHelper.home_dir,'.openshift/express.conf'),
+      ConfigHelper.write_out_config(File.join(ConfigHelper.home_dir,'.openshift', 'express.conf'),
                                               "local.openshift.redhat.com",
                                               "local@redhat.com",
                                               {"random_value" => 11})
       ENV['LIBRA_SERVER'] = "env.openshift.redhat.com"
       RHC::Config.initialize
-      RHC::Config.set_local_config(File.join(ConfigHelper.home_dir,'.openshift/express.conf'))
+      RHC::Config.set_local_config(File.join(ConfigHelper.home_dir,'.openshift', 'express.conf'))
 
       RHC::Config['libra_server'].should == "env.openshift.redhat.com"
       RHC::Config.default_rhlogin.should == "local@redhat.com"
@@ -140,7 +144,7 @@ describe RHC::Config do
     it "should have global and local config" do
       ConfigHelper.write_out_config(ConfigHelper.global_config_path, "global.openshift.redhat.com",
                                                                      "global@redhat.com")
-      ConfigHelper.write_out_config(File.join(ConfigHelper.home_dir,'.openshift/express.conf'),
+      ConfigHelper.write_out_config(File.join(ConfigHelper.home_dir,'.openshift', 'express.conf'),
                                               "local.openshift.redhat.com","local@redhat.com")
       ConfigHelper.write_out_config(ConfigHelper.opts_config_path,
                                     "opts.openshift.redhat.com",
@@ -159,7 +163,7 @@ describe RHC::Config do
       ConfigHelper.write_out_config(ConfigHelper.global_config_path, "global.openshift.redhat.com",
                                                                      "global@redhat.com",
                                                                      {"random_value" => "12"})
-      ConfigHelper.write_out_config(File.join(ConfigHelper.home_dir,'.openshift/express.conf'),
+      ConfigHelper.write_out_config(File.join(ConfigHelper.home_dir,'.openshift', 'express.conf'),
                                               "local.openshift.redhat.com",
                                               "local@redhat.com",
                                               {"random_value" => 11})
@@ -181,7 +185,7 @@ describe RHC::Config do
     it "should fallback to the default or global or local if not set in config" do
       ConfigHelper.write_out_config(ConfigHelper.global_config_path, nil,
                                                                      "global@redhat.com")
-      ConfigHelper.write_out_config(File.join(ConfigHelper.home_dir,'.openshift/express.conf'),
+      ConfigHelper.write_out_config(File.join(ConfigHelper.home_dir,'.openshift', 'express.conf'),
                                               nil,
                                               nil,
                                               {"random_value" => 11,
@@ -199,6 +203,39 @@ describe RHC::Config do
       RHC::Config.default_rhlogin.should == "global@redhat.com"
       RHC::Config['random_value'].should == "10"
       RHC::Config['local_value'].should == "local"
+    end
+  end
+
+  context "Odds and ends including error conditions" do
+    it "should return a direct http connection" do
+      proxy = RHC::Config.default_proxy
+      proxy.should == Net::HTTP
+    end
+
+    it "should retrun a proxy http connection" do
+      RHC::Config.initialize
+      ENV['http_proxy'] = "fakeproxy.foo:8080"
+      proxy = RHC::Config.default_proxy
+      # returns a generic class so we check to make sure it is not a
+      # Net::HTTP class and rely on simplecov to make sure the proxy
+      # code path was run
+      proxy.should_not == Net::HTTP
+    end
+
+    it "should exit if config file can't be read" do
+      ConfigHelper.write_out_config(ConfigHelper.global_config_path,
+                                    "global.openshift.redhat.com",
+                                    "global@redhat.com")
+      RHC::Config.initialize
+
+      RHC::Vendor::ParseConfig.stub(:new) { raise Errno::EACCES.new("Fake can't read file") }
+
+      RHC::Config.stub(:exit) { |code| code }
+
+      RHC::Config.read_config_files.should == 253
+      RHC::Config.set_local_config("fake.conf").should == 253
+      RHC::Config.set_opts_config("fake.conf").should == 253
+      RHC::Config.check_cpath({"config" => "fake.conf"}).should == 253
     end
   end
 end
