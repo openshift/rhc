@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.95.0
+Version: 0.95.1
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -110,6 +110,11 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Jun 20 2012 Adam Miller <admiller@redhat.com> 0.95.1-1
+- bump_minor_versions for sprint 14 (admiller@redhat.com)
+- Removing --noprompt from ARGV after we're done with it since the other
+  commands complain about it not being a valid option (fotios@redhat.com)
+
 * Wed Jun 20 2012 Adam Miller <admiller@redhat.com> 0.94.8-1
 - Improved style (ffranz@redhat.com)
 - Minor message improvements (ffranz@redhat.com)
