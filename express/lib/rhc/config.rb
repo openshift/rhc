@@ -3,6 +3,22 @@ require 'rhc/core_ext'
 
 module RHC
   module Config
+    # FIXME: Config shouldn't really exit
+    #        stub this out for now so we can test it
+    def self.exit(code)
+      # :nocov:
+      Kernel.exit(code)
+      # :nocov:
+    end
+
+    def self.read_config_files
+      @@global_config = RHC::Vendor::ParseConfig.new(@@global_config_path) if File.exists?(@@global_config_path)
+      @@local_config = RHC::Vendor::ParseConfig.new(File.expand_path(@@local_config_path)) if File.exists?(@@local_config_path)
+    rescue Errno::EACCES => e
+      say "Could not open config file: #{e.message}"
+      exit 253
+    end
+
     def self.initialize
       @@defaults = RHC::Vendor::ParseConfig.new()
       @@global_config = nil
@@ -22,18 +38,12 @@ module RHC
       _linux_cfg = '/etc/openshift/' + @@conf_name
       _gem_cfg = File.join(File.expand_path(File.dirname(__FILE__) + "/../../conf"), @@conf_name)
 
-      config_path = File.exists?(_linux_cfg) ? _linux_cfg : _gem_cfg
+      @@global_config_path = File.exists?(_linux_cfg) ? _linux_cfg : _gem_cfg
       @@home_dir = File.expand_path("~")
       @@home_conf_path = File.join(@@home_dir, '.openshift')
       @@local_config_path = File.join(@@home_conf_path, @@conf_name)
 
-      begin
-        @@global_config = RHC::Vendor::ParseConfig.new(config_path)
-        @@local_config = RHC::Vendor::ParseConfig.new(File.expand_path(@@local_config_path)) if File.exists?(@@local_config_path)
-      rescue Errno::EACCES => e
-        puts "Could not open config file: #{e.message}"
-        exit 253
-      end
+      self.read_config_files
     end
 
     self.initialize
@@ -43,6 +53,8 @@ module RHC
       @@home_dir=home_dir
       @@home_conf_path = File.join(@@home_dir, '.openshift')
       @@local_config_path = File.join(@@home_conf_path, @@conf_name)
+      @@local_config = nil
+      @@local_config = RHC::Vendor::ParseConfig.new(File.expand_path(@@local_config_path)) if File.exists?(@@local_config_path)
     end
 
     def self.[](key)
@@ -70,7 +82,7 @@ module RHC
       begin
         @@local_config = RHC::Vendor::ParseConfig.new(File.expand_path(confpath))
       rescue Errno::EACCES => e
-        puts "Could not open config file: #{e.message}"
+        say "Could not open config file: #{e.message}"
         exit 253
       end
     end
@@ -79,7 +91,7 @@ module RHC
       begin
         @@opts_config = RHC::Vendor::ParseConfig.new(File.expand_path(confpath))
       rescue Errno::EACCES => e
-        puts "Could not open config file: #{e.message}"
+        say "Could not open config file: #{e.message}"
         exit 253
       end
     end
@@ -88,7 +100,7 @@ module RHC
       unless opts["config"].nil?
         opts_config_path = File.expand_path(opts["config"])
         if !File.readable?(opts_config_path)
-          puts "Could not open config file: #{@opts_config_path}"
+          say "Could not open config file: #{@opts_config_path}"
           exit 253
         else
           set_opts_config(opts_config_path)
