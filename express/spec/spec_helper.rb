@@ -17,9 +17,9 @@ begin
         original_result[file.filename].each do |line_result|
           line += 1
           if in_nocov
-            in_nocov = false if file.src[line - 1].match("#[ ]*:nocov:")
+            in_nocov = false if file.src[line - 1].match("^([\s]*)#([\s]*)(\:#{SimpleCov.nocov_token}\:)")
           else
-            if file.src[line - 1].match("#[ ]*:nocov:")
+            if file.src[line - 1].match("^([\s]*)#([\s]*)(\:#{SimpleCov.nocov_token}\:)")
               in_nocov = true
             else
               @missed_lines += 1 if line_result == 0
