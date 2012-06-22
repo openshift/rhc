@@ -9,7 +9,10 @@ class Object
     respond_to?(:empty?) ? empty? : !self
   end
 
-  def to_json
-    RHC::Json.encode(self)
+  # Avoid a conflict if to_json is already defined
+  unless Object.public_methods.include? :to_json
+    def to_json
+      RHC::Json.encode(self)
+    end
   end
 end

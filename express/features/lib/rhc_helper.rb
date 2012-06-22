@@ -1,0 +1,7 @@
+require 'rhc_helper/loggable'
+require 'rhc_helper/commandify'
+require 'rhc_helper/httpify'
+require 'rhc_helper/persistable'
+require 'rhc_helper/runnable'
+require 'rhc_helper/app'
+require 'rhc_helper/domain'
