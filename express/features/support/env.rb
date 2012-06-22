@@ -85,4 +85,9 @@ AfterConfiguration do |config|
   RHCHelper::Loggable.perf_logger = perf_logger
 end
 
+After do |s| 
+  # Tell Cucumber to quit after this scenario is done - if it failed.
+  Cucumber.wants_to_quit = true if s.failed?
+end
+
 World(RHCHelper)
