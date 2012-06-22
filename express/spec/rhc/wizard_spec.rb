@@ -1,26 +1,7 @@
 require 'spec_helper'
-require 'fakefs/safe'
 require 'rhc/wizard'
 require 'rhc/vendor/parseconfig'
 require 'rhc/config'
-
-# chmod isn't implemented in the released fakefs gem
-# but is in git.  Once the git version is released we
-# should remove this and actively check permissions
-class FakeFS::File
-  def self.chmod(*args)
-    # noop
-  end
-
-  # Epic fail - FakeFS manages to redefine this to '/'
-  PATH_SEPARATOR = ":"
-
-  def self.executable?(path)
-    # if the file exists we will assume it is executable
-    # for testing purposes
-    self.exists?(path)
-  end
-end
 
 describe RHC::Wizard do
   before(:all) do
@@ -714,7 +695,7 @@ describe RHC::Wizard do
     attr_accessor :mock_user, :libra_server, :config_path, :ssh_dir
     def initialize
       RHC::Config.home_dir = '/home/mock_user'
-      super '/home/mock_user/.openshift/openshift.conf'
+      super '/home/mock_user/.openshift/express.conf'
       @ssh_dir = "#{RHC::Config.home_dir}/.ssh/"
       @libra_server = 'mock.openshift.redhat.com'
       @mock_user = 'mock_user@foo.bar'
@@ -763,6 +744,9 @@ default_rhlogin='#{rhlogin}'
 libra_server = '#{@libra_server}'
 EOF
       end
+
+      # reload config
+      RHC::Config.home_dir = '/home/mock_user'
     end
 
     def setup_mock_ssh(add_ssh_key=false)
