@@ -24,6 +24,12 @@ module RHCHelper
 
             # Create the domain
             rhc_domain_create
+
+            # Write the new domain to a file in the temp directory
+            File.open(File.join(RHCHelper::TEMP_DIR, 'namespace'), 'w') do |f| 
+              f.write(namespace)
+            end
+
             break
           end
         end

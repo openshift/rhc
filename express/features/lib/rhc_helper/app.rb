@@ -36,12 +36,19 @@ module RHCHelper
     end
 
     def self.rhc_setup
+      # Setup questions asked by wizard which are passed in below:
+      #   1 - username
+      #   2 - password
+      #   3 - upload SSH keys
+      #   4 - if no namespace is found, create namespace? (blank is no)
       if $namespace
         # Namespace is already created, so don't pass anything in
-        run("rhc setup", nil, [$username, $password, 'yes', ''])
+        logger.info("Namespace (#{$namespace}) should be found by the wizard")
+        run("rhc setup", nil, [$username, $password, 'yes', ""])
       else
         # Pass in a blank value for namespace to create in the next step
-        run("rhc setup", nil, [$username, $password, 'yes', '', ''])
+        logger.info("Skipping namespace creation")
+        run("rhc setup", nil, [$username, $password, 'yes', "", ""])
       end
     end
 

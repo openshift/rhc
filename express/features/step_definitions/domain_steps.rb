@@ -10,7 +10,7 @@ Then /^the domain should be reserved?$/ do
 
   # Check for up to a minute
   resolved = false
-  60.times do
+  120.times do
     resolved = Domain.reserved?
     break if resolved
     sleep 1

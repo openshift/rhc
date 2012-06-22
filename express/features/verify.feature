@@ -1,14 +1,17 @@
 Feature: Client Integration Tests
+  @init
   Scenario: Setup Wizard
     Given the libra client tools
     When the setup wizard is run
     Then the client tools should be setup
 
+  @init
   Scenario: Domain Creation
     Given the libra client tools
     When a new domain is needed and created
     Then the domain should be reserved
 
+  @init
   Scenario: Application Creation
     Given the libra client tools
     When 1 php-5.3 applications are created
