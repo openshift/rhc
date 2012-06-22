@@ -1,8 +1,13 @@
 Feature: Client Integration Tests
-  Scenario: Application Creation
+  Scenario: Setup Wizard
     Given the libra client tools
     When the setup wizard is run
     Then the client tools should be setup
+
+  Scenario: Domain Creation
+    Given the libra client tools
+    When a new domain is needed and created
+    Then the domain should be reserved
 
   Scenario: Application Creation
     Given the libra client tools

@@ -22,7 +22,7 @@ module RHCHelper
         end
 
         # Log the benchmarking info
-        perf_logger.info "#{time} #{sym.to_s.upcase} #{@namespace} #{@login}"
+        perf_logger.info "#{time} #{sym.to_s.upcase} #{$namespace} #{$login}"
       else
         super(sym, *args, &block)
       end
@@ -46,16 +46,21 @@ module RHCHelper
     # Print out the command arguments based on the state of the application instance
     def get_args(cmd, cartridge=nil, debug=true)
       args = " "
-      args << "-l #{@login} " if @login
-      args << "-a #{@name} " if @name
-      args << "-p #{@password} " if @password
+      args << "-l #{$username} "
+      args << "-p #{$password} "
       args << "-d " if debug
+
+      # Add the application name for all application commands
+      if cmd =~ /app/
+        raise "No application name" unless @name
+        args << "-a #{@name} "
+      end
 
       # Command specific arguments
       case cmd
         when /domain/
-          raise "No namespace set" unless @namespace
-          args << "-n #{@namespace} "
+          raise "No namespace set" unless $namespace
+          args << "-n #{$namespace} "
         when /destroy/
           args << "-b "
         when /snapshot/

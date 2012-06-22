@@ -14,7 +14,7 @@ module RHCHelper
     end
 
     def from_json(json)
-      app = App.new(json['namespace'], json['login'], json['type'], json['name'], json['password'])
+      app = App.new(json['type'], json['name'])
       app.embed = json['embed']
       app.mysql_user = json['mysql_user']
       app.mysql_password = json['mysql_password']
@@ -30,7 +30,7 @@ module RHCHelper
     attr_accessor :file
 
     def persist
-      json = self.to_json(:except => [:logger, :perf_logger])
+      json = self.to_json(:except => [:logger, :perf_logger, :username, :password, :namespace])
       File.open(@file, "w") {|f| f.puts json}
     end
   end

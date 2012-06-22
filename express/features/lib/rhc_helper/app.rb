@@ -1,4 +1,3 @@
-require 'dnsruby'
 require 'tmpdir'
 require 'rhc-rest'
 
@@ -7,15 +6,14 @@ module RHCHelper
   # Constant Definitions
   #
   TEMP_DIR = File.join(Dir.tmpdir, "rhc")
-  DOMAIN = "rhcloud.com"
 
   #
-  # A class to help maintain the state from rhc calls
+  # A class to help maintain the state from rhc calls and helper
+  # methods around application management.
   #
   class App 
     extend Persistable
     extend Runnable
-    include Dnsruby
     include Loggable
     include Commandify
     include Runnable
@@ -23,22 +21,28 @@ module RHCHelper
     include Httpify
 
     # attributes to represent the general information of the application
-    attr_accessor :name, :namespace, :login, :password, :type, :hostname, :repo, :embed, :snapshot, :uid, :alias
+    attr_accessor :name, :type, :hostname, :repo, :embed, :snapshot, :uid, :alias
 
     # mysql connection information
     attr_accessor :mysql_hostname, :mysql_user, :mysql_password, :mysql_database
 
     # Create the data structure for a test application
-    def initialize(namespace, login, type, name, password=nil)
-      @name, @namespace, @login, @type, @password = name, namespace, login, type, password
-      @hostname = "#{name}-#{namespace}.#{DOMAIN}"
-      @repo = "#{TEMP_DIR}/#{namespace}_#{name}_repo"
-      @file = "#{TEMP_DIR}/#{namespace}.json"
+    def initialize(type, name)
+      @name, @type = name, type
+      @hostname = "#{name}-#{$namespace}.#{$domain}"
+      @repo = "#{TEMP_DIR}/#{$namespace}_#{name}_repo"
+      @file = "#{TEMP_DIR}/#{$namespace}.json"
       @embed = []
     end
 
     def self.rhc_setup
-      run("rhc setup", nil, [$username, $password, 'yes', ""])
+      if $namespace
+        # Namespace is already created, so don't pass anything in
+        run("rhc setup", nil, [$username, $password, 'yes', ''])
+      else
+        # Pass in a blank value for namespace to create in the next step
+        run("rhc setup", nil, [$username, $password, 'yes', '', ''])
+      end
     end
 
     def self.create_unique(type, prefix="test")
@@ -62,20 +66,9 @@ module RHCHelper
         next if test_names.index(name)
 
         # Create the app
-        app = App.new($namespace, $username, type, name, $password)
+        app = App.new(type, name)
         app.persist
         return app
-      end
-    end
-
-    def reserved?
-      # If we get a response, then the namespace is reserved
-      # An exception means that it is available
-      begin
-        Dnsruby::Resolver.new.query("#{@namespace}.#{DOMAIN}", Dnsruby::Types::TXT)
-        return true
-      rescue Dnsruby::NXDomain
-        return false
       end
     end
 

@@ -1,5 +1,6 @@
 require 'uri'
 require 'net/https'
+require 'ostruct'
 
 module RHCHelper
   module Httpify
@@ -9,20 +10,20 @@ module RHCHelper
     attr_accessor :response_code, :response_time
 
     def http_instance(uri, timeout=30)
-      http = Net::HTTP.new(uri.host, uri.port)
+      proxy = ENV['http_proxy'] ? URI.parse(ENV['http_proxy']) : OpenStruct.new
+      http = Net::HTTP.new(uri.host, uri.port, proxy.host, proxy.port)
       http.open_timeout = timeout
       http.read_timeout = timeout
       if (uri.scheme == "https")
         http.use_ssl = true
         http.verify_mode = OpenSSL::SSL::VERIFY_NONE
       end
-      return http
+      return http.start
     end
 
     def http_get(url, timeout=30)
       uri = URI.parse(url)
       http = http_instance(uri, timeout)
-      http.start
       request = Net::HTTP::Get.new(uri.request_uri)
       http.request(request)
     end
@@ -30,7 +31,6 @@ module RHCHelper
     def http_head(url, host=nil, follow_redirects=true)
       uri = URI.parse(url)
       http = http_instance(uri)
-      http.start
       request = Net::HTTP::Head.new(uri.request_uri)
       request["Host"] = host if host
       response = http.request(request)
@@ -51,7 +51,7 @@ module RHCHelper
             logger.info("Connection still accessible / retry #{i} / #{hostname}")
             sleep 1
           end
-        rescue SocketError
+        rescue
           return true
         end
       end

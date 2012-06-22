@@ -26,7 +26,6 @@ Given /^an existing (.+) application( without an embedded cartridge)?$/ do |type
 end
 
 When /^(\d+) (.+) applications are created$/ do |app_count, type|
-  # Create our domain and apps
   @apps = app_count.to_i.times.collect do
     app = App.create_unique(type)
     app.rhc_app_create
