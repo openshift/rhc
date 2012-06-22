@@ -30,7 +30,7 @@ module RHCHelper
     attr_accessor :file
 
     def persist
-      json = self.to_json(:except => [:logger, :perf_logger, :username, :password, :namespace])
+      json = self.to_json(:except => [:logger, :perf_logger])
       File.open(@file, "w") {|f| f.puts json}
     end
   end
