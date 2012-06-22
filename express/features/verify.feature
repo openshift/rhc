@@ -47,6 +47,12 @@ Feature: Client Integration Tests
     When the application is tidied
     Then it should succeed
 
+  Scenario: Application Show
+    Given the libra client tools
+    And an existing php-5.3 application
+    When the application is shown
+    Then it should succeed
+
   Scenario: Application Destroy
     Given the libra client tools
     And an existing php-5.3 application

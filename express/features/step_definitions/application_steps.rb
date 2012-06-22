@@ -55,6 +55,10 @@ When /^the application is snapshot$/ do
   @app.rhc_app_snapshot_save
 end
 
+When /^the application is shown$/ do
+  @app.rhc_app_show
+end
+
 When /^the application is tidied$/ do
   @app.rhc_app_tidy
 end
