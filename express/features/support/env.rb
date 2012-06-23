@@ -1,4 +1,5 @@
 $: << File.expand_path(File.join(File.dirname(__FILE__), "../lib"))
+require 'simplecov' if !(RUBY_VERSION < '1.9') && ENV['COVERAGE'] == 'yes'
 
 require 'rhc_helper'
 require 'rhc-rest'
