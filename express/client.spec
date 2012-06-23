@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.95.2
+Version: 0.95.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -110,6 +110,17 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Sat Jun 23 2012 Dan McPherson <dmcphers@redhat.com> 0.95.3-1
+- Merge pull request #73 from J5/master (ccoleman@redhat.com)
+- [rspec] finish up the odds and ends to get Config to 100%% coverage
+  (johnp@redhat.com)
+- [rspec] break up Config to make it easier for testsing (johnp@redhat.com)
+- [rspec] add RHC::Config tests (johnp@redhat.com)
+- [rspec] fix home dir switching code to correctly reload config
+  (johnp@redhat.com)
+- [rspec] move fakefs bits into spec_helper so other tests can benifit
+  (johnp@redhat.com)
+
 * Thu Jun 21 2012 Adam Miller <admiller@redhat.com> 0.95.2-1
 - Merge pull request #72 from J5/master (ccoleman@redhat.com)
 - [simplecov] simpler coverage fix (johnp@redhat.com)
