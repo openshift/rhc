@@ -10,8 +10,8 @@ class Object
   end
 
   # Avoid a conflict if to_json is already defined
-  unless Object.public_methods.include? :to_json
-    def to_json
+  unless Object.new.respond_to? :to_json
+    def to_json(options=nil)
       RHC::Json.encode(self)
     end
   end
