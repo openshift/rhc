@@ -2,9 +2,8 @@ language: ruby
 rvm:
   - 1.8.7
   - 1.9.3
-gemfile: express/Gemfile
+gemfile: Gemfile
 after_install: gem list
-before_script: cd express
 script: bundle exec rake spec
 notifications:
   email:
