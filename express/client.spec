@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.95.3
+Version: 0.95.4
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -110,6 +110,16 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Sat Jun 23 2012 Dan McPherson <dmcphers@redhat.com> 0.95.4-1
+- Merge pull request #67 from matthicksj/add-cuc-tests (ccoleman@redhat.com)
+- Switching cucumber to exit on any failure (mhicks@redhat.com)
+- Adding rhc app show test (mhicks@redhat.com)
+- Better OpenShift Origin instance support and docs (mhicks@redhat.com)
+- No need to exclude these fields anymore (mhicks@redhat.com)
+- Refactoring, fixes and additional functionality (mhicks@redhat.com)
+- Minor fixes, handling rhc setup and configuration (mhicks@redhat.com)
+- Adds end to end cucumber integration tests (mhicks@redhat.com)
+
 * Sat Jun 23 2012 Dan McPherson <dmcphers@redhat.com> 0.95.3-1
 - Merge pull request #73 from J5/master (ccoleman@redhat.com)
 - [rspec] finish up the odds and ends to get Config to 100%% coverage
