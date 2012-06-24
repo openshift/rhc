@@ -65,3 +65,17 @@ Installing git from MacPorts/HomeBrew/Fink/etc requires Xcode.
 Now obtain the client code, either via 'git clone' as above
 or via the rhc gem.
 
+## Contributing
+Once you've made your changes:
+
+1. [Fork](http://help.github.com/forking/) the code
+2. Create a topic branch - `git checkout -b my_branch`
+3. Push to your branch - `git push origin my_branch`
+4. Create a [Pull Request](http://help.github.com/pull-requests/) from your branch
+5. That's it!
+
+## Coding Standards
+We are following the GitHub Ruby styleguide (https://github.com/styleguide/ruby)
+
+If you use vim, we've included a .vimrc in the root of this project.
+In order to use it, install https://github.com/MarcWeber/vim-addon-local-vimrc
