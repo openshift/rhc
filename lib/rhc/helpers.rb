@@ -1,7 +1,18 @@
 require 'commander/user_interaction'
 require 'rhc/config'
+require 'rhc/commands'
+
+OptionParser.accept(URI) {|s,| URI.parse(s) if s}
 
 module RHC
+
+  module Helpers
+    private
+      def self.global_option(*args)
+        RHC::Commands.global_option *args
+      end
+  end
+
   module Helpers
 
     # helpers always have Commander UI available
@@ -28,15 +39,37 @@ module RHC
       # Replace with d = DateTime.rfc3339(s)
     end
 
-    def openshift_server
-      RHC::Config.get_value('libra_server')
+
+    #
+    # Global config
+    #
+
+    global_option '-c', '--config FILE', "Path of a different config file"
+    def config
+      raise "Operations requiring configuration must define a config accessor"
     end
 
-    def success(*args)
-      args.each{ |a| say color(a, :green) }
+    def openshift_server
+      config.get_value('libra_server')
     end
-    def warn(*args)
-      args.each{ |a| say color(a, :yellow) }
+    def openshift_url
+      "https://#{openshift_server}"
+    end
+
+
+    #
+    # Output helpers
+    #
+
+    def say(msg)
+      super
+      msg
+    end
+    def success(msg, *args)
+      say color(msg, :green)
+    end
+    def warn(msg, *args)
+      say color(msg, :yellow)
     end
 
     def color(s, color)
