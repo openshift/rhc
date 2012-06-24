@@ -4,7 +4,7 @@ require 'rhc/config'
 
 describe RHC::Commands::Server do
   before(:each) do
-    RHC::Config.initialize
+    RHC::Config.set_defaults
   end
 
   describe 'run' do
@@ -12,8 +12,8 @@ describe RHC::Commands::Server do
 
     context 'when no issues' do
       before { stub_request(:get, 'https://openshift.redhat.com/app/status/status.json').to_return(:body => {'issues' => []}.to_json) }
-      it { expect { run }.should exit_with_code(0) }
       it('should output success') { run_output.should =~ /All systems running fine/ }
+      it { expect { run }.should exit_with_code(0) }
     end
 
     context 'when 1 issue' do

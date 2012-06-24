@@ -4,14 +4,14 @@ require 'rhc/helpers'
 
 class RHC::Commands::Base
 
-  attr_reader :args, :options
-
-  def initialize(args=[], options={})
+  def initialize(args=[], options=OptionParser.new)
     @args, @options = args, options
   end
 
   protected
     include RHC::Helpers
+
+    attr_reader :args, :options
 
     def application
       #@application ||= ... identify current application or throw,
@@ -33,6 +33,13 @@ class RHC::Commands::Base
       #                object).
     end
 
+    def config
+      @config ||= begin
+        RHC::Config.set_opts_config(options.config) if options.config
+        RHC::Config
+      end
+    end
+
     class InvalidCommand < StandardError ; end
 
     def self.inherited(klass)
@@ -49,11 +56,12 @@ class RHC::Commands::Base
       name = [method_name]
       name.unshift(self.object_name).compact!
       raise InvalidCommand, "Either object_name must be set or a non default method defined" if name.empty?
-      RHC::Commands.add({
+      RHC::Commands.add((@options || {}).merge({
         :name => name.join(' '),
         :class => self,
         :method => method,
-      });
+      }));
+      @options = nil
     end
 
     def self.object_name(value=nil)
@@ -64,4 +72,16 @@ class RHC::Commands::Base
           value.to_s.downcase if value
         end
     end
+
+    def self.description(value)
+      options[:description] = value
+    end
+    def self.summary(value)
+      options[:summary] = value
+    end
+
+    private
+      def self.options
+        @options ||= {}
+      end
 end
