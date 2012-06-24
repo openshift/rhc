@@ -1,4 +1,5 @@
 $: << File.expand_path(File.join(File.dirname(__FILE__), "../lib"))
+require 'simplecov' if !(RUBY_VERSION < '1.9') && ENV['COVERAGE'] == 'yes'
 
 require 'rhc_helper'
 require 'rhc-rest'
@@ -46,7 +47,7 @@ unless ENV['NO_CLEAN']
   puts "--------------------------------------------------------------------------------------------------"
   # Start with a clean config
   puts "  Replacing express.conf with the specified libra_server"
-  File.open(RHC::Config::local_config_path, 'w') {|f| f.write("libra_server=#{URI.parse($end_point).hostname}") }
+  File.open(RHC::Config::local_config_path, 'w') {|f| f.write("libra_server=#{URI.parse($end_point).host}") }
 
   puts "  Cleaning up test applications..."
   FileUtils.rm_rf RHCHelper::TEMP_DIR

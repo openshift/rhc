@@ -1,45 +1,16 @@
-#require 'rubygems'
-#require 'spec'
-require 'webmock/rspec'
-
-begin
+unless RUBY_VERSION < '1.9'
   require 'simplecov'
 
-  # monkey patch to get correct coverage count
-  class SimpleCov::Result
-    def missed_lines
-      return @missed_lines if defined? @missed_lines
-      @missed_lines = 0
-      @files.each do |file|
-        @missed_lines += file.missed_lines.count
-      end
-      @missed_lines
-    end
-  end
-
-  SimpleCov.start do
-    add_filter 'lib/rhc-rest.rb'
-    add_filter 'lib/rhc-common.rb'
-    add_filter 'lib/helpers.rb'
-    add_filter 'lib/rhc/vendor/'
-    add_filter 'lib/rhc-rest/' #temporary
-  end
-
-  original_stderr = $stderr
+  original_stderr = $stderr # in case helpers don't properly cleanup
   SimpleCov.at_exit do
-    begin
-      SimpleCov.result.format!
-      if SimpleCov.result.covered_percent < 99.0
-        original_stderr.puts "Coverage not 100%, build failed."
-        exit 1
-      end
-    rescue
-      puts "No coverage check, older Ruby"
+    SimpleCov.result.format!
+    if SimpleCov.result.covered_percent < 100.0
+      original_stderr.puts "Coverage not 100%, build failed."
+      exit 1
     end
   end
-rescue
 end
-
+require 'webmock/rspec'
 require 'fakefs/safe'
 
 # chmod isn't implemented in the released fakefs gem
