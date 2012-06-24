@@ -4,27 +4,26 @@ Overview
 These tests can be run against a production or OpenShift Origin instance for
 verification of basic functionality.  These tests should be operating system
 independent and will shell out to execute the 'rhc *' commands to emulate a
-user as closely as possible.
+user as closely as possible.  These tests exercise both the commandline
+client and the underlying infrastructure and serve as integration level
+verification tests for the entire stack.
 
 Usage
 =============
 
-Warnings
---------
+Run from the express/ directory with 
 
-You might see warnings about some constants being loaded twice.  This is due to
-the autoloading of cucumber in addition to the structured require ordering of
-the rhc helpers.  You can avoid this by running cucumber with explicit requires.
-For example, from within the express directory, you could run:
+   <env variables> bundle exec rake features
 
-    bundle exec cucumber --require features/support --require features/step_definitions
+'features' requires RHC_USERNAME+RHC_PASSWORD+RHC_NAMESPACE or
+RHC_ENDPOINT to be set in the environment.
 
 Using a proxy
 --------------
 
 You can use a proxy by setting the http_proxy environment variable.  For example
 
-    http_proxy='http://proxyserver:proxyport/' bundle exec cucumber
+    http_proxy='http://proxyserver:proxyport/' bundle exec rake features
 
 Pre-defined users
 -----------------
@@ -38,7 +37,7 @@ You use environment variables to notify the tests of the well defined user,
 password and namespace.  This can be done by passing the values in before the
 command:
 
-    RHC_USERNAME='mylogin@example.com' RHC_PASSWORD='supersecretpassword' RHC_NAMESPACE='mynamespace' bundle exec cucumber
+    RHC_USERNAME='mylogin@example.com' RHC_PASSWORD='supersecretpassword' RHC_NAMESPACE='mynamespace' bundle exec rake features
 
 Development Usage
 =================
@@ -48,7 +47,7 @@ You will most likely be running against your own OpenShift Origin system.  To be
 able to point to a custom system, you can configure the REST endpoint that is used.
 If not specified, it will default to the OpenShift Production REST Endpoint:
 
-    RHC_ENDPOINT='https://myserver/rest/api' bundle exec cucumber
+    RHC_ENDPOINT='https://myserver/rest/api' bundle exec rake features
 
 
 Developing tests
