@@ -11,7 +11,7 @@ verification tests for the entire stack.
 Usage
 =============
 
-Run from the express/ directory with 
+Run from the base directory with 
 
    <env variables> bundle exec rake features
 
