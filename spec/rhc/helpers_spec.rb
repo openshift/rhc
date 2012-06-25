@@ -3,6 +3,16 @@ require 'rhc/helpers'
 require 'rhc/core_ext'
 require 'highline/import'
 require 'rhc/config'
+require 'date'
+
+# Ruby 1.8.7 support
+unless DateTime.instance_methods.any?{ |m| m.to_sym == :to_time }
+  class DateTime
+    def to_time
+      Time.mktime(year, month, day, hour, min, sec)
+    end
+  end
+end
 
 describe RHC::Helpers do
   before(:each) do
