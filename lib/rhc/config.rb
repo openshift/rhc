@@ -19,7 +19,7 @@ module RHC
       exit 253
     end
 
-    def self.initialize
+    def self.set_defaults
       @@defaults = RHC::Vendor::ParseConfig.new()
       @@global_config = nil
       @@local_config = nil
@@ -29,21 +29,25 @@ module RHC
 
       @@defaults.add('libra_server', 'openshift.redhat.com')
       @@env_config.add('libra_server', ENV['LIBRA_SERVER']) if ENV['LIBRA_SERVER']
-
       #
       # Config paths... /etc/openshift/express.conf or $GEM/conf/express.conf -> ~/.openshift/express.conf
       #
-
       @@conf_name = 'express.conf'
-      _linux_cfg = '/etc/openshift/' + @@conf_name
-      _gem_cfg = File.join(File.expand_path(File.dirname(__FILE__) + "/../../conf"), @@conf_name)
-
-      @@global_config_path = File.exists?(_linux_cfg) ? _linux_cfg : _gem_cfg
       @@home_dir = File.expand_path("~")
       @@home_conf_path = File.join(@@home_dir, '.openshift')
       @@local_config_path = File.join(@@home_conf_path, @@conf_name)
+      
+      @@_linux_cfg = '/etc/openshift/' + @@conf_name
+      @@global_config_path = @@_linux_cfg
+    end
 
-      self.read_config_files
+    def self.initialize
+      set_defaults
+
+      _gem_cfg = File.join(File.expand_path(File.dirname(__FILE__) + "/../../conf"), @@conf_name)
+      @@global_config_path = File.exists?(@@_linux_cfg) ? @@_linux_cfg : _gem_cfg
+
+      read_config_files
     end
 
     self.initialize

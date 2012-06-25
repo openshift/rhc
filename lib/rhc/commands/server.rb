@@ -2,8 +2,11 @@ require 'rhc/commands/base'
 
 module RHC::Commands
   class Server < Base
+
+    summary "Display information about the status of the OpenShift service."
+    description "Retrieves any open issues or notices about the operation of the OpenShift service and displays them in the order they were opened."
     def run
-      status = decode_json(RestClient.get("https://#{openshift_server}/app/status/status.json").body)
+      status = decode_json(RestClient.get("#{openshift_url}/app/status/status.json").body)
       open = status['open']
 
       (success 'All systems running fine' and return 0) if open.blank?
