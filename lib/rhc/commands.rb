@@ -1,5 +1,3 @@
-require 'rhc/config'
-
 module RHC
   module Commands 
     def self.load
@@ -11,12 +9,16 @@ module RHC
     def self.add(opts)
       commands[opts[:name]] = opts
     end
+    def self.global_option(*args)
+      global_options << args
+    end
     def self.to_commander(instance=Commander::Runner.instance)
+      global_options.each{ |args| instance.global_option *args }
       commands.each_pair do |name, opts|
         instance.command name do |c|
-          c.option '--config PATH', String, 'Path of alternate config'
+          c.description = opts[:description]
+          c.summary = opts[:summary]
           c.when_called do |args, options|
-            RHC::Config.set_opts_config(options.config) if options.config
             opts[:class].new(args, options).send(opts[:method])
           end
         end
@@ -27,6 +29,9 @@ module RHC
     protected
       def self.commands
         @commands ||= {}
+      end
+      def self.global_options
+        @options ||= []
       end
   end
 end

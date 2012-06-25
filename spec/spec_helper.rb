@@ -121,6 +121,20 @@ module ClassSpecHelpers
     $terminal = MockHighLineTerminal.new @input, @output
   end
 
+  def capture(&block)
+    old_stderr = $stderr
+    old_terminal = $terminal
+    @input = StringIO.new
+    @output = StringIO.new
+    $stderr = (@error = StringIO.new)
+    $terminal = MockHighLineTerminal.new @input, @output
+    yield
+  ensure
+    $stderr = old_stderr
+    $terminal = old_terminal
+    @output.to_s
+  end
+
   def run
     #Commander::Runner.instance_variable_set :"@singleton", nil
     mock_terminal

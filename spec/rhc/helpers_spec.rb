@@ -3,21 +3,67 @@ require 'rhc/helpers'
 require 'rhc/core_ext'
 require 'highline/import'
 require 'rhc/config'
+require 'date'
 
 describe RHC::Helpers do
   before(:each) do
     mock_terminal
-    RHC::Config.initialize
+    RHC::Config.set_defaults
     @tests = HelperTests.new()
   end
 
   subject do 
     Class.new(Object) do
       include RHC::Helpers
+
+      def config
+        @config ||= RHC::Config
+      end
     end.new
   end
 
   its(:openshift_server) { should == 'openshift.redhat.com' }
+  its(:openshift_url) { should == 'https://openshift.redhat.com' }
+
+
+  it("should pluralize many") { subject.pluralize(3, 'fish').should == '3 fishs' }
+  it("should not pluralize one") { subject.pluralize(1, 'fish').should == '1 fish' }
+
+  it("should decode json"){ subject.decode_json("{\"a\" : 1}").should == {'a' => 1} }
+
+  it("should output green on success") do
+    capture{ subject.success 'this is green' }.should == "\e[32mthis is green\e[0m"
+  end
+  it("should output yellow on warn") do
+    capture{ subject.success 'this is yellow' }.should == "\e[32mthis is yellow\e[0m"
+  end
+  it("should return true on success"){ subject.success('anything').should be_true }
+  it("should return true on success"){ subject.warn('anything').should be_true }
+
+  it("should draw a table") do
+    subject.table([[10,2], [3,40]]) do |i|
+      i.map(&:to_s)
+    end.should == ['10 2','3  40']
+  end
+
+  it "should parse an RFC3339 date" do
+    d = subject.datetime_rfc3339('2012-06-24T20:48:20-04:00')
+    d.day.should == 24
+    d.month.should == 6
+    d.year.should == 2012
+  end
+
+  context 'using the current time' do
+    let(:now){ Time.now }
+    let(:rfc3339){ '%Y-%m-%dT%H:%M:%S%z' }
+    it("should output the time for a date that is today") do
+      subject.date(now.strftime(rfc3339)).should =~ /^[0-9]/
+    end
+    it("should output the year for a date that is not this year") do
+      older = now - 1*365*24*60
+      subject.date(older.strftime(rfc3339)).should =~ /^[A-Z]/
+    end
+  end
 
   context 'with LIBRA_SERVER environment variable' do
     before do
@@ -26,7 +72,16 @@ describe RHC::Helpers do
       RHC::Config.initialize
     end
     its(:openshift_server) { should == 'test.com' }
+    its(:openshift_url) { should == 'https://test.com' }
     after { ENV['LIBRA_SERVER'] = nil }
+  end
+
+  context "without RHC::Config" do
+    subject do 
+      Class.new(Object){ include RHC::Helpers }.new
+    end
+
+    it("should raise on config"){ expect{ subject.config }.should raise_error }
   end
 
   context "Formatter" do
