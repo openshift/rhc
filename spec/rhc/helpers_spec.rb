@@ -5,15 +5,6 @@ require 'highline/import'
 require 'rhc/config'
 require 'date'
 
-# Ruby 1.8.7 support
-unless DateTime.instance_methods.any?{ |m| m.to_sym == :to_time }
-  class DateTime
-    def to_time
-      Time.mktime(year, month, day, hour, min, sec)
-    end
-  end
-end
-
 describe RHC::Helpers do
   before(:each) do
     mock_terminal
@@ -56,7 +47,10 @@ describe RHC::Helpers do
   end
 
   it "should parse an RFC3339 date" do
-    subject.datetime_rfc3339('2012-06-24T20:48:20-04:00').to_time.to_i.should == 1340585300
+    d = subject.datetime_rfc3339('2012-06-24T20:48:20-04:00')
+    d.day.should == 24
+    d.month.should == 6
+    d.year.should == 2012
   end
 
   context 'using the current time' do
