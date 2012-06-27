@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.95.4
+Version: 0.95.5
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -110,6 +110,29 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Jun 27 2012 Adam Miller <admiller@redhat.com> 0.95.5-1
+- add thor developer dependency so we can run cucumber tests (johnp@redhat.com)
+- fix tito build due to move to root directory (johnp@redhat.com)
+- Merge pull request #77 from smarterclayton/add_help_information_to_framework
+  (johnp@redhat.com)
+- Fixes BZ 834813, error while creating scaled apps on Ruby 1.9+
+  (ffranz@redhat.com)
+- DateTime on Ruby 1.8.7 can't be converted because of timezones
+  (ccoleman@redhat.com)
+- Ruby 1.8.7 doesn't support to_time (ccoleman@redhat.com)
+- Add simple help info to the framework Improve the spec tests so that they
+  pass when an openshift config file already exists Get 100%% coverage of
+  helpers in helpers_spec.rb Add a way to create global options cleanly from
+  the helper (ccoleman@redhat.com)
+- Move everything in express/ into the root (ccoleman@redhat.com)
+- Add contributing guidelines (ccoleman@redhat.com)
+- Merge pull request #75 from smarterclayton/finish_up_cuc_tests
+  (ccoleman@redhat.com)
+- Ruby 1.8.7 does not support URI#hostname (ccoleman@redhat.com)
+- Integrate cucumber into rake, simplify coverage reporting, allow optional
+  execution of coverage during cucumber (ccoleman@redhat.com)
+- Fix ActiveSupport override in both Ruby 1.8 and 1.9 (ccoleman@redhat.com)
+
 * Sat Jun 23 2012 Dan McPherson <dmcphers@redhat.com> 0.95.4-1
 - Merge pull request #67 from matthicksj/add-cuc-tests (ccoleman@redhat.com)
 - Switching cucumber to exit on any failure (mhicks@redhat.com)
