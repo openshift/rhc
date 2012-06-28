@@ -67,15 +67,12 @@ module Rhc
 
     def send(request)
       begin
-        #puts request.headers
         response = request.execute
         #set cookie
         rh_sso = response.cookies['rh_sso']
-        #puts response.cookies
         if not rh_sso.nil?
           @@headers["cookie"] = "rh_sso=#{rh_sso}"
         end
-        #puts "#{response}"
         return parse_response(response) unless response.nil? or response.code == 204
       rescue RestClient::RequestTimeout, RestClient::ServerBrokeConnection, RestClient::SSLCertificateNotVerified => e
         raise ResourceAccessException.new("Failed to access resource: #{e.message}")
