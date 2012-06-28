@@ -3,13 +3,8 @@ require 'rhc/vendor/zliby'
 require 'archive/tar/minitar'
 include Archive::Tar
 
-if File.executable?('/usr/bin/gnutar') then
-  #:nocov:
-  TAR_BIN = '/usr/bin/gnutar'
-  #:nocov:
-else
-  TAR_BIN = 'tar'
-end
+TAR_BIN = 'tar'
+TAR_BIN = '/usr/bin/gnutar' unless not File.executable? '/usr/bin/gnutar'
 
 module RHC
 
@@ -20,7 +15,7 @@ module RHC
       return false if ! (File.file? filename and File.basename(filename).downcase =~ /.\.tar\.gz$/i)
 
       contains = false
-      if RHC::Helpers.windows? or force_ruby then
+      if RHC::Helpers.windows? or force_ruby
         search = /#{search.to_s}/ if ! search.is_a?(Regexp)
         begin
           RHC::Vendor::Zlib::GzipReader.open(filename) do |gz|
