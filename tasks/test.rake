@@ -4,7 +4,12 @@ require 'cucumber/rake/task'
 
 desc "Check environment for spec"
 task :check_features do
-  fail "Must specify RHC_ENDPOINT OR RHC_USERNAME/RHC_PASSWORD/RHC_DOMAIN in the environment" unless ENV['RHC_ENDPOINT']
+  fail "Must specify RHC_SERVER or RHC_ENDPOINT in the environment" unless ENV['RHC_ENDPOINT'] or ENV['RHC_SERVER']
+  if ENV['RHC_SERVER']
+    endpoint = "https://#{ENV['RHC_SERVER']}/broker/rest/api"
+    puts "Using '#{endpoint}' to test rest api"
+    ENV['RHC_ENDPOINT'] = endpoint
+  end
 end
 
 desc "Run integration suite"
