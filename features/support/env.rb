@@ -1,5 +1,18 @@
 $: << File.expand_path(File.join(File.dirname(__FILE__), "../lib"))
-require 'simplecov' if !(RUBY_VERSION < '1.9') && ENV['COVERAGE'] == 'yes'
+if RUBY_VERSION >= '1.9'
+  ENV['RHC_FEATURE_COVERAGE'] = "1"
+  require 'simplecov'
+
+  original_stderr = $stderr # in case helpers don't properly cleanup
+
+  SimpleCov.start do
+    coverage_dir 'coverage/features/'
+    use_merging true
+
+    # Note, the #:nocov: coverage exclusion  should only be used on external functions 
+    #  that cannot be nondestructively tested in a developer environment.
+  end
+end
 
 require 'rhc_helper'
 require 'rhc-rest'

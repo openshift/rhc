@@ -3,6 +3,14 @@
 # print help
 #
 
+if RUBY_VERSION >= '1.9' and ENV['RHC_FEATURE_COVERAGE']
+  require 'simplecov'
+  SimpleCov.start do
+    coverage_dir "coverage/features"
+    use_merging true
+  end
+end
+
 # Require rhc-common for wizard invocation
 require 'rhc-common'
 
