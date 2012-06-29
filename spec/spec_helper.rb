@@ -1,15 +1,4 @@
-unless RUBY_VERSION < '1.9'
-  require 'simplecov'
-
-  original_stderr = $stderr # in case helpers don't properly cleanup
-  SimpleCov.at_exit do
-    SimpleCov.result.format!
-    if SimpleCov.result.covered_percent < 100.0
-      original_stderr.puts "Coverage not 100%, build failed."
-      exit 1
-    end
-  end
-end
+require 'coverage_helper'
 require 'webmock/rspec'
 require 'fakefs/safe'
 
