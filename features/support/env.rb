@@ -9,6 +9,8 @@ require 'rhc/config'
 chars = ("1".."9").to_a
 random_username = "test" + Array.new(8, '').collect{chars[rand(chars.size)]}.join + "@example.com"
 
+ ENV["PATH"] = "#{ENV['RHC_LOCAL_PATH']}:#{ENV['PATH']}" if ENV['RHC_LOCAL_PATH']
+
 # Generate a random username if one isn't specified (for unauthenticated systems)
 $username = ENV['RHC_USERNAME'] || random_username
 

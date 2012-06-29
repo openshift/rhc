@@ -1,4 +1,4 @@
-unless RUBY_VERSION < '1.9'
+if RUBY_VERSION >= '1.9' and ENV['RHC_FEATURE_COVERAGE']
   require 'simplecov'
   SimpleCov.start do
     coverage_dir 'coverage/features/'
