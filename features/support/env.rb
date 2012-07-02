@@ -1,5 +1,5 @@
 $: << File.expand_path(File.join(File.dirname(__FILE__), "../lib"))
-require 'simplecov' if !(RUBY_VERSION < '1.9') && ENV['COVERAGE'] == 'yes'
+require 'rhc/coverage_helper'
 
 require 'rhc_helper'
 require 'rhc-rest'
@@ -8,6 +8,8 @@ require 'rhc/config'
 # Generate a random username in case one isn't set
 chars = ("1".."9").to_a
 random_username = "test" + Array.new(8, '').collect{chars[rand(chars.size)]}.join + "@example.com"
+
+ ENV["PATH"] = "#{ENV['RHC_LOCAL_PATH']}:#{ENV['PATH']}" if ENV['RHC_LOCAL_PATH']
 
 # Generate a random username if one isn't specified (for unauthenticated systems)
 $username = ENV['RHC_USERNAME'] || random_username

@@ -1,4 +1,7 @@
 #!/usr/bin/env ruby
+
+require 'rhc/coverage_helper'
+
 require 'rhc-common'
 
 #

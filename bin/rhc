@@ -2,6 +2,7 @@
 #
 # print help
 #
+require 'rhc/coverage_helper'
 
 # Require rhc-common for wizard invocation
 require 'rhc-common'
