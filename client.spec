@@ -13,6 +13,7 @@ BuildRoot:     %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 BuildRequires: rubygem-rake
 BuildRequires: rubygem-rspec
 BuildRequires: rubygem-webmock
+BuildRequires: rubygem-cucumber
 Requires:      ruby >= 1.8.5
 Requires:      rubygem-parseconfig
 Requires:      rubygem-rest-client
