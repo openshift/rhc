@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.95.5
+Version: 0.95.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -110,6 +110,18 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Jul 02 2012 Adam Miller <admiller@redhat.com> 0.95.6-1
+- add comment to the top of coverage_helper (johnp@redhat.com)
+- make coverage helper module more ruby'esk (johnp@redhat.com)
+- [rake] make a cucumber_local task that runs on the local bundle
+  (johnp@redhat.com)
+- [rake] clean up tasks (johnp@redhat.com)
+- [rake] add cucumber task and allow specifying RHC_SERVER (johnp@redhat.com)
+- [cucumber coverage] use a helper to start simplecov (johnp@redhat.com)
+- add simplecov to cucumber tests (johnp@redhat.com)
+- [simplecov] Seperated simplecov output for spec tests (nhr@redhat.com)
+- Fixes BZ 829833, Yard warnings when gem install rhc (ffranz@redhat.com)
+
 * Wed Jun 27 2012 Adam Miller <admiller@redhat.com> 0.95.5-1
 - add thor developer dependency so we can run cucumber tests (johnp@redhat.com)
 - fix tito build due to move to root directory (johnp@redhat.com)
