@@ -1,5 +1,5 @@
 $: << File.expand_path(File.join(File.dirname(__FILE__), "../lib"))
-require 'rhc-feature-coverage-helper'
+require 'rhc/coverage_helper'
 
 require 'rhc_helper'
 require 'rhc-rest'

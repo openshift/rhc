@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-require 'rhc-feature-coverage-helper'
+require 'rhc/coverage_helper'
 
 require 'rhc-common'
 require 'net/http'
