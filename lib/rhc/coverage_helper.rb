@@ -1,3 +1,7 @@
+# Must be the first module imported at entry points (executables that run
+# in seperate processes from the test harness) otherwise coverage will be
+# incomplete
+
 if RUBY_VERSION >= '1.9' and ENV['RHC_FEATURE_COVERAGE']
   require 'simplecov'
   SimpleCov.start do
