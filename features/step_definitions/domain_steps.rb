@@ -1,5 +1,4 @@
 include RHCHelper
-=begin
 When /^a new domain is needed and created$/ do
   Domain.create_if_needed
 end
@@ -18,4 +17,3 @@ Then /^the domain should be reserved?$/ do
 
   resolved.should be_true, 'Not able to lookup DNS TXT record in time.'
 end
-=end
