@@ -8,17 +8,12 @@ require 'rhc-rest/domain'
 require 'rhc-rest/key'
 require 'rhc-rest/user'
 
-@@end_point = ""
-@@headers = {:accept => :json}
-
 module Rhc
   module Rest
+    @@headers = {:accept => :json}
+
     def logger
-      if defined?Rails.logger
-        Rails.logger
-      else
-        Logger.new(STDOUT)
-      end
+      Logger.new(STDOUT)
     end
 
     def parse_response(response)

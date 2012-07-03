@@ -29,7 +29,6 @@ unless RUBY_VERSION < '1.9'
     # Filters - these files will be ignored.
     add_filter 'lib/rhc/vendor/'   # vendored files should be taken directly and only
                                    # namespaces changed
-    add_filter 'lib/rhc-rest.rb'   # REST coverage is not yet 100%
     add_filter 'lib/rhc-rest/'     # REST coverage is not yet 100%
     add_filter 'lib/bin/'          # This is just for safety; simplecov isn't picking these up.
     add_filter 'lib/rhc-common.rb' # deprecated, functionality moved into client or rhc/helpers.rb
