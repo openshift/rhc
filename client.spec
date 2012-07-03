@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.95.6
+Version: 0.95.7
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -111,6 +111,10 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Jul 03 2012 Adam Miller <admiller@redhat.com> 0.95.7-1
+- added buildrequires rubygem-cucumber because tests are running at rpm build
+  time (admiller@redhat.com)
+
 * Mon Jul 02 2012 Adam Miller <admiller@redhat.com> 0.95.6-1
 - add comment to the top of coverage_helper (johnp@redhat.com)
 - make coverage helper module more ruby'esk (johnp@redhat.com)
