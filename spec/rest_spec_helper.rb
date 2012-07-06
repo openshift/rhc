@@ -37,7 +37,9 @@ module RestSpecHelper
       operation = link[0]
       href      = link[1]
       method    = link[2]
-      link_set[operation] = { 'href' => mock_href(href), 'method' => method }
+      # Note that the 'relative' key/value pair below is a convenience for testing;
+      # this is not used by the API classes.
+      link_set[operation] = { 'href' => mock_href(href), 'method' => method, 'relative' => href }
     end
     return link_set
   end
@@ -59,10 +61,10 @@ module RestSpecHelper
   end
 
   def mock_client_links
-    [['GET_USER',       'user/',       'get' ],
-     ['ADD_DOMAIN',     'domains/add', 'post'],
-     ['LIST_DOMAINS',   'domains/',    'get' ],
-     ['LIST_CARTIDGES', 'cartridges/', 'get' ]]
+    [['GET_USER',        'user/',       'get' ],
+     ['ADD_DOMAIN',      'domains/add', 'post'],
+     ['LIST_DOMAINS',    'domains/',    'get' ],
+     ['LIST_CARTRIDGES', 'cartridges/', 'get' ]]
   end
 
   def mock_domain_links(domain_id='test_domain')
