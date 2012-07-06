@@ -33,6 +33,7 @@ module RHCHelper
       @repo = "#{TEMP_DIR}/#{$namespace}_#{name}_repo"
       @file = "#{TEMP_DIR}/#{$namespace}.json"
       @embed = []
+      @embed_helpers = {}
     end
 
     def self.rhc_setup
@@ -77,6 +78,29 @@ module RHCHelper
         app.persist
         return app
       end
+    end
+
+    def add_cartridge(name)
+      exitcode = 0
+      cartridge(name).add do |ec|
+        exitcode = ec
+        embed << name unless embed.include?(name) or ec != 0
+      end
+
+      persist
+      exitcode
+    end
+
+    def remove_cartridge(name)
+      cartridge(name).remove
+      embed.reject! { |s| s == name }
+
+      persist
+    end
+
+    def cartridge(name)
+      @embed_helpers[name] = RHCHelper::Cartridge.new(self, name) unless @embed_helpers.include?(name)
+      @embed_helpers[name]
     end
 
     def get_index_file
