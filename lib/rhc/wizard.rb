@@ -385,22 +385,21 @@ EOF
             "applications without first creating a namespace."
       end
 
-      namespace = nil
-      paragraph do
-        namespace = ask "Please enter a namespace or leave this blank if you wish to skip this step:" do |q|
-          q.validate = lambda { |p| RHC::check_namespace p }
-        end
-      end
-
-      while !config_namespace namespace do
+      # Ask for a namespace at least once, configure the namespace if a valid,
+      # non-blank string is provided.
+      namespace  = nil
+      first_pass = true
+      while first_pass or !config_namespace namespace do
+        first_pass = false
         paragraph do
           namespace = ask "Please enter a namespace or leave this blank if you wish to skip this step:" do |q|
-            q.validate = lambda { |p| RHC::check_namespace p }
+            q.validate  = lambda{ |p| RHC::check_namespace p }
+            q.responses[:not_valid]    = 'The namespace value must contain only letters and/or numbers (A-Za-z0-9):'
+            q.responses[:ask_on_error] = ''
           end
         end
       end
     end
-
 
     def dbus_send_exec(name, service, obj_path, iface, stringafied_params, wait_for_reply)
       # :nocov: dbus_send_exec is not safe to run on a test system
