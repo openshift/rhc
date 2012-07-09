@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.95.10
+Version: 0.95.11
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -111,6 +111,14 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Jul 09 2012 Adam Miller <admiller@redhat.com> 0.95.11-1
+- Merge pull request #90 from J5/master (contact@fabianofranz.com)
+- [bug #816813] fix it so debug=true in conf works with rhc app
+  (johnp@redhat.com)
+- [spec] add test for ssh helper (johnp@redhat.com)
+- bump the key generation to 2048 bits (johnp@redhat.com)
+- [bug #837189] call ssh-add when writing out ssh key (johnp@redhat.com)
+
 * Mon Jul 09 2012 Dan McPherson <dmcphers@redhat.com> 0.95.10-1
 - Removed debug comments (contact@fabianofranz.com)
 - Fixes BZ 837464 (contact@fabianofranz.com)
