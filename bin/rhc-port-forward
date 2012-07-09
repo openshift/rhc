@@ -111,14 +111,11 @@ Net::SSH.start(ssh_host, app_uuid) do |ssh|
 
   ssh.exec! "rhc-list-ports" do |channel, stream, data|
 
-    # data comes from a linux server so it is a one-line string for windows, we need to split \n manually
-    if RHC::Helpers.windows?
-      data = data.split /\n/
-    end
-
     if stream == :stderr
 
       data.lines { |line|
+        puts 'LINE: ' + line
+
         line = line.chomp
 
         if line.downcase =~ /permission denied/
@@ -134,6 +131,8 @@ Net::SSH.start(ssh_host, app_uuid) do |ssh|
     else
 
       data.lines { |line|
+        puts 'LINE: ' + line
+
         line = line.chomp
 
         if line.downcase =~ /scale/
@@ -158,12 +157,10 @@ Net::SSH.start(ssh_host, app_uuid) do |ssh|
     Net::SSH.start(ssh_host, scaled_uuid) do |ssh|
 
       ssh.exec! "rhc-list-ports" do |channel, stream, data|
-        # data comes from a linux server so it is a one-line string for windows, we need to split \n manually
-        if RHC::Helpers.windows?
-          data = data.split /\n/
-        end
         if stream == :stderr
           data.lines { |line|
+        puts 'LINE: ' + line
+
             line = line.chomp
             if line.downcase =~ /permission denied/
               puts line
@@ -175,6 +172,8 @@ Net::SSH.start(ssh_host, app_uuid) do |ssh|
           }
         else
           data.lines { |line|
+        puts 'LINE: ' + line
+
             line = line.chomp
             if ip_and_port_simple_regex.match(line)
               hosts_and_ports << line
