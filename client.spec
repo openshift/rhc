@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.95.9
+Version: 0.95.10
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -111,6 +111,12 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Jul 09 2012 Dan McPherson <dmcphers@redhat.com> 0.95.10-1
+- Removed debug comments (contact@fabianofranz.com)
+- Fixes BZ 837464 (contact@fabianofranz.com)
+- Fixes BZ 837191, not parsing \n on windows anymore (using .lines instead)
+  (contact@fabianofranz.com)
+
 * Mon Jul 09 2012 Dan McPherson <dmcphers@redhat.com> 0.95.9-1
 - Merge pull request #89 from nhr/BZ836177 (ccoleman@redhat.com)
 - Merge pull request #87 from J5/master (ccoleman@redhat.com)
