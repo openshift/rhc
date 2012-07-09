@@ -33,7 +33,7 @@ module RHC
     #  # => /home/user/.ssh/id_rsa.pub
     #
     # Returns nil on failure or public key location as a String on success
-    def generate_ssh_key_ruby(type="RSA", bits = 1024, comment = "OpenShift-Key")
+    def generate_ssh_key_ruby(type="RSA", bits = 2048, comment = "OpenShift-Key")
       key = RHC::Vendor::SSHKey.generate(:type => type,
                                          :bits => bits,
                                          :comment => comment)
