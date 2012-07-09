@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.95.8
+Version: 0.95.9
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -111,6 +111,18 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Jul 09 2012 Dan McPherson <dmcphers@redhat.com> 0.95.9-1
+- Merge pull request #89 from nhr/BZ836177 (ccoleman@redhat.com)
+- Merge pull request #87 from J5/master (ccoleman@redhat.com)
+- Fixed BZ836177 -  error message is not clear when using invalid domain name
+  in rhc setup wizard (nhr@redhat.com)
+- Added rspec coverage for Rhc::Rest::Client (nhr@redhat.com)
+- [cucumber] add tests for cartridge creation and stub out other tests
+  (johnp@redhat.com)
+- [cucumber] Suppress simplecov output for rhc scripts (johnp@redhat.com)
+- [cucumber] revert debug comments which were mistakenly checked in
+  (johnp@redhat.com)
+
 * Thu Jul 05 2012 Adam Miller <admiller@redhat.com> 0.95.8-1
 - Added rsepc testing for Rhc::Rest. Made minor fixes to Rhc::Rest base module.
   (nhr@redhat.com)
