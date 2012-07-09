@@ -1,5 +1,8 @@
 $: << File.expand_path(File.join(File.dirname(__FILE__), "../lib"))
 require 'rhc/coverage_helper'
+SimpleCov.at_exit do
+    SimpleCov.result.format!
+end
 
 require 'rhc_helper'
 require 'rhc-rest'

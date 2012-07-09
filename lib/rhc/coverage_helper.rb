@@ -6,6 +6,7 @@ if RUBY_VERSION >= '1.9' and ENV['RHC_FEATURE_COVERAGE']
   require 'simplecov'
   SimpleCov.start do
     coverage_dir 'coverage/features/'
+    command_name 'Cucumber Features'
 
     # Filters - these files will be ignored.
     add_filter 'lib/rhc/vendor/'   # vendored files should be taken directly and only
@@ -26,5 +27,9 @@ if RUBY_VERSION >= '1.9' and ENV['RHC_FEATURE_COVERAGE']
     use_merging = true
     # Note, the #:nocov: coverage exclusion  should only be used on external functions 
     #  that cannot be nondestructively tested in a developer environment.
+  end
+
+  # suppress output
+  SimpleCov.at_exit do
   end
 end

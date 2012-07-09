@@ -14,6 +14,17 @@ Given /^an existing (.+) application with an embedded (.*) cartridge$/ do |type,
   @app.should_not be_nil, 'No existing applications w/cartridges found.  Check the creation scenarios for failures.'
 end
 
+Given /^an existing (.+) application with embedded (.*) and (.*) cartridges$/ do |type, embed_1, embed_2|
+  App.find_on_fs.each do |app|
+    if app.type == type and app.embed.include?(embed_1) and app.embed.include?(embed_2)
+      @app = app
+      break
+    end
+  end
+
+  @app.should_not be_nil, 'No existing applications w/cartridges found.  Check the creation scenarios for failures.'
+end
+
 Given /^an existing (.+) application( without an embedded cartridge)?$/ do |type, ignore|
   App.find_on_fs.each do |app|
     if app.type == type and app.embed.empty?
