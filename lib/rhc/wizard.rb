@@ -1,5 +1,6 @@
 require 'rhc-common'
 require 'rhc/helpers'
+require 'rhc/ssh_key_helpers'
 require 'highline/system_extensions'
 require 'net/ssh'
 require 'fileutils'
@@ -8,6 +9,7 @@ module RHC
   class Wizard
     include HighLine::SystemExtensions
     include RHC::Helpers
+    include RHC::SSHKeyHelpers
 
     @@stages = [:greeting_stage,
                 :login_stage,
@@ -520,12 +522,6 @@ We recommend these free applications:
   * TortoiseGit - git client that integrates into the file explorer http://code.google.com/p/tortoisegit/
 
 EOF
-    end
-
-    def exe?(executable)
-      ENV['PATH'].split(File::PATH_SEPARATOR).any? do |directory|
-        File.executable?(File.join(directory, executable.to_s))
-      end
     end
 
     def git_version_exec
