@@ -206,6 +206,52 @@ describe RHC::Config do
     end
   end
 
+  context "Debug options" do
+    after(:all) do
+      FakeFS::FileSystem.clear
+    end
+
+    it "should show debug as false because nothing is set" do
+      ConfigHelper.check_legacy_debug({}).should be_false
+    end
+
+    it "should show debug as 'true' because config is set" do
+      ConfigHelper.write_out_config(ConfigHelper.global_config_path,
+                                    nil,
+                                    nil,
+                                    {"debug" => "true"})
+      RHC::Config.initialize
+      ConfigHelper.check_legacy_debug({}).should == "true"
+    end
+
+    it "should show debug as false because config is set" do
+      ConfigHelper.write_out_config(ConfigHelper.global_config_path,
+                                    nil,
+                                    nil,
+                                    {"debug" => "false"})
+      RHC::Config.initialize
+      ConfigHelper.check_legacy_debug({}).should be_false
+    end
+
+    it "should show debug as true because config is set" do
+      ConfigHelper.write_out_config(ConfigHelper.global_config_path,
+                                    nil,
+                                    nil,
+                                    {"debug" => "true"})
+      RHC::Config.initialize
+      ConfigHelper.check_legacy_debug({"debug" => false}).should be_true
+    end
+
+    it "should show debug as true because opt is set" do
+      ConfigHelper.write_out_config(ConfigHelper.global_config_path,
+                                    nil,
+                                    nil,
+                                    {"debug" => "false"})
+      RHC::Config.initialize
+      ConfigHelper.check_legacy_debug({"debug" => true}).should be_true
+    end
+  end
+
   context "Odds and ends including error conditions" do
     it "should return a direct http connection" do
       proxy = RHC::Config.default_proxy
@@ -255,6 +301,15 @@ class ConfigHelper
 
   def self.opts_config_path
     @@opts_config_path
+  end
+
+  def self.check_legacy_debug(opts)
+    # this simulates how the old rhc code checked for debug
+    # in the future this should all be filtered through the Config module
+    # and an app should just have to use RHC::Config.debug?
+    debug = RHC::Config['debug'] == 'false' ? nil : RHC::Config['debug']
+    debug = true if opts.has_key? 'debug'
+    debug
   end
 
   def self.write_out_config(config_path, server, login, other={})
