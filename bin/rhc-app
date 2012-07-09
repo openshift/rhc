@@ -96,7 +96,7 @@ def validate_args(val_type=true, val_cartridge=false, val_timeout=true)
     p_usage
   end
   
-  debug = $opt.has_key? 'debug'
+  debug = true if $opt.has_key? 'debug'
   RHC::debug(debug)
   
   RHC::timeout($opt["timeout"], get_var('timeout')) if val_timeout

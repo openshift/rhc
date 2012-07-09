@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'rhc/helpers'
+require 'rhc/ssh_key_helpers'
 require 'rhc/core_ext'
 require 'highline/import'
 require 'rhc/config'
@@ -137,8 +138,25 @@ describe RHC::Helpers do
     end
   end
 
+  context "SSH Key Helpers" do
+    before do
+      FakeFS.activate!
+    end
+
+    it "should generate an ssh key then return nil when it tries to create another" do
+      @tests.generate_ssh_key_ruby.should match("\.ssh/id_rsa\.pub")
+      @tests.generate_ssh_key_ruby == nil
+    end
+
+    after do
+      FakeFS::FileSystem.clear
+      FakeFS.deactivate!
+    end
+  end
+
   class HelperTests
     include RHC::Helpers
+    include RHC::SSHKeyHelpers
 
     def initialize
       @print_num = 0
