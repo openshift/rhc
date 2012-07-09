@@ -114,7 +114,6 @@ Net::SSH.start(ssh_host, app_uuid) do |ssh|
     if stream == :stderr
 
       data.lines { |line|
-        puts 'LINE: ' + line
 
         line = line.chomp
 
@@ -131,7 +130,6 @@ Net::SSH.start(ssh_host, app_uuid) do |ssh|
     else
 
       data.lines { |line|
-        puts 'LINE: ' + line
 
         line = line.chomp
 
@@ -159,7 +157,6 @@ Net::SSH.start(ssh_host, app_uuid) do |ssh|
       ssh.exec! "rhc-list-ports" do |channel, stream, data|
         if stream == :stderr
           data.lines { |line|
-        puts 'LINE: ' + line
 
             line = line.chomp
             if line.downcase =~ /permission denied/
@@ -172,7 +169,6 @@ Net::SSH.start(ssh_host, app_uuid) do |ssh|
           }
         else
           data.lines { |line|
-        puts 'LINE: ' + line
 
             line = line.chomp
             if ip_and_port_simple_regex.match(line)
