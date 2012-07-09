@@ -3,8 +3,7 @@ require 'rhc/vendor/zliby'
 require 'archive/tar/minitar'
 include Archive::Tar
 
-TAR_BIN = 'tar'
-TAR_BIN = '/usr/bin/gnutar' unless not File.executable? '/usr/bin/gnutar'
+TAR_BIN = File.executable?('/usr/bin/gnutar') ? '/usr/bin/gnutar' : 'tar'
 
 module RHC
 
