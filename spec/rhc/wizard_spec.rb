@@ -826,10 +826,9 @@ EOF
       true
     end
 
-    def get_key_fingerprint(path=nil)
+    def get_key_fingerprint(path=RHC::Config.ssh_pub_key_file_path)
       # returns the fingerprint and the short name used as the default
       # key name
-      path = RHC::Config.ssh_pub_key_file_path if path.nil?
       fingerprint = Net::SSH::KeyFactory.load_public_key(path).fingerprint
       short_name = fingerprint[0, 12].gsub(/[^0-9a-zA-Z]/,'')
       return fingerprint, short_name
