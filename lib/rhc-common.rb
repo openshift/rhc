@@ -306,9 +306,13 @@ end
 
     # Inject public fingerprint into key.
     begin
-      ssh_keys['fingerprint'] = \
-        Net::SSH::KeyFactory.load_data_public_key(
-          "#{ssh_keys['ssh_type']} #{ssh_keys['ssh_key']}").fingerprint
+      if ssh_keys['ssh_type'].nil? or ssh_keys['ssh_type'].empty?
+        ssh_keys['fingerprint'] = nil
+      else
+        ssh_keys['fingerprint'] = \
+          Net::SSH::KeyFactory.load_data_public_key(
+            "#{ssh_keys['ssh_type']} #{ssh_keys['ssh_key']}").fingerprint
+      end
     rescue NoMethodError 
       #older net/ssh (mac for example)
       tempfile = `mktemp /tmp/openshift.XXXXXXXX`
@@ -1235,7 +1239,7 @@ end
 #
 def default_setup_wizard
   if RHC::Config.should_run_wizard?
-    w = RHC::Wizard.new(RHC::Config.local_config_path) 
+    w = RHC::Wizard.new(RHC::Config.local_config_path)
     return w.run
   end
 

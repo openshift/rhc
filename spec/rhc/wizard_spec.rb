@@ -574,6 +574,38 @@ describe RHC::Wizard do
     end
   end
 
+  context "Check SSHWizard" do
+    it "should generate and upload keys since the user does not have them" do
+      wizard = SSHWizardDriver.new
+      wizard.stub_rhc_client_new
+      wizard.stub_user_info
+      RHC.stub(:get_ssh_keys) { {"keys" => [], "fingerprint" => nil} }
+      wizard.set_expected_key_name_and_action('default', 'add')
+      $terminal.write_line("yes")
+
+      wizard.run().should be_true
+
+      output = $terminal.read
+      output.should match("Sending new key default")
+    end
+
+    it "should pass through since the user has keys already" do
+      wizard = SSHWizardDriver.new
+      wizard.stub_rhc_client_new
+      wizard.stub_user_info
+      wizard.setup_mock_ssh(true)
+      key_data = wizard.get_mock_key_data
+      RHC.stub(:get_ssh_keys) do
+        key_data
+      end
+
+      wizard.run().should be_true
+
+      output = $terminal.read
+      output.should == ""
+    end
+  end
+
   context "Check odds and ends" do
     it "should call dbus_send_session_method and get multiple return values" do
       wizard = FirstRunWizardDriver.new
@@ -693,9 +725,9 @@ describe RHC::Wizard do
     end
 
     attr_accessor :mock_user, :libra_server, :config_path, :ssh_dir
-    def initialize
+    def initialize(*args)
       RHC::Config.home_dir = '/home/mock_user'
-      super '/home/mock_user/.openshift/express.conf'
+      super *args
       @ssh_dir = "#{RHC::Config.home_dir}/.ssh/"
       @libra_server = 'mock.openshift.redhat.com'
       @mock_user = 'mock_user@foo.bar'
@@ -794,9 +826,10 @@ EOF
       true
     end
 
-    def get_key_fingerprint(path=@ssh_pub_key_file_path)
+    def get_key_fingerprint(path=nil)
       # returns the fingerprint and the short name used as the default
       # key name
+      path = RHC::Config.ssh_pub_key_file_path if path.nil?
       fingerprint = Net::SSH::KeyFactory.load_public_key(path).fingerprint
       short_name = fingerprint[0, 12].gsub(/[^0-9a-zA-Z]/,'')
       return fingerprint, short_name
@@ -853,9 +886,25 @@ EOF
 
   class FirstRunWizardDriver < RHC::Wizard
     include WizardDriver
+
+    def initialize
+      super '/home/mock_user/.openshift/express.conf'
+    end
   end
 
   class RerunWizardDriver < RHC::RerunWizard
     include WizardDriver
+
+    def initialize
+      super '/home/mock_user/.openshift/express.conf'
+    end
+  end
+
+  class SSHWizardDriver < RHC::SSHWizard
+    include WizardDriver
+
+    def initialize
+      super 'mock_user@foo.bar', 'password'
+    end
   end
 end
