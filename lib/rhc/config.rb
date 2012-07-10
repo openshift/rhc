@@ -36,7 +36,9 @@ module RHC
       @@home_dir = File.expand_path("~")
       @@home_conf_path = File.join(@@home_dir, '.openshift')
       @@local_config_path = File.join(@@home_conf_path, @@conf_name)
-      
+      @@ssh_priv_key_file_path = "#{@@home_dir}/.ssh/id_rsa"
+      @@ssh_pub_key_file_path = "#{@@home_dir}/.ssh/id_rsa.pub"
+ 
       @@_linux_cfg = '/etc/openshift/' + @@conf_name
       @@global_config_path = @@_linux_cfg
     end
@@ -59,6 +61,8 @@ module RHC
       @@local_config_path = File.join(@@home_conf_path, @@conf_name)
       @@local_config = nil
       @@local_config = RHC::Vendor::ParseConfig.new(File.expand_path(@@local_config_path)) if File.exists?(@@local_config_path)
+      @@ssh_priv_key_file_path = "#{@@home_dir}/.ssh/id_rsa"
+      @@ssh_pub_key_file_path = "#{@@home_dir}/.ssh/id_rsa.pub"
     end
 
     def self.[](key)
@@ -129,6 +133,10 @@ module RHC
       not (has_local_config? or has_opts_config?)
     end
 
+    def self.should_run_ssh_wizard?
+      not File.exists? @@ssh_priv_key_file_path
+    end
+
     def self.local_config_path
       @@local_config_path
     end
@@ -139,6 +147,10 @@ module RHC
 
     def self.home_dir
       @@home_dir
+    end
+
+    def self.ssh_pub_key_file_path
+      @@ssh_pub_key_file_path
     end
 
     def self.default_rhlogin
