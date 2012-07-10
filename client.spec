@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.95.11
+Version: 0.95.12
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -111,6 +111,13 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Jul 10 2012 Adam Miller <admiller@redhat.com> 0.95.12-1
+- Merge pull request #92 from J5/master (ccoleman@redhat.com)
+- add Config value as default because it correctly evaluates when called
+  (johnp@redhat.com)
+- [bug #837189] Normalize on generating ssh keys using the wizard
+  (johnp@redhat.com)
+
 * Mon Jul 09 2012 Adam Miller <admiller@redhat.com> 0.95.11-1
 - Merge pull request #90 from J5/master (contact@fabianofranz.com)
 - [bug #816813] fix it so debug=true in conf works with rhc app
