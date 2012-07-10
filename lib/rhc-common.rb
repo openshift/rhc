@@ -536,6 +536,9 @@ end
       rescue Rhc::Rest::ValidationException => e
         validation_error_code = (e.code.nil?) ? 406 : e.code
         print_response_err(Struct::FakeResponse.new(e.message, validation_error_code))
+      rescue Rhc::Rest::ServerErrorException => e
+        error_code = (e.code.nil?) ? 500 : e.code
+        print_response_err(Struct::FakeResponse.new(e.message, error_code))
       end
     else
       json_data = generate_json(data)
