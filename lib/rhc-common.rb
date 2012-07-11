@@ -871,7 +871,7 @@ LOOKSGOOD
         end
       end
     rescue Exception => e
-      puts e.message
+      puts e.backtrace if debug
       puts "Error in trying to save snapshot.  You can try to save manually by running:"
       puts
       puts ssh_cmd
@@ -884,7 +884,7 @@ LOOKSGOOD
   def self.snapshot_restore(rhc_domain, namespace, app_name, app_uuid, filename, debug=false)
     if File.exists? filename
 
-      if ! RHC::TarGz.contains filename, './*/' + app_name
+      if ! RHC::Helpers.windows? and ! RHC::TarGz.contains filename, './*/' + app_name
 
         puts "Archive at #{filename} does not contain the target application: ./*/#{app_name}"
         puts "If you created this archive rather than exported with rhc-snapshot, be sure"
@@ -894,7 +894,7 @@ LOOKSGOOD
 
       else
 
-        include_git = RHC::TarGz.contains filename, './*/git'
+        include_git = RHC::Helpers.windows? ? false : RHC::TarGz.contains(filename, './*/git')
 
         ssh_cmd = "cat #{filename} | ssh #{app_uuid}@#{app_name}-#{namespace}.#{rhc_domain} 'restore#{include_git ? ' INCLUDE_GIT' : ''}'"
         puts "Restoring from snapshot #{filename}..."
@@ -926,8 +926,8 @@ LOOKSGOOD
                   puts "Terminating..."
                 end
                 File.open(filename, 'rb') do |file|
-                  while (line = file.gets)
-                    channel.send_data line
+                  file.chunk(1024) do |chunk|
+                    channel.send_data chunk
                   end
                 end
                 channel.eof!
@@ -936,7 +936,7 @@ LOOKSGOOD
             ssh.loop
           end
         rescue Exception => e
-          puts e.message if debug
+          puts e.backtrace
           puts "Error in trying to restore snapshot.  You can try to restore manually by running:"
           puts
           puts ssh_cmd
