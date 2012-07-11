@@ -918,9 +918,12 @@ LOOKSGOOD
                 channel.on_close do |ch|
                   puts "Terminating..."
                 end
+                i = 0
                 File.open(filename, 'rb') do |file|
-                  while (line = file.gets)
-                    channel.send_data line
+                  while data = file.read(1024)
+                    i = i + 1
+                    puts i
+                    channel.send_data data
                   end
                 end
                 channel.eof!
