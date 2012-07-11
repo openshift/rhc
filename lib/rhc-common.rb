@@ -868,7 +868,7 @@ LOOKSGOOD
         end
       end
     rescue Exception => e
-      puts e.message
+      puts e.backtrace if debug
       puts "Error in trying to save snapshot.  You can try to save manually by running:"
       puts
       puts ssh_cmd
@@ -922,11 +922,8 @@ LOOKSGOOD
                 channel.on_close do |ch|
                   puts "Terminating..."
                 end
-                i = 0
                 File.open(filename, 'rb') do |file|
                   while data = file.read(1024)
-                    i = i + 1
-                    puts i
                     channel.send_data data
                   end
                 end
@@ -936,7 +933,7 @@ LOOKSGOOD
             ssh.loop
           end
         rescue Exception => e
-          puts e.message if debug
+          puts e.backtrace if debug
           puts "Error in trying to restore snapshot.  You can try to restore manually by running:"
           puts
           puts ssh_cmd
