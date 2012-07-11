@@ -1245,9 +1245,3 @@ def default_setup_wizard
 
   false
 end
-
-class File
-  def chunk(chunk_size=1024)
-    yield read(chunk_size) until eof?
-  end
-end
