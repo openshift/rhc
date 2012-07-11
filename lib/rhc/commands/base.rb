@@ -4,14 +4,14 @@ require 'rhc/helpers'
 
 class RHC::Commands::Base
 
-  def initialize(args=[], options=OptionParser.new)
-    @args, @options = args, options
+  def initialize(command=nil, args=[], options=OptionParser.new)
+    @command, @args, @options = command, args, options
   end
 
   protected
     include RHC::Helpers
 
-    attr_reader :args, :options
+    attr_reader :command, :args, :options
 
     def application
       #@application ||= ... identify current application or throw,
@@ -36,6 +36,8 @@ class RHC::Commands::Base
     def config
       @config ||= begin
         RHC::Config.set_opts_config(options.config) if options.config
+        RHC::Config.password = options.password if options.password
+        RHC::Config.opts_login = options.rhlogin if options.rhlogin
         RHC::Config
       end
     end

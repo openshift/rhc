@@ -273,15 +273,19 @@ describe RHC::Config do
                                     "global.openshift.redhat.com",
                                     "global@redhat.com")
       RHC::Config.initialize
-
       RHC::Vendor::ParseConfig.stub(:new) { raise Errno::EACCES.new("Fake can't read file") }
-
       RHC::Config.stub(:exit) { |code| code }
+
+      RHC::Config.check_cpath({"config" => "fake.conf"}).should == 253
+
+      # write out config file so it exists but is not readable
+      ConfigHelper.write_out_config("fake.conf",
+                                    "global.openshift.redhat.com",
+                                    "global@redhat.com")
 
       RHC::Config.read_config_files.should == 253
       RHC::Config.set_local_config("fake.conf").should == 253
       RHC::Config.set_opts_config("fake.conf").should == 253
-      RHC::Config.check_cpath({"config" => "fake.conf"}).should == 253
     end
   end
 end
