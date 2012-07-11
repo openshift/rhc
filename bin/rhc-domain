@@ -80,8 +80,8 @@ def create_or_alter_domain(alter=false)
       puts "OpenShift key found at #{ssh_key_file_path}.  Reusing..."
   else
       puts "Generating OpenShift ssh key to #{ssh_key_file_path}"
-      # Use system for interaction
-      system("ssh-keygen -t rsa -f '#{ssh_key_file_path}'")
+      w = RHC::SSHWizard.new($opt['rhlogin'], $password)
+      w.run
   end
   
   ssh_keyfile_contents = File.open(ssh_pub_key_file_path).gets.chomp.split(' ')

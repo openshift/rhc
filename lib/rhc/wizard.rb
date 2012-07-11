@@ -1,5 +1,6 @@
 require 'rhc-common'
 require 'rhc/helpers'
+require 'rhc/ssh_key_helpers'
 require 'highline/system_extensions'
 require 'net/ssh'
 require 'fileutils'
@@ -8,19 +9,28 @@ module RHC
   class Wizard
     include HighLine::SystemExtensions
     include RHC::Helpers
+    include RHC::SSHKeyHelpers
 
-    @@stages = [:greeting_stage,
-                :login_stage,
-                :create_config_stage,
-                :config_ssh_key_stage,
-                :upload_ssh_key_stage,
-                :install_client_tools_stage,
-                :config_namespace_stage,
-                :show_app_info_stage,
-                :finalize_stage]
+    STAGES = [:greeting_stage,
+              :login_stage,
+              :create_config_stage,
+              :config_ssh_key_stage,
+              :upload_ssh_key_stage,
+              :install_client_tools_stage,
+              :config_namespace_stage,
+              :show_app_info_stage,
+              :finalize_stage]
+    def stages
+      STAGES
+    end
 
     def initialize(config_path)
       @config_path = config_path
+      if @libra_server.nil?
+        @libra_server = get_var('libra_server')
+        # if not set, set to default
+        @libra_server = @libra_server ?  @libra_server : "openshift.redhat.com"
+      end
     end
 
     # Public: Runs the setup wizard to make sure ~/.openshift and ~/.ssh are correct
@@ -32,7 +42,7 @@ module RHC
     #
     # Returns nil on failure or true on success
     def run
-      @@stages.each do |stage|
+      stages.each do |stage|
         # FIXME: cleanup if we fail
         if (self.send stage).nil?
           return nil
@@ -42,10 +52,6 @@ module RHC
     end
 
     private
-
-    def stages
-      @@stages
-    end
 
     def greeting_stage
       paragraph do
@@ -68,12 +74,6 @@ module RHC
     end
 
     def login_stage
-      if @libra_server.nil?
-        @libra_server = get_var('libra_server')
-        # if not set, set to default
-        @libra_server = @libra_server ?  @libra_server : "openshift.redhat.com"
-      end
-
       # get_password adds an extra untracked newline so set :bottom to -1
       section(:top => 1, :bottom => -1) do
         @username = ask("To connect to #{@libra_server} enter your OpenShift login (email or Red Hat login id): ") do |q|
@@ -121,15 +121,13 @@ EOF
     end
 
     def config_ssh_key_stage
-      @ssh_priv_key_file_path = "#{RHC::Config.home_dir}/.ssh/id_rsa"
-      @ssh_pub_key_file_path = "#{RHC::Config.home_dir}/.ssh/id_rsa.pub"
-      unless File.exists? @ssh_priv_key_file_path
+      if RHC::Config.should_run_ssh_wizard?
         paragraph do
           say "No SSH keys were found. We will generate a pair of keys for you."
         end
-        @ssh_pub_key_file_path = generate_ssh_key_ruby()
+        ssh_pub_key_file_path = generate_ssh_key_ruby()
         paragraph do
-          say "    Created: #{@ssh_pub_key_file_path}\n\n"
+          say "    Created: #{ssh_pub_key_file_path}\n\n"
         end
       end
       true
@@ -145,9 +143,9 @@ EOF
 
       local_fingerprint = nil
       begin
-        local_fingerprint = Net::SSH::KeyFactory.load_public_key(@ssh_pub_key_file_path).fingerprint
+        local_fingerprint = Net::SSH::KeyFactory.load_public_key(RHC::Config.ssh_pub_key_file_path).fingerprint
       rescue NoMethodError #older net/ssh (mac for example)
-        local_fingerprint = ssh_keygen_fallback @ssh_pub_key_file_path
+        local_fingerprint = ssh_keygen_fallback RHC::Config.ssh_pub_key_file_path
       end
 
       return true if @ssh_keys['fingerprint'] == local_fingerprint
@@ -196,9 +194,9 @@ EOF
         key_fingerprint = nil
         key_valid = true
         begin
-          key_fingerprint = Net::SSH::KeyFactory.load_public_key(@ssh_pub_key_file_path).fingerprint
+          key_fingerprint = Net::SSH::KeyFactory.load_public_key(RHC::Config.ssh_pub_key_file_path).fingerprint
         rescue NoMethodError #older net/ssh (mac for example)
-          key_fingerprint = ssh_keygen_fallback @ssh_pub_key_file_path
+          key_fingerprint = ssh_keygen_fallback RHC::Config.ssh_pub_key_file_path
           if $?.exitstatus != 0
             key_valid = false
           end
@@ -208,7 +206,7 @@ EOF
 
         if ! key_valid
           paragraph do
-            say "Your ssh public key at #{@ssh_pub_key_file_path} can not be read. " \
+            say "Your ssh public key at #{RHC::Config.ssh_pub_key_file_path} can not be read. " \
                 "The setup can not continue until you manually remove or fix both of your " \
                 "public and private keys id_rsa keys."
             end
@@ -227,12 +225,12 @@ EOF
       if known_keys.include?(key_name)
         section do
           say "Key already exists!  Updating key #{key_name} .. "
-          add_or_update_key('update', key_name, @ssh_pub_key_file_path, @username, @password)
+          add_or_update_key('update', key_name, RHC::Config.ssh_pub_key_file_path, @username, @password)
         end
       else
         section do
           say "Sending new key #{key_name} .. "
-          add_or_update_key('add', key_name, @ssh_pub_key_file_path, @username, @password)
+          add_or_update_key('add', key_name, RHC::Config.ssh_pub_key_file_path, @username, @password)
         end
       end
       true
@@ -522,12 +520,6 @@ We recommend these free applications:
 EOF
     end
 
-    def exe?(executable)
-      ENV['PATH'].split(File::PATH_SEPARATOR).any? do |directory|
-        File.executable?(File.join(directory, executable.to_s))
-      end
-    end
-
     def git_version_exec
       `git --version 2>&1`
     end
@@ -588,6 +580,20 @@ EOF
             "by calling 'rhc setup'."
       end
       true
+    end
+  end
+
+  class SSHWizard < Wizard
+    STAGES = [:config_ssh_key_stage,
+              :upload_ssh_key_stage]
+    def stages
+      STAGES
+    end
+
+    def initialize(username, password)
+      @username = username
+      @password = password
+      super("")
     end
   end
 end
