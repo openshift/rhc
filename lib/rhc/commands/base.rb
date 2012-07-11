@@ -36,6 +36,8 @@ class RHC::Commands::Base
     def config
       @config ||= begin
         RHC::Config.set_opts_config(options.config) if options.config
+        RHC::Config.password = options.password if options.password
+        RHC::Config.opts_login = options.rhlogin if options.rhlogin
         RHC::Config
       end
     end

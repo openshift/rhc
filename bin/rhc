@@ -60,31 +60,22 @@ begin
     run_setup_wizard_if_needed
     system("rhc-port-forward #{get_args} 2>&1")
     retcode = $?.exitstatus
-  when "server"
-    run_setup_wizard_if_needed
-    begin
-      require 'rhc/cli'
-      RHC::CLI.start(ARGV)
-      retcode = 0
-    rescue SystemExit => e
-      retcode = e.status
-    end
-  when "setup"
-    if ARGV.include?('--help') or ARGV.include?('-h') or ARGV.include?('help')
-      puts "Usage: rhc setup"
-      puts "Runs the setup wizard to configure your account"
-      exit 0
-    end
-
-    w = RHC::RerunWizard.new(RHC::Config.local_config_path) 
-    success = w.run
-    retcode = 0
-    retcode = 1 unless success
   when "-h", "--help", "help", nil
     p_usage 0
   else
-    puts "Invalid rhc command: #{ARGV[0]}"
-    p_usage
+    if ["server", "setup"].include?(ARGV[0])
+      run_setup_wizard_if_needed if ARGV[0] != "setup"
+      begin
+        require 'rhc/cli'
+        RHC::CLI.start(ARGV)
+        retcode = 0
+      rescue SystemExit => e
+        retcode = e.status
+      end
+    else
+      puts "Invalid rhc command: #{ARGV[0]}"
+      p_usage
+    end
   end
 
   if retcode == nil

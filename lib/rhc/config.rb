@@ -23,7 +23,8 @@ module RHC
       @@defaults = RHC::Vendor::ParseConfig.new()
       @@global_config = nil
       @@local_config = nil
-      @@opts_config = nil
+      @@opts_config = nil # config file passed in the options
+      @@opts  = RHC::Vendor::ParseConfig.new() # option switches that override config file
       @@default_proxy = nil
       @@env_config = RHC::Vendor::ParseConfig.new()
 
@@ -36,6 +37,17 @@ module RHC
       @@home_dir = File.expand_path("~")
       @@home_conf_path = File.join(@@home_dir, '.openshift')
       @@local_config_path = File.join(@@home_conf_path, @@conf_name)
+
+      # config path passed in on the command line
+      @@opts_config_path = nil
+
+      # authoritive config path
+      # this can be @@local_config_path or @@opts_config_path
+      # @@opts_config_path trumps
+      # this is used to determine where config options should be written to
+      # when a script modifies the config such as in rhc setup
+      @@config_path = @@local_config_path
+
       @@ssh_priv_key_file_path = "#{@@home_dir}/.ssh/id_rsa"
       @@ssh_pub_key_file_path = "#{@@home_dir}/.ssh/id_rsa.pub"
  
@@ -66,8 +78,10 @@ module RHC
     end
 
     def self.[](key)
+      raise KeyError("Please use RHC::Config.password to access the password config") if key == "password"
+
       # evaluate in cascading order
-      configs = [@@opts_config, @@env_config, @@local_config, @@global_config, @@defaults]
+      configs = [@@opts, @@opts_config, @@env_config, @@local_config, @@global_config, @@defaults]
       result = nil
       configs.each do |conf|
         result = conf[key] if !conf.nil?
@@ -86,9 +100,24 @@ module RHC
       @@defaults.add('default_rhlogin', username)
     end
 
+    def self.opts_login=(username)
+      @@opts['default_rhlogin'] = username
+    end
+
+    # password is not allowed in config files and can only be passed on comman line
+    def self.password=(password)
+      @@opts['password'] = password
+    end
+
+    def self.password
+      @@opts['password']
+    end
+
     def self.set_local_config(confpath)
       begin
-        @@local_config = RHC::Vendor::ParseConfig.new(File.expand_path(confpath))
+        @@local_config_path = File.expand_path(confpath)
+        @@config_path = @@local_config_path if @@opts_config_path.nil?
+        @@local_config = RHC::Vendor::ParseConfig.new(@@local_config_path)
       rescue Errno::EACCES => e
         say "Could not open config file: #{e.message}"
         exit 253
@@ -97,7 +126,9 @@ module RHC
 
     def self.set_opts_config(confpath)
       begin
-        @@opts_config = RHC::Vendor::ParseConfig.new(File.expand_path(confpath))
+        @@opts_config_path = File.expand_path(confpath)
+        @@config_path = @@opts_config_path
+        @@opts_config = RHC::Vendor::ParseConfig.new(@@opts_config_path) if File.exists?(@@opts_config_path)
       rescue Errno::EACCES => e
         say "Could not open config file: #{e.message}"
         exit 253
@@ -135,6 +166,16 @@ module RHC
 
     def self.should_run_ssh_wizard?
       not File.exists? @@ssh_priv_key_file_path
+    end
+
+    ##
+    # config_path
+    #
+    # authoritive configuration path
+    # this is used to determine where config options should be written to
+    # when a script modifies the config such as in rhc setup
+    def self.config_path
+      @@config_path
     end
 
     def self.local_config_path
