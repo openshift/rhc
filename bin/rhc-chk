@@ -170,13 +170,15 @@ module TestBase
     response = http.start {|http| http.request(req)}
     return response
   ensure
-    $debuginfo['fetches'] ||= []
-    body = RHC::json_decode(response.body)
-    body['data'] = body['data'] && body['data'] != '' ? RHC::json_decode(body['data']) : ''
-    $debuginfo['fetches'] << {url.to_s => {
-      'body' => body,
-      'header' => response.instance_variable_get(:@header)
-    }}
+    unless response.nil?
+      $debuginfo['fetches'] ||= []
+      body = RHC::json_decode(response.body)
+      body['data'] = body['data'] && body['data'] != '' ? RHC::json_decode(body['data']) : ''
+      $debuginfo['fetches'] << {url.to_s => {
+        'body' => body,
+        'header' => response.instance_variable_get(:@header)
+      }}
+    end
   end
 
   def continue_test
