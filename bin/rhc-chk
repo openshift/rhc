@@ -331,16 +331,23 @@ class Test3_SSH < Test::Unit::TestCase
     flunk(error_for(:no_account,test)) if $user_info.nil?
   end
 
+  def require_domain(test)
+    flunk(error_for(:no_domain,test)) if $user_info['user_info']['domains'].empty?
+  end
+
   def require_remote_keys(test)
     require_login(test)
+    require_domain(test)
     @@remote_pub_keys ||= (
-
-    ssh_keys = RHC::get_ssh_keys($libra_server, $rhlogin, $password, $http)
-    my_keys = [ssh_keys['ssh_key'], ssh_keys['keys'].values.map{|k| k['key']}].flatten
-    my_keys.delete_if{|x| x.length == 0 }
+      ssh_keys = RHC::get_ssh_keys($libra_server, $rhlogin, $password, $http)
+      my_keys = [ssh_keys['ssh_key'], ssh_keys['keys'].values.map{|k| k['key']}].flatten
+      my_keys.delete_if{|x| x.length == 0 }
       my_keys
     )
-    flunk(error_for(:no_remote_pub_keys,test)) if @@remote_pub_keys.nil?
+
+    missing_keys = [:nil?,:empty?].map{|f| @@remote_pub_keys.send(f) rescue false }.inject(:|)
+
+    flunk(error_for(:no_remote_pub_keys,test)) if missing_keys
   end
 
   def require_agent_keys(fatal = true)
@@ -387,7 +394,7 @@ class Test3_SSH < Test::Unit::TestCase
   end
 
   def test_03_remote_ssh_keys
-    require_remote_keys("whether you have a valid key loaded in your agent")
+    require_remote_keys("whether your local SSH keys match the ones in your account")
     require_agent_keys(false)
 
     assert !(@@remote_pub_keys & [agent_key_fingerprints,libra_public_key].flatten).empty? ,error_for(:pubkey_not_loaded," ")
@@ -395,6 +402,7 @@ class Test3_SSH < Test::Unit::TestCase
 
   def test_04_ssh_connect
     require_login("connecting to your applications")
+    require_domain("connecting to your applications")
 
     host_template = "%%s-%s.%s" % [
       $user_info['user_info']['domains'][0]['namespace'],
@@ -541,6 +549,7 @@ $messages = YAML.load <<-EOF
   :no_derive: "We were unable to derive your public SSH key and compare it to the remote"
   :no_connectivity: "Cannot connect to server, therefore most tests will not work"
   :no_account: "You must have an account on the server in order to test: %s"
+  :no_domain: "You must have a domain associated with this account in order to test: %s"
   :cant_connect: You need to be able to connect to the server in order to test authentication
   :no_match_pub: "Local %s does not match remote pub key, SSH auth will not work"
   :_404: "The user %s does not have an account on this server"
