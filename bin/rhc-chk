@@ -199,16 +199,25 @@ end
 #####################################################
 
 def error_for(name,*args)
-  if name.kind_of? String
-    name = name.downcase.to_sym
+  # Make sure the name is a downcased symbol
+  name = name.to_s.downcase.to_sym
+
+  # Create message template
+  message = [:errors,:solutions].map{|x| get_message(x,name) }.compact.join("\n")
+
+  # Params for message template
+  params = args.flatten
+
+  # Ensure we have the right number of placeholders
+  num_placeholders = message.scan("%s").length
+  unless num_placeholders == params.length
+    warn("\nWARNING: error_for called with wrong number of args from: \n\t%s\n" % caller[0]) if $debug
+    # This will ensure we have the right number of arguments, but should not get here
+    params << Array.new(num_placeholders,"???")
   end
 
-  message = sprintf(get_message(:errors,name),*(args.shift || ''))
-  solution = get_message(:solutions,name)
-  if solution
-    message << "\n" << sprintf(solution,*(args.shift || ''))
-  end
-  message
+  # Return the message
+  message % params.flatten
 end
 
 def get_message(type,name)
