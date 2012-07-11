@@ -101,12 +101,12 @@ module RHC
     end
 
     def self.opts_login=(username)
-      @@opts['default_rhlogin'] = username
+      @@opts.add('default_rhlogin', username)
     end
 
     # password is not allowed in config files and can only be passed on comman line
     def self.password=(password)
-      @@opts['password'] = password
+      @@opts.add('password', password)
     end
 
     def self.password

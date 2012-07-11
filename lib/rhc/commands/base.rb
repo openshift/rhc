@@ -4,7 +4,7 @@ require 'rhc/helpers'
 
 class RHC::Commands::Base
 
-  def initialize(command, args=[], options=OptionParser.new)
+  def initialize(command=nil, args=[], options=OptionParser.new)
     @command, @args, @options = command, args, options
   end
 

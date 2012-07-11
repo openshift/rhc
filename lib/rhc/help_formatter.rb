@@ -2,23 +2,27 @@ require 'commander/help_formatters/base'
 
 module RHC
   class UsageHelpFormatter < Commander::HelpFormatter::Base
+    def global_options_output
+      result = "Global Options:\n"
+      @runner.options.each { |o|
+        result += o[:switches].join('|')
+        result += "\t#{o[:description]}\n"
+      }
+      result
+    end
+
     def render
       # TODO: render the rhc usage when we move 100% to using Commander
-      "rhc"
+      result = "#{@runner.program(:name)} - #{@runner.program(:description)}\n\n"
+      result += global_options_output
+      result
     end
 
     def render_command command
-      #TODO: generate list of command line switches
-      program = @runner.program_defaults
-      <<USAGE
-Usage: #{program[:name]} #{command.name}
-#{command.summary}
-
-List of arguments
-  -l|--rhlogin      rhlogin      Red Hat login (RHN or OpenShift login)
-  -p|--password     password     RHLogin password (optional, will prompt)
-  -c|--config       path         Path of alternate config file
-USAGE
+      result = ""
+      result = "Usage: #{@runner.program(:name)} #{command.name}\n"
+      result += "#{command.summary}\n\n"
+      result += global_options_output
     end
   end
 
