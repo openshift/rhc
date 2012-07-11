@@ -19,7 +19,7 @@ module RHC
           c.description = opts[:description]
           c.summary = opts[:summary]
           c.when_called do |args, options|
-            opts[:class].new(args, options).send(opts[:method])
+            opts[:class].new(c, args, options).send(opts[:method])
           end
         end
       end

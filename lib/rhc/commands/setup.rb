@@ -5,9 +5,15 @@ require 'rhc/config'
 module RHC::Commands
   class Setup < Base
 
-    summary "Configure your OpenShift account"
-    description "Runs the setup wizard to configure your OpenShift account."
+    summary "Runs the setup wizard to configure your OpenShift account."
+
     def run
+      # TODO: make help subcommand global
+      if @args.include? 'help'
+        say Commander::Runner.instance.help_formatter.render_command(@command)
+        return 0
+      end
+
       # TODO: pass in config object to wizard instead of it using RHC::Config directly
       w = RHC::RerunWizard.new(config.config_path)
       s = w.run
