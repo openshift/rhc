@@ -79,7 +79,9 @@ module RHC
         @username = ask("To connect to #{@libra_server} enter your OpenShift login (email or Red Hat login id): ") do |q|
           q.default = RHC::Config.default_rhlogin
         end
-        @password = RHC::get_password
+
+        @password = RHC::Config.password
+        @password = RHC::get_password if @password.nil?
       end
 
       # Confirm username / password works:

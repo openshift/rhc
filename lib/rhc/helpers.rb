@@ -49,6 +49,9 @@ module RHC
       raise "Operations requiring configuration must define a config accessor"
     end
 
+    global_option '-l', '--rhlogin login', "Red Hat login (RHN or OpenShift login with OpenShift access)"
+    global_option '-p', '--password password', "RHLogin password"
+
     def openshift_server
       config.get_value('libra_server')
     end
