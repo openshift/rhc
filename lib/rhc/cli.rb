@@ -32,7 +32,7 @@ module RHC
       program :name,        'rhc'
       program :version,     '0.0.0' #FIXME pull from versions.rb
       program :description, 'Command line interface for OpenShift.'
-      program :help_formatter, RHC::UsageHelpFormatter
+      program :help_formatter, :compact
 
       RHC::Commands.load.to_commander
       exit(run! || 0)
