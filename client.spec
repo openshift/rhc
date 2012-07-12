@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.95.12
+Version: 0.95.13
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -111,6 +111,24 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Jul 11 2012 Adam Miller <admiller@redhat.com> 0.95.13-1
+- [rspec] get to 100%% coverage with new wizard command change
+  (johnp@redhat.com)
+- add a better help formatter (johnp@redhat.com)
+- make wizard run from Commander and setup default command line args
+  (johnp@redhat.com)
+- Merge pull request #94 from fabianofranz/master (ccoleman@redhat.com)
+- Added coverage to File ext (chunks) (contact@fabianofranz.com)
+- Moved File chunk extension to core_ext.rb (contact@fabianofranz.com)
+- Changed tar.gz file check from client to server side when on Windows
+  (contact@fabianofranz.com)
+- Added a rescue to handle server errors when attempting to create new scaling
+  applications (nhr@redhat.com)
+- Removed debug code (contact@fabianofranz.com)
+- Merge branch 'master' of github.com:openshift/os-client-tools
+  (contact@fabianofranz.com)
+- Fixes BZ 836097 (contact@fabianofranz.com)
+
 * Tue Jul 10 2012 Adam Miller <admiller@redhat.com> 0.95.12-1
 - Merge pull request #92 from J5/master (ccoleman@redhat.com)
 - add Config value as default because it correctly evaluates when called
