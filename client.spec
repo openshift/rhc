@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.96.0
+Version: 0.96.1
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -111,6 +111,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Jul 11 2012 Adam Miller <admiller@redhat.com> 0.96.1-1
+- bump_minor_versions for sprint 15 (admiller@redhat.com)
+
 * Wed Jul 11 2012 Adam Miller <admiller@redhat.com> 0.95.13-1
 - [rspec] get to 100%% coverage with new wizard command change
   (johnp@redhat.com)
