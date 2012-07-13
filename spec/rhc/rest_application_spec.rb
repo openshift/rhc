@@ -23,7 +23,7 @@ module Rhc
       context "#new" do
         it "returns an application object" do
           app = app_obj
-          app.class.should equal(Rhc::Rest::Application)
+          app.class.should be_an_instance_of Rhc::Rest::Application
           app.instance_variable_get(:@links).length.should equal(app_links.length)
         end
       end
@@ -36,7 +36,7 @@ module Rhc
         it "returns a new cartridge object" do
           app  = app_obj
           cart = app.add_cartridge('mock_cart_0')
-          cart.class.should equal(Rhc::Rest::Cartridge)
+          cart.class.should be_an_instance_of Rhc::Rest::Cartridge
           cart.instance_variable_get(:@name).should == 'mock_cart_0'
         end
       end
@@ -52,7 +52,7 @@ module Rhc
           carts = app.cartridges
           carts.length.should equal(2)
           (0..1).each do |idx|
-            carts[idx].class.should equal(Rhc::Rest::Cartridge)
+            carts[idx].class.should be_an_instance_of Rhc::Rest::Cartridge
             carts[idx].instance_variable_get(:@name).should == "mock_cart_#{idx}"
           end
         end
@@ -67,7 +67,6 @@ module Rhc
       # These application control tests are subtle; the key lies in making sure the
       # webmock specifies the expected body that is sent in the request.
       # This is currently of the form "event=foo"
-
       shared_examples_for "a control method" do
         before do
           @control_method = control_data[:method]
