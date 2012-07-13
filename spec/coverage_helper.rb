@@ -35,6 +35,7 @@ unless RUBY_VERSION < '1.9'
     add_filter 'features/'         # Don't report on the files that run the cucumber tests
     add_filter 'lib/rhc-feature-coverage-helper.rb'
     add_filter 'spec/'             # Don't report on the files that run the spec tests
+    add_filter 'lib/rhc/help_formatter.rb'
 
     # Groups - general categories of test areas
     add_group('Commands') { |src_file| src_file.filename.include?(File.join(%w[lib rhc commands])) }
