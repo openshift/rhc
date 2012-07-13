@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.96.1
+Version: 0.96.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -111,6 +111,14 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Jul 13 2012 Adam Miller <admiller@redhat.com> 0.96.2-1
+- Merge pull request #97 from fotioslindiakos/BZ836483 (johnp@redhat.com)
+- Merge pull request #99 from J5/master (ccoleman@redhat.com)
+- some fixes to setup command and checking the spec test (johnp@redhat.com)
+- Added tests to ensure a domain exists (fotios@redhat.com)
+- Fixed error_for to ensure the sprintf won't fail (fotios@redhat.com)
+- Ensuring we don't fail if broker sends nil HTTP response (fotios@redhat.com)
+
 * Wed Jul 11 2012 Adam Miller <admiller@redhat.com> 0.96.1-1
 - bump_minor_versions for sprint 15 (admiller@redhat.com)
 
