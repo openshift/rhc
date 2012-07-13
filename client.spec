@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.95.13
+Version: 0.95.14
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -111,6 +111,11 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Jul 13 2012 Adam Miller <admiller@redhat.com> 0.95.14-1
+- Added tests to ensure a domain exists (fotios@redhat.com)
+- Fixed error_for to ensure the sprintf won't fail (fotios@redhat.com)
+- Ensuring we don't fail if broker sends nil HTTP response (fotios@redhat.com)
+
 * Wed Jul 11 2012 Adam Miller <admiller@redhat.com> 0.95.13-1
 - [rspec] get to 100%% coverage with new wizard command change
   (johnp@redhat.com)
