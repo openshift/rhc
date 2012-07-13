@@ -10,7 +10,6 @@ module Rhc
   module Rest
     describe Application do
       let (:app_links) { mock_response_links(mock_app_links('mock_domain','mock_app')) }
-      let (:cart_links) { mock_response_links(mock_app_links('mock_domain','mock_app')) }
       let (:app_obj) {
         Rhc::Rest::Application.new({ 'domain_id'       => 'mock_domain',
                                      'name'            => 'mock_app',
@@ -32,47 +31,21 @@ module Rhc
       context "#add_cartridge" do
         before do
           stub_request(:any, mock_href(app_links['ADD_CARTRIDGE']['relative'], true)).
-              to_return({ :body   => {
-                            :type => 'cartridge',
-                            :data => {
-                              :name  => 'mock_cart',
-                              :type  => 'mock_cart_type',
-                              :links => mock_response_links(mock_cart_links('mock_domain','mock_app','mock_cart'))
-                             }
-                          }.to_json,
-                          :status => 200
-                        })
+            to_return(mock_cartridge_response)
         end
         it "returns a new cartridge object" do
           app  = app_obj
-          cart = app.add_cartridge('mock_cart')
+          cart = app.add_cartridge('mock_cart_0')
           cart.class.should equal(Rhc::Rest::Cartridge)
-          cart.instance_variable_get(:@name).should == 'mock_cart'
+          cart.instance_variable_get(:@name).should == 'mock_cart_0'
         end
       end
 
       context "#cartridges" do
-        before do
+        before(:each) do
           stub_request(:any, mock_href(app_links['LIST_CARTRIDGES']['relative'], true)).
-            to_return({ :body   => {
-                          :type => 'cartridges',
-                          :data => [{ :name  => 'mock_cart_0',
-                                      :type  => 'mock_cart_0_type',
-                                      :links => mock_response_links(mock_cart_links('mock_domain','mock_app','mock_cart_0'))
-                                    },
-                                    { :name  => 'mock_cart_1',
-                                      :type  => 'mock_cart_1_type',
-                                      :links => mock_response_links(mock_cart_links('mock_domain','mock_app','mock_cart_1'))
-                                    }]
-                        }.to_json,
-                        :status => 200
-                      }).
-            to_return({ :body   => {
-                          :type => 'cartridges',
-                          :data => []
-                        }.to_json,
-                        :status => 200
-                      })            
+            to_return(mock_cartridge_response(2)).
+            to_return(mock_cartridge_response(0))
         end
         it "returns a list of all cartridges in the current application" do
           app   = app_obj
@@ -96,72 +69,56 @@ module Rhc
       # This is currently of the form "event=foo"
 
       shared_examples_for "a control method" do
+        before do
+          @control_method = control_data[:method]
+          @control_event  = control_data.has_key?(:event)   ? control_data[:event]       : control_data[:method]
+          @control_link   = control_data.has_key?(:link)    ? control_data[:link].upcase : control_data[:method].upcase
+          @control_output = control_data.has_key?(:result)  ? control_data[:result]      : @control_event
+          @with_payload   = control_data.has_key?(:payload) ? control_data[:payload]     : true
+          if @with_payload
+            stub_request(:any, mock_href(app_links[@control_link]['relative'], true)).
+              with(:body => { 'event' => @control_event }). # This is the critical part
+              to_return({ :body => { :data => @control_event }.to_json, :status => 200 })
+          else
+            stub_request(:any, mock_href(app_links[@control_link]['relative'], true)).
+              to_return({ :body => { :data => @control_event }.to_json, :status => 200 })
+          end
+        end
         it "sends the control request to the server" do
           app = app_obj
-          expect { eval 'app.' + control_method.to_s }.to_not raise_error
-          eval( 'app.' + control_method.to_s ).should == control_method.to_s
+          expect { eval("app.#{@control_method}") }.to_not raise_error
+          eval("app.#{@control_method}").should == @control_output
         end
       end
 
       context "#start" do
-        let(:control_method) { :start }
-        before do
-          stub_request(:any, mock_href(app_links['START']['relative'], true)).
-            with(:body => { 'event' => 'start' }). # This is the critical part
-            to_return({ :body => { :data => 'start' }.to_json, :status => 200 })
-        end
+        let(:control_data) { { :method => 'start' } }
         it_should_behave_like "a control method"
       end
 
       context "#stop" do
         context " and the request is not forced (force == false)" do
-          let(:control_method) { :stop }
-          before do
-            stub_request(:any, mock_href(app_links['STOP']['relative'], true)).
-              with(:body => { 'event' => 'stop' }). # This is the critical part
-              to_return({ :body => { :data => 'stop' }.to_json, :status => 200 })
-          end
+          let(:control_data) { { :method => 'stop' } }
           it_should_behave_like "a control method"
         end
         context " and the request is forced (force == true)" do
-          before do
-            stub_request(:any, mock_href(app_links['STOP']['relative'], true)).
-              with(:body => { 'event' => 'force-stop' }). # This is the critical part
-              to_return({ :body => { :data => 'force-stop' }.to_json, :status => 200 })
-          end
-          it "should request a forced stop" do
-            app = app_obj
-            expect { app.stop(true) }.to_not raise_error
-            app.stop(true).should == 'force-stop'
-          end
+          let(:control_data) { { :method => 'stop(true)', :event => 'force-stop', :link => 'stop' } }
+          it_should_behave_like "a control method"
         end
       end
 
       context "#restart" do
-        let(:control_method) { :restart }
-        before do
-          stub_request(:any, mock_href(app_links['RESTART']['relative'], true)).
-            with(:body => { 'event' => 'restart' }). # This is the critical part
-            to_return({ :body => { :data => 'restart' }.to_json, :status => 200 })
-        end
+        let(:control_data) { { :method => 'restart' } }
         it_should_behave_like "a control method"
       end
 
       context "#delete" do
-        let(:control_method) { :delete }
-        before do
-          stub_request(:any, mock_href(app_links['DELETE']['relative'], true)).
-            to_return({ :body => { :data => 'delete' }.to_json, :status => 200 })
-        end
+        let(:control_data) { { :method => 'delete', :payload => false } }
         it_should_behave_like "a control method"
       end
 
       context "#destroy" do
-        let(:control_method) { :destroy }
-        before do
-          stub_request(:any, mock_href(app_links['DELETE']['relative'], true)).
-            to_return({ :body => { :data => 'destroy' }.to_json, :status => 200 })
-        end
+        let(:control_data) { { :method => 'destroy', :event => 'delete', :link => 'delete', :payload => false } }
         it_should_behave_like "a control method"
       end
     end
