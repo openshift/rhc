@@ -70,13 +70,12 @@ module Rhc
       shared_examples_for "a control method" do
         before do
           @control_method = control_data[:method]
-          @control_arg    = control_data.has_key?(:arg)     ? control_data[:arg]         : nil
           @control_call   = [@control_method]
           if control_data.has_key?(:arg)
             @control_call << control_data[:arg]
           end
-          @control_event  = control_data.has_key?(:event)   ? control_data[:event]       : control_data[:method].to_s
-          @control_link   = control_data.has_key?(:link)    ? control_data[:link].upcase : control_data[:method].to_s.upcase
+          @control_event  = control_data.has_key?(:event)   ? control_data[:event]       : @control_method.to_s
+          @control_link   = control_data.has_key?(:link)    ? control_data[:link].upcase : @control_method.to_s.upcase
           @control_output = control_data.has_key?(:result)  ? control_data[:result]      : @control_event
           @with_payload   = control_data.has_key?(:payload) ? control_data[:payload]     : true
           if @with_payload
