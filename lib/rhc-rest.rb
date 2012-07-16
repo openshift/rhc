@@ -60,7 +60,7 @@ module Rhc
       end
     end
 
-    def send(request)
+    def request(request)
       begin
         response = request.execute
         #set cookie

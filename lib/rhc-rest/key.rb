@@ -17,7 +17,7 @@ module Rhc
         method =  @links['UPDATE']['method']
         payload = {:type => type, :content => content}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
-        return send(request)
+        return request(request)
       end
 
       #Delete Key
@@ -26,7 +26,7 @@ module Rhc
         url = @links['DELETE']['href']
         method =  @links['DELETE']['method']
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
-        return send(request)
+        return request(request)
       end
       alias :delete :destroy
     end

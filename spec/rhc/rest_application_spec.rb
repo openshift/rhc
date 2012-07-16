@@ -23,7 +23,7 @@ module Rhc
       context "#new" do
         it "returns an application object" do
           app = app_obj
-          app.class.should be_an_instance_of Rhc::Rest::Application
+          app.should be_an_instance_of Rhc::Rest::Application
           app.instance_variable_get(:@links).length.should equal(app_links.length)
         end
       end
@@ -36,7 +36,7 @@ module Rhc
         it "returns a new cartridge object" do
           app  = app_obj
           cart = app.add_cartridge('mock_cart_0')
-          cart.class.should be_an_instance_of Rhc::Rest::Cartridge
+          cart.should be_an_instance_of Rhc::Rest::Cartridge
           cart.instance_variable_get(:@name).should == 'mock_cart_0'
         end
       end
@@ -52,7 +52,7 @@ module Rhc
           carts = app.cartridges
           carts.length.should equal(2)
           (0..1).each do |idx|
-            carts[idx].class.should be_an_instance_of Rhc::Rest::Cartridge
+            carts[idx].should be_an_instance_of Rhc::Rest::Cartridge
             carts[idx].instance_variable_get(:@name).should == "mock_cart_#{idx}"
           end
         end
@@ -70,8 +70,13 @@ module Rhc
       shared_examples_for "a control method" do
         before do
           @control_method = control_data[:method]
-          @control_event  = control_data.has_key?(:event)   ? control_data[:event]       : control_data[:method]
-          @control_link   = control_data.has_key?(:link)    ? control_data[:link].upcase : control_data[:method].upcase
+          @control_arg    = control_data.has_key?(:arg)     ? control_data[:arg]         : nil
+          @control_call   = [@control_method]
+          if control_data.has_key?(:arg)
+            @control_call << control_data[:arg]
+          end
+          @control_event  = control_data.has_key?(:event)   ? control_data[:event]       : control_data[:method].to_s
+          @control_link   = control_data.has_key?(:link)    ? control_data[:link].upcase : control_data[:method].to_s.upcase
           @control_output = control_data.has_key?(:result)  ? control_data[:result]      : @control_event
           @with_payload   = control_data.has_key?(:payload) ? control_data[:payload]     : true
           if @with_payload
@@ -85,39 +90,39 @@ module Rhc
         end
         it "sends the control request to the server" do
           app = app_obj
-          expect { eval("app.#{@control_method}") }.to_not raise_error
-          eval("app.#{@control_method}").should == @control_output
+          expect { app.send(*@control_call)  }.to_not raise_error
+          app.send(*@control_call).should == @control_output
         end
       end
 
       context "#start" do
-        let(:control_data) { { :method => 'start' } }
+        let(:control_data) { { :method => :start } }
         it_should_behave_like "a control method"
       end
 
       context "#stop" do
         context " and the request is not forced (force == false)" do
-          let(:control_data) { { :method => 'stop' } }
+          let(:control_data) { { :method => :stop } }
           it_should_behave_like "a control method"
         end
         context " and the request is forced (force == true)" do
-          let(:control_data) { { :method => 'stop(true)', :event => 'force-stop', :link => 'stop' } }
+          let(:control_data) { { :method => :stop, :arg => true, :event => 'force-stop', :link => 'stop' } }
           it_should_behave_like "a control method"
         end
       end
 
       context "#restart" do
-        let(:control_data) { { :method => 'restart' } }
+        let(:control_data) { { :method => :restart } }
         it_should_behave_like "a control method"
       end
 
       context "#delete" do
-        let(:control_data) { { :method => 'delete', :payload => false } }
+        let(:control_data) { { :method => :delete, :payload => false } }
         it_should_behave_like "a control method"
       end
 
       context "#destroy" do
-        let(:control_data) { { :method => 'destroy', :event => 'delete', :link => 'delete', :payload => false } }
+        let(:control_data) { { :method => :destroy, :event => 'delete', :link => 'delete', :payload => false } }
         it_should_behave_like "a control method"
       end
     end

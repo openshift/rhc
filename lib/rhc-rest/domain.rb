@@ -27,7 +27,7 @@ module Rhc
           timeout = 300 # 5 minute timeout for scalable app
         end
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload, :timeout => timeout)
-        return send(request)
+        return request(request)
       end
 
       #Get all Application for this domain
@@ -36,7 +36,7 @@ module Rhc
         url = @links['LIST_APPLICATIONS']['href']
         method =  @links['LIST_APPLICATIONS']['method']
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
-        return send(request)
+        return request(request)
       end
 
       #Update Domain
@@ -46,7 +46,7 @@ module Rhc
         method =  @links['UPDATE']['method']
         payload = {:id => new_id}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
-        return send(request)
+        return request(request)
       end
       alias :save :update
 
@@ -57,7 +57,7 @@ module Rhc
         method =  @links['DELETE']['method']
         payload = {:force => force}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
-        return send(request)
+        return request(request)
       end
       alias :delete :destroy
     end

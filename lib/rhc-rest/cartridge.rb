@@ -16,7 +16,7 @@ module Rhc
         method =  @links['START']['method']
         payload = {:event=> "start"}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
-        return send(request)
+        return request(request)
       end
 
       #Stop Cartridge
@@ -26,7 +26,7 @@ module Rhc
         method =  @links['STOP']['method']
         payload = {:event=> "stop"}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
-        return send(request)
+        return request(request)
       end
 
       #Restart Cartridge
@@ -36,7 +36,7 @@ module Rhc
         method =  @links['RESTART']['method']
         payload = {:event=> "restart"}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
-        return send(request)
+        return request(request)
       end
 
       #Reload Cartridge
@@ -46,7 +46,7 @@ module Rhc
         method =  @links['RESTART']['method']
         payload = {:event=> "reload"}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
-        return send(request)
+        return request(request)
       end
 
       #Delete Cartridge
@@ -55,7 +55,7 @@ module Rhc
         url = @links['DELETE']['href']
         method =  @links['DELETE']['method']
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
-        return send(request)
+        return request(request)
       end
       alias :delete :destroy
       alias :delete :destroy

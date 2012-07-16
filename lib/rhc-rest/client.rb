@@ -15,7 +15,7 @@ module Rhc
         begin
           response = request.execute
           result = RHC::Json.decode(response)
-          @links = send(request)
+          @links = request(request)
         rescue RestClient::ExceptionWithResponse => e
             logger.error "Failed to get API #{e.response}"
         rescue Exception => e
@@ -30,7 +30,7 @@ module Rhc
         method =  @links['ADD_DOMAIN']['method']
         payload = {:id => id}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
-        return send(request)
+        return request(request)
       end
 
       #Get all Domain
@@ -39,7 +39,7 @@ module Rhc
         url = @links['LIST_DOMAINS']['href']
         method =  @links['LIST_DOMAINS']['method']
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
-        return send(request)
+        return request(request)
       end
 
       #Find Domain by namesapce
@@ -76,7 +76,7 @@ module Rhc
         url = @links['LIST_CARTRIDGES']['href']
         method =  @links['LIST_CARTRIDGES']['method']
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
-        return send(request)
+        return request(request)
       end
 
       #Find Cartridge by name
@@ -97,7 +97,7 @@ module Rhc
         url = @links['GET_USER']['href']
         method =  @links['GET_USER']['method']
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
-        return send(request)
+        return request(request)
       end
 
       #find Key by name
