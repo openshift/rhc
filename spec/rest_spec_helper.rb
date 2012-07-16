@@ -83,4 +83,26 @@ module RestSpecHelper
     [['ADD_KEY',   'user/keys/add', 'post'],
      ['LIST_KEYS', 'user/keys/',    'get' ]]
   end
+
+  def mock_cartridge_response(cart_count=1)
+    carts = []
+    while carts.length < cart_count
+      carts << {
+        :name  => "mock_cart_#{carts.length}",
+        :type  => "mock_cart_#{carts.length}_type",
+        :links => mock_response_links(mock_cart_links('mock_domain','mock_app',"mock_cart_#{carts.length}"))
+      }
+    end
+
+    carts = carts[0] if cart_count == 1
+    type  = cart_count == 1 ? 'cartridge' : 'cartridges'
+
+    return {
+      :body   => {
+        :type => type,
+        :data => carts
+      }.to_json,
+      :status => 200
+    }
+  end
 end
