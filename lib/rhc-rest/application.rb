@@ -22,7 +22,7 @@ module Rhc
         method =  @links['ADD_CARTRIDGE']['method']
         payload = {:name => name}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
-        return send(request)
+        return request(request)
       end
 
       #Get all Cartridge for this applications
@@ -31,7 +31,7 @@ module Rhc
         url = @links['LIST_CARTRIDGES']['href']
         method =  @links['LIST_CARTRIDGES']['method']
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
-        return send(request)
+        return request(request)
       end
 
       #Start Application
@@ -41,7 +41,7 @@ module Rhc
         method =  @links['START']['method']
         payload = {:event=> "start"}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
-        return send(request)
+        return request(request)
       end
 
       #Stop  Application
@@ -55,7 +55,7 @@ module Rhc
           payload = {:event=> "stop"}
         end
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
-        return send(request)
+        return request(request)
       end
 
       #Restart Application
@@ -65,7 +65,7 @@ module Rhc
         method =  @links['RESTART']['method']
         payload = {:event=> "restart"}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
-        return send(request)
+        return request(request)
       end
 
       #Delete Application
@@ -74,7 +74,7 @@ module Rhc
         url = @links['DELETE']['href']
         method =  @links['DELETE']['method']
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
-        return send(request)
+        return request(request)
       end
       alias :delete :destroy
     end

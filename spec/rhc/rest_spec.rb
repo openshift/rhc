@@ -27,7 +27,7 @@ module Rhc
     subject = RhcRest.new
 
     # logger function
-    describe "logger" do
+    describe "#logger" do
       it "establishes a logger" do
         logger = Logger.new(STDOUT)
         subject.logger.should have_same_attributes_as(logger)
@@ -35,7 +35,7 @@ module Rhc
     end
 
     # parse_response function
-    describe "parse_response" do
+    describe "#parse_response" do
       context "with no response type" do
         let(:object) {{ :links => { :foo => 'bar' } }}
         it "deserializes to the encapsualted data" do
@@ -208,8 +208,8 @@ module Rhc
       end
     end
 
-    # send function
-    describe "send" do
+    # request function
+    describe "#request" do
       context "with a successful request" do
         let(:object) {{
             :type => 'domain',
@@ -234,7 +234,7 @@ module Rhc
                                             :payload => {},
                                             :timeout => 300
                                             )
-          subject.send(request).should have_same_attributes_as(dom_obj)
+          subject.request(request).should have_same_attributes_as(dom_obj)
         end
       end
 
@@ -252,7 +252,7 @@ module Rhc
                                             :method  => 'get',
                                             :headers => {:accept => :json}
                                             )
-          lambda { subject.send(request) }.should raise_error(Rhc::Rest::ResourceAccessException, 'Failed to access resource: unexpected nil')
+          lambda { subject.request(request) }.should raise_error(Rhc::Rest::ResourceAccessException, 'Failed to access resource: unexpected nil')
         end
       end
 
@@ -270,7 +270,7 @@ module Rhc
                                             :method  => 'get',
                                             :headers => {:accept => :json}
                                             )
-          subject.send(request).should equal(nil)
+          subject.request(request).should equal(nil)
         end
       end
 
@@ -283,7 +283,7 @@ module Rhc
                                             :method  => 'get',
                                             :headers => {:accept => :json}
                                             )
-          lambda { subject.send(request) }.should raise_error(Rhc::Rest::ResourceAccessException, 'Failed to access resource: Request Timeout')
+          lambda { subject.request(request) }.should raise_error(Rhc::Rest::ResourceAccessException, 'Failed to access resource: Request Timeout')
         end
       end
 
@@ -296,7 +296,7 @@ module Rhc
                                             :method  => 'get',
                                             :headers => {:accept => :json}
                                             )
-          lambda { subject.send(request) }.should raise_error(Rhc::Rest::ResourceAccessException, 'Failed to access resource: Lost Server Connection')
+          lambda { subject.request(request) }.should raise_error(Rhc::Rest::ResourceAccessException, 'Failed to access resource: Lost Server Connection')
         end
       end
 
@@ -309,7 +309,7 @@ module Rhc
                                             :method  => 'get',
                                             :headers => {:accept => :json}
                                             )
-          lambda { subject.send(request) }.should raise_error(Rhc::Rest::ResourceAccessException, 'Failed to access resource: Unverified SSL Certificate')
+          lambda { subject.request(request) }.should raise_error(Rhc::Rest::ResourceAccessException, 'Failed to access resource: Unverified SSL Certificate')
         end
       end
 
@@ -323,7 +323,7 @@ module Rhc
                                             :method  => 'get',
                                             :headers => {:accept => :json}
                                             )
-          lambda { subject.send(request) }.should raise_error(Rhc::Rest::ResourceAccessException, 'Failed to access resource: Generic Error')
+          lambda { subject.request(request) }.should raise_error(Rhc::Rest::ResourceAccessException, 'Failed to access resource: Generic Error')
         end
       end
 
@@ -342,13 +342,13 @@ module Rhc
                                             :method  => 'get',
                                             :headers => {:accept => :json}
                                             )
-          lambda { subject.send(request) }.should raise_error(Rhc::Rest::UnAuthorizedException, 'Not authenticated')
+          lambda { subject.request(request) }.should raise_error(Rhc::Rest::UnAuthorizedException, 'Not authenticated')
         end
       end
     end
 
     # process_error_response function
-    describe "process_error_response" do
+    describe "#process_error_response" do
       context "with a 400 response" do
         it "raises a client error" do
           mock_resp  = { :messages => [{ :severity => 'error', :text => 'mock error message' }] }

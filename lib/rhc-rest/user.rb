@@ -14,7 +14,7 @@ module Rhc
         method =  @links['ADD_KEY']['method']
         payload = {:name => name, :type => type, :content => content}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
-        return send(request)
+        return request(request)
       end
 
       #Get all Key for this user
@@ -22,7 +22,7 @@ module Rhc
         url = @links['LIST_KEYS']['href']
         method =  @links['LIST_KEYS']['method']
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
-        return send(request)
+        return request(request)
       end
 
       #Find Key by name
