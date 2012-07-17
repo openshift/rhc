@@ -44,10 +44,6 @@ end
 
 begin
   case ARGV[0]
-  when "domain"
-    run_setup_wizard_if_needed
-    system("rhc-domain #{get_args} 2>&1")
-    retcode = $?.exitstatus
   when "app"
     run_setup_wizard_if_needed
     system("rhc-app #{get_args} 2>&1")
