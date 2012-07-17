@@ -4,9 +4,9 @@ require 'rhc/config'
 
 module RHC::Commands
   class Setup < Base
+
     summary "Runs the setup wizard to configure your OpenShift account."
     suppress_wizard
-
     def run
       # TODO: make help subcommand global
       if args[0] == 'help'
