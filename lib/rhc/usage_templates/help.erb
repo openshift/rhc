@@ -1,31 +1,16 @@
-<%= $terminal.color "NAME", :bold %>:
+Usage: <%= program :name %> (<resource> | --help) [<command>] [<args>]
+<%= program :description %>
 
-    <%= program :name %>
-
-  <%= $terminal.color "DESCRIPTION", :bold %>:
-
-    <%= program :description %>
-
-  <%= $terminal.color "COMMANDS", :bold %>:
+List of resources:
+  <%# remove these as they are added to commander%>
+  app                Manage applications within the rhcloud account.
+  sshkey             Manage multiple keys for the registered rhcloud user.
+  port-forward       Forward remote ports to the workstation
 <% for name, command in @commands.sort -%>
-	<% unless alias? name %>
-    <%= "%-20s %s" % [command.name, command.summary || command.description] -%>
-	<% end -%>
-<% end %>
-<% unless @aliases.empty? %>
-  <%= $terminal.color "ALIASES", :bold %>:
-  <% for alias_name, args in @aliases.sort %>
-    <%= "%-20s %s %s" % [alias_name, command(alias_name).name, args.join(' ')] -%>
-  <% end %>
-<% end %>
-<% unless @options.empty? -%>
-  <%= $terminal.color "GLOBAL OPTIONS", :bold %>:
-	<% for option in @options -%>
-
-    <%= option[:switches].join ', ' %> 
-        <%= option[:description] %>
-	<% end -%>
+	<%- unless alias? name or name == "help" -%>  <%="%-18s %s" % [command.name, command.summary || command.description] %><% end %>
 <% end -%>
+
+See '<%= program :name %> <resource> --help' for more applicable commands and arguments on a specific resource.
 <% if program :help -%>
   <% for title, body in program(:help) %>
   <%= $terminal.color title.to_s.upcase, :bold %>:
