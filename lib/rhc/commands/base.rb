@@ -96,8 +96,21 @@ class RHC::Commands::Base
       @suppress_wizard
     end
 
-    private
+    def self.option(*args)
+      cmd_options << args
+    end
 
+    def self.argument(name, description, *option_args)
+      cmd_args << {:name => name, :description => description, :matching_option => option_args}
+    end
+
+    private
+      def self.cmd_options
+        options[:cmd_options] ||= []
+      end
+      def self.cmd_args
+        options[:cmd_args] ||=[]
+      end
       def self.options
         @options ||= {}
       end
