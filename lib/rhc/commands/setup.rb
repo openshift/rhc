@@ -8,8 +8,6 @@ module RHC::Commands
     suppress_wizard
 
     def run
-      super
-
       # TODO: make help subcommand global
       if args[0] == 'help'
         say Commander::Runner.instance.help_formatter.render_command(@command)

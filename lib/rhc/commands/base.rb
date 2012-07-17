@@ -8,6 +8,10 @@ class RHC::Commands::Base
 
   def initialize(command=nil, args=[], options=OptionParser.new)
     @command, @args, @options = command, args, options
+    if not self.class.suppress_wizard? and config.should_run_wizard?
+      w = RHC::Wizard.new(config.local_config_path)
+      w.run
+    end
   end
 
   protected
@@ -90,13 +94,6 @@ class RHC::Commands::Base
 
     def self.suppress_wizard?
       @suppress_wizard
-    end
-
-    def run
-      if not self.class.suppress_wizard? and RHC::Config.should_run_wizard?
-        w = RHC::Wizard.new(RHC::Config.local_config_path)
-        w.run
-      end
     end
 
     private
