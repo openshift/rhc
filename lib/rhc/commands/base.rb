@@ -1,6 +1,8 @@
 require 'commander'
 require 'commander/delegates'
 require 'rhc/helpers'
+require 'rhc/wizard'
+require 'rhc/config'
 
 class RHC::Commands::Base
 
@@ -82,7 +84,23 @@ class RHC::Commands::Base
       options[:summary] = value
     end
 
+    def self.suppress_wizard
+      @suppress_wizard = true
+    end
+
+    def self.suppress_wizard?
+      @suppress_wizard
+    end
+
+    def run
+      if not self.class.suppress_wizard? and RHC::Config.should_run_wizard?
+        w = RHC::Wizard.new(RHC::Config.local_config_path)
+        w.run
+      end
+    end
+
     private
+
       def self.options
         @options ||= {}
       end
