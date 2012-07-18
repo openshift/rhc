@@ -7,6 +7,7 @@ require 'logger'
 
 # Extend core methods
 require 'rhc/core_ext'
+require 'rhc/version'
 
 module RHC
   module Commands; end

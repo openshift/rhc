@@ -1,6 +1,6 @@
 %define gemdir %(ruby -rubygems -e 'puts Gem::dir' 2>/dev/null)
 
-Summary:       Multi-tenant cloud management system client tools
+Summary:       OpenShift client management tools
 Name:          rhc
 Version: 0.96.2
 Release:       1%{?dist}
@@ -32,6 +32,8 @@ Provides OpenShift client libraries
 
 %prep
 %setup -q
+pwd
+rake --trace version["%{version}"]
 
 %build
 for f in bin/rhc*
