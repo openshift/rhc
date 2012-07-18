@@ -28,8 +28,15 @@ module RHC
           end
           c.when_called do |args, options|
             begin
+              # handle help here
+              if args.length > 0 and args[0] == 'help'
+                help = instance.help_formatter.render_command(c)
+                say help
+                next
+              end
+
               # check to see if an arg's option was set
-              raise ArgumentError.new("Too many arguments") if args.length > args_metadata.length
+              raise ArgumentError.new("Invalid arguments") if args.length > args_metadata.length
               args_metadata.each_with_index do |arg_meta, i|
                 o = arg_meta[:option_switches]
                 raise ArgumentError.new("Missing #{arg[:name]} argument") if o.nil? and args.length <= i
