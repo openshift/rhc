@@ -113,8 +113,15 @@ module RHC::Commands
       $?.exitstatus.nil? ? 1 : $?.exitstatus
     end
 
-    def destroy
-
+    argument :namespace, "Namespace you wish to destroy", "-n", "--namespace namespace"
+    option "--timeout timeout", "Timeout, in seconds, for the session"
+    summary "Destroys your domain and any application underneath it.  Use with caution."
+    syntax "<namespace> [--timeout timeout]"
+    def destroy(namespace)
+      domain = rest_client.find_domain namespace
+      raise Rhc::Rest::ResourceNotFoundException.new("Domain with namespace '#{namespace}' does not exist.", 128) if domain.empty?
+      domain.destroy
+      success
     end
   end
 
