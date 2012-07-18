@@ -13,7 +13,19 @@ module RHC::Commands
     summary "Bind a registered user to a domain"
     syntax "<action> <namespace> [--timeout timeout]"
     def create(namespace)
-
+      d = rest_client.domains
+      raise Rhc::Rest::BaseException.new("User #{config.username} has already created domain '#{d[0].id}'.  If you wish to change the namespace of this domain please use the command 'rhc domain alter'.", 1) unless d.empty?
+      say "Creating domain with namespace '#{namespace}' ... "
+      newdomain = rest_client.add_domain(namespace)
+      if newdomain.id == namespace
+        say "success!"
+        say "\n"
+        say "You may now create an application using the 'rhc app create' command"
+      else
+        # we should not get here - the rest libs should have raised any errors
+        raise Rhc::Rest::BaseException.new("Unknown Error: this should not have been reached: #{newdomain.inspect}", 255)
+      end
+      success
     end
 
     argument :namespace, "Namespace for your application(s) (alphanumeric)", "-n", "--namespace namespace"
