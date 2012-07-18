@@ -55,7 +55,7 @@ module RHC
               args_metadata.each_with_index do |arg_meta, i|
                 o = arg_meta[:option_switches]
                 raise ArgumentError.new("Missing #{arg[:name]} argument") if o.nil? and args.length <= i
-                value = options.__hash__[arg[:name]]
+                value = options.__hash__[arg_meta[:name]]
                 unless value.nil?
                   raise ArgumentError.new("#{arg[:name]} specified twice on the command line and as a #{o[0]} switch") unless args.length == i
                   # add the option as an argument
