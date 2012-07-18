@@ -25,7 +25,7 @@ else
 end
 
 task :version, :version do |t, args|
-  version = args[:version]
+  version = args[:version] || /(Version: )(.*)/.match(File.read("client.spec"))[2]
   raise "No version specified" unless version
   puts "RPM version  #{version}"
   major, minor, micro, *extra = version.split('.')

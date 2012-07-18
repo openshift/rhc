@@ -1,3 +1,4 @@
 #!/bin/bash
 
-rake clean package
+rake clean version # version must be defined first
+rake package
