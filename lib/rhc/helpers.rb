@@ -56,7 +56,7 @@ module RHC
     # Global config
     #
 
-    global_option '-c', '--config FILE', "Path of a different config file"
+    global_option '--config FILE', "Path of a different config file"
     def config
       raise "Operations requiring configuration must define a config accessor"
     end
