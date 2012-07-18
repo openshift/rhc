@@ -70,7 +70,23 @@ module RHC
     def openshift_url
       "https://#{openshift_server}"
     end
+    def openshift_rest_node
+      "#{openshift_url}/broker/rest/api"
+    end
 
+    def rest_client
+      @rest_client if @rest_client
+
+      username = config.username
+      unless username
+        username = ask "To connect to #{openshift_server} enter your OpenShift login (email or Red Hat login id): "
+        config.config_user(username)
+      end
+
+      password = RHC::Config.password || RHC::get_password
+
+      @rest_client ||= Rhc::Rest::Client.new(openshift_rest_node, username, password)
+    end
 
     #
     # Output helpers

@@ -95,6 +95,10 @@ module RHC
       self[key]
     end
 
+    def self.username
+      self['default_rhlogin']
+    end
+
     # Public: configures the default user for this session
     def self.config_user(username)
       @@defaults.add('default_rhlogin', username)
