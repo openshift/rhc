@@ -2,7 +2,7 @@ require 'rhc/commands/base'
 
 module RHC::Commands
   class Domain < Base
-    summary "Manage your namespace"
+    summary "Manage your domain"
     syntax "<action>"
     def run
 
@@ -11,7 +11,7 @@ module RHC::Commands
     argument :namespace, "Namespace for your application(s) (alphanumeric)", "-n", "--namespace namespace"
     option "--timeout timeout", "Timeout, in seconds, for the session"
     summary "Bind a registered user to a domain"
-    syntax "<action> <namespace> [--timeout timeout]"
+    syntax "<namespace> [--timeout timeout]"
     def create(namespace)
       d = rest_client.domains
       raise Rhc::Rest::BaseException.new("User #{config.username} has already created domain '#{d[0].id}'.  If you wish to change the namespace of this domain please use the command 'rhc domain alter'.", 1) unless d.empty?
