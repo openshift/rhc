@@ -100,8 +100,17 @@ module RHC::Commands
       success
     end
 
+    option "--timeout timeout", "Timeout, in seconds, for the session"
+    summary "Run a status check on your domain"
     def status
+      args = []
+      @options.each do |key, value|
+        if value.length > 0 && value.to_s.strip.length == 0; value = "'#{value}'" end
+        args << "--#{key} #{value}"
+      end
 
+      system("rhc-chk #{args.join(' ')} 2>&1")
+      $?.exitstatus.nil? ? 1 : $?.exitstatus
     end
 
     def destroy
