@@ -38,7 +38,7 @@ module RHC::Commands
       #       but in the future this will be manditory if you have more than one
       #       domain.  Figure out how to support overloading of commands
       d = rest_client.domains
-      raise Rhc::BaseError("No domains are registered to the user #{config.username}. Be sure to run 'rhc domain create' first.", 1) if d.empty?
+      raise Rhc::BaseException.new("No domains are registered to the user #{config.username}. Be sure to run 'rhc domain create' first.", 1) if d.empty?
 
       say "Updating domain '#{d[0].id}' to namespace '#{namespace}' ... "
       newdomain = d[0].update(namespace)
@@ -46,7 +46,7 @@ module RHC::Commands
         say "success!"
       else
         # we should not get here - the rest libs should have raised any errors
-        raise Rhc::BaseError("Unknown Error: this should not have been reached: #{newdomain.inspect}", 255)
+        raise Rhc::BaseException.new("Unknown Error: this should not have been reached: #{newdomain.inspect}", 255)
       end
       success
     end
