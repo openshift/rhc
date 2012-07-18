@@ -1,4 +1,4 @@
-# OpenShift Command Line Tools (RHC) [![Build Status](https://secure.travis-ci.org/openshift/os-client-tools.png)](http://travis-ci.org/openshift/os-client-tools)
+# OpenShift Command Line Tools (RHC) [![Build Status](https://secure.travis-ci.org/openshift/rhc.png)](http://travis-ci.org/openshift/rhc)
 
 The OpenShift command line tools allow you to manage your OpenShift
 applications from the command line.  The [Getting Started
@@ -20,19 +20,18 @@ DEPENDENCIES:
 * ruby (1.8.7 or later)
 * rubygems
 
-Step 1:  Create a domain to under which your applications will live:
+Step 1:  Run the setup command to configure your system:
 
-    $ rhc domain create -n desirednamespace -l rhlogin
+    $ rhc setup
 
-The name you choose here will form part of your application's public
-URL.
+Follow the instructions in setup to set your SSH keys and create a domain.  The name you choose for your domain will form part of your application's public URL.
 
 Step 2: Create an OpenShift application:
 
-    $ rhc app create -l rhlogin -a appname -r /path/to/new/git/repo -t <framework Ex: php-5.3>
+    $ rhc app create -a appname -r /path/to/new/git/repo -t <framework Ex: php-5.3>
 
 Once that's complete, follow the directions printed at the end of running
-rhc app create
+rhc app create.
 
 
 ## Making changes to your application
@@ -45,6 +44,7 @@ git repo.  Commit them, then push.  For example:
     $ git push
 
 Then just reload your web page to see the changes.
+
 
 ## OS X Notes:
 
@@ -64,6 +64,7 @@ Installing git from MacPorts/HomeBrew/Fink/etc requires Xcode.
 Now obtain the client code, either via 'git clone' as above
 or via the rhc gem.
 
+
 ## Developing / Contributing
 We expect code contributions to follow these standards:
 
@@ -73,7 +74,7 @@ We expect code contributions to follow these standards:
 exec rake spec</code>.  Features are in 'features/' and can be run with
 <code>bundle exec rake features</code> (although these tests runs
 against the gem installed locally so you will need to gem install
-first).  See [README.md](https://github.com/openshift/os-client-tools/blob/master/features/README.md) in the features dir for more info.
+first).  See [README.md](https://github.com/openshift/rhc/blob/master/features/README.md) in the features dir for more info.
 3. We maintain 100% line coverage of all newly added code via spec
    testing.  The build will fail if new code is added and it does not
 have full line coverage.  Some old code is currently excluded until it
