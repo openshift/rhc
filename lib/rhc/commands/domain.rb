@@ -13,7 +13,7 @@ module RHC::Commands
     summary "Bind a registered user to a domain"
     syntax "<action> <namespace> [--timeout timeout]"
     def create(namespace)
-      puts "you called create with namespace #{namespace}"
+
     end
 
     argument :namespace, "Namespace for your application(s) (alphanumeric)", "-n", "--namespace namespace"
@@ -21,7 +21,22 @@ module RHC::Commands
     summary "Alter namespace (will change urls)."
     syntax "<namespace> [--timeout timeout]"
     def alter(namespace)
-      puts "you called alter (#{@args})"
+      # TODO: Support multiple domains.  Right now we assume one domain so
+      #       you don't have to send in the name of the domain you want to change
+      #       but in the future this will be manditory if you have more than one
+      #       domain.  Figure out how to support overloading of commands
+      d = rest_client.domains
+      raise Rhc::BaseError("No domains are registered to the user #{config.username}. Be sure to run 'rhc domain create' first.", 1) if d.empty?
+
+      say "Updating domain '#{d[0].id}' to namespace '#{namespace}' ... "
+      newdomain = d[0].update(namespace)
+      if newdomain.id == namespace
+        say "success!"
+      else
+        # we should not get here - the rest libs should have raised any errors
+        raise Rhc::BaseError("Unknown Error: this should not have been reached: #{newdomain.inspect}", 255)
+      end
+      success
     end
 
     summary "Show your configured domains"
