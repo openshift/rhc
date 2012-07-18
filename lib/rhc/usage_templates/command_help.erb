@@ -1,36 +1,26 @@
+Usage: rhc <%= @command.name %> <%= @command.syntax %>
+<%= @command.description || @command.summary || 'No description.' %>
+<% unless @actions.empty? -%>
 
-  <%= $terminal.color "NAME", :bold %>:
+List of actions
+<% for action in @actions -%>
+  <%= "%-18s %s\n" % [action[:name], action[:summary]] -%>
+<% end -%>
+<% end -%>
+<% unless @command.options.empty? -%>
 
-    <%= @name %>
-<% if @syntax -%>
-
-  <%= $terminal.color "SYNOPSIS", :bold %>:
-
-    <%= @syntax -%>
-
+Options for <%= @command.name %>
+<% for option in @command.options -%>
+  <%= "%-25s %s\n" % [option[:switches].join('|'), option[:description]] -%>
+<% end -%>
 <% end -%>
 
-  <%= $terminal.color "DESCRIPTION", :bold %>:
-
-    <%= @description || @summary || 'No description.' -%>
-
-<% unless @examples.empty? -%>
-
-  <%= $terminal.color "EXAMPLES", :bold %>:
-	<% for description, command in @examples -%>
-
-    # <%= description %>
-    <%= command %>
-	<% end -%>
+Global options
+<% for option in @global_options -%>
+  <%= "%-25s %s\n" % [option[:switches].join('|'), option[:description]] -%>
 <% end -%>
-<% unless @options.empty? -%>
+<%#-
+  Other Attrs we may wish to use:
 
-  <%= $terminal.color "OPTIONS", :bold %>:
-	<% for option in @options -%>
-
-    <%= option[:switches].join ', ' %> 
-        <%= option[:description] %>
-	<% end -%>
-<% end -%>
-
-
+   * @examples - for description, command in @examples
+-%>

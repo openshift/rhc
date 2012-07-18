@@ -87,6 +87,9 @@ class RHC::Commands::Base
     def self.summary(value)
       options[:summary] = value
     end
+    def self.syntax(value)
+      options[:syntax] = value
+    end
 
     def self.suppress_wizard
       @suppress_wizard = true
