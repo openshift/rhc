@@ -18,27 +18,30 @@ module RHC
         instance.command name do |c|
           c.description = opts[:description]
           c.summary = opts[:summary]
-          cmd_options = opts[:cmd_options]
-          cmd_options.each { |o| c.option *o } unless cmd_options.nil?
-          cmd_args = opts[:cmd_args] || []
-          cmd_args.each do |arg|
-            matching_options = arg[:matching_option]
-            matching_options << arg[:description]
-            c.option(*matching_options) unless arg[:matching_option].nil?
+          options_metadata = opts[:options_metadata]
+          options_metadata.each { |o| c.option *o } unless options_metadata.nil?
+          args_metadata = opts[:args_metadata] || []
+          args_metadata.each do |arg_meta|
+            arg_option_switches = arg_meta[:option_switches]
+            arg_option_switches << arg_meta[:description]
+            c.option(*arg_option_switches) unless arg_option_switches.nil?
           end
           c.when_called do |args, options|
             begin
               # check to see if an arg's option was set
-              raise ArgumentError.new("Too many arguments") if args.length > cmd_args.length
-              cmd_args.each_with_index do |arg, i|
-                o = arg[:matching_option]
+              raise ArgumentError.new("Too many arguments") if args.length > args_metadata.length
+              args_metadata.each_with_index do |arg_meta, i|
+                o = arg_meta[:option_switches]
                 raise ArgumentError.new("Missing #{arg[:name]} argument") if o.nil? and args.length <= i
                 value = options.__hash__[arg[:name]]
                 unless value.nil?
                   raise ArgumentError.new("#{arg[:name]} specified twice on the command line and as a #{o[0]} switch") unless args.length == i
+                  # add the option as an argument
                   args << value
                 end
               end
+
+              # call command
               opts[:class].new(c, args, options).send(opts[:method], *args)
             rescue ArgumentError => e
               help = instance.help_formatter.render_command(c)

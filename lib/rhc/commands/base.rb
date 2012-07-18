@@ -97,19 +97,19 @@ class RHC::Commands::Base
     end
 
     def self.option(*args)
-      cmd_options << args
+      options_metadata << args
     end
 
     def self.argument(name, description, *option_args)
-      cmd_args << {:name => name, :description => description, :matching_option => option_args}
+      args_metadata << {:name => name, :description => description, :option_switches => option_args}
     end
 
     private
-      def self.cmd_options
-        options[:cmd_options] ||= []
+      def self.options_metadata
+        options[:options_metadata] ||= []
       end
-      def self.cmd_args
-        options[:cmd_args] ||=[]
+      def self.args_metadata
+        options[:args_metadata] ||=[]
       end
       def self.options
         @options ||= {}
