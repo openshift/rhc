@@ -64,7 +64,13 @@ module RHC
               end
 
               # call command
-              opts[:class].new(c, args, options).send(opts[:method], *args)
+              begin
+                opts[:class].new(c, args, options).send(opts[:method], *args)
+              rescue Exception => e
+                say e.to_s
+                say e.backtrace if options.trace
+                not e.respond_to?(:code) or e.code.nil? ? 128 : e.code
+              end
             rescue ArgumentError => e
               cb = CommandHelpBindings.new(c, instance.commands, instance.options)
               help = instance.help_formatter.render_command(cb)
