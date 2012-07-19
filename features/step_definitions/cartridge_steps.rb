@@ -32,8 +32,8 @@ Then /^the (.+) cartridge should be stopped$/ do |name|
 end
 
 Then /^the (.+) cartridge should be removed$/ do |name|
-  # for some reason the server returns Success when cart does not exist
-  @app.cartridge(name).status.should match("RESULT:\n(.*)Success")
+  # look for response code 400
+  @app.cartridge(name).status.should match("Response code was 400")
 end
 
 
