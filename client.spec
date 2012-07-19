@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.96.2
+Version: 0.96.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -111,6 +111,19 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Jul 19 2012 Adam Miller <admiller@redhat.com> 0.96.3-1
+- Update README with changes to repository name. (ccoleman@redhat.com)
+- Tidied up some redundancies in the shared examples setup. (hripps@redhat.com)
+- Rhc::Rest#send was colliding with Ruby core send() method. This has been
+  renamed to resolve the collision. Changes have been made throughout the REST
+  API to accound fort this correction. Additionally, removed evals in
+  rest_application_spec.rb to use the newly liberated ruby send() method
+  instead. (hripps@redhat.com)
+- Changed the way that class expectations are evaluated (hripps@redhat.com)
+- DRYed up the Rhc::Rest::Aplication tests. (hripps@redhat.com)
+- Added coverage for Rhc::Rest::Application; also added a filter to coverage
+  config for a file that was blocking 100%% coverage. (hripps@redhat.com)
+
 * Fri Jul 13 2012 Adam Miller <admiller@redhat.com> 0.96.2-1
 - Merge pull request #97 from fotioslindiakos/BZ836483 (johnp@redhat.com)
 - Merge pull request #99 from J5/master (ccoleman@redhat.com)
