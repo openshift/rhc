@@ -120,7 +120,7 @@ module RHC::Commands
     def destroy(namespace)
       domain = rest_client.find_domain namespace
       raise Rhc::Rest::ResourceNotFoundException.new("Domain with namespace '#{namespace}' does not exist.", 128) if domain.empty?
-      domain.destroy
+      domain[0].destroy
       success
     end
   end

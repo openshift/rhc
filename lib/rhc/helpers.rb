@@ -63,6 +63,7 @@ module RHC
 
     global_option '-l', '--rhlogin login', "Red Hat login (RedHat Network or OpenShift)"
     global_option '-p', '--password password', "Red Hat password"
+    global_option '-d', '--debug', "Turn on debugging"
 
     def openshift_server
       config.get_value('libra_server')
@@ -85,7 +86,7 @@ module RHC
 
       password = RHC::Config.password || RHC::get_password
 
-      @rest_client ||= Rhc::Rest::Client.new(openshift_rest_node, username, password)
+      @rest_client = Rhc::Rest::Client.new(openshift_rest_node, username, password, @options.debug)
     end
 
     #

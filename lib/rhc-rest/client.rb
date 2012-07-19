@@ -5,7 +5,9 @@ module Rhc
   module Rest
     class Client
       include Rest
-      def initialize(end_point, username, password)
+      def initialize(end_point, username, password, debug=false)
+        # use mydebug for legacy reasons
+        @mydebug = @mydebug || debug
         logger.debug "Connecting to #{end_point}" if @mydebug
         credentials = Base64.encode64("#{username}:#{password}")
         @@headers["Authorization"] = "Basic #{credentials}"
