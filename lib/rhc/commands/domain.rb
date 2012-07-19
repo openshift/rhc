@@ -5,7 +5,8 @@ module RHC::Commands
     summary "Manage your domain"
     syntax "<action>"
     def run
-
+      # default to domain show
+      show
     end
 
     argument :namespace, "Namespace for your application(s) (alphanumeric)", "-n", "--namespace namespace"
