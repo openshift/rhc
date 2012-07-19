@@ -25,7 +25,7 @@ module RHC
       global_options << args
     end
     def self.to_commander(instance=Commander::Runner.instance)
-      global_options.each{ |args, block| instance.global_option *args }
+      global_options.each{ |args| instance.global_option *args }
       commands.each_pair do |name, opts|
         instance.command name do |c|
           c.description = opts[:description]
