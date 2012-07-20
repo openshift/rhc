@@ -119,7 +119,7 @@ class RHC::Commands::Base
       end
 
       # convinient way of returning a success value so code is clearer
-      def success
+      def command_success
         0
       end
 end

@@ -10,7 +10,7 @@ module RHC::Commands
       status = decode_json(get("#{openshift_url}/app/status/status.json").body)
       open = status['open']
 
-      (success 'All systems running fine' and return 0) if open.blank?
+      (success 'All systems running fine' and return command_success) if open.blank?
 
       open.each do |i|
         i = i['issue']

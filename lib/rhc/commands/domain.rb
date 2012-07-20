@@ -26,7 +26,7 @@ module RHC::Commands
         # we should not get here - the rest libs should have raised any errors
         raise Rhc::Rest::BaseException.new("Unknown Error: this should not have been reached: #{newdomain.inspect}", 255)
       end
-      success
+      command_success
     end
 
     argument :namespace, "Namespace for your application(s) (alphanumeric)", "-n", "--namespace namespace"
@@ -49,7 +49,7 @@ module RHC::Commands
         # we should not get here - the rest libs should have raised any errors
         raise Rhc::BaseException.new("Unknown Error: this should not have been reached: #{newdomain.inspect}", 255)
       end
-      success
+      command_success
     end
 
     summary "Show your configured domains"
@@ -98,7 +98,7 @@ module RHC::Commands
           end
         end
       end
-      success
+      command_success
     end
 
     option "--timeout timeout", "Timeout, in seconds, for the session"
@@ -122,7 +122,7 @@ module RHC::Commands
       domain = rest_client.find_domain namespace
       raise Rhc::Rest::ResourceNotFoundException.new("Domain with namespace '#{namespace}' does not exist.", 128) if domain.empty?
       domain[0].destroy
-      success
+      command_success
     end
   end
 

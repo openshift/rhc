@@ -10,7 +10,7 @@ module RHC::Commands
     def run
       w = RHC::RerunWizard.new(config.config_path)
       # exit 0 on success 1 otherwise
-      w.run ? 0 : 1
+      w.run ? command_success : 1
     end
   end
 end
