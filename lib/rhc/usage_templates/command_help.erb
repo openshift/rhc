@@ -1,13 +1,13 @@
 Usage: rhc <%= @command.name %> <%= @command.syntax %>
 <%= @command.description || @command.summary || 'No description.' %>
-<% unless @actions.empty? -%>
+<% unless @actions.nil? or @actions.empty? -%>
 
 List of actions
 <% for action in @actions -%>
   <%= "%-18s %s\n" % [action[:name], action[:summary]] -%>
 <% end -%>
 <% end -%>
-<% unless @command.options.empty? -%>
+<% unless @command.options.nil? or @command.options.empty? -%>
 
 Options for <%= @command.name %>
 <% for option in @command.options -%>

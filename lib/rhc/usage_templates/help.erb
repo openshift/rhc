@@ -11,7 +11,7 @@ List of resources
 <%- end -%>
 
 Global options
-<%- unless @options.empty?  -%>
+<%- unless @options.nil? or @options.empty?  -%>
 <% for option in @options -%>
   <%= "%-25s %s\n" % [option[:switches].join('|'), option[:description]] -%>
 <% end -%>
