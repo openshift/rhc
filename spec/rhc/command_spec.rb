@@ -66,24 +66,50 @@ describe RHC::Commands::Base do
     end
 
     context 'when statically defined with no default method' do
-      subject do 
-        Kernel.module_eval do 
+      subject do
+        Kernel.module_eval do
           class Static < RHC::Commands::Base
+            suppress_wizard
+
             def test; 1; end
+
+            argument :testarg, "Test arg", "--testarg testarg"
+            summary "Test command execute"
             def execute; 1; end
+            def raise_exception
+              raise Exception.new("test exception")
+            end
           end
         end
         Static
       end
 
-      it("should register itself") { expect { subject }.to change(commands, :length).by(2) }
+      it("should register itself") { expect { subject }.to change(commands, :length).by(3) }
       it("should have an object name of the class") { subject.object_name.should == 'static' }
 
       context 'and when test is called' do
         it { expects_running('static', 'test').should call(:test).on(instance).with(no_args) }
       end
-      context 'and when test is called' do
-        it { expects_running('static', 'execute').should call(:execute).on(instance).with(no_args) }
+      context 'and when execute is called with argument' do
+        it { expects_running('static', 'execute', 'simplearg').should call(:execute).on(instance).with('simplearg') }
+      end
+      context 'and when execute is called with argument switch' do
+        it { expects_running('static', 'execute', '--testarg', 'switcharg').should call(:execute).on(instance).with('switcharg') }
+      end
+      context 'and when execute is called with same argument and switch' do
+        it { expects_running('statis', 'execute', 'duparg', '--testarg', 'duparg2').should exit_with_code(1) }
+      end
+
+      context 'and when execute is called with too many arguments' do
+        it { expects_running('static', 'execute', 'arg1', 'arg2').should exit_with_code(1) }
+      end
+
+      context 'and when execute is called with a missing argument' do
+        it { expects_running('static', 'execute').should exit_with_code(1) }
+      end
+
+      context 'and when an exception is raised in a call' do
+        it { expects_running('static', 'raise_exception', '--trace').should exit_with_code(128) }
       end
     end
   end

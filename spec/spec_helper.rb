@@ -48,6 +48,8 @@ module ClassSpecHelpers
     program :name, 'test'
     program :version, '1.2.3'
     program :description, 'something'
+    program :help_formatter, RHC::UsageHelpFormatter
+
     #create_test_command
     yield if block
     Commander::Runner.instance
@@ -170,8 +172,8 @@ module ExitCodeMatchers
     end
     description do
       "expect block to call exit(#{code})"
-    end    
-  end  
+    end
+  end
 end
 
 module CommanderInvocationMatchers
