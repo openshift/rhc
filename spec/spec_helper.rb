@@ -58,10 +58,10 @@ module ClassSpecHelpers
   #
   def expects_running *args
     mock_terminal
-    r = new_command_runner args do
+    r = new_command_runner *args do
       instance #ensure instance is created before subject :new is mocked
       subject.should_receive(:new).any_number_of_times.and_return(instance)
-      RHC::Commands.to_commander 
+      RHC::Commands.to_commander
     end
     lambda { r.run!; @output }
   end
