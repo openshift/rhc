@@ -2,6 +2,8 @@ require 'spec_helper'
 require 'rhc/commands/base'
 
 describe RHC::Commands::Base do
+  # supress the wizard for Command tests
+  before(:each) { RHC::Commands::Base.stub!(:suppress_wizard?) {true} }
 
   describe '#object_name' do
     subject { described_class }

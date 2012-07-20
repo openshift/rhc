@@ -5,7 +5,7 @@ describe RHC::CLI do
   shared_examples_for 'a help page' do
     let(:arguments) { @arguments or raise "no arguments" }
     it('should contain the program description') { run_output.should =~ /Command line interface for OpenShift/ }
-    it('should contain the global options') { run_output.should =~ /Global Options:/ }
+    it('should contain the global options') { run_output.should =~ /Global options/ }
     it('should provide a --config switch') { run_output.should =~ /\-\-config FILE/ }
   end
 
