@@ -54,10 +54,9 @@ module RHC
               raise ArgumentError.new("Invalid arguments") if args.length > args_metadata.length
               args_metadata.each_with_index do |arg_meta, i|
                 o = arg_meta[:option_switches]
-                raise ArgumentError.new("Missing #{arg[:name]} argument") if o.nil? and args.length <= i
                 value = options.__hash__[arg_meta[:name]]
                 unless value.nil?
-                  raise ArgumentError.new("#{arg[:name]} specified twice on the command line and as a #{o[0]} switch") unless args.length == i
+                  raise ArgumentError.new("#{arg_meta[:name]} specified twice on the command line and as a #{o[0]} switch") unless args.length == i
                   # add the option as an argument
                   args << value
                 end
@@ -69,12 +68,13 @@ module RHC
               rescue Exception => e
                 say e.to_s
                 e.backtrace.each { |line| say line } if options.trace
-                not e.respond_to?(:code) or e.code.nil? ? 128 : e.code
+                (e.respond_to?(:code) and not e.code.nil?) ? e.code : 128
               end
             rescue ArgumentError => e
               cb = CommandHelpBindings.new(c, instance.commands, instance.options)
               help = instance.help_formatter.render_command(cb)
-              say "Error: #{e.to_s}#{help}"
+              say "Error: #{e.to_s}\n#{help}"
+              1
             end
           end
         end
