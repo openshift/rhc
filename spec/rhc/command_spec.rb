@@ -2,15 +2,12 @@ require 'spec_helper'
 require 'rhc/commands/base'
 
 describe RHC::Commands::Base do
-  # supress the wizard for Command tests
-  before(:each) { RHC::Commands::Base.stub!(:suppress_wizard?) {true} }
-
   describe '#object_name' do
     subject { described_class }
     its(:object_name) { should == 'base' }
 
     context 'when the class is at the root' do
-      subject do 
+      subject do
         Kernel.module_eval do 
           class StaticRootClass < RHC::Commands::Base; def run; 1; end; end
         end
@@ -45,7 +42,21 @@ describe RHC::Commands::Base do
 
       it("should register itself") { expect { subject }.to change(commands, :length).by(1) }
       it("should have an object name") { subject.object_name.should == 'test' }
-      it { expects_running('test').should call(:run).on(instance).with(no_args) }
+      it("should run with wizard") do
+        FakeFS.activate!
+        wizard_run = false
+        RHC::Wizard.stub!(:new) do
+          w = double("Wizard")
+          w.stub!(:run) { wizard_run = true }
+          w
+        end
+
+        expects_running('test').should call(:run).on(instance).with(no_args)
+        wizard_run.should be_true
+
+        FakeFS::FileSystem.clear
+        FakeFS.deactivate!
+      end
     end
 
     context 'when statically defined' do
@@ -53,6 +64,7 @@ describe RHC::Commands::Base do
         Kernel.module_eval do 
           module Nested
             class Static < RHC::Commands::Base
+              suppress_wizard
               def run(args, options); 1; end
             end
           end
