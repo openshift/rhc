@@ -68,7 +68,7 @@ module RHC
                 opts[:class].new(c, args, options).send(opts[:method], *args)
               rescue Exception => e
                 say e.to_s
-                say e.backtrace if options.trace
+                e.backtrace.each { |line| say line } if options.trace
                 not e.respond_to?(:code) or e.code.nil? ? 128 : e.code
               end
             rescue ArgumentError => e
