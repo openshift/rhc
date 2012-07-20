@@ -36,13 +36,13 @@ describe RHC::Commands::Base do
 
     context 'when dynamically instantiating without an object name' do
       subject { const_for(Class.new(RHC::Commands::Base) { def run; 1; end }) }
-      
+
       it("should raise") { expect { subject }.to raise_exception( RHC::Commands::Base::InvalidCommand, /object_name/i ) }
     end
 
     context 'when dynamically instantiating with object_name' do
       subject { const_for(Class.new(RHC::Commands::Base) { object_name :test; def run(args, options); 1; end }) }
-      
+
       it("should register itself") { expect { subject }.to change(commands, :length).by(1) }
       it("should have an object name") { subject.object_name.should == 'test' }
       it { expects_running('test').should call(:run).on(instance).with(no_args) }
@@ -59,7 +59,7 @@ describe RHC::Commands::Base do
         end
         Nested::Static
       end
-      
+
       it("should register itself") { expect { subject }.to change(commands, :length).by(1) }
       it("should have an object name of the class") { subject.object_name.should == 'static' }
       it("invokes the right method") { expects_running('static').should call(:run).on(instance).with(no_args) }
@@ -75,10 +75,10 @@ describe RHC::Commands::Base do
         end
         Static
       end
-      
+
       it("should register itself") { expect { subject }.to change(commands, :length).by(2) }
       it("should have an object name of the class") { subject.object_name.should == 'static' }
-      
+
       context 'and when test is called' do
         it { expects_running('static', 'test').should call(:test).on(instance).with(no_args) }
       end
