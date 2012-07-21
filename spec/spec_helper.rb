@@ -65,7 +65,7 @@ module ClassSpecHelpers
       subject.should_receive(:new).any_number_of_times.and_return(instance)
       RHC::Commands.to_commander
     end
-    lambda { r.run!; @output }
+    lambda { r.run! }
   end
 
   class MockHighLineTerminal < HighLine
@@ -155,11 +155,9 @@ module ExitCodeMatchers
     actual = nil
     match do |block|
       begin
-        block.call
+        actual = block.call
       rescue SystemExit => e
         actual = e.status
-      else
-        actual = 0
       end
       actual and actual == code
     end

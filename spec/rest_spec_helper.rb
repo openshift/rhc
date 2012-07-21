@@ -1,4 +1,5 @@
 require 'webmock/rspec'
+require 'rhc-rest'
 
 Spec::Matchers.define :have_same_attributes_as do |expected|
   match do |actual|
@@ -109,5 +110,97 @@ module RestSpecHelper
       }.to_json,
       :status => 200
     }
+  end
+
+  class MockRestClient
+    def initialize
+      Rhc::Rest::Client.stub(:new) { self }
+      @domains = []
+    end
+
+    def domains
+      @domains
+    end
+
+    def add_domain(id)
+      d = MockRestDomain.new(id, self)
+      @domains << d
+      d
+    end
+
+    def find_domain(id)
+      i = domains.find_index { |d| d.id == id }
+      i.nil? ? [] : [domains[i]]
+    end
+  end
+
+  class MockRestDomain
+    attr_reader :id
+
+    def initialize(id, client)
+      @id = id
+      @client = client
+      @applications = []
+    end
+
+    def update(id)
+      @id = id
+      self
+    end
+
+    def destroy
+      @client.domains.delete_if { |d| d.id == @id }
+
+      @client = nil
+      @applications = nil
+    end
+
+    def add_application(name, type)
+      a = MockRestApplication.new(name, type, self)
+      @applications << a
+      a
+    end
+
+    def applications
+      @applications
+    end
+  end
+
+  class MockRestApplication
+    attr_reader :name, :uuid, :creation_time, :git_url, :app_url, :aliases
+
+    def initialize(name, type, domain)
+      @name = name
+      @domain = domain
+      @cartridges = []
+      @creation_time = "now"
+      @uuid = "fakeuuidfortests"
+      @git_url = "git:fake.foo/git/#{@name}.git"
+      @app_url = "https://#{@name}-#{@domain.id}.fake.foo/"
+      @aliases = []
+      add_cartridge(type, false)
+    end
+
+    def add_cartridge(name, embedded=true)
+      type = embedded ? "embedded" : "framework"
+      c = MockRestCartridge.new(name, type, self)
+      @cartridges << c
+      c
+    end
+
+    def cartridges
+      @cartridges
+    end
+  end
+
+  class MockRestCartridge
+    attr_reader :name
+    attr_reader :type
+
+    def initialize(name, type, app)
+      @name = name
+      @type = type
+      @app = app
+    end
   end
 end

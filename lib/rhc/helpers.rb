@@ -77,7 +77,7 @@ module RHC
     end
 
     def rest_client
-      @rest_client if @rest_client
+      return @rest_client if @rest_client
 
       username = config.username
       unless username

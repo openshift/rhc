@@ -23,8 +23,10 @@ module RHC::Commands
         say "\n"
         say "You may now create an application using the 'rhc app create' command"
       else
+        #:nocov:
         # we should not get here - the rest libs should have raised any errors
         raise Rhc::Rest::BaseException.new("Unknown Error: this should not have been reached: #{newdomain.inspect}", 255)
+        #:nocov:
       end
       command_success
     end
@@ -39,15 +41,17 @@ module RHC::Commands
       #       but in the future this will be manditory if you have more than one
       #       domain.  Figure out how to support overloading of commands
       d = rest_client.domains
-      raise Rhc::BaseException.new("No domains are registered to the user #{config.username}. Be sure to run 'rhc domain create' first.", 1) if d.empty?
+      raise Rhc::Rest::BaseException.new("No domains are registered to the user #{config.username}. Be sure to run 'rhc domain create' first.", 1) if d.empty?
 
       say "Updating domain '#{d[0].id}' to namespace '#{namespace}' ... "
       newdomain = d[0].update(namespace)
       if newdomain.id == namespace
         say "success!"
       else
+        #:nocov:
         # we should not get here - the rest libs should have raised any errors
-        raise Rhc::BaseException.new("Unknown Error: this should not have been reached: #{newdomain.inspect}", 255)
+        raise Rhc::Rest::BaseException.new("Unknown Error: this should not have been reached: #{newdomain.inspect}", 255)
+        #:nocov:
       end
       command_success
     end
@@ -63,7 +67,7 @@ module RHC::Commands
         elsif domains.length == 1
           say "Namespace: #{domains[0].id}"
         else
-          domains.each_with_index { |d, i| puts "Namespace(#{i}): #{d.id}" }
+          domains.each_with_index { |d, i| say "Namespace(#{i}): #{d.id}" }
         end
       end
 
@@ -87,7 +91,7 @@ module RHC::Commands
                 #say "      Git URL: #{a.git_url}"
                 #say "   Public URL: #{a.app_url}"
                 say "      Aliases: #{a.aliases.join(', ')}" if a.aliases and not a.aliases.empty?
-                if carts && !carts.empty?
+                if carts.length > 1
                   say "   Embedded:"
                   carts.each { |c| say "      #{c.name}" if c.type == 'embedded' }
                 else
@@ -105,12 +109,14 @@ module RHC::Commands
     summary "Run a status check on your domain"
     def status
       args = []
-      @options.each do |key, value|
+
+      options.__hash__.each do |key, value|
+        value = value.to_s
         if value.length > 0 && value.to_s.strip.length == 0; value = "'#{value}'" end
         args << "--#{key} #{value}"
       end
 
-      system("rhc-chk #{args.join(' ')} 2>&1")
+      Kernel.system("rhc-chk #{args.join(' ')} 2>&1")
       $?.exitstatus.nil? ? 1 : $?.exitstatus
     end
 
