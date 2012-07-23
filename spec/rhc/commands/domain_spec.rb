@@ -167,7 +167,7 @@ describe RHC::Commands::Domain do
       Kernel.stub!(:system) do |cmd| 
         @cmd = cmd
         # run the true command to get $?.exitstatus == 0
-        system("/usr/bin/true")
+        system("true")
       end
     end
 
