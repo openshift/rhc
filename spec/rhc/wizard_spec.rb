@@ -372,7 +372,7 @@ describe RHC::Wizard do
       @wizard.run_next_stage # we can skip testing the greeting
     end
 
-    it "should ask password input with default login (use a different one)" do
+    it "should ask password input with default login(use a different one)" do
       @wizard.stub_rhc_client_new
       @wizard.stub_user_info
       $terminal.write_line(@wizard.mock_user)
