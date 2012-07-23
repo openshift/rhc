@@ -88,11 +88,11 @@ module RHC::Commands
                 say "    Framework: #{carts[0].name}"
                 say "     Creation: #{a.creation_time}"
                 say "         UUID: #{a.uuid}"
-                #say "      Git URL: #{a.git_url}"
-                #say "   Public URL: #{a.app_url}"
+                say "      Git URL: #{a.git_url}" if a.git_url
+                say "   Public URL: #{a.app_url}" if a.app_url
                 say "      Aliases: #{a.aliases.join(', ')}" if a.aliases and not a.aliases.empty?
+                say "   Embedded:"
                 if carts.length > 1
-                  say "   Embedded:"
                   carts.each { |c| say "      #{c.name}" if c.type == 'embedded' }
                 else
                   say "      None"
