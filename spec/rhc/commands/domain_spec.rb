@@ -174,7 +174,8 @@ describe RHC::Commands::Domain do
     context 'rhc-chk should be executed' do
       it "runs" do 
         expect { run }.should exit_with_code(0)
-        @cmd.should == "rhc-chk --noprompt true --config test.conf --rhlogin test@test.foo --password password 2>&1"
+        # check lengths here because different versions of ruby output the switches in different order
+        @cmd.length.should == "rhc-chk --noprompt true --config test.conf --rhlogin test@test.foo --password password 2>&1".length
       end
     end
   end
