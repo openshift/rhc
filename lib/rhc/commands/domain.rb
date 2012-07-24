@@ -9,8 +9,8 @@ module RHC::Commands
       show
     end
 
-    argument :namespace, "Namespace for your application(s) (alphanumeric)", "-n", "--namespace namespace"
-    option "--timeout timeout", "Timeout, in seconds, for the session"
+    argument :namespace, "Namespace for your application(s) (alphanumeric)", ["-n", "--namespace namespace"]
+    option ["--timeout timeout"], "Timeout, in seconds, for the session"
     summary "Bind a registered user to a domain"
     syntax "<namespace> [--timeout timeout]"
     def create(namespace)
@@ -31,8 +31,8 @@ module RHC::Commands
       command_success
     end
 
-    argument :namespace, "Namespace for your application(s) (alphanumeric)", "-n", "--namespace namespace"
-    option "--timeout timeout", "Timeout, in secon  ds, for the session"
+    argument :namespace, "Namespace for your application(s) (alphanumeric)", ["-n", "--namespace namespace"]
+    option ["--timeout timeout"], "Timeout, in seconds, for the session"
     summary "Alter namespace (will change urls)."
     syntax "<namespace> [--timeout timeout]"
     def alter(namespace)
@@ -105,7 +105,7 @@ module RHC::Commands
       command_success
     end
 
-    option "--timeout timeout", "Timeout, in seconds, for the session"
+    option ["--timeout timeout"], "Timeout, in seconds, for the session"
     summary "Run a status check on your domain"
     def status
       args = []
@@ -120,8 +120,8 @@ module RHC::Commands
       $?.exitstatus.nil? ? 1 : $?.exitstatus
     end
 
-    argument :namespace, "Namespace you wish to destroy", "-n", "--namespace namespace"
-    option "--timeout timeout", "Timeout, in seconds, for the session"
+    argument :namespace, "Namespace you wish to destroy", ["-n", "--namespace namespace"]
+    option ["--timeout timeout"], "Timeout, in seconds, for the session"
     summary "Destroys your domain and any application underneath it.  Use with caution."
     syntax "<namespace> [--timeout timeout]"
     def destroy(namespace)

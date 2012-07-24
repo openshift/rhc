@@ -4,9 +4,9 @@ require 'rhc/config'
 
 module RHC::Commands
   class Setup < Base
+    suppress_wizard
 
     summary "Runs the setup wizard to configure your OpenShift account."
-    suppress_wizard
     def run
       w = RHC::RerunWizard.new(config.config_path)
       # exit 0 on success 1 otherwise

@@ -8,8 +8,8 @@ module RHC
 
   module Helpers
     private
-      def self.global_option(*args)
-        RHC::Commands.global_option *args
+      def self.global_option(switches, description)
+        RHC::Commands.global_option switches, description
       end
   end
 

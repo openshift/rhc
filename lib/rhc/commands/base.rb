@@ -99,12 +99,14 @@ class RHC::Commands::Base
       @suppress_wizard
     end
 
-    def self.option(*args)
+    def self.option(switches, description)
+      # flatten into OptionParser syntax
+      args = [switches, description].flatten
       options_metadata << args
     end
 
-    def self.argument(name, description, *option_args)
-      args_metadata << {:name => name, :description => description, :option_switches => option_args}
+    def self.argument(name, description, switches)
+      args_metadata << {:name => name, :description => description, :option_switches => switches}
     end
 
     private
