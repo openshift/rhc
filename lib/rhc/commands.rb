@@ -23,7 +23,7 @@ module RHC
     end
     def self.global_option(switches, description)
       # flatten into OptionParser syntax
-      args = [switches, description].flatten
+      args = [switches, description].flatten(1)
       global_options << args
     end
     def self.to_commander(instance=Commander::Runner.instance)
