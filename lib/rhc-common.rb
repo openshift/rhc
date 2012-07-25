@@ -526,6 +526,8 @@ end
             "health_check.php"
           when /^perl/
             "health_check.pl"
+          when /^zend/
+            "health_check.php"
           else
             "health"
           end
