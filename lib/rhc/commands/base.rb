@@ -106,15 +106,15 @@ class RHC::Commands::Base
     end
 
     def self.argument(name, description, switches)
-      args_metadata << {:name => name, :description => description, :option_switches => switches}
+      args_metadata << {:name => name, :description => description, :switches => switches}
     end
 
     private
       def self.options_metadata
-        options[:options_metadata] ||= []
+        options[:options] ||= []
       end
       def self.args_metadata
-        options[:args_metadata] ||=[]
+        options[:args] ||=[]
       end
       def self.options
         @options ||= {}

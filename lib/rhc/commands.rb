@@ -33,13 +33,13 @@ module RHC
           c.description = opts[:description]
           c.summary = opts[:summary]
           c.syntax = opts[:syntax]
-          options_metadata = opts[:options_metadata]
-          options_metadata.each { |o| c.option *o } unless options_metadata.nil?
-          args_metadata = opts[:args_metadata] || []
-          args_metadata.each do |arg_meta|
-            arg_option_switches = arg_meta[:option_switches]
-            arg_option_switches << arg_meta[:description]
-            c.option(*arg_option_switches) unless arg_option_switches.nil?
+
+          (opts[:options]||[]).each { |o| c.option *o }
+          args_metadata = opts[:args] || []
+          (args_metadata).each do |arg_meta|
+            arg_switches = arg_meta[:switches]
+            arg_switches << arg_meta[:description]
+            c.option(*arg_switches) unless arg_switches.nil?
           end
 
           c.when_called do |args, options|
@@ -55,7 +55,7 @@ module RHC
               # check to see if an arg's option was set
               raise ArgumentError.new("Invalid arguments") if args.length > args_metadata.length
               args_metadata.each_with_index do |arg_meta, i|
-                o = arg_meta[:option_switches]
+                o = arg_meta[:switches]
                 value = options.__hash__[arg_meta[:name]]
                 unless value.nil?
                   raise ArgumentError.new("#{arg_meta[:name]} specified twice on the command line and as a #{o[0]} switch") unless args.length == i
