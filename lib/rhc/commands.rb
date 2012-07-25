@@ -39,7 +39,7 @@ module RHC
           (args_metadata).each do |arg_meta|
             arg_switches = arg_meta[:switches]
             arg_switches << arg_meta[:description]
-            c.option(*arg_switches) unless arg_switches.nil?
+            c.option *arg_switches unless arg_switches.nil?
           end
 
           c.when_called do |args, options|
