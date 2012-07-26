@@ -2,7 +2,7 @@ Usage: rhc <%= @command.name %> <%= @command.syntax %>
 <%= @command.description || @command.summary || 'No description.' %>
 <% unless @actions.nil? or @actions.empty? -%>
 
-List of actions
+List of Actions
 <% for action in @actions -%>
   <%= "%-18s %s\n" % [action[:name], action[:summary]] -%>
 <% end -%>
@@ -15,7 +15,7 @@ Options for <%= @command.name %>
 <% end -%>
 <% end -%>
 
-Global options
+Global Options
 <% for option in @global_options -%>
   <%= "%-25s %s\n" % [option[:switches].join('|'), option[:description]] -%>
 <% end -%>
