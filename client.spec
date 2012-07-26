@@ -2,7 +2,7 @@
 
 Summary:       Multi-tenant cloud management system client tools
 Name:          rhc
-Version: 0.96.3
+Version: 0.96.4
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -111,6 +111,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Jul 26 2012 Dan McPherson <dmcphers@redhat.com> 0.96.4-1
+- added zend health_check.php (lnader@redhat.com)
+
 * Thu Jul 19 2012 Adam Miller <admiller@redhat.com> 0.96.3-1
 - Update README with changes to repository name. (ccoleman@redhat.com)
 - Tidied up some redundancies in the shared examples setup. (hripps@redhat.com)
