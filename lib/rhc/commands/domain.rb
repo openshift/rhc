@@ -9,19 +9,18 @@ module RHC::Commands
       show
     end
 
-    argument :namespace, "Namespace for your application(s) (alphanumeric)", ["-n", "--namespace namespace"]
-    option ["--timeout timeout"], "Timeout, in seconds, for the session"
     summary "Bind a registered user to a domain"
     syntax "<namespace> [--timeout timeout]"
+    argument :namespace, "Namespace for your application(s) (alphanumeric)", ["-n", "--namespace namespace"]
+    option ["--timeout timeout"], "Timeout, in seconds, for the session"
     def create(namespace)
-      d = rest_client.domains
-      raise Rhc::Rest::BaseException.new("User #{config.username} has already created domain '#{d[0].id}'.  If you wish to change the namespace of this domain please use the command 'rhc domain alter'.", 1) unless d.empty?
+      domain = rest_client.domains
+      raise Rhc::Rest::BaseException.new("User #{config.username} has already created domain '#{d[0].id}'.  If you wish to change the namespace of this domain please use the command 'rhc domain alter'.", 1) unless domain.empty?
       say "Creating domain with namespace '#{namespace}' ... "
-      newdomain = rest_client.add_domain(namespace)
+      new_domain = rest_client.add_domain(namespace)
       if newdomain.id == namespace
-        say "success!"
-        say "\n"
-        say "You may now create an application using the 'rhc app create' command"
+        paragraph { say "success!" }
+        paragraph { say "You may now create an application using the 'rhc app create' command" }
       else
         #:nocov:
         # we should not get here - the rest libs should have raised any errors
@@ -31,25 +30,24 @@ module RHC::Commands
       command_success
     end
 
-    argument :namespace, "Namespace for your application(s) (alphanumeric)", ["-n", "--namespace namespace"]
-    option ["--timeout timeout"], "Timeout, in seconds, for the session"
     summary "Alter namespace (will change urls)."
     syntax "<namespace> [--timeout timeout]"
+    argument :namespace, "Namespace for your application(s) (alphanumeric)", ["-n", "--namespace namespace"]
+    option ["--timeout timeout"], "Timeout, in seconds, for the session"
     def alter(namespace)
       # TODO: Support multiple domains.  Right now we assume one domain so
       #       you don't have to send in the name of the domain you want to change
       #       but in the future this will be manditory if you have more than one
       #       domain.  Figure out how to support overloading of commands
-      d = rest_client.domains
+      domain = rest_client.domains
       raise Rhc::Rest::BaseException.new("No domains are registered to the user #{config.username}. Be sure to run 'rhc domain create' first.", 1) if d.empty?
 
       say "Updating domain '#{d[0].id}' to namespace '#{namespace}' ... "
-      newdomain = d[0].update(namespace)
-      if newdomain.id == namespace
+      new_domain = domain[0].update(namespace)
+      if new_domain.id == namespace
         say "success!"
       else
-        #:nocov:
-        # we should not get here - the rest libs should have raised any errors
+        #:nocov: we should not get here - the rest libs should have raised any errors
         raise Rhc::Rest::BaseException.new("Unknown Error: this should not have been reached: #{newdomain.inspect}", 255)
         #:nocov:
       end
@@ -105,8 +103,8 @@ module RHC::Commands
       command_success
     end
 
-    option ["--timeout timeout"], "Timeout, in seconds, for the session"
     summary "Run a status check on your domain"
+    option ["--timeout timeout"], "Timeout, in seconds, for the session"
     def status
       args = []
 
@@ -120,10 +118,10 @@ module RHC::Commands
       $?.exitstatus.nil? ? 1 : $?.exitstatus
     end
 
-    argument :namespace, "Namespace you wish to destroy", ["-n", "--namespace namespace"]
-    option ["--timeout timeout"], "Timeout, in seconds, for the session"
     summary "Destroys your domain and any application underneath it.  Use with caution."
     syntax "<namespace> [--timeout timeout]"
+    argument :namespace, "Namespace you wish to destroy", ["-n", "--namespace namespace"]
+    option ["--timeout timeout"], "Timeout, in seconds, for the session"
     def destroy(namespace)
       domain = rest_client.find_domain namespace
       raise Rhc::Rest::ResourceNotFoundException.new("Domain with namespace '#{namespace}' does not exist.", 128) if domain.empty?
