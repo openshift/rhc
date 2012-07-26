@@ -1,4 +1,4 @@
-# Writing a command module for the RHC tools
+# Adding a new command to the RHC program
 
 In an effort to make rhc commands more consistent and easier to write we have adopted the Commander module as the basis for the command line tools going forward.  Among some of the benefits Commander brings to the table is the ability to generate help documentation, auto complete directives and option parsing directly from the code.  It also allows us to efficiently handle functional and coverage tests without having to merge results from a number of binaries.  Bellow is a tutorial on how to write commands in the new framework.
 
@@ -90,7 +90,7 @@ This may be generated from metadata in the future but for now we use this to doc
 <!-- language: ruby -->
     class Domain < Base
       ...
-      syntax "\<namespace\> [--timeout timeout]" 
+      syntax "\<namespace\> [--timeout timeout]"
       def create(namespace)
         ...
       end
