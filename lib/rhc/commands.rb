@@ -22,9 +22,7 @@ module RHC
       commands[opts[:name]] = opts
     end
     def self.global_option(switches, description)
-      # flatten into OptionParser syntax
-      args = [switches, description].flatten(1)
-      global_options << args
+      global_options << [switches, description].flatten(1)
     end
     def self.to_commander(instance=Commander::Runner.instance)
       global_options.each{ |args| instance.global_option *args }

@@ -100,9 +100,7 @@ class RHC::Commands::Base
     end
 
     def self.option(switches, description)
-      # flatten into OptionParser syntax
-      args = [switches, description].flatten(1)
-      options_metadata << args
+      options_metadata << [switches, description].flatten(1)
     end
 
     def self.argument(name, description, switches)
