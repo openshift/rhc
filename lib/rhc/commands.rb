@@ -44,16 +44,17 @@ module RHC
             usage = RHC::UsageHelpFormatter.new(self).render
             abort "Invalid rhc resource: #{@args[0]}. Use --trace to view backtrace\n#{usage}"
           rescue \
+            ArgumentError,
             OptionParser::InvalidOption,
             OptionParser::InvalidArgument,
             OptionParser::MissingArgument => e
-            help_bindings = CommandHelpBindings.new command, commands, Commander::Runner.instance.options
-            usage = RHC::UsageHelpFormatter.new(self).render_command(help_bindings)
-            abort "#{e}. Use --trace to view backtrace.\n#{usage}"
-          rescue Rhc::Rest::BaseException => e
-            help_bindings = CommandHelpBindings.new command, commands, Commander::Runner.instance.options
+
+            help_bindings = CommandHelpBindings.new(active_command, commands, Commander::Runner.instance.options)
             usage = RHC::UsageHelpFormatter.new(self).render_command(help_bindings)
             say "#{e}. Use --trace to view backtrace.\n#{usage}"
+            1
+          rescue Rhc::Rest::BaseException => e
+            say "#{e}. Use --trace to view backtrace."
             e.code.nil? ? 128 : e.code
           rescue => e
             say "error: #{e}. Use --trace to view backtrace."

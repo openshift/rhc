@@ -44,7 +44,7 @@ module ClassSpecHelpers
     end
   end
   def new_command_runner *args, &block
-    Commander::Runner.instance_variable_set :"@singleton", Commander::Runner.new(args)
+    Commander::Runner.instance_variable_set :"@singleton", RHC::Commands::Runner.new(args)
     program :name, 'test'
     program :version, '1.2.3'
     program :description, 'something'
