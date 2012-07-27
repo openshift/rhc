@@ -27,7 +27,7 @@ module RHC::Commands
         raise Rhc::Rest::BaseException.new("Unknown Error: this should not have been reached: #{newdomain.inspect}", 255)
         #:nocov:
       end
-      command_success
+      0
     end
 
     summary "Alter namespace (will change urls)."
@@ -51,7 +51,7 @@ module RHC::Commands
         raise Rhc::Rest::BaseException.new("Unknown Error: this should not have been reached: #{newdomain.inspect}", 255)
         #:nocov:
       end
-      command_success
+      0
     end
 
     summary "Show your configured domains"
@@ -100,7 +100,7 @@ module RHC::Commands
           end
         end
       end
-      command_success
+      0
     end
 
     summary "Run a status check on your domain"
@@ -126,7 +126,7 @@ module RHC::Commands
       domain = rest_client.find_domain namespace
       raise Rhc::Rest::ResourceNotFoundException.new("Domain with namespace '#{namespace}' does not exist.", 128) if domain.empty?
       domain[0].destroy
-      command_success
+      0
     end
   end
 

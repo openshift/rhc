@@ -117,9 +117,4 @@ class RHC::Commands::Base
       def self.options
         @options ||= {}
       end
-
-      # convinient way of returning a success value so code is clearer
-      def command_success
-        0
-      end
 end

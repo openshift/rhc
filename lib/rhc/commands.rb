@@ -58,7 +58,6 @@ module RHC
           end
         else
           run_active_command
-          0 # always return success unless exception is raised
         end
       end
 
