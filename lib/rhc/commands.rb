@@ -47,14 +47,17 @@ module RHC
             OptionParser::InvalidOption,
             OptionParser::InvalidArgument,
             OptionParser::MissingArgument => e
-            usage = RHC::UsageHelpFormatter.new(self).render
+            help_bindings = CommandHelpBindings.new command, commands, Commander::Runner.instance.options
+            usage = RHC::UsageHelpFormatter.new(self).render_command(help_bindings)
             abort "#{e}. Use --trace to view backtrace.\n#{usage}"
           rescue Rhc::Rest::BaseException => e
-            usage = RHC::UsageHelpFormatter.new(self).render
+            help_bindings = CommandHelpBindings.new command, commands, Commander::Runner.instance.options
+            usage = RHC::UsageHelpFormatter.new(self).render_command(help_bindings)
             say "#{e}. Use --trace to view backtrace.\n#{usage}"
             e.code.nil? ? 128 : e.code
           rescue => e
-            abort "error: #{e}. Use --trace to view backtrace."
+            say "error: #{e}. Use --trace to view backtrace."
+            128
           end
         else
           run_active_command
