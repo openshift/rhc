@@ -29,10 +29,17 @@ module RHC
         global_option('-t', '--trace', 'Display backtrace when an error occurs') { trace = true }
         parse_global_options
         remove_global_options options, @args
+
+        # if help is last arg run as if --help was passed in
+        if @args[-1] == "help"
+          args = @args - ["help"]
+          command(:help).run(*args)
+          return
+        end
+
         unless trace
           begin
             run_active_command
-            0 # always return success unless exception is raised
           rescue InvalidCommandError => e
             usage = RHC::UsageHelpFormatter.new(self).render
             abort "Invalid rhc resource: #{@args[0]}. Use --trace to view backtrace\n#{usage}"
