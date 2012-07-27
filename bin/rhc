@@ -56,8 +56,6 @@ begin
     run_setup_wizard_if_needed
     system("rhc-port-forward #{get_args} 2>&1")
     retcode = $?.exitstatus
-  when "-h", "--help", "help", nil
-    p_usage 0
   else
     begin
       require 'rhc/cli'
