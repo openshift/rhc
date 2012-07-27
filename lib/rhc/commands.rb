@@ -1,3 +1,5 @@
+require 'commander'
+
 module RHC
   module Commands
     class CommandHelpBindings
@@ -9,6 +11,70 @@ module RHC
         end
         @actions.compact!
         @global_options = global_options
+      end
+    end
+    class Runner < Commander::Runner
+      # override so we can do our own error handling
+      def run!
+        trace = false
+        require_program :version, :description
+        trap('INT') { abort program(:int_message) } if program(:int_message)
+        trap('INT') { program(:int_block).call } if program(:int_block)
+        global_option('-h', '--help', 'Display help documentation') do
+          args = @args - %w[-h --help]
+          command(:help).run(*args)
+          return
+        end
+        global_option('-v', '--version', 'Display version information') { say version; return }
+        global_option('-t', '--trace', 'Display backtrace when an error occurs') { trace = true }
+        parse_global_options
+        remove_global_options options, @args
+        unless trace
+          begin
+            run_active_command
+            0 # always return success unless exception is raised
+          rescue InvalidCommandError => e
+            usage = RHC::UsageHelpFormatter.new(self).render
+            abort "Invalid rhc resource: #{@args[0]}. Use --trace to view backtrace\n#{usage}"
+          rescue \
+            OptionParser::InvalidOption,
+            OptionParser::InvalidArgument,
+            OptionParser::MissingArgument => e
+            usage = RHC::UsageHelpFormatter.new(self).render
+            abort "#{e}. Use --trace to view backtrace.\n#{usage}"
+          rescue Rhc::Rest::BaseException => e
+            usage = RHC::UsageHelpFormatter.new(self).render
+            say "#{e}. Use --trace to view backtrace.\n#{usage}"
+            e.code.nil? ? 128 : e.code
+          rescue => e
+            abort "error: #{e}. Use --trace to view backtrace."
+          end
+        else
+          run_active_command
+          0 # always return success unless exception is raised
+        end
+      end
+
+      def create_default_commands
+        command :help do |c|
+          c.syntax = 'rhc help <command>'
+          c.description = 'Display global or <command> help documentation.'
+          c.when_called do |args, options|
+            if args.empty?
+              say help_formatter.render
+            else
+              command = command args.join(' ')
+              begin
+                require_valid_command command
+              rescue InvalidCommandError => e
+                abort "#{e}. Use --help for more information"
+              end
+
+              help_bindings = CommandHelpBindings.new command, commands, Commander::Runner.instance.options
+              say help_formatter.render_command help_bindings
+            end
+          end
+        end
       end
     end
 
@@ -23,6 +89,19 @@ module RHC
     end
     def self.global_option(switches, description)
       global_options << [switches, description].flatten(1)
+    end
+    def self.validate_command(c, args, options, args_metadata)
+      # check to see if an arg's option was set
+      raise ArgumentError.new("Invalid arguments") if args.length > args_metadata.length
+      args_metadata.each_with_index do |arg_meta, i|
+        switch = arg_meta[:switches]
+        value = options.__hash__[arg_meta[:name]]
+        unless value.nil?
+          raise ArgumentError.new("#{arg_meta[:name]} specified twice on the command line and as a #{switch[0]} switch") unless args.length == i
+          # add the option as an argument
+          args << value
+        end
+      end
     end
     def self.to_commander(instance=Commander::Runner.instance)
       global_options.each{ |args| instance.global_option *args }
@@ -41,41 +120,8 @@ module RHC
           end
 
           c.when_called do |args, options|
-            begin
-              # handle help here
-              if args.length > 0 and args[0] == 'help'
-                cb = CommandHelpBindings.new(c, instance.commands, instance.options)
-                help = instance.help_formatter.render_command(cb)
-                say help
-                next
-              end
-
-              # check to see if an arg's option was set
-              raise ArgumentError.new("Invalid arguments") if args.length > args_metadata.length
-              args_metadata.each_with_index do |arg_meta, i|
-                o = arg_meta[:switches]
-                value = options.__hash__[arg_meta[:name]]
-                unless value.nil?
-                  raise ArgumentError.new("#{arg_meta[:name]} specified twice on the command line and as a #{o[0]} switch") unless args.length == i
-                  # add the option as an argument
-                  args << value
-                end
-              end
-
-              # call command
-              begin
-                opts[:class].new(c, args, options).send(opts[:method], *args)
-              rescue Exception => e
-                say e.to_s
-                e.backtrace.each { |line| say line } if options.trace
-                (e.respond_to?(:code) and not e.code.nil?) ? e.code : 128
-              end
-            rescue ArgumentError => e
-              cb = CommandHelpBindings.new(c, instance.commands, instance.options)
-              help = instance.help_formatter.render_command(cb)
-              say "Error: #{e.to_s}\n#{help}"
-              1
-            end
+            validate_command(c, args, options, args_metadata)
+            opts[:class].new(c, args, options).send(opts[:method], *args)
           end
         end
       end

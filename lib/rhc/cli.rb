@@ -18,16 +18,6 @@ module RHC
   # from the gem directory.
   #
   module CLI
-    class Runner < Commander::Runner
-      # override so we can catch InvalidCommandError
-      def run_active_command
-        super
-      rescue InvalidCommandError => e
-        usage = RHC::UsageHelpFormatter.new(self).render
-        abort "Invalid rhc resource: #{@args[0]}\n#{usage}"
-      end
-    end
-
     extend Commander::Delegates
 
     def self.set_terminal
@@ -35,7 +25,7 @@ module RHC
     end
 
     def self.start(args)
-      runner = Runner.new(args)
+      runner = RHC::Commands::Runner.new(args)
       Commander::Runner.instance_variable_set :@singleton, runner
 
       program :name,        'rhc'
