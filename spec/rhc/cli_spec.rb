@@ -16,11 +16,16 @@ describe RHC::CLI do
       it('should provide a message about --help') { run_output.should =~ /\-\-help/ }
     end
 
+    context 'with help and invalid command' do
+      let(:arguments) { ['invalidcommand', 'help'] }
+      it { expect { run }.should exit_with_code(1) }
+    end
+
     context 'with --help' do
       before(:each){ @arguments = ['--help'] }
       it_should_behave_like 'a help page'
     end
-    
+
     context 'with -h' do
       before(:each){ @arguments = ['-h'] }
       it_should_behave_like 'a help page'

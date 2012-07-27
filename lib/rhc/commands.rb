@@ -77,7 +77,7 @@ module RHC
               begin
                 require_valid_command command
               rescue InvalidCommandError => e
-                abort "#{e}. Use --help for more information"
+                abort "#{e}"
               end
 
               help_bindings = CommandHelpBindings.new command, commands, Commander::Runner.instance.options

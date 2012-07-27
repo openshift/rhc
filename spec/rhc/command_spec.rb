@@ -123,6 +123,10 @@ describe RHC::Commands::Base do
       context 'and when an exception is raised in a call' do
         it { expects_running('static', 'raise_exception').should exit_with_code(128) }
       end
+
+      context 'and when an exception is raised in a call with --trace option' do
+        it { expects_running('static', 'raise_exception', "--trace").should raise_error(Exception, "test exception") }
+      end
     end
   end
 end
