@@ -56,7 +56,7 @@ module RHC
           rescue Rhc::Rest::BaseException => e
             say "#{e}. Use --trace to view backtrace."
             e.code.nil? ? 128 : e.code
-          rescue => e
+          rescue Exception => e
             say "error: #{e}. Use --trace to view backtrace."
             128
           end
