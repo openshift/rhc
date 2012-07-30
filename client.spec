@@ -1,4 +1,5 @@
 %define gemdir %(ruby -rubygems -e 'puts Gem::dir' 2>/dev/null)
+%define gemversion %(echo %{version} | cut -d'.' -f1-3)
 
 Summary:       OpenShift client management tools
 Name:          rhc
@@ -72,14 +73,14 @@ rake --trace package
 mkdir -p .%{gemdir}
 # Ignore dependencies here because these will be handled by rpm 
 gem install --install-dir $RPM_BUILD_ROOT/%{gemdir} --bindir $RPM_BUILD_ROOT/%{_bindir} --local -V --force --rdoc --ignore-dependencies \
-     pkg/rhc-%{version}.gem
+     pkg/rhc-%{gemversion}.gem
 
 # Copy the bash autocompletion script
 mkdir -p "$RPM_BUILD_ROOT/etc/bash_completion.d/"
 cp autocomplete/rhc $RPM_BUILD_ROOT/etc/bash_completion.d/rhc
 
-cp LICENSE $RPM_BUILD_ROOT/%{gemdir}/gems/rhc-%{version}/LICENSE
-cp COPYRIGHT $RPM_BUILD_ROOT/%{gemdir}/gems/rhc-%{version}/COPYRIGHT
+cp LICENSE $RPM_BUILD_ROOT/%{gemdir}/gems/rhc-%{gemversion}/LICENSE
+cp COPYRIGHT $RPM_BUILD_ROOT/%{gemdir}/gems/rhc-%{gemversion}/COPYRIGHT
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -105,10 +106,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/rhc-port-forward
 %{_mandir}/man1/rhc*
 %{_mandir}/man5/express*
-%{gemdir}/gems/rhc-%{version}/
-%{gemdir}/cache/rhc-%{version}.gem
-%{gemdir}/doc/rhc-%{version}
-%{gemdir}/specifications/rhc-%{version}.gemspec
+%{gemdir}/gems/rhc-%{gemversion}/
+%{gemdir}/cache/rhc-%{gemversion}.gem
+%{gemdir}/doc/rhc-%{gemversion}
+%{gemdir}/specifications/rhc-%{gemversion}.gemspec
 %config(noreplace) %{_sysconfdir}/openshift/express.conf
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
