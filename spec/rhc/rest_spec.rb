@@ -24,7 +24,7 @@ module Rhc
   include RestSpecHelper
 
   describe Rest do
-    subject = RhcRest.new
+    subject{ RhcRest.new }
 
     # logger function
     describe "#logger" do
@@ -38,7 +38,7 @@ module Rhc
     describe "#parse_response" do
       context "with no response type" do
         let(:object) {{ :links => { :foo => 'bar' } }}
-        it "deserializes to the encapsualted data" do
+        it "deserializes to the encapsulated data" do
           json_response = { :data => object }.to_json
           subject.parse_response(json_response).should have_same_attributes_as(object)
         end
@@ -230,7 +230,7 @@ module Rhc
           dom_obj = Rhc::Rest::Domain.new(object)
           request = RestClient::Request.new(:url     => mock_href,
                                             :method  => 'get',
-                                            :headers => {:accept => :json},
+                                            :headers => { :accept => :json },
                                             :payload => {},
                                             :timeout => 300
                                             )

@@ -11,14 +11,14 @@ describe RHC::Commands::Server do
     let(:arguments) { ['server'] }
 
     context 'when no issues' do
-      before { stub_request(:get, 'https://openshift.redhat.com/app/status/status.json').to_return(:body => {'issues' => []}.to_json) }
+      before { stub_request(:get, 'https://openshift.redhat.com/app/status/status.json').with(&user_agent_header).to_return(:body => {'issues' => []}.to_json) }
       it('should output success') { run_output.should =~ /All systems running fine/ }
       it { expect { run }.should exit_with_code(0) }
     end
 
     context 'when 1 issue' do
       before do 
-        stub_request(:get, 'https://openshift.redhat.com/app/status/status.json').to_return(:body => 
+        stub_request(:get, 'https://openshift.redhat.com/app/status/status.json').with(&user_agent_header).to_return(:body => 
           {'open' => [
             {'issue' => { 
               'created_at' => '2011-05-22T17:31:32-04:00', 
