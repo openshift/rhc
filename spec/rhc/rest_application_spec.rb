@@ -30,7 +30,7 @@ module Rhc
 
       context "#add_cartridge" do
         before do
-          stub_request(:any, mock_href(app_links['ADD_CARTRIDGE']['relative'], true)).
+          stub_api_request(:any, app_links['ADD_CARTRIDGE']['relative']).
             to_return(mock_cartridge_response)
         end
         it "returns a new cartridge object" do
@@ -43,7 +43,7 @@ module Rhc
 
       context "#cartridges" do
         before(:each) do
-          stub_request(:any, mock_href(app_links['LIST_CARTRIDGES']['relative'], true)).
+          stub_api_request(:any, app_links['LIST_CARTRIDGES']['relative']).
             to_return(mock_cartridge_response(2)).
             to_return(mock_cartridge_response(0))
         end
@@ -79,11 +79,11 @@ module Rhc
           @control_output = control_data.has_key?(:result)  ? control_data[:result]      : @control_event
           @with_payload   = control_data.has_key?(:payload) ? control_data[:payload]     : true
           if @with_payload
-            stub_request(:any, mock_href(app_links[@control_link]['relative'], true)).
+            stub_api_request(:any, app_links[@control_link]['relative']).
               with(:body => { 'event' => @control_event }). # This is the critical part
               to_return({ :body => { :data => @control_event }.to_json, :status => 200 })
           else
-            stub_request(:any, mock_href(app_links[@control_link]['relative'], true)).
+            stub_api_request(:any, app_links[@control_link]['relative']).
               to_return({ :body => { :data => @control_event }.to_json, :status => 200 })
           end
         end

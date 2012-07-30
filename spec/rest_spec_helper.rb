@@ -13,6 +13,11 @@ module RestSpecHelper
     "test_user"
   end
 
+  def stub_api_request(method, uri, with_auth=true)
+    stub_request(method, mock_href(uri, with_auth)).
+      with(&user_agent_header)
+  end
+
   def mock_pass
     "test pass"
   end

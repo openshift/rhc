@@ -39,6 +39,18 @@ module RHC
       # Replace with d = DateTime.rfc3339(s)
     end
 
+    #
+    # Web related requests
+    #
+
+    def user_agent
+      "rhc/#{RHC::VERSION::STRING} (ruby #{RUBY_VERSION}; #{RUBY_PLATFORM})#{" (API #{Rhc::Rest::API_VERSION})" rescue ''}"
+    end
+
+    def get(uri, opts=nil, *args)
+      opts = {'User-Agent' => user_agent}.merge(opts || {})
+      RestClient.get(uri, opts, *args)
+    end
 
     #
     # Global config

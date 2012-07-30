@@ -101,7 +101,7 @@ describe RHC::Wizard do
     it "should show a thank you message" do
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match ("The OpenShift client tools have been configured on your computer")
+      output.should match("The OpenShift client tools have been configured on your computer")
     end
   end
 
@@ -189,7 +189,7 @@ describe RHC::Wizard do
     it "should show a thank you message" do
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match ("Thank you")
+      output.should match("Thank you")
     end
   end
 
@@ -282,7 +282,7 @@ describe RHC::Wizard do
     it "should show a thank you message" do
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match ("Thank you")
+      output.should match("Thank you")
     end
   end
 
@@ -360,7 +360,7 @@ describe RHC::Wizard do
     it "should show a thank you message" do
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match ("Thank you")
+      output.should match("Thank you")
     end
   end
 
@@ -443,7 +443,7 @@ describe RHC::Wizard do
     it "should show a thank you message" do
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match ("Thank you")
+      output.should match("Thank you")
     end
   end
 

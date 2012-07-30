@@ -29,18 +29,19 @@ module Rhc
       let(:domain_0_links) { mock_response_links(mock_domain_links('mock_domain_0')) }
       let(:domain_1_links) { mock_response_links(mock_domain_links('mock_domain_1')) }
       let(:user_links)     { mock_response_links(mock_user_links) }
-        
+
       context "#new" do
         before do
-          stub_request(:get, mock_href('', true)).
+          stub_api_request(:get, '').
             to_return({ :body   => { :data => client_links }.to_json,
                         :status => 200
                       })
-          stub_request(:get, mock_href('api_error', true)).
+          stub_api_request(:get, 'api_error').
             to_raise(RestClient::ExceptionWithResponse.new('API Error'))
-          stub_request(:get, mock_href('other_error', true)).
+          stub_api_request(:get, 'other_error').
             to_raise(Exception.new('Other Error'))
         end
+
         it "returns a client object from the required arguments" do
           credentials = Base64.encode64(mock_user + ":" + mock_pass)
           client      = Rhc::Rest::Client.new(mock_href, mock_user, mock_pass)
@@ -59,7 +60,7 @@ module Rhc
 
       context "with an instantiated client " do
         before(:each) do
-          stub_request(:get, mock_href('', true)).
+          stub_api_request(:get, '').
             to_return({ :body   => { :data => client_links }.to_json,
                         :status => 200
                       })
@@ -68,7 +69,7 @@ module Rhc
 
         context "#add_domain" do
           before do
-            stub_request(:any, mock_href(client_links['ADD_DOMAIN']['relative'], true)).
+            stub_api_request(:any, client_links['ADD_DOMAIN']['relative']).
               to_return({ :body   => {
                             :type => 'domain',
                             :data => {
@@ -90,7 +91,7 @@ module Rhc
 
         context "#domains" do
           before(:each) do
-            stub_request(:any, mock_href(client_links['LIST_DOMAINS']['relative'], true)).
+            stub_api_request(:any, client_links['LIST_DOMAINS']['relative']).
               to_return({ :body   => {
                             :type => 'domains',
                             :data =>
@@ -130,7 +131,7 @@ module Rhc
 
         context "#find_domain" do
           before(:each) do
-            stub_request(:any, mock_href(client_links['LIST_DOMAINS']['relative'], true)).
+            stub_api_request(:any, client_links['LIST_DOMAINS']['relative']).
               to_return({ :body   => {
                             :type => 'domains',
                             :data =>
@@ -157,7 +158,7 @@ module Rhc
 
         context "#find_application" do
           before(:each) do
-            stub_request(:any, mock_href(client_links['LIST_DOMAINS']['relative'], true)).
+            stub_api_request(:any, client_links['LIST_DOMAINS']['relative']).
               to_return({ :body   => {
                             :type => 'domains',
                             :data =>
@@ -170,7 +171,7 @@ module Rhc
                           }.to_json,
                           :status => 200
                         })
-            stub_request(:any, mock_href(domain_0_links['LIST_APPLICATIONS']['relative'], true)).
+            stub_api_request(:any, domain_0_links['LIST_APPLICATIONS']['relative']).
               to_return({ :body   => {
                             :type => 'applications',
                             :data =>
@@ -185,7 +186,7 @@ module Rhc
                           }.to_json,
                           :status => 200
                         })
-            stub_request(:any, mock_href(domain_1_links['LIST_APPLICATIONS']['relative'], true)).
+            stub_api_request(:any, domain_1_links['LIST_APPLICATIONS']['relative']).
               to_return({ :body   => {
                             :type => 'applications',
                             :data =>
@@ -220,7 +221,7 @@ module Rhc
         
         context "#cartridges" do
           before(:each) do
-            stub_request(:any, mock_href(client_links['LIST_CARTRIDGES']['relative'], true)).
+            stub_api_request(:any, client_links['LIST_CARTRIDGES']['relative']).
               to_return({ :body   => {
                             :type => 'cartridges',
                             :data =>
@@ -263,7 +264,7 @@ module Rhc
         
         context "#find_cartridge" do
           before(:each) do
-            stub_request(:any, mock_href(client_links['LIST_CARTRIDGES']['relative'], true)).
+            stub_api_request(:any, client_links['LIST_CARTRIDGES']['relative']).
               to_return({ :body   => {
                             :type => 'cartridges',
                             :data =>
@@ -296,7 +297,7 @@ module Rhc
         
         context "#user" do
           before(:each) do
-            stub_request(:any, mock_href(client_links['GET_USER']['relative'], true)).
+            stub_api_request(:any, client_links['GET_USER']['relative']).
               to_return({ :body   => {
                             :type => 'user',
                             :data =>
@@ -317,7 +318,7 @@ module Rhc
 
         context "#find_key" do
           before(:each) do
-            stub_request(:any, mock_href(client_links['GET_USER']['relative'], true)).
+            stub_api_request(:any, client_links['GET_USER']['relative']).
               to_return({ :body   => {
                             :type => 'user',
                             :data =>
@@ -327,7 +328,7 @@ module Rhc
                           }.to_json,
                           :status => 200
                         })
-            stub_request(:any, mock_href(user_links['LIST_KEYS']['relative'], true)).
+            stub_api_request(:any, user_links['LIST_KEYS']['relative']).
               to_return({ :body   => {
                             :type => 'keys',
                             :data =>
@@ -363,7 +364,7 @@ module Rhc
 
         shared_examples_for "a logout method" do
           before(:each) do
-            stub_request(:get, mock_href('', true)).
+            stub_api_request(:get, '').
               to_return({ :body   => { :data => client_links }.to_json,
                           :status => 200
                         })

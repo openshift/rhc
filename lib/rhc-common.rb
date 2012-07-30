@@ -362,6 +362,8 @@ end
 
     puts "Contacting #{url.scheme}://#{url.host}" if @mydebug
     req.set_form_data({'json_data' => json_data, 'password' => password})
+    req['User-Agent'] = RHC::Helpers.user_agent
+
     http = http.new(url.host, url.port)
     http.open_timeout = @connect_timeout
     http.read_timeout = @read_timeout
