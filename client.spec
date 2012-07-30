@@ -2,7 +2,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 0.96.4
+Version: 0.96.5
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -113,6 +113,14 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Jul 30 2012 Dan McPherson <dmcphers@redhat.com> 0.96.5-1
+- Merge pull request #103 from smarterclayton/us2531_expose_version_info_in_gem
+  (ccoleman@redhat.com)
+- build.sh should invoke rake version, rake version should default to the
+  client spec. (ccoleman@redhat.com)
+- US2531 - Update gem version during RPM build, and use RHC::VERSION::STRING
+  when accessing the current version. (ccoleman@redhat.com)
+
 * Thu Jul 26 2012 Dan McPherson <dmcphers@redhat.com> 0.96.4-1
 - added zend health_check.php (lnader@redhat.com)
 
