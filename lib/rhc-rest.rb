@@ -10,7 +10,9 @@ require 'rhc-rest/user'
 
 module Rhc
   module Rest
+    #API_VERSION = '1.1'
     @@headers = {:accept => :json}
+    #@@headers = {:accept => "application/json;version=#{Rhc::Rest::VERSION}"}
 
     def logger
       Logger.new(STDOUT)

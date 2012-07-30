@@ -137,6 +137,15 @@ module ClassSpecHelpers
   else
     "#{@output.string}\n#{$stderr.string}"
   end
+
+  #
+  # usage: stub_request(...).with(&user_agent_header)
+  #
+  def user_agent_header
+    lambda do |request|
+      request.headers['User-Agent'] =~ %r{\Arhc/\d+\.\d+.\d+ \(.*?ruby.*?\)}
+    end
+  end
 end
 
 module ExitCodeMatchers
