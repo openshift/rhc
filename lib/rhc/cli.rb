@@ -30,7 +30,7 @@ module RHC
       Commander::Runner.instance_variable_set :@singleton, runner
 
       program :name,        'rhc'
-      program :version,     '0.0.0' #FIXME pull from versions.rb
+      program :version,     RHC::VERSION::STRING
       program :description, 'Command line interface for OpenShift.'
       program :help_formatter, :compact
 
