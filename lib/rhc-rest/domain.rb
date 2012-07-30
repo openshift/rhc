@@ -7,6 +7,14 @@ module Rhc
         @id = args[:id] || args["id"]
         @links = args[:links] || args["links"]
       end
+      
+      def get_domain
+        logger.debug "Getting domain #{self.id}" if @mydebug
+        url = @links['GET_DOMAIN']['href']
+        method =  @links['GET_DOMAIN']['method']
+        request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
+        return request(request, 3)
+      end
 
       #Add Application to this domain
       # options
@@ -36,7 +44,7 @@ module Rhc
         url = @links['LIST_APPLICATIONS']['href']
         method =  @links['LIST_APPLICATIONS']['method']
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
-        return request(request)
+        return request(request, 3)
       end
 
       #Update Domain
@@ -57,7 +65,23 @@ module Rhc
         method =  @links['DELETE']['method']
         payload = {:force => force}
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
-        return request(request)
+        begin
+          return request(request)
+        rescue ConnectionException => e
+          #see if domain was deleted
+          retries = 0
+          begin
+            until retries == 5 do
+              sleep retries*5
+              get_domain
+              retries += 1
+            end
+          rescue ResourceNotFoundException => e
+            #domain was deleted
+            return
+          end
+          raise ResourceAccessException.new("Failed to delete domain: #{self.id}")
+        end
       end
       alias :delete :destroy
     end
