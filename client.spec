@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 0.96.5
+Version: 0.96.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -114,6 +114,17 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Jul 31 2012 Adam Miller <admiller@redhat.com> 0.96.6-1
+- Merge pull request #109 from smarterclayton/send_user_agent
+  (ccoleman@redhat.com)
+- Fix require bug with helpers and non-standard rhc load order
+  (ccoleman@redhat.com)
+- Merge pull request #106 from smarterclayton/send_user_agent
+  (ccoleman@redhat.com)
+- Ensure that the gem version is always < 4 numbers (ccoleman@redhat.com)
+- Send user agent on all requests, add spec test coverage for user agent, and
+  simplify api request stubs (ccoleman@redhat.com)
+
 * Mon Jul 30 2012 Dan McPherson <dmcphers@redhat.com> 0.96.5-1
 - Merge pull request #103 from smarterclayton/us2531_expose_version_info_in_gem
   (ccoleman@redhat.com)
