@@ -62,7 +62,8 @@ module Rhc
       end
     end
 
-    def request(request)
+    def request(request, retries=0)
+      response = nil
       begin
         response = request.execute
         #set cookie
@@ -70,15 +71,20 @@ module Rhc
         if not rh_sso.nil?
           @@headers["cookie"] = "rh_sso=#{rh_sso}"
         end
-        return parse_response(response) unless response.nil? or response.code == 204
-      rescue RestClient::RequestTimeout, RestClient::ServerBrokeConnection, RestClient::SSLCertificateNotVerified => e
-        raise ResourceAccessException.new("Failed to access resource: #{e.message}")
+      rescue RestClient::RequestTimeout, RestClient::ServerBrokeConnection => e
+        # if it is a get request then re-try
+        if retries>0
+          sleep 5*retries
+          return request(request, retries-1)
+        else
+          raise ConnectionException.new("Connection to server timed out or got interrupted: #{e.message}")
+        end
       rescue RestClient::ExceptionWithResponse => e
-      #puts "#{e.response}"
         process_error_response(e.response)
       rescue Exception => e
         raise ResourceAccessException.new("Failed to access resource: #{e.message}")
       end
+      return parse_response(response) unless response.nil? or response.code == 204
     end
 
     def process_error_response(response)

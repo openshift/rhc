@@ -14,6 +14,15 @@ module Rhc
         @server_identity = args[:server_identity] || args["server_identity"]
         @links = args[:links] || args["links"]
       end
+      
+      #Get application
+      def get_application
+        logger.debug "Getting application #{self.name}" if @mydebug
+        url = @links['GET_APPLICATION']['href']
+        method =  @links['GET_APPLICATION']['method']
+        request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
+        return request(request, 3)
+      end
 
       #Add Cartridge
       def add_cartridge(name)
@@ -31,7 +40,7 @@ module Rhc
         url = @links['LIST_CARTRIDGES']['href']
         method =  @links['LIST_CARTRIDGES']['method']
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
-        return request(request)
+        return request(request, 3)
       end
 
       #Start Application
@@ -74,7 +83,23 @@ module Rhc
         url = @links['DELETE']['href']
         method =  @links['DELETE']['method']
         request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
-        return request(request)
+        begin
+          return request(request)
+        rescue ConnectionException => e
+           #see if application was deleted
+          retries = 0
+          begin
+            until retries == 5 do
+              sleep retries*5
+              get_application
+              retries += 1
+            end
+          rescue ResourceNotFoundException => e
+            #application was deleted
+            return
+          end
+          raise ResourceAccessException.new("Failed to delete application: #{self.name}")
+        end
       end
       alias :delete :destroy
     end
