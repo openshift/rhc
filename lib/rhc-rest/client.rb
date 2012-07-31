@@ -9,7 +9,7 @@ module Rhc
         logger.debug "Connecting to #{end_point}" if @mydebug
         credentials = Base64.encode64("#{username}:#{password}")
         @@headers["Authorization"] = "Basic #{credentials}"
-        @@headers["User-Agent"] = RHC::Helpers.user_agent
+        @@headers["User-Agent"] = RHC::Helpers.user_agent rescue nil
         #first get the API
         RestClient.proxy = ENV['http_proxy']
         request = RestClient::Request.new(:url => end_point, :method => :get, :headers => @@headers)
