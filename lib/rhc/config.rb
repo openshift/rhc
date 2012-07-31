@@ -117,6 +117,14 @@ module RHC
       @@opts['password']
     end
 
+    def self.noprompt(bool)
+      @@opts.add('noprompt', bool)
+    end
+
+    def self.noprompt?
+      @@opts['noprompt']
+    end
+
     def self.set_local_config(confpath)
       begin
         @@local_config_path = File.expand_path(confpath)
@@ -165,7 +173,7 @@ module RHC
 
     # Public: convinience function to see if we should run the wizard
     def self.should_run_wizard?
-      not (has_local_config? or has_opts_config?)
+      not (has_local_config? or has_opts_config? or noprompt?)
     end
 
     def self.should_run_ssh_wizard?

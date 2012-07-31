@@ -9,11 +9,16 @@ class RHC::Commands::Base
 
   def initialize(command=nil, args=[], options=Commander::Command::Options.new)
     @command, @args, @options = command, args, options
+  end
 
-    if not self.class.suppress_wizard? and not options.noprompt and config.should_run_wizard?
+  def run_wizard?
+    # check to see if we need to run wizard
+    if not self.class.suppress_wizard? and config.should_run_wizard?
       w = RHC::Wizard.new(config.local_config_path)
       w.run
+      return true
     end
+    false
   end
 
   protected
@@ -46,6 +51,7 @@ class RHC::Commands::Base
         RHC::Config.set_opts_config(options.config) if options.config
         RHC::Config.password = options.password if options.password
         RHC::Config.opts_login = options.rhlogin if options.rhlogin
+        RHC::Config.noprompt(options.noprompt) if options.noprompt
         RHC::Config
       end
     end
