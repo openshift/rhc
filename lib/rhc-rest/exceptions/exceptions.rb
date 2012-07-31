@@ -66,8 +66,10 @@ module Rhc
     #that authorization has been refused for those credentials. 
     class UnAuthorizedException < Rhc::Rest::ClientErrorException; end
 
-    #I/O Exceptions Connection timeouts, Unreachable host, etc
+    # Unreachable host, SSL Exception
     class ResourceAccessException < Rhc::Rest::BaseException; end
+    #I/O Exceptions Connection timeouts, etc
+    class ConnectionException < Rhc::Rest::BaseException; end
 
   end
 end
