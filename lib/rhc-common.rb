@@ -522,21 +522,11 @@ end
         app_uuid = application.uuid
         result = "Successfully created application: #{app_name}"
 
-        # Since health_check_path is not returned, we need to fudge it for now
-        health_check_path =
-          case app_type
-          when /^php/
-            "health_check.php"
-          when /^perl/
-            "health_check.pl"
-          when /^zend/
-            "health_check.php"
-          else
-            "health"
-          end
+        # health check path now returned by the API
+        health_check_path = application.health_check_path
 
         puts "DEBUG: '#{app_name}' creation returned success." if @mydebug
-      rescue Rhc::Rest::ResourceAccessException => e
+      rescue Rhc::Rest::ConnectionException, Rhc::Rest::ResourceAccessException => e
         print_response_err(Struct::FakeResponse.new(e.message,e.code))
       rescue Rhc::Rest::ValidationException => e
         validation_error_code = (e.code.nil?) ? 406 : e.code
