@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 0.96.6
+Version: 0.96.7
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -114,6 +114,13 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Aug 01 2012 Adam Miller <admiller@redhat.com> 0.96.7-1
+- Merge pull request #110 from lnader/master (ccoleman@redhat.com)
+- Merge pull request #111 from fabianofranz/master (ccoleman@redhat.com)
+- Fixes #823851 and #841170 (ffranz@redhat.com)
+- Bug 839889, Bug 841430 and use health_check_path returned by API
+  (lnader@redhat.com)
+
 * Tue Jul 31 2012 Adam Miller <admiller@redhat.com> 0.96.6-1
 - Merge pull request #109 from smarterclayton/send_user_agent
   (ccoleman@redhat.com)
