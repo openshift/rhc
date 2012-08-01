@@ -354,7 +354,7 @@ class Test3_SSH < Test::Unit::TestCase
     @@agent_keys ||= (
       begin
         Net::SSH::Authentication::Agent.connect.identities
-      rescue
+      rescue Exception
         nil
       end
     )
@@ -362,11 +362,11 @@ class Test3_SSH < Test::Unit::TestCase
   end
 
   def agent_key_names
-    @@agent_keys.map{|x| File.expand_path(x.comment) }
+    @@agent_keys.nil? ? nil : @@agent_keys.map{|x| File.expand_path(x.comment) }
   end
 
   def agent_key_fingerprints
-    @@agent_keys.map{|x| x.to_s.split("\n")[1..-2].join('') }
+    @@agent_keys.nil? ? nil : @@agent_keys.map{|x| x.to_s.split("\n")[1..-2].join('') }
   end
 
   def libra_public_key
@@ -428,13 +428,16 @@ class Test3_SSH < Test::Unit::TestCase
 
   private
   def check_permissions(file,permission)
+    # IO#stat is platform-specific, on windows it's usually 644 but in fact it doesn't matter
+    permission = /.../ if RHC::Helpers.windows?
+
     file = File.expand_path(file)
 
     assert File.exists?(file), error_for(:file_not_found,file)
 
     perms = sprintf('%o',File.stat(file).mode)[-3..-1]
 
-    assert_match permission, perms, error_for(:bad_permissions,[file,perms],permission.source)
+    assert_match(permission, perms, error_for(:bad_permissions,[file,perms],permission.source))
   end
 end
 
