@@ -10,8 +10,13 @@ module Rhc
         @name = args[:name] || args["name"]
         @creation_time = args[:creation_time] || args["creation_time"]
         @uuid = args[:uuid] || args["uuid"]
-        @aliases = args[:aliases] || args["aliases"]
-        @server_identity = args[:server_identity] || args["server_identity"]
+        @git_url = args[:git_url] || args["git_url"]
+        @app_url = args[:app_url] || args["app_url"]
+        @node_profile = args[:node_profile] || args["node_profile"]
+        @frameowrk = args[:frameowrk] || args["framework"]
+        @scalable = args[:scalable] || args["scalable"]
+        @health_check_path = args[:health_check_path] || args["health_check_path"]
+        @embedded = args[:embedded] || args["embedded"]
         @links = args[:links] || args["links"]
       end
 
