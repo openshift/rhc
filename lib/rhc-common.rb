@@ -732,61 +732,54 @@ IMPORTANT
            }
   end
 
+  #
+  # An application is considered available if the health check URL unambiguously returns a 1 or 0.
+  # Otherwise, if the root URL for the app successfully returns content it is also considered
+  # successful.  In the future, applications that do not expose a public web interface will need
+  # a more advanced check mechanism, or the check should not prevent creation.
+  #
   def self.check_app_available(net_http, app_name, fqdn, health_check_path, result, git_url, repo_dir, no_git)
-      #
-      # Test several times, doubling sleep time between attempts.
-      #
-      sleep_time = 2
-      attempt = 0
-      puts "Confirming application '#{app_name}' is available" if @mydebug
-      while attempt < MAX_RETRIES
-          attempt += 1
-          if @mydebug
-            puts "  Attempt # #{attempt}"
-          else
-            print CLEAR_LINE + "Confirming application '#{app_name}' is available:  Attempt # #{attempt}"
-          end
-          $stdout.flush
-          url = URI.parse("http://#{fqdn}/#{health_check_path}")
-          
-          sleep(2.0)
-          begin
-            response = net_http.get_response(url)
-          rescue Exception => e
-            response = nil
-          end
-          if !response.nil? && response.code == "200" && response.body[0,1] == "1"
-            puts CLEAR_LINE + "Confirming application '#{app_name}' is available:  Success!"
-            puts ""
-            puts "#{app_name} published:  http://#{fqdn}/"
-            puts "git url:  #{git_url}"
 
-            if @mydebug
-              unless no_git
-                puts "To make changes to '#{app_name}', commit to #{repo_dir}/."
-              else
-                puts <<LOOKSGOOD
+    available = 3.times.any? do |i|
+      sleep i * 2.0
+
+      puts "Checking if the application is available ##{i+1}"
+      if health_check_path and !health_check_path.empty?
+        value = open("http://#{fqdn}/#{health_check_path}").read[0,1] rescue nil
+        # TODO: I should be typed exception ApplicationHealthFailure
+        raise "ERROR: The application was unable to start.  Please report this issue via the forums or IRC or file a bug through our public bug tracker." if value == '0'
+        return true if value == '1'
+      end
+      open("http://#{fqdn}") rescue nil
+    end
+
+    if available
+      puts "Application #{app_name} is available at: http://#{fqdn}/"
+      puts "  Git URL: #{git_url}"
+
+      if @mydebug
+        unless no_git
+          puts "To make changes to '#{app_name}', commit to #{repo_dir}/."
+        else
+          puts <<LOOKSGOOD
 To make changes to '#{app_name}', you must first clone it with:
-      git clone #{git_url}
+git clone #{git_url}
 
 LOOKSGOOD
-                puts "Then run 'git push' to update your OpenShift space."
-              end
-            end
-            if result && !result.empty?
-              puts "#{result}"
-            end
-            return true
-          end
-          if !response.nil? && @mydebug
-            puts "Server responded with #{response.code}"
-            puts response.body unless response.code == '503'
-          end
-          puts "    sleeping #{sleep_time} seconds" if @mydebug
-          sleep sleep_time
-          sleep_time = delay(sleep_time)
+          puts "Then run 'git push' to update your OpenShift space."
+        end
       end
-      return false
+      if result && !result.empty?
+        puts "#{result}"
+      end
+      return true
+    else
+      puts "Application is not available"
+    end
+    false
+  rescue StandardError => e
+    puts e
+    false
   end
   
   def self.destroy_app(libra_server, net_http, app_name, rhlogin, password)
