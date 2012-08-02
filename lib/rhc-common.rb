@@ -21,7 +21,7 @@ module RHC
   DEFAULT_MAX_LENGTH = 16
   APP_NAME_MAX_LENGTH = 32
   MAX_RETRIES = 7
-  DEFAULT_DELAY = 2
+  DEFAULT_DELAY = 2.0
   API = "1.1.3"
   PATTERN_VERSION=/\A\d+\.\d+\.\d+\z/
   @read_timeout = 120
@@ -740,8 +740,8 @@ IMPORTANT
   #
   def self.check_app_available(net_http, app_name, fqdn, health_check_path, result, git_url, repo_dir, no_git)
 
-    available = 3.times.any? do |i|
-      sleep i * 2.0
+    available = MAX_RETRIES.times.any? do |i|
+      sleep i * DEFAULT_DELAY
 
       puts "Checking if the application is available ##{i+1}"
       if health_check_path and !health_check_path.empty?
