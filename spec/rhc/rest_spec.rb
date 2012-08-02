@@ -283,7 +283,7 @@ module Rhc
                                             :method  => 'get',
                                             :headers => {:accept => :json}
                                             )
-          lambda { subject.request(request) }.should raise_error(Rhc::Rest::ResourceAccessException, 'Failed to access resource: Request Timeout')
+          lambda { subject.request(request) }.should raise_error(Rhc::Rest::ConnectionException, 'Connection to server timed out or got interrupted: Request Timeout')
         end
       end
 
@@ -296,7 +296,7 @@ module Rhc
                                             :method  => 'get',
                                             :headers => {:accept => :json}
                                             )
-          lambda { subject.request(request) }.should raise_error(Rhc::Rest::ResourceAccessException, 'Failed to access resource: Lost Server Connection')
+          lambda { subject.request(request) }.should raise_error(Rhc::Rest::ConnectionException, 'Connection to server timed out or got interrupted: Lost Server Connection')
         end
       end
 
