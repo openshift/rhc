@@ -242,3 +242,10 @@ describe Object do
     specify('empty string') { ''.blank?.should be_true }
   end
 end
+
+describe OpenURI do
+  context 'redirectable?' do
+    specify('http to https') { OpenURI.redirectable?(URI.parse('http://foo.com'), URI.parse('https://foo.com')).should be_true }
+    specify('https to http') { OpenURI.redirectable?(URI.parse('https://foo.com'), URI.parse('http://foo.com')).should be_false }
+  end
+end
