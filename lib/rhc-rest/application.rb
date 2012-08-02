@@ -13,7 +13,7 @@ module Rhc
         @git_url = args[:git_url] || args["git_url"]
         @app_url = args[:app_url] || args["app_url"]
         @node_profile = args[:node_profile] || args["node_profile"]
-        @frameowrk = args[:frameowrk] || args["framework"]
+        @framework = args[:framework] || args["framework"]
         @scalable = args[:scalable] || args["scalable"]
         @health_check_path = args[:health_check_path] || args["health_check_path"]
         @embedded = args[:embedded] || args["embedded"]
