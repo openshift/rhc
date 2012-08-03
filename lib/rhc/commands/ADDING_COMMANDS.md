@@ -61,7 +61,21 @@ Resource descriptors describe the behavior of a resource.  Right now the only re
 
 ## Default Action
 
-In the above example you will notice a run method.  This is the default action that gets executed when `rhc domain` is run.  Every resource should export a run command even if all it does is print usage information.  In this case we are calling the show action by default which will be described in a later section.  All actions have descriptors like summary and syntax, but you will notice the default action's descriptors are a little generic.  This is because the default actions descriptors are used to describe the resource when help is displayed.  In the next section we explore the various action descriptors.
+In the above example you will notice a run method.  This is the default action that gets executed when `rhc domain` is run.  Every resource should export a run command even if all it does is print usage information.  In this case we are calling the show action by default which will be described in a later section.  All actions have descriptors like summary and syntax, but you will notice the default action's descriptors are a little generic.  This is because the default actions descriptors are used to describe the resource when help is displayed.
+
+You may alternatively alias another action as the default action using the `default_action` class method.  This works the same as defining the run method and calling the aliased method directly.  Using default_action is prefered in these cases as it is more descriptive.
+
+<!-- language: ruby -->
+    class Domain < Base
+      summary "Manage your domain"
+      syntax "<action>"
+      default_action :show
+
+      summary "Show your configured domains"
+      def show
+        ...
+      end
+    end
 
 ## Actions
 
