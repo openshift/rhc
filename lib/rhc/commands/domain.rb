@@ -4,10 +4,7 @@ module RHC::Commands
   class Domain < Base
     summary "Manage your domain"
     syntax "<action>"
-    def run
-      # default to domain show
-      show
-    end
+    default_action :show
 
     summary "Bind a registered user to a domain"
     syntax "<namespace> [--timeout timeout]"

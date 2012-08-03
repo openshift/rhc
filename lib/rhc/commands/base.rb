@@ -115,6 +115,10 @@ class RHC::Commands::Base
       args_metadata << {:name => name, :description => description, :switches => switches}
     end
 
+    def self.default_action(action)
+      define_method(:run) { |*args| send(action, *args) }
+    end
+
     private
       def self.options_metadata
         options[:options] ||= []
