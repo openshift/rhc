@@ -195,6 +195,7 @@ describe RHC::Wizard do
 
   context "Repeat run of rhc setup with config set" do
     before(:all) do
+      RHC::Config.set_defaults
       @wizard = RerunWizardDriver.new
       @wizard.setup_mock_config
       @wizard.run_next_stage # we can skip testing the greeting
