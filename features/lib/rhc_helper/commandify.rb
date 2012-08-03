@@ -58,8 +58,12 @@ module RHCHelper
 
       # Command specific arguments
       case cmd
-        when /domain/
+        when /domain show/
+          # domain show doesn't take arguments
+        when /domain /
           raise "No namespace set" unless $namespace
+          # use legacy switch for specifying namespace to verify older interface
+          # should switch to using argument once all commands are moved over
           args << "-n #{$namespace} "
         when /destroy/
           args << "-b "

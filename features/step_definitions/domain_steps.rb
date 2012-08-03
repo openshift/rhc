@@ -1,6 +1,15 @@
 include RHCHelper
+
+And /^given an existing domain$/ do
+  $namespace.nil?.should be_false, 'No existing namespace to alter'
+end
+
 When /^a new domain is needed and created$/ do
   Domain.create_if_needed
+end
+
+When /^a domain is altered$/ do
+  Domain.alter
 end
 
 Then /^the domain should be reserved?$/ do

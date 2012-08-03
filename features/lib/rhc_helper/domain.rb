@@ -10,29 +10,36 @@ module RHCHelper
     extend Commandify
     include Dnsruby
 
+    def self.unique_namespace(prefix)
+      namepace = nil
+      begin
+        # Loop until we find a unique namespace
+        chars = ("1".."9").to_a
+        namespace = prefix + Array.new(8, '').collect{chars[rand(chars.size)]}.join
+
+       end while reserved?(namespace)
+       namespace
+    end
+
     def self.create_if_needed(prefix="test")
       unless $namespace
-        loop do
-          # Loop until we find a unique namespace
-          chars = ("1".."9").to_a
-          namespace = prefix + Array.new(8, '').collect{chars[rand(chars.size)]}.join
+        $namespace = unique_namespace(prefix)
+        # Create the domain
+        rhc_domain_create
 
-          # No retries on reservation check
-          unless reserved?(namespace)
-            # Set the global namespace
-            $namespace = namespace
-
-            # Create the domain
-            rhc_domain_create
-
-            # Write the new domain to a file in the temp directory
-            File.open(File.join(RHCHelper::TEMP_DIR, 'namespace'), 'w') do |f| 
-              f.write(namespace)
-            end
-
-            break
-          end
+        # Write the new domain to a file in the temp directory
+        File.open(File.join(RHCHelper::TEMP_DIR, 'namespace'), 'w') do |f|
+          f.write($namespace)
         end
+      end
+    end
+
+    def self.alter(prefix="alter")
+      $namespace = unique_namespace(prefix)
+      rhc_domain_alter
+      # Write the new domain to a file in the temp directory
+      File.open(File.join(RHCHelper::TEMP_DIR, 'namespace'), 'w') do |f|
+        f.write($namespace)
       end
     end
 

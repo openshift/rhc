@@ -11,6 +11,12 @@ Feature: Client Integration Tests
     When a new domain is needed and created
     Then the domain should be reserved
 
+  Scenario: Domain Altered
+    Given the libra client tools
+    And an existing domain
+    When a domain is altered
+    Then the domain should be reserved
+
   @init
   Scenario: Application Creation
     Given the libra client tools
