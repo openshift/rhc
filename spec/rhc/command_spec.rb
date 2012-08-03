@@ -44,9 +44,11 @@ describe RHC::Commands::Base do
       it("should have an object name") { subject.object_name.should == 'test' }
       it("should run with wizard") do
         FakeFS.activate!
+
         wizard_run = false
-        RHC::Wizard.stub!(:new) do
-          w = double("Wizard")
+        RHC::Wizard.stub!(:new) do |config|
+          RHC::Wizard.unstub!(:new)
+          w = RHC::Wizard.new(config)
           w.stub!(:run) { wizard_run = true }
           w
         end

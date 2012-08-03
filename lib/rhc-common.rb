@@ -1229,10 +1229,8 @@ end
 #          nil of there was an error
 #
 def default_setup_wizard
-  if RHC::Config.should_run_wizard?
-    w = RHC::Wizard.new(RHC::Config.local_config_path)
-    return w.run
-  end
+  w = RHC::Wizard.new(RHC::Config)
+  return w.run if w.needs_configuration?
 
   false
 end

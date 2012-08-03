@@ -11,12 +11,11 @@ class RHC::Commands::Base
     @command, @args, @options = command, args, options
   end
 
-  def run_wizard?
+  def check_config
     # check to see if we need to run wizard
-    if not self.class.suppress_wizard? and config.should_run_wizard?
-      w = RHC::Wizard.new(config.local_config_path)
-      w.run
-      return true
+    if not self.class.suppress_wizard?
+      w = RHC::Wizard.new config
+      return w.run if w.needs_configuration?
     end
     false
   end

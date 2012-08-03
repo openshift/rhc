@@ -132,7 +132,7 @@ module RHC
           c.when_called do |args, options|
             validate_command(c, args, options, args_metadata)
             cmd = opts[:class].new(c, args, options)
-            cmd.run_wizard?
+            cmd.check_config
             cmd.send(opts[:method], *args)
           end
         end

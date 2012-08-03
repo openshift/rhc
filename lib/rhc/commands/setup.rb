@@ -8,7 +8,7 @@ module RHC::Commands
 
     summary "Runs the setup wizard to configure your OpenShift account."
     def run
-      RHC::RerunWizard.new(config.config_path).run ?  0 : 1
+      RHC::RerunWizard.new(config).run ?  0 : 1
     end
   end
 end

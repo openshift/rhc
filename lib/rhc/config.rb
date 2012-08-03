@@ -125,14 +125,16 @@ module RHC
       @@opts['noprompt']
     end
 
-    def self.set_local_config(confpath)
+    def self.set_local_config(confpath, must_exist=true)
       begin
         @@local_config_path = File.expand_path(confpath)
         @@config_path = @@local_config_path if @@opts_config_path.nil?
         @@local_config = RHC::Vendor::ParseConfig.new(@@local_config_path)
       rescue Errno::EACCES => e
-        say "Could not open config file: #{e.message}"
-        exit 253
+        if must_exist
+          say "Could not open config file: #{e.message}"
+          exit 253
+        end
       end
     end
 

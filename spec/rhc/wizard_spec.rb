@@ -881,13 +881,19 @@ EOF
 
       File.open(public_key_file, 'w') { |f| f.write pub_key }
     end
+
+    def config(local_conf_path)
+      conf = RHC::Config
+      conf.set_local_config(local_conf_path, false)
+      conf
+    end
   end
 
   class FirstRunWizardDriver < RHC::Wizard
     include WizardDriver
 
     def initialize
-      super '/home/mock_user/.openshift/express.conf'
+      super config('/home/mock_user/.openshift/express.conf')
     end
   end
 
@@ -895,7 +901,7 @@ EOF
     include WizardDriver
 
     def initialize
-      super '/home/mock_user/.openshift/express.conf'
+      super config('/home/mock_user/.openshift/express.conf')
     end
   end
 

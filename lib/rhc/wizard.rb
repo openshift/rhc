@@ -24,10 +24,11 @@ module RHC
       STAGES
     end
 
-    def initialize(config_path)
-      @config_path = config_path
+    def initialize(config)
+      @config = config
+      @config_path = config.config_path
       if @libra_server.nil?
-        @libra_server = get_var('libra_server')
+        @libra_server = config['libra_server']
         # if not set, set to default
         @libra_server = @libra_server ?  @libra_server : "openshift.redhat.com"
       end
@@ -49,6 +50,10 @@ module RHC
         end
       end
       true
+    end
+
+    def needs_configuration?
+      not (@config.has_local_config? or @config.has_opts_config? or @config.noprompt?)
     end
 
     private
@@ -540,7 +545,7 @@ EOF
   end
 
   class RerunWizard < Wizard
-    def initialize(config_path)
+    def initialize(config)
       super
     end
 
@@ -595,7 +600,7 @@ EOF
     def initialize(username, password)
       @username = username
       @password = password
-      super("")
+      super RHC::Config
     end
   end
 end
