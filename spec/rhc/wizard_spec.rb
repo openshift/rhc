@@ -778,7 +778,7 @@ EOF
       end
 
       # reload config
-      RHC::Config.home_dir = '/home/mock_user'
+      @config.home_dir = '/home/mock_user'
     end
 
     def setup_mock_ssh(add_ssh_key=false)
