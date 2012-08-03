@@ -13,9 +13,16 @@ Feature: Client Integration Tests
 
   Scenario: Domain Altered
     Given the libra client tools
-    And an existing domain
+    And given an existing domain
     When a domain is altered
     Then the domain should be reserved
+
+  Scenario: Domain Show
+    Given the libra client tools
+    And given an existing domain
+    When rhc domain is run
+    When rhc domain show is run
+    Then the default domain action output should equal the show action output
 
   @init
   Scenario: Application Creation

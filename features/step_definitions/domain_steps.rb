@@ -1,6 +1,6 @@
 include RHCHelper
 
-And /^given an existing domain$/ do
+And /^an existing domain$/ do
   $namespace.nil?.should be_false, 'No existing namespace to alter'
 end
 
@@ -10,6 +10,25 @@ end
 
 When /^a domain is altered$/ do
   Domain.alter
+end
+
+When /^rhc domain (.*)is run$/ do |action|
+  action.rstrip!
+  cmd = "rhc_domain"
+  cmd += "_#{action}" if action.length > 0
+  Domain.send(:"#{cmd}")
+end
+
+Then /^the default domain action output should equal the show action output$/ do
+  Domain.domain_output.should match($namespace)
+
+  domain_output = Domain.domain_output.lines
+  domain_show_output = Domain.domain_show_output.lines
+
+  # check line by line while ignoring debug output which is timestamped
+  domain_output.zip(domain_show_output) do |a, b|
+    a.should == b unless a.match("DEBUG") 
+  end
 end
 
 Then /^the domain should be reserved?$/ do

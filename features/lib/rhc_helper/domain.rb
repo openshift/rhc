@@ -10,6 +10,10 @@ module RHCHelper
     extend Commandify
     include Dnsruby
 
+    class << self
+      attr_reader :domain_output, :domain_show_output
+    end
+
     def self.unique_namespace(prefix)
       namepace = nil
       begin

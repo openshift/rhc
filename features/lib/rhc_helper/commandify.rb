@@ -155,4 +155,12 @@ module RHCHelper
     @embed.delete(cartridge)
     persist
   end
+
+  def domain_callback(exitcode, stdout, stderr, arg)
+    @domain_output = stdout
+  end
+  
+  def domain_show_callback(exitcode, stdout, stderr, arg)
+    @domain_show_output = stdout
+  end
 end
