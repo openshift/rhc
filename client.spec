@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 0.97.1
+Version: 0.97.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -114,6 +114,15 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Sat Aug 04 2012 Dan McPherson <dmcphers@redhat.com> 0.97.2-1
+- Bug 845171 (lnader@redhat.com)
+- Merge pull request #113 from lnader/master (ccoleman@redhat.com)
+- Bug 845171 (lnader@redhat.com)
+- Loop and test roughly the same amount of time as before (ccoleman@redhat.com)
+- Bug 845154 - When the CLI creates an app, it should check the health check
+  URL first (if available), then check the root page.  If either are available
+  we consider the app to have been loaded. (ccoleman@redhat.com)
+
 * Thu Aug 02 2012 Adam Miller <admiller@redhat.com> 0.97.1-1
 - bump_minor_versions for sprint 16 (admiller@redhat.com)
 
