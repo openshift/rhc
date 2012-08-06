@@ -748,7 +748,7 @@ IMPORTANT
         value = open("http://#{fqdn}/#{health_check_path}").read[0,1] rescue nil
         # TODO: I should be typed exception ApplicationHealthFailure
         raise "ERROR: The application was unable to start.  Please report this issue via the forums or IRC or file a bug through our public bug tracker." if value == '0'
-        return true if value == '1'
+        next true if value == '1'
       end
       open("http://#{fqdn}") rescue nil
     end
@@ -772,11 +772,11 @@ LOOKSGOOD
       if result && !result.empty?
         puts "#{result}"
       end
-      return true
+      true
     else
       puts "Application is not available"
+      false
     end
-    false
   rescue StandardError => e
     puts e
     false
