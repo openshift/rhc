@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 0.96.8
+Version: 0.96.9
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -114,6 +114,10 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Aug 06 2012 Adam Miller <admiller@redhat.com> 0.96.9-1
+- Bug 845171 - Was returning too aggressively, output not produced.
+  (ccoleman@redhat.com)
+
 * Thu Aug 02 2012 Adam Miller <admiller@redhat.com> 0.96.8-1
 - Loop and test roughly the same amount of time as before (ccoleman@redhat.com)
 - Bug 845154 - When the CLI creates an app, it should check the health check
