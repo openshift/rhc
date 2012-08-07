@@ -12,41 +12,33 @@ module RHC::Commands
     option ["--timeout timeout"], "Timeout, in seconds, for the session"
     def create(namespace)
       domain = rest_client.domains
-      raise Rhc::Rest::BaseException.new("User #{config.username} has already created domain '#{domain[0].id}'.  If you wish to change the namespace of this domain please use the command 'rhc domain alter'.", 1) unless domain.empty?
+
       say "Creating domain with namespace '#{namespace}' ... "
       new_domain = rest_client.add_domain(namespace)
-      if new_domain.id == namespace
-        paragraph { say "success!" }
-        paragraph { say "You may now create an application using the 'rhc app create' command" }
-      else
-        #:nocov: we should not get here - the rest libs should have raised any errors
-        raise Rhc::Rest::BaseException.new("Unknown Error: this should not have been reached: #{new_domain.inspect}", 255)
-        #:nocov:
-      end
+
+      paragraph { say "success!" }
+      paragraph { say "You may now create an application using the 'rhc app create' command" }
+
       0
     end
 
-    summary "Alter namespace (will change urls)."
+    summary "Update namespace (will change urls)."
     syntax "<namespace> [--timeout timeout]"
     argument :namespace, "Namespace for your application(s) (alphanumeric)", ["-n", "--namespace namespace"]
     option ["--timeout timeout"], "Timeout, in seconds, for the session"
-    def alter(namespace)
+    # alias :alter
+    def update(namespace)
       # TODO: Support multiple domains.  Right now we assume one domain so
       #       you don't have to send in the name of the domain you want to change
       #       but in the future this will be manditory if you have more than one
       #       domain.  Figure out how to support overloading of commands
       domain = rest_client.domains
-      raise Rhc::Rest::BaseException.new("No domains are registered to the user #{config.username}. Be sure to run 'rhc domain create' first.", 1) if domain.empty?
+      raise RHC::DomainNotFoundException.new("No domains are registered to the user #{config.username}. Please use 'rhc domain create' to create one.") if domain.empty?
 
       say "Updating domain '#{domain[0].id}' to namespace '#{namespace}' ... "
       new_domain = domain[0].update(namespace)
-      if new_domain.id == namespace
-        say "success!"
-      else
-        #:nocov: we should not get here - the rest libs should have raised any errors
-        raise Rhc::Rest::BaseException.new("Unknown Error: this should not have been reached: #{new_domain.inspect}", 255)
-        #:nocov:
-      end
+      say "success!"
+
       0
     end
 

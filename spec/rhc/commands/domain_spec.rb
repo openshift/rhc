@@ -86,24 +86,10 @@ describe RHC::Commands::Domain do
       end
       it { run_output.should match("'testnamespace'.*success") }
     end
-
-    context 'when there is an already created domain' do
-      before(:each) do
-        @rc = MockRestClient.new
-        @rc.add_domain("olddomain")
-      end
-
-      it "should not create a domain" do
-        expect { run }.should exit_with_code(1)
-        @rc.domains[0].should_not == 'testnamespace'
-      end
-
-      it { run_output.should match("test@test.foo has already created domain 'olddomain'") }
-    end
   end
 
-  describe 'alter' do
-    let(:arguments) { ['domain', 'alter', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password', 'alterednamespace'] }
+  describe 'update' do
+    let(:arguments) { ['domain', 'update', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password', 'alterednamespace'] }
 
     context 'when no issues with ' do
       before(:each) do
@@ -111,7 +97,7 @@ describe RHC::Commands::Domain do
         @rc.add_domain("olddomain")
       end
 
-      it "should alter a domain" do
+      it "should update a domain" do
         expect { run }.should exit_with_code(0)
         @rc.domains[0].id.should == 'alterednamespace'
       end
@@ -124,7 +110,7 @@ describe RHC::Commands::Domain do
       end
 
       it "should not create a domain" do
-        expect { run }.should exit_with_code(1)
+        expect { run }.should exit_with_code(127)
         @rc.domains.empty?.should be_true
       end
       it { run_output.should match("No domains are registered to the user test@test.foo") }
