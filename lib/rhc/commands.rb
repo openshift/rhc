@@ -113,6 +113,24 @@ module RHC
         end
       end
     end
+
+    def self.global_config_setup(options)
+      RHC::Config.set_opts_config(options.config) if options.config
+      RHC::Config.password = options.password if options.password
+      RHC::Config.opts_login = options.rhlogin if options.rhlogin
+      RHC::Config.noprompt(options.noprompt) if options.noprompt
+      RHC::Config
+    end
+
+    def self.needs_configuration!(cmd, config)
+      # check to see if we need to run wizard
+      if not cmd.class.suppress_wizard?
+        w = RHC::Wizard.new config
+        return w.run if w.needs_configuration?
+      end
+      false
+    end
+
     def self.to_commander(instance=Commander::Runner.instance)
       global_options.each{ |args| instance.global_option *args }
       commands.each_pair do |name, opts|
@@ -130,10 +148,11 @@ module RHC
           end
 
           c.when_called do |args, options|
-            validate_command(c, args, options, args_metadata)
-            cmd = opts[:class].new(c, args, options)
-            cmd.check_config
-            cmd.send(opts[:method], *args)
+            validate_command c, args, options, args_metadata
+            config = global_config_setup options
+            cmd = opts[:class].new c, args, options, config
+            needs_configuration! cmd, config
+            cmd.send opts[:method], *args
           end
         end
       end

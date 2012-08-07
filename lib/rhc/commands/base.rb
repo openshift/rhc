@@ -4,26 +4,21 @@ require 'rhc/helpers'
 require 'rhc/wizard'
 require 'rhc/config'
 require 'rhc/commands'
+require 'rhc/exceptions'
 
 class RHC::Commands::Base
 
-  def initialize(command=nil, args=[], options=Commander::Command::Options.new)
-    @command, @args, @options = command, args, options
-  end
-
-  def check_config
-    # check to see if we need to run wizard
-    if not self.class.suppress_wizard?
-      w = RHC::Wizard.new config
-      return w.run if w.needs_configuration?
-    end
-    false
+  def initialize(command=nil, 
+                 args=[],
+                 options=Commander::Command::Options.new,
+                 config=RHC::Config)
+    @command, @args, @options, @config = command, args, options, config
   end
 
   protected
     include RHC::Helpers
 
-    attr_reader :command, :args, :options
+    attr_reader :command, :args, :options, :config
 
     def application
       #@application ||= ... identify current application or throw,
@@ -43,16 +38,6 @@ class RHC::Commands::Base
       #
       #                Initialize with auth (a separate responsibility
       #                object).
-    end
-
-    def config
-      @config ||= begin
-        RHC::Config.set_opts_config(options.config) if options.config
-        RHC::Config.password = options.password if options.password
-        RHC::Config.opts_login = options.rhlogin if options.rhlogin
-        RHC::Config.noprompt(options.noprompt) if options.noprompt
-        RHC::Config
-      end
     end
 
     class InvalidCommand < StandardError ; end
