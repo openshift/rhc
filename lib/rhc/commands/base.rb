@@ -91,6 +91,10 @@ class RHC::Commands::Base
       @suppress_wizard
     end
 
+    def self.alias_action(action)
+      aliases << action
+    end
+
     def self.option(switches, description)
       options_metadata << [switches, description].flatten(1)
     end
@@ -108,9 +112,12 @@ class RHC::Commands::Base
         options[:options] ||= []
       end
       def self.args_metadata
-        options[:args] ||=[]
+        options[:args] ||= []
       end
       def self.options
         @options ||= {}
+      end
+      def self.aliases
+        options[:aliases] ||= []
       end
 end

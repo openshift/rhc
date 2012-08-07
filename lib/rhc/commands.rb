@@ -154,6 +154,14 @@ module RHC
             needs_configuration! cmd, config
             cmd.send opts[:method], *args
           end
+
+          unless opts[:aliases].nil?
+            opts[:aliases].each do |a|
+              alias_components = name.split(" ")
+              alias_components[-1] = a
+              instance.alias_command  "#{alias_components.join(' ')}", :"#{name}"
+            end
+          end
         end
       end
       self

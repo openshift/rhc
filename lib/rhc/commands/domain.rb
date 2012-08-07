@@ -26,7 +26,7 @@ module RHC::Commands
     syntax "<namespace> [--timeout timeout]"
     argument :namespace, "Namespace for your application(s) (alphanumeric)", ["-n", "--namespace namespace"]
     option ["--timeout timeout"], "Timeout, in seconds, for the session"
-    # alias :alter
+    alias_action :alter
     def update(namespace)
       # TODO: Support multiple domains.  Right now we assume one domain so
       #       you don't have to send in the name of the domain you want to change
