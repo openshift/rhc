@@ -117,6 +117,23 @@ describe RHC::Commands::Domain do
     end
   end
 
+  describe 'alter alias' do
+    let(:arguments) { ['domain', 'alter', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password', 'alterednamespace'] }
+
+    context 'when no issues with ' do
+      before(:each) do
+        @rc = MockRestClient.new
+        @rc.add_domain("olddomain")
+      end
+
+      it "should update a domain" do
+        expect { run }.should exit_with_code(0)
+        @rc.domains[0].id.should == 'alterednamespace'
+      end
+      it { run_output.should match("Updating domain 'olddomain' to namespace 'alterednamespace'.*success") }
+    end
+  end
+
   describe 'destroy' do
     let(:arguments) { ['domain', 'destroy', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password', 'deleteme'] }
 
