@@ -7,7 +7,8 @@ module RHC
         @command = command
         @actions = instance_commands.collect do |ic|
           m = /^#{command.name} ([^ ]+)/.match(ic[0])
-          m ? {:name => m[1], :summary => ic[1].summary || ""} : nil
+          # if we have a match and it is not an alias then we can use it
+          m and ic[0] == ic[1].name ? {:name => m[1], :summary => ic[1].summary || ""} : nil
         end
         @actions.compact!
         @global_options = global_options
