@@ -276,16 +276,16 @@ describe RHC::Config do
       RHC::Vendor::ParseConfig.stub(:new) { raise Errno::EACCES.new("Fake can't read file") }
       RHC::Config.stub(:exit) { |code| code }
 
-      RHC::Config.check_cpath({"config" => "fake.conf"}).should == 253
+      expect { RHC::Config.check_cpath({"config" => "fake.conf"}) }.to raise_error(Errno::EACCES)
 
       # write out config file so it exists but is not readable
       ConfigHelper.write_out_config("fake.conf",
                                     "global.openshift.redhat.com",
                                     "global@redhat.com")
 
-      RHC::Config.read_config_files.should == 253
-      RHC::Config.set_local_config("fake.conf").should == 253
-      RHC::Config.set_opts_config("fake.conf").should == 253
+      expect { RHC::Config.read_config_files }.to raise_error(Errno::EACCES)
+      expect { RHC::Config.set_local_config("fake.conf") }.to raise_error(Errno::EACCES)
+      expect { RHC::Config.set_opts_config("fake.conf") }.to raise_error(Errno::EACCES)
     end
   end
 end
