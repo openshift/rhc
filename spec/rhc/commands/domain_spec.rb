@@ -84,7 +84,7 @@ describe RHC::Commands::Domain do
         expect { run }.should exit_with_code(0)
         @rc.domains[0].id.should == 'testnamespace'
       end
-      it { run_output.should match("'testnamespace'.*success") }
+      it { run_output.should match(/'testnamespace'\n\nRESULTS:\n.*Success/m) }
     end
   end
 
@@ -101,7 +101,7 @@ describe RHC::Commands::Domain do
         expect { run }.should exit_with_code(0)
         @rc.domains[0].id.should == 'alterednamespace'
       end
-      it { run_output.should match("Updating domain 'olddomain' to namespace 'alterednamespace'.*success") }
+      it { run_output.should match(/Updating domain 'olddomain' to namespace 'alterednamespace'\n\nRESULTS:\n.*Success/m) }
     end
 
     context 'when there is no domain' do
@@ -130,7 +130,7 @@ describe RHC::Commands::Domain do
         expect { run }.should exit_with_code(0)
         @rc.domains[0].id.should == 'alterednamespace'
       end
-      it { run_output.should match("Updating domain 'olddomain' to namespace 'alterednamespace'.*success") }
+      it { run_output.should match(/Updating domain 'olddomain' to namespace 'alterednamespace'\n\nRESULTS:\n.*Success/m) }
     end
   end
 

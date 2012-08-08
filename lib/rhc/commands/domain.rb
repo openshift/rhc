@@ -13,11 +13,13 @@ module RHC::Commands
     def create(namespace)
       domain = rest_client.domains
 
-      say "Creating domain with namespace '#{namespace}' ... "
-      new_domain = rest_client.add_domain(namespace)
-
-      paragraph { say "success!" }
-      paragraph { say "You may now create an application using the 'rhc app create' command" }
+      paragraph { say "Creating domain with namespace '#{namespace}'" }
+      paragraph do
+        say "RESULTS:"
+        rest_client.add_domain(namespace)
+        say "  Success!"
+        say "  You may now create an application using the 'rhc app create' command"
+      end
 
       0
     end
@@ -35,9 +37,13 @@ module RHC::Commands
       domain = rest_client.domains
       raise RHC::DomainNotFoundException.new("No domains are registered to the user #{config.username}. Please use 'rhc domain create' to create one.") if domain.empty?
 
-      say "Updating domain '#{domain[0].id}' to namespace '#{namespace}' ... "
-      new_domain = domain[0].update(namespace)
-      say "success!"
+      paragraph { say "Updating domain '#{domain[0].id}' to namespace '#{namespace}'" }
+
+      paragraph do
+        say "RESULTS:"
+        domain[0].update(namespace)
+        say "  Success!"
+      end
 
       0
     end
