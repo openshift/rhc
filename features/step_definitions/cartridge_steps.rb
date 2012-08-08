@@ -38,5 +38,5 @@ end
 
 
 Then /^adding the (.+) cartridge should fail$/ do |name|
-  @app.add_cartridge(name).should == 1
+  @app.add_cartridge(name).should == 154
 end
