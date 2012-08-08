@@ -134,8 +134,8 @@ describe RHC::Commands::Domain do
     end
   end
 
-  describe 'destroy' do
-    let(:arguments) { ['domain', 'destroy', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password', 'deleteme'] }
+  describe 'delete' do
+    let(:arguments) { ['domain', 'delete', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password', 'deleteme'] }
 
     context 'when no issues with ' do
       before(:each) do
@@ -160,6 +160,22 @@ describe RHC::Commands::Domain do
         @rc.domains[0].id.should == 'dontdelete'
       end
       it { run_output.should match("Domain with namespace 'deleteme' does not exist") }
+    end
+  end
+
+  describe 'alias destroy' do
+    let(:arguments) { ['domain', 'destroy', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password', 'deleteme'] }
+
+    context 'when no issues with ' do
+      before(:each) do
+        @rc = MockRestClient.new
+        @rc.add_domain("deleteme")
+      end
+
+      it "should delete a domain" do
+        expect { run }.should exit_with_code(0)
+        @rc.domains.empty?.should be_true
+      end
     end
   end
 
