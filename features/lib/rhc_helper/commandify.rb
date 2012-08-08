@@ -94,7 +94,7 @@ module RHCHelper
     def get_cmd_callback(cmd, cartridge=nil)
       # Break the command up on spaces
       cmd_parts = cmd.split
-      
+
       # Drop the 'rhc' portion from the array
       cmd_parts.shift
 
@@ -162,8 +162,21 @@ module RHCHelper
   def domain_callback(exitcode, stdout, stderr, arg)
     @domain_output = stdout
   end
-  
+
   def domain_show_callback(exitcode, stdout, stderr, arg)
     @domain_show_output = stdout
   end
+
+  def domain_create_callback(exitcode, stdout, stderr, arg)
+    @exitcode = exitcode
+  end
+  
+  def domain_update_callback(exitcode, stdout, stderr, arg)
+    @exitcode = exitcode
+  end
+
+  def domain_delete_callback(exitcode, stdout, stderr, arg)
+    @exitcode = exitcode
+  end
+
 end

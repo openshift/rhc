@@ -113,7 +113,7 @@ module RHC::Commands
     alias_action :destroy
     def delete(namespace)
       domain = rest_client.find_domain namespace
-      raise Rhc::Rest::ResourceNotFoundException.new("Domain with namespace '#{namespace}' does not exist.", 128) if domain.empty?
+      raise RHC::DomainNotFoundException.new("Domain with namespace '#{namespace}' does not exist.") if domain.empty?
       domain[0].destroy
       0
     end

@@ -11,7 +11,7 @@ module RHCHelper
     include Dnsruby
 
     class << self
-      attr_reader :domain_output, :domain_show_output
+      attr_reader :domain_output, :domain_show_output, :exitcode
     end
 
     def self.unique_namespace(prefix)
@@ -38,12 +38,27 @@ module RHCHelper
       end
     end
 
-    def self.alter(prefix="alter")
-      $namespace = unique_namespace(prefix)
-      rhc_domain_alter
+    def self.delete
+      rhc_domain_delete
+      $namespace = nil
       # Write the new domain to a file in the temp directory
-      File.open(File.join(RHCHelper::TEMP_DIR, 'namespace'), 'w') do |f|
-        f.write($namespace)
+      namespace_file = File.join(RHCHelper::TEMP_DIR, 'namespace')
+      File.delete(namespace_file) if File.exists?(namespace_file)
+    end
+
+    def self.update(prefix="update")
+      old_namespace = $namespace
+      $namespace = unique_namespace(prefix)
+      rhc_domain_update
+
+      namespace_file = File.join(RHCHelper::TEMP_DIR, 'namespace')
+      if @exitcode == 0
+        # Write the new domain to a file in the temp directory
+        File.open(namespace_file, 'w') do |f|
+          f.write($namespace)
+        end
+      else
+        $namespace = old_namespace
       end
     end
 
