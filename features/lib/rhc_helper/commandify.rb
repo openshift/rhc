@@ -18,8 +18,11 @@ module RHCHelper
 
         # Run the command, timing it
         time = Benchmark.realtime do
-          run(cmd, args[0], &cmd_callback).should == 0
+          exitcode = run(cmd, args[0], &cmd_callback)
         end
+
+        # if there is a callback let it take care of validating the results
+        exitcode.should == 0 unless cmd_callback
 
         # Log the benchmarking info
         perf_logger.info "#{time} #{sym.to_s.upcase} #{$namespace} #{$login}"
