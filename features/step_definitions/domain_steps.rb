@@ -12,11 +12,11 @@ When /^a new domain is needed and created$/ do
   Domain.create_if_needed
 end
 
-When /^domain is updated$/ do |action|
+When /^domain is updated$/ do
   Domain.update
 end
 
-When /^domain is deleted$/ do |action|
+When /^domain is deleted$/ do
   Domain.delete
 end
 
