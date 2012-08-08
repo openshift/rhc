@@ -511,7 +511,7 @@ end
       end_point = "https://#{libra_server}/broker/rest/api"
       client = Rhc::Rest::Client.new(end_point, rhlogin, password)
 
-      domain = client.find_domain(user_info['user_info']['domains'][0]['namespace']).first
+      domain = client.find_domain(user_info['user_info']['domains'][0]['namespace'])
 
       namespace = domain.id
       # Catch errors

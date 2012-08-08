@@ -1,5 +1,6 @@
 require 'webmock/rspec'
 require 'rhc-rest'
+require 'rhc/exceptions'
 
 Spec::Matchers.define :have_same_attributes_as do |expected|
   match do |actual|
@@ -129,8 +130,8 @@ module RestSpecHelper
     end
 
     def find_domain(id)
-      i = domains.find_index { |d| d.id == id }
-      i.nil? ? [] : [domains[i]]
+      domains.each { |domain| return domain if domain.id == id }
+      raise RHC::DomainNotFoundException.new("Domain #{id} does not exist")
     end
   end
 

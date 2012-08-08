@@ -48,29 +48,9 @@ module Rhc
       #Find Domain by namesapce
       def find_domain(id)
         logger.debug "Finding domain #{id}" if @mydebug
-        filtered = Array.new
-        domains.each do |domain|
-        #TODO do a regex caomparison
-          if domain.id == id
-          filtered.push(domain)
-          end
-        end
-        return filtered
-      end
+        domains.each { |domain| return domain if domain.id == id }
 
-      #Find Application by name
-      def find_application(name)
-        logger.debug "Finding application #{name}" if @mydebug
-        filtered = Array.new
-        domains.each do |domain|
-        #TODO do a regex caomparison
-          domain.applications.each do |app|
-            if app.name == name
-            filtered.push(app)
-            end
-          end
-        end
-        return filtered
+        raise RHC::DomainNotFoundException.new("Domain #{id} does not exist")
       end
 
       #Get all Cartridge
@@ -87,7 +67,6 @@ module Rhc
         logger.debug "Finding cartridge #{name}" if @mydebug
         filtered = Array.new
         cartridges.each do |cart|
-        #TODO do a regex caomparison
           if cart.name == name
           filtered.push(cart)
           end
@@ -106,14 +85,9 @@ module Rhc
       #find Key by name
       def find_key(name)
         logger.debug "Finding key #{name}" if @mydebug
-        filtered = Array.new
-        user.keys.each do |key|
-        #TODO do a regex caomparison
-          if key.name == name
-          filtered.push(key)
-          end
-        end
-        return filtered
+        user.keys.each { |key| return key if key.name == name }
+
+        raise RHC::KeyNotFoundException.new("Key #{name} does not exist")
       end
 
       def logout

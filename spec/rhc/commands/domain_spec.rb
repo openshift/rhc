@@ -159,7 +159,7 @@ describe RHC::Commands::Domain do
         expect { run }.should exit_with_code(127)
         @rc.domains[0].id.should == 'dontdelete'
       end
-      it { run_output.should match("Domain with namespace 'deleteme' does not exist") }
+      it { run_output.should match("Domain deleteme does not exist") }
     end
   end
 

@@ -11,8 +11,6 @@ module RHC::Commands
     argument :namespace, "Namespace for your application(s) (alphanumeric)", ["-n", "--namespace namespace"]
     option ["--timeout timeout"], "Timeout, in seconds, for the session"
     def create(namespace)
-      domain = rest_client.domains
-
       paragraph { say "Creating domain with namespace '#{namespace}'" }
       paragraph do
         say "RESULT:"
@@ -122,9 +120,8 @@ module RHC::Commands
 
       paragraph do
         say "RESULT:"
-        domains = rest_client.find_domain namespace
-        raise RHC::DomainNotFoundException.new("Domain with namespace '#{namespace}' does not exist.") if domains.empty?
-        domains[0].destroy
+        domain = rest_client.find_domain namespace
+        domain.destroy
         say "  Success!"
       end
 
