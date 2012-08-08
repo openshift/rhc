@@ -28,7 +28,7 @@ Feature: Client Integration Tests
     Given the libra client tools
     And an existing domain
     When rhc domain create is called
-    Then the domain command should fail with an exitcode of 127
+    Then the domain command should fail with an exitcode of 128
 
   Scenario: Domain Delete
     Given the libra client tools
