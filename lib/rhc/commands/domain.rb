@@ -112,9 +112,9 @@ module RHC::Commands
     option ["--timeout timeout"], "Timeout, in seconds, for the session"
     alias_action :destroy
     def delete(namespace)
-      domain = rest_client.find_domain namespace
-      raise RHC::DomainNotFoundException.new("Domain with namespace '#{namespace}' does not exist.") if domain.empty?
-      domain[0].destroy
+      domains = rest_client.find_domain namespace
+      raise RHC::DomainNotFoundException.new("Domain with namespace '#{namespace}' does not exist.") if domains.empty?
+      domains[0].destroy
       0
     end
   end
