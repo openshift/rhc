@@ -15,7 +15,7 @@ module RHC::Commands
 
       paragraph { say "Creating domain with namespace '#{namespace}'" }
       paragraph do
-        say "RESULTS:"
+        say "RESULT:"
         rest_client.add_domain(namespace)
         say "  Success!"
         say "  You may now create an application using the 'rhc app create' command"
@@ -40,7 +40,7 @@ module RHC::Commands
       paragraph { say "Updating domain '#{domain[0].id}' to namespace '#{namespace}'" }
 
       paragraph do
-        say "RESULTS:"
+        say "RESULT:"
         domain[0].update(namespace)
         say "  Success!"
       end
@@ -118,9 +118,16 @@ module RHC::Commands
     option ["--timeout timeout"], "Timeout, in seconds, for the session"
     alias_action :destroy
     def delete(namespace)
-      domains = rest_client.find_domain namespace
-      raise RHC::DomainNotFoundException.new("Domain with namespace '#{namespace}' does not exist.") if domains.empty?
-      domains[0].destroy
+      paragraph { say "Deleting domain '#{namespace}'" }
+
+      paragraph do
+        say "RESULT:"
+        domains = rest_client.find_domain namespace
+        raise RHC::DomainNotFoundException.new("Domain with namespace '#{namespace}' does not exist.") if domains.empty?
+        domains[0].destroy
+        say "  Success!"
+      end
+
       0
     end
   end
