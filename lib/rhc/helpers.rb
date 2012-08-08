@@ -56,15 +56,15 @@ module RHC
     # Global config
     #
 
-    global_option '--config FILE', "Path of a different config file"
+    global_option ['--config FILE'], "Path of a different config file"
     def config
       raise "Operations requiring configuration must define a config accessor"
     end
 
-    global_option '--noprompt', "Bypass first run wizard"
-    global_option '-l', '--rhlogin login', "Red Hat login (RedHat Network or OpenShift)"
-    global_option '-p', '--password password', "Red Hat password"
-    global_option '-d', '--debug', "Turn on debugging"
+    global_option ['--noprompt'], "Bypass first run wizard"
+    global_option ['-l', '--rhlogin login'], "Red Hat login (RedHat Network or OpenShift)"
+    global_option ['-p', '--password password'], "Red Hat password"
+    global_option ['-d', '--debug'], "Turn on debugging"
 
     def openshift_server
       config.get_value('libra_server')
