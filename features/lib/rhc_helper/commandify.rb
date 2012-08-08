@@ -16,6 +16,7 @@ module RHCHelper
         # Add arguments to the command
         cmd << get_args(cmd, args[0])
 
+        exitcode = nil
         # Run the command, timing it
         time = Benchmark.realtime do
           exitcode = run(cmd, args[0], &cmd_callback)
