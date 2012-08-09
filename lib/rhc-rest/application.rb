@@ -18,6 +18,9 @@ module Rhc
         @health_check_path = args[:health_check_path] || args["health_check_path"]
         @embedded = args[:embedded] || args["embedded"]
         @links = args[:links] || args["links"]
+        @app_url = args[:app_url] || args["app_url"]
+        @git_url = args[:git_url] || args["git_url"]
+        @scalable = args[:scalable] || args["scalable"]
       end
 
       #Add Cartridge

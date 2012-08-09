@@ -1,0 +1,27 @@
+Usage: <%= program :name %> (<resource> | --help) [<action>] [<args>]
+<%= program :description %>
+
+List of Resources
+  <%# remove these as they are added to commander%>
+  app                Manage applications within the rhcloud account.
+  sshkey             Manage multiple keys for the registered rhcloud user.
+  port-forward       Forward remote ports to the workstation
+<% for name, command in @commands.sort -%>
+	<%- unless alias? name or name == "help" or name.include?(" ") -%>  <%="%-18s %s\n" % [command.name, command.summary || command.description] %><%- end -%>
+<%- end -%>
+
+Global Options
+<%- unless @options.nil? or @options.empty?  -%>
+<% for option in @options -%>
+  <%= "%-25s %s\n" % [option[:switches].join('|'), option[:description]] -%>
+<% end -%>
+<%- end -%>
+
+See '<%= program :name %> <resource> --help' for more applicable commands and arguments on a specific resource.
+<% if program :help -%>
+  <% for title, body in program(:help) %>
+  <%= $terminal.color title.to_s.upcase, :bold %>:
+
+    <%= body %>
+  <% end -%>
+<% end -%>

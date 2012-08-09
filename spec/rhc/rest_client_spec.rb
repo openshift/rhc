@@ -145,14 +145,15 @@ module Rhc
                           :status => 200
                         })
           end
-          it "returns a list of domain objects for matching domain IDs" do
-            matches = @client.find_domain('mock_domain_0')
-            matches.length.should equal(1)
-            matches[0].class.should == Rhc::Rest::Domain
+          it "returns a domain object for matching domain IDs" do
+            match = nil
+            expect { match = @client.find_domain('mock_domain_0') }.should_not raise_error
+
+            match.id.should == 'mock_domain_0'
+            match.class.should == Rhc::Rest::Domain
           end
-          it "returns an empty list when no matching domain IDs can be found" do
-            matches = @client.find_domain('mock_domain_2')
-            matches.length.should equal(0)
+          it "raise an error when no matching domain IDs can be found" do
+            expect { @client.find_domain('mock_domain_2') }.should raise_error(RHC::DomainNotFoundException)
           end
         end
 
@@ -202,23 +203,22 @@ module Rhc
                           :status => 200
                         })
           end
-          it "returns a list of application objects for matching application IDs" do
-            matches = @client.find_application('mock_app')
-            matches.length.should equal(2)
-            (0..1).each do |idx|
-              matches[idx].class.should                              == Rhc::Rest::Application
-              matches[idx].instance_variable_get(:@name).should      == 'mock_app'
-              matches[idx].instance_variable_get(:@domain_id).should == "mock_domain_#{idx}"
-              matches[idx].instance_variable_get(:@links).should     ==
-                mock_response_links(mock_app_links("mock_domain_#{idx}",'mock_app'))
+          it "returns application objects for matching application IDs" do
+            domain = @client.domains[0]
+            domain.applications.each do |app|
+              match = domain.find_application(app.name)
+              match.class.should                              == Rhc::Rest::Application
+              match.instance_variable_get(:@name).should      == 'mock_app'
+              match.instance_variable_get(:@domain_id).should == "#{domain.id}"
+              match.instance_variable_get(:@links).should     ==
+                mock_response_links(mock_app_links("#{domain.id}",'mock_app'))
             end
           end
-          it "returns an empty list when no matching applications can be found" do
-            matches = @client.find_application('no_match')
-            matches.length.should equal(0)
+          it "Raises an excpetion when no matching applications can be found" do
+            expect { @client.domains[0].find_application('no_match') }.should raise_error(RHC::ApplicationNotFoundException)
           end
         end
-        
+
         context "#cartridges" do
           before(:each) do
             stub_api_request(:any, client_links['LIST_CARTRIDGES']['relative']).
@@ -294,7 +294,7 @@ module Rhc
             matches.length.should equal(0)
           end
         end
-        
+
         context "#user" do
           before(:each) do
             stub_api_request(:any, client_links['GET_USER']['relative']).
@@ -347,18 +347,18 @@ module Rhc
                         })
           end
           it "returns a list of key objects for matching keys" do
-            keys = @client.find_key('mock_key_0')
-            keys.length.should equal(1)
-            keys[0].class.should                            == Rhc::Rest::Key
-            keys[0].instance_variable_get(:@name).should    == 'mock_key_0'
-            keys[0].instance_variable_get(:@type).should    == 'mock_key_0_type'
-            keys[0].instance_variable_get(:@content).should == '123456789:0'
-            keys[0].instance_variable_get(:@links).should   ==
+            key = nil
+            expect { key = @client.find_key('mock_key_0') }.should_not raise_error
+
+            key.class.should                            == Rhc::Rest::Key
+            key.instance_variable_get(:@name).should    == 'mock_key_0'
+            key.instance_variable_get(:@type).should    == 'mock_key_0_type'
+            key.instance_variable_get(:@content).should == '123456789:0'
+            key.instance_variable_get(:@links).should   ==
               mock_response_links(mock_key_links('mock_key_0'))
           end
-          it "returns an empty list when no matching keys can be found" do
-            keys = @client.find_key('no_match')
-            keys.length.should equal(0)
+          it "raise an error when no matching keys can be found" do
+            expect { @client.find_key('no_match') }.should raise_error(RHC::KeyNotFoundException)
           end
         end
 
@@ -392,7 +392,7 @@ module Rhc
           let(:logout_method) { :logout }
           it_should_behave_like "a logout method"
         end
-        
+
         context "#close" do
           let(:logout_method) { :close }
           it_should_behave_like "a logout method"

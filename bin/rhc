@@ -44,10 +44,6 @@ end
 
 begin
   case ARGV[0]
-  when "domain"
-    run_setup_wizard_if_needed
-    system("rhc-domain #{get_args} 2>&1")
-    retcode = $?.exitstatus
   when "app"
     run_setup_wizard_if_needed
     system("rhc-app #{get_args} 2>&1")
@@ -60,21 +56,13 @@ begin
     run_setup_wizard_if_needed
     system("rhc-port-forward #{get_args} 2>&1")
     retcode = $?.exitstatus
-  when "-h", "--help", "help", nil
-    p_usage 0
   else
-    if ["server", "setup"].include?(ARGV[0])
-      run_setup_wizard_if_needed if ARGV[0] != "setup"
-      begin
-        require 'rhc/cli'
-        RHC::CLI.start(ARGV)
-        retcode = 0
-      rescue SystemExit => e
-        retcode = e.status
-      end
-    else
-      puts "Invalid rhc command: #{ARGV[0]}"
-      p_usage
+    begin
+      require 'rhc/cli'
+      RHC::CLI.start(ARGV)
+      retcode = 0
+    rescue SystemExit => e
+      retcode = e.status
     end
   end
 

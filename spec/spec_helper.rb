@@ -44,10 +44,12 @@ module ClassSpecHelpers
     end
   end
   def new_command_runner *args, &block
-    Commander::Runner.instance_variable_set :"@singleton", Commander::Runner.new(args)
+    Commander::Runner.instance_variable_set :"@singleton", RHC::Commands::Runner.new(args)
     program :name, 'test'
     program :version, '1.2.3'
     program :description, 'something'
+    program :help_formatter, RHC::UsageHelpFormatter
+
     #create_test_command
     yield if block
     Commander::Runner.instance
@@ -58,12 +60,12 @@ module ClassSpecHelpers
   #
   def expects_running *args
     mock_terminal
-    r = new_command_runner args do
+    r = new_command_runner *args do
       instance #ensure instance is created before subject :new is mocked
       subject.should_receive(:new).any_number_of_times.and_return(instance)
-      RHC::Commands.to_commander 
+      RHC::Commands.to_commander
     end
-    lambda { r.run!; @output }
+    lambda { r.run! }
   end
 
   class MockHighLineTerminal < HighLine
@@ -153,11 +155,9 @@ module ExitCodeMatchers
     actual = nil
     match do |block|
       begin
-        block.call
+        actual = block.call
       rescue SystemExit => e
         actual = e.status
-      else
-        actual = 0
       end
       actual and actual == code
     end
@@ -170,8 +170,8 @@ module ExitCodeMatchers
     end
     description do
       "expect block to call exit(#{code})"
-    end    
-  end  
+    end
+  end
 end
 
 module CommanderInvocationMatchers

@@ -39,6 +39,13 @@ module Rhc
         return request(request)
       end
 
+      def find_application(name)
+        logger.debug "Finding application #{name}" if @mydebug
+        applications.each { |app| return app if app.name == name }
+
+        raise RHC::ApplicationNotFoundException.new("Application #{name} does not exist")
+      end
+
       #Update Domain
       def update(new_id)
         logger.debug "Updating domain #{self.id} to #{new_id}" if @mydebug

@@ -1,17 +1,24 @@
 require 'commander'
 require 'commander/delegates'
 require 'rhc/helpers'
+require 'rhc/wizard'
+require 'rhc/config'
+require 'rhc/commands'
+require 'rhc/exceptions'
 
 class RHC::Commands::Base
 
-  def initialize(command=nil, args=[], options=OptionParser.new)
-    @command, @args, @options = command, args, options
+  def initialize(command=nil, 
+                 args=[],
+                 options=Commander::Command::Options.new,
+                 config=RHC::Config)
+    @command, @args, @options, @config = command, args, options, config
   end
 
   protected
     include RHC::Helpers
 
-    attr_reader :command, :args, :options
+    attr_reader :command, :args, :options, :config
 
     def application
       #@application ||= ... identify current application or throw,
@@ -31,15 +38,6 @@ class RHC::Commands::Base
       #
       #                Initialize with auth (a separate responsibility
       #                object).
-    end
-
-    def config
-      @config ||= begin
-        RHC::Config.set_opts_config(options.config) if options.config
-        RHC::Config.password = options.password if options.password
-        RHC::Config.opts_login = options.rhlogin if options.rhlogin
-        RHC::Config
-      end
     end
 
     class InvalidCommand < StandardError ; end
@@ -81,9 +79,45 @@ class RHC::Commands::Base
     def self.summary(value)
       options[:summary] = value
     end
+    def self.syntax(value)
+      options[:syntax] = value
+    end
+
+    def self.suppress_wizard
+      @suppress_wizard = true
+    end
+
+    def self.suppress_wizard?
+      @suppress_wizard
+    end
+
+    def self.alias_action(action)
+      aliases << action
+    end
+
+    def self.option(switches, description)
+      options_metadata << [switches, description].flatten(1)
+    end
+
+    def self.argument(name, description, switches)
+      args_metadata << {:name => name, :description => description, :switches => switches}
+    end
+
+    def self.default_action(action)
+      define_method(:run) { |*args| send(action, *args) }
+    end
 
     private
+      def self.options_metadata
+        options[:options] ||= []
+      end
+      def self.args_metadata
+        options[:args] ||= []
+      end
       def self.options
         @options ||= {}
+      end
+      def self.aliases
+        options[:aliases] ||= []
       end
 end

@@ -18,7 +18,6 @@ module RHC
   # from the gem directory.
   #
   module CLI
-
     extend Commander::Delegates
 
     def self.set_terminal
@@ -26,13 +25,13 @@ module RHC
     end
 
     def self.start(args)
-      runner = Commander::Runner.new(args)
+      runner = RHC::Commands::Runner.new(args)
       Commander::Runner.instance_variable_set :@singleton, runner
 
       program :name,        'rhc'
       program :version,     RHC::VERSION::STRING
       program :description, 'Command line interface for OpenShift.'
-      program :help_formatter, :compact
+      program :help_formatter, RHC::UsageHelpFormatter
 
       RHC::Commands.load.to_commander
       exit(run! || 0)

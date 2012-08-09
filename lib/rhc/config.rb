@@ -3,20 +3,11 @@ require 'rhc/core_ext'
 
 module RHC
   module Config
-    # FIXME: Config shouldn't really exit
-    #        stub this out for now so we can test it
-    def self.exit(code)
-      # :nocov:
-      Kernel.exit(code)
-      # :nocov:
-    end
-
     def self.read_config_files
       @@global_config = RHC::Vendor::ParseConfig.new(@@global_config_path) if File.exists?(@@global_config_path)
       @@local_config = RHC::Vendor::ParseConfig.new(File.expand_path(@@local_config_path)) if File.exists?(@@local_config_path)
     rescue Errno::EACCES => e
-      say "Could not open config file: #{e.message}"
-      exit 253
+      raise Errno::EACCES.new("Could not open config file: #{e.message}")
     end
 
     def self.set_defaults
@@ -95,6 +86,10 @@ module RHC
       self[key]
     end
 
+    def self.username
+      self['default_rhlogin']
+    end
+
     # Public: configures the default user for this session
     def self.config_user(username)
       @@defaults.add('default_rhlogin', username)
@@ -113,14 +108,23 @@ module RHC
       @@opts['password']
     end
 
-    def self.set_local_config(confpath)
+    def self.noprompt(bool)
+      @@opts.add('noprompt', bool)
+    end
+
+    def self.noprompt?
+      @@opts['noprompt']
+    end
+
+    def self.set_local_config(confpath, must_exist=true)
       begin
         @@local_config_path = File.expand_path(confpath)
         @@config_path = @@local_config_path if @@opts_config_path.nil?
         @@local_config = RHC::Vendor::ParseConfig.new(@@local_config_path)
       rescue Errno::EACCES => e
-        say "Could not open config file: #{e.message}"
-        exit 253
+        if must_exist
+          raise Errno::EACCES.new "Could not open config file: #{e.message}"
+        end
       end
     end
 
@@ -130,8 +134,7 @@ module RHC
         @@config_path = @@opts_config_path
         @@opts_config = RHC::Vendor::ParseConfig.new(@@opts_config_path) if File.exists?(@@opts_config_path)
       rescue Errno::EACCES => e
-        say "Could not open config file: #{e.message}"
-        exit 253
+        raise Errno::EACCES.new "Could not open config file: #{e.message}"
       end
     end
 
@@ -139,8 +142,7 @@ module RHC
       unless opts["config"].nil?
         opts_config_path = File.expand_path(opts["config"])
         if !File.readable?(opts_config_path)
-          say "Could not open config file: #{@opts_config_path}"
-          exit 253
+          raise Errno::EACCES.new "Could not open config file: #{@opts_config_path}"
         else
           set_opts_config(opts_config_path)
         end
@@ -161,7 +163,7 @@ module RHC
 
     # Public: convinience function to see if we should run the wizard
     def self.should_run_wizard?
-      not (has_local_config? or has_opts_config?)
+      not (has_local_config? or has_opts_config? or noprompt?)
     end
 
     def self.should_run_ssh_wizard?
