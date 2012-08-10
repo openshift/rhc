@@ -16,10 +16,14 @@ module RHCHelper
         # Add arguments to the command
         cmd << get_args(cmd, args[0])
 
+        exitcode = nil
         # Run the command, timing it
         time = Benchmark.realtime do
-          run(cmd, args[0], &cmd_callback).should == 0
+          exitcode = run(cmd, args[0], &cmd_callback)
         end
+
+        # if there is a callback let it take care of validating the results
+        exitcode.should == 0 unless cmd_callback
 
         # Log the benchmarking info
         perf_logger.info "#{time} #{sym.to_s.upcase} #{$namespace} #{$login}"
@@ -58,8 +62,12 @@ module RHCHelper
 
       # Command specific arguments
       case cmd
-        when /domain/
+        when /domain show/
+          # domain show doesn't take arguments
+        when /domain /
           raise "No namespace set" unless $namespace
+          # use legacy switch for specifying namespace to verify older interface
+          # should switch to using argument once all commands are moved over
           args << "-n #{$namespace} "
         when /destroy/
           args << "-b "
@@ -87,7 +95,7 @@ module RHCHelper
     def get_cmd_callback(cmd, cartridge=nil)
       # Break the command up on spaces
       cmd_parts = cmd.split
-      
+
       # Drop the 'rhc' portion from the array
       cmd_parts.shift
 
@@ -151,4 +159,25 @@ module RHCHelper
     @embed.delete(cartridge)
     persist
   end
+
+  def domain_callback(exitcode, stdout, stderr, arg)
+    @domain_output = stdout
+  end
+
+  def domain_show_callback(exitcode, stdout, stderr, arg)
+    @domain_show_output = stdout
+  end
+
+  def domain_create_callback(exitcode, stdout, stderr, arg)
+    @exitcode = exitcode
+  end
+  
+  def domain_update_callback(exitcode, stdout, stderr, arg)
+    @exitcode = exitcode
+  end
+
+  def domain_delete_callback(exitcode, stdout, stderr, arg)
+    @exitcode = exitcode
+  end
+
 end

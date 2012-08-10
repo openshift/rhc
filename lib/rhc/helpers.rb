@@ -8,8 +8,8 @@ module RHC
 
   module Helpers
     private
-      def self.global_option(*args)
-        RHC::Commands.global_option *args
+      def self.global_option(switches, description)
+        RHC::Commands.global_option switches, description
       end
   end
 
@@ -56,13 +56,15 @@ module RHC
     # Global config
     #
 
-    global_option '-c', '--config FILE', "Path of a different config file"
+    global_option ['--config FILE'], "Path of a different config file"
     def config
       raise "Operations requiring configuration must define a config accessor"
     end
 
-    global_option '-l', '--rhlogin login', "Red Hat login (RedHat Network or OpenShift)"
-    global_option '-p', '--password password', "Red Hat password"
+    global_option ['--noprompt'], "Bypass first run wizard"
+    global_option ['-l', '--rhlogin login'], "Red Hat login (RedHat Network or OpenShift)"
+    global_option ['-p', '--password password'], "Red Hat password"
+    global_option ['-d', '--debug'], "Turn on debugging"
 
     def openshift_server
       config.get_value('libra_server')
@@ -70,7 +72,23 @@ module RHC
     def openshift_url
       "https://#{openshift_server}"
     end
+    def openshift_rest_node
+      "#{openshift_url}/broker/rest/api"
+    end
 
+    def rest_client
+      return @rest_client if @rest_client
+
+      username = config.username
+      unless username
+        username = ask "To connect to #{openshift_server} enter your OpenShift login (email or Red Hat login id): "
+        config.config_user(username)
+      end
+
+      password = RHC::Config.password || RHC::get_password
+
+      @rest_client = Rhc::Rest::Client.new(openshift_rest_node, username, password, @options.debug)
+    end
 
     #
     # Output helpers

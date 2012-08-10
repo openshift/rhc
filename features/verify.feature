@@ -11,7 +11,43 @@ Feature: Client Integration Tests
     When a new domain is needed and created
     Then the domain should be reserved
 
+  Scenario: Domain Update
+    Given the libra client tools
+    And an existing domain
+    When domain is updated
+    Then the domain should be reserved
+
+  Scenario: Domain Show
+    Given the libra client tools
+    And an existing domain
+    When rhc domain is run
+    When rhc domain show is run
+    Then the default domain action output should equal the show action output
+
+  Scenario: Domain Create Fails
+    Given the libra client tools
+    And an existing domain
+    When rhc domain create is called
+    Then the domain command should fail with an exitcode of 128
+
+  Scenario: Domain Delete
+    Given the libra client tools
+    And an existing domain
+    When domain is deleted
+    Then domains should be empty
+
+  Scenario: Domain Update Fails
+    Given the libra client tools
+    And given domains is empty
+    When domain is updated
+    Then the domain command should fail with an exitcode of 127
+
   @init
+  Scenario: Domain Creation for Apps
+    Given the libra client tools
+    When a new domain is needed and created
+    Then the domain should be reserved
+
   Scenario: Application Creation
     Given the libra client tools
     When 1 php-5.3 applications are created

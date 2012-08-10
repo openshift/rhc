@@ -80,6 +80,7 @@ first).  See [README.md](https://github.com/openshift/rhc/blob/master/features/R
 have full line coverage.  Some old code is currently excluded until it
 can be refactored.  Run <code>bundle exec rake spec</code> on Ruby 1.9+
 to see your code coverage level.
+4. When writting a new Command please follow [ADDING_COMMANDS.md](https://github.com/openshift/rhc/blob/master/lib/rhc/commands/ADDING_COMMANDS.md)
 
 Once you've made your changes:
 

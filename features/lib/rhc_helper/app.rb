@@ -82,7 +82,7 @@ module RHCHelper
 
     def add_cartridge(name)
       exitcode = 0
-      cartridge(name).add do |ec|
+      cartridge(name).add do |ec, stdout, stderr, arg|
         exitcode = ec
         embed << name unless embed.include?(name) or ec != 0
       end

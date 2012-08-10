@@ -511,7 +511,7 @@ end
       end_point = "https://#{libra_server}/broker/rest/api"
       client = Rhc::Rest::Client.new(end_point, rhlogin, password)
 
-      domain = client.find_domain(user_info['user_info']['domains'][0]['namespace']).first
+      domain = client.find_domain(user_info['user_info']['domains'][0]['namespace'])
 
       namespace = domain.id
       # Catch errors
@@ -1229,10 +1229,8 @@ end
 #          nil of there was an error
 #
 def default_setup_wizard
-  if RHC::Config.should_run_wizard?
-    w = RHC::Wizard.new(RHC::Config.local_config_path)
-    return w.run
-  end
+  w = RHC::Wizard.new(RHC::Config)
+  return w.run if w.needs_configuration?
 
   false
 end

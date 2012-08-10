@@ -1,6 +1,7 @@
 require 'spec_helper'
 require 'rest_spec_helper'
 require 'rhc-rest/client'
+require 'base64'
 
 Spec::Runner.configure do |configuration|
   include(RestSpecHelper)
@@ -9,6 +10,11 @@ end
 module Rhc
   module Rest
     describe Application do
+      # make sure auth is set up for the Application object since we are not
+      # calling it from RHC::Rest::Client
+      credentials = Base64.encode64("#{mock_user}:#{mock_pass}")
+      @@headers["Authorization"] = "Basic #{credentials}"
+
       let (:app_links) { mock_response_links(mock_app_links('mock_domain','mock_app')) }
       let (:app_obj) {
         Rhc::Rest::Application.new({ 'domain_id'       => 'mock_domain',

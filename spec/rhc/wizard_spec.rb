@@ -195,6 +195,7 @@ describe RHC::Wizard do
 
   context "Repeat run of rhc setup with config set" do
     before(:all) do
+      RHC::Config.set_defaults
       @wizard = RerunWizardDriver.new
       @wizard.setup_mock_config
       @wizard.run_next_stage # we can skip testing the greeting
@@ -372,7 +373,7 @@ describe RHC::Wizard do
       @wizard.run_next_stage # we can skip testing the greeting
     end
 
-    it "should ask password input with default login (use a different one)" do
+    it "should ask password input with default login(use a different one)" do
       @wizard.stub_rhc_client_new
       @wizard.stub_user_info
       $terminal.write_line(@wizard.mock_user)
@@ -778,7 +779,7 @@ EOF
       end
 
       # reload config
-      RHC::Config.home_dir = '/home/mock_user'
+      @config.home_dir = '/home/mock_user'
     end
 
     def setup_mock_ssh(add_ssh_key=false)
@@ -881,13 +882,19 @@ EOF
 
       File.open(public_key_file, 'w') { |f| f.write pub_key }
     end
+
+    def config(local_conf_path)
+      conf = RHC::Config
+      conf.set_local_config(local_conf_path, false)
+      conf
+    end
   end
 
   class FirstRunWizardDriver < RHC::Wizard
     include WizardDriver
 
     def initialize
-      super '/home/mock_user/.openshift/express.conf'
+      super config('/home/mock_user/.openshift/express.conf')
     end
   end
 
@@ -895,7 +902,7 @@ EOF
     include WizardDriver
 
     def initialize
-      super '/home/mock_user/.openshift/express.conf'
+      super config('/home/mock_user/.openshift/express.conf')
     end
   end
 

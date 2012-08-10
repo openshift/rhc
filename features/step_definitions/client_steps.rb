@@ -1,3 +1,5 @@
+require 'rhc/wizard'
+
 # Cross-platform way of finding an executable in the $PATH.
 #
 #   which('ruby') #=> /usr/bin/ruby
@@ -27,6 +29,6 @@ When /^the setup wizard is run$/ do
 end
 
 Then /^the client tools should be setup$/ do
-  RHC::Config.should_run_wizard?.should be_false, "Wizard still thinks it needs to be run"
+  RHC::Wizard.new(RHC::Config).needs_configuration?.should be_false, "Wizard still thinks it needs to be run"
 end
 

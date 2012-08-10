@@ -13,7 +13,7 @@ describe RHC::Helpers do
     @tests = HelperTests.new()
   end
 
-  subject do 
+  subject do
     Class.new(Object) do
       include RHC::Helpers
 
@@ -154,12 +154,38 @@ describe RHC::Helpers do
     end
   end
 
+  context "Rest Client helper" do
+    before do
+      FakeFS.activate!
+      Rhc::Rest::Client.stub!(:new) { |openshift_rest_node, username, password, debug| @username = username; @password = password; nil}
+    end
+
+    it "should ask for username" do
+      $terminal.write_line("testuser@foo.bar")
+      $terminal.write_line("password")
+      @tests.rest_client
+      @username.should == "testuser@foo.bar"
+      @tests.config["default_rhlogin"].should == @username
+      @password.should == "password"
+    end
+
+    after do
+      FakeFS::FileSystem.clear
+      FakeFS.deactivate!
+    end
+  end
+
   class HelperTests
     include RHC::Helpers
     include RHC::SSHKeyHelpers
 
     def initialize
       @print_num = 0
+      @options = Commander::Command::Options.new
+    end
+
+    def config
+      @config ||= RHC::Config
     end
 
     def next_print_num
