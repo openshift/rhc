@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 0.97.4
+Version: 0.97.5
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -114,6 +114,131 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Aug 10 2012 Adam Miller <admiller@redhat.com> 0.97.5-1
+- micro version bump, should have been auto-committed. will follow up
+  (admiller@redhat.com)
+- Refactor find methods to either return one value or raise an exception
+  (johnp@redhat.com)
+- some feature test fixes (johnp@redhat.com)
+- fix tests as RESULTS: became RESULT: in output (johnp@redhat.com)
+- make output more consistent umong commands (johnp@redhat.com)
+- output a RESULTS: block like other commands (johnp@redhat.com)
+- switch to raising an excpetion instead of exiting in config
+  (johnp@redhat.com)
+- rename as domains since it is an array (johnp@redhat.com)
+- scope the exitcode correctly (johnp@redhat.com)
+- some fixes to merge errors (johnp@redhat.com)
+- correct logic for when we need to install bigdecimal gem (johnp@redhat.com)
+- make gemfile work with ruby 1.8 (johnp@redhat.com)
+- global options argument format change missed in rebase (johnp@redhat.com)
+- fix the error code where the issue is and revert the last change
+  (johnp@redhat.com)
+- fix expected error code (johnp@redhat.com)
+- add feature tests (johnp@redhat.com)
+- if callback is present have it handle the return code (johnp@redhat.com)
+- make rhc domain destroy an alias to rhc domain delete (johnp@redhat.com)
+- suppress aliases from help output (johnp@redhat.com)
+- add a test for the alter alias (johnp@redhat.com)
+- add aliasing functionality and alias domain alter to domain update
+  (johnp@redhat.com)
+- remove exceptions handled by rest api and add DomainNotFoundException
+  (johnp@redhat.com)
+- move config code to commander.rb instead of in the individual commands
+  (johnp@redhat.com)
+- add rhc domain and rhc domain show checks (johnp@redhat.com)
+- fix up cucumber tests and add domain alter steps (johnp@redhat.com)
+- reset config before tests (johnp@redhat.com)
+- use internal config (johnp@redhat.com)
+- add doc section on using default_action (johnp@redhat.com)
+- refactor wizard to take a config object (johnp@redhat.com)
+- add default_action class method to allow aliasing methods as default
+  (johnp@redhat.com)
+- deprecate domain binaries as rhc domain is the one true interface now
+  (johnp@redhat.com)
+- refactor when we run the first run wizard (johnp@redhat.com)
+- 100%% spec coverage (johnp@redhat.com)
+- handle generic exceptions (johnp@redhat.com)
+- correctly handle help on error and run with our Runner instance on tests
+  (johnp@redhat.com)
+- use correct help formatter when error occures (johnp@redhat.com)
+- remove another usage of command_success (johnp@redhat.com)
+- fix spec tests to reflect string changes (johnp@redhat.com)
+- small fixes (johnp@redhat.com)
+- remove use of command_success and just return 0 (johnp@redhat.com)
+- if help is passed in run as if --help was passed in (johnp@redhat.com)
+- refactor override Runner.run! for handling error conditions
+  (johnp@redhat.com)
+- let commander handle rhc help (johnp@redhat.com)
+- clean up domain command a bit (johnp@redhat.com)
+- fix documentation to be linked from toplevel README.md and renamed
+  (johnp@redhat.com)
+- cleanups (johnp@redhat.com)
+- use headline style in section output (johnp@redhat.com)
+- simplify code block (johnp@redhat.com)
+- style fix (johnp@redhat.com)
+- simplify metadata identifiers (johnp@redhat.com)
+- Only flatten 1 level since OptionParser syntax allows for lists
+  (johnp@redhat.com)
+- fix options to take a list of switches for future functionality
+  (johnp@redhat.com)
+- add a readme on how to add commands (johnp@redhat.com)
+- check length because diffent ruby versions order options differently
+  (johnp@redhat.com)
+- run true without a path as different test systems may install it elsewhere
+  (johnp@redhat.com)
+- remove some spaces before parens to supress warnings (johnp@redhat.com)
+- add the domain spec tests (missed this) (johnp@redhat.com)
+- fix the application model to expose git and app url (johnp@redhat.com)
+- get spec tests at 100%% for new commander domain code (johnp@redhat.com)
+- make sure wizard is either suppresed or mocked (johnp@redhat.com)
+- add new tests to check error conditions (johnp@redhat.com)
+- don't filter out help formatter in coverage test anymore (johnp@redhat.com)
+- check that objects are accessable when printing out help (johnp@redhat.com)
+- fix error reporting (johnp@redhat.com)
+- correctly pass in params as *args (johnp@redhat.com)
+- remove some whitespace (johnp@redhat.com)
+- suppress wizard and other little test fixes (johnp@redhat.com)
+- add global options output to help (johnp@redhat.com)
+- rename success to command_success so it doesn't clash with the highline
+  helper (johnp@redhat.com)
+- send it correct default options object and add noprompt global option
+  (johnp@redhat.com)
+- handle outputting traces better (johnp@redhat.com)
+- fix race in tests where auth is not yet set up correctly (johnp@redhat.com)
+- suppress wizard for rhc server since you don't need a login
+  (johnp@redhat.com)
+- default to show for rhc domain (johnp@redhat.com)
+- add debug option and fix domain creation (johnp@redhat.com)
+- fix test to reflect fixed cart status output when cart is not added
+  (johnp@redhat.com)
+- revert modification that mistakenly got checked in (johnp@redhat.com)
+- port rhc domain destroy to rest api (johnp@redhat.com)
+- hook rhc domain status back up (johnp@redhat.com)
+- minor string fixups (johnp@redhat.com)
+- fix error invokation (johnp@redhat.com)
+- port rhc domain create to the rest api (johnp@redhat.com)
+- port rhc domain alter to rest (johnp@redhat.com)
+- remove help handler in setup command as we handle it generically now
+  (johnp@redhat.com)
+- hook up domain show to rest apis (johnp@redhat.com)
+- handle errors gracefully (johnp@redhat.com)
+- fix typo (johnp@redhat.com)
+- improve the help output for commands (johnp@redhat.com)
+- handle help for all commands (johnp@redhat.com)
+- refactor metadata vars to be more descriptive (johnp@redhat.com)
+- remove -c global option for config since legacy uses that for cartridge
+  (johnp@redhat.com)
+- Stub out domain command and handle argument and options processing
+  (johnp@redhat.com)
+- only show rhc usage for top level commands (johnp@redhat.com)
+- initial stub of the domain command (johnp@redhat.com)
+- run wizard on initialize not on run (johnp@redhat.com)
+- run setup wizard if needed also allow commands to suppress the wizard
+  (johnp@redhat.com)
+- handle invalid commands via commander's help formatter (johnp@redhat.com)
+- make sure the erb files get installed (johnp@redhat.com)
+- add help templates for usage (johnp@redhat.com)
+
 * Wed Aug 08 2012 Adam Miller <admiller@redhat.com> 0.97.4-1
 - 
 
