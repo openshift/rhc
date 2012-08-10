@@ -94,8 +94,12 @@ class RHC::Commands::Base
       @suppress_wizard
     end
 
-    def self.alias_action(action)
-      aliases << action
+    def self.alias_action(action, options={})
+      # if it is a root_command we simply alias it to the passed in action
+      # if not we prepend the current resource to the action
+      # default == false
+      root_command = options[:root_command] || false
+      aliases << [action, root_command]
     end
 
     def self.option(switches, description)

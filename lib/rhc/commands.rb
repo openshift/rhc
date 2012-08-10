@@ -165,10 +165,15 @@ module RHC
           end
 
           unless opts[:aliases].nil?
-            opts[:aliases].each do |a|
-              alias_components = name.split(" ")
-              alias_components[-1] = a
-              instance.alias_command  "#{alias_components.join(' ')}", :"#{name}"
+            opts[:aliases].each do |a, root_command|
+              alias_cmd = a
+              unless root_command
+                # prepend the current resource
+                alias_components = name.split(" ")
+                alias_components[-1] = a
+                alias_cmd = alias_components.join(' ')
+              end
+              instance.alias_command  "#{alias_cmd}", :"#{name}"
             end
           end
         end
