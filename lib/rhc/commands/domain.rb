@@ -23,9 +23,9 @@ module RHC::Commands
     end
 
     summary "Update namespace (will change urls)."
-    syntax "<namespace> [--timeout timeout]"
-    argument :old_namespace, "The namespace you are updating (optional)", [], :context => :namespace_context
-    argument :namespace, "The new namepace", ["-n", "--namespace namespace"]
+    syntax "<old_namespace><new_namespace> [--timeout timeout]"
+    argument :old_namespace, "The namespace you are updating", [], :context => :namespace_context
+    argument :new_namespace, "The new namepace", []
     option ["--timeout timeout"], "Timeout, in seconds, for the session"
     alias_action :alter
     def update(old_namespace, namespace)
