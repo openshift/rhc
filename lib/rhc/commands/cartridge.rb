@@ -8,12 +8,14 @@ module RHC::Commands
     default_action :list
 
     summary "List supported embedded cartridges"
+    alias_action :"app cartridge list", :root_command => true
     def list
       carts = rest_client.cartridges.collect { |c| c.name }
       paragraph do
         say "RESULT:"
         say "  #{carts.join(', ')}"
       end
+      0
     end
 
     summary "Add a cartridge to your application"

@@ -130,7 +130,7 @@ module RestSpecHelper
     end
   end
 
-  class MockRestDomain
+  class MockRestDomain < Rhc::Rest::Domain
     attr_reader :id
 
     def initialize(id, client)
@@ -145,11 +145,7 @@ module RestSpecHelper
     end
 
     def destroy
-      @client.domains.delete_if do |d|
-        match = (d.id == @id)
-        raise Rhc::Rest::ClientErrorException.new("Mock error.  Trying to delete domain with apps.", 128) if match and not applications.empty?
-        match
-      end
+      @client.domains.delete_if { |d| d.id == @id }
 
       @client = nil
       @applications = nil
