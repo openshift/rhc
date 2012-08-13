@@ -89,7 +89,7 @@ describe RHC::Commands::Domain do
   end
 
   describe 'update' do
-    let(:arguments) { ['domain', 'update', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password', 'alterednamespace'] }
+    let(:arguments) { ['domain', 'update', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password', 'olddomain', 'alterednamespace'] }
 
     context 'when no issues with ' do
       before(:each) do
