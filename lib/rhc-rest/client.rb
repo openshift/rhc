@@ -63,7 +63,7 @@ module Rhc
       end
 
       #Find Cartridge by name or regex
-      def find_cartridge(name)
+      def find_cartridges(name)
         logger.debug "Finding cartridge #{name}" if @mydebug
         regex = nil
         if name.is_a?(Hash)
