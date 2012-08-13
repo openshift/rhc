@@ -9,19 +9,63 @@ require 'rhc/exceptions'
 class RHC::Commands::Base
 
   def initialize(command=nil,
-                 args=[],
                  options=Commander::Command::Options.new,
                  config=RHC::Config)
-    @command, @args, @options, @config = command, args, options, config
-
+    @command, @options, @config = command, options, config
     # apply timeout here even though it isn't quite a global
     $rest_timeout = @options.timeout ? @options.timeout.to_i : nil
   end
 
+  def fill_and_validate_args(args_metadata, args, options)
+    raise ArgumentError.new("Invalid arguments") if args.length > args_metadata.length
+
+    ##
+    # Argument fill and validate algorithm
+    #
+    # 1.) process args_metadata filling in arg slots with any switches found
+    # 2.) backfill empty arg slots from right to left with passed in args
+    # 3.) try to fill in any empty slots by calling their context callback
+    # 4.) Validate all arguments are filled in (e.g. not nil) and return
+    arg_slots = [].fill(nil, 0, args_metadata.length)
+    backfill_args = args.dup
+
+    # squash algorithm into single pass loop
+    # manually handle negitive index because there is no reverse_each_index array method
+    i = 0
+    args_metadata.reverse_each do |arg_meta|
+      i -= 1
+
+      # check switches
+      switch = arg_meta[:switches]
+      value = options.__hash__[arg_meta[:name]]
+      if value.nil?
+        unless backfill_args.empty?
+          # backfill an arg
+          value = backfill_args.pop
+        else
+          # try to call the context callback
+          context_helper = arg_meta[:context_helper]
+          raise ArgumentError.new("Missing a manditory argument") if context_helper.nil?
+
+          value = self.send(context_helper)
+          raise ArgumentError.new("Could not obtain the #{arg_meta[:name]} context.  You may need to fill this information in manually.") if value.nil?
+        end
+      end
+
+      arg_slots[i] = value
+    end
+
+    # validate all args have been filled in (e.g. no backfill args left)
+    raise ArgumentError.new("Too many arguments passed in.") unless backfill_args.empty?
+
+    arg_slots
+  end
+
   protected
     include RHC::Helpers
+    include RHC::ContextHelpers
 
-    attr_reader :command, :args, :options, :config
+    attr_reader :command, :options, :config
 
     def application
       #@application ||= ... identify current application or throw,
@@ -106,8 +150,9 @@ class RHC::Commands::Base
       options_metadata << [switches, description].flatten(1)
     end
 
-    def self.argument(name, description, switches)
-      args_metadata << {:name => name, :description => description, :switches => switches}
+    def self.argument(name, description, switches, options={})
+      context_helper = options[:context]
+      args_metadata << {:name => name, :description => description, :switches => switches, :context_helper => context_helper}
     end
 
     def self.default_action(action)

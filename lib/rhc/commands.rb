@@ -109,19 +109,6 @@ module RHC
     def self.global_option(switches, description)
       global_options << [switches, description].flatten(1)
     end
-    def self.validate_command(c, args, options, args_metadata)
-      # check to see if an arg's option was set
-      raise ArgumentError.new("Invalid arguments") if args.length > args_metadata.length
-      args_metadata.each_with_index do |arg_meta, i|
-        switch = arg_meta[:switches]
-        value = options.__hash__[arg_meta[:name]]
-        unless value.nil?
-          raise ArgumentError.new("#{arg_meta[:name]} specified twice on the command line and as a #{switch[0]} switch") unless args.length == i
-          # add the option as an argument
-          args << value
-        end
-      end
-    end
 
     def self.global_config_setup(options)
       RHC::Config.set_opts_config(options.config) if options.config
@@ -152,16 +139,18 @@ module RHC
           args_metadata = opts[:args] || []
           (args_metadata).each do |arg_meta|
             arg_switches = arg_meta[:switches]
-            arg_switches << arg_meta[:description]
-            c.option *arg_switches unless arg_switches.nil?
+            unless arg_switches.nil? or arg_switches.empty?
+              arg_switches << arg_meta[:description]
+              c.option *arg_switches
+            end
           end
 
           c.when_called do |args, options|
-            validate_command c, args, options, args_metadata
             config = global_config_setup options
-            cmd = opts[:class].new c, args, options, config
+            cmd = opts[:class].new c, options, config
+            filled_args = cmd.fill_and_validate_args args_metadata, args, options
             needs_configuration! cmd, config
-            cmd.send opts[:method], *args
+            cmd.send opts[:method], *filled_args
           end
 
           unless opts[:aliases].nil?
