@@ -1,3 +1,4 @@
+require 'rubygems'
 require 'uri'
 require 'net/https'
 require 'ostruct'
@@ -21,72 +22,114 @@ module RHCHelper
       return http.start
     end
 
-    def http_get(url, timeout=30)
-      uri = URI.parse(url)
-      http = http_instance(uri, timeout)
-      request = Net::HTTP::Get.new(uri.request_uri)
-      http.request(request)
-    end
-    
-    def http_head(url, host=nil, follow_redirects=true)
-      uri = URI.parse(url)
-      http = http_instance(uri)
-      request = Net::HTTP::Head.new(uri.request_uri)
-      request["Host"] = host if host
-      response = http.request(request)
-      
-      if follow_redirects and response.is_a?(Net::HTTPRedirection)
-        return http_head(response.header['location'])
-      else
-        return response
-      end
-    end
+    def do_http(options)
+      # Generate the URL if it doesn't exist
+      options[:url] ||= "http%s://%s" % [options[:use_https] ? 's' : '', hostname]
 
-    def is_inaccessible?(max_retries=120)
-      max_retries.times do |i|
-        begin
-          if http_head("http://#{hostname}").is_a? Net::HTTPServerError
-            return true
-          else
-            logger.info("Connection still accessible / retry #{i} / #{hostname}")
-            sleep 1
+      # Set some default options
+      http_defaults = {
+        :method   => :head,
+        :host     => nil,
+        :expected => Net::HTTPSuccess,
+        :sleep    => 5,
+        :timeout  => 1200,
+        :http_timeout => 30,
+        :follow_redirects => true,
+      }
+      options = http_defaults.merge(options)
+      # We at least need a URL
+
+      # Parse the URI
+      uri = URI.parse(options[:url])
+      # Start with a nil response
+      response = nil
+
+      # Set some headers
+      headers = {}
+      headers['Host'] = host if options[:host]
+
+      # Keep retrying, and let Ruby handle the timeout
+      start   = Time.now
+
+      # Helper function to log message and sleep
+      def my_sleep(start,uri,e,options)
+        err_str = "Connection inacessible for %s (%s) - %.2f seconds"
+        logger.info(err_str % [uri,e.class,Time.now - start])
+        logger.info "Sleeping for %d seconds, retrying" % options[:sleep]
+        sleep options[:sleep]
+      end
+
+      begin
+        timeout(options[:timeout]) do
+          begin
+            # Send the HTTP request
+            response = begin
+                         http = http_instance(uri,options[:http_timeout])
+                         logger.debug "Checking: #{http}"
+                         http.send_request(
+                           options[:method].to_s.upcase, # Allow options to be a symbol
+                           uri.request_uri, nil, headers
+                         )
+                       rescue Exception => e
+                         # Pass these up so we can check them
+                         return e
+                       end
+            logger.debug "Received %s" % response
+
+            case response
+            when options[:expected]
+              # This will fall through and return response
+            when Net::HTTPRedirection
+              if options[:follow_redirects] == true
+                response = do_http(options.merge({
+                  :url => response.header['location']
+                }))
+              else
+                # Response will be returned as-is
+              end
+            when Net::HTTPServiceUnavailable, SocketError
+              my_sleep(start,uri,response,options)
+              retry
+            end
           end
-        rescue
-          return true
         end
+      rescue Timeout::Error => e
+        puts "Did not receive an acceptable response in %d seconds" % options[:timeout]
       end
-      return false
+
+      return response
     end
 
-    def is_accessible?(use_https=false, max_retries=120, host=nil)
-      prefix = use_https ? "https://" : "http://"
-      url = prefix + hostname
+    def is_inaccessible?
+      check_response({
+        :expected => Net::HTTPServiceUnavailable
+      })
+    end
 
-      max_retries.times do |i|
-        begin
-          if http_head(url, host).is_a? Net::HTTPSuccess
-            return true
-          else
-            logger.info("Connection still inaccessible / retry #{i} / #{url}")
-            sleep 1
-          end
-        rescue SocketError
-          logger.info("Connection still inaccessible / retry #{i} / #{url}")
-          sleep 1
-        end
-      end
-
-      return false
+    def is_accessible?(options = {})
+      check_response(options.merge({
+        :expected => Net::HTTPSuccess
+      }))
     end
 
     def doesnt_exist?
-      response = do_http({
-        :method => :head,
-        :url => "http://#{hostname}",
-        :expected => SocketError
-      })
+      check_response({
+        :expected => SocketError,
+      }) do |response|
+          return !(response.is_a?(Net::HTTPSuccess))
+        end
+    end
 
-      return !(response.is_a?(Net::HTTPSuccess))
+    def check_response(options)
+      response = do_http(options)
+
+      if block_given?
+        # Use the custom check for this response
+        yield response
+      else
+        # Compare the response against :expected or Net::HTTPSuccess
+        response.is_a?(options[:expected] || Net::HTTPSuccess)
+      end
     end
 
     def connect(use_https=false, max_retries=30)
@@ -96,22 +139,22 @@ module RHCHelper
       logger.info("Connecting to #{url}")
       beginning_time = Time.now
 
-      max_retries.times do |i|
-        response = http_get(url, 1)
+      response = do_http({
+        :method => :get,
+        :url => url,
+        :http_timeout => 1
+      })
 
-        if response.is_a? Net::HTTPSuccess
-          @response_code = response.code
-          @response_time = Time.now - beginning_time
-          logger.info("Connection result = #{@response_code} / #{url}")
-          logger.info("Connection response time = #{@response_time} / #{url}")
-          return response.body
-        else
-          logger.info("Connection failed / retry #{i} / #{url}")
-          sleep 1
-        end
+      if response.is_a? Net::HTTPSuccess
+        @response_code = response.code
+        @response_time = Time.now - beginning_time
+        logger.info("Connection result = #{@response_code} / #{url}")
+        logger.info("Connection response time = #{@response_time} / #{url}")
+        return response.body
+      else
+        logger.info("Connection failed / #{url}")
+        return nil
       end
-
-      return nil
     end
   end
 end
