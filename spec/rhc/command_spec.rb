@@ -131,4 +131,81 @@ describe RHC::Commands::Base do
       end
     end
   end
+
+  describe "args fill and validate" do
+    subject do
+      Kernel.module_eval do
+        class Contextual < RHC::Commands::Base
+          protected
+            def test_arg1_context
+              "arg1_context"
+            end
+            def test_arg2_context
+              "arg2_context"
+            end
+        end
+      end
+      Contextual.new
+    end
+    let(:args_metadata) do
+      [{:name => "arg1",
+        :context_helper => :test_arg1_context
+       },
+       {:name => "arg2",
+        :context_helper => :test_arg2_context
+       },
+       {:name => "arg3"
+       },
+       {:name => "arg4"
+       }]
+    end
+
+    context "all args given" do
+      let(:args) { ["arg_one", "arg_two", "arg_three", "arg_four"] }
+      let(:options) { Commander::Command::Options.new }
+      it { subject.fill_and_validate_args(args_metadata, args, options).should == ["arg_one", "arg_two", "arg_three", "arg_four"] }
+    end
+
+    context "some options given" do
+      let(:args) { ["arg_two", "arg_four"] }
+      let(:options) do
+        options = Commander::Command::Options.new
+        options.default({"arg1" => "arg_one", "arg3" => "arg_three"})
+        options
+      end
+      it { subject.fill_and_validate_args(args_metadata, args, options).should == ["arg_one", "arg_two", "arg_three", "arg_four"] }
+    end
+
+    context "no context arg given given" do
+      let(:args) { ["arg_three", "arg_four"] }
+      let(:options) { Commander::Command::Options.new  }
+      it { subject.fill_and_validate_args(args_metadata, args, options).should == ["arg1_context", "arg2_context", "arg_three", "arg_four"] }
+    end
+
+    context "one context arg given given" do
+      let(:args) { ["arg_two", "arg_three", "arg_four"] }
+      let(:options) { Commander::Command::Options.new }
+      it { subject.fill_and_validate_args(args_metadata, args, options).should == ["arg1_context", "arg_two", "arg_three", "arg_four"] }
+    end
+
+    context "too many args" do
+      let(:args) { ["arg_one", "arg_two", "arg_three", "arg_four"] }
+      let(:options) do
+        options = Commander::Command::Options.new
+        options.default({"arg1" => "arg_one", "arg3" => "arg_three"})
+        options
+      end
+      it { expect { subject.fill_and_validate_args(args_metadata, args, options) }.should raise_error(ArgumentError) }
+    end
+
+    context "not enough args" do
+      let(:args) { [] }
+      let(:options) do
+        options = Commander::Command::Options.new
+        options.default({"arg1" => "arg_one"})
+        options
+      end
+      it { expect { subject.fill_and_validate_args(args_metadata, args, options) }.should raise_error(ArgumentError) }
+    end
+  end
 end
