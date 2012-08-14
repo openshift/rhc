@@ -199,6 +199,19 @@ module RHC
       section(:top => 1, :bottom => 1, &block)
     end
 
+    ##
+    # results
+    #
+    # highline helper which creates a paragraph with a header
+    # to distinguish the final results of a command from other output
+    #
+    def results(&block)
+      paragraph do
+        say "RESULT:"
+        yield
+      end
+    end
+
     # Platform helpers
     def jruby? ; RUBY_PLATFORM =~ /java/i end
     def windows? ; RUBY_PLATFORM =~ /win(32|dows|ce)|djgpp|(ms|cyg|bcc)win|mingw32/i end

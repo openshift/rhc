@@ -1,4 +1,5 @@
 require 'commander'
+require 'rhc/helpers'
 
 module RHC
   module Commands
@@ -55,10 +56,10 @@ module RHC
             say "#{e}. Use --trace to view backtrace.\n#{usage}"
             1
           rescue Rhc::Rest::BaseException => e
-            say "#{e}. Use --trace to view backtrace."
+            RHC::Helpers.results { say "#{e} Use --trace to view backtrace." }
             e.code.nil? ? 128 : e.code
           rescue Exception => e
-            say "error: #{e}. Use --trace to view backtrace."
+            RHC::Helpers.results { say "error: #{e} Use --trace to view backtrace." }
             128
           end
         else
