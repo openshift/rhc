@@ -197,11 +197,13 @@ module RestSpecHelper
   class MockRestCartridge
     attr_reader :name
     attr_reader :type
+    attr_reader :properties
 
-    def initialize(name, type, app)
+    def initialize(name, type, app, properties={:cart_data => {:connection_url => {'value' => "http://fake.url" }}})
       @name = name
       @type = type
       @app = app
+      @properties = properties
     end
   end
 end

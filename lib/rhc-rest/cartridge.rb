@@ -2,11 +2,18 @@ module Rhc
   module Rest
     class Cartridge
       include Rest
-      attr_reader :type, :name
+      attr_reader :type, :name, :properties
       def initialize(args)
         @name = args[:name] || args["name"]
         @type = args[:type] || args["type"]
         @links = args[:links] || args["links"]
+        @properties = {}
+        props = args[:properties] || args["properties"] || []
+        props.each do |p|
+          category = @properties[:"#{p['type']}"] || {}
+          category[:"#{p['name']}"] = p
+          @properties[:"#{p['type']}"] = category
+        end
       end
 
       #Start Cartridge
