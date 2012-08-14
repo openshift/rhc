@@ -31,12 +31,9 @@ class RHC::Commands::Base
 
     # squash algorithm into single pass loop
     # manually handle negitive index because there is no reverse_each_index array method
-    i = 0
-    args_metadata.reverse_each do |arg_meta|
-      i -= 1
+    args_metadata.reverse.each_with_index do |arg_meta, i|
 
       # check switches
-      switch = arg_meta[:switches]
       value = options.__hash__[arg_meta[:name]]
       if value.nil?
         unless backfill_args.empty?
@@ -58,7 +55,7 @@ class RHC::Commands::Base
     # validate all args have been filled in (e.g. no backfill args left)
     raise ArgumentError.new("Too many arguments passed in.") unless backfill_args.empty?
 
-    arg_slots
+    arg_slots.reverse
   end
 
   protected
