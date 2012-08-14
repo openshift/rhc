@@ -61,8 +61,8 @@ module RHC::Commands
 
     private
 
-    def cart_regex(cart)
-      "^#{cart.rstrip}(-[0-9\.]+){0,1}$"
-    end
+      def cart_regex(cart)
+        "^#{cart.rstrip}(-[0-9\.]+){0,1}$"
+      end
   end
 end
