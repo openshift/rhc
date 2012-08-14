@@ -26,7 +26,7 @@ module Rhc
         if options[:scale]
           timeout = 300 # 5 minute timeout for scalable app
         end
-        request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload, :timeout => timeout)
+        request = new_request(:url => url, :method => method, :headers => @@headers, :payload => payload, :timeout => timeout)
         return request(request)
       end
 
@@ -35,7 +35,7 @@ module Rhc
         logger.debug "Getting all applications for domain #{self.id}" if @mydebug
         url = @links['LIST_APPLICATIONS']['href']
         method =  @links['LIST_APPLICATIONS']['method']
-        request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
+        request = new_request(:url => url, :method => method, :headers => @@headers)
         return request(request)
       end
 
@@ -52,7 +52,8 @@ module Rhc
         url = @links['UPDATE']['href']
         method =  @links['UPDATE']['method']
         payload = {:id => new_id}
-        request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
+        # 5 minute timeout as this may take time if there are a lot of apps
+        request = new_request(:url => url, :method => method, :headers => @@headers, :payload => payload, :timeout=> 300)
         return request(request)
       end
       alias :save :update
@@ -63,7 +64,7 @@ module Rhc
         url = @links['DELETE']['href']
         method =  @links['DELETE']['method']
         payload = {:force => force}
-        request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
+        request = new_request(:url => url, :method => method, :headers => @@headers, :payload => payload)
         return request(request)
       end
       alias :delete :destroy

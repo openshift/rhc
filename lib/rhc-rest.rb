@@ -62,6 +62,13 @@ module Rhc
       end
     end
 
+    def new_request(options)
+      # user specified timeout takes presidence
+      options[:timeout] = $rest_timeout || options[:timeout]
+
+      RestClient::Request.new options
+    end
+
     def request(request)
       begin
         response = request.execute

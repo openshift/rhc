@@ -29,7 +29,7 @@ module Rhc
         url = @links['ADD_CARTRIDGE']['href']
         method =  @links['ADD_CARTRIDGE']['method']
         payload = {:name => name}
-        request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
+        request = new_request(:url => url, :method => method, :headers => @@headers, :payload => payload)
         return request(request)
       end
 
@@ -38,7 +38,7 @@ module Rhc
         logger.debug "Getting all cartridges for application #{self.name}" if @mydebug
         url = @links['LIST_CARTRIDGES']['href']
         method =  @links['LIST_CARTRIDGES']['method']
-        request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
+        request = new_request(:url => url, :method => method, :headers => @@headers)
         return request(request)
       end
 
@@ -48,7 +48,7 @@ module Rhc
         url = @links['START']['href']
         method =  @links['START']['method']
         payload = {:event=> "start"}
-        request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
+        request = new_request(:url => url, :method => method, :headers => @@headers, :payload => payload)
         return request(request)
       end
 
@@ -62,7 +62,7 @@ module Rhc
         else
           payload = {:event=> "stop"}
         end
-        request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
+        request = new_request(:url => url, :method => method, :headers => @@headers, :payload => payload)
         return request(request)
       end
 
@@ -72,7 +72,7 @@ module Rhc
         url = @links['RESTART']['href']
         method =  @links['RESTART']['method']
         payload = {:event=> "restart"}
-        request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
+        request = new_request(:url => url, :method => method, :headers => @@headers, :payload => payload)
         return request(request)
       end
 
@@ -81,7 +81,7 @@ module Rhc
         logger.debug "Deleting application #{self.name}" if @mydebug
         url = @links['DELETE']['href']
         method =  @links['DELETE']['method']
-        request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
+        request = new_request(:url => url, :method => method, :headers => @@headers)
         return request(request)
       end
       alias :delete :destroy

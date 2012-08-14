@@ -14,7 +14,7 @@ module Rhc
         @@headers["User-Agent"] = RHC::Helpers.user_agent rescue nil
         #first get the API
         RestClient.proxy = ENV['http_proxy']
-        request = RestClient::Request.new(:url => end_point, :method => :get, :headers => @@headers)
+        request = new_request(:url => end_point, :method => :get, :headers => @@headers)
         begin
           response = request.execute
           result = RHC::Json.decode(response)
@@ -32,7 +32,7 @@ module Rhc
         url = @links['ADD_DOMAIN']['href']
         method =  @links['ADD_DOMAIN']['method']
         payload = {:id => id}
-        request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
+        request = new_request(:url => url, :method => method, :headers => @@headers, :payload => payload)
         return request(request)
       end
 
@@ -41,7 +41,7 @@ module Rhc
         logger.debug "Getting all domains" if @mydebug
         url = @links['LIST_DOMAINS']['href']
         method =  @links['LIST_DOMAINS']['method']
-        request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
+        request = new_request(:url => url, :method => method, :headers => @@headers)
         return request(request)
       end
 
@@ -58,7 +58,7 @@ module Rhc
         logger.debug "Getting all cartridges" if @mydebug
         url = @links['LIST_CARTRIDGES']['href']
         method =  @links['LIST_CARTRIDGES']['method']
-        request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
+        request = new_request(:url => url, :method => method, :headers => @@headers)
         return request(request)
       end
 
@@ -78,7 +78,7 @@ module Rhc
       def user
         url = @links['GET_USER']['href']
         method =  @links['GET_USER']['method']
-        request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
+        request = new_request(:url => url, :method => method, :headers => @@headers)
         return request(request)
       end
 

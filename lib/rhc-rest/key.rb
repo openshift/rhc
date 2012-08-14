@@ -16,7 +16,7 @@ module Rhc
         url = @links['UPDATE']['href']
         method =  @links['UPDATE']['method']
         payload = {:type => type, :content => content}
-        request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
+        request = new_request(:url => url, :method => method, :headers => @@headers, :payload => payload)
         return request(request)
       end
 
@@ -25,7 +25,7 @@ module Rhc
         logger.debug "Deleting key #{self.name}" if @mydebug
         url = @links['DELETE']['href']
         method =  @links['DELETE']['method']
-        request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
+        request = new_request(:url => url, :method => method, :headers => @@headers)
         return request(request)
       end
       alias :delete :destroy
