@@ -13,7 +13,7 @@ module Rhc
         url = @links['ADD_KEY']['href']
         method =  @links['ADD_KEY']['method']
         payload = {:name => name, :type => type, :content => content}
-        request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
+        request = new_request(:url => url, :method => method, :headers => @@headers, :payload => payload)
         return request(request)
       end
 
@@ -21,7 +21,7 @@ module Rhc
       def keys
         url = @links['LIST_KEYS']['href']
         method =  @links['LIST_KEYS']['method']
-        request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
+        request = new_request(:url => url, :method => method, :headers => @@headers)
         return request(request)
       end
 

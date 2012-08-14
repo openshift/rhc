@@ -22,7 +22,7 @@ module Rhc
         url = @links['START']['href']
         method =  @links['START']['method']
         payload = {:event=> "start"}
-        request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
+        request = new_request(:url => url, :method => method, :headers => @@headers, :payload => payload)
         return request(request)
       end
 
@@ -32,7 +32,7 @@ module Rhc
         url = @links['STOP']['href']
         method =  @links['STOP']['method']
         payload = {:event=> "stop"}
-        request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
+        request = new_request(:url => url, :method => method, :headers => @@headers, :payload => payload)
         return request(request)
       end
 
@@ -42,7 +42,7 @@ module Rhc
         url = @links['RESTART']['href']
         method =  @links['RESTART']['method']
         payload = {:event=> "restart"}
-        request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
+        request = new_request(:url => url, :method => method, :headers => @@headers, :payload => payload)
         return request(request)
       end
 
@@ -52,7 +52,7 @@ module Rhc
         url = @links['RESTART']['href']
         method =  @links['RESTART']['method']
         payload = {:event=> "reload"}
-        request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers, :payload => payload)
+        request = new_request(:url => url, :method => method, :headers => @@headers, :payload => payload)
         return request(request)
       end
 
@@ -61,7 +61,7 @@ module Rhc
         logger.debug "Deleting cartridge #{self.name}" if @mydebug
         url = @links['DELETE']['href']
         method =  @links['DELETE']['method']
-        request = RestClient::Request.new(:url => url, :method => method, :headers => @@headers)
+        request = new_request(:url => url, :method => method, :headers => @@headers)
         return request(request)
       end
       alias :delete :destroy
