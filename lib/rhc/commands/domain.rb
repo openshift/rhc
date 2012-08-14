@@ -81,11 +81,15 @@ module RHC::Commands
                 say "      Git URL: #{a.git_url}" if a.git_url
                 say "   Public URL: #{a.app_url}" if a.app_url
                 say "      Aliases: #{a.aliases.join(', ')}" if a.aliases and not a.aliases.empty?
-                say "   Embedded:"
+                say "     Embedded:"
                 if carts.length > 1
-                  carts.each { |c| say "      #{c.name}" if c.type == 'embedded' }
+                  carts.each do |c|
+                    if c.type == 'embedded'
+                      say "       #{c.name} - #{c.properties[:cart_data][:connection_url]['value']}"
+                    end
+                  end
                 else
-                  say "      None"
+                  say "       None"
                 end
               end
             end
@@ -110,18 +114,22 @@ module RHC::Commands
       $?.exitstatus.nil? ? 1 : $?.exitstatus
     end
 
-    summary "Destroys your domain and any application underneath it.  Use with caution."
+    summary "Deletes your domain."
     syntax "<namespace> [--timeout timeout]"
     argument :namespace, "Namespace you wish to destroy", ["-n", "--namespace namespace"]
     option ["--timeout timeout"], "Timeout, in seconds, for the session"
     alias_action :destroy
     def delete(namespace)
       paragraph { say "Deleting domain '#{namespace}'" }
+      domain = rest_client.find_domain namespace
 
       paragraph do
         say "RESULT:"
-        domain = rest_client.find_domain namespace
-        domain.destroy
+        begin
+          domain.destroy
+        rescue Rhc::Rest::ClientErrorException
+          raise Rhc::Rest::ClientErrorException.new("Domain contains applications. Delete applications first.", 128)
+        end
         say "  Success!"
       end
 
