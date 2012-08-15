@@ -12,11 +12,11 @@ module RHC::Commands
     option ["--timeout timeout"], "Timeout, in seconds, for the session"
     def create(namespace)
       paragraph { say "Creating domain with namespace '#{namespace}'" }
-      paragraph do
-        say "RESULT:"
-        rest_client.add_domain(namespace)
-        say "  Success!"
-        say "  You may now create an application using the 'rhc app create' command"
+      rest_client.add_domain(namespace)
+
+      results do
+        say "Success!"
+        say "You may now create an application using the 'rhc app create' command"
       end
 
       0
@@ -37,11 +37,9 @@ module RHC::Commands
 
       paragraph { say "Updating domain '#{domain[0].id}' to namespace '#{namespace}'" }
 
-      paragraph do
-        say "RESULT:"
-        domain[0].update(namespace)
-        say "  Success!"
-      end
+      domain[0].update(namespace)
+
+      results { say "Success!" }
 
       0
     end
@@ -124,15 +122,14 @@ module RHC::Commands
       domain = rest_client.find_domain namespace
 
       paragraph do
-        say "RESULT:"
         begin
           domain.destroy
         rescue Rhc::Rest::ClientErrorException
           raise Rhc::Rest::ClientErrorException.new("Domain contains applications. Delete applications first.", 128)
         end
-        say "  Success!"
       end
 
+      results { say "Success!" }
       0
     end
   end

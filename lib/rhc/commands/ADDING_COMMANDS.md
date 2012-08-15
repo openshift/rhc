@@ -142,21 +142,34 @@ This specifies that the action takes an argument.  Arguments are strings passed 
 
 ## Return Codes and Exceptions
 
-All actions should return a code of 0 if everything is run successfully.  For readablity we provide a command_success convinience method.  The method is simply an alias for 0 so if you return from the action anywhere other than the end you must use `return command_success`.
+All actions should return a code of 0 if everything is run successfully.
 
 <!-- language: ruby -->
     def run
       ...
-      command_success
+      0
     end
 
-To specify an error you can simply return a non-0 number but if you raise an exception usage info is automatically printed to the console.  Right now we use `Rhc::Rest::BaseException` because it provides a way to specify the exact exit code but in the future we may specify a set of standard errors with standard error codes already set.
+To specify an error you can simply return a non-0 number but if you raise an exception usage info is automatically printed to the console.  All exceptions should be specified in rhc/exception.rb
 
 <!-- language: ruby -->
     def run
       ...
       # some error state is reached
-      raise Rhc::Rest::BaseException.new("An error has occured", 127)
+      raise RHC::DomainNotFoundError.new("An domain error has occured")
+    end
+
+## Results
+
+If an error is raised the command infrastructure will take care of printing out the failed results.  However all successful results should be wrapped in a `results` formatting block after any code that can raise an error.  There is one exception to this rule.  If the action outputs a large set of data as its results it does not have to be wrapped in a `results` block.  The `results` will promently format the results to distinguish it from any other output such as status updates and interactive questions.
+
+<!-- language: ruby -->
+    def run
+      ...
+      results do
+        say "These are the results."
+        say "Success!"
+      end
     end
 
 ## Placement of Resources
