@@ -1,4 +1,5 @@
 require 'commander'
+require 'rhc/helpers'
 
 module RHC
   module Commands
@@ -15,6 +16,12 @@ module RHC
       end
     end
     class Runner < Commander::Runner
+      # regex fix from git - match on word boundries
+      def valid_command_names_from *args
+        arg_string = args.delete_if { |value| value =~ /^-/ }.join ' '
+        commands.keys.find_all { |name| name if /^#{name}\b/.match arg_string }
+      end
+
       # override so we can do our own error handling
       def run!
         trace = false
@@ -43,7 +50,8 @@ module RHC
             run_active_command
           rescue InvalidCommandError => e
             usage = RHC::UsageHelpFormatter.new(self).render
-            abort "Invalid rhc resource: #{@args[0]}. Use --trace to view backtrace\n#{usage}"
+            i = @args.find_index { |a| a.start_with?('-') } || @args.length
+            abort "The command 'rhc #{@args[0,i].join(' ')}' is not recognized.\n#{usage}"
           rescue \
             ArgumentError,
             OptionParser::InvalidOption,
@@ -52,13 +60,13 @@ module RHC
 
             help_bindings = CommandHelpBindings.new(active_command, commands, Commander::Runner.instance.options)
             usage = RHC::UsageHelpFormatter.new(self).render_command(help_bindings)
-            say "#{e}. Use --trace to view backtrace.\n#{usage}"
+            say "#{e}\n#{usage}"
             1
           rescue Rhc::Rest::BaseException => e
-            say "#{e}. Use --trace to view backtrace."
+            RHC::Helpers.results { say "#{e}" }
             e.code.nil? ? 128 : e.code
           rescue Exception => e
-            say "error: #{e}. Use --trace to view backtrace."
+            RHC::Helpers.results { say "error: #{e} Use --trace to view backtrace." }
             128
           end
         else
