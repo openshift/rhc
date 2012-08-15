@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 0.97.6
+Version: 0.97.7
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -114,6 +114,19 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Aug 15 2012 Adam Miller <admiller@redhat.com> 0.97.7-1
+- regex fix from git - match on word boundry (johnp@redhat.com)
+- Clean up error strings (johnp@redhat.com)
+- update adding commands doc (johnp@redhat.com)
+- add results formatting block so results are alway consistent
+  (johnp@redhat.com)
+- [Bug 847685] Raise default timeout for domain update and implement --timeout
+  (johnp@redhat.com)
+- [Bug 847719] Remove the suggestion to use --force from domain delete output
+  (johnp@redhat.com)
+- [Bug 847723] - show connection url for carts in domain show
+  (johnp@redhat.com)
+
 * Mon Aug 13 2012 Adam Miller <admiller@redhat.com> 0.97.6-1
 - 
 
