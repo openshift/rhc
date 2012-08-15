@@ -16,6 +16,12 @@ module RHC
       end
     end
     class Runner < Commander::Runner
+      # regex fix from git - match on word boundries
+      def valid_command_names_from *args
+        arg_string = args.delete_if { |value| value =~ /^-/ }.join ' '
+        commands.keys.find_all { |name| name if /^#{name}\b/.match arg_string }
+      end
+
       # override so we can do our own error handling
       def run!
         trace = false
