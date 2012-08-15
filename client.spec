@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 0.97.7
+Version: 0.97.8
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -114,6 +114,12 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Aug 15 2012 Adam Miller <admiller@redhat.com> 0.97.8-1
+- 
+
+* Wed Aug 15 2012 Adam Miller <admiller@redhat.com>
+- 
+
 * Wed Aug 15 2012 Adam Miller <admiller@redhat.com> 0.97.7-1
 - regex fix from git - match on word boundry (johnp@redhat.com)
 - Clean up error strings (johnp@redhat.com)
