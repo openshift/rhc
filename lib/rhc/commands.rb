@@ -44,7 +44,8 @@ module RHC
             run_active_command
           rescue InvalidCommandError => e
             usage = RHC::UsageHelpFormatter.new(self).render
-            abort "Invalid rhc resource: #{@args[0]}. Use --trace to view backtrace\n#{usage}"
+            i = @args.find_index { |a| a.start_with?('-') } || @args.length
+            abort "The command 'rhc #{@args[0,i].join(' ')}' is not recognized.\n#{usage}"
           rescue \
             ArgumentError,
             OptionParser::InvalidOption,
@@ -53,10 +54,10 @@ module RHC
 
             help_bindings = CommandHelpBindings.new(active_command, commands, Commander::Runner.instance.options)
             usage = RHC::UsageHelpFormatter.new(self).render_command(help_bindings)
-            say "#{e}. Use --trace to view backtrace.\n#{usage}"
+            say "#{e}\n#{usage}"
             1
           rescue Rhc::Rest::BaseException => e
-            RHC::Helpers.results { say "#{e} Use --trace to view backtrace." }
+            RHC::Helpers.results { say "#{e}" }
             e.code.nil? ? 128 : e.code
           rescue Exception => e
             RHC::Helpers.results { say "error: #{e} Use --trace to view backtrace." }
