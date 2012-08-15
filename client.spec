@@ -29,7 +29,7 @@ Provides:      rubygem-rhc
 BuildArch:     noarch
 
 %description
-Provides OpenShift client libraries
+Provides OpenShift client libraries.
 
 %prep
 %setup -q
