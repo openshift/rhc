@@ -83,7 +83,10 @@ module RHC::Commands
                 if carts.length > 1
                   carts.each do |c|
                     if c.type == 'embedded'
-                      say "       #{c.name} - #{c.properties[:cart_data][:connection_url]['value']}"
+                      connection_url = c.properties[:cart_data][:connection_url]
+                      value = ""
+                      value = " - #{connection_url['value']}" unless connection_url.nil?
+                      say "       #{c.name}#{value}"
                     end
                   end
                 else
