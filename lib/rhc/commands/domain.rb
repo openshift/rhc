@@ -39,7 +39,10 @@ module RHC::Commands
 
       domain[0].update(namespace)
 
-      results { say "Success!" }
+      results do
+        say "Success!"
+        say "You can use 'rhc domain show' to view any url changes.  Be sure to update any links including the url in your local git config: <local_git_repo>/.git/config"
+      end
 
       0
     end
@@ -83,7 +86,10 @@ module RHC::Commands
                 if carts.length > 1
                   carts.each do |c|
                     if c.type == 'embedded'
-                      say "       #{c.name} - #{c.properties[:cart_data][:connection_url]['value']}"
+                      connection_url = c.properties[:cart_data][:connection_url]
+                      value = ""
+                      value = " - #{connection_url['value']}" unless connection_url.nil?
+                      say "       #{c.name}#{value}"
                     end
                   end
                 else
