@@ -135,7 +135,12 @@ module RHC
           c.summary = opts[:summary]
           c.syntax = opts[:syntax]
 
-          (opts[:options]||[]).each { |o| c.option *o }
+          options_metadata = opts[:options]||[]
+          options_metadata.each do |o|
+            option_data = [o[:switches], o[:description]].flatten(1)
+            c.option *option_data
+            o[:arg] = Runner.switch_to_sym(o[:switches].last)
+          end
           args_metadata = opts[:args] || []
           (args_metadata).each do |arg_meta|
             arg_switches = arg_meta[:switches]
@@ -148,7 +153,7 @@ module RHC
           c.when_called do |args, options|
             config = global_config_setup options
             cmd = opts[:class].new c, options, config
-            filled_args = cmd.fill_and_validate_args args_metadata, args, options
+            filled_args = cmd.validate_args_and_options args_metadata, options_metadata, args
             needs_configuration! cmd, config
             cmd.send opts[:method], *filled_args
           end

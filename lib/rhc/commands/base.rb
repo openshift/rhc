@@ -16,46 +16,35 @@ class RHC::Commands::Base
     $rest_timeout = @options.timeout ? @options.timeout.to_i : nil
   end
 
-  def fill_and_validate_args(args_metadata, args, options)
-    raise ArgumentError.new("Invalid arguments") if args.length > args_metadata.length
+  def validate_args_and_options(args_metadata, options_metadata, args)
+    # process options
+    options_metadata.each do |option_meta|
+      arg = option_meta[:arg]
 
-    ##
-    # Argument fill and validate algorithm
-    #
-    # 1.) process args_metadata filling in arg slots with any switches found
-    # 2.) backfill empty arg slots from right to left with passed in args
-    # 3.) try to fill in any empty slots by calling their context callback
-    # 4.) Validate all arguments are filled in (e.g. not nil) and return
-    arg_slots = [].fill(nil, 0, args_metadata.length)
-    backfill_args = args.dup
-
-    # squash algorithm into single pass loop
-    # manually handle negitive index because there is no reverse_each_index array method
-    args_metadata.reverse.each_with_index do |arg_meta, i|
-
-      # check switches
-      value = options.__hash__[arg_meta[:name]]
-      if value.nil?
-        unless backfill_args.empty?
-          # backfill an arg
-          value = backfill_args.pop
-        else
-          # try to call the context callback
-          context_helper = arg_meta[:context_helper]
-          raise ArgumentError.new("Missing a manditory argument") if context_helper.nil?
-
-          value = self.send(context_helper)
-          raise ArgumentError.new("Could not obtain the #{arg_meta[:name]} context.  You may need to fill this information in manually.") if value.nil?
-        end
-      end
-
-      arg_slots[i] = value
+      context_helper = option_meta[:context_helper]
+      @options.__hash__[arg] = self.send(context_helper) if @options.__hash__[arg].nil? and context_helper
+      raise ArgumentError.new("Missing required option '#{arg}'.") if option_meta[:required] and @options.__hash__[arg].nil?
     end
 
-    # validate all args have been filled in (e.g. no backfill args left)
-    raise ArgumentError.new("Too many arguments passed in.") unless backfill_args.empty?
+    # process args
+    arg_slots = [].fill(nil, 0, args_metadata.length)
+    fill_args = args.reverse
+    args_metadata.each_with_index do |arg_meta, i|
+      # check options
+      value = @options.__hash__[arg_meta[:name]]
+      if value
+        arg_slots[i] = value
+      elsif arg_meta[:arg_type] == :list
+        arg_slots[i] = fill_args || []
+      else
+        raise ArgumentError.new("Missing required argument '#{arg_meta[:name]}'.") if fill_args.empty?
+        arg_slots[i] = fill_args.pop
+      end
+    end
 
-    arg_slots.reverse
+    raise ArgumentError.new("Too many arguments passed in.") unless fill_args.empty?
+
+    arg_slots
   end
 
   protected
@@ -103,7 +92,7 @@ class RHC::Commands::Base
       RHC::Commands.add((@options || {}).merge({
         :name => name.join(' '),
         :class => self,
-        :method => method,
+        :method => method
       }));
       @options = nil
     end
@@ -143,13 +132,20 @@ class RHC::Commands::Base
       aliases << [action, root_command]
     end
 
-    def self.option(switches, description)
-      options_metadata << [switches, description].flatten(1)
+    def self.option(switches, description, options={})
+      options_metadata << {:switches => switches,
+                           :description => description,
+                           :context_helper => options[:context],
+                           :required => options[:required]
+                          }
     end
 
     def self.argument(name, description, switches, options={})
-      context_helper = options[:context]
-      args_metadata << {:name => name, :description => description, :switches => switches, :context_helper => context_helper}
+      arg_type = options[:arg_type]
+      raise ArgumentError("Only the last argument descriptor for an action can be a list") if arg_type == :list and list_argument_defined?
+      list_argument_defined true if arg_type == :list
+
+      args_metadata << {:name => name, :description => description, :switches => switches, :arg_type => arg_type}
     end
 
     def self.default_action(action)
@@ -157,6 +153,12 @@ class RHC::Commands::Base
     end
 
     private
+      def self.list_argument_defined(bool)
+        options[:list_argument_defined] = bool
+      end
+      def self.list_argument_defined?
+        options[:list_argument_defined]
+      end
       def self.options_metadata
         options[:options] ||= []
       end

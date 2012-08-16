@@ -19,14 +19,16 @@ module RHC::Commands
     end
 
     summary "Add a cartridge to your application"
-    syntax "[<app>] <cartridge_type> [--timeout timeout]"
-    argument :namespace, "Optional namespace of the application you are adding the cartrdige to", ["-n", "--namespace namespace"], :context => :namespace_context
-    argument :app, "Application you are adding the cartride to", ["-a", "--app app"], :context => :app_context
+    syntax "<cartridge_type> [--timeout timeout] [--namespace namespace] [--app app]"
     argument :cart_type, "The type of the cartridge you are adding (run 'rhc cartridge list' to obtain a list of available cartridges)", ["-c", "--cartridge cart_type"]
+    option ["-n", "--namespace namespace"], "Namespace of the application you are adding the cartrdige to", :context => :namespace_context, :required => true
+    option ["-a", "--app app"], "Application you are adding the cartride to", :context => :app_context, :required => true
     option ["--timeout timeout"], "Timeout, in seconds, for the session"
     alias_action :"app cartridge add", :root_command => true
-    def add(namespace, app, cart_type)
+    def add(cart_type)
       carts = rest_client.find_cartridges :regex => cart_regex(cart_type)
+      app = options.app
+      namespace = options.namespace
 
       if carts.length == 0
         paragraph do
