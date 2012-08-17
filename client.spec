@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 0.97.11
+Version: 0.97.12
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -114,6 +114,16 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Aug 17 2012 Adam Miller <admiller@redhat.com> 0.97.12-1
+- bump rhc version (admiller@redhat.com)
+- Merge pull request #125 from J5/bugfix (openshift+bot@redhat.com)
+- fix spec test mock rest classes so they inherit from actual classes
+  (johnp@redhat.com)
+- [bug 847723] have cartridge model handle propery access better
+  (johnp@redhat.com)
+- Bug 848262 - Alias are not shown when using rhc domain show
+  (lnader@redhat.com)
+
 * Thu Aug 16 2012 Adam Miller <admiller@redhat.com> 0.97.11-1
 - bump version for rhc (admiller@redhat.com)
 - [Bug 848619] Let user know they need to update configs (johnp@redhat.com)
