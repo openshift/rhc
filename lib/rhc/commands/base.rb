@@ -35,7 +35,8 @@ class RHC::Commands::Base
       if value
         arg_slots[i] = value
       elsif arg_meta[:arg_type] == :list
-        arg_slots[i] = fill_args || []
+        arg_slots[i] = fill_args.reverse
+        fill_args = []
       else
         raise ArgumentError.new("Missing required argument '#{arg_meta[:name]}'.") if fill_args.empty?
         arg_slots[i] = fill_args.pop
