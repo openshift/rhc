@@ -3,24 +3,28 @@ module Rhc
   module Rest
     class Application
       include Rest
-      attr_reader :domain_id, :name, :creation_time, :uuid, :aliases, :git_url, :app_url, :node_profile, :framework, :scalable, :health_check_path, :embedded
+      attr_reader :domain_id, :name, :creation_time, :uuid, :aliases, :git_url, :app_url, :gear_profile, :framework, 
+      :scalable, :health_check_path, :embedded, :gear_count, :ssh_url, :scale_min, :scale_max
       def initialize(args)
         #logger.debug args
         @domain_id = args[:domain_id] || args["domain_id"]
         @name = args[:name] || args["name"]
         @creation_time = args[:creation_time] || args["creation_time"]
         @uuid = args[:uuid] || args["uuid"]
+        @aliases = args[:aliases] || args["aliases"]
         @git_url = args[:git_url] || args["git_url"]
         @app_url = args[:app_url] || args["app_url"]
-        @node_profile = args[:node_profile] || args["node_profile"]
+        @gear_profile = args[:gear_profile] || args["gear_profile"]
         @framework = args[:framework] || args["framework"]
         @scalable = args[:scalable] || args["scalable"]
         @health_check_path = args[:health_check_path] || args["health_check_path"]
         @embedded = args[:embedded] || args["embedded"]
+        @gear_count = args[:gear_count] || args["gear_count"]
+        @ssh_url = args[:ssh_url] || args["ssh_url"]
+        @scale_min = args[:scale_min] || args["scale_min"]
+        @scale_max = args[:scale_max] || args["scale_max"]
         @links = args[:links] || args["links"]
-        @app_url = args[:app_url] || args["app_url"]
-        @git_url = args[:git_url] || args["git_url"]
-        @scalable = args[:scalable] || args["scalable"]
+        
       end
 
       #Add Cartridge
