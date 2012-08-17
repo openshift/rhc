@@ -113,7 +113,7 @@ module RestSpecHelper
     }
   end
 
-  class MockRestClient
+  class MockRestClient < Rhc::Rest::Client
     def initialize
       Rhc::Rest::Client.stub(:new) { self }
       @domains = []
@@ -127,11 +127,6 @@ module RestSpecHelper
       d = MockRestDomain.new(id, self)
       @domains << d
       d
-    end
-
-    def find_domain(id)
-      domains.each { |domain| return domain if domain.id == id }
-      raise RHC::DomainNotFoundException.new("Domain #{id} does not exist")
     end
   end
 
@@ -198,7 +193,7 @@ module RestSpecHelper
     end
   end
 
-  class MockRestCartridge
+  class MockRestCartridge < Rhc::Rest::Cartridge
     attr_reader :name
     attr_reader :type
     attr_reader :properties

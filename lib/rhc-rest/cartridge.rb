@@ -16,6 +16,11 @@ module Rhc
         end
       end
 
+      def property(category, key)
+         category = properties[category]
+         category ? category[key] : nil
+      end
+
       #Start Cartridge
       def start
         logger.debug "Starting cartridge #{self.name}" if @mydebug
