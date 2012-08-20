@@ -82,12 +82,12 @@ module RHC::Commands
                 say "      Git URL: #{a.git_url}" if a.git_url
                 say "   Public URL: #{a.app_url}" if a.app_url
                 say "      Aliases: #{a.aliases.join(', ')}" if a.aliases and not a.aliases.empty?
-                say "     Embedded:"
+                say "   Cartridges:"
                 if carts.length > 1
                   carts.each do |c|
                     if c.type == 'embedded'
-                      connection_url = c.property :cart_data, :connection_url
-                      value = connection_url ? " - #{connection_url['value']}" : nil
+                      connection_url = c.property(:cart_data, :connection_url) || c.property(:cart_data, :job_url)
+                      value = connection_url ? " - #{connection_url['value']}" : ""
                       say "       #{c.name}#{value}"
                     end
                   end

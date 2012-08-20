@@ -70,6 +70,6 @@ module Rhc
     class ResourceAccessException < Rhc::Rest::BaseException; end
     #I/O Exceptions Connection timeouts, etc
     class ConnectionException < Rhc::Rest::BaseException; end
-
+    class TimeoutException < ConnectionException; end
   end
 end
