@@ -26,7 +26,7 @@ List of commands
 
 List of arguments
   -l|--rhlogin      rhlogin      Red Hat login (RHN or OpenShift login) (#{rhlogin})
-  -p|--password     password     RHLogin password (optional, will prompt)
+  -p|--password     password     Red Hat login password (optional, will prompt)
   -n|--namespace    namespace    Namespace for your application(s) (alphanumeric - max #{RHC::DEFAULT_MAX_LENGTH} chars) (required for creating or destroying domain)
   -d|--debug                     Print Debug info
   -h|--help                      Show Usage info
@@ -228,7 +228,7 @@ def show_domain_info()
   end
 
   #puts "    UUID: #{user_info['user_info']['uuid']}"
-  puts "  RHLogin: #{user_info['user_info']['rhlogin']}"
+  puts "  Red Hat login: #{user_info['user_info']['rhlogin']}"
 
   puts "\n\n" 
 

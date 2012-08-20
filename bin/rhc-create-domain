@@ -22,7 +22,7 @@ Bind a registered rhcloud user to a domain in rhcloud.
 
   -n|--namespace   namespace   Namespace for your application(s) (alphanumeric - max #{RHC::DEFAULT_MAX_LENGTH} chars) (required)
   -l|--rhlogin     rhlogin     Red Hat login (RHN or OpenShift login) (#{rhlogin})
-  -p|--password    password    RHLogin password (optional, will prompt)
+  -p|--password    password    Red Hat login password (optional, will prompt)
   -a|--alter                   Alter namespace (will change urls) and/or ssh key
   -d|--debug                   Print Debug info
   -h|--help                    Show Usage info

@@ -16,7 +16,7 @@ Forward remote ports to the workstation
 
   -l|--rhlogin   rhlogin    Red Hat login (RHN or OpenShift login) (#{rhlogin})
   -a|--app                  Target application (required)
-  -p|--password  password   RHLogin password (optional, will prompt)
+  -p|--password  password   Red Hat login password (optional, will prompt)
   -d|--debug                Print Debug info
   -h|--help                 Show Usage info
   --config  path            Path of alternate config file

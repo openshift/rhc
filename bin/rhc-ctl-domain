@@ -20,7 +20,7 @@ Manage multiple keys for the registered rhcloud user.
   rhc-ctl-domain [-l rhlogin] [-p password] [-d] [-h] [-n namespace] (-a key-name [-k ssh-pubkey] | -u key-name [-k ssh-pubkey] | -r key-name | --destroy)
 
   -l|--rhlogin         rhlogin      Red Hat login (RHN or OpenShift login) (#{rhlogin})
-  -p|--password        password     RHLogin password (optional, will prompt)
+  -p|--password        password     Red Hat login password (optional, will prompt)
   -n|--namespace       namespace    Namespace for your application(s) (alphanumeric - max #{RHC::DEFAULT_MAX_LENGTH} chars) (required for destroying domain)
   -a|--add-ssh-key     key-name     Add SSH key to the user account (key-name is the user-specified identifier for the key)
   -r|--remove-ssh-key  key-name     Remove SSH key from the user account
