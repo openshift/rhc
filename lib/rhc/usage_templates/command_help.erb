@@ -1,5 +1,6 @@
 Usage: rhc <%= @command.name %> <%= @command.syntax %>
-<%= @command.description || @command.summary || 'No description.' %>
+
+<%= @command.description || @command.summary %>
 <% unless @actions.nil? or @actions.empty? -%>
 
 List of Actions
@@ -7,17 +8,17 @@ List of Actions
   <%= "%-18s %s\n" % [action[:name], action[:summary]] -%>
 <% end -%>
 <% end -%>
-<% unless @command.options.nil? or @command.options.empty? -%>
+<% unless @command.options.nil? or @command.options.empty? or @command.options.all?{ |o| o[:hide] } -%>
 
 Options for <%= @command.name %>
-<% for option in @command.options -%>
-  <%= "%-25s %s\n" % [option[:switches].join('|'), option[:description]] -%>
+<% for option in @command.options -%><% next if option[:hide] -%>
+  <%= "%-25s %s\n" % [option[:switches].join(', '), option[:description]] -%>
 <% end -%>
 <% end -%>
 
 Global Options
-<% for option in @global_options -%>
-  <%= "%-25s %s\n" % [option[:switches].join('|'), option[:description]] -%>
+<% for option in @global_options -%><% next if option[:hide] -%>
+  <%= "%-25s %s\n" % [option[:switches].join(', '), option[:description]] -%>
 <% end -%>
 <%#-
   Other Attrs we may wish to use:

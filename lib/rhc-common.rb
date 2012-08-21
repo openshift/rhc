@@ -1221,16 +1221,3 @@ end
 def get_var(key)
   RHC::Config[key]
 end
-
-# Public: convinience function for running the wizard
-#
-# Returns: false if wizard did not need to run
-#          true if wizard ran successfuly
-#          nil of there was an error
-#
-def default_setup_wizard
-  w = RHC::Wizard.new(RHC::Config)
-  return w.run if w.needs_configuration?
-
-  false
-end

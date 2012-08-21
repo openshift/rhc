@@ -35,14 +35,14 @@ describe RHC::Commands::Setup do
   end
 
   describe 'help' do
-    let(:arguments) { ['setup', 'help'] }
+    let(:arguments) { ['setup', '--help'] }
 
     context 'help is run' do
       it "should display help" do
         @wizard.stub!(:run).and_return(true)
         expect { run }.should exit_with_code(0)
       end
-      it('should output usage') { run_output.should match("Runs the setup wizard") }
+      it('should output usage') { run_output.should match("Easy to use wizard for getting started") }
     end
   end
 end

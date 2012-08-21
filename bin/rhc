@@ -39,7 +39,13 @@ def get_args
 end
 
 def run_setup_wizard_if_needed
-  default_setup_wizard unless ARGV.delete('--noprompt')
+  if not (RHC::Config.has_local_config? or
+          RHC::Config.has_opts_config? or
+          ARGV.include?('--noprompt') or
+          ARGV.include?('--help') or
+          ARGV.include?('-h'))
+    RHC::Wizard.new(RHC::Config).run
+  end
 end
 
 begin

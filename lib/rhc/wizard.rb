@@ -52,10 +52,6 @@ module RHC
       true
     end
 
-    def needs_configuration?
-      not (@config.has_local_config? or @config.has_opts_config? or @config.noprompt?)
-    end
-
     private
 
     def greeting_stage
