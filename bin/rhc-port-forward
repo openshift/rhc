@@ -86,7 +86,7 @@ unless user_info['app_info'][app_name]
     exit 101
 end
 
-if (user_info['app_info'][app_name].has_key?('embedded') && user_info['app_info'][app_name]['embedded'].keys.any?{ |k| k =~ /haproxy/ })
+if (user_info['app_info'][app_name].has_key?('embedded') && user_info['app_info'][app_name]['embedded'].keys.any?{ |k| k =~ /\Ahaproxy/ })
   puts
   puts "This utility does not currently support scaled applications.\n"
   puts "You will need to set up port forwarding manually.\n"
