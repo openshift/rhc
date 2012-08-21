@@ -4,7 +4,6 @@ require 'commander/runner'
 require 'commander/delegates'
 require 'rhc/commands'
 require 'rhc/help_formatter'
-require 'rhc/autocomplete'
 
 include Commander::UI
 include Commander::UI::AskForClass
@@ -33,12 +32,6 @@ module RHC
       program :version,     RHC::VERSION::STRING
       program :description, 'Command line interface for OpenShift.'
       program :help_formatter, RHC::UsageHelpFormatter
-
-      RHC::Commands.load.to_commander
-      if args[0] == 'autocomplete'
-        autocomplete = RHC::Commands::AutoComplete.new
-        exit(autocomplete.run(args))
-      end
 
       exit(run! || 0)
     end

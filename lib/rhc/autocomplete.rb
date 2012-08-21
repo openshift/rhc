@@ -1,32 +1,68 @@
+require 'rhc'
 require 'commander'
+require 'commander/runner'
+require 'commander/delegates'
+require 'rhc/commands'
 
-module RHC::Commands
+module RHC
+  class AutoCompleteBindings
+    attr_reader :top_level_opts, :commands
+    def initialize(top_level_opts, commands)
+      @top_level_opts = top_level_opts
+      @commands = commands
+    end
+  end
+
   class AutoComplete
-    def run(args)
-      autocomplete_list = []
-      switch_list = []
+    def initialize(script="rhc")
+      @script_erb = ERB.new(File.read(File.join(File.dirname(__FILE__), 'autocomplete_templates', "#{script}.erb")), nil, '-')
+      cli_init
+      # :name => {:actions => [], :switches => []}
+      @command_data = {}
+      @top_level_commands = []
+      @global_switches = []
+      Commander::Runner.instance.options.each { |o| @global_switches << o[:switches][-1] }
+    end
 
-      # remove 'autocomplete' and 'rhc' args
-      args.shift while ['autocomplete', 'rhc'].include? args[0]
+    def gen()
+      process_data
+      gen_script
+    end
 
-      # remove comparing switches for now though we may wish to add some sort of
-      # contextual callback for switches later (e.g. rhc cartridge add cart -a
-      # could list available apps)
-      i = args.index { |arg| arg.start_with? '-' } || args.length
-      args = args[0, i]
-      only_switches = (i < args.length) ? true : false
-      Commander::Runner.instance.commands.each_pair do |name, cmd|
-        arg_match = args.join ' '
-        if name.match "^#{arg_match}"
-          arg = name[arg_match.length, name.length].lstrip
-          autocomplete_list << arg if arg.length !=0 and arg.count(' ') == 0 and cmd.summary != nil and not only_switches
-          # this is the current command so add switches also
-          cmd.options { |o| switch_list << o[:switches][-1] if o[:switches] } if arg.length == 0
+    private
+      def cli_init
+        runner = RHC::Commands::Runner.new([])
+        Commander::Runner.instance_variable_set :@singleton, runner
+        RHC::Commands.load.to_commander
+      end
+
+      def process_data
+        Commander::Runner.instance.commands.each_pair do |name, cmd|
+          next if cmd.summary.nil?
+
+          if name.rindex(' ').nil?
+            @top_level_commands << name
+          else
+            commands = name.split ' '
+            action = commands.pop
+            id = commands.join(' ')
+            data = @command_data[:"#{id}"] || {:actions => [],
+                                               :switches => []}
+            data[:actions] << action
+            @command_data[:"#{id}"] = data
+          end
+
+          switches = []
+          cmd.options { |o| switches << o[:switches][-1] if o[:switches] }
+          data = @command_data[:"#{name}"] || {:actions => [],
+                                               :switches => []}
+          data[:switches] = switches.concat(@global_switches)
+          @command_data[:"#{name}"] = data
         end
       end
 
-      say autocomplete_list.concat(switch_list).join ' '
-      0
-    end
+      def gen_script
+        @script_erb.result AutoCompleteBindings.new(@top_level_commands.join(' '), @command_data).get_binding
+      end
   end
 end
