@@ -5,6 +5,7 @@ require 'rhc/wizard'
 require 'rhc/config'
 require 'rhc/commands'
 require 'rhc/exceptions'
+require 'rhc/context_helper'
 
 class RHC::Commands::Base
 
