@@ -33,6 +33,7 @@ module RHC
       program :description, 'Command line interface for OpenShift.'
       program :help_formatter, RHC::UsageHelpFormatter
 
+      RHC::Commands.load.to_commander
       exit(run! || 0)
     end
   end
