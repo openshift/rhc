@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 0.97.13
+Version: 0.97.14
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -114,6 +114,12 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Aug 21 2012 Adam Miller <admiller@redhat.com> 0.97.14-1
+- Merge pull request #126 from J5/bugfix (openshift+bot@redhat.com)
+- rhc version bump (admiller@redhat.com)
+- [Bug 847685] seperate connection errors from timeouts (johnp@redhat.com)
+- [Bug 847723] Get jenkins url (johnp@redhat.com)
+
 * Mon Aug 20 2012 Adam Miller <admiller@redhat.com> 0.97.13-1
 - rhc version bump wasn't pushed ... need to figure out why
   (admiller@redhat.com)
