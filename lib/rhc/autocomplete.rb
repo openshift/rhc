@@ -6,8 +6,8 @@ module RHC::Commands
       autocomplete_list = []
       switch_list = []
 
-      # remove 'autocomplete' arg
-      args.shift
+      # remove 'autocomplete' and 'rhc' args
+      args.shift while ['autocomplete', 'rhc'].include? args[0]
 
       # remove comparing switches for now though we may wish to add some sort of
       # contextual callback for switches later (e.g. rhc cartridge add cart -a
