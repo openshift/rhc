@@ -9,7 +9,7 @@ require 'resolv'
 require 'uri'
 require 'highline/import'
 require 'rhc'
-require 'rhc-rest'
+require 'rhc/rest'
 require 'rhc/helpers'
 require 'rhc/config'
 require 'rhc/wizard'
@@ -509,7 +509,7 @@ end
     #  API in order to access the rest of the logic in this function
     if scale
       end_point = "https://#{libra_server}/broker/rest/api"
-      client = Rhc::Rest::Client.new(end_point, rhlogin, password)
+      client = RHC::Rest::Client.new(end_point, rhlogin, password)
 
       domain = client.find_domain(user_info['user_info']['domains'][0]['namespace'])
 
@@ -526,12 +526,12 @@ end
         health_check_path = application.health_check_path
 
         puts "DEBUG: '#{app_name}' creation returned success." if @mydebug
-      rescue Rhc::Rest::ConnectionException, Rhc::Rest::ResourceAccessException => e
+      rescue RHC::Rest::ConnectionException, RHC::Rest::ResourceAccessException => e
         print_response_err(Struct::FakeResponse.new(e.message,e.code))
-      rescue Rhc::Rest::ValidationException => e
+      rescue RHC::Rest::ValidationException => e
         validation_error_code = (e.code.nil?) ? 406 : e.code
         print_response_err(Struct::FakeResponse.new(e.message, validation_error_code))
-      rescue Rhc::Rest::ServerErrorException => e
+      rescue RHC::Rest::ServerErrorException => e
         error_code = (e.code.nil?) ? 500 : e.code
         print_response_err(Struct::FakeResponse.new(e.message, error_code))
       end

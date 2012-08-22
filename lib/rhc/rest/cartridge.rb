@@ -1,4 +1,4 @@
-module Rhc
+module RHC
   module Rest
     class Cartridge
       include Rest

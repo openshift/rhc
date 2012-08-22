@@ -1,5 +1,5 @@
 require 'webmock/rspec'
-require 'rhc-rest'
+require 'rhc/rest'
 require 'rhc/exceptions'
 
 Spec::Matchers.define :have_same_attributes_as do |expected|
@@ -113,9 +113,9 @@ module RestSpecHelper
     }
   end
 
-  class MockRestClient < Rhc::Rest::Client
+  class MockRestClient < RHC::Rest::Client
     def initialize
-      Rhc::Rest::Client.stub(:new) { self }
+      RHC::Rest::Client.stub(:new) { self }
       @domains = []
     end
 
@@ -147,7 +147,7 @@ module RestSpecHelper
     def destroy
       @client.domains.delete_if do |d|
         match = (d.id == @id)
-        raise Rhc::Rest::ClientErrorException.new("Mock error.  Trying to delete domain with apps.", 128) if match and not applications.empty?
+        raise RHC::Rest::ClientErrorException.new("Mock error.  Trying to delete domain with apps.", 128) if match and not applications.empty?
         match
       end
 
@@ -193,7 +193,7 @@ module RestSpecHelper
     end
   end
 
-  class MockRestCartridge < Rhc::Rest::Cartridge
+  class MockRestCartridge < RHC::Rest::Cartridge
     attr_reader :name
     attr_reader :type
     attr_reader :properties

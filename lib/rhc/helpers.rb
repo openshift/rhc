@@ -44,7 +44,7 @@ module RHC
     #
 
     def user_agent
-      "rhc/#{RHC::VERSION::STRING} (ruby #{RUBY_VERSION}; #{RUBY_PLATFORM})#{" (API #{Rhc::Rest::API_VERSION})" rescue ''}"
+      "rhc/#{RHC::VERSION::STRING} (ruby #{RUBY_VERSION}; #{RUBY_PLATFORM})#{" (API #{RHC::Rest::API_VERSION})" rescue ''}"
     end
 
     def get(uri, opts=nil, *args)
@@ -74,20 +74,6 @@ module RHC
     end
     def openshift_rest_node
       "#{openshift_url}/broker/rest/api"
-    end
-
-    def rest_client
-      return @rest_client if @rest_client
-
-      username = config.username
-      unless username
-        username = ask "To connect to #{openshift_server} enter your OpenShift login (email or Red Hat login id): "
-        config.config_user(username)
-      end
-
-      password = RHC::Config.password || RHC::get_password
-
-      @rest_client = Rhc::Rest::Client.new(openshift_rest_node, username, password, @options.debug)
     end
 
     #
