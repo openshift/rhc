@@ -4,7 +4,7 @@ require 'stringio'
 require 'rest_spec_helper'
 require 'rhc-rest/client'
 
-Spec::Runner.configure do |configuration|
+RSpec.configure do |configuration|
   include(RestSpecHelper)
 end
 
