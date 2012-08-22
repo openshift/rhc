@@ -17,8 +17,8 @@ def p_usage(error_code = 255)
 Usage: #{$0}
 Display information about a user
 
-  -l|--rhlogin   rhlogin    Red Hat login (RHN or OpenShift login) (#{rhlogin})
-  -p|--password  password   RHLogin password (optional, will prompt)
+  -l|--rhlogin   rhlogin    OpenShift login (#{rhlogin})
+  -p|--password  password   Password (optional, will prompt)
   -a|--apps                 List applications for rhlogin
   -i|--info                 Show user info
   -d|--debug                Print Debug info
@@ -98,7 +98,7 @@ if opt['info']
       domains.each_index { |i| puts "Namespace(#{i}): #{domains[i]['namespace']}" }
     end
     #puts "    UUID: #{user_info['user_info']['uuid']}"
-    puts "  RHLogin: #{user_info['user_info']['rhlogin']}"
+    puts "  OpenShift login: #{user_info['user_info']['rhlogin']}"
     puts "Primary SSH key: #{user_info['user_info']['ssh_key']}"
     puts "Primary SSH key type: #{user_info['user_info']['ssh_type']}"  unless user_info['user_info']['ssh_type'].to_s.strip.length == 0
 
