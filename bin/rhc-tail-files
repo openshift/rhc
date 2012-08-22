@@ -15,11 +15,11 @@ def p_usage(exit_code = 255)
 Usage: #{$0}
 Tail the logs of an application
 
-  -l|--rhlogin   rhlogin    Red Hat login (RHN or OpenShift login) (#{rhlogin})
+  -l|--rhlogin   rhlogin    OpenShift login (#{rhlogin})
   -a|--app                  Target application (required)
   -f|--files                File glob relative to app (default <application_name>/logs/*) (optional)
   -o|--opts                 Options to pass to the server-side (linux based) tail command (-f is implicit.  See the linux tail man page full list of options.) (Ex: --opts '-n 100')
-  -p|--password  password   Red Hat login password (optional, will prompt)
+  -p|--password  password   Password (optional, will prompt)
   -d|--debug                Print Debug info
   -h|--help                 Show Usage info
   --config  path            Path of alternate config file

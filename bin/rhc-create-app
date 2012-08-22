@@ -17,8 +17,8 @@ Create an OpenShift app.
   -t|--type  type            Type of app to create (#{type_keys}) (required)
   -g|--gear-size size        The size of the gear for this app ([small|medium], defaults to small)
   -s|--scaling               Enable scaling for this app
-  -l|--rhlogin  rhlogin      Red Hat login (RHN or OpenShift login) (#{rhlogin})
-  -p|--password  password    Red Hat login password (optional, will prompt)
+  -l|--rhlogin  rhlogin      OpenShift login (#{rhlogin})
+  -p|--password  password    Password (optional, will prompt)
   -r|--repo  path            Git Repo path (defaults to ./$app_name)
   -n|--nogit                 Only create remote space, don't pull it locally
   -d|--debug                 Print Debug info

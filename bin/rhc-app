@@ -48,8 +48,8 @@ List of cartridge actions
   reload                         Reloads cartridge configuration
 
 List of arguments
-  -l|--rhlogin      rhlogin      Red Hat login (RHN or OpenShift login) (#{rhlogin})
-  -p|--password     password     Red Hat login password (optional, will prompt)
+  -l|--rhlogin      rhlogin      OpenShift login (#{rhlogin})
+  -p|--password     password     Password (optional, will prompt)
   -a|--app          application  Application name  (alphanumeric - max #{RHC::APP_NAME_MAX_LENGTH} chars) (required)
   -t|--type         type         Type of app to create (#{type_keys}) (required for creating an application)
   -c|--cartridge    cartridge    The embedded cartrige to manage (required for the cartridge command)
