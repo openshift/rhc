@@ -30,7 +30,7 @@ module RHC
           return false
         end
       else
-        `#{TAR_BIN} --wildcards -tf #{filename} '#{search.to_s}' 2>&1 > /dev/null`
+        `#{TAR_BIN} --wildcards -tf #{filename} '#{search.to_s}' 2> /dev/null`
         contains = $?.exitstatus == 0
       end
       contains
