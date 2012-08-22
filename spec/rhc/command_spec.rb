@@ -42,23 +42,23 @@ describe RHC::Commands::Base do
 
       it("should register itself") { expect { subject }.to change(commands, :length).by(1) }
       it("should have an object name") { subject.object_name.should == 'test' }
-      it("should run with wizard") do
-        FakeFS.activate!
-
-        wizard_run = false
-        RHC::Wizard.stub!(:new) do |config|
-          RHC::Wizard.unstub!(:new)
-          w = RHC::Wizard.new(config)
-          w.stub!(:run) { wizard_run = true }
-          w
-        end
-
-        expects_running('test').should call(:run).on(instance).with(no_args)
-        wizard_run.should be_true
-
-        FakeFS::FileSystem.clear
-        FakeFS.deactivate!
-      end
+      # it("should run with wizard") do
+      #   FakeFS.activate!
+      # 
+      #   wizard_run = false
+      #   RHC::Wizard.stub!(:new) do |config|
+      #     RHC::Wizard.unstub!(:new)
+      #     w = RHC::Wizard.new(config)
+      #     w.stub!(:run) { wizard_run = true }
+      #     w
+      #   end
+      # 
+      #   expects_running('test').should call(:run).on(instance).with(no_args)
+      #   wizard_run.should be_true
+      # 
+      #   FakeFS::FileSystem.clear
+      #   FakeFS.deactivate!
+      # end
     end
 
     context 'when statically defined' do
