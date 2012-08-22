@@ -30,7 +30,7 @@ Run a simple check on local configs and credentials to confirm tools are
 properly setup.  Often run to troubleshoot connection issues.
 
   -l|--rhlogin   rhlogin    Red Hat login (RHN or OpenShift login) (#{rhlogin})
-  -p|--password  password   Red Hat password (for RHN or OpenShift)
+  -p|--password  password   Red Hat login password (optional, will prompt)
   -d|--debug                Print Debug info
   -h|--help                 Show Usage info
   --config  path            Path of alternate config file

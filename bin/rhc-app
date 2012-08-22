@@ -35,7 +35,7 @@ List of commands
   threaddump                     Trigger a thread dump for jbossas, jbosseap, and ruby applications
   tail                           Tail the logs of an application
   snapshot       [save|restore]  Saves/Restores an application snapshot to/from a tarball at the location specified using --filepath (default: ./$APPNAME.tar.gz)
-  cartridge      <action>        Manage a cartridge runningin this application
+  cartridge      <action>        Manage a cartridge running in this application
 
 List of cartridge actions
   list                           List of supported embedded cartridges
@@ -49,7 +49,7 @@ List of cartridge actions
 
 List of arguments
   -l|--rhlogin      rhlogin      Red Hat login (RHN or OpenShift login) (#{rhlogin})
-  -p|--password     password     RHLogin password (optional, will prompt)
+  -p|--password     password     Red Hat login password (optional, will prompt)
   -a|--app          application  Application name  (alphanumeric - max #{RHC::APP_NAME_MAX_LENGTH} chars) (required)
   -t|--type         type         Type of app to create (#{type_keys}) (required for creating an application)
   -c|--cartridge    cartridge    The embedded cartrige to manage (required for the cartridge command)
