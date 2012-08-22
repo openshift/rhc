@@ -3,7 +3,7 @@ require 'rest_spec_helper'
 require 'rhc-rest/client'
 require 'base64'
 
-Spec::Runner.configure do |configuration|
+RSpec.configure do |configuration|
   include(RestSpecHelper)
 end
 

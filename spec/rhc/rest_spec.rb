@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'rest_spec_helper'
 require 'rhc-rest'
 
-Spec::Runner.configure do |configuration|
+RSpec.configure do |configuration|
   include(RestSpecHelper)
 end
 

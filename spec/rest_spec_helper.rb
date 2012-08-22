@@ -2,7 +2,7 @@ require 'webmock/rspec'
 require 'rhc-rest'
 require 'rhc/exceptions'
 
-Spec::Matchers.define :have_same_attributes_as do |expected|
+RSpec::Matchers.define :have_same_attributes_as do |expected|
   match do |actual|
     (actual.instance_variables == expected.instance_variables) &&
       (actual.instance_variables.map { |i| instance_variable_get(i) } ==
