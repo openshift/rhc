@@ -87,7 +87,7 @@ describe RHC::Commands::Base do
 
             def test; 1; end
 
-            argument :testarg, "Test arg", "--testarg testarg"
+            argument :testarg, "Test arg", ["--testarg testarg"]
             summary "Test command execute"
             def execute; 1; end
             def raise_exception
@@ -108,7 +108,7 @@ describe RHC::Commands::Base do
         it { expects_running('static', 'execute', 'simplearg').should call(:execute).on(instance).with('simplearg') }
       end
       context 'and when execute is called with argument switch' do
-        it { expects_running('static', 'execute', '--testarg', 'switcharg').should call(:execute).on(instance).with('switcharg') }
+        it { expects_running('static', 'execute', '--testarg', 'switcharg', '--trace').should call(:execute).on(instance).with('switcharg') }
       end
       context 'and when execute is called with same argument and switch' do
         it { expects_running('statis', 'execute', 'duparg', '--testarg', 'duparg2').should exit_with_code(1) }

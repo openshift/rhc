@@ -11,10 +11,7 @@ module RHC::Commands
     alias_action :"app cartridge list", :root_command => true
     def list
       carts = rest_client.cartridges.collect { |c| c.name }
-      paragraph do
-        say "RESULT:"
-        say "  #{carts.join(', ')}"
-      end
+      results { say "#{carts.join(', ')}" }
       0
     end
 
@@ -31,32 +28,28 @@ module RHC::Commands
       namespace = options.namespace
 
       if carts.length == 0
-        paragraph do
-          say "RESULT:"
-          carts = rest_client.cartridges.collect { |c| c.name }
+        carts = rest_client.cartridges.collect { |c| c.name }
+        results do
           say "Invalid type specified: '#{cart_type}'. Valid cartridge types are (#{carts.join(', ')})."
         end
         return 154
       end
 
       if carts.length > 1
-        paragraph do
-          say "RESULT:"
+        results do
           say "Multiple cartridge versions match your criteria. Please specify one."
-          carts.each { |cart| say "  #{cart.name}" }
+          carts.each { |cart| say "#{cart.name}" }
         end
         return 155
       end
 
       cart = carts[0] if carts.length
       paragraph { say "Adding '#{cart.name}' to application '#{app}'" }
-      paragraph do
-        say "RESULT:"
-        rest_domain = rest_client.find_domain(namespace)
-        rest_app = rest_domain.find_application(app)
-        rest_app.add_cartridge(cart.name)
-        say "  Success!"
-      end
+
+      rest_domain = rest_client.find_domain(namespace)
+      rest_app = rest_domain.find_application(app)
+      rest_app.add_cartridge(cart.name)
+      results { say "  Success!" }
 
       0
     end

@@ -33,7 +33,7 @@ describe RHC::Commands::Cartridge do
   end
 
   describe 'cartridge add' do
-    let(:arguments) { ['cartridge', 'add', 'app1', 'mock_cart-1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+    let(:arguments) { ['cartridge', 'add', 'mock_cart-1', '--app', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     context 'when run' do
       before(:each) do
@@ -47,7 +47,7 @@ describe RHC::Commands::Cartridge do
   end
 
   describe 'alias app cartridge add' do
-    let(:arguments) { ['app', 'cartridge', 'add', 'app1', 'unique_mock_cart', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+    let(:arguments) { ['app', 'cartridge', 'add', 'unique_mock_cart', '--app', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     context 'when run' do
       before(:each) do
@@ -61,7 +61,7 @@ describe RHC::Commands::Cartridge do
   end
 
   describe 'cartridge add no cart found error' do
-    let(:arguments) { ['cartridge', 'add', 'app1', 'nomatch_cart', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+    let(:arguments) { ['cartridge', 'add', 'nomatch_cart', '--app', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     context 'when run' do
       before(:each) do

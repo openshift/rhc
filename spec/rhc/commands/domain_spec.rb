@@ -118,7 +118,7 @@ describe RHC::Commands::Domain do
   end
 
   describe 'alter alias' do
-    let(:arguments) { ['domain', 'alter', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password', 'alterednamespace'] }
+    let(:arguments) { ['domain', 'alter', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password', 'olddomain', 'alterednamespace'] }
 
     context 'when no issues with ' do
       before(:each) do
@@ -177,26 +177,13 @@ describe RHC::Commands::Domain do
         @rc.domains.empty?.should be_true
       end
     end
-
-    context 'when domain contains app' do
-      before(:each) do
-        @rc = MockRestClient.new
-        d = @rc.add_domain("deleteme")
-        d.add_application("app1", "testframework-1.0")
-      end
-
-      it "should fail to delete domain" do
-        expect { run }.should exit_with_code(128)
-        @rc.domains.empty?.should be_false
-      end
-    end
   end
 
   describe 'status' do
     let(:arguments) { ['domain', 'status', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     before(:each) do
-      Kernel.stub!(:system) do |cmd| 
+      Kernel.stub!(:system) do |cmd|
         @cmd = cmd
         # run the true command to get $?.exitstatus == 0
         system("true")
