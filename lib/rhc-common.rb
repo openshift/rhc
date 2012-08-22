@@ -150,11 +150,11 @@ end
   def self.check_rhlogin(rhlogin)
     if rhlogin
       if rhlogin =~ /["\$\^<>\|%\/;:,\\\*=~]/
-        puts 'RHLogin may not contain any of these characters: (\") ($) (^) (<) (>) (|) (%) (/) (;) (:) (,) (\) (*) (=) (~)'
+        puts 'OpenShift login may not contain any of these characters: (\") ($) (^) (<) (>) (|) (%) (/) (;) (:) (,) (\) (*) (=) (~)'
         return false
       end
     else
-      puts "RHLogin is required"
+      puts "OpenShift login is required"
       return false
     end
     true

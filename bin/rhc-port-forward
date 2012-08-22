@@ -14,9 +14,9 @@ def p_usage(exit_code = 255)
 Usage: rhc port-forward
 Forward remote ports to the workstation
 
-  -l|--rhlogin   rhlogin    Red Hat login (RHN or OpenShift login) (#{rhlogin})
+  -l|--rhlogin   rhlogin    OpenShift login (#{rhlogin})
   -a|--app                  Target application (required)
-  -p|--password  password   RHLogin password (optional, will prompt)
+  -p|--password  password   Password (optional, will prompt)
   -d|--debug                Print Debug info
   -h|--help                 Show Usage info
   --config  path            Path of alternate config file
