@@ -14,9 +14,9 @@ def p_usage(exit_code = 255)
 Usage: rhc port-forward
 Forward remote ports to the workstation
 
-  -l|--rhlogin   rhlogin    Red Hat login (RHN or OpenShift login) (#{rhlogin})
+  -l|--rhlogin   rhlogin    OpenShift login (#{rhlogin})
   -a|--app                  Target application (required)
-  -p|--password  password   Red Hat login password (optional, will prompt)
+  -p|--password  password   Password (optional, will prompt)
   -d|--debug                Print Debug info
   -h|--help                 Show Usage info
   --config  path            Path of alternate config file
@@ -86,6 +86,13 @@ unless user_info['app_info'][app_name]
     exit 101
 end
 
+if (user_info['app_info'][app_name].has_key?('embedded') && user_info['app_info'][app_name]['embedded'].keys.any?{ |k| k =~ /\Ahaproxy/ })
+  puts
+  puts "This utility does not currently support scaled applications.\n"
+  puts "You will need to set up port forwarding manually.\n"
+  puts
+  exit 101
+end
 
 # mock for windows
 if defined?(UNIXServer) != 'constant' or UNIXServer.class != Class

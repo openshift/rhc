@@ -7,7 +7,7 @@ TAR_BIN = File.executable?('/usr/bin/gnutar') ? '/usr/bin/gnutar' : 'tar'
 
 module RHC
 
-	module TarGz
+  module TarGz
 
     def self.contains(filename, search, force_ruby=false)
       
@@ -36,6 +36,6 @@ module RHC
       contains
     end
 
-	end
+  end
 
 end

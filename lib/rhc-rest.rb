@@ -78,8 +78,10 @@ module Rhc
           @@headers["cookie"] = "rh_sso=#{rh_sso}"
         end
         return parse_response(response) unless response.nil? or response.code == 204
-      rescue RestClient::RequestTimeout, RestClient::ServerBrokeConnection => e
-        raise ConnectionException.new("Connection to server timed out or got interrupted: #{e.message}")
+      rescue RestClient::RequestTimeout => e
+        raise TimeoutException.new("Connection to server timed out. It is possible the operation finished without being able to report success. Use 'rhc domain show' or 'rhc app status' to check the status of your applications.") 
+      rescue RestClient::ServerBrokeConnection => e
+        raise ConnectionException.new("Connection to server got interrupted: #{e.message}")
       rescue RestClient::ExceptionWithResponse => e
         process_error_response(e.response)
       rescue Exception => e

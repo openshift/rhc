@@ -25,8 +25,8 @@ List of commands
   destroy           Destroys the domain and any added ssh keys
 
 List of arguments
-  -l|--rhlogin      rhlogin      Red Hat login (RHN or OpenShift login) (#{rhlogin})
-  -p|--password     password     Red Hat login password (optional, will prompt)
+  -l|--rhlogin      rhlogin      OpenShift login (#{rhlogin})
+  -p|--password     password     Password (optional, will prompt)
   -n|--namespace    namespace    Namespace for your application(s) (alphanumeric - max #{RHC::DEFAULT_MAX_LENGTH} chars) (required for creating or destroying domain)
   -d|--debug                     Print Debug info
   -h|--help                      Show Usage info
@@ -228,7 +228,7 @@ def show_domain_info()
   end
 
   #puts "    UUID: #{user_info['user_info']['uuid']}"
-  puts "  Red Hat login: #{user_info['user_info']['rhlogin']}"
+  puts "  OpenShift login: #{user_info['user_info']['rhlogin']}"
 
   puts "\n\n" 
 
