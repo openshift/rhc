@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 0.98.0
+Version: 0.98.1
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -114,6 +114,14 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Aug 22 2012 Adam Miller <admiller@redhat.com> 0.98.1-1
+- bump_minor_versions for sprint 17 (admiller@redhat.com)
+- rhc version bump (admiller@redhat.com)
+- Merge pull request #136 from BanzaiMan/dev/hasari/tar_output_devnull
+  (openshift+bot@redhat.com)
+- Add a missing space (asari.ruby@gmail.com)
+- Further cleanup of targz.rb. (asari.ruby@gmail.com)
+
 * Wed Aug 22 2012 Adam Miller <admiller@redhat.com> 0.97.16-1
 - bump rhc version (admiller@redhat.com)
 - Merge pull request #134 from rmillner/dev/rmillner/BZ850544
