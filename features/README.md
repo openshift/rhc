@@ -25,6 +25,15 @@ You can use a proxy by setting the http_proxy environment variable.  For example
 
     http_proxy='http://proxyserver:proxyport/' bundle exec rake features
 
+Bypassing SSH Key Validation
+----------------------------
+Because the user will be SSHing into an unknown host, we need to bypass
+host key validation.
+To do this, simply add the following environment variable before any
+other commands (modify the path as needed):
+
+  GIT_SSH=features/support/ssh.sh
+
 Pre-defined users
 -----------------
 
