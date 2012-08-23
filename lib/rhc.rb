@@ -13,9 +13,9 @@ module RHC
   module Commands; end
 
   autoload :Helpers,  'rhc/helpers'
+  autoload :Rest,     'rhc/rest'
 end
 
 # Replace me with proper autoloads on the module RHC
 require 'rhc-common'
-require 'rhc-rest'
 

@@ -95,7 +95,7 @@ module RHC
       # instantiate a REST client that stages can use
       # TODO: use only REST calls in the wizard
       end_point = "https://#{@libra_server}/broker/rest/api"
-      @rest_client = Rhc::Rest::Client.new(end_point, @username, @password)
+      @rest_client = RHC::Rest::Client.new(end_point, @username, @password)
 
       true
     end
@@ -368,13 +368,12 @@ EOF
           return true
         end
 
-
         begin
           domain = @rest_client.add_domain(namespace)
 
           say "Your domain name '#{domain.id}' has been successfully created"
-        rescue Rhc::Rest::ValidationException => e
-          say "#{e.to_s}"
+        rescue RHC::Rest::ValidationException => e
+          say e.message
           return false
         end
       end

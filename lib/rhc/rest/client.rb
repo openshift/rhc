@@ -1,7 +1,7 @@
 require 'base64'
 require 'rhc/json'
 
-module Rhc
+module RHC
   module Rest
     class Client
       include Rest
@@ -21,7 +21,7 @@ module Rhc
           @links = request(request)
         rescue RestClient::ExceptionWithResponse => e
             logger.error "Failed to get API #{e.response}"
-        rescue Exception => e
+        rescue => e
           raise ResourceAccessException.new("Resource could not be accessed:#{e.message}")
         end
       end

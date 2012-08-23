@@ -62,10 +62,10 @@ module RHC
             usage = RHC::UsageHelpFormatter.new(self).render_command(help_bindings)
             say "#{e}\n#{usage}"
             1
-          rescue Rhc::Rest::BaseException => e
-            RHC::Helpers.results { say "#{e}" }
+          rescue RHC::Rest::Exception, RHC::Exception => e
+            RHC::Helpers.results { say e.message }
             e.code.nil? ? 128 : e.code
-          rescue Exception => e
+          rescue => e
             RHC::Helpers.results { say "error: #{e} Use --trace to view backtrace." }
             128
           end

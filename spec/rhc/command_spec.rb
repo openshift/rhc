@@ -90,6 +90,9 @@ describe RHC::Commands::Base do
             argument :testarg, "Test arg", "--testarg testarg"
             summary "Test command execute"
             def execute; 1; end
+            def raise_error
+              raise StandardError.new("test exception")
+            end
             def raise_exception
               raise Exception.new("test exception")
             end
@@ -98,7 +101,7 @@ describe RHC::Commands::Base do
         Static
       end
 
-      it("should register itself") { expect { subject }.to change(commands, :length).by(3) }
+      it("should register itself") { expect { subject }.to change(commands, :length).by(4) }
       it("should have an object name of the class") { subject.object_name.should == 'static' }
 
       context 'and when test is called' do
@@ -122,8 +125,12 @@ describe RHC::Commands::Base do
         it { expects_running('static', 'execute').should exit_with_code(1) }
       end
 
+      context 'and when an error is raised in a call' do
+        it { expects_running('static', 'raise_error').should exit_with_code(128) }
+      end
+
       context 'and when an exception is raised in a call' do
-        it { expects_running('static', 'raise_exception').should exit_with_code(128) }
+        it { expects_running('static', 'raise_exception').should raise_error(Exception, "test exception") }
       end
 
       context 'and when an exception is raised in a call with --trace option' do
@@ -131,4 +138,26 @@ describe RHC::Commands::Base do
       end
     end
   end
+
+  describe "rest_client" do
+    before do
+      FakeFS.activate!
+      RHC::Rest::Client.stub!(:new) { |openshift_rest_node, username, password, debug| @username = username; @password = password; true}
+    end
+
+    it "should ask for username" do
+      $terminal.write_line("testuser@foo.bar")
+      $terminal.write_line("password")
+      subject.send(:rest_client).should be_true
+      @username.should == "testuser@foo.bar"
+      subject.send(:config)["default_rhlogin"].should == @username
+      @password.should == "password"
+    end
+
+    after do
+      FakeFS::FileSystem.clear
+      FakeFS.deactivate!
+    end
+  end
+
 end
