@@ -139,7 +139,7 @@ Feature: Client Integration Tests
     Given the libra client tools
     And an existing php-5.3 application
     When the application is destroyed
-    Then the application should not be accessible
+    Then the application should not exist
 
   @init
   Scenario: Template Creation

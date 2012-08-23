@@ -79,6 +79,16 @@ module RHCHelper
       return false
     end
 
+    def doesnt_exist?
+      response = do_http({
+        :method => :head,
+        :url => "http://#{hostname}",
+        :expected => SocketError
+      })
+
+      return !(response.is_a?(Net::HTTPSuccess))
+    end
+
     def connect(use_https=false, max_retries=30)
       prefix = use_https ? "https://" : "http://"
       url = prefix + hostname
