@@ -13,7 +13,9 @@ Usage
 
 Run from the base directory with 
 
-   <env variables> bundle exec rake features
+```
+<env variables> bundle exec rake features
+```
 
 'features' requires RHC_USERNAME+RHC_PASSWORD+RHC_NAMESPACE or
 RHC_ENDPOINT to be set in the environment.
@@ -32,7 +34,7 @@ host key validation.
 To do this, simply add the following environment variable before any
 other commands (modify the path as needed):
 
-  GIT_SSH=features/support/ssh.sh
+    GIT_SSH=features/support/ssh.sh
 
 Pre-defined users
 -----------------
@@ -69,11 +71,15 @@ and interate on a single test by doing the following:
 
 * Run the initialization portion of the test suite
 
-    RHC_ENDPOINT='https://yourserver/rest/api' bundle exec cucumber -t @init
+   ```
+   RHC_ENDPOINT='https://yourserver/rest/api' bundle exec cucumber -t @init
+   ```
 
 * Run the tests on your specific feature without reset state and using the
 created username and namespace from the previous run. For example, if the
 cucumber feature you wanted to test started on line 17, in your .feature file,
 you would run
 
-    RHC_USERNAME=`cat /tmp/rhc/username` RHC_NAMESPACE=`cat /tmp/rhc/namespace` RHC_ENDPOINT='https://yourserver/rest/api' NO_CLEAN=1 bundle exec cucumber features/verify.feature:20
+   ```
+   RHC_USERNAME=`cat /tmp/rhc/username` RHC_NAMESPACE=`cat /tmp/rhc/namespace` RHC_ENDPOINT='https://yourserver/rest/api' NO_CLEAN=1 bundle exec cucumber features/verify.feature:20
+   ```
