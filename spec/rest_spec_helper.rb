@@ -1,5 +1,5 @@
 require 'webmock/rspec'
-require 'rhc-rest'
+require 'rhc/rest'
 require 'rhc/exceptions'
 
 Spec::Matchers.define :have_same_attributes_as do |expected|
@@ -113,14 +113,20 @@ module RestSpecHelper
     }
   end
 
-  class MockRestClient < Rhc::Rest::Client
+  class MockRestClient < RHC::Rest::Client
     def initialize
-      Rhc::Rest::Client.stub(:new) { self }
+      RHC::Rest::Client.stub(:new) { self }
       @domains = []
     end
 
     def domains
       @domains
+    end
+
+    def cartridges
+      [MockRestCartridge.new("mock_cart-1", "mock_cart_type-1"),
+       MockRestCartridge.new("mock_cart-2", "mock_cart_type-2"),
+       MockRestCartridge.new("unique_mock_cart-1", "unique_mock_cart_type-1")]
     end
 
     def add_domain(id)
@@ -130,7 +136,7 @@ module RestSpecHelper
     end
   end
 
-  class MockRestDomain
+  class MockRestDomain < RHC::Rest::Domain
     attr_reader :id
 
     def initialize(id, client)
@@ -145,11 +151,7 @@ module RestSpecHelper
     end
 
     def destroy
-      @client.domains.delete_if do |d|
-        match = (d.id == @id)
-        raise Rhc::Rest::ClientErrorException.new("Mock error.  Trying to delete domain with apps.", 128) if match and not applications.empty?
-        match
-      end
+      @client.domains.delete_if { |d| d.id == @id }
 
       @client = nil
       @applications = nil
@@ -193,12 +195,12 @@ module RestSpecHelper
     end
   end
 
-  class MockRestCartridge < Rhc::Rest::Cartridge
+  class MockRestCartridge < RHC::Rest::Cartridge
     attr_reader :name
     attr_reader :type
     attr_reader :properties
 
-    def initialize(name, type, app, properties={:cart_data => {:connection_url => {'value' => "http://fake.url" }}})
+    def initialize(name, type, app=nil, properties={:cart_data => {:connection_url => {'value' => "http://fake.url" }}})
       @name = name
       @type = type
       @app = app

@@ -1,13 +1,12 @@
 require 'spec_helper'
 require 'rest_spec_helper'
-require 'rhc-rest/client'
 require 'base64'
 
 Spec::Runner.configure do |configuration|
   include(RestSpecHelper)
 end
 
-module Rhc
+module RHC
   module Rest
     describe Application do
       # make sure auth is set up for the Application object since we are not
@@ -17,7 +16,7 @@ module Rhc
 
       let (:app_links) { mock_response_links(mock_app_links('mock_domain','mock_app')) }
       let (:app_obj) {
-        Rhc::Rest::Application.new({ 'domain_id'       => 'mock_domain',
+        RHC::Rest::Application.new({ 'domain_id'       => 'mock_domain',
                                      'name'            => 'mock_app',
                                      'creation_time'   => Time.now.to_s,
                                      'uuid'            => 1234,
@@ -29,7 +28,7 @@ module Rhc
       context "#new" do
         it "returns an application object" do
           app = app_obj
-          app.should be_an_instance_of Rhc::Rest::Application
+          app.should be_an_instance_of RHC::Rest::Application
           app.instance_variable_get(:@links).length.should equal(app_links.length)
         end
       end
@@ -42,7 +41,7 @@ module Rhc
         it "returns a new cartridge object" do
           app  = app_obj
           cart = app.add_cartridge('mock_cart_0')
-          cart.should be_an_instance_of Rhc::Rest::Cartridge
+          cart.should be_an_instance_of RHC::Rest::Cartridge
           cart.instance_variable_get(:@name).should == 'mock_cart_0'
         end
       end
@@ -58,7 +57,7 @@ module Rhc
           carts = app.cartridges
           carts.length.should equal(2)
           (0..1).each do |idx|
-            carts[idx].should be_an_instance_of Rhc::Rest::Cartridge
+            carts[idx].should be_an_instance_of RHC::Rest::Cartridge
             carts[idx].instance_variable_get(:@name).should == "mock_cart_#{idx}"
           end
         end

@@ -39,7 +39,7 @@ module RHC
                                          :comment => comment)
       ssh_dir = "#{RHC::Config.home_dir}/.ssh"
       if File.exists?("#{ssh_dir}/id_rsa")
-        puts "SSH key already exists: #{ssh_dir}/id_rsa.  Reusing..."
+        say "SSH key already exists: #{ssh_dir}/id_rsa.  Reusing..."
         return nil
       else
         unless File.exists?(ssh_dir)

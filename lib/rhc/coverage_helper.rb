@@ -18,7 +18,7 @@ if RUBY_VERSION >= '1.9' and ENV['RHC_FEATURE_COVERAGE']
     # Groups - general categories of test areas
     add_group('Commands') { |src_file| src_file.filename.include?(File.join(%w[lib rhc commands])) }
     add_group('RHC Lib')  { |src_file| src_file.filename.include?(File.join(%w[lib rhc])) }
-    add_group('REST')     { |src_file| src_file.filename.include?(File.join(%w[lib rhc-rest])) }  
+    add_group('REST')     { |src_file| src_file.filename.include?(File.join(%w[lib rhc/rest])) }  
     add_group('Legacy')   { |src_file| src_file.filename.include?(File.join(%w[bin])) or
                                        src_file.filename.include?(File.join(%w[lib rhc-common.rb])) }
     add_group('Test')     { |src_file| src_file.filename.include?(File.join(%w[features])) or
