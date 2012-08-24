@@ -151,6 +151,7 @@ module RestSpecHelper
     end
 
     def destroy
+      raise RHC::Rest::ClientErrorException.new("Applications must be empty.") unless @applications.empty?
       @client.domains.delete_if { |d| d.id == @id }
 
       @client = nil
