@@ -130,7 +130,9 @@ module RHC::Commands
         begin
           domain.destroy
         rescue Rhc::Rest::ClientErrorException
+          # :nocov:
           raise Rhc::Rest::ClientErrorException.new("Domain contains applications. Delete applications first.", 128)
+          # :nocov:
         end
       end
 
