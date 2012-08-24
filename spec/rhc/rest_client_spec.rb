@@ -252,7 +252,7 @@ module Rhc
               carts[idx].instance_variable_get(:@type).should  == "mock_cart_#{idx}_type"
               carts[idx].instance_variable_get(:@links).should ==
                 mock_response_links(mock_cart_links("mock_cart_#{idx}"))
-            end          
+            end
           end
           it "returns an empty list when no cartridges exist" do
             # Disregard the first response; this is for the previous expectiation.
@@ -261,8 +261,8 @@ module Rhc
             carts.length.should equal(0)
           end
         end
-        
-        context "#find_cartridge" do
+
+        context "#find_cartridges" do
           before(:each) do
             stub_api_request(:any, client_links['LIST_CARTRIDGES']['relative']).
               to_return({ :body   => {
@@ -275,13 +275,18 @@ module Rhc
                              { :name  => 'mock_cart_1',
                                :type  => 'mock_cart_1_type',
                                :links => mock_response_links(mock_cart_links('mock_cart_1')),
-                             }]
+                             },
+                             { :name  => 'mock_nomatch_cart_0',
+                               :type  => 'mock_nomatch_cart_0_type',
+                               :links => mock_response_links(mock_cart_links('mock_nomatch_cart_0')),
+                             }
+                            ]
                           }.to_json,
                           :status => 200
                         })
           end
           it "returns a list of cartridge objects for matching cartridges" do
-            matches = @client.find_cartridge('mock_cart_0')
+            matches = @client.find_cartridges('mock_cart_0')
             matches.length.should equal(1)
             matches[0].class.should                          == Rhc::Rest::Cartridge
             matches[0].instance_variable_get(:@name).should  == 'mock_cart_0'
@@ -290,8 +295,12 @@ module Rhc
               mock_response_links(mock_cart_links('mock_cart_0'))
           end
           it "returns an empty list when no matching cartridges can be found" do
-            matches = @client.find_cartridge('no_match')
+            matches = @client.find_cartridges('no_match')
             matches.length.should equal(0)
+          end
+          it "returns multiple cartridge matches" do
+            matches = @client.find_cartridges :regex => "mock_cart_[0-9]"
+            matches.length.should equal(2)
           end
         end
 

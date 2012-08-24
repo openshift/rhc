@@ -123,6 +123,12 @@ module RestSpecHelper
       @domains
     end
 
+    def cartridges
+      [MockRestCartridge.new("mock_cart-1", "mock_cart_type-1"),
+       MockRestCartridge.new("mock_cart-2", "mock_cart_type-2"),
+       MockRestCartridge.new("unique_mock_cart-1", "unique_mock_cart_type-1")]
+    end
+
     def add_domain(id)
       d = MockRestDomain.new(id, self)
       @domains << d
@@ -130,7 +136,7 @@ module RestSpecHelper
     end
   end
 
-  class MockRestDomain
+  class MockRestDomain < Rhc::Rest::Domain
     attr_reader :id
 
     def initialize(id, client)
@@ -145,11 +151,7 @@ module RestSpecHelper
     end
 
     def destroy
-      @client.domains.delete_if do |d|
-        match = (d.id == @id)
-        raise Rhc::Rest::ClientErrorException.new("Mock error.  Trying to delete domain with apps.", 128) if match and not applications.empty?
-        match
-      end
+      @client.domains.delete_if { |d| d.id == @id }
 
       @client = nil
       @applications = nil
@@ -198,7 +200,7 @@ module RestSpecHelper
     attr_reader :type
     attr_reader :properties
 
-    def initialize(name, type, app, properties={:cart_data => {:connection_url => {'value' => "http://fake.url" }}})
+    def initialize(name, type, app=nil, properties={:cart_data => {:connection_url => {'value' => "http://fake.url" }}})
       @name = name
       @type = type
       @app = app

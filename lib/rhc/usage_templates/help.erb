@@ -7,7 +7,7 @@ List of Resources
   sshkey             Manage multiple keys for the registered rhcloud user.
   port-forward       Forward remote ports to the workstation
 <% for name, command in @commands.sort -%>
-	<%- unless alias? name or name == "help" or name.include?(" ") -%>  <%="%-18s %s\n" % [command.name, command.summary || command.description] %><%- end -%>
+	<%- unless alias? name or name == "help" or name.include?(" ") or command.summary.nil? -%>  <%="%-18s %s\n" % [command.name, command.summary || command.description] %><%- end -%>
 <%- end -%>
 
 Global Options

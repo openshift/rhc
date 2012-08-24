@@ -62,13 +62,21 @@ module Rhc
         return request(request)
       end
 
-      #Find Cartridge by name
-      def find_cartridge(name)
+      #Find Cartridge by name or regex
+      def find_cartridges(name)
         logger.debug "Finding cartridge #{name}" if @mydebug
+        regex = nil
+        if name.is_a?(Hash)
+          name = name[:name] if name[:name]
+          regex = name[:regex] if name[:regex]
+        end
+
         filtered = Array.new
         cartridges.each do |cart|
-          if cart.name == name
-          filtered.push(cart)
+          if regex
+            filtered.push(cart) if cart.name.match(regex)
+          else
+            filtered.push(cart) if cart.name == name
           end
         end
         return filtered
