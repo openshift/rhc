@@ -64,17 +64,25 @@ class RHC::Commands::Base
       #                     current git repo for remote, fail.
     end
 
-    def client
-      #@client ||= ... Return a client object capable of making calls
-      #                to the OpenShift API that transforms intent
-      #                and options, to remote calls, and then handle
-      #                the output (or failures) into exceptions and
-      #                formatted object output.  Most interactions 
-      #                should be through this call pattern.
-      #
-      #                Initialize with auth (a separate responsibility
-      #                object).
+    # Return a client object capable of making calls
+    # to the OpenShift API that transforms intent
+    # and options, to remote calls, and then handle
+    # the output (or failures) into exceptions and
+    # formatted object output.  Most interactions 
+    # should be through this call pattern.
+    def rest_client
+      @rest_client ||= begin
+        username = config.username
+        unless username
+          username = ask "To connect to #{openshift_server} enter your OpenShift login (email or Red Hat login id): "
+          config.config_user(username)
+        end
+        password = RHC::Config.password || RHC::get_password
+
+        RHC::Rest::Client.new(openshift_rest_node, username, password, @options.debug)
+      end
     end
+
 
     class InvalidCommand < StandardError ; end
 

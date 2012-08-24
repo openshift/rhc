@@ -1,5 +1,5 @@
 
-module Rhc
+module RHC
   module Rest
     class Application
       include Rest

@@ -1,5 +1,5 @@
 require 'tmpdir'
-require 'rhc-rest'
+require 'rhc/rest'
 
 module RHCHelper
   #

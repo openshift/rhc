@@ -4,7 +4,7 @@ require 'rhc/coverage_helper'
 SimpleCov.at_exit{ SimpleCov.result.format! } if defined? SimpleCov
 
 require 'rhc_helper'
-require 'rhc-rest'
+require 'rhc/rest'
 require 'rhc/config'
 
 # Generate a random username in case one isn't set
@@ -57,7 +57,7 @@ unless ENV['NO_CLEAN']
   FileUtils.rm_rf RHCHelper::TEMP_DIR
 
   # Cleanup all test applications
-  client = Rhc::Rest::Client.new($end_point, $username, $password)
+  client = RHC::Rest::Client.new($end_point, $username, $password)
   client.domains.each do |domain|
     domain.applications.each do |app|
       if app.name.start_with?("test")

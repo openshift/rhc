@@ -1,5 +1,5 @@
 require 'tmpdir'
-require 'rhc-rest'
+require 'rhc/rest'
 
 module RHCHelper
   #
@@ -55,7 +55,7 @@ module RHCHelper
 
     def self.create_unique(type, prefix="test")
       # Get a REST client to verify the application name
-      client = Rhc::Rest::Client.new($end_point, $username, $password)
+      client = RHC::Rest::Client.new($end_point, $username, $password)
 
       # Cleanup all test applications
       test_names = []

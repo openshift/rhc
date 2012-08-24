@@ -1,14 +1,14 @@
 require 'spec_helper'
 require 'rest_spec_helper'
-require 'rhc-rest'
+require 'rhc/rest'
 
 Spec::Runner.configure do |configuration|
   include(RestSpecHelper)
 end
 
-# We have to make an object to test the Rhc::Rest module
-class RhcRest
-  include Rhc::Rest
+# We have to make an object to test the RHC::Rest module
+class RHCRest
+  include RHC::Rest
 end
 
 module MockRestResponse
@@ -20,11 +20,11 @@ module MockRestResponse
   end
 end
 
-module Rhc
+module RHC
   include RestSpecHelper
 
   describe Rest do
-    subject{ RhcRest.new }
+    subject{ RHCRest.new }
 
     # logger function
     describe "#logger" do
@@ -56,7 +56,7 @@ module Rhc
           }}
         it "deserializes to an application" do
           json_response = { :type => 'application', :data => object }.to_json
-          app_obj       = Rhc::Rest::Application.new(object)
+          app_obj       = RHC::Rest::Application.new(object)
           subject.parse_response(json_response).should have_same_attributes_as(app_obj)
         end
       end
@@ -81,8 +81,8 @@ module Rhc
         }
         it "deserializes to a list of applications" do
           json_response = { :type => 'applications', :data => object }.to_json
-          app_obj_1     = Rhc::Rest::Application.new(object[0])
-          app_obj_2     = Rhc::Rest::Application.new(object[1])
+          app_obj_1     = RHC::Rest::Application.new(object[0])
+          app_obj_2     = RHC::Rest::Application.new(object[1])
           subject.parse_response(json_response).length.should equal(2)
           subject.parse_response(json_response)[0].should have_same_attributes_as(app_obj_1)
           subject.parse_response(json_response)[1].should have_same_attributes_as(app_obj_2)
@@ -98,7 +98,7 @@ module Rhc
 
         it "deserializes to a cartridge" do
           json_response = { :type => 'cartridge', :data => object }.to_json
-          cart_obj      = Rhc::Rest::Cartridge.new(object)
+          cart_obj      = RHC::Rest::Cartridge.new(object)
           subject.parse_response(json_response).should have_same_attributes_as(cart_obj)
         end
       end
@@ -116,8 +116,8 @@ module Rhc
 
         it "deserializes to a list of cartridges" do
           json_response = { :type => 'cartridges', :data => object }.to_json
-          cart_obj_1    = Rhc::Rest::Cartridge.new(object[0])
-          cart_obj_2    = Rhc::Rest::Cartridge.new(object[1])
+          cart_obj_1    = RHC::Rest::Cartridge.new(object[0])
+          cart_obj_2    = RHC::Rest::Cartridge.new(object[1])
           subject.parse_response(json_response).length.should equal(2)
           subject.parse_response(json_response)[0].should have_same_attributes_as(cart_obj_1)
           subject.parse_response(json_response)[1].should have_same_attributes_as(cart_obj_2)
@@ -132,7 +132,7 @@ module Rhc
 
         it "deserializes to a domain" do
           json_response = { :type => 'domain', :data => object }.to_json
-          dom_obj       = Rhc::Rest::Domain.new(object)
+          dom_obj       = RHC::Rest::Domain.new(object)
           subject.parse_response(json_response).should have_same_attributes_as(dom_obj)
         end
       end
@@ -148,8 +148,8 @@ module Rhc
 
         it "deserializes to a list of domains" do
           json_response = { :type => 'domains', :data => object }.to_json
-          dom_obj_1     = Rhc::Rest::Domain.new(object[0])
-          dom_obj_2     = Rhc::Rest::Domain.new(object[1])
+          dom_obj_1     = RHC::Rest::Domain.new(object[0])
+          dom_obj_2     = RHC::Rest::Domain.new(object[1])
           subject.parse_response(json_response).length.should equal(2)
           subject.parse_response(json_response)[0].should have_same_attributes_as(dom_obj_1)
           subject.parse_response(json_response)[1].should have_same_attributes_as(dom_obj_2)
@@ -166,7 +166,7 @@ module Rhc
 
         it "deserializes to a key" do
           json_response = { :type => 'key', :data => object }.to_json
-          key_obj       = Rhc::Rest::Key.new(object)
+          key_obj       = RHC::Rest::Key.new(object)
           subject.parse_response(json_response).should have_same_attributes_as(key_obj)
         end
       end
@@ -186,8 +186,8 @@ module Rhc
 
         it "deserializes to a list of keys" do
           json_response = { :type => 'keys', :data => object }.to_json
-          key_obj_1     = Rhc::Rest::Key.new(object[0])
-          key_obj_2     = Rhc::Rest::Key.new(object[1])
+          key_obj_1     = RHC::Rest::Key.new(object[0])
+          key_obj_2     = RHC::Rest::Key.new(object[1])
           subject.parse_response(json_response).length.should equal(2)
           subject.parse_response(json_response)[0].should have_same_attributes_as(key_obj_1)
           subject.parse_response(json_response)[1].should have_same_attributes_as(key_obj_2)
@@ -202,7 +202,7 @@ module Rhc
 
         it "deserializes to a user" do
           json_response = { :type => 'user', :data => object }.to_json
-          user_obj      = Rhc::Rest::User.new(object)
+          user_obj      = RHC::Rest::User.new(object)
           subject.parse_response(json_response).should have_same_attributes_as(user_obj)
         end
       end
@@ -227,7 +227,7 @@ module Rhc
         end
 
         it "sends the response to be deserialized" do
-          dom_obj = Rhc::Rest::Domain.new(object)
+          dom_obj = RHC::Rest::Domain.new(object)
           request = RestClient::Request.new(:url     => mock_href,
                                             :method  => 'get',
                                             :headers => { :accept => :json },
@@ -252,7 +252,7 @@ module Rhc
                                             :method  => 'get',
                                             :headers => {:accept => :json}
                                             )
-          lambda { subject.request(request) }.should raise_error(Rhc::Rest::ResourceAccessException, 'Failed to access resource: unexpected nil')
+          lambda { subject.request(request) }.should raise_error(RHC::Rest::ResourceAccessException, 'Failed to access resource: unexpected nil')
         end
       end
 
@@ -283,7 +283,7 @@ module Rhc
                                             :method  => 'get',
                                             :headers => {:accept => :json}
                                             )
-          lambda { subject.request(request) }.should raise_error(Rhc::Rest::TimeoutException, "Connection to server timed out. It is possible the operation finished without being able to report success. Use 'rhc domain show' or 'rhc app status' to check the status of your applications.")
+          lambda { subject.request(request) }.should raise_error(RHC::Rest::TimeoutException, "Connection to server timed out. It is possible the operation finished without being able to report success. Use 'rhc domain show' or 'rhc app status' to check the status of your applications.")
         end
       end
 
@@ -296,7 +296,7 @@ module Rhc
                                             :method  => 'get',
                                             :headers => {:accept => :json}
                                             )
-          lambda { subject.request(request) }.should raise_error(Rhc::Rest::ConnectionException, 'Connection to server got interrupted: Lost Server Connection')
+          lambda { subject.request(request) }.should raise_error(RHC::Rest::ConnectionException, 'Connection to server got interrupted: Lost Server Connection')
         end
       end
 
@@ -309,7 +309,7 @@ module Rhc
                                             :method  => 'get',
                                             :headers => {:accept => :json}
                                             )
-          lambda { subject.request(request) }.should raise_error(Rhc::Rest::ResourceAccessException, 'Failed to access resource: Unverified SSL Certificate')
+          lambda { subject.request(request) }.should raise_error(RHC::Rest::ResourceAccessException, 'Failed to access resource: Unverified SSL Certificate')
         end
       end
 
@@ -323,7 +323,7 @@ module Rhc
                                             :method  => 'get',
                                             :headers => {:accept => :json}
                                             )
-          lambda { subject.request(request) }.should raise_error(Rhc::Rest::ResourceAccessException, 'Failed to access resource: Generic Error')
+          lambda { subject.request(request) }.should raise_error(RHC::Rest::ResourceAccessException, 'Failed to access resource: Generic Error')
         end
       end
 
@@ -342,7 +342,7 @@ module Rhc
                                             :method  => 'get',
                                             :headers => {:accept => :json}
                                             )
-          lambda { subject.request(request) }.should raise_error(Rhc::Rest::UnAuthorizedException, 'Not authenticated')
+          lambda { subject.request(request) }.should raise_error(RHC::Rest::UnAuthorizedException, 'Not authenticated')
         end
       end
     end
@@ -355,7 +355,7 @@ module Rhc
           json_data = RHC::Json.encode(mock_resp)
           json_data.extend(MockRestResponse)
           json_data.set_code(400)
-          lambda { subject.process_error_response(json_data) }.should raise_error(Rhc::Rest::ClientErrorException, 'mock error message')
+          lambda { subject.process_error_response(json_data) }.should raise_error(RHC::Rest::ClientErrorException, 'mock error message')
         end
       end
 
@@ -365,7 +365,7 @@ module Rhc
           json_data.extend(MockRestResponse)
           json_data.set_code(401)
 
-          lambda { subject.process_error_response(json_data) }.should raise_error(Rhc::Rest::UnAuthorizedException, 'Not authenticated')
+          lambda { subject.process_error_response(json_data) }.should raise_error(RHC::Rest::UnAuthorizedException, 'Not authenticated')
         end
       end
 
@@ -375,7 +375,7 @@ module Rhc
           json_data  = RHC::Json.encode(mock_resp)
           json_data.extend(MockRestResponse)
           json_data.set_code(403)
-          lambda { subject.process_error_response(json_data) }.should raise_error(Rhc::Rest::RequestDeniedException, 'mock error message')
+          lambda { subject.process_error_response(json_data) }.should raise_error(RHC::Rest::RequestDeniedException, 'mock error message')
         end
       end
 
@@ -385,7 +385,7 @@ module Rhc
           json_data  = RHC::Json.encode(mock_resp)
           json_data.extend(MockRestResponse)
           json_data.set_code(404)
-          lambda { subject.process_error_response(json_data) }.should raise_error(Rhc::Rest::ResourceNotFoundException, 'mock error message')
+          lambda { subject.process_error_response(json_data) }.should raise_error(RHC::Rest::ResourceNotFoundException, 'mock error message')
         end
       end
 
@@ -395,7 +395,7 @@ module Rhc
           json_data  = RHC::Json.encode(mock_resp)
           json_data.extend(MockRestResponse)
           json_data.set_code(409)
-          lambda { subject.process_error_response(json_data) }.should raise_error(Rhc::Rest::ValidationException, 'mock error message')
+          lambda { subject.process_error_response(json_data) }.should raise_error(RHC::Rest::ValidationException, 'mock error message')
         end
       end
 
@@ -405,7 +405,7 @@ module Rhc
           json_data  = RHC::Json.encode(mock_resp)
           json_data.extend(MockRestResponse)
           json_data.set_code(422)
-          lambda { subject.process_error_response(json_data) }.should raise_error(Rhc::Rest::ValidationException, 'mock error message')
+          lambda { subject.process_error_response(json_data) }.should raise_error(RHC::Rest::ValidationException, 'mock error message')
         end
       end
 
@@ -416,7 +416,7 @@ module Rhc
           json_data  = RHC::Json.encode(mock_resp)
           json_data.extend(MockRestResponse)
           json_data.set_code(422)
-          lambda { subject.process_error_response(json_data) }.should raise_error(Rhc::Rest::ValidationException, 'mock error message 1 mock error message 2')
+          lambda { subject.process_error_response(json_data) }.should raise_error(RHC::Rest::ValidationException, 'mock error message 1 mock error message 2')
         end
       end
 
@@ -426,7 +426,7 @@ module Rhc
           json_data  = RHC::Json.encode(mock_resp)
           json_data.extend(MockRestResponse)
           json_data.set_code(500)
-          lambda { subject.process_error_response(json_data) }.should raise_error(Rhc::Rest::ServerErrorException, 'mock error message')
+          lambda { subject.process_error_response(json_data) }.should raise_error(RHC::Rest::ServerErrorException, 'mock error message')
         end
       end
 
@@ -436,7 +436,7 @@ module Rhc
           json_data  = RHC::Json.encode(mock_resp)
           json_data.extend(MockRestResponse)
           json_data.set_code(503)
-          lambda { subject.process_error_response(json_data) }.should raise_error(Rhc::Rest::ServiceUnavailableException, 'mock error message')
+          lambda { subject.process_error_response(json_data) }.should raise_error(RHC::Rest::ServiceUnavailableException, 'mock error message')
         end
       end
 
@@ -446,7 +446,7 @@ module Rhc
           json_data  = RHC::Json.encode(mock_resp)
           json_data.extend(MockRestResponse)
           json_data.set_code(999)
-          lambda { subject.process_error_response(json_data) }.should raise_error(Rhc::Rest::ResourceAccessException, 'Server returned error code with no output: 999')
+          lambda { subject.process_error_response(json_data) }.should raise_error(RHC::Rest::ResourceAccessException, 'Server returned error code with no output: 999')
         end
       end
     end

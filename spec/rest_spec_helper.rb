@@ -1,5 +1,5 @@
 require 'webmock/rspec'
-require 'rhc-rest'
+require 'rhc/rest'
 require 'rhc/exceptions'
 
 Spec::Matchers.define :have_same_attributes_as do |expected|
@@ -113,9 +113,9 @@ module RestSpecHelper
     }
   end
 
-  class MockRestClient < Rhc::Rest::Client
+  class MockRestClient < RHC::Rest::Client
     def initialize
-      Rhc::Rest::Client.stub(:new) { self }
+      RHC::Rest::Client.stub(:new) { self }
       @domains = []
     end
 
@@ -195,7 +195,7 @@ module RestSpecHelper
     end
   end
 
-  class MockRestCartridge < Rhc::Rest::Cartridge
+  class MockRestCartridge < RHC::Rest::Cartridge
     attr_reader :name
     attr_reader :type
     attr_reader :properties
