@@ -35,9 +35,10 @@ module RHCHelper
         :timeout  => 1200,
         :http_timeout => 30,
         :follow_redirects => true,
+        :redirects => 0,
+        :max_redirects => 10
       }
       options = http_defaults.merge(options)
-      # We at least need a URL
 
       # Parse the URI
       uri = URI.parse(options[:url])
@@ -61,11 +62,11 @@ module RHCHelper
 
       begin
         timeout(options[:timeout]) do
-          begin
+          loop do
             # Send the HTTP request
             response = begin
                          http = http_instance(uri,options[:http_timeout])
-                         logger.debug "Checking: #{http}"
+                         logger.debug "Requesting: #{uri}"
                          http.send_request(
                            options[:method].to_s.upcase, # Allow options to be a symbol
                            uri.request_uri, nil, headers
@@ -74,27 +75,37 @@ module RHCHelper
                          # Pass these up so we can check them
                          return e
                        end
-            logger.debug "Received %s" % response
+            logger.debug "Received: %s" % response
 
             case response
+            # Catch any response if we're expecting it
             when options[:expected]
-              # This will fall through and return response
-            when Net::HTTPRedirection
-              if options[:follow_redirects] == true
-                response = do_http(options.merge({
-                  :url => response.header['location']
-                }))
-              else
-                # Response will be returned as-is
-              end
+              break
+            # Retry these responses
             when Net::HTTPServiceUnavailable, SocketError
               my_sleep(start,uri,response,options)
-              retry
+            else
+              # Some other response
+              break
             end
           end
         end
       rescue Timeout::Error => e
         puts "Did not receive an acceptable response in %d seconds" % options[:timeout]
+      end
+
+      # Test to see if we should follow redirect
+      if options[:follow_redirects] && response.is_a?(Net::HTTPRedirection) && !(response.is_a?(options[:expected]))
+        logger.debug "Response was a redirect, we will attempt to follow"
+        logger.debug "We've been redirected #{options[:redirects]} times"
+        if options[:redirects] < options[:max_redirects]
+          options[:redirects] += 1
+          response = do_http(options.merge({
+            :url => response.header['location']
+          }))
+        else
+          logger.debug "Too many redirects"
+        end
       end
 
       return response
