@@ -161,6 +161,19 @@ describe RHC::Commands::Domain do
       end
       it { run_output.should match("Domain deleteme does not exist") }
     end
+
+    context 'when there are applications on the domain' do
+      before(:each) do
+        @rc = MockRestClient.new
+        domain = @rc.add_domain("deleteme")
+        domain.add_application 'testapp1', 'mock-1.0'
+      end
+      it "should error out" do
+        expect { run }.should exit_with_code(128)
+        @rc.domains[0].id.should == 'deleteme'
+      end
+      it { run_output.should match("^Domain contains applications. Delete applications first.$") }
+    end
   end
 
   describe 'alias destroy' do
