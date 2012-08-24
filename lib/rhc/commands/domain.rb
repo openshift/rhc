@@ -129,7 +129,9 @@ module RHC::Commands
       begin
         domain.destroy
       rescue RHC::Rest::ClientErrorException #FIXME: I am insufficiently specific
+        #:nocov:
         raise RHC::Exception.new("Domain contains applications. Delete applications first.", 128)
+        #:nocov:
       end
 
       results { say "Success!" }
