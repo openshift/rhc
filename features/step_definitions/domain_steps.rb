@@ -62,3 +62,7 @@ end
 Then /^domains should be empty$/ do
   $namespace.should be_nil
 end
+
+When /^rhc domain create is called$/ do
+  Domain.create
+end

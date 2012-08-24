@@ -82,17 +82,21 @@ end
 Then /^the applications should be accessible?$/ do
   @apps.each do |app|
     app.is_accessible?.should be_true
-    app.is_accessible?(true).should be_true
+    app.is_accessible?({:use_https => true}).should be_true
   end
 end
 
 Then /^the application should be accessible$/ do
   @app.is_accessible?.should be_true
-  @app.is_accessible?(true).should be_true, "Application was not accessible and should be"
+  @app.is_accessible?({:use_https => true}).should be_true, "Application was not accessible and should be"
 end
 
 Then /^the application should not be accessible$/ do
   @app.is_inaccessible?.should be_true, "Application was still accessible when it shouldn't be"
+end
+
+Then /^the application should not exist$/ do
+  @app.doesnt_exist?.should be_true, "Application still exists when it shouldn't"
 end
 
 Then /^it should succeed$/ do
