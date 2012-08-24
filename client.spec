@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 0.97.15
+Version: 0.98.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -114,6 +114,40 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Aug 23 2012 Adam Miller <admiller@redhat.com> 0.98.3-1
+- rhc version bump (admiller@redhat.com)
+
+* Thu Aug 23 2012 Adam Miller <admiller@redhat.com> 0.98.2-1
+- version bump for rhc (admiller@redhat.com)
+
+* Wed Aug 22 2012 Adam Miller <admiller@redhat.com> 0.98.1-1
+- bump_minor_versions for sprint 17 (admiller@redhat.com)
+- rhc version bump (admiller@redhat.com)
+- Merge pull request #136 from BanzaiMan/dev/hasari/tar_output_devnull
+  (openshift+bot@redhat.com)
+- Add a missing space (asari.ruby@gmail.com)
+- Further cleanup of targz.rb. (asari.ruby@gmail.com)
+
+* Wed Aug 22 2012 Adam Miller <admiller@redhat.com> 0.97.16-1
+- bump rhc version (admiller@redhat.com)
+- Merge pull request #134 from rmillner/dev/rmillner/BZ850544
+  (openshift+bot@redhat.com)
+- Merge pull request #135 from J5/bugfix (dmcphers@redhat.com)
+- Merge pull request #132 from fabianofranz/master (dmcphers@redhat.com)
+- [Bug 850697] catch another exception that may result from an invalid key
+  (johnp@redhat.com)
+- Merge pull request #130 from BanzaiMan/dev/hasari/tar_output_devnull
+  (openshift+bot@redhat.com)
+- Include monitoring URL in list of printed entities. (rmillner@redhat.com)
+- Fixes BZ 849769 (ffranz@redhat.com)
+- Send only STDERR to /dev/null. (asari.ruby@gmail.com)
+- When calling "(gnu)tar" via shell, send output to /dev/null, so that when the
+  tar file doesn not contain the file we are looking for, the error message
+  does not seep through to the output. (asari.ruby@gmail.com)
+- General cleanup. Replace hard tabs with spaces, and replace "smart" quotes.
+  (asari.ruby@gmail.com)
+- Fixes BZ 849769 (ffranz@redhat.com)
+
 * Tue Aug 21 2012 Adam Miller <admiller@redhat.com> 0.97.15-1
 - Merge pull request #128 from nhr/BZ844025 (openshift+bot@redhat.com)
 - Modified regex for searching the embedded hash (nhr@redhat.com)

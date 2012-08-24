@@ -14,11 +14,11 @@ def p_usage(exit_code = 255)
 Usage: #{$0}
 Pull down application snapshot for a user
 
-  -l|--rhlogin   rhlogin    Red Hat login (RHN or OpenShift login) (#{rhlogin})
+  -l|--rhlogin   rhlogin    OpenShift login (#{rhlogin})
   -a|--app                  Target application to snapshot (required)
   -r|--restore              Local path of the tarball to restore (restores git and application data folders found in archive)
   -s|--save                 Local path to save tarball (default: ./$APPNAME.tar.gz)
-  -p|--password  password   RHLogin password (optional, will prompt)
+  -p|--password  password   Password (optional, will prompt)
   -d|--debug                Print Debug info
   -h|--help                 Show Usage info
   --config  path            Path of alternate config file

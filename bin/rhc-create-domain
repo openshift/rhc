@@ -21,8 +21,8 @@ Bind a registered rhcloud user to a domain in rhcloud.
         <id_rsa>.pub keys, then re-run with --alter
 
   -n|--namespace   namespace   Namespace for your application(s) (alphanumeric - max #{RHC::DEFAULT_MAX_LENGTH} chars) (required)
-  -l|--rhlogin     rhlogin     Red Hat login (RHN or OpenShift login) (#{rhlogin})
-  -p|--password    password    RHLogin password (optional, will prompt)
+  -l|--rhlogin     rhlogin     OpenShift login (#{rhlogin})
+  -p|--password    password    Password (optional, will prompt)
   -a|--alter                   Alter namespace (will change urls) and/or ssh key
   -d|--debug                   Print Debug info
   -h|--help                    Show Usage info

@@ -1,8 +1,8 @@
 module RHC
   module VERSION #:nocov:
     MAJOR = 0
-    MINOR = 97
-    MICRO = 14
+    MINOR = 98
+    MICRO = 3
     #PRE  = ''
     STRING = [MAJOR,MINOR,MICRO].compact.join('.')
   end

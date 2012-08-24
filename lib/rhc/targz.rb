@@ -11,17 +11,16 @@ module RHC
 
     def self.contains(filename, search, force_ruby=false)
       
-      return false if ! (File.file? filename and File.basename(filename).downcase =~ /.\.tar\.gz$/i)
+      return false if ! (File.file? filename and File.basename(filename).downcase =~ /.\.t(ar\.)?gz$/i)
 
-      contains = false
+      regex = Regexp.new search
       if RHC::Helpers.windows? or force_ruby
-        search = /#{search.to_s}/ if ! search.is_a?(Regexp)
         begin
           RHC::Vendor::Zlib::GzipReader.open(filename) do |gz|
             Minitar::Reader.open gz do |tar|
               tar.each_entry do |entry|
-                if entry.full_name =~ search
-                  contains = true
+                if entry.full_name =~ regex
+                  return true
                 end
               end
             end
@@ -30,10 +29,10 @@ module RHC
           return false
         end
       else
-        `#{TAR_BIN} --wildcards -tf #{filename} '#{search.to_s}'`
-        contains = $?.exitstatus == 0
+        # combining STDOUT and STDERR (i.e., 2>&1) does not suppress output
+        # when the specs run via 'bundle exec rake spec'
+        return system "#{TAR_BIN} --wildcards -tf #{filename} #{regex.source} 2>/dev/null >/dev/null"
       end
-      contains
     end
 
   end
