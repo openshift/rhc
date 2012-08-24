@@ -4,34 +4,32 @@ require 'rhc/config'
 include RHCHelper
 
 Given /^an existing (.+) application with an embedded (.*) cartridge$/ do |type, embed|
-  App.find_on_fs.each do |app|
-    if app.type == type and app.embed.include?(embed)
-      @app = app
-      break
-    end
+  @app = App.find_on_fs(type).find do |app|
+    app.embed.include?(embed)
   end
 
   @app.should_not be_nil, 'No existing applications w/cartridges found.  Check the creation scenarios for failures.'
 end
 
 Given /^an existing (.+) application with embedded (.*) and (.*) cartridges$/ do |type, embed_1, embed_2|
-  App.find_on_fs.each do |app|
-    if app.type == type and app.embed.include?(embed_1) and app.embed.include?(embed_2)
-      @app = app
-      break
-    end
+  embeds = [embed_1,embed_2]
+  @app = App.find_on_fs(type).find do |app|
+    [app.embed & embeds ] == embeds
   end
 
   @app.should_not be_nil, 'No existing applications w/cartridges found.  Check the creation scenarios for failures.'
 end
 
-Given /^an existing (.+) application( without an embedded cartridge)?$/ do |type, ignore|
-  App.find_on_fs.each do |app|
-    if app.type == type and app.embed.empty?
-      @app = app
-      break
-    end
+Given /^an existing (.+) application without an embedded cartridge$/ do |type|
+  @app = App.find_on_fs(type).find do |app|
+    app.embed.empty?
   end
+
+  @app.should_not be_nil, 'No existing applications found.  Check the creation scenarios for failures.'
+end
+
+Given /^an existing (.+) application$/ do |type|
+  @app = App.find_on_fs(type).first
 
   @app.should_not be_nil, 'No existing applications found.  Check the creation scenarios for failures.'
 end
@@ -44,34 +42,27 @@ When /^(\d+) (.+) applications are created$/ do |app_count, type|
   end
 end
 
-When /^the application is stopped$/ do
-  @app.rhc_app_stop
-end
+When /^the application is (\w+)$/ do |command|
+  # Do any pre-check setup we may need
+  case command
+  when 'snapshot'
+    @snapshot = File.join(RHCHelper::TEMP_DIR, "snapshot.tar.gz")
+    @app.snapshot = @snapshot
+  end
 
-When /^the application is started$/ do
-  @app.rhc_app_start
-end
+  # Set up aliases for any irregular commands
+  aliases = {
+    :stopped => :stop,
+    :shown   => :show,
+    :tidied  => :tidy,
+    :snapshot => :snapshot_save
+  }
 
-When /^the application is restarted$/ do
-  @app.rhc_app_restart
-end
+  # Use an alias if it exists, or just remove 'ed' (like from started)
+  cmd = aliases[command.to_sym] || command.gsub(/ed$/,'').to_sym
 
-When /^the application is destroyed$/ do
-  @app.rhc_app_destroy
-end
-
-When /^the application is snapshot$/ do
-  @snapshot = File.join(RHCHelper::TEMP_DIR, "snapshot.tar.gz")
-  @app.snapshot = @snapshot
-  @app.rhc_app_snapshot_save
-end
-
-When /^the application is shown$/ do
-  @app.rhc_app_show
-end
-
-When /^the application is tidied$/ do
-  @app.rhc_app_tidy
+  # Send the specified command to the application
+  @app.send("rhc_app_#{cmd}")
 end
 
 Then /^the snapshot should be found$/ do

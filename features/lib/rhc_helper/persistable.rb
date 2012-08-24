@@ -6,8 +6,11 @@ module RHCHelper
     include ActiveSupport::JSON
     include Loggable
 
-    def find_on_fs
-      Dir.glob("#{RHCHelper::TEMP_DIR}/*.json").collect {|f| App.from_file(f)}
+    def find_on_fs(type = nil)
+      # Find all apps
+      apps = Dir.glob("#{RHCHelper::TEMP_DIR}/*.json").collect {|f| App.from_file(f)}
+      apps = apps.select{|app| app.type == type } unless type.nil?
+      apps
     end
 
     def from_file(filename)

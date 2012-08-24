@@ -11,37 +11,6 @@ Feature: Client Integration Tests
     When a new domain is needed and created
     Then the domain should be reserved
 
-  Scenario: Domain Update
-    Given the libra client tools
-    And an existing domain
-    When domain is updated
-    Then the domain should be reserved
-
-  Scenario: Domain Show
-    Given the libra client tools
-    And an existing domain
-    When rhc domain is run
-    When rhc domain show is run
-    Then the default domain action output should equal the show action output
-
-  Scenario: Domain Create Fails
-    Given the libra client tools
-    And an existing domain
-    When rhc domain create is run
-    Then the domain command should fail with an exitcode of 128
-
-  Scenario: Domain Delete
-    Given the libra client tools
-    And an existing domain
-    When domain is deleted
-    Then domains should be empty
-
-  Scenario: Domain Update Fails
-    Given the libra client tools
-    And given domains is empty
-    When domain is updated
-    Then the domain command should fail with an exitcode of 127
-
   @init
   Scenario: Domain Creation for Apps
     Given the libra client tools
@@ -52,48 +21,6 @@ Feature: Client Integration Tests
     Given the libra client tools
     When 1 php-5.3 applications are created
     Then the applications should be accessible
-
-  Scenario: Application Stopping
-    Given the libra client tools
-    And an existing php-5.3 application
-    When the application is stopped
-    Then the application should not be accessible
-
-  Scenario: Application Starting
-    Given the libra client tools
-    And an existing php-5.3 application
-    When the application is started
-    Then the application should be accessible
-
-  Scenario: Application Restarting
-    Given the libra client tools
-    And an existing php-5.3 application
-    When the application is restarted
-    Then the application should be accessible
-
-  Scenario: Application Snapshot
-    Given the libra client tools
-    And an existing php-5.3 application
-    When the application is snapshot
-    Then the snapshot should be found
-
-  Scenario: Application Tidy
-    Given the libra client tools
-    And an existing php-5.3 application
-    When the application is tidied
-    Then it should succeed
-
-  Scenario: Application Show
-    Given the libra client tools
-    And an existing php-5.3 application
-    When the application is shown
-    Then it should succeed
-
-  Scenario: Cartridge Add
-    Given the libra client tools
-    And an existing php-5.3 application
-    When the mysql-5.1 cartridge is added
-    Then the mysql-5.1 cartridge should be running
 
   Scenario: Cartridge Stop
     Given the libra client tools
@@ -135,11 +62,6 @@ Feature: Client Integration Tests
   Scenario: Add Alias
   Scenario: Remove Alias
 
-  Scenario: Application Destroy
-    Given the libra client tools
-    And an existing php-5.3 application
-    When the application is destroyed
-    Then the application should not exist
 
   @init
   Scenario: Template Creation
