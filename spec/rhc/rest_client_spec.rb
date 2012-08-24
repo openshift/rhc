@@ -29,6 +29,7 @@ module RHC
       let(:domain_0_links) { mock_response_links(mock_domain_links('mock_domain_0')) }
       let(:domain_1_links) { mock_response_links(mock_domain_links('mock_domain_1')) }
       let(:user_links)     { mock_response_links(mock_user_links) }
+      let(:key_links)      { mock_response_links(mock_key_links) }
 
       context "#new" do
         before do
@@ -402,6 +403,54 @@ module RHC
           end
         end
 
+        context "#delete_key" do
+          before(:each) do
+            stub_api_request(:any, client_links['GET_USER']['relative']).
+              to_return({ :body   => {
+                            :type => 'user',
+                            :data =>
+                            { :login => mock_user,
+                              :links => mock_response_links(mock_user_links)
+                            }
+                          }.to_json,
+                          :status => 200
+                        })
+            stub_api_request(:any, user_links['LIST_KEYS']['relative']).
+              to_return({ :body   => {
+                            :type => 'keys',
+                            :data =>
+                            [{ :name    => 'mock_key_0',
+                               :type    => 'mock_key_0_type',
+                               :content => '123456789:0',
+                               :links   => mock_response_links(mock_key_links('mock_key_0'))
+                             },
+                             { :name    => 'mock_key_1',
+                               :type    => 'mock_key_1_type',
+                               :content => '123456789:1',
+                               :links   => mock_response_links(mock_key_links('mock_key_1'))
+                             }]
+                          }.to_json,
+                          :status => 200
+                        })
+
+            stub_api_request(:post, key_links['DELETE']['relative']).
+              to_return({ :body   => {}.to_json,
+                          :status => 200
+                        })
+
+            @client = MockClient.new(mock_href, mock_user, mock_pass)
+          end
+          
+          it "should delete keys" do
+            expect { @client.delete_key('mock_key_0') }.should be_true
+          end
+          
+          it 'raises an error if nonexistent key is requested' do
+            expect { @client.find_key('no_match') }.
+              should raise_error(RHC::KeyNotFoundException)
+          end
+        end
+        
         context "#logout" do
           let(:logout_method) { :logout }
           it_should_behave_like "a logout method"
