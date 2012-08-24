@@ -22,7 +22,7 @@ describe RHC::Wizard do
     it "should print out first run greeting" do
       @wizard.run_next_stage
       greeting = $terminal.read
-      greeting.count("\n").should == 8
+      greeting.count("\n").should >= 7
       greeting.should match(Regexp.escape("It looks like you have not configured or used OpenShift client tools on this computer."))
       greeting.should match(Regexp.escape("\n#{@wizard.config_path}\n"))
     end
@@ -719,7 +719,7 @@ describe RHC::Wizard do
       end
 
       def add_domain(domain_name)
-        raise Rhc::Rest::ValidationException.new("Error: domain name should be '#{@domain_name}' but got '#{domain_name}'") if domain_name != @domain_name
+        raise RHC::Rest::ValidationException.new("Error: domain name should be '#{@domain_name}' but got '#{domain_name}'") if domain_name != @domain_name
 
         MockDomain.new(domain_name)
       end
@@ -748,7 +748,7 @@ describe RHC::Wizard do
     end
 
     def stub_rhc_client_new
-      Rhc::Rest::Client.stub(:new) do |end_point, name, password|
+      RHC::Rest::Client.stub(:new) do |end_point, name, password|
         MockRestApi.new(end_point, name, password)
       end
     end

@@ -62,10 +62,10 @@ module RHC
             usage = RHC::UsageHelpFormatter.new(self).render_command(help_bindings)
             say "#{e}\n#{usage}"
             1
-          rescue Rhc::Rest::BaseException => e
-            RHC::Helpers.results { say "#{e}" }
+          rescue RHC::Rest::Exception, RHC::Exception => e
+            RHC::Helpers.results { say e.message }
             e.code.nil? ? 128 : e.code
-          rescue Exception => e
+          rescue => e
             RHC::Helpers.results { say "error: #{e} Use --trace to view backtrace." }
             128
           end
@@ -109,19 +109,6 @@ module RHC
     def self.global_option(switches, description)
       global_options << [switches, description].flatten(1)
     end
-    def self.validate_command(c, args, options, args_metadata)
-      # check to see if an arg's option was set
-      raise ArgumentError.new("Invalid arguments") if args.length > args_metadata.length
-      args_metadata.each_with_index do |arg_meta, i|
-        switch = arg_meta[:switches]
-        value = options.__hash__[arg_meta[:name]]
-        unless value.nil?
-          raise ArgumentError.new("#{arg_meta[:name]} specified twice on the command line and as a #{switch[0]} switch") unless args.length == i
-          # add the option as an argument
-          args << value
-        end
-      end
-    end
 
     def self.global_config_setup(options)
       RHC::Config.set_opts_config(options.config) if options.config
@@ -148,27 +135,41 @@ module RHC
           c.summary = opts[:summary]
           c.syntax = opts[:syntax]
 
-          (opts[:options]||[]).each { |o| c.option *o }
+          options_metadata = opts[:options]||[]
+          options_metadata.each do |o|
+            option_data = [o[:switches], o[:description]].flatten(1)
+            c.option *option_data
+            o[:arg] = Runner.switch_to_sym(o[:switches].last)
+          end
           args_metadata = opts[:args] || []
           (args_metadata).each do |arg_meta|
             arg_switches = arg_meta[:switches]
-            arg_switches << arg_meta[:description]
-            c.option *arg_switches unless arg_switches.nil?
+            unless arg_switches.nil? or arg_switches.empty?
+              arg_switches << arg_meta[:description]
+              c.option *arg_switches
+            end
           end
 
           c.when_called do |args, options|
-            validate_command c, args, options, args_metadata
             config = global_config_setup options
-            cmd = opts[:class].new c, args, options, config
+            cmd = opts[:class].new c
+            cmd.options = options
+            cmd.config = config
+            filled_args = cmd.validate_args_and_options args_metadata, options_metadata, args
             needs_configuration! cmd, config
-            cmd.send opts[:method], *args
+            cmd.send opts[:method], *filled_args
           end
 
           unless opts[:aliases].nil?
-            opts[:aliases].each do |a|
-              alias_components = name.split(" ")
-              alias_components[-1] = a
-              instance.alias_command  "#{alias_components.join(' ')}", :"#{name}"
+            opts[:aliases].each do |a, root_command|
+              alias_cmd = a
+              unless root_command
+                # prepend the current resource
+                alias_components = name.split(" ")
+                alias_components[-1] = a
+                alias_cmd = alias_components.join(' ')
+              end
+              instance.alias_command  "#{alias_cmd}", :"#{name}"
             end
           end
         end

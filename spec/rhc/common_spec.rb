@@ -31,7 +31,7 @@ describe RHC do
                       :status => 200
                     })
         stub_request(:any, mock_href(domain_links['ADD_APPLICATION']['relative'], true)).
-          to_raise(Rhc::Rest::ServerErrorException.new("Mock server error"))
+          to_raise(RHC::Rest::ServerErrorException.new("Mock server error"))
         RHC.stub!(:print_response_err) { |output| @test_output = output; exit 1 }
       end
       it "posts an error message if the Rest API encounters a server error" do

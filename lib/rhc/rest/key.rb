@@ -1,4 +1,4 @@
-module Rhc
+module RHC
   module Rest
     class Key
       include Rest

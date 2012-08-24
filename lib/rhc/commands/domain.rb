@@ -126,12 +126,12 @@ module RHC::Commands
       paragraph { say "Deleting domain '#{namespace}'" }
       domain = rest_client.find_domain namespace
 
-      paragraph do
-        begin
-          domain.destroy
-        rescue Rhc::Rest::ClientErrorException
-          raise Rhc::Rest::ClientErrorException.new("Domain contains applications. Delete applications first.", 128)
-        end
+      begin
+        domain.destroy
+      rescue RHC::Rest::ClientErrorException #FIXME: I am insufficiently specific
+        #:nocov:
+        raise RHC::Exception.new("Domain contains applications. Delete applications first.", 128)
+        #:nocov:
       end
 
       results { say "Success!" }

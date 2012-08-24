@@ -29,7 +29,7 @@ unless RUBY_VERSION < '1.9'
     # Filters - these files will be ignored.
     add_filter 'lib/rhc/vendor/'   # vendored files should be taken directly and only
                                    # namespaces changed
-    add_filter 'lib/rhc-rest/'     # REST coverage is not yet 100%
+    add_filter 'lib/rhc/rest/'     # REST coverage is not yet 100%
     add_filter 'lib/bin/'          # This is just for safety; simplecov isn't picking these up.
     add_filter 'lib/rhc-common.rb' # deprecated, functionality moved into client or rhc/helpers.rb
     add_filter 'features/'         # Don't report on the files that run the cucumber tests
@@ -39,7 +39,7 @@ unless RUBY_VERSION < '1.9'
     # Groups - general categories of test areas
     add_group('Commands') { |src_file| src_file.filename.include?(File.join(%w[lib rhc commands])) }
     add_group('RHC Lib')  { |src_file| src_file.filename.include?(File.join(%w[lib rhc])) }
-    add_group('REST')     { |src_file| src_file.filename.include?(File.join(%w[lib rhc-rest])) }  
+    add_group('REST')     { |src_file| src_file.filename.include?(File.join(%w[lib rhc/rest])) }  
     add_group('Legacy')   { |src_file| src_file.filename.include?(File.join(%w[bin])) or
                                        src_file.filename.include?(File.join(%w[lib rhc-common.rb])) }  
     add_group('Test')     { |src_file| src_file.filename.include?(File.join(%w[features])) or

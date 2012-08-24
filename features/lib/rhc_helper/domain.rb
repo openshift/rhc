@@ -1,5 +1,5 @@
 require 'dnsruby'
-require 'rhc-rest'
+require 'rhc/rest'
 
 module RHCHelper
   #

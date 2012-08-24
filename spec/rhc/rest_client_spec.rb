@@ -2,7 +2,7 @@ require 'base64'
 require 'spec_helper'
 require 'stringio'
 require 'rest_spec_helper'
-require 'rhc-rest/client'
+require 'rhc/rest/client'
 
 Spec::Runner.configure do |configuration|
   include(RestSpecHelper)
@@ -10,7 +10,7 @@ end
 
 # This object is used in a few cases where we need to inspect
 # the logged output.
-class MockClient < Rhc::Rest::Client
+class MockClient < RHC::Rest::Client
   def logger
     Logger.new((@output = StringIO.new))
   end
@@ -22,7 +22,7 @@ class MockClient < Rhc::Rest::Client
   end
 end
 
-module Rhc
+module RHC
   module Rest
     describe Client do
       let(:client_links)   { mock_response_links(mock_client_links) }
@@ -44,7 +44,7 @@ module Rhc
 
         it "returns a client object from the required arguments" do
           credentials = Base64.encode64(mock_user + ":" + mock_pass)
-          client      = Rhc::Rest::Client.new(mock_href, mock_user, mock_pass)
+          client      = RHC::Rest::Client.new(mock_href, mock_user, mock_pass)
           @@headers['Authorization'].should == "Basic #{credentials}"
           client.instance_variable_get(:@links).should == client_links
         end
@@ -53,7 +53,7 @@ module Rhc
           client.logged.should =~ /API Error$/
         end
         it "raises a generic error for any other error condition" do
-          lambda{ Rhc::Rest::Client.new(mock_href('other_error'), mock_user, mock_pass) }.
+          lambda{ RHC::Rest::Client.new(mock_href('other_error'), mock_user, mock_pass) }.
             should raise_error("Resource could not be accessed:Other Error")
         end
       end
@@ -64,7 +64,7 @@ module Rhc
             to_return({ :body   => { :data => client_links }.to_json,
                         :status => 200
                       })
-          @client = Rhc::Rest::Client.new(mock_href, mock_user, mock_pass)
+          @client = RHC::Rest::Client.new(mock_href, mock_user, mock_pass)
         end
 
         context "#add_domain" do
@@ -82,7 +82,7 @@ module Rhc
           end
           it "returns a domain object" do
             domain = @client.add_domain('mock_domain')
-            domain.class.should                          == Rhc::Rest::Domain
+            domain.class.should                          == RHC::Rest::Domain
             domain.instance_variable_get(:@id).should    == 'mock_domain'
             domain.instance_variable_get(:@links).should ==
               mock_response_links(mock_domain_links('mock_domain'))
@@ -115,7 +115,7 @@ module Rhc
             domains = @client.domains
             domains.length.should equal(2)
             (0..1).each do |idx|
-              domains[idx].class.should                          == Rhc::Rest::Domain
+              domains[idx].class.should                          == RHC::Rest::Domain
               domains[idx].instance_variable_get(:@id).should    == "mock_domain_#{idx}"
               domains[idx].instance_variable_get(:@links).should ==
                 mock_response_links(mock_domain_links("mock_domain_#{idx}"))
@@ -150,7 +150,7 @@ module Rhc
             expect { match = @client.find_domain('mock_domain_0') }.should_not raise_error
 
             match.id.should == 'mock_domain_0'
-            match.class.should == Rhc::Rest::Domain
+            match.class.should == RHC::Rest::Domain
           end
           it "raise an error when no matching domain IDs can be found" do
             expect { @client.find_domain('mock_domain_2') }.should raise_error(RHC::DomainNotFoundException)
@@ -207,7 +207,7 @@ module Rhc
             domain = @client.domains[0]
             domain.applications.each do |app|
               match = domain.find_application(app.name)
-              match.class.should                              == Rhc::Rest::Application
+              match.class.should                              == RHC::Rest::Application
               match.instance_variable_get(:@name).should      == 'mock_app'
               match.instance_variable_get(:@domain_id).should == "#{domain.id}"
               match.instance_variable_get(:@links).should     ==
@@ -247,12 +247,12 @@ module Rhc
             carts = @client.cartridges
             carts.length.should equal(2)
             (0..1).each do |idx|
-              carts[idx].class.should                          == Rhc::Rest::Cartridge
+              carts[idx].class.should                          == RHC::Rest::Cartridge
               carts[idx].instance_variable_get(:@name).should  == "mock_cart_#{idx}"
               carts[idx].instance_variable_get(:@type).should  == "mock_cart_#{idx}_type"
               carts[idx].instance_variable_get(:@links).should ==
                 mock_response_links(mock_cart_links("mock_cart_#{idx}"))
-            end          
+            end
           end
           it "returns an empty list when no cartridges exist" do
             # Disregard the first response; this is for the previous expectiation.
@@ -261,8 +261,8 @@ module Rhc
             carts.length.should equal(0)
           end
         end
-        
-        context "#find_cartridge" do
+
+        context "#find_cartridges" do
           before(:each) do
             stub_api_request(:any, client_links['LIST_CARTRIDGES']['relative']).
               to_return({ :body   => {
@@ -275,23 +275,32 @@ module Rhc
                              { :name  => 'mock_cart_1',
                                :type  => 'mock_cart_1_type',
                                :links => mock_response_links(mock_cart_links('mock_cart_1')),
-                             }]
+                             },
+                             { :name  => 'mock_nomatch_cart_0',
+                               :type  => 'mock_nomatch_cart_0_type',
+                               :links => mock_response_links(mock_cart_links('mock_nomatch_cart_0')),
+                             }
+                            ]
                           }.to_json,
                           :status => 200
                         })
           end
           it "returns a list of cartridge objects for matching cartridges" do
-            matches = @client.find_cartridge('mock_cart_0')
+            matches = @client.find_cartridges('mock_cart_0')
             matches.length.should equal(1)
-            matches[0].class.should                          == Rhc::Rest::Cartridge
+            matches[0].class.should                          == RHC::Rest::Cartridge
             matches[0].instance_variable_get(:@name).should  == 'mock_cart_0'
             matches[0].instance_variable_get(:@type).should  == 'mock_cart_0_type'
             matches[0].instance_variable_get(:@links).should ==
               mock_response_links(mock_cart_links('mock_cart_0'))
           end
           it "returns an empty list when no matching cartridges can be found" do
-            matches = @client.find_cartridge('no_match')
+            matches = @client.find_cartridges('no_match')
             matches.length.should equal(0)
+          end
+          it "returns multiple cartridge matches" do
+            matches = @client.find_cartridges :regex => "mock_cart_[0-9]"
+            matches.length.should equal(2)
           end
         end
 
@@ -310,7 +319,7 @@ module Rhc
           end
           it "returns the user object associated with this client connection" do
             user = @client.user
-            user.class.should                           == Rhc::Rest::User
+            user.class.should                           == RHC::Rest::User
             user.instance_variable_get(:@login).should  == mock_user
             user.instance_variable_get(:@links).should  == mock_response_links(mock_user_links)
           end
@@ -350,7 +359,7 @@ module Rhc
             key = nil
             expect { key = @client.find_key('mock_key_0') }.should_not raise_error
 
-            key.class.should                            == Rhc::Rest::Key
+            key.class.should                            == RHC::Rest::Key
             key.instance_variable_get(:@name).should    == 'mock_key_0'
             key.instance_variable_get(:@type).should    == 'mock_key_0_type'
             key.instance_variable_get(:@content).should == '123456789:0'
