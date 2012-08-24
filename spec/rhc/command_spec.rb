@@ -106,7 +106,7 @@ describe RHC::Commands::Base do
         Static
       end
 
-      it("should register itself") { expect { subject }.to change(commands, :length).by(4) }
+      it("should register itself") { expect { subject }.to change(commands, :length).by(5) }
       it("should have an object name of the class") { subject.object_name.should == 'static' }
 
       context 'and when test is called' do

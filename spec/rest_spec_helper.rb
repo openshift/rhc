@@ -136,7 +136,7 @@ module RestSpecHelper
     end
   end
 
-  class MockRestDomain < Rhc::Rest::Domain
+  class MockRestDomain < RHC::Rest::Domain
     attr_reader :id
 
     def initialize(id, client)
