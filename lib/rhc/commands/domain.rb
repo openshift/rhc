@@ -23,19 +23,21 @@ module RHC::Commands
     end
 
     summary "Update namespace (will change urls)."
-    syntax "<old_namespace> <new_namespace> [--timeout timeout]"
-    argument :old_namespace, "The namespace you are updating", [], :context => :namespace_context
-    argument :new_namespace, "The new namepace", []
+    syntax "<namespace> [--timeout timeout]"
+    argument :namespace, "Namespace for your application(s) (alphanumeric)", ["-n", "--namespace namespace"]
     option ["--timeout timeout"], "Timeout, in seconds, for the session"
     alias_action :alter
-    def update(old_namespace, namespace)
-      domains = rest_client.domains
-      raise RHC::DomainNotFoundException.new("No domains are registered to the user #{config.username}. Please use 'rhc domain create' to create one.") if domains.empty?
+    def update(namespace)
+      # TODO: Support multiple domains.  Right now we assume one domain so
+      #       you don't have to send in the name of the domain you want to change
+      #       but in the future this will be manditory if you have more than one
+      #       domain.  Figure out how to support overloading of commands
+      domain = rest_client.domains
+      raise RHC::DomainNotFoundException.new("No domains are registered to the user #{config.username}. Please use 'rhc domain create' to create one.") if domain.empty?
 
-      domain = rest_client.find_domain(old_namespace)
-      paragraph { say "Updating domain '#{domain.id}' to namespace '#{namespace}'" }
+      paragraph { say "Updating domain '#{domain[0].id}' to namespace '#{namespace}'" }
 
-      domain.update(namespace)
+      domain[0].update(namespace)
 
       results do
         say "Success!"
