@@ -1,3 +1,6 @@
+require 'rubygems'
+require 'active_support/ordered_hash'
+
 require 'rhc_helper/loggable'
 require 'rhc_helper/commandify'
 require 'rhc_helper/httpify'

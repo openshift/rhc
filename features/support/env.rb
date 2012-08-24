@@ -49,6 +49,10 @@ unless ENV['NO_CLEAN']
   puts "--------------------------------------------------------------------------------------------------"
   puts "               Resetting environment"
   puts "--------------------------------------------------------------------------------------------------"
+  # Ensure the directory for local_config_path exists
+  config_dir = File.dirname(RHC::Config::local_config_path)
+  Dir::mkdir(config_dir) unless File.exists?(config_dir)
+
   # Start with a clean config
   puts "  Replacing express.conf with the specified libra_server"
   File.open(RHC::Config::local_config_path, 'w') {|f| f.write("libra_server=#{URI.parse($end_point).host}") }

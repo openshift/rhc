@@ -38,6 +38,10 @@ module RHCHelper
       end
     end
 
+    def self.create
+      rhc_domain_create
+    end
+
     def self.delete
       rhc_domain_delete
       $namespace = nil
