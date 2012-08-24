@@ -152,7 +152,9 @@ module RHC
 
           c.when_called do |args, options|
             config = global_config_setup options
-            cmd = opts[:class].new c, options, config
+            cmd = opts[:class].new c
+            cmd.options = options
+            cmd.config = config
             filled_args = cmd.validate_args_and_options args_metadata, options_metadata, args
             needs_configuration! cmd, config
             cmd.send opts[:method], *filled_args

@@ -8,6 +8,7 @@ require 'rhc/exceptions'
 require 'rhc/context_helper'
 
 class RHC::Commands::Base
+  attr_accessor :options, :config
 
   def initialize(command=nil,
                  options=Commander::Command::Options.new,
