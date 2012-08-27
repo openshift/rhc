@@ -1,5 +1,5 @@
 {
-  :application => 'we have a running php-5.3 application',
+  :application => 'we have a running php-5.3 application without an embedded cartridge',
   :domain => 'we have an existing domain',
   :client => 'we have the client tools setup',
   :single_cartridge => 'we have a running php-5.3 application with an embedded mysql-5.1 cartridge',
