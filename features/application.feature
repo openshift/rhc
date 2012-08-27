@@ -1,13 +1,12 @@
-@account_required @domain_required @application_required
-Feature: Existing Application Operations
+@application
+Feature: Application Operations
 
   Background:
-    Given the libra client tools
-    And an existing php-5.3 application
+    Given we have an existing domain
 
-  @stopped_application
-  Scenario: Application Starting
-    When the application is started
+  @init
+  Scenario: Application Creation
+    When a php-5.3 application is created
     Then the application should be accessible
 
   Scenario Outline: Running Application Commands
@@ -17,12 +16,9 @@ Feature: Existing Application Operations
     Examples:
       | command   | what            | status |
       | stopped   | the application | not be accessible |
+      | started   | the application | be accessible |
       | restarted | the application | be accessible |
       | snapshot  | the snapshot    | be found |
       | tidied    | it              | succeed |
       | shown     | it              | succeed |
       | destroyed | the application | not exist |
-
-  Scenario: Cartridge Add
-    When the mysql-5.1 cartridge is added
-    Then the mysql-5.1 cartridge should be running

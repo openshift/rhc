@@ -3,43 +3,69 @@ require 'rhc/config'
 
 include RHCHelper
 
-Given /^an existing (.+) application with an embedded (.*) cartridge$/ do |type, embed|
+Given /^an existing (or new )?(.+) application with an embedded (.*) cartridge$/ do |create,type,embed|
   @app = App.find_on_fs(type).find do |app|
     app.embed.include?(embed)
+  end
+
+  if create && @app.nil?
+    Then "a #{type} application is created"
+    And "the #{embed} cartridge is added"
   end
 
   @app.should_not be_nil, 'No existing applications w/cartridges found.  Check the creation scenarios for failures.'
 end
 
-Given /^an existing (.+) application with embedded (.*) and (.*) cartridges$/ do |type, embed_1, embed_2|
+Given /^an existing (or new )?(.+) application with embedded (.*) and (.*) cartridges$/ do |create,type, embed_1, embed_2|
   embeds = [embed_1,embed_2]
   @app = App.find_on_fs(type).find do |app|
     [app.embed & embeds ] == embeds
   end
 
+  if create && @app.nil?
+    Then "a #{type} application is created"
+    embeds.each do |embed|
+      And "the #{embed} cartridge is added"
+    end
+  end
+
   @app.should_not be_nil, 'No existing applications w/cartridges found.  Check the creation scenarios for failures.'
 end
 
-Given /^an existing (.+) application without an embedded cartridge$/ do |type|
+Given /^an existing (or new )?(.+) application without an embedded cartridge$/ do |create,type|
   @app = App.find_on_fs(type).find do |app|
     app.embed.empty?
+  end
+
+  if create && @app.nil?
+    Then "a #{type} application is created"
   end
 
   @app.should_not be_nil, 'No existing applications found.  Check the creation scenarios for failures.'
 end
 
-Given /^an existing (.+) application$/ do |type|
+Given /^an existing (or new )?(.+) application$/ do |create,type|
   @app = App.find_on_fs(type).first
+
+  if create && @app.nil?
+    Then "a #{type} application is created"
+  end
 
   @app.should_not be_nil, 'No existing applications found.  Check the creation scenarios for failures.'
 end
 
 When /^(\d+) (.+) applications are created$/ do |app_count, type|
+  old_app = @app
   @apps = app_count.to_i.times.collect do
-    app = App.create_unique(type)
-    app.rhc_app_create
-    app
+    Then "a #{type} application is created"
+    @app
   end
+  @app = old_app
+end
+
+When /^a (.+) application is created$/ do |type|
+  @app = App.create_unique(type)
+  @app.rhc_app_create
 end
 
 When /^the application is (\w+)$/ do |command|

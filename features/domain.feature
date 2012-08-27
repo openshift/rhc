@@ -1,9 +1,13 @@
-@account_required @domain_required
+@domain
 Feature: Existing Domain Operations
 
   Background:
-    Given the libra client tools
-    And an existing domain
+    Given we have the client tools setup
+
+  @init
+  Scenario: Domain Creation
+    When a new domain is needed and created
+    Then the domain should be reserved
 
   Scenario: Domain Update
     When domain is updated
