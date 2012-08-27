@@ -3,6 +3,7 @@ require 'rhc/config'
 
 include RHCHelper
 
+# This can transform any application cartridge requirements into an array
 Transform /^application with(.*)$/ do |embed_type|
   case embed_type.strip
   when /^out an embedded cartridge/
@@ -14,20 +15,8 @@ Transform /^application with(.*)$/ do |embed_type|
   end
 end
 
-Given /^an existing (or new )?(.+) (application with an embedded .* cartridge)$/ do |create,type,embed|
-  @app = App.find_on_fs(type).find do |app|
-    app.embed.include?(embed)
-  end
-
-  if create && @app.nil?
-    Then "a #{type} application is created"
-    And "the #{embed} cartridge is added"
-  end
-
-  @app.should_not be_nil, 'No existing applications w/cartridges found.  Check the creation scenarios for failures.'
-end
-
-Given /^an existing (or new )?(.+) (application with embedded .* and .* cartridges)$/ do |create,type, embeds|
+# Use the transformed array so we can reuse this step for all combinations
+Given /^an existing (or new )?(.+) (application with.*)$/ do |create,type, embeds|
   @app = App.find_on_fs(type).find do |app|
     app.embed == embeds
   end
@@ -39,29 +28,15 @@ Given /^an existing (or new )?(.+) (application with embedded .* and .* cartridg
     end
   end
 
-  @app.should_not be_nil, 'No existing applications w/cartridges found.  Check the creation scenarios for failures.'
+  @app.should_not be_nil, "No existing %s applications %sfound.  Check the creation scenarios for failures." % [
+    type,
+    embeds ? '' : "w/ [#{embeds.join(',')}]"
+  ]
 end
 
-Given /^an existing (or new )?(.+) (application without an embedded cartridge)$/ do |create,type,embed|
-  @app = App.find_on_fs(type).find do |app|
-    app.embed == embed
-  end
-
-  if create && @app.nil?
-    Then "a #{type} application is created"
-  end
-
-  @app.should_not be_nil, 'No existing applications found.  Check the creation scenarios for failures.'
-end
-
+# Mark this step as pending so we make sure to explicitly require apps without embeds
 Given /^an existing (or new )?(.+) application$/ do |create,type|
-  @app = App.find_on_fs(type).first
-
-  if create && @app.nil?
-    Then "a #{type} application is created"
-  end
-
-  @app.should_not be_nil, 'No existing applications found.  Check the creation scenarios for failures.'
+  pending
 end
 
 When /^(\d+) (.+) applications are created$/ do |app_count, type|
