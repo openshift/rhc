@@ -8,7 +8,7 @@ module RHC::Commands
     default_action :list
 
     summary "List supported embedded cartridges"
-    alias_action :"app cartridge list", :root_command => true
+    alias_action :"app cartridge list", :root_command => true, :deprecated => true
     def list
       carts = rest_client.cartridges.collect { |c| c.name }
       results { say "#{carts.join(', ')}" }
@@ -18,10 +18,10 @@ module RHC::Commands
     summary "Add a cartridge to your application"
     syntax "<cartridge_type> [--timeout timeout] [--namespace namespace] [--app app]"
     argument :cart_type, "The type of the cartridge you are adding (run 'rhc cartridge list' to obtain a list of available cartridges)", ["-c", "--cartridge cart_type"]
-    option ["-n", "--namespace namespace"], "Namespace of the application you are adding the cartrdige to", :context => :namespace_context, :required => true
-    option ["-a", "--app app"], "Application you are adding the cartride to", :context => :app_context, :required => true
+    option ["-n", "--namespace namespace"], "Namespace of the application you are adding the cartridge to", :context => :namespace_context, :required => true
+    option ["-a", "--app app"], "Application you are adding the cartridge to", :context => :app_context, :required => true
     option ["--timeout timeout"], "Timeout, in seconds, for the session"
-    alias_action :"app cartridge add", :root_command => true
+    alias_action :"app cartridge add", :root_command => true, :deprecated => true
     def add(cart_type)
       carts = rest_client.find_cartridges :regex => cart_regex(cart_type)
       app = options.app
@@ -52,6 +52,66 @@ module RHC::Commands
       results { say "  Success!" }
 
       0
+    end
+
+    summary "Remove a cartridge from your application"
+    syntax "<cartridge> [--timeout timeout] [--namespace namespace] [--app app]"
+    argument :cartridge, "The name of the cartridge you are removing", ["-c", "--cartridge cartridge"]
+    option ["-n", "--namespace namespace"], "Namespace of the application you are removing the cartridge from", :context => :namespace_context, :required => true
+    option ["-a", "--app app"], "Application you are removing the cartridge from", :context => :app_context, :required => true
+    option ["--timeout timeout"], "Timeout, in seconds, for the session"
+    alias_action :"app cartridge remove", :root_command => true, :deprecated => true
+    def remove(cartridge)
+    end
+
+    summary "Stop a cartridge"
+    syntax "<cartridge> [--timeout timeout] [--namespace namespace] [--app app]"
+    argument :cart_type, "The name of the cartridge you are stopping", ["-c", "--cartridge cartridge"]
+    option ["-n", "--namespace namespace"], "Namespace of the application the cartrdige belongs to", :context => :namespace_context, :required => true
+    option ["-a", "--app app"], "Application the cartridge", :context => :app_context, :required => true
+    option ["--timeout timeout"], "Timeout, in seconds, for the session"
+    alias_action :"app cartridge start", :root_command => true, :deprecated => true
+    def start
+    end
+
+    summary "Stop a cartridge"
+    syntax "<cartridge_type> [--timeout timeout] [--namespace namespace] [--app app]"
+    argument :cart_type, "The name of the cartridge you are stopping", ["-c", "--cartridge cartridge"]
+    option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
+    option ["-a", "--app app"], "Application you the cartridge belongs to", :context => :app_context, :required => true
+    option ["--timeout timeout"], "Timeout, in seconds, for the session"
+    alias_action :"app cartridge stop", :root_command => true, :deprecated => true
+    def stop(cartridge)
+    end
+
+    summary "Restart a cartridge"
+    syntax "<cartridge_type> [--timeout timeout] [--namespace namespace] [--app app]"
+    argument :cart_type, "The name of the cartridge you are restarting", ["-c", "--cartridge cartridge"]
+    option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
+    option ["-a", "--app app"], "Application the cartridge belongs to", :context => :app_context, :required => true
+    option ["--timeout timeout"], "Timeout, in seconds, for the session"
+    alias_action :"app cartridge restart", :root_command => true, :deprecated => true
+    def restart(cartridge)
+    end
+
+    summary "Get current the status of a cartridge"
+    syntax "<cartridge> [--timeout timeout] [--namespace namespace] [--app app]"
+    argument :cart_type, "The name of the cartridge you are getting the status of", ["-c", "--cartridge cartridge"]
+    option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
+    option ["-a", "--app app"], "Application the cartridge belongs to", :context => :app_context, :required => true
+    option ["--timeout timeout"], "Timeout, in seconds, for the session"
+    alias_action :"app cartridge status", :root_command => true, :deprecated => true
+    def status(cartridge)
+    end
+
+    summary "Reload the cartridge's configuration"
+    syntax "<cartridge> [--timeout timeout] [--namespace namespace] [--app app]"
+    argument :cart_type, "The name of the cartridge you are reloading", ["-c", "--cartridge cartridge"]
+    option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
+    option ["-a", "--app app"], "Application the cartridge belongs to", :context => :app_context, :required => true
+    option ["--timeout timeout"], "Timeout, in seconds, for the session"
+    alias_action :"app cartridge reload", :root_command => true, :deprecated => true
+    def reload(cartridge)
     end
 
     private
