@@ -17,9 +17,10 @@ end
 
 # Use the transformed array so we can reuse this step for all combinations
 Given /^an existing (or new )?(.+) (application with.*)$/ do |create,type, embeds|
-  @app = App.find_on_fs(type).find do |app|
-    app.embed == embeds
-  end
+  options = { :type => type }
+  options[:embed] = embeds if embeds
+
+  @app = App.find_on_fs(options)
 
   if create && @app.nil?
     Then "a #{type} application is created"
