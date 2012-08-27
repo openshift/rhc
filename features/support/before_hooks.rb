@@ -9,3 +9,15 @@
     Given assumption
   end
 end
+
+Before('@application','@running') do
+  if @app.is_inaccessible?
+    Then "the application is started"
+  end
+end
+
+Before('@application','@stopped') do
+  unless @app.is_inaccessible?
+    Then "the application is stopped"
+  end
+end

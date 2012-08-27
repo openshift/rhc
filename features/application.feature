@@ -13,12 +13,26 @@ Feature: Application Operations
     When the application is <command>
     Then <what> should <status>
 
+    # Breaking these examples up so they can flow logically, but also be run individually
+    @running
     Examples:
       | command   | what            | status |
-      | stopped   | the application | not be accessible |
-      | started   | the application | be accessible |
       | restarted | the application | be accessible |
       | snapshot  | the snapshot    | be found |
       | tidied    | it              | succeed |
       | shown     | it              | succeed |
+
+    @running
+    Examples:
+      | command   | what            | status |
+      | stopped   | the application | not be accessible |
+
+    @stopped
+    Examples:
+      | command   | what            | status |
+      | started   | the application | be accessible |
+
+    @running
+    Examples:
+      | command   | what            | status |
       | destroyed | the application | not exist |
