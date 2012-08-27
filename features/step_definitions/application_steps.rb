@@ -82,10 +82,11 @@ Then /^the snapshot should be found$/ do
 end
 
 Then /^the applications should be accessible?$/ do
+  old_app = @app
   @apps.each do |app|
-    app.is_accessible?.should be_true
-    app.is_accessible?({:use_https => true}).should be_true
+    Then "the application should be accessible"
   end
+  @app = old_app
 end
 
 Then /^the application should be accessible$/ do
