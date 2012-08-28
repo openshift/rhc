@@ -30,4 +30,6 @@ module RHC
       super message, 118
     end
   end
+
+  class DeprecatedError < RuntimeError; end
 end
