@@ -21,6 +21,21 @@ module RHC
 
     extend self
 
+    def disable_deprecated?
+      # 1) default for now is false
+      # 2) when releasing a 1.0 beta flip this to true
+      # 3) all deprecated aliases should be removed right before 1.0
+      disable = false
+
+      env_disable = ENV['DISABLE_DEPRECATED']
+      unless env_disable.nil?
+        disable = true
+        disable = false if ['false', 'no', '0'].include? env_disable
+      end
+
+      disable
+    end
+
     def decode_json(s)
       RHC::Vendor::OkJson.decode(s)
     end

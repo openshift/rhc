@@ -149,8 +149,10 @@ class RHC::Commands::Base
       # if it is a root_command we simply alias it to the passed in action
       # if not we prepend the current resource to the action
       # default == false
-      root_command = options[:root_command] || false
-      aliases << [action, root_command]
+      options[:root_command] ||= false
+      options[:action] = action
+      options[:deprecated] ||= false
+      aliases << options
     end
 
     def self.option(switches, description, options={})
