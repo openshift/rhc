@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 0.98.3
+Version: 0.98.4
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -114,6 +114,78 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Aug 28 2012 Adam Miller <admiller@redhat.com> 0.98.4-1
+- Merge pull request #137 from BanzaiMan/dev/hasari/feature-color-spec-output
+  (openshift+bot@redhat.com)
+- Merge pull request #140 from J5/command-refactor (openshift+bot@redhat.com)
+- Merge pull request #138 from fotioslindiakos/jenkins_rhc_tests
+  (openshift+bot@redhat.com)
+- add spec test for deleting a domain with applications (johnp@redhat.com)
+- Minor spec bug (ccoleman@redhat.com)
+- Readd nocov, J5 to add it separately (ccoleman@redhat.com)
+- Fix puts in ssh_key_helpers (ccoleman@redhat.com)
+- Merge remote-tracking branch 'origin/master' into integration
+  (ccoleman@redhat.com)
+- Fix refactor spec tests (ccoleman@redhat.com)
+- Merge pull request #133 from smarterclayton/move_rhc_rest_to_proper_namespace
+  (ccoleman@redhat.com)
+- Merge pull request #120 from J5/command-refactor (ccoleman@redhat.com)
+- 100%% spec coverage (johnp@redhat.com)
+- assign config and options outside the constructor (johnp@redhat.com)
+- remove spec changes for domain update to reflect the revert
+  (johnp@redhat.com)
+- remove cartridge spec so we can merge with master (johnp@redhat.com)
+- Revert "update 'domain update' to use old_domain as a context arg"
+  (johnp@redhat.com)
+- remove cartridge for now so that the infrastructure can be marged
+  (johnp@redhat.com)
+- Changed begin/retry to use loop to satisfy changes for 1.9 Moved redirect
+  logic outside of timeout to prevent original timeout from killing recursion
+  Added redirect depth check (fotios@redhat.com)
+- Update features/README.md (fotioslindiakos@gmail.com)
+- Added information for bypassing SSH to the README (fotios@redhat.com)
+- Fixed Domain create step (fotios@redhat.com)
+- Modified HTTP request code (fotios@redhat.com)
+- Modified test for deleted applications (fotios@redhat.com)
+- Require ActiveSupport::OrderedHash for cucumber (fotios@redhat.com)
+- Added SSH wrapper so we can ignore host authenticity checking during Jenkins
+  tests (fotios@redhat.com)
+- Create ~/.openshift directory before tests if it doesn't exist
+  (fotios@redhat.com)
+- rhc version bump (admiller@redhat.com)
+- Move "--color" option to a file that is read by "(r)spec". This will allow
+  "bundle exec spec …" to pick up "--color" without having to type it every
+  time. (asari.ruby@gmail.com)
+- Leave FIXME on domain.destroy catch exception (ccoleman@redhat.com)
+- Remove command_runner.rb, should be in another branch (ccoleman@redhat.com)
+- Move Rhc::Rest to proper RHC::Rest package (ccoleman@redhat.com)
+- fix spec issues from rebase (johnp@redhat.com)
+- revert overzealous code removal (johnp@redhat.com)
+- remove spec tests since we removed contextual args (johnp@redhat.com)
+- commit rake task that runs the autocomplete generator (johnp@redhat.com)
+- refactor autocomplete as a script generation tool (johnp@redhat.com)
+- readd requires which got lost in rebase (johnp@redhat.com)
+- remove rhc and autocommit from args list in autocomplete (johnp@redhat.com)
+- move autocomplete out of stream of the regular commands (johnp@redhat.com)
+- improvements to autocomplete (johnp@redhat.com)
+- initial commit of the hidden autocomplete command (johnp@redhat.com)
+- hide any commands which don't have a summary (johnp@redhat.com)
+- refactor context arguments as options and implement lists (johnp@redhat.com)
+- indent fix (johnp@redhat.com)
+- clean up arg fill loop by using reverse.each_with_index (johnp@redhat.com)
+- add the actual cartridge tests to get 100%% spec test coverage
+  (johnp@redhat.com)
+- 100%% spec coverage on carts (johnp@redhat.com)
+- add spec tests for argument fill and validation (johnp@redhat.com)
+- fix broken spec tests (johnp@redhat.com)
+- rename find_cartridge to find_cartridges since it returns an array
+  (johnp@redhat.com)
+- add new cartridge command (johnp@redhat.com)
+- update 'domain update' to use old_domain as a context arg (johnp@redhat.com)
+- add context argument processing (johnp@redhat.com)
+- enable finding cartridges via a regex (johnp@redhat.com)
+- add the ability to alias a command as a root command (johnp@redhat.com)
+
 * Thu Aug 23 2012 Adam Miller <admiller@redhat.com> 0.98.3-1
 - rhc version bump (admiller@redhat.com)
 
