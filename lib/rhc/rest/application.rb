@@ -44,6 +44,22 @@ module RHC
         return request(request)
       end
 
+      #Find Cartridge by name
+      def find_cartridge(name, options={})
+        logger.debug "Finding cartridge #{name} in app #{@name}" if @mydebug
+
+        type = options[:type]
+
+        cartridges.each { |cart| return cart if cart.name == name and (type.nil? or cart.type == type) }
+
+        suggested_msg = ""
+        unless cartridges.empty?
+          suggested_msg = "\n\nValid cartridges:"
+          cartridges.each { |cart| suggested_msg += "\n#{cart.name}" if type.nil? or cart.type == type }
+        end
+        raise RHC::CartridgeNotFoundException.new("Cartridge #{name} can't be found in application #{@name}.#{suggested_msg}")
+      end
+
       #Start Application
       def start
         logger.debug "Starting application #{self.name}" if @mydebug
