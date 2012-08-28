@@ -34,30 +34,34 @@ $namespace = ENV['RHC_NAMESPACE']
 raise "Username not found in environment (RHC_USERNAME)" unless $username
 raise "Password not found in environment (RHC_PASSWORD)" unless $password
 
-puts "\n\n"
-puts "--------------------------------------------------------------------------------------------------"
-puts "                Test Information"
-puts "--------------------------------------------------------------------------------------------------"
-puts "  REST End Point: #{$end_point}"
-puts "  Domain: #{$domain}"
-puts "  Username: #{$username}"
-puts "  Creating New Namespace: #{$namespace.nil?}"
-puts "--------------------------------------------------------------------------------------------------"
-puts "\n\n"
+def _log(msg)
+  puts msg unless ENV['QUIET']
+end
+
+_log "\n\n"
+_log "--------------------------------------------------------------------------------------------------"
+_log "                Test Information"
+_log "--------------------------------------------------------------------------------------------------"
+_log "  REST End Point: #{$end_point}"
+_log "  Domain: #{$domain}"
+_log "  Username: #{$username}"
+_log "  Creating New Namespace: #{$namespace.nil?}"
+_log "--------------------------------------------------------------------------------------------------"
+_log "\n\n"
 
 unless ENV['NO_CLEAN']
-  puts "--------------------------------------------------------------------------------------------------"
-  puts "               Resetting environment"
-  puts "--------------------------------------------------------------------------------------------------"
+  _log "--------------------------------------------------------------------------------------------------"
+  _log "               Resetting environment"
+  _log "--------------------------------------------------------------------------------------------------"
   # Ensure the directory for local_config_path exists
   config_dir = File.dirname(RHC::Config::local_config_path)
   Dir::mkdir(config_dir) unless File.exists?(config_dir)
 
   # Start with a clean config
-  puts "  Replacing express.conf with the specified libra_server"
+  _log "  Replacing express.conf with the specified libra_server"
   File.open(RHC::Config::local_config_path, 'w') {|f| f.write("libra_server=#{URI.parse($end_point).host}") }
 
-  puts "  Cleaning up test applications..."
+  _log "  Cleaning up test applications..."
   FileUtils.rm_rf RHCHelper::TEMP_DIR
 
   # Cleanup all test applications
@@ -65,15 +69,15 @@ unless ENV['NO_CLEAN']
   client.domains.each do |domain|
     domain.applications.each do |app|
       if app.name.start_with?("test")
-        puts "    Deleting application #{app.name}"
+        _log "    Deleting application #{app.name}"
         app.delete
       end
     end
   end
 
-  puts "  Application cleanup complete"
-  puts "--------------------------------------------------------------------------------------------------"
-  puts "\n\n"
+  _log "  Application cleanup complete"
+  _log "--------------------------------------------------------------------------------------------------"
+  _log "\n\n"
 end
 
 AfterConfiguration do |config|
