@@ -28,7 +28,14 @@ When /^the setup wizard is run$/ do
   RHC::Config.initialize
 end
 
-Then /^the client tools should be setup$/ do
-  RHC::Wizard.new(RHC::Config).needs_configuration?.should be_false, "Wizard still thinks it needs to be run"
+Then /^the client tools should be setup( if needed)?$/ do |setup|
+  configured = RHC::Wizard.new(RHC::Config).needs_configuration?
+
+  if !configured && setup
+    Then 'the setup wizard is run'
+    configured = RHC::Wizard.new(RHC::Config).needs_configuration?
+  end
+
+  configured.should be_false, "Wizard still thinks it needs to be run"
 end
 

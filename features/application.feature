@@ -1,8 +1,5 @@
-@application
+@application @domain_required
 Feature: Application Operations
-
-  Background:
-    Given we have an existing domain
 
   @init
   Scenario: Application Creation

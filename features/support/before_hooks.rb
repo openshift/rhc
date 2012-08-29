@@ -1,15 +1,21 @@
+Before('@domain_required') do
+  Given 'we have an existing domain'
+end
+
+# These assumptions help to ensure any steps that are run independently have the same state as after the @init step
 {
-  :application => 'we have a running php-5.3 application without an embedded cartridge',
+  :application => 'an existing or new php-5.3 application without an embedded cartridge',
   :domain => 'we have an existing domain',
   :client => 'we have the client tools setup',
-  :single_cartridge => 'we have a running php-5.3 application with an embedded mysql-5.1 cartridge',
-  :multiple_cartridge => 'we have a running php-5.3 application with embedded mysql-5.1 and phpmyadmin-3.4 cartridges',
+  :single_cartridge => 'an existing or new php-5.3 application with an embedded mysql-5.1 cartridge',
+  :multiple_cartridge => 'an existing or new php-5.3 application with embedded mysql-5.1 and phpmyadmin-3.4 cartridges',
 }.each do |tag,assumption|
   Before("@#{tag}",'~@init') do
     Given assumption
   end
 end
 
+# These ensure that if our test requires a running/stopped application, it exists
 Before('@application','@running') do
   if @app.is_inaccessible?
     Then "the application is started"
