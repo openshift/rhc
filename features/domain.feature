@@ -1,8 +1,5 @@
-@domain
+@domain @client_tools_required
 Feature: Existing Domain Operations
-
-  Background:
-    Given we have the client tools setup
 
   @init
   Scenario: Domain Creation

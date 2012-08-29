@@ -91,6 +91,7 @@ AfterConfiguration do |config|
   logger = Logger.new(File.join(RHCHelper::TEMP_DIR, "cucumber.log"))
   logger.level = Logger::DEBUG
   RHCHelper::Loggable.logger = logger
+  $logger = logger
 
   # Setup performance monitor logger
   perf_logger = Logger.new(File.join(RHCHelper::TEMP_DIR, "perfmon.log"))

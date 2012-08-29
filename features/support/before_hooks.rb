@@ -1,5 +1,14 @@
+# Defined the required hooks first so we make sure we have everything we need
 Before('@domain_required') do
   Given 'we have an existing domain'
+end
+
+Before('@client_tools_required') do
+  Given 'we have the client tools setup'
+end
+
+Before('@single_cartridge','@init') do
+  Given 'an existing or new php-5.3 application without an embedded cartridge'
 end
 
 # These assumptions help to ensure any steps that are run independently have the same state as after the @init step
@@ -12,18 +21,5 @@ end
 }.each do |tag,assumption|
   Before("@#{tag}",'~@init') do
     Given assumption
-  end
-end
-
-# These ensure that if our test requires a running/stopped application, it exists
-Before('@application','@running') do
-  if @app.is_inaccessible?
-    Then "the application is started"
-  end
-end
-
-Before('@application','@stopped') do
-  unless @app.is_inaccessible?
-    Then "the application is stopped"
   end
 end
