@@ -81,9 +81,9 @@ NO_CLEAN
 This option prevents the tests from deleting the existing apps in this
 namespace before running the tests.
 It also prevents the tests from replacing the existing
-`~/.openshift/express.conf'.
+`~/.openshift/express.conf`.
 
-If this is specified, the script will use values stored in `/tmp/rhc/(username|namespace)` (unless overridden by `RHC_(USERNAME|NAMESPACE)`.
+If this is specified, the script will use values stored in `/tmp/rhc/(username|namespace)` (unless overridden by `RHC_(USERNAME|NAMESPACE)`).
 
 Development Usage
 =================
