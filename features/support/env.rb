@@ -12,6 +12,18 @@ def set_path
 end
 
 def set_creds
+  # Get the value from the file
+  def from_file(filename)
+    value =  File.exists?(filename) ? File.read(filename) : ""
+    value.empty? ? nil : value
+  end
+
+  # If NO_CLEAN is specified, reuse the variables if specified
+  if ENV['NO_CLEAN']
+    ENV['RHC_USERNAME'] ||= from_file('/tmp/rhc/username')
+    ENV['RHC_NAMESPACE'] ||= from_file('/tmp/rhc/namespace')
+  end
+
   # Generate a random username in case one isn't set
   chars = ("1".."9").to_a
   random_username = "test" + Array.new(8, '').collect{chars[rand(chars.size)]}.join + "@example.com"
