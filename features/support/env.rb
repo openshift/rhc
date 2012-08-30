@@ -7,29 +7,53 @@ require 'rhc_helper'
 require 'rhc/rest'
 require 'rhc/config'
 
-# Generate a random username in case one isn't set
-chars = ("1".."9").to_a
-random_username = "test" + Array.new(8, '').collect{chars[rand(chars.size)]}.join + "@example.com"
+def set_path
+  ENV["PATH"] = "#{ENV['RHC_LOCAL_PATH']}:#{ENV['PATH']}" if ENV['RHC_LOCAL_PATH']
+end
 
- ENV["PATH"] = "#{ENV['RHC_LOCAL_PATH']}:#{ENV['PATH']}" if ENV['RHC_LOCAL_PATH']
+def set_creds
+  # Generate a random username in case one isn't set
+  chars = ("1".."9").to_a
+  random_username = "test" + Array.new(8, '').collect{chars[rand(chars.size)]}.join + "@example.com"
 
-# Generate a random username if one isn't specified (for unauthenticated systems)
-$username = ENV['RHC_USERNAME'] || random_username
+  # Generate a random username if one isn't specified (for unauthenticated systems)
+  $username = ENV['RHC_USERNAME'] || random_username
 
-# Use a generic password if one isn't specific (for unauthenticated systems)
-$password = ENV['RHC_PASSWORD'] || 'test'
+  # Use a generic password if one isn't specific (for unauthenticated systems)
+  $password = ENV['RHC_PASSWORD'] || 'test'
 
-# Default the domain to production unless a random username is used.
-# In that case, use dev.rhcloud.com for the development DNS namespace
-default_domain = ENV['RHC_USERNAME'] ? "rhcloud.com" : "dev.rhcloud.com"
-$domain = ENV['RHC_DOMAIN'] || default_domain
+  # Default the domain to production unless a random username is used.
+  # In that case, use dev.rhcloud.com for the development DNS namespace
+  default_domain = ENV['RHC_USERNAME'] ? "rhcloud.com" : "dev.rhcloud.com"
+  $domain = ENV['RHC_DOMAIN'] || default_domain
 
-# Default the endpoint to the production REST API's
-$end_point = ENV['RHC_ENDPOINT'] || "https://openshift.redhat.com/broker/rest/api"
+  # Don't default the namespace to anything - the existance if checked to
+  # determine how the setup wizard is run
+  $namespace = ENV['RHC_NAMESPACE']
+end
 
-# Don't default the namespace to anything - the existance if checked to
-# determine how the setup wizard is run
-$namespace = ENV['RHC_NAMESPACE']
+def set_endpoint
+  # Use either the ENV variable, our libra_server, or prod
+  ENV['RHC_SERVER'] ||= (ENV['RHC_DEV'] ? RHC::Config['libra_server'] : 'openshift.redhat.com')
+  # Format the endpoint properly
+  ENV['RHC_ENDPOINT'] ||= "https://%s/broker/rest/api" % ENV['RHC_SERVER']
+  $end_point =  ENV['RHC_ENDPOINT']
+end
+
+# This env variable needs to be set so the git commands can bypass host key authenticity checking
+def set_ssh
+  ENV['GIT_SSH'] ||= File.expand_path(File.join(File.dirname(__FILE__),'ssh.sh'))
+end
+
+### Run initialization commands
+# Set the PATH env variable
+set_path
+# Set the username,password,etc based on env variables or defaults
+set_creds
+# Set the endpoint to test against
+set_endpoint
+# Set the ssh env variable
+set_ssh
 
 raise "Username not found in environment (RHC_USERNAME)" unless $username
 raise "Password not found in environment (RHC_PASSWORD)" unless $password
@@ -99,7 +123,7 @@ AfterConfiguration do |config|
   RHCHelper::Loggable.perf_logger = perf_logger
 end
 
-After do |s| 
+After do |s|
   # Tell Cucumber to quit after this scenario is done - if it failed.
   Cucumber.wants_to_quit = true if s.failed?
 end
