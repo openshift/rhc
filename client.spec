@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 0.98.4
+Version: 0.98.5
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -114,6 +114,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Aug 30 2012 Adam Miller <admiller@redhat.com> 0.98.5-1
+- version bump for rhc (admiller@redhat.com)
+
 * Tue Aug 28 2012 Adam Miller <admiller@redhat.com> 0.98.4-1
 - Merge pull request #137 from BanzaiMan/dev/hasari/feature-color-spec-output
   (openshift+bot@redhat.com)
