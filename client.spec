@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 0.98.5
+Version: 0.98.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -114,6 +114,10 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Aug 30 2012 Adam Miller <admiller@redhat.com> 0.98.6-1
+- rhc version bump (admiller@redhat.com)
+- remove autocomplete rake task for now (johnp@redhat.com)
+
 * Thu Aug 30 2012 Adam Miller <admiller@redhat.com> 0.98.5-1
 - version bump for rhc (admiller@redhat.com)
 
