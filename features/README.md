@@ -185,8 +185,6 @@ Given "a demo directory exists or is created" do
 end
 ```
 
-This goes against the concept of using error statements for control
-
 Now we can define a `before_hook` that runs our steps before any
 scenarios that are not tagged `@init`.
 
