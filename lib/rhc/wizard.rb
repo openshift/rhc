@@ -116,7 +116,7 @@ EOF
 
         paragraph do
           say "Created local config file: " + @config_path
-          say "The express.conf file contains user configuration, and can be transferred to different computers."
+          say "The #{File.basename(@config_path)} file contains user configuration, and can be transferred to different computers."
         end
 
         true
