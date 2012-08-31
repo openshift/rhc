@@ -179,7 +179,7 @@ module RestSpecHelper
     end
   end
 
-  class MockRestApplication
+  class MockRestApplication < RHC::Rest::Application
     attr_reader :name, :uuid, :creation_time, :git_url, :app_url, :aliases
 
     def initialize(name, type, domain)
@@ -216,6 +216,22 @@ module RestSpecHelper
       @type = type
       @app = app
       @properties = properties
+    end
+
+    def start
+      @app
+    end
+
+    def stop
+      @app
+    end
+
+    def restart
+      @app
+    end
+
+    def reload
+      @app
     end
   end
 end
