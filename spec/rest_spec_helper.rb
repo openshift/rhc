@@ -249,6 +249,10 @@ module RestSpecHelper
       @properties = properties
     end
 
+    def destroy
+      @app.cartridges.delete self
+    end
+
     def start
       @app
     end

@@ -79,6 +79,7 @@ module RHC::Commands
       rest_cartridge.destroy
 
       results { say "Success! Cartridge #{rest_cartridge.name} removed from application #{rest_app.name}." }
+      0
     end
 
     summary "Start a cartridge"
