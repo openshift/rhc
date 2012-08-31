@@ -46,6 +46,7 @@ def run_setup_wizard_if_needed
           ARGV.include?('-h'))
     RHC::Wizard.new(RHC::Config).run
   end
+  ARGV.delete('--noprompt')
 end
 
 begin
