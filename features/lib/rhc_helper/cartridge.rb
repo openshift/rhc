@@ -24,7 +24,7 @@ module RHCHelper
       @file = "#{TEMP_DIR}/#{$namespace}.json"
     end
 
-    def rhc_app_cartridge(cmd)
+    def legacy_rhc_app_cartridge(cmd)
       full_cmd = "rhc app cartridge #{cmd} -l #{$username} -p #{$password} -a #{@app_name}"
       full_cmd += " -c #{@name}" if cmd != "list"
       run(full_cmd, nil) do |exitstatus, out, err, arg|
@@ -32,15 +32,23 @@ module RHCHelper
       end
     end
 
+    def rhc_cartridge(cmd)
+      full_cmd = "rhc cartridge #{cmd} -l #{$username} -p #{$password} -a #{@app_name}"
+      full_cmd += " #{@name}" if cmd != "list"
+      run(full_cmd, nil) do |exitstatus, out, err, arg|
+        yield exitstatus, out, err, arg if block_given?
+      end
+    end
+
     def add
-      rhc_app_cartridge('add') do |exitstatus, out, err, arg|
+      rhc_cartridge('add') do |exitstatus, out, err, arg|
         yield exitstatus, out, err, arg if block_given?
       end
     end
 
     def status
       result = ""
-      rhc_app_cartridge('status') do |exitstatus, out, err, arg|
+      legacy_rhc_app_cartridge('status') do |exitstatus, out, err, arg|
         result = out
       end
 
@@ -48,19 +56,19 @@ module RHCHelper
     end
 
     def start
-      rhc_app_cartridge('start')
+      rhc_cartridge('start')
     end
 
     def stop
-      rhc_app_cartridge('stop')
+      rhc_cartridge('stop')
     end
 
     def restart
-      rhc_app_cartridge('restart')
+      rhc_cartridge('restart')
     end
 
     def remove
-      rhc_app_cartridge('remove')
+      rhc_cartridge('remove')
     end
   end
 end
