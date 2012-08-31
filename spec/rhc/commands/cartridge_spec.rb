@@ -86,6 +86,43 @@ describe RHC::Commands::Cartridge do
     end
   end
 
+  describe 'cartridge remove without confirming' do
+    let(:arguments) { ['cartridge', 'remove', 'mock_cart-1', '-a', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+
+    context 'when run' do
+      before(:each) do
+        @rc = MockRestClient.new
+        domain = @rc.add_domain("mock_domain")
+        app = domain.add_application("app1", "mock_type")
+        app.add_cartridge('mock_cart-1')
+      end
+      it { expect { run }.should exit_with_code(1) }
+      it { run_output.should match("Removing a cartridge is a destructive operation") }
+    end
+  end
+
+  describe 'cartridge remove' do
+    let(:arguments) { ['cartridge', 'remove', 'mock_cart-1', '--confirm', '--trace', '-a', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+
+    context 'when run' do
+      before(:each) do
+        @rc = MockRestClient.new
+        domain = @rc.add_domain("mock_domain")
+        @app = domain.add_application("app1", "mock_type")
+      end
+      it "should remove cartridge" do
+        @app.add_cartridge('mock_cart-1')
+        expect { run }.should exit_with_code(0)
+        # framework cart should be the only one listed
+        @app.cartridges.length.should == 1
+      end
+      it "should raise cartridge not found exception" do
+        expect { run }.should raise_error RHC::CartridgeNotFoundException
+      end
+    end
+  end
+
+
   describe 'cartridge start' do
     let(:arguments) { ['cartridge', 'start', 'mock_cart-1', '-a', 'app1','--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
