@@ -115,9 +115,6 @@ module RHCHelper
     end
   end
 
-  # The regex to parse the ssh output from the create app results
-  SSH_OUTPUT_PATTERN = %r|ssh://([^@]+)@([^/]+)|
-
   #
   # Begin Post Processing Callbacks
   #
