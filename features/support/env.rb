@@ -7,57 +7,97 @@ require 'rhc_helper'
 require 'rhc/rest'
 require 'rhc/config'
 
-# Generate a random username in case one isn't set
-chars = ("1".."9").to_a
-random_username = "test" + Array.new(8, '').collect{chars[rand(chars.size)]}.join + "@example.com"
+def set_path
+  ENV["PATH"] = "#{ENV['RHC_LOCAL_PATH']}:#{ENV['PATH']}" if ENV['RHC_LOCAL_PATH']
+end
 
- ENV["PATH"] = "#{ENV['RHC_LOCAL_PATH']}:#{ENV['PATH']}" if ENV['RHC_LOCAL_PATH']
+def set_creds
+  # Get the value from the file
+  def from_file(filename)
+    value =  File.exists?(filename) ? File.read(filename) : ""
+    value.empty? ? nil : value
+  end
 
-# Generate a random username if one isn't specified (for unauthenticated systems)
-$username = ENV['RHC_USERNAME'] || random_username
+  # If NO_CLEAN is specified, reuse the variables if specified
+  if ENV['NO_CLEAN']
+    ENV['RHC_USERNAME'] ||= from_file('/tmp/rhc/username')
+    ENV['RHC_NAMESPACE'] ||= from_file('/tmp/rhc/namespace')
+  end
 
-# Use a generic password if one isn't specific (for unauthenticated systems)
-$password = ENV['RHC_PASSWORD'] || 'test'
+  # Generate a random username in case one isn't set
+  chars = ("1".."9").to_a
+  random_username = "test" + Array.new(8, '').collect{chars[rand(chars.size)]}.join + "@example.com"
 
-# Default the domain to production unless a random username is used.
-# In that case, use dev.rhcloud.com for the development DNS namespace
-default_domain = ENV['RHC_USERNAME'] ? "rhcloud.com" : "dev.rhcloud.com"
-$domain = ENV['RHC_DOMAIN'] || default_domain
+  # Generate a random username if one isn't specified (for unauthenticated systems)
+  $username = ENV['RHC_USERNAME'] || random_username
 
-# Default the endpoint to the production REST API's
-$end_point = ENV['RHC_ENDPOINT'] || "https://openshift.redhat.com/broker/rest/api"
+  # Use a generic password if one isn't specific (for unauthenticated systems)
+  $password = ENV['RHC_PASSWORD'] || 'test'
 
-# Don't default the namespace to anything - the existance if checked to
-# determine how the setup wizard is run
-$namespace = ENV['RHC_NAMESPACE']
+  # Default the domain to production unless a random username is used.
+  # In that case, use dev.rhcloud.com for the development DNS namespace
+  default_domain = ENV['RHC_USERNAME'] ? "rhcloud.com" : "dev.rhcloud.com"
+  $domain = ENV['RHC_DOMAIN'] || default_domain
+
+  # Don't default the namespace to anything - the existance if checked to
+  # determine how the setup wizard is run
+  $namespace = ENV['RHC_NAMESPACE']
+end
+
+def set_endpoint
+  # Use either the ENV variable, our libra_server, or prod
+  ENV['RHC_SERVER'] ||= (ENV['RHC_DEV'] ? RHC::Config['libra_server'] : 'openshift.redhat.com')
+  # Format the endpoint properly
+  ENV['RHC_ENDPOINT'] ||= "https://%s/broker/rest/api" % ENV['RHC_SERVER']
+  $end_point =  ENV['RHC_ENDPOINT']
+end
+
+# This env variable needs to be set so the git commands can bypass host key authenticity checking
+def set_ssh
+  ENV['GIT_SSH'] ||= File.expand_path(File.join(File.dirname(__FILE__),'ssh.sh'))
+end
+
+### Run initialization commands
+# Set the PATH env variable
+set_path
+# Set the username,password,etc based on env variables or defaults
+set_creds
+# Set the endpoint to test against
+set_endpoint
+# Set the ssh env variable
+set_ssh
 
 raise "Username not found in environment (RHC_USERNAME)" unless $username
 raise "Password not found in environment (RHC_PASSWORD)" unless $password
 
-puts "\n\n"
-puts "--------------------------------------------------------------------------------------------------"
-puts "                Test Information"
-puts "--------------------------------------------------------------------------------------------------"
-puts "  REST End Point: #{$end_point}"
-puts "  Domain: #{$domain}"
-puts "  Username: #{$username}"
-puts "  Creating New Namespace: #{$namespace.nil?}"
-puts "--------------------------------------------------------------------------------------------------"
-puts "\n\n"
+def _log(msg)
+  puts msg unless ENV['QUIET']
+end
+
+_log "\n\n"
+_log "--------------------------------------------------------------------------------------------------"
+_log "                Test Information"
+_log "--------------------------------------------------------------------------------------------------"
+_log "  REST End Point: #{$end_point}"
+_log "  Domain: #{$domain}"
+_log "  Username: #{$username}"
+_log "  Creating New Namespace: #{$namespace.nil?}"
+_log "--------------------------------------------------------------------------------------------------"
+_log "\n\n"
 
 unless ENV['NO_CLEAN']
-  puts "--------------------------------------------------------------------------------------------------"
-  puts "               Resetting environment"
-  puts "--------------------------------------------------------------------------------------------------"
+  _log "--------------------------------------------------------------------------------------------------"
+  _log "               Resetting environment"
+  _log "--------------------------------------------------------------------------------------------------"
   # Ensure the directory for local_config_path exists
   config_dir = File.dirname(RHC::Config::local_config_path)
   Dir::mkdir(config_dir) unless File.exists?(config_dir)
 
   # Start with a clean config
-  puts "  Replacing express.conf with the specified libra_server"
+  _log "  Replacing express.conf with the specified libra_server"
   File.open(RHC::Config::local_config_path, 'w') {|f| f.write("libra_server=#{URI.parse($end_point).host}") }
 
-  puts "  Cleaning up test applications..."
+  _log "  Cleaning up test applications..."
   FileUtils.rm_rf RHCHelper::TEMP_DIR
 
   # Cleanup all test applications
@@ -65,15 +105,15 @@ unless ENV['NO_CLEAN']
   client.domains.each do |domain|
     domain.applications.each do |app|
       if app.name.start_with?("test")
-        puts "    Deleting application #{app.name}"
+        _log "    Deleting application #{app.name}"
         app.delete
       end
     end
   end
 
-  puts "  Application cleanup complete"
-  puts "--------------------------------------------------------------------------------------------------"
-  puts "\n\n"
+  _log "  Application cleanup complete"
+  _log "--------------------------------------------------------------------------------------------------"
+  _log "\n\n"
 end
 
 AfterConfiguration do |config|
@@ -87,6 +127,7 @@ AfterConfiguration do |config|
   logger = Logger.new(File.join(RHCHelper::TEMP_DIR, "cucumber.log"))
   logger.level = Logger::DEBUG
   RHCHelper::Loggable.logger = logger
+  $logger = logger
 
   # Setup performance monitor logger
   perf_logger = Logger.new(File.join(RHCHelper::TEMP_DIR, "perfmon.log"))
@@ -94,7 +135,7 @@ AfterConfiguration do |config|
   RHCHelper::Loggable.perf_logger = perf_logger
 end
 
-After do |s| 
+After do |s|
   # Tell Cucumber to quit after this scenario is done - if it failed.
   Cucumber.wants_to_quit = true if s.failed?
 end

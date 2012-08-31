@@ -2,8 +2,6 @@ require 'logger'
 
 module RHCHelper
   module Loggable
-    PASSWORD_REGEX = / -p [^\s]* /
-
     def logger
       Loggable.logger
     end
