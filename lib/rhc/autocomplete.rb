@@ -31,7 +31,7 @@ module RHC
 
     private
       def cli_init
-        runner = RHC::Commands::Runner.new([])
+        runner = RHC::CommandRunner.new([])
         Commander::Runner.instance_variable_set :@singleton, runner
         RHC::Commands.load.to_commander
       end

@@ -3,7 +3,6 @@ require 'commander'
 require 'commander/runner'
 require 'commander/delegates'
 require 'rhc/commands'
-require 'rhc/help_formatter'
 
 include Commander::UI
 include Commander::UI::AskForClass
@@ -25,13 +24,13 @@ module RHC
     end
 
     def self.start(args)
-      runner = RHC::Commands::Runner.new(args)
+      runner = RHC::CommandRunner.new(args)
       Commander::Runner.instance_variable_set :@singleton, runner
 
-      program :name,        'rhc'
-      program :version,     RHC::VERSION::STRING
-      program :description, 'Command line interface for OpenShift.'
-      program :help_formatter, RHC::UsageHelpFormatter
+      program :name,           'rhc'
+      program :description,    'Command line interface for OpenShift.'
+      program :version,        RHC::VERSION::STRING
+      program :help_formatter, RHC::HelpFormatter
 
       RHC::Commands.load.to_commander
       exit(run! || 0)
