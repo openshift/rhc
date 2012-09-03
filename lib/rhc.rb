@@ -13,7 +13,7 @@ module RHC
   autoload :Rest,           'rhc/rest'
   autoload :HelpFormatter,  'rhc/help_formatter'
   autoload :CommandRunner,  'rhc/command_runner'
-  autoload :Version,        'rhc/version'
+  autoload :VERSION,        'rhc/version'
   autoload :Commands,       'rhc/commands'
   autoload :Config,         'rhc/config'
 end
