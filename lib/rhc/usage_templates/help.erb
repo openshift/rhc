@@ -7,7 +7,6 @@ List of Commands and Resources
 	<%- unless alias? name or name == "help" or name.include?(" ") or command.summary.nil? -%>  <%="%-18s %s\n" % [command.name, command.summary || command.description] %><%- end -%>
 <%- end -%>
   sshkey             Manage multiple keys for the registered OpenShift user.
-  port-forward       Forward remote ports to the workstation
 
 Global Options
 <%- unless @options.nil? or @options.empty?  -%>
