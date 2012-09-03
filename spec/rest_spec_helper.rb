@@ -158,7 +158,7 @@ module RestSpecHelper
       @applications = nil
     end
 
-    def add_application(name, type)
+    def add_application(name, type=nil)
       a = MockRestApplication.new(name, type, self)
       @applications << a
       a
@@ -181,7 +181,7 @@ module RestSpecHelper
       @git_url = "git:fake.foo/git/#{@name}.git"
       @app_url = "https://#{@name}-#{@domain.id}.fake.foo/"
       @aliases = []
-      add_cartridge(type, false)
+      add_cartridge(type, false) if type
     end
 
     def add_cartridge(name, embedded=true)

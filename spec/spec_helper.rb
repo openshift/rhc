@@ -11,7 +11,7 @@ class FakeFS::File
   end
 
   # Epic fail - FakeFS manages to redefine this to '/'
-  PATH_SEPARATOR = ":"
+  const_set('PATH_SEPARATOR', ":")
 
   def self.executable?(path)
     # if the file exists we will assume it is executable
@@ -44,11 +44,11 @@ module ClassSpecHelpers
     end
   end
   def new_command_runner *args, &block
-    Commander::Runner.instance_variable_set :"@singleton", RHC::Commands::Runner.new(args)
+    Commander::Runner.instance_variable_set :"@singleton", RHC::CommandRunner.new(args)
     program :name, 'test'
     program :version, '1.2.3'
     program :description, 'something'
-    program :help_formatter, RHC::UsageHelpFormatter
+    program :help_formatter, RHC::HelpFormatter
 
     #create_test_command
     yield if block

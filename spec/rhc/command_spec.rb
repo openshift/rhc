@@ -136,7 +136,7 @@ describe RHC::Commands::Base do
       end
 
       context 'and when an error is raised in a call' do
-        it { expects_running('static', 'raise_error').should exit_with_code(128) }
+        it { expects_running('static', 'raise_error').should raise_error(StandardError, "test exception") }
       end
 
       context 'and when an exception is raised in a call' do

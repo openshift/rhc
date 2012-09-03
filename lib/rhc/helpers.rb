@@ -8,8 +8,8 @@ module RHC
 
   module Helpers
     private
-      def self.global_option(switches, description)
-        RHC::Commands.global_option switches, description
+      def self.global_option(*args, &block)
+        RHC::Commands.global_option *args, &block
       end
   end
 
@@ -32,6 +32,8 @@ module RHC
         return d.strftime('%l:%M %p').strip if now.yday == d.yday
       end
       d.strftime('%b %d %l:%M %p')
+    rescue ArgumentError
+      "Unknown date"
     end
 
     def datetime_rfc3339(s)
@@ -56,15 +58,15 @@ module RHC
     # Global config
     #
 
-    global_option ['--config FILE'], "Path of a different config file"
+    global_option '-l', '--rhlogin login', "OpenShift login"
+    global_option '-p', '--password password', "OpenShift password"
+    global_option '-d', '--debug', "Turn on debugging"
+
+    global_option '--noprompt', "Do not ask for input"
+    global_option '--config FILE', "Path of a different config file"
     def config
       raise "Operations requiring configuration must define a config accessor"
     end
-
-    global_option ['--noprompt'], "Bypass first run wizard"
-    global_option ['-l', '--rhlogin login'], "Red Hat login (RedHat Network or OpenShift)"
-    global_option ['-p', '--password password'], "Red Hat password"
-    global_option ['-d', '--debug'], "Turn on debugging"
 
     def openshift_server
       config.get_value('libra_server')
@@ -90,6 +92,9 @@ module RHC
     def warn(msg, *args)
       say color(msg, :yellow)
     end
+    def error(msg, *args)
+      say color(msg, :red)
+    end
 
     def color(s, color)
       $terminal.color(s, color)
@@ -113,6 +118,11 @@ module RHC
       items.map do |item|
         item.each_with_index.map{ |s,i| s.send((align[i] == :right ? :rjust : :ljust), columns[i], ' ') }.join(join).strip
       end
+    end
+
+    def header(s)
+      say s
+      say "=" * s.length
     end
 
       ##

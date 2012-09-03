@@ -9,16 +9,27 @@ describe RHC::CLI do
     it('should provide a --config switch') { run_output.should =~ /\-\-config FILE/ }
   end
 
+  shared_examples_for 'an invalid command' do
+    let(:arguments) { @arguments }
+    it('should contain the invalid command message') { run_output.should =~ /is not recognized/ }
+    it('should contain the arguments') { run_output.should include(@arguments[0]) }
+    it('should reference --help') { run_output.should =~ / help\b/ }
+  end
+
   describe '#start' do
     context 'with no arguments' do
-      let(:arguments) { [] }
-      it { expect { run }.should exit_with_code(1) }
-      it('should provide a message about --help') { run_output.should =~ /\-\-help/ }
+      before(:each) { @arguments = [] }
+      it_should_behave_like 'a help page'
+    end
+
+    context 'with an invalid command' do
+      before(:each) { @arguments = ['invalidcommand'] }
+      it_should_behave_like 'an invalid command'
     end
 
     context 'with help and invalid command' do
-      let(:arguments) { ['invalidcommand', 'help'] }
-      it { expect { run }.should exit_with_code(1) }
+      before(:each) { @arguments = ['invalidcommand', '--help'] }
+      it_should_behave_like 'an invalid command'
     end
 
     context 'with --help' do
