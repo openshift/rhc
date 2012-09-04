@@ -168,8 +168,8 @@ module RestSpecHelper
       @applications = nil
     end
 
-    def add_application(name, type=nil)
-      a = MockRestApplication.new(name, type, self)
+    def add_application(name, type=nil, scale=nil)
+      a = MockRestApplication.new(name, type, self, scale)
       @applications << a
       a
     end
@@ -180,9 +180,9 @@ module RestSpecHelper
   end
 
   class MockRestApplication
-    attr_reader :name, :uuid, :creation_time, :git_url, :app_url, :aliases
+    attr_reader :name, :uuid, :creation_time, :git_url, :app_url, :aliases, :scalable, :embedded, :ssh_url
 
-    def initialize(name, type, domain)
+    def initialize(name, type, domain, scale=nil)
       @name = name
       @domain = domain
       @cartridges = []
@@ -190,7 +190,12 @@ module RestSpecHelper
       @uuid = "fakeuuidfortests"
       @git_url = "git:fake.foo/git/#{@name}.git"
       @app_url = "https://#{@name}-#{@domain.id}.fake.foo/"
+      @ssh_url = "ssh://#{@uuid}@127.0.0.1"
       @aliases = []
+      if scale
+        @scalable = true
+        @embedded = {"haproxy-1.4" => {:info => ""}}
+      end
       add_cartridge(type, false) if type
     end
 
