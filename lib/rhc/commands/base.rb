@@ -123,7 +123,7 @@ class RHC::Commands::Base
           value ||= if self.name && !self.name.empty?
             self.name.split('::').last
           end
-          value.to_s.downcase if value
+          value.to_s.split(/(?=[A-Z])/).join('-').downcase if value
         end
     end
 

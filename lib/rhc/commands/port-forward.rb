@@ -4,8 +4,6 @@ module RHC::Commands
   class PortForward < Base
 
     summary "Forward remote ports to the workstation"
-    description ""
-    syntax "<action>"
     option ["-n", "--namespace namespace"], "Namespace of the application you are port forwarding to", :context => :namespace_context, :required => true
     option ["-a", "--app app"], "Application you are port forwarding to (required)", :context => :app_context, :required => true
     option ["--timeout timeout"], "Timeout, in seconds, for the session"
@@ -18,8 +16,7 @@ module RHC::Commands
       rest_app = rest_domain.find_application app
 
       if (rest_app.embedded && rest_app.embedded.keys.any?{ |k| k =~ /\Ahaproxy/ })
-        results { say "This utility does not currently support scaled applications. You will need to set up port forwarding manually." }
-        exit 101
+        raise RHC::ScaledApplicationsNotSupportedException.new "This utility does not currently support scaled applications. You will need to set up port forwarding manually."
       end
 
       say "Checking available ports..."
@@ -28,7 +25,7 @@ module RHC::Commands
 
       app_uuid, ssh_host = rest_app.ssh_url[6..-1].split('@')
 
-      logger.debug "Using #{app_uuid}@#{ssh_host}..." if @mydebug
+      say "Using #{app_uuid}@#{ssh_host}..." if options.debug
 
       hosts_and_ports = []
       hosts_and_ports_descriptions = []
@@ -45,8 +42,7 @@ module RHC::Commands
               line = line.chomp
 
               if line.downcase =~ /permission denied/
-                results { say line }
-                exit 1
+                raise RHC::PermissionDeniedException.new line
               end
 
               if line.index(ip_and_port_simple_regex)
@@ -77,7 +73,7 @@ module RHC::Commands
 
         scaled_uuids.each { |scaled_uuid|
 
-          logger.debug "Using #{scaled_uuid}@#{ssh_host} (scaled instance)..." if @mydebug
+          say "Using #{scaled_uuid}@#{ssh_host} (scaled instance)..." if options.debug
 
           Net::SSH.start(ssh_host, scaled_uuid) do |ssh|
 
@@ -87,8 +83,7 @@ module RHC::Commands
 
                   line = line.chomp
                   if line.downcase =~ /permission denied/
-                    results { say line }
-                    exit 1
+                    raise RHC::PermissionDeniedException.new line
                   end
                   if line.index(ip_and_port_simple_regex)
                     hosts_and_ports_descriptions << line
@@ -109,7 +104,7 @@ module RHC::Commands
 
         if hosts_and_ports.length == 0
           results { say "No available ports to forward." }
-          exit 102
+          return 102
         end
 
         hosts_and_ports_descriptions.each { |description| say "Binding #{description}..." }
@@ -127,22 +122,17 @@ module RHC::Commands
 
         rescue Interrupt
           say "Terminating..."
-          exit 0
+          return 0
 
-        rescue Exception => e
-          results {
-            logger.debug e.message if @mydebug
-            say "Error trying to forward ports. You can try to forward manually by running:"
-            ssh_cmd = "ssh -N "
-            hosts_and_ports.each { |port| ssh_cmd << "-L #{port}:#{port} " }
-            ssh_cmd << "#{app_uuid}@#{app_name}-#{namespace}.#{rhc_domain}"
-            say ssh_cmd
-            exit 1
-          }
+        rescue Exception => e #FIXME: I am insufficiently specific
+          ssh_cmd = "ssh -N "
+          hosts_and_ports.each { |port| ssh_cmd << "-L #{port}:#{port} " }
+          ssh_cmd << "#{app_uuid}@#{ssh_host}"
+          raise RHC::Exception.new("#{e.message if options.debug}\nError trying to forward ports. You can try to forward manually by running:\n" + ssh_cmd, 1)
         end
 
       end
-      exit 1
+      return 1
     end
   end
 end

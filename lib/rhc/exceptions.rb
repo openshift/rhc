@@ -38,4 +38,16 @@ module RHC
       super message, 128
     end
   end
+
+  class ScaledApplicationsNotSupportedException < Exception
+    def initialize(message="Scaled applications not supported")
+      super message, 101
+    end
+  end
+
+  class PermissionDeniedException < Exception
+    def initialize(message="Permission denied")
+      super message, 1
+    end
+  end
 end
