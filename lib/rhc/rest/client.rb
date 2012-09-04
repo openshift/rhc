@@ -9,7 +9,10 @@ module RHC
         # use mydebug for legacy reasons
         @mydebug = @mydebug || debug
         logger.debug "Connecting to #{end_point}" if @mydebug
-        credentials = Base64.encode64("#{username}:#{password}")
+
+        # we remove all newlines instead of having the Base64 module handle it
+        # because ruby 1.9 and 1.8 have different APIs for not adding newlines
+        credentials = Base64.encode64("#{username}:#{password}").delete("\n")
         @@headers["Authorization"] = "Basic #{credentials}"
         @@headers["User-Agent"] = RHC::Helpers.user_agent rescue nil
         #first get the API
@@ -19,8 +22,6 @@ module RHC
           response = request.execute
           result = RHC::Json.decode(response)
           @links = request(request)
-        rescue RestClient::ExceptionWithResponse => e
-            logger.error "Failed to get API #{e.response}"
         rescue => e
           raise ResourceAccessException.new("Resource could not be accessed:#{e.message}")
         end
