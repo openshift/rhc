@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 0.98.6
+Version: 0.98.7
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -114,6 +114,46 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Sep 04 2012 Adam Miller <admiller@redhat.com> 0.98.7-1
+- Merge pull request #144 from
+  smarterclayton/us2819_cleanup_layout_and_refactor (openshift+bot@redhat.com)
+- Version loading won't work for old commands (ccoleman@redhat.com)
+- Merge remote-tracking branch 'origin/master' into
+  us2819_cleanup_layout_and_refactor (ccoleman@redhat.com)
+- Modified output message to reflect the config file name that was actually
+  created. (hripps@redhat.com)
+- Remove --noprompt from ARGV for legacy commands (ccoleman@redhat.com)
+- Make the application layout more consistent with the console
+  (ccoleman@redhat.com)
+- Removed extra line from README (fotios@redhat.com)
+- Updated features/README.md (fotios@redhat.com)
+- Update features/README.md (fotioslindiakos@gmail.com)
+- Updated README (fotios@redhat.com)
+- Modified support/env.rb to automatically try to reuse values stored in
+  /tmp/rhc if NO_CLEAN is set (fotios@redhat.com)
+- Modified features/support/env.rb to take care of setting up required
+  environment (fotios@redhat.com)
+- Fixing hooks and assumptions (fotios@redhat.com)
+- Fixed background/hooks for applications (fotios@redhat.com)
+- Added QUIET env variable to suppress initialization output during Jenkins
+  tests (fotios@redhat.com)
+- Moved constant declarations to rhc_helper to prevent duplicates
+  (fotios@redhat.com)
+- Commented out some unimplemented features (fotios@redhat.com)
+- Changed background for multiple cartridges features (fotios@redhat.com)
+- Moved searching options to persitable (fotios@redhat.com)
+- DRY up accessible checks for multiple apps (fotios@redhat.com)
+- DRYed up cartridge steps (fotios@redhat.com)
+- Rearranged application scenario steps to be more logical, but also run
+  individually (fotios@redhat.com)
+- Modified application steps to use transform for expectations
+  (fotios@redhat.com)
+- Fixing some hooks (fotios@redhat.com)
+- Refactored features to re-run @init code if run independently
+  (fotios@redhat.com)
+- Refactoring cucumber tests (fotios@redhat.com)
+- rhc version.rb bump (admiller@redhat.com)
+
 * Thu Aug 30 2012 Adam Miller <admiller@redhat.com> 0.98.6-1
 - rhc version bump (admiller@redhat.com)
 - remove autocomplete rake task for now (johnp@redhat.com)
