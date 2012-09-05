@@ -11,8 +11,9 @@ module RHC
     describe Application do
       # make sure auth is set up for the Application object since we are not
       # calling it from RHC::Rest::Client
-      credentials = Base64.encode64("#{mock_user}:#{mock_pass}")
+      credentials = Base64.strict_encode64("#{mock_user}:#{mock_pass}")
       @@headers["Authorization"] = "Basic #{credentials}"
+      @@headers["User-Agent"] = RHC::Helpers.user_agent
 
       let (:app_links) { mock_response_links(mock_app_links('mock_domain','mock_app')) }
       let (:app_obj) {
