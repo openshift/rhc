@@ -29,116 +29,82 @@ module RHC::Commands
 
       hosts_and_ports = []
       hosts_and_ports_descriptions = []
-      scaled_uuids = []
 
-      Net::SSH.start(ssh_host, app_uuid) do |ssh|
+      begin
 
-        ssh.exec! "rhc-list-ports" do |channel, stream, data|
+        Net::SSH.start(ssh_host, app_uuid) do |ssh|
 
-          if stream == :stderr
+          ssh.exec! "rhc-list-ports" do |channel, stream, data|
 
-            data.lines { |line|
+            if stream == :stderr
 
-              line = line.chomp
+              data.lines { |line|
 
-              if line.downcase =~ /permission denied/
-                raise RHC::PermissionDeniedException.new line
-              end
+                line = line.chomp
 
-              if line.index(ip_and_port_simple_regex)
-                hosts_and_ports_descriptions << line
-              end
-            }
-
-          else
-
-            data.lines { |line|
-
-              line = line.chomp
-
-              if line.downcase =~ /scale/
-                scaled_uuid = line[5..-1]
-                scaled_uuids << scaled_uuid
-
-              else
-                if ip_and_port_simple_regex.match(line)
-                  hosts_and_ports << line
+                if line.downcase =~ /permission denied/
+                  raise RHC::PermissionDeniedException.new line
                 end
-              end
-            }
 
-          end
+                if line.index(ip_and_port_simple_regex)
+                  hosts_and_ports_descriptions << line
+                end
+              }
 
-        end
+            else
 
-        scaled_uuids.each { |scaled_uuid|
+              data.lines { |line|
 
-          say "Using #{scaled_uuid}@#{ssh_host} (scaled instance)..." if options.debug
+                line = line.chomp
 
-          Net::SSH.start(ssh_host, scaled_uuid) do |ssh|
-
-            ssh.exec! "rhc-list-ports" do |channel, stream, data|
-              if stream == :stderr
-                data.lines { |line|
-
-                  line = line.chomp
-                  if line.downcase =~ /permission denied/
-                    raise RHC::PermissionDeniedException.new line
-                  end
-                  if line.index(ip_and_port_simple_regex)
-                    hosts_and_ports_descriptions << line
-                  end
-                }
-              else
-                data.lines { |line|
-
-                  line = line.chomp
+                if not line.downcase =~ /scale/
                   if ip_and_port_simple_regex.match(line)
                     hosts_and_ports << line
                   end
-                }
+                end
+              }
+
+            end
+
+          end
+
+          if hosts_and_ports.length == 0
+            results { say "No available ports to forward." }
+            return 102
+          end
+
+          hosts_and_ports_descriptions.each { |description| say "Binding #{description}..." }
+
+          begin
+
+            Net::SSH.start(ssh_host, app_uuid) do |ssh|
+              say "Forwarding ports, use ctl + c to stop"
+              hosts_and_ports.each do |host_and_port|
+                host, port = host_and_port.split(/:/)
+                ssh.forward.local(host, port.to_i, host, port.to_i)
               end
+              ssh.loop { true }
             end
-          end
-        }
 
-        if hosts_and_ports.length == 0
-          results { say "No available ports to forward." }
-          return 102
-        end
-
-        hosts_and_ports_descriptions.each { |description| say "Binding #{description}..." }
-
-        begin
-
-          Net::SSH.start(ssh_host, app_uuid) do |ssh|
-            say "Forwarding ports, use ctl + c to stop"
-            hosts_and_ports.each do |host_and_port|
-              host, port = host_and_port.split(/:/)
-              ssh.forward.local(host, port.to_i, host, port.to_i)
-            end
-            ssh.loop { true }
+          rescue Interrupt
+            say "Terminating..."
+            return 0
           end
 
-        rescue Interrupt
-          say "Terminating..."
-          return 0
-
-        rescue Exception => e #FIXME: I am insufficiently specific
-          ssh_cmd = "ssh -N "
-          hosts_and_ports.each { |port| ssh_cmd << "-L #{port}:#{port} " }
-          ssh_cmd << "#{app_uuid}@#{ssh_host}"
-          raise RHC::Exception.new("#{e.message if options.debug}\nError trying to forward ports. You can try to forward manually by running:\n" + ssh_cmd, 1)
         end
 
+      rescue Exception => e #FIXME: I am insufficiently specific
+        ssh_cmd = "ssh -N "
+        hosts_and_ports.each { |port| ssh_cmd << "-L #{port}:#{port} " }
+        ssh_cmd << "#{app_uuid}@#{ssh_host}"
+        raise RHC::Exception.new("#{e.message if options.debug}\nError trying to forward ports. You can try to forward manually by running:\n" + ssh_cmd, 1)
       end
-      return 1
+
+      return 0
     end
   end
 end
 
 # mock for windows
-if defined?(UNIXServer) != 'constant' or UNIXServer.class != Class
-  class UNIXServer; end
-end
+if defined?(UNIXServer) != 'constant' or UNIXServer.class != Class then class UNIXServer; end; end
 
