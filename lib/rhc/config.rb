@@ -126,6 +126,14 @@ module RHC
       @opts['password']
     end
 
+    def noprompt=(bool)
+      @opts.add('noprompt', bool)
+    end
+
+    def noprompt
+      @opts['noprompt']
+    end
+
     def set_local_config(confpath, must_exist=true)
       begin
         @local_config_path = File.expand_path(confpath)
