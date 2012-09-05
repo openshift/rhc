@@ -1,6 +1,5 @@
 require 'base64'
 require 'rhc/json'
-
 module RHC
   module Rest
     class Client
@@ -128,5 +127,18 @@ module RHC
       alias :close :logout
     end
 
+    #Application threaddump
+    def threaddump(app)
+        logger.debug "Threaddump in progress for #{app}" if @mydebug
+        url = @links['LIST_DOMAINS']['href']
+        method = @links['LIST_DOMAINS']['method']
+        request = new_request(:url => url, :method => method, :headers => @@headers)
+        response = request(request)
+        domain = response.first if not response.empty?
+        application = domain.find_application(app)
+        return application.threaddump unless application.nil?
+
+        raise RHC::ApplicationNotFoundException.new("Application #{app} does not exist") if application.nil?
+    end
   end
 end

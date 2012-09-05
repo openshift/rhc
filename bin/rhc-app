@@ -32,7 +32,6 @@ List of commands
   tidy                           Garbage collects the git repo and empties log/tmp dirs
   add-alias                      Add a custom domain name for the application
   remove-alias                   Remove a custom domain name for the application
-  threaddump                     Trigger a thread dump for jbossas, jbosseap, and ruby applications
   tail                           Tail the logs of an application
   snapshot       [save|restore]  Saves/Restores an application snapshot to/from a tarball at the location specified using --filepath (default: ./$APPNAME.tar.gz)
   cartridge      <action>        Manage a cartridge running in this application
@@ -425,7 +424,7 @@ begin
         ["--config", GetoptLong::REQUIRED_ARGUMENT],
         ["--timeout", GetoptLong::REQUIRED_ARGUMENT]
     )
-  elsif ARGV[0] =~ /^(show|start|stop|force-stop|restart|reload|status|destroy|tidy|add-alias|remove-alias|threaddump|destroy)$/
+  elsif ARGV[0] =~ /^(show|start|stop|force-stop|restart|reload|status|destroy|tidy|add-alias|remove-alias|destroy)$/
     ARGV.shift
     opts = GetoptLong.new(
         ["--debug", "-d", GetoptLong::NO_ARGUMENT],
@@ -505,7 +504,7 @@ case argv_c[0]
     create_app
   when "show"
     show_app
-  when "start", "stop", "force-stop", "restart", "reload", "status", "tidy", "add-alias", "remove-alias", "threaddump", "destroy"
+  when "start", "stop", "force-stop", "restart", "reload", "status", "tidy", "add-alias", "remove-alias", "destroy"
     control_app(argv_c[0])
   when "tail"
     system("rhc-tail-files #{get_args argv_c} 2>&1")
