@@ -12,10 +12,10 @@ Spec::Matchers.define :have_same_attributes_as do |expected|
 end
 
 # ruby 1.8 does not have strict_encode
-if RUBY_VERSION == 1.8
+if RUBY_VERSION.to_f == 1.8
   module Base64
-    def strict_encode(value)
-      b64encode(value, value.length)
+    def strict_encode64(value)
+      b64encode(value, value.length).strip
     end
   end
 end

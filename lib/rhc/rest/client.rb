@@ -14,7 +14,7 @@ module RHC
         userpass = "#{username}:#{password}"
         # :nocov: version dependent code
         if RUBY_VERSION.to_f == 1.8
-          credentials = Base64.b64encode(userpass, userpass.length)
+          credentials = Base64.b64encode(userpass, userpass.length).strip
         else
           credentials = Base64.strict_encode64(userpass)
         end
