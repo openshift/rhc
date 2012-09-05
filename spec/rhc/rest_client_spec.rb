@@ -43,7 +43,7 @@ module RHC
         end
 
         it "returns a client object from the required arguments" do
-          credentials = Base64.encode64(mock_user + ":" + mock_pass).delete("\n")
+          credentials = Base64.strict_encode64(mock_user + ":" + mock_pass)
           client      = RHC::Rest::Client.new(mock_href, mock_user, mock_pass)
           @@headers['Authorization'].should == "Basic #{credentials}"
           client.instance_variable_get(:@links).should == client_links

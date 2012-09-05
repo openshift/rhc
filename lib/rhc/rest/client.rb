@@ -10,9 +10,15 @@ module RHC
         @mydebug = @mydebug || debug
         logger.debug "Connecting to #{end_point}" if @mydebug
 
-        # we remove all newlines instead of having the Base64 module handle it
-        # because ruby 1.9 and 1.8 have different APIs for not adding newlines
-        credentials = Base64.encode64("#{username}:#{password}").delete("\n")
+        credentials = nil
+        userpass = "#{username}:#{password}"
+        # :nocov: version dependent code
+        if RUBY_VERSION.to_f == 1.8
+          credentials = Base64.b64encode(userpass, userpass.length)
+        else
+          credentials = Base64.strict_encode64(userpass)
+        end
+        # :nocov:
         @@headers["Authorization"] = "Basic #{credentials}"
         @@headers["User-Agent"] = RHC::Helpers.user_agent rescue nil
         #first get the API
