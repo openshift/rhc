@@ -20,7 +20,6 @@ module RHC
       RHC::Config.set_opts_config(options.config) if options.config
       RHC::Config.password = options.password if options.password
       RHC::Config.opts_login = options.rhlogin if options.rhlogin
-      RHC::Config.noprompt = options.noprompt if options.noprompt
       RHC::Config
     end
 
