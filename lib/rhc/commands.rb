@@ -114,5 +114,8 @@ module RHC
       def self.global_options
         @options ||= []
       end
+      def self.deprecated
+        @deprecated ||= {}
+      end
   end
 end
