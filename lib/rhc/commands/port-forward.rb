@@ -8,17 +8,17 @@ module RHC::Commands
 
     summary "Forward remote ports to the workstation"
     option ["-n", "--namespace namespace"], "Namespace of the application you are port forwarding to", :context => :namespace_context, :required => true
-    option ["-a", "--app app"], "Application you are port forwarding to (required)", :context => :app_context, :required => true
+    argument :app, "Application you are port forwarding to (required)", ["-a", "--app app"]
     option ["--timeout timeout"], "Timeout, in seconds, for the session"
-    def run
+    def run(app)
 
-      domain = rest_client.find_domain options.namespace
-      app = domain.find_application options.app
+      rest_domain = rest_client.find_domain options.namespace
+      rest_app = rest_domain.find_application app
 
-      raise RHC::ScaledApplicationsNotSupportedException.new "This utility does not currently support scaled applications. You will need to set up port forwarding manually." if (app.embedded.keys.any?{ |k| k =~ /\Ahaproxy/ })
+      raise RHC::ScaledApplicationsNotSupportedException.new "This utility does not currently support scaled applications. You will need to set up port forwarding manually." if (rest_app.embedded.keys.any?{ |k| k =~ /\Ahaproxy/ })
 
-      ssh_uri = URI.parse(app.ssh_url)
-      say "Using #{app.ssh_url}..." if options.debug
+      ssh_uri = URI.parse(rest_app.ssh_url)
+      say "Using #{rest_app.ssh_url}..." if options.debug
 
       hosts_and_ports = []
       hosts_and_ports_descriptions = []
