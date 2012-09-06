@@ -152,12 +152,13 @@ describe RHC::Commands::Base do
       context 'and when deprecated alias is called' do
         it do
           expects_running('static', 'exe', "arg").should call(:execute).on(instance).with('arg')
-          $terminal.read.should match("Warning!!! The command 'rhc static exe' is deprecated.  Please use 'rhc static execute' instead.")
+          $stderr.seek(0)
+          $stderr.read.should match("Warning: The command 'rhc static exe' is deprecated.  Please use 'rhc static execute' instead.")
         end
       end
 
       context 'and when deprecated alias is called with DISABLE_DEPRECATED env var' do
-        before { ENV['DISABLE_DEPRECATED'] = 'true' }
+        before { ENV['DISABLE_DEPRECATED'] = '1' }
         after { ENV['DISABLE_DEPRECATED'] = nil }
         it { expects_running('static', 'exe', 'arg', '--trace').should raise_error(RHC::DeprecatedError) }
       end

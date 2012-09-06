@@ -28,10 +28,7 @@ module RHC
       disable = false
 
       env_disable = ENV['DISABLE_DEPRECATED']
-      unless env_disable.nil?
-        disable = true
-        disable = false if ['false', 'no', '0'].include? env_disable
-      end
+      disable = true if env_disable == '1'
 
       disable
     end
