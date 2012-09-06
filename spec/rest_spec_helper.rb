@@ -191,6 +191,7 @@ module RestSpecHelper
       @git_url = "git:fake.foo/git/#{@name}.git"
       @app_url = "https://#{@name}-#{@domain.id}.fake.foo/"
       @ssh_url = "ssh://#{@uuid}@127.0.0.1"
+      @embedded = {}
       @aliases = []
       if scale
         @scalable = true

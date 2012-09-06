@@ -1,6 +1,7 @@
 require 'spec_helper'
 require 'rhc/commands/port-forward'
 require 'rhc/config'
+require 'uri'
 
 describe RHC::Commands::PortForward do
 
@@ -18,7 +19,7 @@ describe RHC::Commands::PortForward do
         domain.add_application 'mockapp', 'mock-1.0', true
       end
       it "should error out" do
-        expect { run }.should exit_with_code(101)
+        expect { run }.should exit_with_code(128)
       end
       it "should match the app state" do
         @rc.domains[0].id.should == 'mockdomain'
@@ -33,8 +34,9 @@ describe RHC::Commands::PortForward do
         @rc = MockRestClient.new
         domain = @rc.add_domain("mockdomain")
         app = domain.add_application 'mockapp', 'mock-1.0'
+        uri = URI.parse app.ssh_url
         ssh = mock(Net::SSH)
-        Net::SSH.should_receive(:start).with(app.ssh_url[6..-1].split('@')[1], app.uuid).and_yield(ssh)
+        Net::SSH.should_receive(:start).with(uri.host, uri.user).and_yield(ssh)
         ssh.should_receive(:exec!).with("rhc-list-ports").and_yield(nil, :stderr, '127.0.0.1:3306')
       end
       it "should error out as no ports to forward" do
@@ -43,7 +45,7 @@ describe RHC::Commands::PortForward do
         @rc.domains[0].applications.size.should == 1
         @rc.domains[0].applications[0].name.should == 'mockapp'
       end
-      it { run_output.should match("No available ports to forward.") }
+      it { run_output.should match("no available ports to forward.") }
     end
 
     context 'when port forwarding an app with permission denied ports' do
@@ -52,16 +54,17 @@ describe RHC::Commands::PortForward do
         domain = @rc.add_domain("mockdomain")
         app = domain.add_application 'mockapp', 'mock-1.0'
         ssh = mock(Net::SSH)
-        Net::SSH.should_receive(:start).with(app.ssh_url[6..-1].split('@')[1], app.uuid).and_yield(ssh)
+        uri = URI.parse app.ssh_url
+        Net::SSH.should_receive(:start).with(uri.host, uri.user).and_yield(ssh)
         ssh.should_receive(:exec!).with("rhc-list-ports").and_yield(nil, :stderr, 'permission denied')
       end
       it "should error out as permission denied" do
-        expect { run }.should exit_with_code(1)
+        expect { run }.should exit_with_code(129)
         @rc.domains[0].id.should == 'mockdomain'
         @rc.domains[0].applications.size.should == 1
         @rc.domains[0].applications[0].name.should == 'mockapp'
       end
-      it { run_output.should match("Error trying to forward ports.") }
+      it { run_output.should match("Permission denied") }
     end
 
     context 'when port forwarding an app with ports to forward' do
@@ -70,7 +73,8 @@ describe RHC::Commands::PortForward do
         domain = @rc.add_domain("mockdomain")
         app = domain.add_application 'mockapp', 'mock-1.0'
         ssh = mock(Net::SSH)
-        Net::SSH.should_receive(:start).with(app.ssh_url[6..-1].split('@')[1], app.uuid).and_yield(ssh).twice
+        uri = URI.parse app.ssh_url
+        Net::SSH.should_receive(:start).with(uri.host, uri.user).and_yield(ssh).twice
         ssh.should_receive(:exec!).with("rhc-list-ports").and_yield(nil, :stdout, '127.0.0.1:3306')
         forward = mock(Net::SSH::Service::Forward)
         ssh.should_receive(:forward).and_return(forward)
@@ -107,7 +111,8 @@ describe RHC::Commands::PortForward do
         domain = @rc.add_domain("mockdomain")
         app = domain.add_application 'mockapp', 'mock-1.0'
         ssh = mock(Net::SSH)
-        Net::SSH.should_receive(:start).with(app.ssh_url[6..-1].split('@')[1], app.uuid).and_yield(ssh).twice
+        uri = URI.parse app.ssh_url
+        Net::SSH.should_receive(:start).with(uri.host, uri.user).and_yield(ssh).twice
         ssh.should_receive(:exec!).with("rhc-list-ports").and_yield(nil, :stdout, '127.0.0.1:3306')
         forward = mock(Net::SSH::Service::Forward)
         ssh.should_receive(:forward).and_return(forward)
@@ -120,7 +125,7 @@ describe RHC::Commands::PortForward do
         @rc.domains[0].applications.size.should == 1
         @rc.domains[0].applications[0].name.should == 'mockapp'
       end
-      it { run_output.should include("Terminating...") }
+      it { run_output.should include("Ending port forward") }
     end
 
    end
