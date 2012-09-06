@@ -20,7 +20,7 @@ module RHC
       RHC::Config.set_opts_config(options.config) if options.config
       RHC::Config.password = options.password if options.password
       RHC::Config.opts_login = options.rhlogin if options.rhlogin
-      RHC::Config.noprompt(options.noprompt) if options.noprompt
+      RHC::Config.noprompt = options.noprompt if options.noprompt
       RHC::Config
     end
 
@@ -74,6 +74,22 @@ module RHC
             end
           end
 
+          unless opts[:aliases].nil?
+            opts[:aliases].each do |a|
+              alias_cmd = a[:action]
+
+              unless a[:root_command]
+                # prepend the current resource
+                alias_components = name.split(" ")
+                alias_components[-1] = a[:action]
+                alias_cmd = alias_components.join(' ')
+              end
+
+              deprecated[alias_cmd] = true if a[:deprecated]
+              instance.alias_command "#{alias_cmd}", :"#{name}"
+            end
+          end
+
           c.when_called do |args, options|
             config = global_config_setup(options)
             deprecated?
@@ -86,19 +102,6 @@ module RHC
 
             needs_configuration!(cmd, options, config)
             cmd.send(opts[:method], *filled_args)
-          end
-
-          unless opts[:aliases].nil?
-            opts[:aliases].each do |a, root_command|
-              alias_cmd = a
-              unless root_command
-                # prepend the current resource
-                alias_components = name.split(" ")
-                alias_components[-1] = a
-                alias_cmd = alias_components.join(' ')
-              end
-              instance.alias_command  "#{alias_cmd}", :"#{name}"
-            end
           end
         end
       end
