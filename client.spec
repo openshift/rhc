@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 0.98.8
+Version: 0.98.9
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -114,6 +114,16 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Sep 06 2012 Adam Miller <admiller@redhat.com> 0.98.9-1
+- Merge pull request #148 from J5/bugfix (openshift+bot@redhat.com)
+- ruby 1.8 still requires us to strip off the last \n for b64encode
+  (johnp@redhat.com)
+- fix tests by setting the correct user agent (johnp@redhat.com)
+- use version paths to call the correct base64 method (johnp@redhat.com)
+- rhc version.rb bump (admiller@redhat.com)
+- [bug 854152] make sure we don't have newlines in base64 auth encoding
+  (johnp@redhat.com)
+
 * Tue Sep 04 2012 Adam Miller <admiller@redhat.com> 0.98.8-1
 - rhc version.rb bump (admiller@redhat.com)
 
