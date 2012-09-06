@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'rhc/commands/base'
+require 'rhc/exceptions'
 
 describe RHC::Commands::Base do
   describe '#object_name' do
@@ -89,6 +90,7 @@ describe RHC::Commands::Base do
 
             argument :testarg, "Test arg", ["--testarg testarg"]
             summary "Test command execute"
+            alias_action :exe, :deprecated => true
             def execute(testarg); 1; end
 
             argument :args, "Test arg list", [], :arg_type => :list
@@ -145,6 +147,20 @@ describe RHC::Commands::Base do
 
       context 'and when an exception is raised in a call with --trace option' do
         it { expects_running('static', 'raise_exception', "--trace").should raise_error(Exception, "test exception") }
+      end
+
+      context 'and when deprecated alias is called' do
+        it do
+          expects_running('static', 'exe', "arg").should call(:execute).on(instance).with('arg')
+          $stderr.seek(0)
+          $stderr.read.should match("Warning: The command 'rhc static exe' is deprecated.  Please use 'rhc static execute' instead.")
+        end
+      end
+
+      context 'and when deprecated alias is called with DISABLE_DEPRECATED env var' do
+        before { ENV['DISABLE_DEPRECATED'] = '1' }
+        after { ENV['DISABLE_DEPRECATED'] = nil }
+        it { expects_running('static', 'exe', 'arg', '--trace').should raise_error(RHC::DeprecatedError) }
       end
     end
   end
