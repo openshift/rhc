@@ -15,7 +15,7 @@ end
 if RUBY_VERSION.to_f == 1.8
   module Base64
     def strict_encode64(value)
-      b64encode(value, value.length).strip
+      encode64(value).delete("\n")
     end
   end
 end
