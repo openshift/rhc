@@ -1,4 +1,5 @@
 require 'commander'
+require 'rhc/helpers'
 
 module RHC
   module Commands
@@ -20,6 +21,19 @@ module RHC
       RHC::Config.password = options.password if options.password
       RHC::Config.opts_login = options.rhlogin if options.rhlogin
       RHC::Config
+    end
+
+    def self.deprecated?
+      command_name = Commander::Runner.instance.command_name_from_args
+      command = Commander::Runner.instance.active_command
+
+      if deprecated[command_name]
+        msg = "The command 'rhc #{command_name}' is deprecated.  Please use 'rhc #{command.name}' instead."
+
+        raise DeprecatedError.new("#{msg} For porting and testing purposes you may switch this error to a warning by setting the DISABLE_DEPRECATED environment variable to 0.  It is not recommended to do so in a production environment as this command may be removed in future releases.") if RHC::Helpers.disable_deprecated?
+
+        warn "Warning: #{msg} For porting and testing purposes you may switch this warning to an error by setting the DISABLE_DEPRECATED environment variable to 1.  This command may be removed in future releases."
+      end
     end
 
     def self.needs_configuration!(cmd, options, config)
@@ -59,8 +73,25 @@ module RHC
             end
           end
 
+          unless opts[:aliases].nil?
+            opts[:aliases].each do |a|
+              alias_cmd = a[:action]
+
+              unless a[:root_command]
+                # prepend the current resource
+                alias_components = name.split(" ")
+                alias_components[-1] = a[:action]
+                alias_cmd = alias_components.join(' ')
+              end
+
+              deprecated[alias_cmd] = true if a[:deprecated]
+              instance.alias_command "#{alias_cmd}", :"#{name}"
+            end
+          end
+
           c.when_called do |args, options|
             config = global_config_setup(options)
+            deprecated?
 
             cmd = opts[:class].new
             cmd.options = options
@@ -70,19 +101,6 @@ module RHC
 
             needs_configuration!(cmd, options, config)
             cmd.send(opts[:method], *filled_args)
-          end
-
-          unless opts[:aliases].nil?
-            opts[:aliases].each do |a, root_command|
-              alias_cmd = a
-              unless root_command
-                # prepend the current resource
-                alias_components = name.split(" ")
-                alias_components[-1] = a
-                alias_cmd = alias_components.join(' ')
-              end
-              instance.alias_command  "#{alias_cmd}", :"#{name}"
-            end
           end
         end
       end
@@ -95,6 +113,9 @@ module RHC
       end
       def self.global_options
         @options ||= []
+      end
+      def self.deprecated
+        @deprecated ||= {}
       end
   end
 end
