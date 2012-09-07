@@ -60,6 +60,15 @@ module RHC
         File.executable?(File.join(directory, executable.to_s))
       end
     end
+    
+    # Public: Format SSH key's core attributes (name, type, fingerprint)
+    # in a given ERB template
+    # 
+    # key - an object to be formatted
+    # template - ERB template
+    def format(key, template)
+      template.result(binding)
+    end
 
     private
 
