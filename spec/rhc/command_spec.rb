@@ -13,7 +13,7 @@ describe RHC::Commands::Base do
         end
         StaticRootClass
       end
-      its(:object_name) { should == 'staticrootclass' }
+      its(:object_name) { should == 'static-root-class' }
     end
     context 'when the class is nested in a module' do
       subject do 
@@ -22,7 +22,7 @@ describe RHC::Commands::Base do
         end
         Nested::StaticRootClass
       end
-      its(:object_name) { should == 'staticrootclass' }
+      its(:object_name) { should == 'static-root-class' }
     end
   end
 
@@ -136,7 +136,7 @@ describe RHC::Commands::Base do
       end
 
       context 'and when an error is raised in a call' do
-        it { expects_running('static', 'raise_error').should exit_with_code(128) }
+        it { expects_running('static', 'raise_error').should raise_error(StandardError, "test exception") }
       end
 
       context 'and when an exception is raised in a call' do

@@ -8,12 +8,13 @@ require 'rhc/exceptions'
 require 'rhc/context_helper'
 
 class RHC::Commands::Base
-  attr_accessor :options, :config
 
-  def initialize(command=nil,
-                 options=Commander::Command::Options.new,
-                 config=RHC::Config)
-    @command, @options, @config = command, options, config
+  attr_writer :options, :config
+
+  def initialize(options=Commander::Command::Options.new,
+                 config=nil)
+    @options, @config = options, config
+
     # apply timeout here even though it isn't quite a global
     $rest_timeout = @options.timeout ? @options.timeout.to_i : nil
   end
@@ -54,7 +55,16 @@ class RHC::Commands::Base
     include RHC::Helpers
     include RHC::ContextHelpers
 
-    attr_reader :command, :options, :config
+    attr_reader :options, :config
+
+    #
+    # The implicit config object provides no defaults.
+    #
+    def config
+      @config ||= begin
+        RHC::Config.new
+      end
+    end
 
     def application
       #@application ||= ... identify current application or throw,
@@ -113,7 +123,7 @@ class RHC::Commands::Base
           value ||= if self.name && !self.name.empty?
             self.name.split('::').last
           end
-          value.to_s.downcase if value
+          value.to_s.split(/(?=[A-Z])/).join('-').downcase if value
         end
     end
 

@@ -52,10 +52,6 @@ module RHC
       true
     end
 
-    def needs_configuration?
-      not (@config.has_local_config? or @config.has_opts_config? or @config.noprompt?)
-    end
-
     private
 
     def greeting_stage
@@ -116,7 +112,7 @@ EOF
 
         paragraph do
           say "Created local config file: " + @config_path
-          say "The express.conf file contains user configuration, and can be transferred to different computers."
+          say "The #{File.basename(@config_path)} file contains user configuration, and can be transferred to different computers."
         end
 
         true

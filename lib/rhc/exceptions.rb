@@ -24,4 +24,28 @@ module RHC
       super message, 118
     end
   end
+
+  class ScaledApplicationsNotSupportedException < Exception
+    def initialize(message="Scaled applications not supported")
+      super message, 128
+    end
+  end
+
+  class PermissionDeniedException < Exception
+    def initialize(message="Permission denied")
+      super message, 129
+    end
+  end
+
+  class NoPortsToForwardException < Exception
+    def initialize(message="No available ports to forward")
+      super message, 102
+    end
+  end
+
+  class PortForwardFailedException < Exception
+    def initialize(message="Port forward failed")
+      super message, 1
+    end
+  end
 end

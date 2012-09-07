@@ -8,7 +8,7 @@ describe RHC::Commands::Domain do
     RHC::Config.set_defaults
   end
 
-  describe 'run' do
+  describe 'default action' do
     let(:arguments) { ['domain', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     context 'when run with no domains' do
@@ -16,7 +16,19 @@ describe RHC::Commands::Domain do
         @rc = MockRestClient.new
       end
       it { expect { run }.should exit_with_code(0) }
-      it { run_output.should match("Namespace: No namespaces found") }
+      it { run_output.should match(/No domain exists.  You can use/) }
+    end
+  end
+
+  describe 'show' do
+    let(:arguments) { ['domain', 'show', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+
+    context 'when run with no domains' do
+      before(:each) do
+        @rc = MockRestClient.new
+      end
+      it { expect { run }.should exit_with_code(0) }
+      it { run_output.should match(/No domain exists.  You can use/) }
     end
 
     context 'when run with one domain no apps' do
@@ -27,8 +39,8 @@ describe RHC::Commands::Domain do
       it { expect { run }.should exit_with_code(0) }
       it "should match output" do
         output = run_output
-        output.should match("Namespace onedomain's Applications")
-        output.should match("No applications found")
+        output.should match(/Applications in onedomain\:/)
+        output.should match(/No applications.  You can use/)
       end
     end
 
@@ -41,10 +53,8 @@ describe RHC::Commands::Domain do
       it { expect { run }.should exit_with_code(0) }
       it "should match output" do
         output = run_output
-        output.should match("Namespace\\(0\\): firstdomain")
-        output.should match("Namespace\\(1\\): seconddomain")
-        output.should match("Namespace firstdomain's Applications")
-        output.should match("Namespace seconddomain's Applications")
+        output.should match("Applications in firstdomain\:")
+        output.should_not match("Applications in seconddomain\:")
       end
     end
 
@@ -62,12 +72,25 @@ describe RHC::Commands::Domain do
       it "should match output" do
         output = run_output
         output.should match("app_no_carts")
-        output.should match("None")
         output.should match("app_multi_carts")
         output.should match("testframework-1.0")
         output.should match("testcart-1")
         output.should match("testcart-2")
         output.should match("testcart-3")
+      end
+    end
+
+    context 'when run with an app without cartridges' do
+      before(:each) do
+        @rc = MockRestClient.new
+        d = @rc.add_domain("appdomain")
+        a = d.add_application("app_no_carts")
+      end
+      it { expect { run }.should exit_with_code(0) }
+      it "should match output" do
+        output = run_output
+        output.should match("app_no_carts")
+        output.should match("Cartridges: none")
       end
     end
   end
@@ -84,7 +107,7 @@ describe RHC::Commands::Domain do
         expect { run }.should exit_with_code(0)
         @rc.domains[0].id.should == 'testnamespace'
       end
-      it { run_output.should match(/'testnamespace'\n\nRESULT:\n.*Success/m) }
+      it { run_output.should match(/'testnamespace'.*?RESULT:.*?Success/m) }
     end
   end
 
@@ -101,7 +124,7 @@ describe RHC::Commands::Domain do
         expect { run }.should exit_with_code(0)
         @rc.domains[0].id.should == 'alterednamespace'
       end
-      it { run_output.should match(/Updating domain 'olddomain' to namespace 'alterednamespace'\n\nRESULT:\n.*Success/m) }
+      it { run_output.should match(/Changing namespace 'olddomain' to 'alterednamespace'.*?RESULT:.*?Success/m) }
     end
 
     context 'when there is no domain' do
@@ -130,7 +153,7 @@ describe RHC::Commands::Domain do
         expect { run }.should exit_with_code(0)
         @rc.domains[0].id.should == 'alterednamespace'
       end
-      it { run_output.should match(/Updating domain 'olddomain' to namespace 'alterednamespace'\n\nRESULT:\n.*Success/m) }
+      it { run_output.should match(/Changing namespace 'olddomain' to 'alterednamespace'.*?RESULT:.*?Success/m) }
     end
   end
 
@@ -172,7 +195,7 @@ describe RHC::Commands::Domain do
         expect { run }.should exit_with_code(128)
         @rc.domains[0].id.should == 'deleteme'
       end
-      it { run_output.should match("^Domain contains applications. Delete applications first.$") }
+      it { run_output.should match("Domain contains applications.*?Delete applications first.") }
     end
   end
 
@@ -213,7 +236,7 @@ describe RHC::Commands::Domain do
   end
 
   describe 'help' do
-    let(:arguments) { ['domain', 'help'] }
+    let(:arguments) { ['domain', '--help'] }
 
     context 'help is run' do
       it "should display help" do

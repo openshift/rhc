@@ -9,7 +9,16 @@ module RHC
         # use mydebug for legacy reasons
         @mydebug = @mydebug || debug
         logger.debug "Connecting to #{end_point}" if @mydebug
-        credentials = Base64.encode64("#{username}:#{password}")
+
+        credentials = nil
+        userpass = "#{username}:#{password}"
+        # :nocov: version dependent code
+        if RUBY_VERSION.to_f == 1.8
+          credentials = Base64.b64encode(userpass, userpass.length).strip
+        else
+          credentials = Base64.strict_encode64(userpass)
+        end
+        # :nocov:
         @@headers["Authorization"] = "Basic #{credentials}"
         @@headers["User-Agent"] = RHC::Helpers.user_agent rescue nil
         #first get the API
@@ -19,8 +28,6 @@ module RHC
           response = request.execute
           result = RHC::Json.decode(response)
           @links = request(request)
-        rescue RestClient::ExceptionWithResponse => e
-            logger.error "Failed to get API #{e.response}"
         rescue => e
           raise ResourceAccessException.new("Resource could not be accessed:#{e.message}")
         end

@@ -3,75 +3,78 @@ require 'rhc/config'
 
 include RHCHelper
 
-Given /^an existing (.+) application with an embedded (.*) cartridge$/ do |type, embed|
-  App.find_on_fs.each do |app|
-    if app.type == type and app.embed.include?(embed)
-      @app = app
-      break
-    end
+# This can transform any application cartridge requirements into an array
+Transform /^application with(.*)$/ do |embed_type|
+  case embed_type.strip
+  when /^out an embedded cartridge/
+    []
+  when /^an embedded (.*) cartridge$/
+    [$1]
+  when /^embedded (.*) and (.*) cartridges$/
+    [$1,$2]
   end
-
-  @app.should_not be_nil, 'No existing applications w/cartridges found.  Check the creation scenarios for failures.'
 end
 
-Given /^an existing (.+) application with embedded (.*) and (.*) cartridges$/ do |type, embed_1, embed_2|
-  App.find_on_fs.each do |app|
-    if app.type == type and app.embed.include?(embed_1) and app.embed.include?(embed_2)
-      @app = app
-      break
+# Use the transformed array so we can reuse this step for all combinations
+Given /^an existing (or new )?(.+) (application with.*)$/ do |create,type, embeds|
+  options = { :type => type }
+  options[:embed] = embeds if embeds
+
+  @app = App.find_on_fs(options)
+
+  if create && @app.nil?
+    Then "a #{type} application is created"
+    embeds.each do |embed|
+      And "the #{embed} cartridge is added"
     end
   end
 
-  @app.should_not be_nil, 'No existing applications w/cartridges found.  Check the creation scenarios for failures.'
+  @app.should_not be_nil, "No existing %s applications %sfound.  Check the creation scenarios for failures." % [
+    type,
+    embeds ? '' : "w/ [#{embeds.join(',')}]"
+  ]
 end
 
-Given /^an existing (.+) application( without an embedded cartridge)?$/ do |type, ignore|
-  App.find_on_fs.each do |app|
-    if app.type == type and app.embed.empty?
-      @app = app
-      break
-    end
-  end
-
-  @app.should_not be_nil, 'No existing applications found.  Check the creation scenarios for failures.'
+# Mark this step as pending so we make sure to explicitly require apps without embeds
+Given /^an existing (or new )?(.+) application$/ do |create,type|
+  pending
 end
 
 When /^(\d+) (.+) applications are created$/ do |app_count, type|
+  old_app = @app
   @apps = app_count.to_i.times.collect do
-    app = App.create_unique(type)
-    app.rhc_app_create
-    app
+    Then "a #{type} application is created"
+    @app
   end
+  @app = old_app
 end
 
-When /^the application is stopped$/ do
-  @app.rhc_app_stop
+When /^a (.+) application is created$/ do |type|
+  @app = App.create_unique(type)
+  @app.rhc_app_create
 end
 
-When /^the application is started$/ do
-  @app.rhc_app_start
-end
+When /^the application is (\w+)$/ do |command|
+  # Do any pre-check setup we may need
+  case command
+  when 'snapshot'
+    @snapshot = File.join(RHCHelper::TEMP_DIR, "snapshot.tar.gz")
+    @app.snapshot = @snapshot
+  end
 
-When /^the application is restarted$/ do
-  @app.rhc_app_restart
-end
+  # Set up aliases for any irregular commands
+  aliases = {
+    :stopped => :stop,
+    :shown   => :show,
+    :tidied  => :tidy,
+    :snapshot => :snapshot_save
+  }
 
-When /^the application is destroyed$/ do
-  @app.rhc_app_destroy
-end
+  # Use an alias if it exists, or just remove 'ed' (like from started)
+  cmd = aliases[command.to_sym] || command.gsub(/ed$/,'').to_sym
 
-When /^the application is snapshot$/ do
-  @snapshot = File.join(RHCHelper::TEMP_DIR, "snapshot.tar.gz")
-  @app.snapshot = @snapshot
-  @app.rhc_app_snapshot_save
-end
-
-When /^the application is shown$/ do
-  @app.rhc_app_show
-end
-
-When /^the application is tidied$/ do
-  @app.rhc_app_tidy
+  # Send the specified command to the application
+  @app.send("rhc_app_#{cmd}")
 end
 
 Then /^the snapshot should be found$/ do
@@ -80,10 +83,11 @@ Then /^the snapshot should be found$/ do
 end
 
 Then /^the applications should be accessible?$/ do
+  old_app = @app
   @apps.each do |app|
-    app.is_accessible?.should be_true
-    app.is_accessible?({:use_https => true}).should be_true
+    Then "the application should be accessible"
   end
+  @app = old_app
 end
 
 Then /^the application should be accessible$/ do

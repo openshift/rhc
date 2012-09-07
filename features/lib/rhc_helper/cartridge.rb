@@ -1,12 +1,6 @@
-require 'tmpdir'
 require 'rhc/rest'
 
 module RHCHelper
-  #
-  # Constant Definitions
-  #
-  TEMP_DIR = File.join(Dir.tmpdir, "rhc")
-
   #
   # A class to help maintain the state from rhc calls and helper
   # methods around cartridge management.

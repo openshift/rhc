@@ -15,6 +15,12 @@ describe RHC::Config do
     FakeFS.deactivate!
   end
 
+  describe "class" do
+    subject{ RHC::Config }
+    it("should raise when foo is invoked") { expect{ RHC::Config.method_missing(:foo) }.to raise_error(NoMethodError) }
+    it("should invoke a method on default") { RHC::Config.username.should be RHC::Config.default.username }
+  end
+
   context "Config default values with no files" do
     before(:each) do
       RHC::Config.initialize
@@ -24,10 +30,6 @@ describe RHC::Config do
       RHC::Config.has_global_config?.should be_false
       RHC::Config.has_local_config?.should be_false
       RHC::Config.has_opts_config?.should be_false
-    end
-
-    it "should suggest I run the wizard" do
-      RHC::Config.should_run_wizard?.should be_true
     end
 
     it "should return openshift.redhat.com for the server" do

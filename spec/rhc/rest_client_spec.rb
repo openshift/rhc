@@ -43,14 +43,19 @@ module RHC
         end
 
         it "returns a client object from the required arguments" do
-          credentials = Base64.encode64(mock_user + ":" + mock_pass)
+          credentials = Base64.strict_encode64(mock_user + ":" + mock_pass)
           client      = RHC::Rest::Client.new(mock_href, mock_user, mock_pass)
           @@headers['Authorization'].should == "Basic #{credentials}"
           client.instance_variable_get(:@links).should == client_links
         end
-        it "logs an error message if the API cannot be connected" do
-          client = MockClient.new(mock_href('api_error'), mock_user, mock_pass)
-          client.logged.should =~ /API Error$/
+        it "does not add newlines to username and password > 60 characters" do
+          username = "a" * 45
+          password = "p" * 45
+          client   = RHC::Rest::Client.new(mock_href, mock_user, mock_pass)
+          @@headers['Authorization'].should_not match("\n")
+        end
+        it "raises an error message if the API cannot be connected" do
+          expect { MockClient.new(mock_href('api_error'), mock_user, mock_pass) }.should raise_error
         end
         it "raises a generic error for any other error condition" do
           lambda{ RHC::Rest::Client.new(mock_href('other_error'), mock_user, mock_pass) }.
