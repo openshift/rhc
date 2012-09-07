@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 0.98.9
+Version: 0.98.10
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -114,6 +114,17 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Sep 07 2012 Adam Miller <admiller@redhat.com> 0.98.10-1
+- Merge pull request #151 from J5/bugfix (openshift+bot@redhat.com)
+- Merge pull request #150 from J5/add_deprecated_aliases
+  (openshift+bot@redhat.com)
+- use encode64().delete("\n") since b64encode prints to stdout
+  (johnp@redhat.com)
+- rhc version.rb bump (admiller@redhat.com)
+- some cleanups for deprecated aliases (johnp@redhat.com)
+- spec test to test deprecation framework (johnp@redhat.com)
+- add the ability to deprecate interfaces (johnp@redhat.com)
+
 * Thu Sep 06 2012 Adam Miller <admiller@redhat.com> 0.98.9-1
 - Merge pull request #148 from J5/bugfix (openshift+bot@redhat.com)
 - ruby 1.8 still requires us to strip off the last \n for b64encode
