@@ -48,7 +48,7 @@ module RHCHelper
     end
 
     # Print out the command arguments based on the state of the application instance
-    def get_args(cmd, cartridge=nil, debug=true)
+    def get_args(cmd, arg0=nil, debug=true)
       args = " "
       args << "-l #{$username} "
       args << "-p #{$password} "
@@ -80,8 +80,10 @@ module RHCHelper
           raise "No alias set" unless @alias
           args << "--alias #{@alias} "
         when /cartridge/
-          raise "No cartridge supplied" unless cartridge
-          args << "-c #{cartridge}"
+          raise "No cartridge supplied" unless arg0
+          args << "-c #{arg0}"
+        when /sshkey/
+          args << arg0.to_s
       end
 
       args.rstrip
@@ -174,6 +176,36 @@ module RHCHelper
   end
 
   def domain_delete_callback(exitcode, stdout, stderr, arg)
+    @exitcode = exitcode
+  end
+
+  def sshkey_callback(exitcode, stdout, stderr, arg)
+    @sshkey_output = stdout
+    @exitcode = exitcode
+  end
+  
+  def sshkey_add_callback(exitcode, stdout, stderr, arg)
+    @sshkey_output = stdout
+    @exitcode = exitcode
+  end
+
+  def sshkey_list_callback(exitcode, stdout, stderr, arg)
+    @sshkey_output = stdout
+    @exitcode = exitcode
+  end
+
+  def sshkey_show_callback(exitcode, stdout, stderr, arg)
+    @sshkey_output = stdout
+    @exitcode = exitcode
+  end
+  
+  def sshkey_update_callback(exitcode, stdout, stderr, arg)
+    @sshkey_output = stdout
+    @exitcode = exitcode
+  end
+
+  def sshkey_delete_callback(exitcode, stdout, stderr, arg)
+    @sshkey_output = stdout
     @exitcode = exitcode
   end
 
