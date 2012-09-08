@@ -29,6 +29,16 @@ module RHC
         return request(request)
       end
       alias :delete :destroy
+      
+      def fingerprint
+        begin
+          public_key = Net::SSH::KeyFactory.load_data_public_key("#{type} #{content}")
+          public_key.fingerprint
+        rescue NotImplementedError, OpenSSL::PKey::PKeyError => e
+          'Invalid key'
+        end
+        
+      end
     end
   end
 end
