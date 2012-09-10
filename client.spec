@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 0.98.11
+Version: 0.98.12
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -114,6 +114,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Sep 10 2012 Troy Dawson <tdawson@redhat.com> 0.98.12-1
+- 
+
 * Mon Sep 10 2012 Troy Dawson <tdawson@redhat.com> 0.98.11-1
 - US2600: [Debt] Refactor RHC key commands (asari.ruby@gmail.com)
 
