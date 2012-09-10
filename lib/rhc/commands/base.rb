@@ -92,6 +92,9 @@ class RHC::Commands::Base
       end
     end
 
+    def debug?
+      @options.debug
+    end
 
     class InvalidCommand < StandardError ; end
 

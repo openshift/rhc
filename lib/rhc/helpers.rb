@@ -94,6 +94,9 @@ module RHC
     # Output helpers
     #
 
+    def debug(msg)
+      puts "DEBUG: #{msg}" if debug?
+    end
     def say(msg)
       super
       msg
