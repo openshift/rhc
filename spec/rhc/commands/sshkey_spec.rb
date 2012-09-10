@@ -3,7 +3,7 @@ require 'rhc/commands/sshkey'
 require 'rhc/config'
 
 
-describe RHC::Commands::SshKey do
+describe RHC::Commands::Sshkey do
   before(:each) do
     RHC::Config.set_defaults
   end
@@ -127,7 +127,7 @@ describe RHC::Commands::SshKey do
         @rc = MockRestClient.new
       end
       
-      # RHC::Commands::SshKey#update throws RuntimeError, but it is swallowed
+      # RHC::Commands::Sshkey#update throws RuntimeError, but it is swallowed
       # up by the wrapper, so we only see status code 1.
       it "exits with status code 1" do
         expect {run}.should exit_with_code(1)

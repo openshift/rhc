@@ -3,7 +3,7 @@
 require 'rhc/commands/base'
 
 module RHC::Commands
-  class SshKey < Base
+  class Sshkey < Base
     include RHC::SSHKeyHelpers
     
     summary 'Manage multiple keys for the registered rhcloud user.'
