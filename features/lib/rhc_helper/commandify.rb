@@ -83,7 +83,9 @@ module RHCHelper
           raise "No cartridge supplied" unless arg0
           args << "-c #{arg0}"
         when /sshkey/
-          args << arg0.to_s
+          # in RHCHelper::Sshkey, we pass *args to method_missing here, so that
+          # we _know_ that arg0 is an Array.
+          args << arg0.first if arg0.first
       end
 
       args.rstrip
