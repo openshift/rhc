@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 0.98.12
+Version: 0.98.13
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -114,6 +114,19 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Sep 10 2012 Dan McPherson <dmcphers@redhat.com> 0.98.13-1
+- Merge pull request #149 from fabianofranz/dev/ffranz/refactor/port-forward
+  (openshift+bot@redhat.com)
+- Fixed rhc sshkey to use the new command lookup defaults (ffranz@redhat.com)
+- Changed --app from option to argument in rhc port-forward (ffranz@redhat.com)
+- Styling fixes to the rhc port-forward command, as suggested
+  (ffranz@redhat.com)
+- US2833: added rspec tests to fix coverage (ffranz@redhat.com)
+- US2833: deprecated rhc-port-forward command (ffranz@redhat.com)
+- US2833 - added spec tests for port forward, new default object_name for
+  commands, improved wording (ffranz@redhat.com)
+- US2833: moved port-forward to new command structure (ffranz@redhat.com)
+
 * Mon Sep 10 2012 Troy Dawson <tdawson@redhat.com> 0.98.12-1
 - 
 
