@@ -14,7 +14,7 @@ describe RHC::Commands::Base do
         end
         StaticRootClass
       end
-      its(:object_name) { should == 'staticrootclass' }
+      its(:object_name) { should == 'static-root-class' }
     end
     context 'when the class is nested in a module' do
       subject do 
@@ -23,7 +23,7 @@ describe RHC::Commands::Base do
         end
         Nested::StaticRootClass
       end
-      its(:object_name) { should == 'staticrootclass' }
+      its(:object_name) { should == 'static-root-class' }
     end
   end
 
