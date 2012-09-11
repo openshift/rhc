@@ -337,7 +337,7 @@ end
           tempfile = `mktemp /tmp/openshift.XXXXXXXX`
           `echo "#{type} #{key}" > #{tempfile}`
           ssh_keys['keys'][name]['fingerprint'] = `ssh-keygen -lf #{tempfile}`.split(' ')[1]
-        rescue NotImplementedError, Net::SSH::Exception
+        rescue NotImplementedError, Net::SSH::Exception, OpenSSL::PKey::PKeyError
           # Could be a new unsupported key type or invalid data on the server
           ssh_keys['keys'][name]['fingerprint'] = 'Key type is not recognized.  Please check this key is valid.'
         end
