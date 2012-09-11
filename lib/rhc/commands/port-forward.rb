@@ -64,7 +64,7 @@ module RHC::Commands
 
         end
 
-      rescue Timeout::Error, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed => e
+      rescue Timeout::Error, Errno::EADDRNOTAVAIL, Errno::EADDRINUSE, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed => e
         ssh_cmd = "ssh -N "
         hosts_and_ports.each { |port| ssh_cmd << "-L #{port}:#{port} " }
         ssh_cmd << "#{ssh_uri.user}@#{ssh_uri.host}"
