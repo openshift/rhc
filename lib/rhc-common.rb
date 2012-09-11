@@ -371,6 +371,7 @@ end
     if url.scheme == "https"
       http.use_ssl = true
       http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      http.ssl_version = 'SSLv3'
     end
     begin
       response = http.start {|http| http.request(req)}
