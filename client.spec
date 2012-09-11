@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 0.98.13
+Version: 0.98.14
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -114,6 +114,20 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Sep 11 2012 Troy Dawson <tdawson@redhat.com> 0.98.14-1
+- Merge pull request #155 from J5/bugfix (openshift+bot@redhat.com)
+- Merge pull request #153 from BanzaiMan/rhc-sshkey-cucumber-features
+  (openshift+bot@redhat.com)
+- move set_terminal to bin/rhc and add FIXME comment (johnp@redhat.com)
+- [Bug #856056] make sure set_terminal is called and disable color for windows
+  (johnp@redhat.com)
+- Merge pull request #154 from J5/bugfix (openshift+bot@redhat.com)
+- Block args handling is slightly different in MRI 1.9.3; *args are wrapped in
+  an Array, so that #to_s ends up with something weird under some
+  circumstances. (asari.ruby@gmail.com)
+- another spot where we weren't catching the sshkey error (johnp@redhat.com)
+- Cucumber features for "rhc sshkey" (asari.ruby@gmail.com)
+
 * Mon Sep 10 2012 Dan McPherson <dmcphers@redhat.com> 0.98.13-1
 - Merge pull request #149 from fabianofranz/dev/ffranz/refactor/port-forward
   (openshift+bot@redhat.com)
