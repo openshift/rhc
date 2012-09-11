@@ -39,9 +39,17 @@ module RHC
         return request(request)
       end
 
-      def find_application(name)
-        logger.debug "Finding application #{name}" if @mydebug
-        applications.each { |app| return app if app.name == name }
+      def find_application(name, options={})
+        if name.is_a?(Hash)
+          options = name.merge(options)
+          name = options[:name]
+        end
+        framework = options[:framework]
+
+        logger.debug "Finding application :name => #{name}, :framework => #{framework}" if @mydebug
+        applications.each do |app|
+          return app if (name.nil? or app.name == name) and (framework.nil? or app.framework == framework)
+        end
 
         raise RHC::ApplicationNotFoundException.new("Application #{name} does not exist")
       end
