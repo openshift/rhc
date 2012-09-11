@@ -21,6 +21,9 @@ module RHC
 
     extend self
 
+    MAX_RETRIES = 7
+    DEFAULT_DELAY_THROTTLE = 2.0
+
     def disable_deprecated?
       # 1) default for now is false
       # 2) when releasing a 1.0 beta flip this to true
