@@ -642,9 +642,9 @@ WARNING
     unless no_git
         puts "Pulling new repo down" if @mydebug
     
-        puts "git clone --quiet #{git_url} #{repo_dir}" if @mydebug
         quiet = (@mydebug ? ' ' : '--quiet ')
-        git_clone = %x<git clone #{quiet} #{git_url} #{repo_dir}>
+        puts "git clone #{quiet}#{git_url} #{repo_dir}" if @mydebug
+        git_clone = %x[git clone #{quiet} #{git_url} #{repo_dir} 2>&1]
         if $?.exitstatus != 0
 
           if RHC::Helpers.windows? 
