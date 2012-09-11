@@ -21,9 +21,11 @@ module RHC
 
     def self.set_terminal
       $terminal.wrap_at = HighLine::SystemExtensions.terminal_size.first - 5 rescue 80 if $stdin.tty?
+      HighLine::use_color = false if RHC::Helpers.windows?
     end
 
     def self.start(args)
+      set_terminal
       runner = RHC::CommandRunner.new(args)
       Commander::Runner.instance_variable_set :@singleton, runner
 
