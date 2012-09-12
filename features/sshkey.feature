@@ -2,63 +2,57 @@
 Feature: SSH key Management
 As an OpenShift user, I want to manage SSH keys with 'rhc sshkey' commands.
 
-  @sshkey_list
+  @sshkey_list @key1
   Scenario: SSH key is listed
-    Given the SSH key "key1" already exists
-    When 'rhc sshkey list' is run
+    When the existing keys are listed
     Then the output includes the key information
-  
-  @sshkey_show
+
+  @sshkey_show @key1
   Scenario: SSH key is shown individually
-    Given the SSH key "key1" already exists
-    When 'rhc sshkey show "key1"' is run
+    When the key "key1" is shown
     Then the output includes the key information for "key1"
-  
+
   @sshkey_show
   Scenario: Requested SSH key does not exist
-    Given the SSH key "key2" does not exist
-    When 'rhc sshkey show "key2"' command is run
+    When the key "key2" is shown
     Then the command exits with status code 118
-  
+
   @sshkey_add
   Scenario: SSH key is added successfully
-    Given the SSH key "key1" does not exist
-    When a new SSH key "features/support/key1.pub" is added as "key1"
-    Then the key "key1" should exist
+    When a new SSH key "key1.pub" is added as "key1"
+    And the key "key1" is shown
+    Then the output includes the key information for "key1"
     And the command exits with status code 0
-  
+
   @sshkey_add
   Scenario: invalid SSH key is added
-    Given the SSH key "key1" does not exist
-    When a new SSH key "features/support/key3.pub" is added as "key3"
+    When a new SSH key "key3.pub" is added as "key3"
     Then the command exits with status code 128
-  
+
   @sshkey_add
   Scenario: a valid private SSH key is added
-    Given the SSH key "key1" does not exist
-    When a new SSH key "features/support/key1" is added as "key1"
+    When a new SSH key "key1" is added as "key1"
     Then the command exits with status code 128
-  
-  @sshkey_add
+
+  @sshkey_add @key1
   Scenario: SSH key with the same name already exists
-    Given the SSH key "key1" already exists
-    When a new SSH key "features/support/key2.pub" is added as "key1"
+    When a new SSH key "key2.pub" is added as "key1"
     Then the command exits with status code 128
-  
+
   @sshkey_add
   Scenario: SSH key with the identical content already exists
-    Given an SSH key "key2" with the same content as "key1" exists
-    And the SSH key "key1" does not exist
-    When 'rhc sshkey add "key1" "features/support/key1.pub"' is run
+    Given a new SSH key "key1.pub" is added as "key1"
+    And a new SSH key "key1.pub" is added as "key2"
     Then the command exits with status code 128
   
-  @sshkey_remove
+
+  @sshkey_remove @key1
   Scenario: SSH key is deleted successfully
-    When 'rhc sshkey remove "key1"' is run
-    Then the SSH key "key1" is deleted
-  
+    When the key "key1" is removed
+    And the key "key1" is shown
+    Then the output does not include the key information for "key1"
+
   @sshkey_remove
   Scenario: SSH key requested to be deleted does not exist
-    Given the SSH key "key1" does not exist
-    When 'rhc sshkey remove "key1"' is run
+    When the key "key1" is removed
     Then the command exits with status code 118

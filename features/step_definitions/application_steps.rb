@@ -23,9 +23,9 @@ Given /^an existing (or new )?(.+) (application with.*)$/ do |create,type, embed
   @app = App.find_on_fs(options)
 
   if create && @app.nil?
-    step "a #{type} application is created"
+    When "a #{type} application is created"
     embeds.each do |embed|
-      step "the #{embed} cartridge is added"
+      When "the #{embed} cartridge is added"
     end
   end
 

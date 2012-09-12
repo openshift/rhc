@@ -1,10 +1,5 @@
 include RHCHelper
 
-Before do
-  Sshkey.remove "key1"
-  Sshkey.remove "key2"
-end
-
 When /^'rhc sshkey (\S+)( .*?)?'(?: command)? is run$/ do |subcommand, rest|
   if subcommand =~ /^(list|show|add|remove|delete|update)$/
     Sshkey.send subcommand.to_sym, rest
@@ -13,40 +8,23 @@ When /^'rhc sshkey (\S+)( .*?)?'(?: command)? is run$/ do |subcommand, rest|
   end
 end
 
-Given /^the SSH key "(.*?)" does not exist$/ do |key|
-  Sshkey.remove "key"
+Given "the existing keys are listed" do
+  When "'rhc sshkey list' is run"
 end
 
-Given /^the SSH key "(.*?)" already exists$/ do |key|
-  keyfile = File.join(File.dirname(__FILE__), '..', 'support', key + '.pub')
-  step "'rhc sshkey add #{key} #{keyfile}' is run"
-end
-
-Given /^an SSH key "(.*?)" with the same content as "(.*?)" exists$/ do |existing_key, new_key|
-  keyfile = File.join(File.dirname(__FILE__), '..', 'support', new_key + '.pub')
-  step "a new SSH key \"#{keyfile}\" is added as \"#{existing_key}\""
+Given /^the key "(.*?)" is (.*)$/ do |key,cmd|
+  cmd = case cmd
+        when "shown"
+          "show"
+        when "removed"
+          "remove"
+        end
+  When "'rhc sshkey #{cmd} \"#{key}\"' is run"
 end
 
 When /^a new SSH key "(.*?)" is added as "(.*)"$/ do |keyfile, name|
-  step "'rhc sshkey add #{name} #{keyfile}' is run"
-end
-
-Then /^the output includes the key information for "(.*?)"$/ do |key|
-  @sshkey_output.should match /Name: #{key}/
-end
-
-Then /^the key "(.*?)" should exist$/ do |key|
-  Sshkey.show "#{key}"
-  Sshkey.sshkey_output.should =~ /Name: #{key}/
-end
-
-Then /^the SSH key "(.*?)" is deleted$/ do |key|
-  Sshkey.show "#{key}"
-  Sshkey.sshkey_output.should_not =~ /Name: #{key}/
-end
-
-Then /^the output includes the key information$/ do
-  @sshkey_output.should match /Name:.*Type:.*Fingerprint:/m
+  keyfile = Sshkey.keyfile_path(keyfile)
+  When "'rhc sshkey add #{name} #{keyfile}' is run"
 end
 
 Then /^the command exits with status code (\d+)$/ do |arg1|
@@ -54,3 +32,25 @@ Then /^the command exits with status code (\d+)$/ do |arg1|
   @exitcode.should == code
 end
 
+Then /^the output (does not include|includes) (.*)$/ do |includes,str|
+  regex = case str
+          when /^the key information for "(.*?)"$/
+            /Name: #{$1}/
+          when "deprecation warning"
+            /deprecated/
+          when "the key information"
+            /Name:.*Type:.*Fingerprint:/m
+          end
+  includes = case includes
+             when "does not"
+               false
+             when "includes"
+               true
+             end
+
+  if includes
+    @sshkey_output.should match regex
+  else
+    @sshkey_output.should_not match regex
+  end
+end
