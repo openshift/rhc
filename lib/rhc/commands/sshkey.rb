@@ -67,14 +67,6 @@ module RHC::Commands
       0
     end
 
-    # summary 'Deprecated. "remove" and "add" instead.'
-    syntax ''
-    def update
-      error 'Update command has been removed. Please delete and re-add the key with the same name.'
-      
-      1
-    end
-
     summary 'Remove SSH key from the user account'
     syntax '<name>'
     alias_action :delete

@@ -138,20 +138,4 @@ describe RHC::Commands::Sshkey do
       end
     end
   end
-  
-  describe "update" do
-    context "when invoked" do
-      let (:arguments) { %w[sshkey update --noprompt] }
-      
-      before :each do
-        @rc = MockRestClient.new
-      end
-      
-      # RHC::Commands::Sshkey#update throws RuntimeError, but it is swallowed
-      # up by the wrapper, so we only see status code 1.
-      it "exits with status code 1" do
-        expect {run}.should exit_with_code(1)
-      end
-    end
-  end
 end

@@ -46,17 +46,6 @@ As an OpenShift user, I want to manage SSH keys with 'rhc sshkey' commands.
     When 'rhc sshkey add "key1" "features/support/key1.pub"' is run
     Then the command exits with status code 128
   
-  @sshkey_update
-  Scenario: 'help' does not show information on update
-    When 'rhc sshkey help' is run
-    Then the output does not include "update"
-  
-  @sshkey_update
-  Scenario: 'update' subcommand is invoked
-    When 'rhc sshkey update' is run
-    Then the command exits with status code 1
-    And the output includes deprecation warning
-  
   @sshkey_remove
   Scenario: SSH key is deleted successfully
     When 'rhc sshkey remove "key1"' is run
