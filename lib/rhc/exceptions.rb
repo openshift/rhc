@@ -39,6 +39,12 @@ module RHC
     end
   end
 
+  class KeyDataInvalidException < Exception
+    def initialize(message = "SSH Key file contains invalid data")
+      super message, 128
+    end
+  end
+
   class ScaledApplicationsNotSupportedException < Exception
     def initialize(message="Scaled applications not supported")
       super message, 128
