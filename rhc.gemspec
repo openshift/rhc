@@ -18,7 +18,7 @@ Gem::Specification.new do |s|
   s.executables  = Dir['bin/*'].map{ |f| File.basename(f) }
   s.require_path = 'lib'
 
-  s.add_dependency              'net-ssh'
+  s.add_dependency              'net-ssh',      '>= 2.0.11'
   s.add_dependency              'archive-tar-minitar'
   s.add_dependency              'test-unit' # used by rhc domain status in ruby 1.9
   s.add_runtime_dependency      'commander',    '>= 4.0'
