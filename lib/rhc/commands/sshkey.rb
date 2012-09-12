@@ -70,7 +70,7 @@ module RHC::Commands
     # summary 'Deprecated. "remove" and "add" instead.'
     syntax ''
     def update
-      warn 'Update command is deprecated. Please delete and re-add the key with the same name.'
+      error 'Update command has been removed. Please delete and re-add the key with the same name.'
       
       1
     end
