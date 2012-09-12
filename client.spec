@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 0.98.14
+Version: 0.98.15
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -114,6 +114,17 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Sep 12 2012 Adam Miller <admiller@redhat.com> 0.98.15-1
+- Avoid warnings when these steps run. (asari.ruby@gmail.com)
+- Merge pull request #156 from nhr/BZ856038 (openshift+bot@redhat.com)
+- Capture stderr output from git clone (jhonce@redhat.com)
+- Merge pull request #157 from J5/bugfix-port-forward
+  (openshift+bot@redhat.com)
+- [Bug #856202] catch Errno::EADDRINUSE and Errno::EADDRNOTAVAIL
+  (johnp@redhat.com)
+- BZ856038 - Updated gemspec to require earliest compatible version of Net::SSH
+  (hripps@redhat.com)
+
 * Tue Sep 11 2012 Troy Dawson <tdawson@redhat.com> 0.98.14-1
 - Merge pull request #155 from J5/bugfix (openshift+bot@redhat.com)
 - Merge pull request #153 from BanzaiMan/rhc-sshkey-cucumber-features
