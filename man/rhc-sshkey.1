@@ -18,8 +18,6 @@ Display all the SSH keys for the user account
 Display the SSH key with the given name
 .IP add
 Add SSH key to the user account 
-.IP update
-Deprecated. 'remove' and 'add' instead.
 .IP remove
 Remove SSH key from the user account
 
@@ -50,12 +48,6 @@ Add the SSH public key specified by
 as
 .B "<name>"
 The command fails if a key with the same name or a key with identical content already exists on this account.
-.SS "update"
-This command is deprecated. Please
-.B remove
-and
-.B add
-the key instead.
 .SS "remove <name>"
 Removes the SSH key from the account.
 
