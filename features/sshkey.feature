@@ -47,6 +47,11 @@ As an OpenShift user, I want to manage SSH keys with 'rhc sshkey' commands.
     Then the command exits with status code 128
   
   @sshkey_update
+  Scenario: 'help' does not show information on update
+    When 'rhc sshkey help' is run
+    Then the output does not include "update"
+  
+  @sshkey_update
   Scenario: 'update' subcommand is invoked
     When 'rhc sshkey update' is run
     Then the command exits with status code 1

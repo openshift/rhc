@@ -39,6 +39,10 @@ Then /^the output includes deprecation warning$/ do
   @sshkey_output.should match /deprecated/
 end
 
+Then /^the output does not include "(.*?)"$/ do |match|
+  @sshkey_output.should_not =~ /^\s+update/
+end
+
 Then /^the key "(.*?)" should exist$/ do |key|
   Sshkey.show "#{key}"
   Sshkey.sshkey_output.should =~ /Name: #{key}/
