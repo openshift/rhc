@@ -1,9 +1,18 @@
 module RHC
   module ContextHelpers
     def app_context
-      # We currently do not have a way of determening an app context so return nil
-      # In the future we will use the uuid embeded in the git config to query
-      # the server for the repo's app name
+      get_uuid_cmd = "git config --get rhc.app-uuid"
+      uuid = %x[#{get_uuid_cmd}].strip
+      return nil if $?.exitstatus != 0 or output.empty?
+
+      # proof of concept - we shouldn't be traversing
+      # the broker should expose apis for getting the application via a uuid
+      rest_client.domains.each do |rest_domain|
+        rest_domain.applications do |rest_app|
+          return rest_app.name if rest_app.uuid == uuid
+        end
+      end
+
       nil
     end
 
