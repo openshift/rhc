@@ -57,7 +57,7 @@ module RHC::Commands
       # validate the user input before sending it to the server
       begin
         Net::SSH::KeyFactory.load_data_public_key "#{type} #{content}"
-      rescue NotImplementedError, Net::SSH::Exception => e
+      rescue NotImplementedError, OpenSSL::PKey::PKeyError, Net::SSH::Exception => e
         raise ::RHC::KeyDataInvalidException.new("File '#{key}' contains invalid data")
       end
 
