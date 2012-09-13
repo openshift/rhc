@@ -13,6 +13,7 @@ module RHC::Commands
     syntax "<name> <cartridge> [... <other cartridges>][--namespace namespace]"
     option ["-n", "--namespace namespace"], "Namespace to add your application to", :context => :namespace_context, :required => true
     option ["-g", "--gear-size size"], "The  size  of the gear for this app. Available gear sizes depend on the type of account you have."
+    option ["-s", "--scaling"], "Enable scaling for this application"
     option ["-r", "--repo dir"], "Git Repo path (defaults to ./$app_name) (applicable to the  create command)"
     option ["--no-git", "--nogit"], "Only  create  remote space, don't pull it locally"
     option ["--no-dns", "--nodns"], "Skip DNS check. Must be used in combination with --nogit"
@@ -22,7 +23,14 @@ module RHC::Commands
     argument :additional_cartridges, "A list of other cartridges such as databases you wish to add. Cartridges can also be added later using 'rhc cartridge add'", [], :arg_type => :list
     def create(name, cartridge, additional_cartridges)
       warnings = []
-      say "Creating '#{name}' application in domain '#{options.namespace}' with cartridge '#{cartridge}'"
+      header "Creating application '#{name}'"
+      table({"Namespace:" => options.namespace,
+             "Cartridge:" => cartridge,
+             "Gear Size:" => options.gear_size || "default",
+             "Scaling:" => options.scaling ? "yes" : "no",
+            }
+           ).each { |s| say "  #{s}" }
+
       rest_domain = rest_client.find_domain(options.namespace)
 
       # check to make sure the right options are set for enabling jenkins
@@ -79,14 +87,14 @@ WARNING
           begin
             run_git_clone(rest_app)
           rescue RHC::GitException => e
+            warn "#{e}"
             if RHC::Helpers.windows? and warning = windows_nslookup_bug?
               warnings << warning
-            elseit
+            else
               warnings << <<WARNING
-#{e}
-You can use this command to clone your application locally
+There were issues when trying to git clone your application's repo.  You can use this command to clone your application manually:
 
-  git clone #{rest_app.git_url} \"#{options.repo}\"
+  rhc app git-clone #{rest_app.name}
 
 WARNING
             end
@@ -182,7 +190,7 @@ WARNING
         check_sshkeys! unless options.noprompt
 
         repo_dir = options.repo || rest_app.name
-        clone_repo rest_app.git_url, repo_dir
+        git_clone_repo rest_app.git_url, repo_dir
 
         configure_git rest_app
 
