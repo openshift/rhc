@@ -128,6 +128,25 @@ WARNING
       run_git_clone(rest_app)
     end
 
+    summary "Delete an application from the server"
+    description "Deletes your application and all of its data from the server.",
+                "Use with caution as this operation is permanent."
+    syntax "<app> [--namespace namespace]"
+    option ["-n", "--namespace namespace"], "Namespace to add your application to", :context => :namespace_context, :required => true
+    argument :app, "The application you wish to delete", ["-a", "--app name"]
+    alias_action :destroy, :deprecated => true
+    def delete(app)
+      rest_domain = rest_client.find_domain(options.namespace)
+      rest_app = rest_domain.find_application(app)
+
+      do_delete = agree "Are you sure you wish to delete the '#{rest_app.name}' application? (yes/no)"
+      if do_delete
+        paragraph { say "Deleting application '#{rest_app.name}'" }
+        rest_app.destroy
+        results { say "Application '#{rest_app.name}' successfully deleted" }
+      end
+    end
+
     private
       include RHC::GitHelpers
 
