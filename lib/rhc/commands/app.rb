@@ -1,5 +1,6 @@
 require 'rhc/commands/base'
 require 'resolv'
+require 'rhc/git_helper'
 
 module RHC::Commands
   class App < Base
@@ -120,6 +121,8 @@ WARNING
     end
 
     private
+      include RHC::GitHelpers
+
       def create_app(name, cartridge, rest_domain, gear_size=nil, scaling=nil)
         app_options = {:cartridge => cartridge}
         app_options[:gear_profile] = gear_size if gear_size
@@ -176,20 +179,12 @@ WARNING
       def run_git_clone(rest_app)
         debug "Pulling new repo down"
 
-        check_sshkeys!
+        check_sshkeys! unless options.noprompt
 
-        quiet = (@debug ? '' : '--quiet ')
+        repo_dir = options.repo || rest_app.name
+        clone_repo rest_app.git_url, repo_dir
 
-        # quote the repo to avoid input injection risk
-        repo = (options.repo ? " #{%q{options.repo}}" : "")
-        clone_cmd = "git clone #{quiet} #{rest_app.git_url}#{options.repo}"
-        debug "Running #{clone_cmd} 2>&1"
-
-        output = %x[#{clone_cmd} 2>&1]
-
-        raise RHC::GitException, "Error in git clone - #{output}" if $?.exitstatus != 0
-
-        configure_git(rest_app)
+        configure_git rest_app
 
         true
       end
@@ -198,15 +193,8 @@ WARNING
         debug "Configuring git repo"
 
         repo_dir = options.repo || rest_app.name
-        keys = { "app-uuid" => rest_app.uuid }
-        unset_cmd = "git config --unset-all rhc."
-        config_cmd = "git config --add rhc."
-        keys.each do |name, value|
-          cmd = "(cd #{repo_dir}; #{unset_cmd}#{name}; #{config_cmd}#{name} #{value})"
-          debug "Running #{cmd} 2>&1"
-          debug "Adding #{name} = #{value} to git config"
-          output = %x[#{cmd} 2>&1]
-          raise RHC::GitException, "Error while adding config values to git - #{output}" unless output.empty?
+        Dir.chdir(repo_dir) do |dir|
+          git_config_set "rhc.app-uuid", rest_app.uuid
         end
       end
 
