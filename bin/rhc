@@ -15,6 +15,7 @@ Command line tool for performing operations related to your rhcloud account.
 
 List of resources
   domain             Manage the namespace for the registered rhcloud user.
+  threaddump         Trigger a thread dump for jbossas, jbosseap, and ruby applications.
   app                Manage applications within the rhcloud account.
   sshkey             Manage multiple keys for the registered rhcloud user.
   port-forward       Forward remote ports to the workstation

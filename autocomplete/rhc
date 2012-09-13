@@ -16,7 +16,7 @@ _rhc()
                 opts="create show alter status destroy"
                 ;;
             app)
-                opts="create show start stop force-stop restart reload status destroy tidy add-alias remove-alias threaddump snapshot tail cartridge"
+                opts="create show start stop force-stop restart reload status destroy tidy add-alias remove-alias snapshot tail cartridge"
                 ;;
             sshkey)
                 opts="add update remove list"
@@ -48,7 +48,7 @@ _rhc()
                     create)
                         opts="--debug --help --rhlogin --password --no-dns --nogit --app --repo --type --enable-jenkins --config --timeout"
                         ;;
-                    show | start | stop | force-stop | restart | reload | status | destroy | tidy | add-alias | remove-alias | threaddump | destroy )
+                    show | start | stop | force-stop | restart | reload | status | destroy | tidy | add-alias | remove-alias | destroy )
                         opts="--debug --help --rhlogin --password --app --alias --bypass --config --timeout"
                         ;;
                     tail)

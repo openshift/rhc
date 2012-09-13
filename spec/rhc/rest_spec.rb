@@ -55,9 +55,9 @@ module RHC
             :links           => { :foo => 'bar' }
           }}
         it "deserializes to an application" do
-          json_response = { :type => 'application', :data => object }.to_json
+          json_response = { :type => 'application', :data => object, :messages => [{'text' => 'test message'}]}.to_json
           app_obj       = RHC::Rest::Application.new(object)
-          subject.parse_response(json_response).should have_same_attributes_as(app_obj)
+          subject.parse_response(json_response)[:data].should have_same_attributes_as(app_obj)
         end
       end
 

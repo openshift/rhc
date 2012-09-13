@@ -112,7 +112,8 @@ module RHC
         end
         return apps
       when 'application'
-        return Application.new(data)
+        message = result['messages'].first['text']
+        return Hash[:message => message, :data => Application.new(data)]
       when 'cartridges'
         carts = Array.new
         data.each do |cart_json|

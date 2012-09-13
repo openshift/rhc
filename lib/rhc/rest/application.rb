@@ -1,9 +1,8 @@
-
 module RHC
   module Rest
     class Application
       include Rest
-      attr_reader :domain_id, :name, :creation_time, :uuid, :aliases, :git_url, :app_url, :gear_profile, :framework, 
+      attr_reader :domain_id, :name, :creation_time, :uuid, :aliases, :git_url, :app_url, :gear_profile, :framework,
       :scalable, :health_check_path, :embedded, :gear_count, :ssh_url, :scale_min, :scale_max
       def initialize(args)
         #logger.debug args
@@ -24,7 +23,6 @@ module RHC
         @scale_min = args[:scale_min] || args["scale_min"]
         @scale_max = args[:scale_max] || args["scale_max"]
         @links = args[:links] || args["links"]
-        
       end
 
       #Add Cartridge
@@ -87,6 +85,17 @@ module RHC
         method =  @links['DELETE']['method']
         request = new_request(:url => url, :method => method, :headers => @@headers)
         return request(request)
+      end
+
+      #Thread dump
+      def threaddump
+        logger.debug "Running thread dump for #{self.name}" if @mydebug
+        url = @links['THREAD_DUMP']['href']
+        method =  @links['THREAD_DUMP']['method']
+        payload = {:event => 'thread-dump'}
+        request = new_request(:url => url, :method => method, :headers => @@headers, :payload => payload)
+        return request(request)
+
       end
       alias :delete :destroy
     end
