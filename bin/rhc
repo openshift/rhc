@@ -51,20 +51,13 @@ def run_setup_wizard_if_needed
 end
 
 begin
-  case ARGV[0]
-  when "app"
-    run_setup_wizard_if_needed
-    system("rhc-app #{get_args} 2>&1")
-    retcode = $?.exitstatus
-  else
-    begin
-      require 'rhc/cli'
-      RHC::CLI.set_terminal
-      RHC::CLI.start(ARGV)
-      retcode = 0
-    rescue SystemExit => e
-      retcode = e.status
-    end
+  begin
+    require 'rhc/cli'
+    RHC::CLI.set_terminal
+    RHC::CLI.start(ARGV)
+    retcode = 0
+  rescue SystemExit => e
+    retcode = e.status
   end
 
   if retcode == nil
