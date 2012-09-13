@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 0.99.0
+Version: 0.99.1
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -114,6 +114,21 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Sep 12 2012 Adam Miller <admiller@redhat.com> 0.99.1-1
+- bump_minor_versions for sprint 18 (admiller@redhat.com)
+- Merge pull request #160 from BanzaiMan/us2600_followup
+  (openshift+bot@redhat.com)
+- Remove "rhc sshkey update" altogether. (asari.ruby@gmail.com)
+- "sshkey update" is "removed", not "deprecated". (asari.ruby@gmail.com)
+- Also catch Net::SSH::Exception (asari.ruby@gmail.com)
+- Remove mention of "update" from rhc-sshkey(1). (asari.ruby@gmail.com)
+- Remove mention of "rhc sshkey update" from "rhc sshkey help".
+  (asari.ruby@gmail.com)
+- Add Cucumber test for the case where an invalid SSH public key is added.
+  (asari.ruby@gmail.com)
+- Add spec for the case for the invalid key addition. We validate before
+  sending it to the server. (asari.ruby@gmail.com)
+
 * Wed Sep 12 2012 Adam Miller <admiller@redhat.com> 0.98.15-1
 - Avoid warnings when these steps run. (asari.ruby@gmail.com)
 - Merge pull request #156 from nhr/BZ856038 (openshift+bot@redhat.com)
