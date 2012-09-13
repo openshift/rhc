@@ -28,6 +28,7 @@ module RHC
       let(:client_links)   { mock_response_links(mock_client_links) }
       let(:domain_0_links) { mock_response_links(mock_domain_links('mock_domain_0')) }
       let(:domain_1_links) { mock_response_links(mock_domain_links('mock_domain_1')) }
+      let(:app_0_links)    { mock_response_links(mock_app_links('mock_domain_0', 'mock_app')) }
       let(:user_links)     { mock_response_links(mock_user_links) }
       let(:key_links)      { mock_response_links(mock_key_links) }
 
@@ -161,6 +162,74 @@ module RHC
           it "raise an error when no matching domain IDs can be found" do
             expect { @client.find_domain('mock_domain_2') }.should raise_error(RHC::DomainNotFoundException)
           end
+        end
+
+        context "#threadump" do
+          before(:each) do
+            stub_api_request(:any, client_links['LIST_DOMAINS']['relative']).
+              to_return({ :body   => {
+                            :type => 'domains',
+                            :data =>
+                            [{ :id    => 'mock_domain_0',
+                               :links => mock_response_links(mock_domain_links('mock_domain_0')),
+                             },
+                             { :id    => 'mock_domain_1',
+                               :links => mock_response_links(mock_domain_links('mock_domain_1')),
+                             }]
+                          }.to_json,
+                          :status => 200
+                        })
+            stub_api_request(:any, domain_0_links['LIST_APPLICATIONS']['relative']).
+              to_return({ :body   => {
+                            :type => 'applications',
+                            :data =>
+                            [{ :domain_id       => 'mock_domain_0',
+                               :name            => 'mock_app',
+                               :creation_time   => Time.new.to_s,
+                               :uuid            => 1234,
+                               :aliases         => ['alias_1', 'alias_2'],
+                               :server_identity => 'mock_server_identity',
+                               :links           => mock_response_links(mock_app_links('mock_domain_0','mock_app')),
+                             }]
+                          }.to_json,
+                          :status => 200
+                        })
+            stub_api_request(:any, domain_1_links['LIST_APPLICATIONS']['relative']).
+              to_return({ :body   => {
+                            :type => 'applications',
+                            :data =>
+                            [{ :domain_id       => 'mock_domain_1',
+                               :name            => 'mock_app',
+                               :creation_time   => Time.new.to_s,
+                               :uuid            => 1234,
+                               :aliases         => ['alias_1', 'alias_2'],
+                               :server_identity => 'mock_server_identity',
+                               :links           => mock_response_links(mock_app_links('mock_domain_1','mock_app')),
+                             }]
+                          }.to_json,
+                          :status => 200
+                        })
+            stub_api_request(:any, app_0_links['THREAD_DUMP']['relative']).with(:body => {:event => 'thread-dump'}).
+              to_return({ :body   => {
+                            :type => 'application',
+                            :data =>
+                            { :domain_id       => 'mock_domain_1',
+                               :name            => 'mock_app',
+                               :creation_time   => Time.new.to_s,
+                               :uuid            => 1234,
+                               :aliases         => ['alias_1', 'alias_2'],
+                               :server_identity => 'mock_server_identity',
+                               :links           => mock_response_links(mock_app_links('mock_domain_1','mock_app')),
+                             },
+                            :messages => [{:text => 'Application test thread dump complete.: Success'}]
+                          }.to_json,
+                          :status => 200
+                        })
+           end
+           it "returns a domain object for matching domain IDs" do
+             match = nil
+             expect { match = @client.threaddump('mock_app') }.should_not raise_error
+           end
         end
 
         context "#find_application" do

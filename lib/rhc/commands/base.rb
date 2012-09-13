@@ -6,7 +6,6 @@ require 'rhc/config'
 require 'rhc/commands'
 require 'rhc/exceptions'
 require 'rhc/context_helper'
-
 class RHC::Commands::Base
 
   attr_writer :options, :config

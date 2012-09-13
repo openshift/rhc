@@ -16,7 +16,7 @@ Control an OpenShift express app
   -a|--app   application   Application name  (alphanumeric) (required)
   -l|--rhlogin rhlogin     OpenShift login (#{rhlogin})
   -p|--password password   Password (optional, will prompt)
-  -c|--command command     (start|stop|force-stop|restart|reload|status|destroy|tidy|add-alias|remove-alias|threaddump)
+  -c|--command command     (start|stop|force-stop|restart|reload|status|destroy|tidy|add-alias|remove-alias)
   -L|--embedded-list       List supported embedded cartridges
   -e|--embed               (add|remove|stop|start|restart|status|reload)-$cartridge eg: add-mysql-5.1
   -b|--bypass              Bypass warnings
@@ -103,8 +103,8 @@ unless opt["embed"] or opt["command"]
 end
 
 if opt["command"]
-  unless opt["command"] =~ /^(start|stop|force-stop|restart|reload|status|destroy|tidy|add-alias|remove-alias|threaddump)$/
-    puts "Invalid command '#{opt["command"]}' specified.  Valid commands are (start|stop|force-stop|restart|reload|status|destroy|tidy|add-alias|remove-alias|threaddump)"
+  unless opt["command"] =~ /^(start|stop|force-stop|restart|reload|status|destroy|tidy|add-alias|remove-alias)$/
+    puts "Invalid command '#{opt["command"]}' specified.  Valid commands are (start|stop|force-stop|restart|reload|status|destroy|tidy|add-alias|remove-alias)"
     p_usage
   end
 elsif opt["embed"]
