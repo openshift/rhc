@@ -63,20 +63,12 @@ module RHC::Commands
     option ["--confirm"], "Safety switch - if this switch is not passed a warning is printed out and the cartridge will not be removed"
     alias_action :"app cartridge remove", :root_command => true, :deprecated => true
     def remove(cartridge)
-      app = options.app
-      namespace = options.namespace
-      confirm = options.confirm
-
-      unless confirm
+      unless options.confirm
         results { say "Removing a cartridge is a destructive operation that may result in loss of data associated with the cartridge.  You must pass the --confirm switch to this command in order to to remove the cartridge." }
         return 1
       end
 
-      rest_domain = rest_client.find_domain(namespace)
-      rest_app = rest_domain.find_application(app)
-      rest_cartridge = rest_app.find_cartridge cartridge, :type => "embedded"
-
-      rest_cartridge.destroy
+      cartridge_action cartridge, :destroy
 
       results { say "Success! Cartridge #{rest_cartridge.name} removed from application #{rest_app.name}." }
       0
@@ -90,13 +82,7 @@ module RHC::Commands
     option ["--timeout timeout"], "Timeout, in seconds, for the session"
     alias_action :"app cartridge start", :root_command => true, :deprecated => true
     def start(cartridge)
-      app = options.app
-      namespace = options.namespace
-
-      rest_domain = rest_client.find_domain(namespace)
-      rest_app = rest_domain.find_application(app)
-      rest_cartridge = rest_app.find_cartridge cartridge, :type => "embedded"
-      rest_cartridge.start
+      cartridge_action cartridge, :start
 
       results { say "#{cartridge} started!" }
       0
@@ -110,13 +96,7 @@ module RHC::Commands
     option ["--timeout timeout"], "Timeout, in seconds, for the session"
     alias_action :"app cartridge stop", :root_command => true, :deprecated => true
     def stop(cartridge)
-      app = options.app
-      namespace = options.namespace
-
-      rest_domain = rest_client.find_domain(namespace)
-      rest_app = rest_domain.find_application(app)
-      rest_cartridge = rest_app.find_cartridge cartridge, :type => "embedded"
-      rest_cartridge.stop
+      cartridge_action cartridge, :stop
 
       results { say "#{cartridge} stopped!" }
       0
@@ -130,13 +110,7 @@ module RHC::Commands
     option ["--timeout timeout"], "Timeout, in seconds, for the session"
     alias_action :"app cartridge restart", :root_command => true, :deprecated => true
     def restart(cartridge)
-      app = options.app
-      namespace = options.namespace
-
-      rest_domain = rest_client.find_domain(namespace)
-      rest_app = rest_domain.find_application(app)
-      rest_cartridge = rest_app.find_cartridge cartridge, :type => "embedded"
-      rest_cartridge.restart
+      cartridge_action cartridge, :restart
 
       results { say "#{cartridge} restarted!" }
       0
@@ -160,19 +134,19 @@ module RHC::Commands
     option ["--timeout timeout"], "Timeout, in seconds, for the session"
     alias_action :"app cartridge reload", :root_command => true, :deprecated => true
     def reload(cartridge)
-      app = options.app
-      namespace = options.namespace
-
-      rest_domain = rest_client.find_domain(namespace)
-      rest_app = rest_domain.find_application(app)
-      rest_cartridge = rest_app.find_cartridge cartridge, :type => "embedded"
-      rest_cartridge.reload
+      cartridge_action cartridge, :reload
 
       results { say "#{cartridge} config reloaded!" }
       0
     end
 
     private
+      def cartridge_action(cartridge, action)
+        rest_domain = rest_client.find_domain(options.namespace)
+        rest_app = rest_domain.find_application(options.app)
+        rest_cartridge = rest_app.find_cartridge cartridge, :type => "embedded"
+        rest_cartridge.send action
+      end
 
       def cart_regex(cart)
         "^#{cart.rstrip}(-[0-9\.]+){0,1}$"
