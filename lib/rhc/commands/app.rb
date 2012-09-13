@@ -1,6 +1,5 @@
 require 'rhc/commands/base'
 require 'resolv'
-require 'uri'
 
 module RHC::Commands
   class App < Base
@@ -32,8 +31,6 @@ module RHC::Commands
       rest_app = create_app(name, cartridge, rest_domain,
                             options.gear_size, options.scaling)
 
-      host = URI(rest_app.app_url).host
-
       # create a jenkins app if not available
       # don't error out if there are issues, setup warnings instead
       begin
@@ -63,9 +60,9 @@ WARNING
       end
 
       unless options.nodns
-        unless dns_propagated? host
+        unless dns_propagated? rest_app.host
           warnings << <<WARNING
-We were unable to lookup your hostname (#{host}) in a reasonable amount of time.
+We were unable to lookup your hostname (#{rest_app.host}) in a reasonable amount of time.
 This can happen periodically and will just take an extra minute or two to
 propagate depending on where you are in the world. Once you are able to access
 your application in a browser, you can run this command to clone your application.
@@ -73,13 +70,13 @@ your application in a browser, you can run this command to clone your applicatio
   git clone #{rest_app.git_url} \"#{options.repo}\""
 
 WARNING
-          print_warnings(host, rest_app, warnings)
+          print_warnings(rest_app, warnings)
           return 0
         end
 
         unless options.nogit
           begin
-            git_clone(host, rest_app.git_url)
+            run_git_clone(rest_app)
           rescue RHC::GitException => e
             if RHC::Helpers.windows? and warning = windows_nslookup_bug?
               warnings << warning
@@ -97,7 +94,7 @@ WARNING
       end
 
       unless warnings.empty?
-        print_warnings(host, rest_app, warnings)
+        print_warnings(rest_app, warnings)
       else
         results { say "Success!" }
       end
@@ -213,25 +210,24 @@ a different application name." if jenkins_app_name == app_name
       def setup_jenkins_app(rest_domain)
         debug "Creating a new jenkins application"
         rest_app = create_app(jenkins_app_name, "jenkins-1.4", rest_domain)
-        host = URI(rest_app.app_url).host
 
         # If we can't get the dns we can't install the client so return nil
-        dns_propagated?(host) ? rest_app : nil
+        dns_propagated?(rest_app.host) ? rest_app : nil
 
       end
       def setup_jenkins_client(rest_app)
         rest_app.add_cartridge("jenkins-client-1.4")
       end
 
-      def windows_nslookup_bug?(host, rest_app)
-        `nslookup #{host}`
+      def windows_nslookup_bug?(rest_app)
+        `nslookup #{rest_app.host}`
         windows_nslookup = $?.exitstatus == 0
-        `ping #{host}-n 2`
+        `ping #{rest_app.host}-n 2`
         windows_ping = $?.exitstatus == 0
 
         if windows_nslookup and !windows_ping # this is related to BZ #826769
           warning <<WINSOCKISSUE
-We were unable to lookup your hostname (#{host})
+We were unable to lookup your hostname (#{rest_app.host})
 in a reasonable amount of time.  This can happen periodically and will just
 take up to 10 extra minutes to propagate depending on where you are in the
 world. This may also be related to an issue with Winsock on Windows [1][2].
@@ -250,7 +246,7 @@ WINSOCKISSUE
         false
       end
 
-      def print_warnings(host, rest_app, warnings)
+      def print_warnings(rest_app, warnings)
         warn <<WARNING
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  WARNING:  Some operations did not complete and your application may not be fully
