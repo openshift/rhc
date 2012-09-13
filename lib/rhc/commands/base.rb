@@ -108,7 +108,7 @@ class RHC::Commands::Base
       return if private_method_defined? method
       return if protected_method_defined? method
 
-      method_name = method.to_s == 'run' ? nil : method.to_s
+      method_name = method.to_s == 'run' ? nil : method.to_s.gsub("_", "-")
       name = [method_name]
       name.unshift(self.object_name).compact!
       raise InvalidCommand, "Either object_name must be set or a non default method defined" if name.empty?
