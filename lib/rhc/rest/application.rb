@@ -67,6 +67,28 @@ module RHC
         raise RHC::CartridgeNotFoundException.new("Cartridge #{name} can't be found in application #{@name}.#{suggested_msg}")
       end
 
+      #Find Cartridges by name or regex
+      def find_cartridges(name, options={})
+        if name.is_a?(Hash)
+          options = name
+          name = options[:name]
+        end
+
+        type = options[:type]
+        regex = options[:regex]
+        logger.debug "Finding cartridge #{name || regex} in app #{@name}" if @mydebug
+
+        filtered = Array.new
+        cartridges.each do |cart|
+          if regex
+            filtered.push(cart) if cart.name.match(regex) and (type.nil? or cart.type == type)
+          else
+            filtered.push(cart) if cart.name == name and (type.nil? or cart.type == type)
+          end
+        end
+        filtered
+      end
+
       #Start Application
       def start
         logger.debug "Starting application #{self.name}" if @mydebug
