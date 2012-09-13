@@ -25,9 +25,5 @@ module RHCHelper
     def self.remove(*args)
       rhc_sshkey_remove args
     end
-    
-    def self.update(*args)
-      rhc_sshkey_update args
-    end
   end
 end

@@ -53,18 +53,18 @@ module RHC::Commands
         raise ::RHC::KeyFileAccessDeniedException.new("Access denied to '#{key}'.")
       end
       type, content, comment = file.gets.chomp.split
+      
+      # validate the user input before sending it to the server
+      begin
+        Net::SSH::KeyFactory.load_data_public_key "#{type} #{content}"
+      rescue NotImplementedError, Net::SSH::Exception => e
+        raise ::RHC::KeyDataInvalidException.new("File '#{key}' contains invalid data")
+      end
+
       rest_client.add_key(name, content, type)
       results { say "SSH key #{key} has been added as '#{name}'" }
       
       0
-    end
-
-    summary 'Deprecated. "remove" and "add" instead.'
-    syntax ''
-    def update
-      warn 'Update command is deprecated. Please delete and re-add the key with the same name.'
-      
-      1
     end
 
     summary 'Remove SSH key from the user account'

@@ -95,10 +95,11 @@ module RHC
   class CommandHelpBindings
     def initialize(command, instance_commands, global_options)
       @command = command
-      @actions = instance_commands.collect do |ic|
-        m = /^#{command.name} ([^ ]+)/.match(ic[0])
+      @actions = instance_commands.collect do |command_name, command_class|
+        next if command_class.summary.nil?
+        m = /^#{command.name} ([^ ]+)/.match(command_name)
         # if we have a match and it is not an alias then we can use it
-        m and ic[0] == ic[1].name ? {:name => m[1], :summary => ic[1].summary || ""} : nil
+        m and command_name == command_class.name ? {:name => m[1], :summary => command_class.summary || ""} : nil
       end
       @actions.compact!
       @global_options = global_options
