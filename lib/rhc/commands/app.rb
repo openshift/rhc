@@ -102,6 +102,23 @@ WARNING
       0
     end
 
+    summary "Clone and configure an application's repository locally"
+    description "This is a convenience wrapper for 'git clone' with the added",
+                "benefit of adding configuration data such as the application's",
+                "UUID to the local repository.  It also automatically",
+                "figures out the git url from the application name so you don't",
+                "have to look it up."
+    syntax "<app> [--namespace namespace]"
+    option ["-n", "--namespace namespace"], "Namespace to add your application to", :context => :namespace_context, :required => true
+    argument :app, "The application you wish to clone", ["-a", "--app name"]
+    # TODO: Implement default values for arguments once ffranz has added context arguments
+    # argument :directory, "The name of a new directory to clone into", [], :default => nil
+    def git_clone(app)
+      rest_domain = rest_client.find_domain(options.namespace)
+      rest_app = rest_domain.find_application(app)
+      run_git_clone(rest_app)
+    end
+
     private
       def create_app(name, cartridge, rest_domain, gear_size=nil, scaling=nil)
         app_options = {:cartridge => cartridge}
@@ -151,22 +168,46 @@ WARNING
         dns.getresources(host, Resolv::DNS::Resource::IN::A).any?
       end
 
-      def git_clone(host, git_url)
+      def check_sshkeys!
+        wizard = RHC::SSHWizard.new(config.username, config.password)
+        wizard.run
+      end
+
+      def run_git_clone(rest_app)
         debug "Pulling new repo down"
 
-        puts "git clone --quiet #{git_url} #{repo_dir}" if @mydebug
+        check_sshkeys!
+
         quiet = (@debug ? '' : '--quiet ')
-        repo = (options.repo ? %q{options.repo} : "")
-        clone_cmd = "git clone #{quiet} #{git_url} #{options.repo}"
-        debug "Running #{clone_cmd}"
 
-        output = %x<#{clone_cmd}>
+        # quote the repo to avoid input injection risk
+        repo = (options.repo ? " #{%q{options.repo}}" : "")
+        clone_cmd = "git clone #{quiet} #{rest_app.git_url}#{options.repo}"
+        debug "Running #{clone_cmd} 2>&1"
 
-        if $?.exitstatus != 0
-          raise RHC::GitException, "Error in git clone - #{output}"
-        end
+        output = %x[#{clone_cmd} 2>&1]
+
+        raise RHC::GitException, "Error in git clone - #{output}" if $?.exitstatus != 0
+
+        configure_git(rest_app)
 
         true
+      end
+
+      def configure_git(rest_app)
+        debug "Configuring git repo"
+
+        repo_dir = options.repo || rest_app.name
+        keys = { "app-uuid" => rest_app.uuid }
+        unset_cmd = "git config --unset-all rhc."
+        config_cmd = "git config --add rhc."
+        keys.each do |name, value|
+          cmd = "(cd #{repo_dir}; #{unset_cmd}#{name}; #{config_cmd}#{name} #{value})"
+          debug "Running #{cmd} 2>&1"
+          debug "Adding #{name} = #{value} to git config"
+          output = %x[#{cmd} 2>&1]
+          raise RHC::GitException, "Error while adding config values to git - #{output}" unless output.empty?
+        end
       end
 
       def jenkins_app_name
