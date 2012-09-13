@@ -34,6 +34,12 @@ As an OpenShift user, I want to manage SSH keys with 'rhc sshkey' commands.
     Then the command exits with status code 128
   
   @sshkey_add
+  Scenario: a valid private SSH key is added
+    Given the SSH key "key1" does not exist
+    When a new SSH key "features/support/key1" is added as "key1"
+    Then the command exits with status code 128
+  
+  @sshkey_add
   Scenario: SSH key with the same name already exists
     Given the SSH key "key1" already exists
     When a new SSH key "features/support/key2.pub" is added as "key1"
