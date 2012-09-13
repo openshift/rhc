@@ -71,18 +71,18 @@ module RHC
       #Find Cartridge by name or regex
       def find_cartridges(name)
         logger.debug "Finding cartridge #{name}" if @mydebug
-        regex = nil
         if name.is_a?(Hash)
-          name = name[:name] if name[:name]
-          regex = name[:regex] if name[:regex]
+          regex = name[:regex]
+          type = name[:type]
+          name = name[:name]
         end
 
         filtered = Array.new
         cartridges.each do |cart|
           if regex
-            filtered.push(cart) if cart.name.match(regex)
+            filtered.push(cart) if cart.name.match(regex) and (type.nil? or cart.type == type)
           else
-            filtered.push(cart) if cart.name == name
+            filtered.push(cart) if cart.name == name and (type.nil? or cart.type == type)
           end
         end
         return filtered
