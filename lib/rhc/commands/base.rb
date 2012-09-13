@@ -129,8 +129,8 @@ class RHC::Commands::Base
         end
     end
 
-    def self.description(value)
-      options[:description] = value
+    def self.description(*args)
+      options[:description] = args.join(' ')
     end
     def self.summary(value)
       options[:summary] = value
