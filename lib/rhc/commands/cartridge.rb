@@ -17,39 +17,27 @@ module RHC::Commands
 
     summary "Add a cartridge to your application"
     syntax "<cartridge_type> [--timeout timeout] [--namespace namespace] [--app app]"
-    argument :cart_type, "The type of the cartridge you are adding (run 'rhc cartridge list' to obtain a list of available cartridges)", ["-c", "--cartridge cart_type"]
     option ["-n", "--namespace namespace"], "Namespace of the application you are adding the cartridge to", :context => :namespace_context, :required => true
     option ["-a", "--app app"], "Application you are adding the cartridge to", :context => :app_context, :required => true
     option ["--timeout timeout"], "Timeout, in seconds, for the session"
+    argument :cart_type, "The type of the cartridge you are adding (run 'rhc cartridge list' to obtain a list of available cartridges)", ["-c", "--cartridge cart_type"]
     alias_action :"app cartridge add", :root_command => true, :deprecated => true
     def add(cart_type)
-      carts = rest_client.find_cartridges :regex => cart_regex(cart_type)
-      app = options.app
-      namespace = options.namespace
+      cart = find_cartridge rest_client, cart_type
 
-      if carts.length == 0
-        carts = rest_client.cartridges.collect { |c| c.name }
-        results do
-          say "Invalid type specified: '#{cart_type}'. Valid cartridge types are (#{carts.join(', ')})."
-        end
-        return 154
+      say "Adding '#{cart.name}' to application '#{options.app}'"
+
+      rest_domain = rest_client.find_domain(options.namespace)
+      rest_app = rest_domain.find_application(options.app)
+      rest_cartridge = rest_app.add_cartridge(cart.name)
+      say "Success"
+
+      paragraph do
+        header "Useful #{cart.name} properties"
+        properties_table(rest_cartridge).each { |s| say "  #{s}" }
       end
-
-      if carts.length > 1
-        results do
-          say "Multiple cartridge versions match your criteria. Please specify one."
-          carts.each { |cart| say "#{cart.name}" }
-        end
-        return 155
-      end
-
-      cart = carts[0] if carts.length
-      paragraph { say "Adding '#{cart.name}' to application '#{app}'" }
-
-      rest_domain = rest_client.find_domain(namespace)
-      rest_app = rest_domain.find_application(app)
-      rest_app.add_cartridge(cart.name)
-      results { say "  Success!" }
+      0
+    end
 
       0
     end
@@ -68,9 +56,12 @@ module RHC::Commands
         return 1
       end
 
-      cartridge_action cartridge, :destroy
+      rest_domain = rest_client.find_domain(options.namespace)
+      rest_app = rest_domain.find_application(options.app)
+      rest_cartridge = rest_app.find_cartridge cartridge, :type => "embedded"
+      rest_cartridge.destroy
 
-      results { say "Success! Cartridge #{rest_cartridge.name} removed from application #{rest_app.name}." }
+      results { say "Success: Cartridge '#{rest_cartridge.name}' removed from application '#{rest_app.name}'." }
       0
     end
 
@@ -144,8 +135,32 @@ module RHC::Commands
       def cartridge_action(cartridge, action)
         rest_domain = rest_client.find_domain(options.namespace)
         rest_app = rest_domain.find_application(options.app)
-        rest_cartridge = rest_app.find_cartridge cartridge, :type => "embedded"
-        rest_cartridge.send action
+        rest_cartridge = find_cartridge rest_app, cartridge
+        result = rest_cartridge.send action
+        [result, rest_cartridge, rest_app, rest_domain]
+      end
+
+      def find_cartridge(rest_obj, cartridge_name, type="embedded")
+        carts = rest_obj.find_cartridges :regex => cart_regex(cartridge_name), :type => type
+
+        if carts.length == 0
+          valid_carts = rest_obj.cartridges.collect { |c| c.name if c.type == type }.compact
+          raise RHC::CartridgeNotFoundException, "Invalid cartridge specified: '#{cartridge_name}'. Valid cartridges are (#{valid_carts.join(', ')})."
+        elsif carts.length > 1
+          msg = "Multiple cartridge versions match your criteria. Please specify one."
+          carts.each { |cart| msg += "\n  #{cart.name}" }
+          raise RHC::MultipleCartridgesException, msg
+        end
+
+        carts[0]
+      end
+
+      def properties_table(cartridge)
+        items = []
+        cartridge.properties[:cart_data].each do |key, prop|
+          items << [prop["name"], prop["value"]]
+        end
+        table items, :join => " = "
       end
 
       def cart_regex(cart)
