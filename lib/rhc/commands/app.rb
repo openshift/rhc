@@ -1,6 +1,7 @@
 require 'rhc/commands/base'
 require 'resolv'
 require 'rhc/git_helper'
+require 'rhc/cartridge_helper'
 
 module RHC::Commands
   class App < Base
@@ -149,6 +150,7 @@ WARNING
 
     private
       include RHC::GitHelpers
+      include RHC::CartridgeHelpers
 
       def create_app(name, cartridge, rest_domain, gear_size=nil, scaling=nil)
         app_options = {:cartridge => cartridge}
@@ -158,7 +160,10 @@ WARNING
 
         debug "Creating application '#{name}' with these options - #{app_options}.inspect"
 
-        rest_app = rest_domain.add_application(name, app_options)
+        rest_cartridge = find_cartridge rest_client, cartridge, "standalone"
+        app_options[:cartridge] = rest_cartridge.name
+
+        rest_app = rest_domain.add_application name, app_options
 
         debug "'#{rest_app.name}' created"
 
