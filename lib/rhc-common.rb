@@ -337,7 +337,7 @@ end
           tempfile = `mktemp /tmp/openshift.XXXXXXXX`
           `echo "#{type} #{key}" > #{tempfile}`
           ssh_keys['keys'][name]['fingerprint'] = `ssh-keygen -lf #{tempfile}`.split(' ')[1]
-        rescue NotImplementedError, Net::SSH::Exception
+        rescue NotImplementedError, Net::SSH::Exception, OpenSSL::PKey::PKeyError
           # Could be a new unsupported key type or invalid data on the server
           ssh_keys['keys'][name]['fingerprint'] = 'Key type is not recognized.  Please check this key is valid.'
         end
@@ -642,9 +642,9 @@ WARNING
     unless no_git
         puts "Pulling new repo down" if @mydebug
     
-        puts "git clone --quiet #{git_url} #{repo_dir}" if @mydebug
         quiet = (@mydebug ? ' ' : '--quiet ')
-        git_clone = %x<git clone #{quiet} #{git_url} #{repo_dir}>
+        puts "git clone #{quiet}#{git_url} #{repo_dir}" if @mydebug
+        git_clone = %x[git clone #{quiet} #{git_url} #{repo_dir} 2>&1]
         if $?.exitstatus != 0
 
           if RHC::Helpers.windows? 

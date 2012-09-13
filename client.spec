@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 0.98.8
+Version: 0.99.1
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -114,6 +114,86 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Sep 12 2012 Adam Miller <admiller@redhat.com> 0.99.1-1
+- bump_minor_versions for sprint 18 (admiller@redhat.com)
+- Merge pull request #160 from BanzaiMan/us2600_followup
+  (openshift+bot@redhat.com)
+- Remove "rhc sshkey update" altogether. (asari.ruby@gmail.com)
+- "sshkey update" is "removed", not "deprecated". (asari.ruby@gmail.com)
+- Also catch Net::SSH::Exception (asari.ruby@gmail.com)
+- Remove mention of "update" from rhc-sshkey(1). (asari.ruby@gmail.com)
+- Remove mention of "rhc sshkey update" from "rhc sshkey help".
+  (asari.ruby@gmail.com)
+- Add Cucumber test for the case where an invalid SSH public key is added.
+  (asari.ruby@gmail.com)
+- Add spec for the case for the invalid key addition. We validate before
+  sending it to the server. (asari.ruby@gmail.com)
+
+* Wed Sep 12 2012 Adam Miller <admiller@redhat.com> 0.98.15-1
+- Avoid warnings when these steps run. (asari.ruby@gmail.com)
+- Merge pull request #156 from nhr/BZ856038 (openshift+bot@redhat.com)
+- Capture stderr output from git clone (jhonce@redhat.com)
+- Merge pull request #157 from J5/bugfix-port-forward
+  (openshift+bot@redhat.com)
+- [Bug #856202] catch Errno::EADDRINUSE and Errno::EADDRNOTAVAIL
+  (johnp@redhat.com)
+- BZ856038 - Updated gemspec to require earliest compatible version of Net::SSH
+  (hripps@redhat.com)
+
+* Tue Sep 11 2012 Troy Dawson <tdawson@redhat.com> 0.98.14-1
+- Merge pull request #155 from J5/bugfix (openshift+bot@redhat.com)
+- Merge pull request #153 from BanzaiMan/rhc-sshkey-cucumber-features
+  (openshift+bot@redhat.com)
+- move set_terminal to bin/rhc and add FIXME comment (johnp@redhat.com)
+- [Bug #856056] make sure set_terminal is called and disable color for windows
+  (johnp@redhat.com)
+- Merge pull request #154 from J5/bugfix (openshift+bot@redhat.com)
+- Block args handling is slightly different in MRI 1.9.3; *args are wrapped in
+  an Array, so that #to_s ends up with something weird under some
+  circumstances. (asari.ruby@gmail.com)
+- another spot where we weren't catching the sshkey error (johnp@redhat.com)
+- Cucumber features for "rhc sshkey" (asari.ruby@gmail.com)
+
+* Mon Sep 10 2012 Dan McPherson <dmcphers@redhat.com> 0.98.13-1
+- Merge pull request #149 from fabianofranz/dev/ffranz/refactor/port-forward
+  (openshift+bot@redhat.com)
+- Fixed rhc sshkey to use the new command lookup defaults (ffranz@redhat.com)
+- Changed --app from option to argument in rhc port-forward (ffranz@redhat.com)
+- Styling fixes to the rhc port-forward command, as suggested
+  (ffranz@redhat.com)
+- US2833: added rspec tests to fix coverage (ffranz@redhat.com)
+- US2833: deprecated rhc-port-forward command (ffranz@redhat.com)
+- US2833 - added spec tests for port forward, new default object_name for
+  commands, improved wording (ffranz@redhat.com)
+- US2833: moved port-forward to new command structure (ffranz@redhat.com)
+
+* Mon Sep 10 2012 Troy Dawson <tdawson@redhat.com> 0.98.12-1
+- 
+
+* Mon Sep 10 2012 Troy Dawson <tdawson@redhat.com> 0.98.11-1
+- US2600: [Debt] Refactor RHC key commands (asari.ruby@gmail.com)
+
+* Fri Sep 07 2012 Adam Miller <admiller@redhat.com> 0.98.10-1
+- Merge pull request #151 from J5/bugfix (openshift+bot@redhat.com)
+- Merge pull request #150 from J5/add_deprecated_aliases
+  (openshift+bot@redhat.com)
+- use encode64().delete("\n") since b64encode prints to stdout
+  (johnp@redhat.com)
+- rhc version.rb bump (admiller@redhat.com)
+- some cleanups for deprecated aliases (johnp@redhat.com)
+- spec test to test deprecation framework (johnp@redhat.com)
+- add the ability to deprecate interfaces (johnp@redhat.com)
+
+* Thu Sep 06 2012 Adam Miller <admiller@redhat.com> 0.98.9-1
+- Merge pull request #148 from J5/bugfix (openshift+bot@redhat.com)
+- ruby 1.8 still requires us to strip off the last \n for b64encode
+  (johnp@redhat.com)
+- fix tests by setting the correct user agent (johnp@redhat.com)
+- use version paths to call the correct base64 method (johnp@redhat.com)
+- rhc version.rb bump (admiller@redhat.com)
+- [bug 854152] make sure we don't have newlines in base64 auth encoding
+  (johnp@redhat.com)
+
 * Tue Sep 04 2012 Adam Miller <admiller@redhat.com> 0.98.8-1
 - rhc version.rb bump (admiller@redhat.com)
 

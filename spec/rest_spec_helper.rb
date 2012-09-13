@@ -15,7 +15,7 @@ end
 if RUBY_VERSION.to_f == 1.8
   module Base64
     def strict_encode64(value)
-      b64encode(value, value.length).strip
+      encode64(value).delete("\n")
     end
   end
 end
@@ -127,6 +127,10 @@ module RestSpecHelper
     def initialize
       RHC::Rest::Client.stub(:new) { self }
       @domains = []
+      @keys = [
+        MockRestKey.new('mockkey1', 'ssh-rsa', 'AAAAB3NzaC1yc2EAAAADAQABAAABAQDNK8xT3O+kSltmCMsSqBfAgheB3YFJ9Y0ESJnFjFASVxH70AcCQAgdQSD/r31+atYShJdP7f0AMWiQUTw2tK434XSylnZWEyIR0V+j+cyOPdVQlns6D5gPOnOtweFF0o18YulwCOK8Q1H28GK8qyWhLe0FcMmxtKbbQgaVRvQdXZz4ThzutCJOyJm9xVb93+fatvwZW76oLLvfFJcJSOK2sgW7tJM2A83bm4mwixFDF7wO/+C9WA+PgPKJUIjvy1gZjBhRB+3b58vLOnYhPOgMNruJwzB+wJ3pg8tLJEjxSbHyyoi6OqMBs4BVV7LdzvwTDxEjcgtHVvaVNXgO5iRX'),
+        MockRestKey.new('mockkey2', 'ssh-dsa', 'AAAAB3NzaC1kc3MAAACBAPaaFj6Xjrjd8Dc4AAkJe0HigqaXMxj/87xHoV+nPgerHIceJWhPUWdW40lSASrgpAV9Eq4zzD+L19kgYdbMw0vSX5Cj3XtNOsow9MmMxFsYjTxCv4eSs/rLdGPaYZ5GVRPDu8tN42Bm8lj5o+ky3HzwW+mkQMZwcADQIgqtn6QhAAAAFQCirDfIMf/JoMOFf8CTnsTKWw/0zwAAAIAIQp6t2sLIp1d2TBfd/qLjOJA10rPADcnhBzWB/cd/oFJ8a/2nmxeSPR5Ov18T6itWqbKwvZw2UC0MrXoYbgcfVNP/ym1bCd9rB5hu1sg8WO4JIxA/47PZooT6PwTKVxHuENEzQyJL2o6ZJq+wuV0taLvm6IaM5TAZuEJ2p4TC/gAAAIBpLcVXZREa7XLY55nyidt/+UC+PxpjhPHOHbzL1OvWEaumN4wcJk/JZPppgXX9+WDkTm1SD891U0cXnGMTP0OZOHkOUHF2ZcfUe7p9kX4WjHs0OccoxV0Lny6MC4DjalJyaaEbijJHSUX3QlLcBOlPHJWpEpvWQ9P8AN4PokiGzA==')
+      ]
     end
 
     def domains
@@ -143,6 +147,23 @@ module RestSpecHelper
       d = MockRestDomain.new(id, self)
       @domains << d
       d
+    end
+    
+    def sshkeys
+      @keys
+    end
+    
+    def find_key(name)
+      # RHC::Rest::Client#find_key(name) returns the first (and only) key
+      @keys.select { |key| key.name == name }.first
+    end
+    
+    def add_key(name, type, content)
+      @keys << MockRestKey.new(name, type, content)
+    end
+    
+    def delete_key(name)
+      @keys.delete_if { |key| key.name == name }
     end
   end
 
@@ -168,8 +189,8 @@ module RestSpecHelper
       @applications = nil
     end
 
-    def add_application(name, type=nil)
-      a = MockRestApplication.new(name, type, self)
+    def add_application(name, type=nil, scale=nil)
+      a = MockRestApplication.new(name, type, self, scale)
       @applications << a
       a
     end
@@ -182,7 +203,7 @@ module RestSpecHelper
   class MockRestApplication < RHC::Rest::Application
     attr_reader :name, :uuid, :creation_time, :git_url, :app_url, :aliases
 
-    def initialize(name, type, domain)
+    def initialize(name, type, domain, scale=nil)
       @name = name
       @domain = domain
       @cartridges = []
@@ -190,7 +211,13 @@ module RestSpecHelper
       @uuid = "fakeuuidfortests"
       @git_url = "git:fake.foo/git/#{@name}.git"
       @app_url = "https://#{@name}-#{@domain.id}.fake.foo/"
+      @ssh_url = "ssh://#{@uuid}@127.0.0.1"
+      @embedded = {}
       @aliases = []
+      if scale
+        @scalable = true
+        @embedded = {"haproxy-1.4" => {:info => ""}}
+      end
       add_cartridge(type, false) if type
     end
 
@@ -236,6 +263,15 @@ module RestSpecHelper
 
     def reload
       @app
+    end
+  end
+
+  class MockRestKey < RHC::Rest::Key
+    attr_reader :name, :type, :content
+    def initialize(name, type, content)
+      @name    = name
+      @type    = type
+      @content = content
     end
   end
 end

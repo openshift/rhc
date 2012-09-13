@@ -30,9 +30,9 @@ module RHC
       if deprecated[command_name]
         msg = "The command 'rhc #{command_name}' is deprecated.  Please use 'rhc #{command.name}' instead."
 
-        raise DeprecatedError.new("#{msg} For porting and testing purposes you may switch this error to a warning by setting the DISABLE_DEPRECATED environment variable to false.  It is not recommended to do so in a production environment as this command may be removed in future releases.") if RHC::Helpers.disable_deprecated?
+        raise DeprecatedError.new("#{msg} For porting and testing purposes you may switch this error to a warning by setting the DISABLE_DEPRECATED environment variable to 0.  It is not recommended to do so in a production environment as this command may be removed in future releases.") if RHC::Helpers.disable_deprecated?
 
-        RHC::Helpers.paragraph { say "Warning!!! #{msg} For porting and testing purposes you may switch this warning to an error by setting the DISABLE_DEPRECATED environment variable to true.  This command may be removed in future releases." }
+        warn "Warning: #{msg} For porting and testing purposes you may switch this warning to an error by setting the DISABLE_DEPRECATED environment variable to 1.  This command may be removed in future releases."
       end
     end
 

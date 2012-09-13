@@ -1,7 +1,7 @@
 .\" Process this file with
 .\" groff -man -Tascii rhc-sshkey.1
 .\" 
-.TH "RHC_SSHKEY" "1" "JANUARY 2011" "Linux" "User Manuals"
+.TH "RHC_SSHKEY" "1" "SEPTEMBER 2012" "Linux" "User Manuals"
 .SH "NAME"
 rhc\-sshkey \- Manage multiple keys for the registered rhcloud user.
 
@@ -14,10 +14,10 @@ rhc\-sshkey \- Manage multiple keys for the registered rhcloud user.
 .SH LIST OF COMMANDS
 .IP list
 Display all the SSH keys for the user account
+.IP show
+Display the SSH key with the given name
 .IP add
 Add SSH key to the user account 
-.IP update
-Update SSH key for the user account
 .IP remove
 Remove SSH key from the user account
 
@@ -26,19 +26,30 @@ Remove SSH key from the user account
 Red Hat login (RHN or OpenShift login with OpenShift access)
 .IP "\-p|\-\-password password"
 RHLogin password
-
-.IP "\-i|\-\-identifier key-name"
-User-specified identifier for the key
-.IP "\-k|\-\-ssh key-filepath" 
-SSH public key filepath 
 .IP \-d|\-\-debug
 Enable debugging / verbose output
 .IP \-h|\-\-help
 Display help menu
 .IP \-\-config
-Alternate full pathname for the config file
+Alternate full pathname for the config file. See
+.BR express.conf (5)
+for further details.
 .IP \-\-timeout
 Timeout value, in seconds, for the connection (default is 10)
+
+.SH "COMMANDS"
+.SS "list"
+List known SSH keys. This is the default action.
+.SS "show <name>"
+Display the SSH key with the given name.
+.SS "add <name> <file>"
+Add the SSH public key specified by
+.B "<file>"
+as
+.B "<name>"
+The command fails if a key with the same name or a key with identical content already exists on this account.
+.SS "remove <name>"
+Removes the SSH key from the account.
 
 .SH "FILES"
 .I <ruby_gem_dir>/gems/rhc\-<version>/conf/express.conf
@@ -66,7 +77,7 @@ Forums: https://openshift.redhat.com/community/forums/openshift
 IRC: #openshift on irc.freenode.net
 
 .SH "AUTHOR"
-Mike McGrath <mmcgrath@redhat.com>, Jim Jagielski <jimjag@redhat.com>
+Mike McGrath <mmcgrath@redhat.com>, Jim Jagielski <jimjag@redhat.com>, Hiro Asari <hasari@redhat.com>
 
 .SH "SEE ALSO"
 .BR rhc-app (1),

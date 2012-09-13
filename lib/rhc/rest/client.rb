@@ -14,7 +14,7 @@ module RHC
         userpass = "#{username}:#{password}"
         # :nocov: version dependent code
         if RUBY_VERSION.to_f == 1.8
-          credentials = Base64.b64encode(userpass, userpass.length).strip
+          credentials = Base64.encode64(userpass).delete("\n")
         else
           credentials = Base64.strict_encode64(userpass)
         end
@@ -103,6 +103,22 @@ module RHC
         user.keys.each { |key| return key if key.name == name }
 
         raise RHC::KeyNotFoundException.new("Key #{name} does not exist")
+      end
+      
+      def sshkeys
+        logger.debug "Finding all keys for #{user.login}" if @mydebug
+        user.keys
+      end
+      
+      def add_key(name, key, content)
+        logger.debug "Adding key #{key} for #{user.login}" if @mydebug
+        user.add_key name, key, content
+      end
+      
+      def delete_key(name)
+        logger.debug "Deleting key '#{name}'" if @mydebug
+        key = find_key(name)
+        key.destroy
       end
 
       def logout
