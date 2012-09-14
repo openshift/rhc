@@ -52,11 +52,6 @@ def set_endpoint
   $end_point =  ENV['RHC_ENDPOINT']
 end
 
-# This env variable needs to be set so the git commands can bypass host key authenticity checking
-def set_ssh
-  ENV['GIT_SSH'] ||= File.expand_path(File.join(File.dirname(__FILE__),'ssh.sh'))
-end
-
 ### Run initialization commands
 # Set the PATH env variable
 set_path
@@ -64,8 +59,6 @@ set_path
 set_creds
 # Set the endpoint to test against
 set_endpoint
-# Set the ssh env variable
-set_ssh
 
 raise "Username not found in environment (RHC_USERNAME)" unless $username
 raise "Password not found in environment (RHC_PASSWORD)" unless $password
@@ -122,6 +115,16 @@ AfterConfiguration do |config|
 
   # Persist the username used for the tests - in case it was auto-generated
   File.open(File.join(RHCHelper::TEMP_DIR, 'username'), 'w') {|f| f.write($username)}
+
+  # Modify the .ssh/config so the git and ssh commands can succeed
+  keyfile = RHCHelper::Sshkey.keyfile_path('key1')
+  File.open('/root/.ssh/config','w',0600) do |f|
+    f.puts "Host *"
+    f.puts "\tStrictHostKeyChecking no"
+    f.puts "\tIdentityFile #{keyfile}"
+    f.puts "\tIdentityFile /root/.ssh/id_rsa"
+  end
+  File.chmod(0600,keyfile)
 
   # Setup the logger
   logger = Logger.new(File.join(RHCHelper::TEMP_DIR, "cucumber.log"))
