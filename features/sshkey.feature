@@ -4,7 +4,8 @@ As an OpenShift user, I want to manage SSH keys with 'rhc sshkey' commands.
 
   @sshkey_list @key1
   Scenario: SSH key is listed
-    When the existing keys are listed
+    When a new SSH key "key1.pub" is added as "key1"
+    And the existing keys are listed
     Then the output includes the key information
 
   @sshkey_show @key1
