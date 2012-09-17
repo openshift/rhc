@@ -148,9 +148,71 @@ WARNING
       end
     end
 
+    summary "Start the application"
+    syntax "<app> [--namespace namespace] [--app app]"
+    argument :app, "The name of the application you are stopping", ["-a", "--app app"], :context => :app_context
+    option ["-n", "--namespace namespace"], "Namespace of the application the cartrdige belongs to", :context => :namespace_context, :required => true
+    def start(app)
+      app_action app, :start
+
+      results { say "#{app} started" }
+      0
+    end
+
+    summary "Stop the application"
+    syntax "<app> [--namespace namespace] [--app app]"
+    argument :app, "The name of the application you are stopping", ["-a", "--app app"], :context => :app_context
+    option ["-n", "--namespace namespace"], "Namespace of the application the cartrdige belongs to", :context => :namespace_context, :required => true
+    def stop(app)
+      app_action app, :stop
+
+      results { say "#{app} stopped" }
+      0
+    end
+
+    summary "Stops all application processes"
+    syntax "<app> [--namespace namespace] [--app app]"
+    argument :app, "The name of the application you are stopping", ["-a", "--app app"], :context => :app_context
+    option ["-n", "--namespace namespace"], "Namespace of the application the cartrdige belongs to", :context => :namespace_context, :required => true
+    def force_stop(app)
+      app_action app, :stop, true
+
+      results { say "#{app} force stopped" }
+      0
+    end
+
+    summary "Restart the application"
+    syntax "<app> [--namespace namespace] [--app app]"
+    argument :app, "The name of the application you are stopping", ["-a", "--app app"], :context => :app_context
+    option ["-n", "--namespace namespace"], "Namespace of the application the cartrdige belongs to", :context => :namespace_context, :required => true
+    def restart(app)
+      app_action app, :restart
+
+      results { say "#{app} restarted" }
+      0
+    end
+
+    summary "Reload the application's configuration"
+    syntax "<app> [--namespace namespace] [--app app]"
+    argument :app, "The name of the application you are stopping", ["-a", "--app app"], :context => :app_context
+    option ["-n", "--namespace namespace"], "Namespace of the application the cartrdige belongs to", :context => :namespace_context, :required => true
+    def reload(app)
+      app_action app, :reload
+
+      results { say "#{app} config reloaded" }
+      0
+    end
+
     private
       include RHC::GitHelpers
       include RHC::CartridgeHelpers
+
+      def app_action(app, action, *args)
+        rest_domain = rest_client.find_domain(options.namespace)
+        rest_app = rest_domain.find_application(options.app)
+        result = rest_app.send action, *args
+        [result, rest_app, rest_domain]
+      end
 
       def create_app(name, cartridge, rest_domain, gear_size=nil, scaling=nil)
         app_options = {:cartridge => cartridge}
