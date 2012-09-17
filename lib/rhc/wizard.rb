@@ -136,86 +136,82 @@ EOF
       true
     end
 
-    def ssh_keygen_fallback(ssh_pub_key_file_path)
-      `ssh-keygen -lf #{ssh_pub_key_file_path} 2>&1`.split(' ')[1]
+    # For Net::SSH versions (< 2.0.11) that does not have
+    # Net::SSH::KeyFactory.load_public_key, we drop to shell to get
+    # the key's fingerprint
+    def ssh_keygen_fallback(path)
+      `ssh-keygen -lf #{path} 2>&1`.split(' ')[1]
+
+      if $?.exitstatus != 0
+        error "Unable to compute SSH public key finger print for #{path}"
+      end
     end
 
+    def fingerprint_for_default_key
+      fingerprint_for RHC::Config::ssh_pub_key_file_path
+    end
+
+    def fingerprint_for(key)
+      Net::SSH::KeyFactory.load_public_key(key).fingerprint
+    rescue NoMethodError => e
+      ssh_keygen_fallback key
+      return nil
+    rescue OpenSSL::PKey::PKeyError, Net::SSH::Exception => e
+      error e.message
+      return nil
+    end
+
+    # return true if the account has the public key defined by
+    # RHC::Config::ssh_pub_key_file_path
     def ssh_key_uploaded?
-      @ssh_keys = RHC::get_ssh_keys(@libra_server, @username, @password, RHC::Config.default_proxy)
-      additional_ssh_keys = @ssh_keys['keys']
-
-      local_fingerprint = nil
-      begin
-        local_fingerprint = Net::SSH::KeyFactory.load_public_key(RHC::Config.ssh_pub_key_file_path).fingerprint
-      rescue NoMethodError #older net/ssh (mac for example)
-        local_fingerprint = ssh_keygen_fallback RHC::Config.ssh_pub_key_file_path
-      end
-
-      return true if @ssh_keys['fingerprint'] == local_fingerprint
-      additional_ssh_keys.each do |name, keyval|
-        return true if keyval['fingerprint'] == local_fingerprint
-      end
-
-      false
+      @ssh_keys ||= @rest_client.sshkeys
+      @ssh_keys.any? { |k| k.fingerprint == fingerprint_for_default_key }
     end
 
-    def upload_ssh_key
-      additional_ssh_keys = @ssh_keys['keys']
-      known_keys = []
+    def existing_keys_info
+      result = "Current Keys: \n"
+      # TODO: This ERB format is shared with RHC::Commands::Sshkey; should be refactored
+      @ssh_keys.each do |key|
+        erb = ERB.new <<-FORMAT
+       Name: <%= key.name %>
+       Type: <%= key.type %>
+Fingerprint: <%= key.fingerprint %>
 
+      FORMAT
+        result += format(key, erb)
+      end
+
+      result
+    end
+
+    def get_preferred_key_name
       paragraph do
         say "You can enter a name for your key, or leave it blank to use the default name. " \
             "Using the same name as an existing key will overwrite the old key."
       end
+      key_name = 'default'
 
-      section(:top => 1) { say 'Current Keys:' }
-      if @ssh_keys['fingerprint'].nil?
-        section(:bottom => 1) { say "    None" }
-      else
-        known_keys << 'default'
-        section do
-          say "    default - #{@ssh_keys['fingerprint']}"
-        end
-      end
-
-      if additional_ssh_keys && additional_ssh_keys.kind_of?(Hash)
-        section(:bottom => 1) do
-          additional_ssh_keys.each do |name, keyval|
-            say "    #{name} - #{keyval['fingerprint']}"
-            known_keys.push(name)
-          end
-        end
-      end
-
-      if @ssh_keys['fingerprint'].nil?
-        key_name = "default"
+      if @ssh_keys.empty?
         paragraph do
-          say "Since you do not have any keys associated with your OpenShift account, " \
-              "your new key will be uploaded as the default key"
+          say <<-DEFAULT_KEY_UPLOAD_MSG
+Since you do not have any keys associated with your OpenShift account,
+your new key will be uploaded as the 'default' key
+          DEFAULT_KEY_UPLOAD_MSG
         end
       else
-        key_fingerprint = nil
-        key_valid = true
-        begin
-          key_fingerprint = Net::SSH::KeyFactory.load_public_key(RHC::Config.ssh_pub_key_file_path).fingerprint
-        rescue NoMethodError #older net/ssh (mac for example)
-          key_fingerprint = ssh_keygen_fallback RHC::Config.ssh_pub_key_file_path
-          if $?.exitstatus != 0
-            key_valid = false
-          end
-        rescue Net::SSH::Exception, NotImplementedError
-          key_valid = false
-        end
+        section(:top => 1) { say existing_keys_info }
 
-        if ! key_valid
+        key_fingerprint = fingerprint_for_default_key
+        unless key_fingerprint
           paragraph do
-            say "Your ssh public key at #{RHC::Config.ssh_pub_key_file_path} can not be read. " \
-                "The setup can not continue until you manually remove or fix both of your " \
-                "public and private keys id_rsa keys."
-            end
-          return false
+            say <<-CONFIG_KEY_INVALID
+Your ssh public key at #{RHC::Config.ssh_pub_key_file_path} is invalid or unreadable.
+The setup can not continue until you manually remove or fix both of your
+public and private keys id_rsa keys.
+            CONFIG_KEY_INVALID
+          end
+          return nil
         end
-
         pubkey_default_name = key_fingerprint[0, 12].gsub(/[^0-9a-zA-Z]/,'')
         paragraph do
           key_name =  ask("Provide a name for this key: ") do |q|
@@ -225,33 +221,50 @@ EOF
         end
       end
 
-      if known_keys.include?(key_name)
-        section do
-          say "Key already exists!  Updating key #{key_name} .. "
-          add_or_update_key('update', key_name, RHC::Config.ssh_pub_key_file_path, @username, @password)
-        end
-      else
-        section do
-          say "Sending new key #{key_name} .. "
-          add_or_update_key('add', key_name, RHC::Config.ssh_pub_key_file_path, @username, @password)
-        end
+      key_name
+    end
+
+    def upload_ssh_key
+      key_name = get_preferred_key_name
+      return false unless key_name
+
+      if !@ssh_keys.empty? && @ssh_keys.any? { |k| k.name == key_name }
+        say "Key with the name #{key_name} already exists. Deleting... "
+        @rest_client.delete_key key_name
       end
+
+      say "Uploading key '#{key_name}' from #{RHC::Config::ssh_pub_key_file_path}"
+
+      #### TODO: This portion is duplicated in RHC::Rest::Client
+      ####       Should be refactored to a helper
+      begin
+        file = File.open RHC::Config.ssh_pub_key_file_path
+      rescue Errno::ENOENT => e
+        raise ::RHC::KeyFileNotExistentException.new("File '#{key}' does not exist.")
+      rescue Errno::EACCES => e
+        raise ::RHC::KeyFileAccessDeniedException.new("Access denied to '#{key}'.")
+      end
+      type, content, comment = file.gets.chomp.split
+      ####
+      say "type: %s\ncontent: %s\n" % [type, content]
+
+      @rest_client.add_key key_name, content, type
       true
     end
 
     def upload_ssh_key_stage
-      unless ssh_key_uploaded?
-        upload = false
-        section do
-          upload = agree "Your public ssh key must be uploaded to the OpenShift server.  Would you like us to upload it for you? (yes/no) "
-        end
+      return true if ssh_key_uploaded?
 
-        if upload
-          upload_ssh_key
-        else
-          paragraph do
-            say "You can upload your ssh key at a later time using the 'rhc sshkey' command"
-          end
+      upload = false
+      section do
+        upload = agree "Your public ssh key must be uploaded to the OpenShift server.  Would you like us to upload it for you? (yes/no) "
+      end
+
+      if upload
+        upload_ssh_key
+      else
+        paragraph do
+          say "You can upload your ssh key at a later time using the 'rhc sshkey' command"
         end
       end
       true
