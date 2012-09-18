@@ -99,6 +99,22 @@ module RHC
         user.find_key(name) or raise RHC::KeyNotFoundException.new("Key #{name} does not exist")
       end
 
+      def sshkeys
+        logger.debug "Finding all keys for #{user.login}" if @mydebug
+        user.keys
+      end
+
+      def add_key(name, key, content)
+        logger.debug "Adding key #{key} for #{user.login}" if @mydebug
+        user.add_key name, key, content
+      end
+
+      def delete_key(name)
+        logger.debug "Deleting key '#{name}'" if @mydebug
+        key = find_key(name)
+        key.destroy
+      end
+
       def logout
         #TODO logout
         debug "Logout/Close client"

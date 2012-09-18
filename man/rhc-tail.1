@@ -1,0 +1,85 @@
+.\" Process this file with
+.\" groff -man -Tascii rhc-tail.1
+.\" 
+.TH "RHC_TAIL" "1" "MAY 2011" "Linux" "User Manuals"
+.SH "NAME"
+rhc\-tail \- Tail files from remote running applications in real\-time
+.SH "SYNOPSIS"
+.B rhc tail [\-p
+.I password
+.B ]
+.B [\-f
+.I pathname
+.B ] [\-d] [\-h]
+.B [\-l
+.I rhlogin
+.B ] [\-o
+.I options
+.B ]
+.B [\-\-config
+.I config_path
+.B ]
+.B [\-\-timeout
+.I #
+.B ] \-a
+.I application_name
+.SH "DESCRIPTION"
+.B rhc tail
+connects to a remote running application and tail's files in
+real\-time.  This is very useful for watching logs.
+.SH "OPTIONS"
+.IP "\-l|\-\-rhlogin login"
+Red Hat login (RHN or OpenShift login with OpenShift access)
+.IP "\-p|\-\-password password"
+RHLogin password
+.IP "\-a|\-\-app application_name"
+Name of remote running application
+.IP "\-f|\-\-files"
+Relative file path glob.  Default: <application_name>/logs/*
+.IP "\-o|\-\-opts options"
+Options to pass to the server\-side (linux based) tail command (\-f is implicit.  See the linux tail man page full list of options.) (Ex: \-\-opts '\-n 100')
+Note: Options not supported by the rhcloud server will result in an error.
+.IP \-d|\-\-debug
+Enable debugging / verbose output
+.IP \-h|\-\-help
+Display help menu
+.IP \-\-config
+Alternate full pathname for the config file
+.IP \-\-timeout
+Timeout value, in seconds, for the connection (default is 10)
+.SH "FILES"
+.I <ruby_gem_dir>/gems/rhc\-<version>/conf/express.conf
+.RS
+The RubyGem system wide configuration file. See
+.BR express.conf (5)
+for further details.
+.RE
+.I /etc/openshift/express.conf
+.RS
+The system wide configuration file. See
+.BR express.conf (5)
+for further details.
+.RE
+.I ~/.openshift/express.conf
+.RS
+Per user configuration file. See
+.BR express.conf (5)
+for further details.
+.RE
+.SH "BUGS"
+Please contact the Red Hat OpenShift team.
+Forums: https://openshift.redhat.com/community/forums/openshift
+IRC: #openshift on irc.freenode.net
+.SH "AUTHOR"
+Mike McGrath <mmcgrath@redhat.com>, Jim Jagielski <jimjag@redhat.com>
+.SH "SEE ALSO"
+.BR rhc\-chk (1),
+.BR rhc\-create\-app(1),
+.BR rhc\-ctl\-app(1),
+.BR rhc\-create\-domain(1),
+.BR rhc\-ctl\-domain (1),
+.BR rhc\-domain\-info (1),
+.BR rhc\-snapshot(1),
+.BR rhc\-port\-forward(1),
+.BR express.conf(5),
+.BR tail(1)
