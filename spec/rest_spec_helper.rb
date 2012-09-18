@@ -140,9 +140,10 @@ module RestSpecHelper
     end
 
     def cartridges
-      [MockRestCartridge.new("mock_cart-1", "mock_cart_type-1"),
-       MockRestCartridge.new("mock_cart-2", "mock_cart_type-2"),
-       MockRestCartridge.new("unique_mock_cart-1", "unique_mock_cart_type-1")]
+      [MockRestCartridge.new("mock_standalone_cart-1", "standalone"),
+       MockRestCartridge.new("mock_cart-1", "embedded"),
+       MockRestCartridge.new("mock_cart-2", "embedded"),
+       MockRestCartridge.new("unique_mock_cart-1", "embedded")]
     end
 
     def add_domain(id)
@@ -226,7 +227,7 @@ module RestSpecHelper
     end
 
     def add_cartridge(name, embedded=true)
-      type = embedded ? "embedded" : "framework"
+      type = embedded ? "embedded" : "standalone"
       c = MockRestCartridge.new(name, type, self)
       @cartridges << c
       c
@@ -238,11 +239,9 @@ module RestSpecHelper
   end
 
   class MockRestCartridge < RHC::Rest::Cartridge
-    attr_reader :name
-    attr_reader :type
-    attr_reader :properties
+    attr_reader :name, :type, :properties
 
-    def initialize(name, type, app=nil, properties={:cart_data => {:connection_url => {'value' => "http://fake.url" }}})
+    def initialize(name, type, app=nil, properties={:cart_data => {:connection_url => {'name' => 'connection_url', 'value' => "http://fake.url" }}})
       @name = name
       @type = type
       @app = app
