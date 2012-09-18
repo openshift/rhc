@@ -94,8 +94,8 @@ describe RHC::Commands::Base do
             def execute(testarg); 1; end
 
             argument :args, "Test arg list", [], :arg_type => :list
-            summary "Test command execute_list"
-            def execute_list(*args); 1; end
+            summary "Test command execute-list"
+            def execute_list(args); 1; end
 
             def raise_error
               raise StandardError.new("test exception")
@@ -133,20 +133,20 @@ describe RHC::Commands::Base do
       end
 
       context 'and when execute_list is called' do
-        it { expects_running('static', 'execute_list').should call(:execute_list).on(instance).with([]) }
-        it { expects_running('static', 'execute_list', '1', '2', '3').should call(:execute_list).on(instance).with(['1', '2', '3']) }
+        it { expects_running('static', 'execute-list', '--trace').should call(:execute_list).on(instance).with([]) }
+        it { expects_running('static', 'execute-list', '1', '2', '3').should call(:execute_list).on(instance).with(['1', '2', '3']) }
       end
 
       context 'and when an error is raised in a call' do
-        it { expects_running('static', 'raise_error').should raise_error(StandardError, "test exception") }
+        it { expects_running('static', 'raise-error').should raise_error(StandardError, "test exception") }
       end
 
       context 'and when an exception is raised in a call' do
-        it { expects_running('static', 'raise_exception').should raise_error(Exception, "test exception") }
+        it { expects_running('static', 'raise-exception').should raise_error(Exception, "test exception") }
       end
 
       context 'and when an exception is raised in a call with --trace option' do
-        it { expects_running('static', 'raise_exception', "--trace").should raise_error(Exception, "test exception") }
+        it { expects_running('static', 'raise-exception', "--trace").should raise_error(Exception, "test exception") }
       end
 
       context 'and when deprecated alias is called' do
