@@ -1,40 +1,26 @@
+require 'rhc/rest/base'
+
 module RHC
   module Rest
-    class User
-      include Rest
+    class User < Base
       attr_reader :login
-      def initialize(args)
-        @login = args[:login] || args["login"]
-        @links = args[:links] || args["links"]
-      end
 
-      #Add Key for this user
       def add_key(name, content, type)
-        url = @links['ADD_KEY']['href']
-        method =  @links['ADD_KEY']['method']
-        payload = {:name => name, :type => type, :content => content}
-        request = new_request(:url => url, :method => method, :headers => @@headers, :payload => payload)
-        return request(request)
+        debug "Add key #{name} of type #{type} for user #{login}"
+        rest_method "ADD_KEY", :name => name, :type => type, :content => content
       end
 
-      #Get all Key for this user
       def keys
-        url = @links['LIST_KEYS']['href']
-        method =  @links['LIST_KEYS']['method']
-        request = new_request(:url => url, :method => method, :headers => @@headers)
-        return request(request)
+        debug "Getting all keys for user #{login}"
+        rest_method "LIST_KEYS"
       end
 
       #Find Key by name
       def find_key(name)
         filtered = Array.new
-        keys.each do |key|
         #TODO do a regex caomparison
-          if key.name == name
-          filtered.push(key)
-          end
-        end
-        return filtered
+        keys.each { |key| filtered.push(key) if key.name == name }
+        filtered
       end
     end
   end

@@ -132,7 +132,7 @@ module RestSpecHelper
         MockRestKey.new('mockkey1', 'ssh-rsa', 'AAAAB3NzaC1yc2EAAAADAQABAAABAQDNK8xT3O+kSltmCMsSqBfAgheB3YFJ9Y0ESJnFjFASVxH70AcCQAgdQSD/r31+atYShJdP7f0AMWiQUTw2tK434XSylnZWEyIR0V+j+cyOPdVQlns6D5gPOnOtweFF0o18YulwCOK8Q1H28GK8qyWhLe0FcMmxtKbbQgaVRvQdXZz4ThzutCJOyJm9xVb93+fatvwZW76oLLvfFJcJSOK2sgW7tJM2A83bm4mwixFDF7wO/+C9WA+PgPKJUIjvy1gZjBhRB+3b58vLOnYhPOgMNruJwzB+wJ3pg8tLJEjxSbHyyoi6OqMBs4BVV7LdzvwTDxEjcgtHVvaVNXgO5iRX'),
         MockRestKey.new('mockkey2', 'ssh-dsa', 'AAAAB3NzaC1kc3MAAACBAPaaFj6Xjrjd8Dc4AAkJe0HigqaXMxj/87xHoV+nPgerHIceJWhPUWdW40lSASrgpAV9Eq4zzD+L19kgYdbMw0vSX5Cj3XtNOsow9MmMxFsYjTxCv4eSs/rLdGPaYZ5GVRPDu8tN42Bm8lj5o+ky3HzwW+mkQMZwcADQIgqtn6QhAAAAFQCirDfIMf/JoMOFf8CTnsTKWw/0zwAAAIAIQp6t2sLIp1d2TBfd/qLjOJA10rPADcnhBzWB/cd/oFJ8a/2nmxeSPR5Ov18T6itWqbKwvZw2UC0MrXoYbgcfVNP/ym1bCd9rB5hu1sg8WO4JIxA/47PZooT6PwTKVxHuENEzQyJL2o6ZJq+wuV0taLvm6IaM5TAZuEJ2p4TC/gAAAIBpLcVXZREa7XLY55nyidt/+UC+PxpjhPHOHbzL1OvWEaumN4wcJk/JZPppgXX9+WDkTm1SD891U0cXnGMTP0OZOHkOUHF2ZcfUe7p9kX4WjHs0OccoxV0Lny6MC4DjalJyaaEbijJHSUX3QlLcBOlPHJWpEpvWQ9P8AN4PokiGzA==')
       ]
-      @links = mock_response_links(mock_client_links)
+      @__json_args__= {:links => mock_response_links(mock_client_links)}
     end
 
     def domains
@@ -171,13 +171,11 @@ module RestSpecHelper
   end
 
   class MockRestDomain < RHC::Rest::Domain
-    attr_reader :id
-
     def initialize(id, client)
       @id = id
       @client = client
       @applications = []
-      @links = mock_response_links(mock_domain_links('mock_domain_0'))
+      @__json_args__= {:links => mock_response_links(mock_domain_links('mock_domain_0'))}
     end
 
     def update(id)
@@ -205,8 +203,6 @@ module RestSpecHelper
   end
 
   class MockRestApplication < RHC::Rest::Application
-    attr_reader :name, :uuid, :creation_time, :git_url, :app_url, :aliases
-
     def fakeuuid
       "fakeuuidfortests#{@name}"
     end
@@ -226,7 +222,7 @@ module RestSpecHelper
         @scalable = true
         @embedded = {"haproxy-1.4" => {:info => ""}}
       end
-      @links = mock_response_links(mock_app_links('mock_domain_0', 'mock_app_0'))
+      @__json_args__= {:links => mock_response_links(mock_app_links('mock_domain_0', 'mock_app_0'))}
       add_cartridge(type, false) if type
     end
 
@@ -243,8 +239,6 @@ module RestSpecHelper
   end
 
   class MockRestCartridge < RHC::Rest::Cartridge
-    attr_reader :name, :type, :properties
-
     def initialize(name, type, app=nil, properties={:cart_data => {:connection_url => {'name' => 'connection_url', 'value' => "http://fake.url" }}})
       @name = name
       @type = type
@@ -274,7 +268,6 @@ module RestSpecHelper
   end
 
   class MockRestKey < RHC::Rest::Key
-    attr_reader :name, :type, :content
     def initialize(name, type, content)
       @name    = name
       @type    = type
