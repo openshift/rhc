@@ -58,6 +58,14 @@ module RHC
         user.add_key name, key, content
       end
 
+      #find Key by name
+      def find_key(name)
+        debug "Finding key #{name}"
+        user.keys.each { |key| return key if key.name == name }
+
+        raise RHC::KeyNotFoundException.new("Key #{name} does not exist")
+      end
+
       def delete_key(name)
         debug "Deleting key '#{name}'"
         key = find_key(name)
@@ -90,14 +98,6 @@ module RHC
           end
         end
         return filtered
-      end
-
-      #find Key by name
-      def find_key(name)
-        debug "Finding key #{name}"
-        user.keys.each { |key| return key if key.name == name }
-
-        raise RHC::KeyNotFoundException.new("Key #{name} does not exist")
       end
 
       def logout
