@@ -207,12 +207,16 @@ module RestSpecHelper
   class MockRestApplication < RHC::Rest::Application
     attr_reader :name, :uuid, :creation_time, :git_url, :app_url, :aliases
 
+    def fakeuuid
+      "fakeuuidfortests#{@name}"
+    end
+
     def initialize(name, type, domain, scale=nil)
       @name = name
       @domain = domain
       @cartridges = []
       @creation_time = "now"
-      @uuid = "fakeuuidfortests"
+      @uuid = fakeuuid
       @git_url = "git:fake.foo/git/#{@name}.git"
       @app_url = "https://#{@name}-#{@domain.id}.fake.foo/"
       @ssh_url = "ssh://#{@uuid}@127.0.0.1"
