@@ -140,11 +140,12 @@ EOF
     # Net::SSH::KeyFactory.load_public_key, we drop to shell to get
     # the key's fingerprint
     def ssh_keygen_fallback(path)
-      `ssh-keygen -lf #{path} 2>&1`.split(' ')[1]
+      fingerprint = `ssh-keygen -lf #{path} 2>&1`.split(' ')[1]
 
       if $?.exitstatus != 0
         error "Unable to compute SSH public key finger print for #{path}"
       end
+      fingerprint
     end
 
     def fingerprint_for_default_key
@@ -153,7 +154,7 @@ EOF
 
     def fingerprint_for(key)
       Net::SSH::KeyFactory.load_public_key(key).fingerprint
-    rescue NoMethodError => e
+    rescue NoMethodError, NotImplementedError => e
       ssh_keygen_fallback key
       return nil
     rescue OpenSSL::PKey::PKeyError, Net::SSH::Exception => e
