@@ -159,7 +159,6 @@ describe RHC::Wizard do
       RHC::Rest::Client.stub(:sshkeys) { {} }
       WizardDriver::MockRestApi.stub(:sshkeys) {[]}
       WizardDriver::MockRestApi.stub(:add_key) {{}}
-      # @wizard.set_expected_key_name_and_action('default', 'add')
       $terminal.write_line('yes')
       @wizard.run_next_stage
     end
@@ -244,7 +243,6 @@ describe RHC::Wizard do
       RHC::Rest::Client.stub(:sshkeys) { key_data }
 
       fingerprint, short_name = @wizard.get_key_fingerprint
-      # @wizard.set_expected_key_name_and_action(short_name, 'add')
       $terminal.write_line('yes')
       $terminal.write_line("") # use default name
       @wizard.run_next_stage
@@ -402,7 +400,6 @@ describe RHC::Wizard do
 
       @wizard.run_next_stage # key config is pretty much a noop here
 
-      @wizard.set_expected_key_name_and_action('default', 'update')
       $terminal.write_line('yes')
       $terminal.write_line('default')
 
@@ -820,11 +817,6 @@ EOF
 
     def windows?
       @platform_windows
-    end
-
-    def set_expected_key_name_and_action(key_name, action)
-      @expected_key_name = key_name
-      @expected_key_action = action
     end
 
     def get_key_fingerprint(path=RHC::Config.ssh_pub_key_file_path)
