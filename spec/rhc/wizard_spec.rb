@@ -649,7 +649,8 @@ describe RHC::Wizard do
       Net::SSH::KeyFactory.stub(:load_public_key) { raise NoMethodError }
       @fallback_run = false
       wizard.stub(:ssh_keygen_fallback) { @fallback_run = true }
-      @rest_client.stub(:sshkeys) { [] }
+      key_data = wizard.get_mock_key_data
+      @rest_client.stub(:sshkeys) { key_data }
 
       wizard.send(:ssh_key_uploaded?)
 
