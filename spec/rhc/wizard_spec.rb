@@ -65,8 +65,7 @@ describe RHC::Wizard do
     end
 
     it "should ask to upload ssh keys" do
-      RHC.stub(:get_ssh_keys) { {"keys" => [], "fingerprint" => nil} }
-      @wizard.set_expected_key_name_and_action('default', 'add')
+      @rest_client.stub(:get_ssh_keys) { @wizard.get_mock_key_data }
       $terminal.write_line('yes')
       @wizard.stub_rhc_client_new
       @wizard.ssh_keys = []
