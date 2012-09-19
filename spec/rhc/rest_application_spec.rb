@@ -30,7 +30,7 @@ module RHC
         it "returns an application object" do
           app = app_obj
           app.should be_an_instance_of RHC::Rest::Application
-          app.instance_variable_get(:@links).length.should equal(app_links.length)
+          app.send(:links).length.should equal(app_links.length)
         end
       end
 
@@ -43,7 +43,7 @@ module RHC
           app  = app_obj
           cart = app.add_cartridge('mock_cart_0')
           cart.should be_an_instance_of RHC::Rest::Cartridge
-          cart.instance_variable_get(:@name).should == 'mock_cart_0'
+          cart.name.should == 'mock_cart_0'
         end
       end
 
@@ -59,7 +59,7 @@ module RHC
           carts.length.should equal(2)
           (0..1).each do |idx|
             carts[idx].should be_an_instance_of RHC::Rest::Cartridge
-            carts[idx].instance_variable_get(:@name).should == "mock_cart_#{idx}"
+            carts[idx].name.should == "mock_cart_#{idx}"
           end
         end
         it "returns an empty list if the current app has no cartridges" do

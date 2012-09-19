@@ -1,12 +1,10 @@
+require 'rhc/rest/base'
+
 module RHC
   module Rest
-    class Cartridge
-      include Rest
+    class Cartridge < Base
       attr_reader :type, :name, :properties
       def initialize(args)
-        @name = args[:name] || args["name"]
-        @type = args[:type] || args["type"]
-        @links = args[:links] || args["links"]
         @properties = {}
         props = args[:properties] || args["properties"] || []
         props.each do |p|
@@ -14,6 +12,8 @@ module RHC
           category[:"#{p['name']}"] = p
           @properties[:"#{p['type']}"] = category
         end
+
+        super
       end
 
       def property(category, key)
@@ -21,55 +21,30 @@ module RHC
          category ? category[key] : nil
       end
 
-      #Start Cartridge
       def start
-        logger.debug "Starting cartridge #{self.name}" if @mydebug
-        url = @links['START']['href']
-        method =  @links['START']['method']
-        payload = {:event=> "start"}
-        request = new_request(:url => url, :method => method, :headers => @@headers, :payload => payload)
-        return request(request)
+        debug "Starting cartridge #{name}"
+        rest_method "START", :event => "start"
       end
 
-      #Stop Cartridge
       def stop()
-        logger.debug "Stopping cartridge #{self.name}" if @mydebug
-        url = @links['STOP']['href']
-        method =  @links['STOP']['method']
-        payload = {:event=> "stop"}
-        request = new_request(:url => url, :method => method, :headers => @@headers, :payload => payload)
-        return request(request)
+        debug "Stopping cartridge #{name}"
+        rest_method "STOP", :event => "stop"
       end
 
-      #Restart Cartridge
       def restart
-        logger.debug "Restarting cartridge #{self.name}" if @mydebug
-        url = @links['RESTART']['href']
-        method =  @links['RESTART']['method']
-        payload = {:event=> "restart"}
-        request = new_request(:url => url, :method => method, :headers => @@headers, :payload => payload)
-        return request(request)
+        debug "Restarting cartridge #{name}"
+        rest_method "RESTART", :event => "restart"
       end
 
-      #Reload Cartridge
       def reload
-        logger.debug "Reloading cartridge #{self.name}" if @mydebug
-        url = @links['RESTART']['href']
-        method =  @links['RESTART']['method']
-        payload = {:event=> "reload"}
-        request = new_request(:url => url, :method => method, :headers => @@headers, :payload => payload)
-        return request(request)
+        debug "Reloading cartridge #{name}"
+        rest_method "RESTART", :event => "reload"
       end
 
-      #Delete Cartridge
       def destroy
-        logger.debug "Deleting cartridge #{self.name}" if @mydebug
-        url = @links['DELETE']['href']
-        method =  @links['DELETE']['method']
-        request = new_request(:url => url, :method => method, :headers => @@headers)
-        return request(request)
+        debug "Deleting cartridge #{name}"
+        rest_method "DELETE"
       end
-      alias :delete :destroy
       alias :delete :destroy
     end
   end

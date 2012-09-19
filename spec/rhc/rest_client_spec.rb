@@ -14,8 +14,8 @@ class MockClient < RHC::Rest::Client
   def logger
     Logger.new((@output = StringIO.new))
   end
-  def debug
-    @mydebug = true
+  def use_debug
+    @debug = true
   end
   def logged
     @output.string
@@ -48,7 +48,7 @@ module RHC
           credentials = Base64.strict_encode64(mock_user + ":" + mock_pass)
           client      = RHC::Rest::Client.new(mock_href, mock_user, mock_pass)
           @@headers['Authorization'].should == "Basic #{credentials}"
-          client.instance_variable_get(:@links).should == client_links
+          client.send(:links).should == client_links
         end
         it "does not add newlines to username and password > 60 characters" do
           username = "a" * 45
@@ -61,7 +61,7 @@ module RHC
         end
         it "raises a generic error for any other error condition" do
           lambda{ RHC::Rest::Client.new(mock_href('other_error'), mock_user, mock_pass) }.
-            should raise_error("Resource could not be accessed:Other Error")
+            should raise_error("Failed to access resource: Other Error")
         end
       end
 
@@ -89,9 +89,9 @@ module RHC
           end
           it "returns a domain object" do
             domain = @client.add_domain('mock_domain')
-            domain.class.should                          == RHC::Rest::Domain
-            domain.instance_variable_get(:@id).should    == 'mock_domain'
-            domain.instance_variable_get(:@links).should ==
+            domain.class.should == RHC::Rest::Domain
+            domain.id.should == 'mock_domain'
+            domain.send(:links).should ==
               mock_response_links(mock_domain_links('mock_domain'))
           end
         end
@@ -123,8 +123,8 @@ module RHC
             domains.length.should equal(2)
             (0..1).each do |idx|
               domains[idx].class.should                          == RHC::Rest::Domain
-              domains[idx].instance_variable_get(:@id).should    == "mock_domain_#{idx}"
-              domains[idx].instance_variable_get(:@links).should ==
+              domains[idx].id.should    == "mock_domain_#{idx}"
+              domains[idx].send(:links).should ==
                 mock_response_links(mock_domain_links("mock_domain_#{idx}"))
             end
           end
@@ -162,74 +162,6 @@ module RHC
           it "raise an error when no matching domain IDs can be found" do
             expect { @client.find_domain('mock_domain_2') }.should raise_error(RHC::DomainNotFoundException)
           end
-        end
-
-        context "#threadump" do
-          before(:each) do
-            stub_api_request(:any, client_links['LIST_DOMAINS']['relative']).
-              to_return({ :body   => {
-                            :type => 'domains',
-                            :data =>
-                            [{ :id    => 'mock_domain_0',
-                               :links => mock_response_links(mock_domain_links('mock_domain_0')),
-                             },
-                             { :id    => 'mock_domain_1',
-                               :links => mock_response_links(mock_domain_links('mock_domain_1')),
-                             }]
-                          }.to_json,
-                          :status => 200
-                        })
-            stub_api_request(:any, domain_0_links['LIST_APPLICATIONS']['relative']).
-              to_return({ :body   => {
-                            :type => 'applications',
-                            :data =>
-                            [{ :domain_id       => 'mock_domain_0',
-                               :name            => 'mock_app',
-                               :creation_time   => Time.new.to_s,
-                               :uuid            => 1234,
-                               :aliases         => ['alias_1', 'alias_2'],
-                               :server_identity => 'mock_server_identity',
-                               :links           => mock_response_links(mock_app_links('mock_domain_0','mock_app')),
-                             }]
-                          }.to_json,
-                          :status => 200
-                        })
-            stub_api_request(:any, domain_1_links['LIST_APPLICATIONS']['relative']).
-              to_return({ :body   => {
-                            :type => 'applications',
-                            :data =>
-                            [{ :domain_id       => 'mock_domain_1',
-                               :name            => 'mock_app',
-                               :creation_time   => Time.new.to_s,
-                               :uuid            => 1234,
-                               :aliases         => ['alias_1', 'alias_2'],
-                               :server_identity => 'mock_server_identity',
-                               :links           => mock_response_links(mock_app_links('mock_domain_1','mock_app')),
-                             }]
-                          }.to_json,
-                          :status => 200
-                        })
-            stub_api_request(:any, app_0_links['THREAD_DUMP']['relative']).with(:body => {:event => 'thread-dump'}).
-              to_return({ :body   => {
-                            :type => 'application',
-                            :data =>
-                            { :domain_id       => 'mock_domain_1',
-                               :name            => 'mock_app',
-                               :creation_time   => Time.new.to_s,
-                               :uuid            => 1234,
-                               :aliases         => ['alias_1', 'alias_2'],
-                               :server_identity => 'mock_server_identity',
-                               :links           => mock_response_links(mock_app_links('mock_domain_1','mock_app')),
-                             },
-                            :messages => [{:text => 'Application test thread dump complete.: Success'}]
-                          }.to_json,
-                          :status => 200
-                        })
-           end
-           it "returns a domain object for matching domain IDs" do
-             match = nil
-             expect { match = @client.threaddump('mock_app') }.should_not raise_error
-           end
         end
 
         context "#find_application" do
@@ -283,9 +215,9 @@ module RHC
             domain.applications.each do |app|
               match = domain.find_application(app.name)
               match.class.should                              == RHC::Rest::Application
-              match.instance_variable_get(:@name).should      == 'mock_app'
-              match.instance_variable_get(:@domain_id).should == "#{domain.id}"
-              match.instance_variable_get(:@links).should     ==
+              match.name.should      == 'mock_app'
+              match.domain_id.should == "#{domain.id}"
+              match.send(:links).should     ==
                 mock_response_links(mock_app_links("#{domain.id}",'mock_app'))
             end
           end
@@ -323,9 +255,9 @@ module RHC
             carts.length.should equal(2)
             (0..1).each do |idx|
               carts[idx].class.should                          == RHC::Rest::Cartridge
-              carts[idx].instance_variable_get(:@name).should  == "mock_cart_#{idx}"
-              carts[idx].instance_variable_get(:@type).should  == "mock_cart_#{idx}_type"
-              carts[idx].instance_variable_get(:@links).should ==
+              carts[idx].name.should  == "mock_cart_#{idx}"
+              carts[idx].type.should  == "mock_cart_#{idx}_type"
+              carts[idx].send(:links).should ==
                 mock_response_links(mock_cart_links("mock_cart_#{idx}"))
             end
           end
@@ -364,9 +296,9 @@ module RHC
             matches = @client.find_cartridges('mock_cart_0')
             matches.length.should equal(1)
             matches[0].class.should                          == RHC::Rest::Cartridge
-            matches[0].instance_variable_get(:@name).should  == 'mock_cart_0'
-            matches[0].instance_variable_get(:@type).should  == 'mock_cart_0_type'
-            matches[0].instance_variable_get(:@links).should ==
+            matches[0].name.should  == 'mock_cart_0'
+            matches[0].type.should  == 'mock_cart_0_type'
+            matches[0].send(:links).should ==
               mock_response_links(mock_cart_links('mock_cart_0'))
           end
           it "returns an empty list when no matching cartridges can be found" do
@@ -395,8 +327,8 @@ module RHC
           it "returns the user object associated with this client connection" do
             user = @client.user
             user.class.should                           == RHC::Rest::User
-            user.instance_variable_get(:@login).should  == mock_user
-            user.instance_variable_get(:@links).should  == mock_response_links(mock_user_links)
+            user.login.should  == mock_user
+            user.send(:links).should  == mock_response_links(mock_user_links)
           end
         end
 
@@ -435,10 +367,10 @@ module RHC
             expect { key = @client.find_key('mock_key_0') }.should_not raise_error
 
             key.class.should                            == RHC::Rest::Key
-            key.instance_variable_get(:@name).should    == 'mock_key_0'
-            key.instance_variable_get(:@type).should    == 'mock_key_0_type'
-            key.instance_variable_get(:@content).should == '123456789:0'
-            key.instance_variable_get(:@links).should   ==
+            key.name.should    == 'mock_key_0'
+            key.type.should    == 'mock_key_0_type'
+            key.content.should == '123456789:0'
+            key.send(:links).should   ==
               mock_response_links(mock_key_links('mock_key_0'))
           end
           it "raise an error when no matching keys can be found" do
@@ -456,7 +388,7 @@ module RHC
           end
           context "debug mode is on" do
             it "writes a message to the logger" do
-              @client.debug
+              @client.use_debug
               @client.logger # starts our mock logger
               eval '@client.' + logout_method.to_s
               @client.logged.should =~ /Logout\/Close client$/
