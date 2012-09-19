@@ -323,8 +323,7 @@ describe RHC::Wizard do
     end
 
     it "should check for ssh keys and find a match" do
-      key_data = @wizard.get_mock_key_data
-      @rest_client.stub(:sshkeys) { key_data }
+      @wizard.stub(:ssh_key_uploaded?) { true } # an SSH key already exists
       @wizard.run_next_stage # key config is pretty much a noop here
 
       # run the key check stage
@@ -596,7 +595,7 @@ describe RHC::Wizard do
       wizard.stub_user_info
       wizard.setup_mock_ssh(true)
       key_data = wizard.get_mock_key_data
-      @rest_client.stub(:sshkeys) { [OpenStruct.new(:name => 'default', :fingerprint => '', :type => 'ssh-rsa')] }
+      wizard.stub(:ssh_key_uploaded?) { true } # an SSH key already exists
 
       wizard.run().should be_true
 
