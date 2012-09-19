@@ -178,4 +178,18 @@ describe RHC::Commands::Cartridge do
       it { run_output.should match('reload') }
     end
   end
+
+  describe 'cartridge show' do
+    let(:arguments) { ['cartridge', 'show', 'mock_cart-1', '-a', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+
+    context 'when run' do
+      before(:each) do
+        @rc = MockRestClient.new
+        domain = @rc.add_domain("mock_domain")
+        app = domain.add_application("app1", "mock_type")
+        app.add_cartridge('mock_cart-1')
+      end
+      it { run_output.should match('connection_url = http://fake.url') }
+    end
+  end
 end

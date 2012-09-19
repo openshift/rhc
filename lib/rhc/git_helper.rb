@@ -2,6 +2,7 @@ require 'open3'
 
 module RHC
   module GitHelpers
+    # :nocov: These all call external binaries so test them in cucumber
     def git_config_get(key)
       config_get_cmd = "git config --get #{key}"
       debug "Running #{config_get_cmd}"
@@ -44,5 +45,6 @@ module RHC
 
       raise RHC::GitException, "Error in git clone - #{err}" if exitstatus != 0
     end
+    # :nocov:
   end
 end
