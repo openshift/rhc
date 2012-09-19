@@ -1,6 +1,5 @@
 require 'logger'
 require 'rest-client'
-require 'rhc/rest-client-patch'
 
 module RHC
   module Rest
