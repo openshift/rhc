@@ -230,6 +230,16 @@ module RHC
     def jruby? ; RUBY_PLATFORM =~ /java/i end
     def windows? ; RUBY_PLATFORM =~ /win(32|dows|ce)|djgpp|(ms|cyg|bcc)win|mingw32/i end
     def unix? ; !jruby? && !windows? end
+    
+    # common SSH key display format in ERB
+    def ssh_key_display_format
+      ERB.new <<-FORMAT
+       Name: <%= key.name %>
+       Type: <%= key.type %>
+Fingerprint: <%= key.fingerprint %>
+
+      FORMAT
+    end
 
   end
 end
