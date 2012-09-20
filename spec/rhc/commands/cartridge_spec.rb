@@ -46,6 +46,39 @@ describe RHC::Commands::Cartridge do
     end
   end
 
+  describe 'cartridge add with app context' do
+    let(:arguments) { ['cartridge', 'add', 'mock_cart-1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+
+    context 'when run' do
+      before(:each) do
+        @rc = MockRestClient.new
+        domain = @rc.add_domain("mock_domain")
+        app = domain.add_application("app1", "mock_type")
+        instance = RHC::Commands::Cartridge.new
+        instance.stub(:git_config_get) { |key| app.uuid if key == "rhc.app-uuid" }
+        RHC::Commands::Cartridge.stub(:new) { instance }
+      end
+      it { expect { run }.should exit_with_code(0) }
+      it { run_output.should match("Success") }
+    end
+  end
+
+  describe 'cartridge add with no app context' do
+    let(:arguments) { ['cartridge', 'add', 'mock_cart-1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+
+    context 'when run' do
+      before(:each) do
+        @rc = MockRestClient.new
+        domain = @rc.add_domain("mock_domain")
+        app = domain.add_application("app1", "mock_type")
+        instance = RHC::Commands::Cartridge.new
+        instance.stub(:git_config_get) { |key| "" if key == "rhc.app-uuid" }
+        RHC::Commands::Cartridge.stub(:new) { instance }
+      end
+      it { expect { run }.should exit_with_code(1) }
+    end
+  end
+
   describe 'alias app cartridge add' do
     let(:arguments) { ['app', 'cartridge', 'add', 'unique_mock_cart', '--app', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
