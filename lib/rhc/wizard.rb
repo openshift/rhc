@@ -247,7 +247,7 @@ public and private keys id_rsa keys.
       end
       type, content, comment = file.gets.chomp.split
       ####
-      say "type: %s\ncontent: %s\n" % [type, content]
+      say "type: %s\ncontent: %s\nfingerprint: %s" % [type, content, fingerprint_for(file)]
 
       @rest_client.add_key key_name, content, type
       true

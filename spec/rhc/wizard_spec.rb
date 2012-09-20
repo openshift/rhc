@@ -238,20 +238,18 @@ describe RHC::Wizard do
       File.exists?(public_key_file).should be true
     end
 
-    it "should find out that you have not uploaded the keys and ask to name the key" do
+    it "should find out that you have not uploaded the default key and ask to name the key" do
       key_data = @wizard.get_mock_key_data
-      RHC::Rest::Client.stub(:sshkeys) { key_data }
+      @wizard.ssh_keys = key_data
 
       fingerprint, short_name = @wizard.get_key_fingerprint
       $terminal.write_line('yes')
       $terminal.write_line("") # use default name
       @wizard.run_next_stage
       output = $terminal.read
-      default_key = key_data.select {|k| k.name == 'default'}
-      # output.should match(default_key.first[:fingerprint])
-      # key_data['keys'].each do |key, value|
-      #   output.should match("#{key} - #{value['fingerprint']}")
-      # end
+      key_data.each do |key|
+        output.should match("#{key.name} - #{key.fingerprint}")
+      end
       output.should match("|#{short_name}|")
     end
 
