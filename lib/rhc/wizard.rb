@@ -170,19 +170,12 @@ EOF
     end
 
     def existing_keys_info
-      result = "Current Keys: \n"
+      return unless @ssh_keys
       # TODO: This ERB format is shared with RHC::Commands::Sshkey; should be refactored
-      @ssh_keys.each do |key|
-        erb = ERB.new <<-FORMAT
-       Name: <%= key.name %>
-       Type: <%= key.type %>
-Fingerprint: <%= key.fingerprint %>
-
-      FORMAT
+      @ssh_keys.inject("Current Keys: \n") do |result, key|
+        erb = ::RHC::Helpers.ssh_key_display_format
         result += format(key, erb)
       end
-
-      result
     end
 
     def get_preferred_key_name

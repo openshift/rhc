@@ -16,9 +16,7 @@ module RHC::Commands
     def list
       ssh_keys = rest_client.sshkeys
       results do
-        result = ''
-
-        ssh_keys.each do |key|
+        result = ssh_keys.inject('') do |result, key|
           result += format(key, erb)
         end
         
@@ -83,12 +81,7 @@ module RHC::Commands
     # shared ERB template for formatting SSH Key
     def erb
       return @erb if @erb # cache
-      @erb = ERB.new <<-FORMAT
-       Name: <%= key.name %>
-       Type: <%= key.type %>
-Fingerprint: <%= key.fingerprint %>
-
-      FORMAT
+      @erb = ::RHC::Helpers.ssh_key_display_format
     end
     
   end

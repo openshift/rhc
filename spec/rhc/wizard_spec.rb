@@ -248,7 +248,8 @@ describe RHC::Wizard do
       @wizard.run_next_stage
       output = $terminal.read
       key_data.each do |key|
-        output.should match("#{key.name} - #{key.fingerprint}")
+        output.should match("Name: #{key.name}")
+        output.should match("Fingerprint: #{key.fingerprint}")
       end
       output.should match("|#{short_name}|")
     end
