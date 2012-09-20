@@ -157,9 +157,11 @@ EOF
     rescue NoMethodError, NotImplementedError => e
       ssh_keygen_fallback key
       return nil
+      # :nocov: no reason to cover this case
     rescue OpenSSL::PKey::PKeyError, Net::SSH::Exception => e
       error e.message
       return nil
+      # :nocov:
     end
 
     # return true if the account has the public key defined by
@@ -233,10 +235,14 @@ public and private keys id_rsa keys.
       ####       Should be refactored to a helper
       begin
         file = File.open RHC::Config.ssh_pub_key_file_path
+        # :nocov: we test this scenario with sshkey command specs
       rescue Errno::ENOENT => e
-        raise ::RHC::KeyFileNotExistentException.new("File '#{key}' does not exist.")
+        error ::RHC::KeyFileNotExistentException.new("File '#{key}' does not exist.")
+        return nil
       rescue Errno::EACCES => e
-        raise ::RHC::KeyFileAccessDeniedException.new("Access denied to '#{key}'.")
+        error ::RHC::KeyFileAccessDeniedException.new("Access denied to '#{key}'.")
+        return nil
+        # :nocov:
       end
       type, content, comment = file.gets.chomp.split
       ####

@@ -241,17 +241,17 @@ describe RHC::Wizard do
     it "should find out that you have not uploaded the default key and ask to name the key" do
       key_data = @wizard.get_mock_key_data
       @wizard.ssh_keys = key_data
-
+      
       fingerprint, short_name = @wizard.get_key_fingerprint
       $terminal.write_line('yes')
-      $terminal.write_line("") # use default name
+      $terminal.write_line('73ce2cc1') # answering with an existing key name
       @wizard.run_next_stage
       output = $terminal.read
       key_data.each do |key|
         output.should match("Name: #{key.name}")
         output.should match("Fingerprint: #{key.fingerprint}")
       end
-      output.should match("|#{short_name}|")
+      output.should match("|#{short_name}|") # prompt with the default name
     end
 
     it "should check for client tools via package kit and find them" do
@@ -723,6 +723,10 @@ describe RHC::Wizard do
 
       def add_key(name, content, type)
         @sshkeys[name.to_sym] = ::RestSpecHelper::MockRestKey.new(name, type, content)
+      end
+    
+      def delete_key(key)
+        @sshkeys.delete_if { |k| k.name == key }
       end
     end
 
