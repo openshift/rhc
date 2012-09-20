@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 0.99.1
+Version: 0.99.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -114,6 +114,13 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Sep 20 2012 Adam Miller <admiller@redhat.com> 0.99.2-1
+- Updated rhc cucumber tests (fotios@redhat.com)
+- Merge pull request #161 from calfonso/master (openshift+bot@redhat.com)
+- Fix Bug 856876 - Caught unexpected error messages when adding an sshkey with
+  private key (asari.ruby@gmail.com)
+- US2815: Refactor RHC threaddump command (calfonso@redhat.com)
+
 * Wed Sep 12 2012 Adam Miller <admiller@redhat.com> 0.99.1-1
 - bump_minor_versions for sprint 18 (admiller@redhat.com)
 - Merge pull request #160 from BanzaiMan/us2600_followup
