@@ -237,11 +237,9 @@ public and private keys id_rsa keys.
         file = File.open RHC::Config.ssh_pub_key_file_path
         # :nocov: we test this scenario with sshkey command specs
       rescue Errno::ENOENT => e
-        error ::RHC::KeyFileNotExistentException.new("File '#{key}' does not exist.")
-        return nil
+        raise ::RHC::KeyFileNotExistentException.new("File '#{key}' does not exist.")
       rescue Errno::EACCES => e
-        error ::RHC::KeyFileAccessDeniedException.new("Access denied to '#{key}'.")
-        return nil
+        raise ::RHC::KeyFileAccessDeniedException.new("Access denied to '#{key}'.")
         # :nocov:
       end
       type, content, comment = file.gets.chomp.split
