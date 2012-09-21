@@ -70,6 +70,55 @@ module RHC
       template.result(binding)
     end
 
+
+    # For Net::SSH versions (< 2.0.11) that does not have
+    # Net::SSH::KeyFactory.load_public_key, we drop to shell to get
+    # the key's fingerprint
+    def ssh_keygen_fallback(path)
+      fingerprint = `ssh-keygen -lf #{path} 2>&1`.split(' ')[1]
+
+      if $?.exitstatus != 0
+        error "Unable to compute SSH public key finger print for #{path}"
+      end
+      fingerprint
+    end
+
+    def fingerprint_for(key)
+      Net::SSH::KeyFactory.load_public_key(key).fingerprint
+    rescue NoMethodError, NotImplementedError => e
+      ssh_keygen_fallback key
+      return nil
+      # :nocov: no reason to cover this case
+    rescue OpenSSL::PKey::PKeyError, Net::SSH::Exception => e
+      error e.message
+      return nil
+      # :nocov:
+    end
+    
+    def fingerprint_for_default_key
+      fingerprint_for RHC::Config::ssh_pub_key_file_path
+    end
+
+    # for an SSH public key specified by 'key', return a triple
+    # [type, content, comment]
+    # which is basically the space-separated list of the SSH public key content
+    def ssh_key_triple_for(key)
+      begin
+        file = File.open key
+        # :nocov: we test this scenario with sshkey command specs
+      rescue Errno::ENOENT => e
+        raise ::RHC::KeyFileNotExistentException.new("File '#{key}' does not exist.")
+      rescue Errno::EACCES => e
+        raise ::RHC::KeyFileAccessDeniedException.new("Access denied to '#{key}'.")
+        # :nocov:
+      end
+      file.gets.chomp.split
+    end
+    
+    def ssh_key_triple_for_default_key
+      ssh_key_triple_for RHC::Config::ssh_pub_key_file_path
+    end
+
     private
 
     def ssh_add
