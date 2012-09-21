@@ -127,6 +127,7 @@ WARNING
       rest_domain = rest_client.find_domain(options.namespace)
       rest_app = rest_domain.find_application(app)
       run_git_clone(rest_app)
+      0
     end
 
     summary "Delete an application from the server"
@@ -146,6 +147,7 @@ WARNING
         rest_app.destroy
         results { say "Application '#{rest_app.name}' successfully deleted" }
       end
+      0
     end
 
     summary "Start the application"
