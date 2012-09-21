@@ -141,6 +141,8 @@ module RestSpecHelper
 
     def cartridges
       [MockRestCartridge.new("mock_standalone_cart-1", "standalone"),
+       MockRestCartridge.new("mock_standalone_cart-2", "standalone"),
+       MockRestCartridge.new("mock_unique_standalone_cart-1", "standalone"),
        MockRestCartridge.new("mock_cart-1", "embedded"),
        MockRestCartridge.new("mock_cart-2", "embedded"),
        MockRestCartridge.new("unique_mock_cart-1", "embedded")]
@@ -226,6 +228,10 @@ module RestSpecHelper
       add_cartridge(type, false) if type
     end
 
+    def destroy
+      @domain.applications.delete self
+    end
+
     def add_cartridge(name, embedded=true)
       type = embedded ? "embedded" : "standalone"
       c = MockRestCartridge.new(name, type, self)
@@ -235,6 +241,26 @@ module RestSpecHelper
 
     def cartridges
       @cartridges
+    end
+
+    def start
+      @app
+    end
+
+    def stop(*args)
+      @app
+    end
+
+    def restart
+      @app
+    end
+
+    def reload
+      @app
+    end
+
+    def tidy
+      @app
     end
   end
 
