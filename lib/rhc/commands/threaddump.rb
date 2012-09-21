@@ -5,7 +5,7 @@ module RHC::Commands
     syntax "<application>"
     argument :app, "Name of the application on which to execute the thread dump", []
     def run(app)
-      reply = rest_client.threaddump(app)[:message]
+      reply = rest_client.threaddump(app).messages[0]
       results { say "#{reply}" }
       0
     end

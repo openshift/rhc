@@ -3,7 +3,7 @@ module RHC
     class Application
       include Rest
       attr_reader :domain_id, :name, :creation_time, :uuid, :aliases, :git_url, :app_url, :gear_profile, :framework,
-      :scalable, :health_check_path, :embedded, :gear_count, :ssh_url, :scale_min, :scale_max
+      :scalable, :health_check_path, :embedded, :gear_count, :ssh_url, :scale_min, :scale_max, :messages
       def initialize(args)
         #logger.debug args
         @domain_id = args[:domain_id] || args["domain_id"]
@@ -23,6 +23,7 @@ module RHC
         @scale_min = args[:scale_min] || args["scale_min"]
         @scale_max = args[:scale_max] || args["scale_max"]
         @links = args[:links] || args["links"]
+        @messages = args[:messages] || args["messages"]
       end
 
       #Add Cartridge
