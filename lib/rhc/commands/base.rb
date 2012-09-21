@@ -86,9 +86,9 @@ class RHC::Commands::Base
           username = ask "To connect to #{openshift_server} enter your OpenShift login (email or Red Hat login id): "
           config.config_user(username)
         end
-        password = RHC::Config.password || RHC::get_password
+        config.password = config.password || RHC::get_password
 
-        RHC::Rest::Client.new(openshift_rest_node, username, password, @options.debug)
+        RHC::Rest::Client.new(openshift_rest_node, username, config.password, @options.debug)
       end
     end
 
