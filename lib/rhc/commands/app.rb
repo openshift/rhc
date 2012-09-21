@@ -205,6 +205,17 @@ WARNING
       0
     end
 
+    summary "Clean out the application's logs and tmp directories and tidy up the git repo on the server"
+    syntax "<app> [--namespace namespace] [--app app]"
+    argument :app, "he name of the application you are stopping", ["-a", "--app app"], :context => :app_context
+    option ["-n", "--namespace namespace"], "Namespace of the application the cartrdige belongs to", :context => :namespace_context, :required => true
+    def tidy(app)
+      app_action app, :tidy
+
+      results { say "#{app} cleaned up" }
+      0
+    end
+
     private
       include RHC::GitHelpers
       include RHC::CartridgeHelpers
@@ -263,8 +274,10 @@ WARNING
       end
 
       def host_exist?(host)
+        # :nocov:
         dns = Resolv::DNS.new
         dns.getresources(host, Resolv::DNS::Resource::IN::A).any?
+        # :nocov:
       end
 
       def check_sshkeys!
