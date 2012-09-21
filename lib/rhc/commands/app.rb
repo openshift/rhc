@@ -357,11 +357,23 @@ a different application name." if jenkins_app_name == app_name
         rest_app.add_cartridge("jenkins-client-1.4")
       end
 
-      def windows_nslookup_bug?(rest_app)
+      def run_nslookup
+        # :nocov:
         `nslookup #{rest_app.host}`
-        windows_nslookup = $?.exitstatus == 0
+        $?.exitstatus == 0
+        # :nocov:
+      end
+
+      def run_ping
+        # :nocov:
         `ping #{rest_app.host}-n 2`
-        windows_ping = $?.exitstatus == 0
+        $?.exitstatus == 0
+        # :nocov:
+      end
+
+      def windows_nslookup_bug?(rest_app)
+        windows_nslookup = run_nslookup
+        windows_ping = run_ping
 
         if windows_nslookup and !windows_ping # this is related to BZ #826769
           warning <<WINSOCKISSUE
