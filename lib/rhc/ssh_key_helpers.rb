@@ -105,12 +105,10 @@ module RHC
     def ssh_key_triple_for(key)
       begin
         file = File.open key
-        # :nocov: we test this scenario with sshkey command specs
       rescue Errno::ENOENT => e
         raise ::RHC::KeyFileNotExistentException.new("File '#{key}' does not exist.")
       rescue Errno::EACCES => e
         raise ::RHC::KeyFileAccessDeniedException.new("Access denied to '#{key}'.")
-        # :nocov:
       end
       file.gets.chomp.split
     end
