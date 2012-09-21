@@ -106,7 +106,7 @@ WARNING
       unless warnings.empty?
         print_warnings(rest_app, warnings)
       else
-        results { say "Success!" }
+        results { rest_app.messages.each { |msg| say msg } }
       end
 
       0
