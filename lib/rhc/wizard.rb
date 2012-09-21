@@ -85,13 +85,12 @@ module RHC
         @password = RHC::get_password if @password.nil?
       end
 
-      # Confirm username / password works:
-      user_info = RHC::get_user_info(@libra_server, @username, @password, RHC::Config.default_proxy, true)
-
       # instantiate a REST client that stages can use
-      # TODO: use only REST calls in the wizard
       end_point = "https://#{@libra_server}/broker/rest/api"
       @rest_client = RHC::Rest::Client.new(end_point, @username, @password)
+      
+      # confirm that the REST client can connect
+      return false unless @rest_client.user
 
       true
     end
@@ -266,14 +265,13 @@ public and private keys id_rsa keys.
     def config_namespace_stage
       paragraph do
         say "Checking for your namespace ... "
-        user_info = RHC::get_user_info(@libra_server, @username, @password, RHC::Config.default_proxy, true)
-        domains = user_info['user_info']['domains']
+        domains = @rest_client.domains
         if domains.length == 0
           say "not found"
           ask_for_namespace
         else
           say "found namespace:"
-          domains.each { |d| say "    #{d['namespace']}" }
+          domains.each { |d| say "    #{d.id}" }
         end
       end
 
@@ -284,33 +282,30 @@ public and private keys id_rsa keys.
       section do
         say "Checking for applications ... "
       end
-      user_info = RHC::get_user_info(@libra_server, @username, @password, RHC::Config.default_proxy, true)
-      apps = user_info['app_info']
+      
+      apps = @rest_client.domains.inject([]) do |list, domain|
+        list += domain.applications
+      end
+      
       if !apps.nil? and !apps.empty?
         section(:bottom => 1) do
           say "found"
-          apps.each do |app_name, app_info|
-            app_url = nil
-            unless user_info['user_info']['domains'].empty?
-              app_url = "http://#{app_name}-#{user_info['user_info']['domains'][0]['namespace']}.#{user_info['user_info']['rhc_domain']}/"
-            end
-
-            if app_url.nil?
-              say "    * #{app_name} - no public url (you need to add a namespace)"
+          apps.each do |app|
+            if app.app_url.nil? && app.u
+              say "    * #{app.name} - no public url (you need to add a namespace)"
             else
-              say "    * #{app_name} - #{app_url}"
+              say "    * #{app.name} - #{app.app_url}"
             end
           end
         end
       else
         section(:bottom => 1) { say "none found" }
         paragraph do
-          say "Below is a list of the types of application " \
-              "you can create: "
+          say "Below is a list of the types of application you can create: \n"
 
-          application_types = RHC::get_cartridges_list @libra_server, RHC::Config.default_proxy
-          application_types.each do |cart|
-            say "    * #{cart} - rhc app create -t #{cart} -a <app name>"
+          application_types = @rest_client.cartridges
+          application_types.sort {|a,b| a.name <=> b.name }.each do |cart|
+            say "    * #{cart.name} - rhc app create -t #{cart.name} -a <app name>"
           end
         end
       end
