@@ -5,8 +5,16 @@ module RHC
   module Rest
     class Base
       include Rest
+
+      attr_reader :messages
+
       def initialize(json_args={})
         @__json_args__ = json_args
+        @messages = []
+      end
+
+      def add_message(msg)
+        @messages << msg
       end
 
       private

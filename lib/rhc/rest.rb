@@ -113,8 +113,8 @@ module RHC
         return apps
       when 'application'
         message = result['messages'].first['text']
-        data[:messages] = [message]
         app = Application.new(data)
+        app.add_message(message)
         return app
       when 'cartridges'
         carts = Array.new
