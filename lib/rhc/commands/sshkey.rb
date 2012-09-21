@@ -43,14 +43,7 @@ module RHC::Commands
     argument :key, 'SSH public key filepath', []
     option ["--timeout timeout"], "Timeout, in seconds, for the session"
     def add(name, key)
-      begin
-        file = File.open(key)
-      rescue Errno::ENOENT => e
-        raise ::RHC::KeyFileNotExistentException.new("File '#{key}' does not exist.")
-      rescue Errno::EACCES => e
-        raise ::RHC::KeyFileAccessDeniedException.new("Access denied to '#{key}'.")
-      end
-      type, content, comment = file.gets.chomp.split
+      type, content, comment = ssh_key_triple_for(key)
       
       # validate the user input before sending it to the server
       begin
