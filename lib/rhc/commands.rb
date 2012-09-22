@@ -28,11 +28,7 @@ module RHC
       command = Commander::Runner.instance.active_command
 
       if deprecated[command_name]
-        msg = "The command 'rhc #{command_name}' is deprecated.  Please use 'rhc #{command.name}' instead."
-
-        raise DeprecatedError.new("#{msg} For porting and testing purposes you may switch this error to a warning by setting the DISABLE_DEPRECATED environment variable to 0.  It is not recommended to do so in a production environment as this command may be removed in future releases.") if RHC::Helpers.disable_deprecated?
-
-        warn "Warning: #{msg} For porting and testing purposes you may switch this warning to an error by setting the DISABLE_DEPRECATED environment variable to 1.  This command may be removed in future releases."
+        deprecated_cmd("rhc #{command.name}")
       end
     end
 

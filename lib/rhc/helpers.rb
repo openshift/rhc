@@ -100,6 +100,26 @@ module RHC
     def debug(msg)
       puts "DEBUG: #{msg}" if debug?
     end
+
+    def deprecated_command(correct,short = false)
+      deprecated("This command is deprecated. Please use '#{correct}' instead.",short)
+    end
+
+    def deprecated_option(incorrect,correct)
+      deprecated("The option '#{incorrect}' is deprecated. Please use '#{correct}' instead")
+    end
+
+    def deprecated(msg,short = false)
+      info = " For porting and testing purposes you may switch this %s to a %s by setting the DISABLE_DEPRECATED environment variable to %d.  It is not recommended to do so in a production environment as this option may be removed in future releases."
+
+      msg << info unless short
+      if RHC::Helpers.disable_deprecated?
+        raise DeprecatedError.new(msg % ['error','warning',0])
+      else
+        warn "Warning: #{msg}\n" % ['warning','error',1]
+      end
+    end
+
     def say(msg)
       super
       msg
