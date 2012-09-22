@@ -1,8 +1,6 @@
 #!/usr/bin/env ruby
 # print deprecation warning
-
-puts "Warning: This command is deprecated. Please use rhc-domain-info instead."
-puts""
+RHC::Helpers.deprecated_command('rhc-domain-info',true)
 
 args = ""
 ARGV.each do|a|

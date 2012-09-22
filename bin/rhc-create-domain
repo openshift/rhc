@@ -4,8 +4,7 @@ require 'rhc/coverage_helper'
 
 require 'rhc-common'
 
-puts "Warning: This command is deprecated and will be removed in the future. Please use 'rhc domain (create|update)' instead."
-puts""
+RHC::Helpers.deprecated_command('rhc domain (create|update)',true)
 
 #
 # print help
