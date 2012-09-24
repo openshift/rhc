@@ -144,9 +144,11 @@ module RestSpecHelper
       [MockRestCartridge.new("mock_standalone_cart-1", "standalone"),
        MockRestCartridge.new("mock_standalone_cart-2", "standalone"),
        MockRestCartridge.new("mock_unique_standalone_cart-1", "standalone"),
+       MockRestCartridge.new("jenkins-1.4", "standalone"),
        MockRestCartridge.new("mock_cart-1", "embedded"),
        MockRestCartridge.new("mock_cart-2", "embedded"),
-       MockRestCartridge.new("unique_mock_cart-1", "embedded")]
+       MockRestCartridge.new("unique_mock_cart-1", "embedded"),
+       MockRestCartridge.new("jenkins-client-1.4", "embedded")]
     end
 
     def add_domain(id)
@@ -207,8 +209,13 @@ module RestSpecHelper
       @applications = nil
     end
 
-    def add_application(name, type=nil, scale=nil)
-      a = MockRestApplication.new(name, type, self, scale)
+    def add_application(name, type=nil, scale=nil, gear_profile='default')
+      if type.is_a?(Hash)
+        scale = type[:scale]
+        gear_profile = type[:gear_profile]
+        type = type[:cartridge]
+      end
+      a = MockRestApplication.new(name, type, self, scale, gear_profile)
       @applications << a
       a.add_message("Success")
       a
@@ -224,7 +231,7 @@ module RestSpecHelper
       "fakeuuidfortests#{@name}"
     end
 
-    def initialize(name, type, domain, scale=nil)
+    def initialize(name, type, domain, scale=nil, gear_profile='default')
       @name = name
       @domain = domain
       @cartridges = []
@@ -235,6 +242,7 @@ module RestSpecHelper
       @ssh_url = "ssh://#{@uuid}@127.0.0.1"
       @embedded = {}
       @aliases = []
+      @gear_profile = gear_profile
       if scale
         @scalable = true
         @embedded = {"haproxy-1.4" => {:info => ""}}
