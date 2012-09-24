@@ -28,7 +28,7 @@ module RHC
       command = Commander::Runner.instance.active_command
 
       if deprecated[command_name]
-        deprecated_cmd("rhc #{command.name}")
+        RHC::Helpers.deprecated_command "rhc #{command.name}"
       end
     end
 
