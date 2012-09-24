@@ -214,6 +214,19 @@ describe RHC::Commands::App do
     end
   end
 
+  describe 'app create --nogit deprecated' do
+    let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--noprompt', '--nogit', '--config', '/tmp/test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+
+    before (:each) do
+      @rc = MockRestClient.new
+      @domain = @rc.add_domain("mockdomain")
+    end
+
+    context 'when run' do
+      it { run_output.should match("The option '--nogit' is deprecated. Please use '--\\[no-\\]git' instead") }
+    end
+  end
+
   describe 'app create prompt for sshkeys' do
     let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--config', '/tmp/test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
