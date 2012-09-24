@@ -68,6 +68,16 @@ module RHC
         rest_method "THREAD_DUMP", :event => "thread-dump"
       end
 
+      def add_alias(app_alias)
+        debug "Running add_alias for #{name}"
+        rest_method "ADD_ALIAS", :event => "add-alias", :alias => app_alias
+      end
+
+      def remove_alias(app_alias)
+        debug "Running add_alias for #{name}"
+        rest_method "REMOVE_ALIAS", :event => "remove-alias", :alias => app_alias
+      end
+
       #Find Cartridge by name
       def find_cartridge(name, options={})
         debug "Finding cartridge #{name} in app #{self.name}"

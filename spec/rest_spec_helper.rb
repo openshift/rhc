@@ -62,14 +62,16 @@ module RestSpecHelper
   end
 
   def mock_app_links(domain_id='test_domain',app_id='test_app')
-    [['ADD_CARTRIDGE',   "domains/#{domain_id}/apps/#{app_id}/carts/add",   'post'],
-     ['LIST_CARTRIDGES', "domains/#{domain_id}/apps/#{app_id}/carts/",      'get' ],
+    [['ADD_CARTRIDGE',   "domains/#{domain_id}/apps/#{app_id}/carts/add", 'post'],
+     ['LIST_CARTRIDGES', "domains/#{domain_id}/apps/#{app_id}/carts/",    'get' ],
      ['GET_GEAR_GROUPS', "domains/#{domain_id}/apps/#{app_id}/gear_groups", 'get' ],
-     ['START',           "domains/#{domain_id}/apps/#{app_id}/start",       'post'],
-     ['STOP',            "domains/#{domain_id}/apps/#{app_id}/stop",        'post'],
-     ['RESTART',         "domains/#{domain_id}/apps/#{app_id}/restart",     'post'],
-     ['THREAD_DUMP',     "domains/#{domain_id}/apps/#{app_id}/event",       'post'],
-     ['DELETE',          "domains/#{domain_id}/apps/#{app_id}/delete",      'post']]
+     ['START',           "domains/#{domain_id}/apps/#{app_id}/start",     'post'],
+     ['STOP',            "domains/#{domain_id}/apps/#{app_id}/stop",      'post'],
+     ['RESTART',         "domains/#{domain_id}/apps/#{app_id}/restart",   'post'],
+     ['THREAD_DUMP',     "domains/#{domain_id}/apps/#{app_id}/event",     'post'],
+     ['ADD_ALIAS',       "domains/#{domain_id}/apps/#{app_id}/event",     'post'],
+     ['REMOVE_ALIAS',    "domains/#{domain_id}/apps/#{app_id}/event",     'post'],
+     ['DELETE',          "domains/#{domain_id}/apps/#{app_id}/delete",    'post']]
   end
 
   def mock_cart_links(domain_id='test_domain',app_id='test_app',cart_id='test_cart')
