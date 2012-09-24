@@ -9,10 +9,12 @@ require 'rhc/context_helper'
 class RHC::Commands::Base
 
   attr_writer :options, :config
+  attr_reader :messages
 
   def initialize(options=Commander::Command::Options.new,
                  config=nil)
     @options, @config = options, config
+    @messages = []
 
     # apply timeout here even though it isn't quite a global
     $rest_timeout = @options.timeout ? @options.timeout.to_i : nil
