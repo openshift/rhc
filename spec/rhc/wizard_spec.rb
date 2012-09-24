@@ -92,14 +92,9 @@ describe RHC::Wizard do
     end
 
     it "should show app creation commands" do
-      mock_carts = ['ruby', 'python', 'jbosseap']
-      @rest_client.stub(:cartridges) { mock_carts }
-      @wizard.stub_user_info
       @wizard.run_next_stage
       output = $terminal.read
-      mock_carts.each do |cart|
-        output.should match("\\* #{cart} - rhc app create -t #{cart} -a <app name>")
-      end
+      output.should match 'Below is a list of'
     end
 
     it "should show a thank you message" do
@@ -181,14 +176,9 @@ describe RHC::Wizard do
     end
 
     it "should show app creation commands" do
-      mock_carts = ['ruby', 'python', 'jbosseap']
-      @rest_client.stub(:cartridges) { mock_carts }
-      @wizard.stub_user_info
       @wizard.run_next_stage
       output = $terminal.read
-      mock_carts.each do |cart|
-        output.should match("\\* #{cart} - rhc app create -t #{cart} -a <app name>")
-      end
+      output.should match 'Below is a list of'
     end
 
     it "should show a thank you message" do
@@ -272,14 +262,9 @@ describe RHC::Wizard do
     end
 
     it "should show app creation commands" do
-      mock_carts = ['ruby', 'python', 'jbosseap']
-      @rest_client.stub(:cartridges) { mock_carts }
-      @wizard.stub_user_info
       @wizard.run_next_stage
       output = $terminal.read
-      mock_carts.each do |cart|
-        output.should match("\\* #{cart} - rhc app create -t #{cart} -a <app name>")
-      end
+      output.should match 'Below is a list of'
     end
 
     it "should show a thank you message" do
@@ -347,14 +332,9 @@ describe RHC::Wizard do
     end
 
     it "should show app creation commands" do
-      mock_carts = ['ruby', 'python', 'jbosseap']
-      @rest_client.stub(:cartridges) { mock_carts }
-      @wizard.stub_user_info
       @wizard.run_next_stage
       output = $terminal.read
-      mock_carts.each do |cart|
-        output.should match("\\* #{cart} - rhc app create -t #{cart} -a <app name>")
-      end
+      output.should match 'Below is a list of'
     end
 
     it "should show a thank you message" do
