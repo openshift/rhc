@@ -249,6 +249,7 @@ module RestSpecHelper
       end
       @__json_args__= {:links => mock_response_links(mock_app_links('mock_domain_0', 'mock_app_0'))}
       add_cartridge(type, false) if type
+      @framework = type
       @messages = []
     end
 

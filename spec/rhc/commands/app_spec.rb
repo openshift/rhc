@@ -76,7 +76,6 @@ describe RHC::Commands::App do
       end
       it "should create a jenkins app and a regular app with an embedded jenkins client" do
         expect { run }.should exit_with_code(0)
-        puts $terminal.read
         jenkins_app = @domain.find_application("jenkins")
         jenkins_app.cartridges[0].name.should == "jenkins-1.4"
         app = @domain.find_application("app1")
@@ -106,6 +105,36 @@ describe RHC::Commands::App do
         domain = @rc.add_domain("mockdomain")
       end
       it { expect { run }.should raise_error(ArgumentError, /You have named both your main application and your Jenkins application/) }
+    end
+  end
+
+  describe 'app create enable-jenkins with existing jenkins' do
+    let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--trace', '--enable-jenkins', 'jenkins2', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+
+    context 'when run' do
+      before(:each) do
+        @rc = MockRestClient.new
+        @domain = @rc.add_domain("mockdomain")
+        @domain.add_application("jenkins", "jenkins-1.4")
+      end
+      it "should use existing jenkins" do
+        expect { run }.should exit_with_code(0)
+        expect { @domain.find_application("jenkins") }.should_not raise_error
+        expect { @domain.find_application("jenkins2") }.should raise_error(RHC::ApplicationNotFoundException)
+      end
+    end
+  end
+
+  describe 'app create enable-jenkins named after existing app' do
+    let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--trace', '--enable-jenkins', 'app2', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+
+    context 'when run' do
+      before(:each) do
+        @rc = MockRestClient.new
+        domain = @rc.add_domain("mockdomain")
+        domain.add_application("app2", "mock_unique_standalone_cart")
+      end
+      it { expect { run }.should raise_error(ArgumentError, /You have named your Jenkins application the same as an existing application/) }
     end
   end
 
