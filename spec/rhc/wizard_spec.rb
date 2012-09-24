@@ -93,7 +93,7 @@ describe RHC::Wizard do
 
     it "should show app creation commands" do
       mock_carts = ['ruby', 'python', 'jbosseap']
-      RHC.stub(:get_cartridges_list) { mock_carts }
+      @rest_client.stub(:cartridges) { mock_carts }
       @wizard.stub_user_info
       @wizard.run_next_stage
       output = $terminal.read
@@ -182,7 +182,7 @@ describe RHC::Wizard do
 
     it "should show app creation commands" do
       mock_carts = ['ruby', 'python', 'jbosseap']
-      RHC.stub(:get_cartridges_list) { mock_carts }
+      @rest_client.stub(:cartridges) { mock_carts }
       @wizard.stub_user_info
       @wizard.run_next_stage
       output = $terminal.read
@@ -273,7 +273,7 @@ describe RHC::Wizard do
 
     it "should show app creation commands" do
       mock_carts = ['ruby', 'python', 'jbosseap']
-      RHC.stub(:get_cartridges_list) { mock_carts }
+      @rest_client.stub(:cartridges) { mock_carts }
       @wizard.stub_user_info
       @wizard.run_next_stage
       output = $terminal.read
@@ -348,7 +348,7 @@ describe RHC::Wizard do
 
     it "should show app creation commands" do
       mock_carts = ['ruby', 'python', 'jbosseap']
-      RHC.stub(:get_cartridges_list) { mock_carts }
+      @rest_client.stub(:cartridges) { mock_carts }
       @wizard.stub_user_info
       @wizard.run_next_stage
       output = $terminal.read
@@ -526,7 +526,7 @@ describe RHC::Wizard do
 
       RHC.stub(:get_ssh_keys) { {"keys" => [], "fingerprint" => nil} }
       mock_carts = ['ruby', 'python', 'jbosseap']
-      RHC.stub(:get_cartridges_list) { mock_carts }
+      @rest_client.stub(:cartridges) { mock_carts }
 
       $terminal.write_line "#{@wizard.mock_user}"
       $terminal.write_line "password"
@@ -552,7 +552,7 @@ describe RHC::Wizard do
 
       @rest_client.stub(:get_ssh_keys) { [] }
       mock_carts = ['ruby', 'python', 'jbosseap']
-      RHC.stub(:get_cartridges_list) { mock_carts }
+      @rest_client.stub(:cartridges) { mock_carts }
       # we need to do this because get_character does not get caught
       # by our mock terminal
       @wizard.stub(:get_character) {ask ""}
