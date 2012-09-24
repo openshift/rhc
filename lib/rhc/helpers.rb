@@ -105,8 +105,8 @@ module RHC
       deprecated("This command is deprecated. Please use '#{correct}' instead.",short)
     end
 
-    def deprecated_option(incorrect,correct)
-      deprecated("The option '#{incorrect}' is deprecated. Please use '#{correct}' instead")
+    def deprecated_option(deprecated,new)
+      deprecated("The option '#{deprecated}' is deprecated. Please use '#{new}' instead")
     end
 
     def deprecated(msg,short = false)

@@ -17,9 +17,8 @@ module RHC::Commands
     option ["-s", "--scaling"], "Enable scaling for this application"
     option ["-r", "--repo dir"], "Git Repo path (defaults to ./$app_name) (applicable to the  create command)"
     option ["--[no-]git"], "Only  create  remote space, don't pull it locally"
-    option ["--nogit"], "DEPRECATED! Only  create  remote space, don't pull it locally", :deprecated => {:arg => :git, :val => false}
+    option ["--nogit"], "DEPRECATED! Only  create  remote space, don't pull it locally", :deprecated => {:key => :git, :value => false}
     option ["--[no-]dns"], "Skip DNS check. Must be used in combination with --no-git"
-    option ["--nodns"], "DEPRECATED! Skip DNS check. Must be used in combination with --no-git", :deprecated => {:arg => :dns, :val => false}
     option ["--enable-jenkins [server_name]"], "Indicates to create a Jenkins application (if not already available)  and  embed the Jenkins client into this application. The default name will be 'jenkins' if not specified. Note that --no-dns is ignored for the creation of the Jenkins application."
     argument :name, "The name you wish to give your application", ["-a", "--app name"]
     argument :cartridge, "The first cartridge added to the application. Usually a web framework", ["-t", "--type cartridge"]
