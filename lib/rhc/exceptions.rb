@@ -88,4 +88,16 @@ module RHC
       super message, 1
     end
   end
+
+  class SnapshotSaveException < Exception
+    def initialize(message="Error trying to save snapshot")
+      super message, 130
+    end
+  end
+
+  class SnapshotRestoreException < Exception
+    def initialize(message="Error trying to restore snapshot")
+      super message, 130
+    end
+  end
 end
