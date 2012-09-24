@@ -97,9 +97,7 @@ module RHC
       #find Key by name
       def find_key(name)
         debug "Finding key #{name}"
-        user.keys.each { |key| return key if key.name == name }
-
-        raise RHC::KeyNotFoundException.new("Key #{name} does not exist")
+        user.find_key(name) or raise RHC::KeyNotFoundException.new("Key #{name} does not exist")
       end
 
       def logout
