@@ -65,6 +65,49 @@ describe RHC::Commands::App do
     end
   end
 
+  describe 'app create enable-jenkins' do
+    let(:arguments) { ['app', 'create', 'app1', '--trace', 'mock_unique_standalone_cart', '--enable-jenkins', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+
+    context 'when run' do
+      before(:each) do
+        @rc = MockRestClient.new
+        @domain = @rc.add_domain("mockdomain")
+      end
+      it "should create a jenkins app and a regular app with an embedded jenkins client" do
+        expect { run }.should exit_with_code(0)
+        puts $terminal.read
+        jenkins_app = @domain.find_application("jenkins")
+        jenkins_app.cartridges[0].name.should == "jenkins-1.4"
+        app = @domain.find_application("app1")
+        app.find_cartridge("jenkins-client-1.4")
+      end
+    end
+  end
+
+  describe 'app create enable-jenkins with --no-dns' do
+    let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--trace', '--enable-jenkins', '--no-dns', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+
+    context 'when run' do
+      before(:each) do
+        @rc = MockRestClient.new
+        domain = @rc.add_domain("mockdomain")
+      end
+      it { expect { run }.should raise_error(ArgumentError) }
+    end
+  end
+
+  describe 'app create enable-jenkins with same name as app' do
+    let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--trace', '--enable-jenkins', 'app1','--no-dns', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+
+    context 'when run' do
+      before(:each) do
+        @rc = MockRestClient.new
+        domain = @rc.add_domain("mockdomain")
+      end
+      it { expect { run }.should raise_error(ArgumentError) }
+    end
+  end
+
   describe 'app delete' do
     let(:arguments) { ['app', 'delete', '--trace', '-a', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 

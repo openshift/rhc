@@ -254,7 +254,7 @@ WARNING
         #
         # Confirm that the host exists in DNS
         #
-        puts "Your application's domain name is being propagated worldwide (this might take a minute)..."
+        say "Your application's domain name is being propagated worldwide (this might take a minute)..."
         debug "Start checking for application dns @ '#{host}'"
 
         found = false
