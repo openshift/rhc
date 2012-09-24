@@ -158,8 +158,8 @@ describe RHC::Wizard do
 
     it "should upload ssh key as default" do
       RHC::Rest::Client.stub(:sshkeys) { {} }
-      WizardDriver::MockRestApi.stub(:sshkeys) {[]}
-      WizardDriver::MockRestApi.stub(:add_key) {{}}
+      @rest_client.stub(:sshkeys) {[]}
+      @rest_client.stub(:add_key) {{}}
       $terminal.write_line('yes')
       @wizard.run_next_stage
     end
