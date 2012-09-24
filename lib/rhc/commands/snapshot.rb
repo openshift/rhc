@@ -6,7 +6,7 @@ module RHC::Commands
     alias_action :"app snapshot", :root_command => true
     default_action :save
 
-    summary "Pull down application snapshot for a user."
+    summary "Pull down application snapshot for the specified application."
     syntax "<application>"
     option ["-n", "--namespace namespace"], "Namespace of the application you are port forwarding to", :context => :namespace_context, :required => true
     option ["-f", "--filepath filepath"], "Local path to save tarball (default: ./$APPNAME.tar.gz)"
@@ -50,7 +50,7 @@ module RHC::Commands
       0
     end
 
-    summary "Pull down application snapshot for a user."
+    summary "Restores a previously saved snapshot."
     syntax "<application>"
     option ["-n", "--namespace namespace"], "Namespace of the application you are port forwarding to", :context => :namespace_context, :required => true
     option ["-f", "--filepath filepath"], "Local path to save tarball (default: ./$APPNAME.tar.gz)"
