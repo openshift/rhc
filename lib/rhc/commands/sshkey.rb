@@ -14,12 +14,9 @@ module RHC::Commands
     syntax ''
     option ["--timeout timeout"], "Timeout, in seconds, for the session"
     def list
-      ssh_keys = rest_client.sshkeys
       results do
-        result = ''
-
-        ssh_keys.each do |key|
-          result += format(key, erb)
+        result = rest_client.sshkeys.inject('') do |r, key|
+          r += format(key, erb)
         end
         
         say result
@@ -45,14 +42,7 @@ module RHC::Commands
     argument :key, 'SSH public key filepath', []
     option ["--timeout timeout"], "Timeout, in seconds, for the session"
     def add(name, key)
-      begin
-        file = File.open(key)
-      rescue Errno::ENOENT => e
-        raise ::RHC::KeyFileNotExistentException.new("File '#{key}' does not exist.")
-      rescue Errno::EACCES => e
-        raise ::RHC::KeyFileAccessDeniedException.new("Access denied to '#{key}'.")
-      end
-      type, content, comment = file.gets.chomp.split
+      type, content, comment = ssh_key_triple_for(key)
       
       # validate the user input before sending it to the server
       begin
@@ -83,12 +73,7 @@ module RHC::Commands
     # shared ERB template for formatting SSH Key
     def erb
       return @erb if @erb # cache
-      @erb = ERB.new <<-FORMAT
-       Name: <%= key.name %>
-       Type: <%= key.type %>
-Fingerprint: <%= key.fingerprint %>
-
-      FORMAT
+      @erb = ::RHC::Helpers.ssh_key_display_format
     end
     
   end

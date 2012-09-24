@@ -1,7 +1,9 @@
 require 'spec_helper'
+require 'rest_spec_helper'
 require 'rhc/wizard'
 require 'rhc/vendor/parseconfig'
 require 'rhc/config'
+require 'ostruct'
 
 describe RHC::Wizard do
   before(:all) do
@@ -63,9 +65,10 @@ describe RHC::Wizard do
     end
 
     it "should ask to upload ssh keys" do
-      RHC.stub(:get_ssh_keys) { {"keys" => [], "fingerprint" => nil} }
-      @wizard.set_expected_key_name_and_action('default', 'add')
+      @rest_client.stub(:get_ssh_keys) { @wizard.get_mock_key_data }
       $terminal.write_line('yes')
+      @wizard.stub_rhc_client_new
+      @wizard.ssh_keys = []
       @wizard.run_next_stage
     end
 
@@ -153,8 +156,9 @@ describe RHC::Wizard do
     end
 
     it "should upload ssh key as default" do
-      RHC.stub(:get_ssh_keys) { {"keys" => [], "fingerprint" => nil} }
-      @wizard.set_expected_key_name_and_action('default', 'add')
+      RHC::Rest::Client.stub(:sshkeys) { {} }
+      WizardDriver::MockRestApi.stub(:sshkeys) {[]}
+      WizardDriver::MockRestApi.stub(:add_key) {{}}
       $terminal.write_line('yes')
       @wizard.run_next_stage
     end
@@ -234,23 +238,20 @@ describe RHC::Wizard do
       File.exists?(public_key_file).should be true
     end
 
-    it "should find out that you have not uploaded the keys and ask to name the key" do
+    it "should find out that you have not uploaded the default key and ask to name the key" do
       key_data = @wizard.get_mock_key_data
-      RHC.stub(:get_ssh_keys) do
-        key_data
-      end
-
+      @wizard.ssh_keys = key_data
+      
       fingerprint, short_name = @wizard.get_key_fingerprint
-      @wizard.set_expected_key_name_and_action(short_name, 'add')
       $terminal.write_line('yes')
-      $terminal.write_line("") # use default name
+      $terminal.write_line('73ce2cc1') # answering with an existing key name
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match("default - #{key_data['fingerprint']}")
-      key_data['keys'].each do |key, value|
-        output.should match("#{key} - #{value['fingerprint']}")
+      key_data.each do |key|
+        output.should match("Name: #{key.name}")
+        output.should match("Fingerprint: #{key.fingerprint}")
       end
-      output.should match("|#{short_name}|")
+      output.should match("|#{short_name}|") # prompt with the default name
     end
 
     it "should check for client tools via package kit and find them" do
@@ -319,10 +320,7 @@ describe RHC::Wizard do
     end
 
     it "should check for ssh keys and find a match" do
-      key_data = @wizard.get_mock_key_data
-      RHC.stub(:get_ssh_keys) do
-        key_data
-      end
+      @wizard.stub(:ssh_key_uploaded?) { true } # an SSH key already exists
       @wizard.run_next_stage # key config is pretty much a noop here
 
       # run the key check stage
@@ -396,14 +394,11 @@ describe RHC::Wizard do
 
     it "should check for ssh keys, not find it on the server and update existing key" do
       key_data = @wizard.get_mock_key_data
-      key_data['keys'].delete('73ce2cc1')
-      RHC.stub(:get_ssh_keys) do
-        key_data
-      end
+      key_data.delete_if { |k| k.name == '73ce2cc1' }
+      @rest_client.stub(:sshkeys) { key_data }
 
       @wizard.run_next_stage # key config is pretty much a noop here
 
-      @wizard.set_expected_key_name_and_action('default', 'update')
       $terminal.write_line('yes')
       $terminal.write_line('default')
 
@@ -411,7 +406,7 @@ describe RHC::Wizard do
       @wizard.run_next_stage
 
       output = $terminal.read
-      output.should match("Updating key default")
+      output.should match("Uploading key 'default'")
     end
 
     it "should check for client tools and find them" do
@@ -554,7 +549,7 @@ describe RHC::Wizard do
       @wizard.setup_mock_ssh
       @wizard.setup_mock_package_kit(false)
 
-      RHC.stub(:get_ssh_keys) { {"keys" => [], "fingerprint" => nil} }
+      @rest_client.stub(:get_ssh_keys) { [] }
       mock_carts = ['ruby', 'python', 'jbosseap']
       RHC.stub(:get_cartridges_list) { mock_carts }
       # we need to do this because get_character does not get caught
@@ -579,15 +574,15 @@ describe RHC::Wizard do
     it "should generate and upload keys since the user does not have them" do
       wizard = SSHWizardDriver.new
       wizard.stub_rhc_client_new
+      @rest_client.stub(:sshkeys) { [] }
+      @rest_client.stub(:add_key) { true } # assume key is added succesfully
       wizard.stub_user_info
-      RHC.stub(:get_ssh_keys) { {"keys" => [], "fingerprint" => nil} }
-      wizard.set_expected_key_name_and_action('default', 'add')
       $terminal.write_line("yes")
 
       wizard.run().should be_true
 
       output = $terminal.read
-      output.should match("Sending new key default")
+      output.should match("Uploading key 'default'")
     end
 
     it "should pass through since the user has keys already" do
@@ -596,9 +591,7 @@ describe RHC::Wizard do
       wizard.stub_user_info
       wizard.setup_mock_ssh(true)
       key_data = wizard.get_mock_key_data
-      RHC.stub(:get_ssh_keys) do
-        key_data
-      end
+      wizard.stub(:ssh_key_uploaded?) { true } # an SSH key already exists
 
       wizard.run().should be_true
 
@@ -650,7 +643,8 @@ describe RHC::Wizard do
       Net::SSH::KeyFactory.stub(:load_public_key) { raise NoMethodError }
       @fallback_run = false
       wizard.stub(:ssh_keygen_fallback) { @fallback_run = true }
-      RHC.stub(:get_ssh_keys) { {"keys" => [], "fingerprint" => nil} }
+      key_data = wizard.get_mock_key_data
+      @rest_client.stub(:sshkeys) { key_data }
 
       wizard.send(:ssh_key_uploaded?)
 
@@ -663,7 +657,7 @@ describe RHC::Wizard do
       @fallback_run = false
       wizard.stub(:ssh_keygen_fallback) do
         @fallback_run = true
-        "fingerprint AA:BB:CC:DD:EE:FF"
+        [OpenStruct.new( :name => 'default', :fingerprint => 'AA:BB:CC:DD:EE:FF', :type => 'ssh-rsa' )]
       end
       $?.stub(:exitstatus) { 255 }
       Net::SSH::KeyFactory.stub(:load_public_key) { raise NoMethodError }
@@ -671,7 +665,7 @@ describe RHC::Wizard do
       wizard.send(:upload_ssh_key).should be_false
 
       output = $terminal.read
-      output.should match("Your ssh public key at .* can not be read")
+      output.should match("Your ssh public key at .* is invalid or unreadable\.")
       @fallback_run.should be_true
     end
 
@@ -683,7 +677,7 @@ describe RHC::Wizard do
       wizard.send(:upload_ssh_key).should be_false
 
       output = $terminal.read
-      output.should match("Your ssh public key at .* can not be read")
+      output.should match("Your ssh public key at .* is invalid or unreadable\.")
     end
 
     it "should match ssh key fallback fingerprint to net::ssh fingerprint" do
@@ -711,17 +705,28 @@ describe RHC::Wizard do
       end
     end
     class MockRestApi
+      attr_accessor :sshkeys
+
       def initialize(end_point, name, password)
         @end_point = end_point
         @name = name
         @password = password
         @domain_name = 'testnamespace'
+        @sshkeys = {}
       end
 
       def add_domain(domain_name)
         raise RHC::Rest::ValidationException.new("Error: domain name should be '#{@domain_name}' but got '#{domain_name}'") if domain_name != @domain_name
 
         MockDomain.new(domain_name)
+      end
+
+      def add_key(name, content, type)
+        @sshkeys[name.to_sym] = ::RestSpecHelper::MockRestKey.new(name, type, content)
+      end
+    
+      def delete_key(key)
+        @sshkeys.delete_if { |k| k.name == key }
       end
     end
 
@@ -747,9 +752,10 @@ describe RHC::Wizard do
       self.send stages[@current_wizard_stage]
     end
 
+    # Set up @rest_client so that we can stub subsequent REST calls
     def stub_rhc_client_new
       RHC::Rest::Client.stub(:new) do |end_point, name, password|
-        MockRestApi.new(end_point, name, password)
+        @rest_client = MockRestApi.new(end_point, name, password)
       end
     end
 
@@ -816,17 +822,6 @@ EOF
       @platform_windows
     end
 
-    def set_expected_key_name_and_action(key_name, action)
-      @expected_key_name = key_name
-      @expected_key_action = action
-    end
-
-    def add_or_update_key(action, key_name, pub_ssh_path, username, password)
-      raise "Error: Expected '#{@expected_key_action}' ssh key action but got '#{action}'" if @expected_key_action and action != @expected_key_action
-      raise "Error: Expected '#{@expected_key_name}' ssh key name but got '#{key_name}'" if @expected_key_name and key_name != @expected_key_name
-      true
-    end
-
     def get_key_fingerprint(path=RHC::Config.ssh_pub_key_file_path)
       # returns the fingerprint and the short name used as the default
       # key name
@@ -839,14 +834,15 @@ EOF
       @ssh_keys = data
     end
 
+    class Sshkey < OpenStruct; end
+
     def get_mock_key_data
-      key_data =
-         {"keys" => {
-           "cb490595" => {"fingerprint" => "cb:49:05:95:b4:42:1c:95:74:f7:2d:41:0d:f0:37:3b"},
-           "96d90241" => {"fingerprint" => "96:d9:02:41:e1:cb:0d:ce:e5:3b:fc:da:13:65:3e:32"},
-           "73ce2cc1" => {"fingerprint" => "73:ce:2c:c1:01:ea:79:cc:f6:be:86:45:67:96:7f:e3"}
-         },
-         "fingerprint" => "0f:97:4b:82:87:bb:c6:dc:40:a3:c1:bc:bb:55:1e:fa"}
+      [
+        Sshkey.new(:name => 'default',  :type => 'ssh-rsa', :fingerprint => "0f:97:4b:82:87:bb:c6:dc:40:a3:c1:bc:bb:55:1e:fa"),
+        Sshkey.new(:name => 'cb490595', :type => 'ssh-rsa', :fingerprint => "cb:49:05:95:b4:42:1c:95:74:f7:2d:41:0d:f0:37:3b"),
+        Sshkey.new(:name => '96d90241', :type => 'ssh-rsa', :fingerprint => "96:d9:02:41:e1:cb:0d:ce:e5:3b:fc:da:13:65:3e:32"),
+        Sshkey.new(:name => '73ce2cc1', :type => 'ssh-rsa', :fingerprint => "73:ce:2c:c1:01:ea:79:cc:f6:be:86:45:67:96:7f:e3")
+      ]
     end
 
     def priv_key
