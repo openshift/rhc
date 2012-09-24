@@ -26,15 +26,14 @@ class RHC::Commands::Base
       # Check to see if we've provided a value for an option tagged as deprecated
       if (!(val = @options.__hash__[arg]).nil? && dep_info = option_meta[:deprecated])
         # Get the arg for the correct option and what the value should be
-        (correct_arg,default) = dep_info.values_at(:arg,:val)
+        (correct_arg, default) = dep_info.values_at(:key, :value)
         # Set the default value for the correct option to the passed value
         ## Note: If this isn't triggered, then the original default will be honored
         ## If the user specifies any value for the correct option, it will be used
-        options.default \
-          correct_arg => default
+        options.default correct_arg => default
         # Alert the users if they're using a deprecated option
-        (correct,incorrect) = [options_metadata.find{|x| x[:arg] == correct_arg },option_meta].flatten.map{|x| x[:switches].join(", ") }
-        RHC::Helpers.deprecated_option(incorrect,correct)
+        (correct, incorrect) = [options_metadata.find{|x| x[:arg] == correct_arg },option_meta].flatten.map{|x| x[:switches].join(", ") }
+        deprecated_option(incorrect, correct)
       end
 
       context_helper = option_meta[:context_helper]
