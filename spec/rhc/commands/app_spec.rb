@@ -7,20 +7,19 @@ describe RHC::Commands::App do
   before(:each) do
     FakeFS.activate!
     RHC::Config.set_defaults
-    instance = RHC::Commands::App.new
+    @instance = RHC::Commands::App.new
     RHC::Commands::App.stub(:new) do
-      instance.stub(:git_config_get) { "" }
-      instance.stub(:git_config_set) { "" }
+      @instance.stub(:git_config_get) { "" }
+      @instance.stub(:git_config_set) { "" }
       Kernel.stub(:sleep) { }
-      instance.stub(:git_clone_repo) do |git_url, repo_dir|
+      @instance.stub(:git_clone_repo) do |git_url, repo_dir|
         raise RHC::GitException, "Error in git clone" if repo_dir == "giterrorapp"
         Dir::mkdir(repo_dir)
       end
-      instance.stub(:host_exist?) do |host|
-        return false if host.match("dnserror")
-        true
+      @instance.stub(:host_exist?) do |host|
+        host.match("dnserror") ? false : true
       end
-      instance
+      @instance
     end
   end
 
@@ -135,6 +134,120 @@ describe RHC::Commands::App do
         domain.add_application("app2", "mock_unique_standalone_cart")
       end
       it { expect { run }.should raise_error(ArgumentError, /You have named your Jenkins application the same as an existing application/) }
+    end
+  end
+
+  describe 'app create jenkins fails to install warnings' do
+    let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--enable-jenkins', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+
+    before(:each) do
+      @rc = MockRestClient.new
+      @domain = @rc.add_domain("mockdomain")
+    end
+
+    context 'when run with error in jenkins setup' do
+      before(:each) do
+        @instance.stub(:setup_jenkins_app) { raise Exception }
+      end
+      it "should print out jenkins warning" do
+        run_output.should match("Jenkins failed to install")
+      end
+    end
+
+    context 'when run with error in jenkins-client setup' do
+      before(:each) do
+        @instance.stub(:setup_jenkins_client) { raise Exception }
+      end
+      it "should print out jenkins warning" do
+        run_output.should match("Jenkins client failed to install")
+      end
+    end
+  end
+
+  describe 'dns app create warnings' do
+    let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+
+    context 'when run' do
+      before(:each) do
+        @rc = MockRestClient.new
+        @domain = @rc.add_domain("dnserror")
+      end
+      it { run_output.should match("unable to lookup your hostname") }
+    end
+  end
+
+  describe 'app create git warnings' do
+    let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+
+    before(:each) do
+      @rc = MockRestClient.new
+      @domain = @rc.add_domain("mockdomain")
+      @instance.stub(:run_git_clone) { raise RHC::GitException }
+    end
+
+    context 'when run with error in git clone' do
+      it "should print out git warning" do
+        run_output.should match("There were issues when trying to git clone your application's repo")
+      end
+    end
+
+    context 'when run with windows and no nslookup bug' do
+      before(:each) do
+        RHC::Helpers.stub(:windows?) { true }
+        @instance.stub(:run_nslookup) { true }
+        @instance.stub(:run_ping) { true }
+      end
+      it "should print out git warning" do
+        run_output.should match("There were issues when trying to git clone your application's repo")
+      end
+    end
+
+    context 'when run with windows nslookup bug' do
+      before(:each) do
+        RHC::Helpers.stub(:windows?) { true }
+        @instance.stub(:run_nslookup) { true }
+        @instance.stub(:run_ping) { false }
+      end
+      it "should print out windows warning" do
+        run_output.should match("This may also be related to an issue with Winsock on Windows")
+      end
+    end
+  end
+
+  describe 'app create prompt for sshkeys' do
+    let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--config', '/tmp/test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+
+    before (:each) do
+      @rc = MockRestClient.new
+      @domain = @rc.add_domain("mockdomain")
+      # fakefs is activated
+      Dir.mkdir('/tmp/')
+      File.open('/tmp/test.conf', 'w') do |f|
+        f.write("rhlogin=test@test.foo")
+      end
+
+      # don't run wizard here because we test this elsewhere
+      wizard_instance = RHC::SSHWizard.new('test@test.foo', 'password')
+      wizard_instance.stub(:ssh_key_uploaded?) { true }
+      RHC::SSHWizard.stub(:new) { wizard_instance }
+      RHC::Config.stub(:should_run_ssh_wizard?) { false }
+    end
+
+    context 'when run' do
+      it { expect { run }.should exit_with_code(0) }
+    end
+  end
+
+  describe 'app git-clone' do
+    let(:arguments) { ['app', 'git-clone', '--trace', '-a', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+
+    context 'when run' do
+      before(:each) do
+        @rc = MockRestClient.new
+        @domain = @rc.add_domain("mockdomain")
+        @app = @domain.add_application("app1", "mock_unique_standalone_cart")
+      end
+      it { expect { run }.should exit_with_code(0) }
     end
   end
 

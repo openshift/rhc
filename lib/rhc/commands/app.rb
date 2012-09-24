@@ -94,7 +94,7 @@ WARNING
             run_git_clone(rest_app)
           rescue RHC::GitException => e
             warn "#{e}"
-            if RHC::Helpers.windows? and warning = windows_nslookup_bug?
+            if RHC::Helpers.windows? and warning = windows_nslookup_bug?(rest_app)
               warnings << warning
             else
               warnings << <<WARNING
@@ -381,7 +381,7 @@ a different application name." if jenkins_app_name == app_name
         windows_ping = run_ping
 
         if windows_nslookup and !windows_ping # this is related to BZ #826769
-          warning <<WINSOCKISSUE
+          warning = <<WINSOCKISSUE
 We were unable to lookup your hostname (#{rest_app.host})
 in a reasonable amount of time.  This can happen periodically and will just
 take up to 10 extra minutes to propagate depending on where you are in the
