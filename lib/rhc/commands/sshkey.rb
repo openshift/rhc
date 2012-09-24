@@ -14,10 +14,9 @@ module RHC::Commands
     syntax ''
     option ["--timeout timeout"], "Timeout, in seconds, for the session"
     def list
-      ssh_keys = rest_client.sshkeys
       results do
-        result = ssh_keys.inject('') do |result, key|
-          result += format(key, erb)
+        result = rest_client.sshkeys.inject('') do |r, key|
+          r += format(key, erb)
         end
         
         say result
