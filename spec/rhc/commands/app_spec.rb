@@ -11,6 +11,7 @@ describe RHC::Commands::App do
     RHC::Commands::App.stub(:new) do
       instance.stub(:git_config_get) { "" }
       instance.stub(:git_config_set) { "" }
+      Kernel.stub(:sleep) { }
       instance.stub(:git_clone_repo) do |git_url, repo_dir|
         raise RHC::GitException, "Error in git clone" if repo_dir == "giterrorapp"
         Dir::mkdir(repo_dir)

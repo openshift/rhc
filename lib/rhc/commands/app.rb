@@ -260,7 +260,7 @@ WARNING
         found = false
 
         # Allow DNS to propagate
-        sleep 5
+        Kernel.sleep 5
 
         # Now start checking for DNS
         sleep_time = 2
@@ -269,7 +269,7 @@ WARNING
           break if found
 
           say "    retry # #{i+1} - Waiting for DNS: #{host}"
-          sleep sleep_time.to_i
+          Kernel.sleep sleep_time.to_i
           sleep_time *= DEFAULT_DELAY_THROTTLE
         end
 
