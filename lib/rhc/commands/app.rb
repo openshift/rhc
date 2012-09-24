@@ -314,7 +314,7 @@ WARNING
 
       def jenkins_app_name
         return "jenkins" if options.enable_jenkins == true or options.enable_jenkins == "true"
-        return options.enable_jenkins if options.enable_jenkins.is_a(String)
+        return options.enable_jenkins if options.enable_jenkins.is_a?(String)
         nil
       end
 

@@ -93,19 +93,19 @@ describe RHC::Commands::App do
         @rc = MockRestClient.new
         domain = @rc.add_domain("mockdomain")
       end
-      it { expect { run }.should raise_error(ArgumentError) }
+      it { expect { run }.should raise_error(ArgumentError, /The --no-dns option can't be used in conjunction with --enable-jenkins/) }
     end
   end
 
   describe 'app create enable-jenkins with same name as app' do
-    let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--trace', '--enable-jenkins', 'app1','--no-dns', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+    let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--trace', '--enable-jenkins', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     context 'when run' do
       before(:each) do
         @rc = MockRestClient.new
         domain = @rc.add_domain("mockdomain")
       end
-      it { expect { run }.should raise_error(ArgumentError) }
+      it { expect { run }.should raise_error(ArgumentError, /You have named both your main application and your Jenkins application/) }
     end
   end
 
