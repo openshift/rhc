@@ -11,7 +11,7 @@ module RHC::Commands
     option ["-n", "--namespace namespace"], "Namespace of the application you are port forwarding to", :context => :namespace_context, :required => true
     option ["-f", "--filepath filepath"], "Local path to save tarball (default: ./$APPNAME.tar.gz)"
     argument :app, "Application you are port forwarding to (required)", ["-a", "--app app"]
-    alias_action :"app snapshot", :root_command => true
+    alias_action :"app snapshot", :root_command => true, :deprecated => true
     def save(app)
       ssh_uri = URI.parse(rest_client.find_domain(options.namespace).find_application(app).ssh_url)
       filename = "#{app}.tar.gz" unless options.filepath
@@ -55,7 +55,7 @@ module RHC::Commands
     option ["-n", "--namespace namespace"], "Namespace of the application you are port forwarding to", :context => :namespace_context, :required => true
     option ["-f", "--filepath filepath"], "Local path to save tarball (default: ./$APPNAME.tar.gz)"
     argument :app, "Application you are port forwarding to (required)", ["-a", "--app app"]
-    alias_action :"app snapshot", :root_command => true
+    alias_action :"app snapshot", :root_command => true, :deprecated => true
     def restore(app)
 
       filename = "#{app}.tar.gz" unless options.filepath
@@ -84,7 +84,6 @@ module RHC::Commands
               if $?.exitstatus != 0
                 debug output
                 raise RHC::SnapshotRestoreException.new "Error in trying to restore snapshot. You can try to restore manually by running:\n#{ssh_cmd}"
-                return 1
               end
             else
               ssh = Net::SSH.start(ssh_uri.host, ssh_uri.user)
