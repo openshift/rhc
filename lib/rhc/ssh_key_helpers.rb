@@ -83,7 +83,7 @@ module RHC
       fingerprint
     end
 
-    def fingerprint_for(key)
+    def fingerprint_for_local_key(key)
       Net::SSH::KeyFactory.load_public_key(key).fingerprint
     rescue NoMethodError, NotImplementedError => e
       ssh_keygen_fallback key
@@ -96,7 +96,7 @@ module RHC
     end
     
     def fingerprint_for_default_key
-      fingerprint_for RHC::Config::ssh_pub_key_file_path
+      fingerprint_for_local_key RHC::Config::ssh_pub_key_file_path
     end
 
     # for an SSH public key specified by 'key', return a triple
