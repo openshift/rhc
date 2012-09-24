@@ -4,6 +4,7 @@ require 'rhc/wizard'
 require 'rhc/vendor/parseconfig'
 require 'rhc/config'
 require 'ostruct'
+require 'rest_spec_helper'
 
 describe RHC::Wizard do
   before(:all) do
@@ -697,38 +698,6 @@ describe RHC::Wizard do
   end
 
   module WizardDriver
-    class MockDomain
-      attr_accessor :id
-
-      def initialize(id)
-        @id = id
-      end
-    end
-    class MockRestApi
-      attr_accessor :sshkeys
-
-      def initialize(end_point, name, password)
-        @end_point = end_point
-        @name = name
-        @password = password
-        @domain_name = 'testnamespace'
-        @sshkeys = {}
-      end
-
-      def add_domain(domain_name)
-        raise RHC::Rest::ValidationException.new("Error: domain name should be '#{@domain_name}' but got '#{domain_name}'") if domain_name != @domain_name
-
-        MockDomain.new(domain_name)
-      end
-
-      def add_key(name, content, type)
-        @sshkeys[name.to_sym] = ::RestSpecHelper::MockRestKey.new(name, type, content)
-      end
-    
-      def delete_key(key)
-        @sshkeys.delete_if { |k| k.name == key }
-      end
-    end
 
     attr_accessor :mock_user, :libra_server, :config_path, :ssh_dir
     def initialize(*args)
@@ -754,9 +723,7 @@ describe RHC::Wizard do
 
     # Set up @rest_client so that we can stub subsequent REST calls
     def stub_rhc_client_new
-      RHC::Rest::Client.stub(:new) do |end_point, name, password|
-        @rest_client = MockRestApi.new(end_point, name, password)
-      end
+      @rest_client = RestSpecHelper::MockRestClient.new
     end
 
     def stub_user_info(domains=[], app_info=[], key_type="", key="", keys={})
