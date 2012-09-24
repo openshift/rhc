@@ -127,5 +127,10 @@ describe RHC::Commands::App do
       let(:arguments) { ['app', 'reload', 'app1','--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
       it { run_output.should match('reload') }
     end
+
+    context 'app tidy' do
+      let(:arguments) { ['app', 'tidy', 'app1','--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+      it { run_output.should match('cleaned') }
+    end
   end
 end

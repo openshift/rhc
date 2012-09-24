@@ -8,8 +8,8 @@ module RHC::Commands
     def run(app)
       rest_domain = rest_client.find_domain(options.namespace)
       rest_app = rest_domain.find_application(app)
-      reply = rest_app.threaddump[:message]
-      say "#{reply}"
+      rest_app.threaddump.messages.each { |m| say m }
+
       0
     end
   end

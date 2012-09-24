@@ -153,7 +153,9 @@ describe RHC::Commands::Base do
         it do
           expects_running('static', 'exe', "arg").should call(:execute).on(instance).with('arg')
           $stderr.seek(0)
-          $stderr.read.should match("Warning: The command 'rhc static exe' is deprecated.  Please use 'rhc static execute' instead.")
+          # some systems might redirect warnings to stderr
+          output = "#{$stderr.read} #{$terminal.read}"
+          output.should match("Warning: This command is deprecated. Please use 'rhc static execute' instead.")
         end
       end
 
