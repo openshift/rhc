@@ -14,7 +14,7 @@ module RHC::Commands
     alias_action :"app snapshot", :root_command => true, :deprecated => true
     def save(app)
       ssh_uri = URI.parse(rest_client.find_domain(options.namespace).find_application(app).ssh_url)
-      filename = "#{app}.tar.gz" unless options.filepath
+      filename = options.filepath ? options.filepath : "#{app}.tar.gz"
 
       ssh_cmd = "ssh #{ssh_uri.user}@#{ssh_uri.host} 'snapshot' > #{filename}"
       debug ssh_cmd
@@ -24,7 +24,7 @@ module RHC::Commands
       begin
 
         if ! RHC::Helpers.windows?
-          output = `#{ssh_cmd}`
+          output = Kernel.` ssh_cmd
           if $?.exitstatus != 0
             debug output
             raise RHC::SnapshotSaveException.new "Error in trying to save snapshot. You can try to save manually by running:\n#{ssh_cmd}"
@@ -58,7 +58,7 @@ module RHC::Commands
     alias_action :"app snapshot", :root_command => true, :deprecated => true
     def restore(app)
 
-      filename = "#{app}.tar.gz" unless options.filepath
+      filename = options.filepath ? options.filepath : "#{app}.tar.gz"
 
       if File.exists? filename
 
@@ -80,7 +80,7 @@ module RHC::Commands
 
           begin
             if ! RHC::Helpers.windows?
-              output = `#{ssh_cmd}`
+              output = Kernel.` ssh_cmd
               if $?.exitstatus != 0
                 debug output
                 raise RHC::SnapshotRestoreException.new "Error in trying to restore snapshot. You can try to restore manually by running:\n#{ssh_cmd}"
