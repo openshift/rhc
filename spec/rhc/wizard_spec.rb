@@ -558,12 +558,7 @@ describe RHC::Wizard do
 
     it "should pass through since the user has keys already" do
       wizard = SSHWizardDriver.new
-      wizard.stub_rhc_client_new
-      wizard.stub_user_info
-      wizard.setup_mock_ssh(true)
-      key_data = wizard.get_mock_key_data
-
-      @rest_client.stub(:sshkeys) { key_data }
+      wizard.stub(:ssh_key_uploaded?) { true }
       wizard.run().should be_true
 
       output = $terminal.read
