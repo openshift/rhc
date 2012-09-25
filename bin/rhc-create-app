@@ -4,6 +4,8 @@ require 'rhc/coverage_helper'
 
 require 'rhc-common'
 
+RHC::Helpers.deprecated_command('rhc app create',true)
+
 def p_usage(error_code = 255)
     libra_server = get_var('libra_server')
     rhlogin = get_var('default_rhlogin') ? "Default: #{get_var('default_rhlogin')}" : "required"
