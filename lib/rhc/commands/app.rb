@@ -30,12 +30,14 @@ module RHC::Commands
 
       warnings = []
       header "Creating application '#{name}'"
-      table({"Namespace:" => options.namespace,
-             "Cartridge:" => cartridge,
-             "Gear Size:" => options.gear_size || "default",
-             "Scaling:" => options.scaling ? "yes" : "no",
-            }
-           ).each { |s| say "  #{s}" }
+      paragraph do
+        table({"Namespace:" => options.namespace,
+               "Cartridge:" => cartridge,
+               "Gear Size:" => options.gear_size || "default",
+               "Scaling:" => options.scaling ? "yes" : "no",
+              }
+             ).each { |s| say "  #{s}" }
+      end
 
       rest_domain = rest_client.find_domain(options.namespace)
 
@@ -51,41 +53,28 @@ module RHC::Commands
       begin
         jenkins_rest_app = setup_jenkins_app(rest_domain) if options.enable_jenkins and jenkins_rest_app.nil?
       rescue Exception => e
-        warnings << <<WARNING
-Jenkins failed to install - #{e}
-You may use these commands to create the jenkins app and install the client:
-
-  rhc app create jenkins
-  rhc cartridge add jenkins-client -a #{rest_app.name}
-
-WARNING
+        add_issue("Jenkins failed to install - #{e}",
+                  "Installing jenkins and jenkins-client",
+                  "rhc app create jenkins",
+                  "rhc cartridge add jenkins-client -a #{rest_app.name}")
       end
 
       # add jenkins-client cart
       begin
         setup_jenkins_client(rest_app) if jenkins_rest_app
       rescue Exception => e
-        warnings << <<WARNING
-Jenkins client failed to install in your application - #{e}
-You may use this command to add the client to your application
-
-  rhc cartridge add jenkins-client -a #{rest_app.name}
-
-WARNING
+        add_issue("Jenkins client failed to install - #{e}",
+                  "Install the jenkins client",
+                  "rhc cartridge add jenkins-client -a #{rest_app.name}")
       end
 
       if options.dns
         unless dns_propagated? rest_app.host
-          warnings << <<WARNING
-We were unable to lookup your hostname (#{rest_app.host}) in a reasonable amount of time.
-This can happen periodically and will just take an extra minute or two to
-propagate depending on where you are in the world. Once you are able to access
-your application in a browser, you can run this command to clone your application.
+          add_issue("We were unable to lookup your hostname (#{rest_app.host}) in a reasonable amount of time and can not clone your application.",
+                    "Clone your git repo",
+                    "rhc app clone #{rest_app.name}")
 
-  git clone #{rest_app.git_url} \"#{options.repo}\""
-
-WARNING
-          print_warnings(rest_app, warnings)
+          output_issues(rest_app)
           return 0
         end
 
@@ -94,22 +83,17 @@ WARNING
             run_git_clone(rest_app)
           rescue RHC::GitException => e
             warn "#{e}"
-            if RHC::Helpers.windows? and warning = windows_nslookup_bug?(rest_app)
-              warnings << warning
-            else
-              warnings << <<WARNING
-There were issues when trying to git clone your application's repo.  You can use this command to clone your application manually:
-
-  rhc app git-clone #{rest_app.name}
-
-WARNING
+            unless RHC::Helpers.windows? and windows_nslookup_bug?(rest_app)
+              add_issue("We were unable to clone your application's git repo - #{e}",
+                        "Clone your git repo",
+                        "rhc app clone #{rest_app.name}")
             end
           end
         end
       end
 
-      unless warnings.empty?
-        print_warnings(rest_app, warnings)
+      if issues?
+        output_issues(rest_app)
       else
         results { rest_app.messages.each { |msg| say msg } }
       end
@@ -392,55 +376,54 @@ a different application name." if jenkins_app_name == app_name
         windows_ping = run_ping
 
         if windows_nslookup and !windows_ping # this is related to BZ #826769
-          warning = <<WINSOCKISSUE
+          issue = <<WINSOCKISSUE
 We were unable to lookup your hostname (#{rest_app.host})
-in a reasonable amount of time.  This can happen periodically and will just
+in a reasonable amount of time.  This can happen periodically and may
 take up to 10 extra minutes to propagate depending on where you are in the
 world. This may also be related to an issue with Winsock on Windows [1][2].
-We recommend you wait a few minutes then clone your git repository manually with
-this command:
-
-    git clone #{rest_app.git_url} "#{options.repo}"
+We recommend you wait a few minutes then clone your git repository manually.
 
 [1] http://support.microsoft.com/kb/299357
 [2] http://support.microsoft.com/kb/811259
-
 WINSOCKISSUE
-          return warning
+          add_issue(issue,
+                    "Clone your git repo",
+                    "rhc app clone #{rest_app.name}")
+
+          return true
         end
 
         false
       end
 
-      def print_warnings(rest_app, warnings)
-        warn <<WARNING
+      def output_issues(rest_app)
+        reasons, steps = format_issues(4)
+        warn <<WARNING_OUTPUT
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- WARNING:  Some operations did not complete and your application may not be fully
-configured.  Bellow are a list of the warnings and commands you may use to
-complete your application's configuration
+WARNING:  Your application was created successfully but had problems during
+          configuration. Below is a list of the issues and steps you can
+          take to complete the configuration of your application.
 
   Application URL: #{rest_app.app_url}
 
-WARNING
+  Issues:
+#{reasons}
+  Steps to complete your configuration:
+#{steps}
+  If you can't get your application '#{rest_app.name}' running in the browser,
+  you can try destroying and recreating the application:
 
-        warnings.each { |w| warn w }
-        warn "\n"
+    $ rhc app destroy #{rest_app.name} --confirm
 
-        warn <<WARNING
-If you can't get your application '#{rest_app.name}' running in the browser, you can
-also try destroying and recreating the application as well using:
+  If this doesn't work for you, let us know in the forums or in IRC and we'll
+  make sure to get you up and running.
 
-  rhc app destroy #{rest_app.name} --confirm
+    Forums - https://openshift.redhat.com/community/forums/openshift
+    IRC - #openshift (on Freenode)
 
-If this doesn't work for you, let us know in the forums or in IRC and we'll
-make sure to get you up and running.
-
-  Forums: https://openshift.redhat.com/community/forums/openshift
-
-  IRC: #openshift (on Freenode)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-WARNING
+WARNING_OUTPUT
       end
   end
 end

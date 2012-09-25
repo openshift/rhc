@@ -19,5 +19,35 @@ module RHC
         say "Cartridges: none"
       end
     end
+
+    # Issues collector collects a set of recoverable issues and steps to fix them
+    # for output at the end of a complex command
+    def add_issue(reason, commands_header, *commands)
+      @issues ||= []
+      issue = {:reason => reason,
+               :commands_header => commands_header,
+               :commands => commands}
+      @issues << issue
+    end
+
+    def format_issues(indent)
+      return nil unless issues?
+
+      indentation = " " * indent
+      reasons = ""
+      steps = ""
+
+      @issues.each_with_index do |issue, i|
+        reasons << "#{indentation}#{i+1}. #{issue[:reason].strip}\n"
+        steps << "#{indentation}#{i+1}. #{issue[:commands_header].strip}\n"
+        issue[:commands].each { |cmd| steps << "#{indentation}  $ #{cmd}\n" }
+      end
+
+      [reasons, steps]
+    end
+
+    def issues?
+      not @issues.nil?
+    end
   end
 end
