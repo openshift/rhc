@@ -187,7 +187,7 @@ describe RHC::Commands::App do
 
     context 'when run with error in git clone' do
       it "should print out git warning" do
-        run_output.should match("There were issues when trying to git clone your application's repo")
+        run_output.should match("We were unable to clone your application's git repo")
       end
     end
 
@@ -198,7 +198,7 @@ describe RHC::Commands::App do
         @instance.stub(:run_ping) { true }
       end
       it "should print out git warning" do
-        run_output.should match("There were issues when trying to git clone your application's repo")
+        run_output.should match(" We were unable to clone your application's git repo")
       end
     end
 
