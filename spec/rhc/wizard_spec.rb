@@ -572,8 +572,8 @@ describe RHC::Wizard do
       wizard.stub_user_info
       wizard.setup_mock_ssh(true)
       key_data = wizard.get_mock_key_data
-      wizard.stub(:ssh_key_uploaded?) { true } # an SSH key already exists
 
+      @rest_client.stub(:sshkeys) { key_data }
       wizard.run().should be_true
 
       output = $terminal.read
