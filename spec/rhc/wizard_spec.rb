@@ -92,14 +92,9 @@ describe RHC::Wizard do
     end
 
     it "should show app creation commands" do
-      mock_carts = ['ruby', 'python', 'jbosseap']
-      RHC.stub(:get_cartridges_list) { mock_carts }
-      @wizard.stub_user_info
       @wizard.run_next_stage
       output = $terminal.read
-      mock_carts.each do |cart|
-        output.should match("\\* #{cart} - rhc app create -t #{cart} -a <app name>")
-      end
+      output.should match 'Below is a list of'
     end
 
     it "should show a thank you message" do
@@ -157,9 +152,8 @@ describe RHC::Wizard do
     end
 
     it "should upload ssh key as default" do
-      RHC::Rest::Client.stub(:sshkeys) { {} }
-      WizardDriver::MockRestApi.stub(:sshkeys) {[]}
-      WizardDriver::MockRestApi.stub(:add_key) {{}}
+      @rest_client.stub(:sshkeys) {[]}
+      @wizard.stub(:get_preferred_key_name) { 'default' }
       $terminal.write_line('yes')
       @wizard.run_next_stage
     end
@@ -181,14 +175,9 @@ describe RHC::Wizard do
     end
 
     it "should show app creation commands" do
-      mock_carts = ['ruby', 'python', 'jbosseap']
-      RHC.stub(:get_cartridges_list) { mock_carts }
-      @wizard.stub_user_info
       @wizard.run_next_stage
       output = $terminal.read
-      mock_carts.each do |cart|
-        output.should match("\\* #{cart} - rhc app create -t #{cart} -a <app name>")
-      end
+      output.should match 'Below is a list of'
     end
 
     it "should show a thank you message" do
@@ -272,14 +261,9 @@ describe RHC::Wizard do
     end
 
     it "should show app creation commands" do
-      mock_carts = ['ruby', 'python', 'jbosseap']
-      RHC.stub(:get_cartridges_list) { mock_carts }
-      @wizard.stub_user_info
       @wizard.run_next_stage
       output = $terminal.read
-      mock_carts.each do |cart|
-        output.should match("\\* #{cart} - rhc app create -t #{cart} -a <app name>")
-      end
+      output.should match 'Below is a list of'
     end
 
     it "should show a thank you message" do
@@ -347,14 +331,9 @@ describe RHC::Wizard do
     end
 
     it "should show app creation commands" do
-      mock_carts = ['ruby', 'python', 'jbosseap']
-      RHC.stub(:get_cartridges_list) { mock_carts }
-      @wizard.stub_user_info
       @wizard.run_next_stage
       output = $terminal.read
-      mock_carts.each do |cart|
-        output.should match("\\* #{cart} - rhc app create -t #{cart} -a <app name>")
-      end
+      output.should match 'Below is a list of'
     end
 
     it "should show a thank you message" do
@@ -526,7 +505,7 @@ describe RHC::Wizard do
 
       RHC.stub(:get_ssh_keys) { {"keys" => [], "fingerprint" => nil} }
       mock_carts = ['ruby', 'python', 'jbosseap']
-      RHC.stub(:get_cartridges_list) { mock_carts }
+      @rest_client.stub(:cartridges) { mock_carts }
 
       $terminal.write_line "#{@wizard.mock_user}"
       $terminal.write_line "password"
@@ -552,7 +531,7 @@ describe RHC::Wizard do
 
       @rest_client.stub(:get_ssh_keys) { [] }
       mock_carts = ['ruby', 'python', 'jbosseap']
-      RHC.stub(:get_cartridges_list) { mock_carts }
+      @rest_client.stub(:cartridges) { mock_carts }
       # we need to do this because get_character does not get caught
       # by our mock terminal
       @wizard.stub(:get_character) {ask ""}
@@ -592,8 +571,8 @@ describe RHC::Wizard do
       wizard.stub_user_info
       wizard.setup_mock_ssh(true)
       key_data = wizard.get_mock_key_data
-      wizard.stub(:ssh_key_uploaded?) { true } # an SSH key already exists
 
+      @rest_client.stub(:sshkeys) { key_data }
       wizard.run().should be_true
 
       output = $terminal.read
