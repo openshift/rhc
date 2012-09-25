@@ -36,7 +36,6 @@ describe RHC::Wizard do
       $terminal.write_line "#{@wizard.mock_user}"
       $terminal.write_line "password"
 
-      @wizard.stub_user_info
 
       @wizard.run_next_stage
 
@@ -81,7 +80,6 @@ describe RHC::Wizard do
     end
 
     it "should ask for a namespace" do
-      @wizard.stub_user_info
       $terminal.write_line("thisnamespaceistoobigandhastoomanycharacterstobevalid")
 
       $terminal.write_line("invalidnamespace")
@@ -121,8 +119,6 @@ describe RHC::Wizard do
       @wizard.stub_rhc_client_new
       $terminal.write_line "#{@wizard.mock_user}"
       $terminal.write_line "password"
-
-      @wizard.stub_user_info
 
       @wizard.run_next_stage
 
@@ -167,7 +163,6 @@ describe RHC::Wizard do
     end
 
     it "should ask for a namespace" do
-      @wizard.stub_user_info
       $terminal.write_line("testnamespace")
       @wizard.run_next_stage
       output = $terminal.read
@@ -197,7 +192,6 @@ describe RHC::Wizard do
 
     it "should ask for password input with default login" do
       @wizard.stub_rhc_client_new
-      @wizard.stub_user_info
 
       $terminal.write_line("") # hit enter for default
       $terminal.write_line "password"
@@ -253,7 +247,6 @@ describe RHC::Wizard do
     end
 
     it "should ask for a namespace" do
-      @wizard.stub_user_info
       $terminal.write_line("testnamespace")
       @wizard.run_next_stage
       output = $terminal.read
@@ -284,7 +277,6 @@ describe RHC::Wizard do
 
     it "should ask for password input with default login" do
       @wizard.stub_rhc_client_new
-      @wizard.stub_user_info
 
       $terminal.write_line("") # hit enter for default
       $terminal.write_line "password"
@@ -323,7 +315,6 @@ describe RHC::Wizard do
     end
 
     it "should ask for a namespace" do
-      @wizard.stub_user_info
       $terminal.write_line("testnamespace")
       @wizard.run_next_stage
       output = $terminal.read
@@ -353,7 +344,6 @@ describe RHC::Wizard do
 
     it "should ask password input with default login(use a different one)" do
       @wizard.stub_rhc_client_new
-      @wizard.stub_user_info
       $terminal.write_line(@wizard.mock_user)
       $terminal.write_line "password"
 
@@ -435,8 +425,6 @@ describe RHC::Wizard do
       $terminal.write_line "#{@wizard.mock_user}"
       $terminal.write_line "password"
 
-      @wizard.stub_user_info
-
       @wizard.run_next_stage
 
       output = $terminal.read
@@ -470,7 +458,6 @@ describe RHC::Wizard do
     end
 
     it "should ask for namespace and decline entering one" do
-      @wizard.stub_user_info
       $terminal.write_line("")
       @wizard.run_next_stage
       output = $terminal.read
@@ -495,7 +482,6 @@ describe RHC::Wizard do
     it "should run" do
       @wizard.libra_server = nil
       @wizard.stub_rhc_client_new
-      @wizard.stub_user_info
       @wizard.setup_mock_ssh
 
       RHC.stub(:get_ssh_keys) { {"keys" => [], "fingerprint" => nil} }
@@ -512,7 +498,6 @@ describe RHC::Wizard do
 
     it "should fail" do
       @wizard.stub_rhc_client_new
-      @wizard.stub_user_info
       @wizard.stub(:login_stage) { nil }
       @wizard.run().should be_nil
     end
@@ -520,7 +505,6 @@ describe RHC::Wizard do
     it "should cover package kit install steps" do
       @wizard.libra_server = nil
       @wizard.stub_rhc_client_new
-      @wizard.stub_user_info
       @wizard.setup_mock_ssh
       @wizard.setup_mock_package_kit(false)
 
@@ -691,19 +675,6 @@ describe RHC::Wizard do
     # Set up @rest_client so that we can stub subsequent REST calls
     def stub_rhc_client_new
       @rest_client = RestSpecHelper::MockRestClient.new
-    end
-
-    def stub_user_info(domains=[], app_info=[], key_type="", key="", keys={})
-      RHC.stub(:get_user_info) do
-        {"ssh_key" => key,
-         "ssh_key_type" => key_type,
-         "keys" => keys,
-         "app_info" => app_info,
-         "user_info" => {"domains" => domains,
-                         "rhc_domain" => @libra_server},
-         "domains" => domains,
-         "rhlogin" => @mock_user}
-      end
     end
 
     def setup_mock_config(rhlogin=@mock_user)
