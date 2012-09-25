@@ -547,15 +547,13 @@ describe RHC::Wizard do
     it "should generate and upload keys since the user does not have them" do
       wizard = SSHWizardDriver.new
       wizard.stub_rhc_client_new
-      @rest_client.stub(:sshkeys) { [] }
-      @rest_client.stub(:add_key) { true } # assume key is added succesfully
-      wizard.stub_user_info
-      $terminal.write_line("yes")
+      key_name = 'default'
+      $terminal.write_line("yes\n#{key_name}\n")
 
       wizard.run().should be_true
 
       output = $terminal.read
-      output.should match("Uploading key 'default'")
+      output.should match("Uploading key '#{key_name}'")
     end
 
     it "should pass through since the user has keys already" do
