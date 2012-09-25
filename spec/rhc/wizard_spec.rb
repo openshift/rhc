@@ -405,7 +405,7 @@ describe RHC::Wizard do
     end
 
     it "should list apps" do
-      @wizard.setup_mock_domain_and_applications('setnamespace', 'test1', 'test2')
+      @wizard.setup_mock_domain_and_applications('setnamespace', 'test1' => :default, 'test2' => :default)
       
       @wizard.run_next_stage
       output = $terminal.read
@@ -476,11 +476,7 @@ describe RHC::Wizard do
     end
 
     it "should list apps without domain" do
-      @wizard.stub_user_info([],
-                             {"test1" => {},
-                              "test2" => {}
-                             }
-                            )
+      @wizard.setup_mock_domain_and_applications(nil, 'test1' => nil, 'test2' => nil)
       @wizard.run_next_stage
       output = $terminal.read
       output.should match("test1 - no public url")
@@ -757,18 +753,19 @@ EOF
       self.stub(:"has_git?") { bool }
     end
     
-    def setup_mock_domain_and_applications(domain, *apps)
+    def setup_mock_domain_and_applications(domain, apps = {})
       @rest_client ||= stub_rhc_client_new
+      apps_ary = []
+      apps.each do |app, url|
+        apps_ary.push OpenStruct.new(
+          :name => app,
+          :app_url => url == :default ? "http://#{app}-#{domain}.#{@libra_server}/" : url,
+          :u => true
+        )
+      end
+                
       @rest_client.stub(:domains) {
-        [OpenStruct.new(
-          :id => domain,
-          :applications => apps.map {|app|
-            OpenStruct.new(
-              :name => app,
-              :app_url => "http://#{app}-#{domain}.#{@libra_server}/"
-            ) 
-          }
-        )]
+        [OpenStruct.new(:id => domain, :applications => apps_ary)]
       }
     end
 
