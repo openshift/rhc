@@ -232,10 +232,10 @@ WARNING
         [result, rest_app, rest_domain]
       end
 
-      def create_app(name, cartridge, rest_domain, gear_size=nil, scaling=nil)
+      def create_app(name, cartridge, rest_domain, gear_size=nil, scale=nil)
         app_options = {:cartridge => cartridge}
         app_options[:gear_profile] = gear_size if gear_size
-        app_options[:scaling] = scaling if scaling
+        app_options[:scale] = scale if scale
         app_options[:debug] = true if @debug
 
         debug "Creating application '#{name}' with these options - #{app_options}.inspect"
