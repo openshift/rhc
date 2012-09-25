@@ -117,5 +117,13 @@ describe RHC::Commands::Snapshot do
 
   end
 
+  describe 'snapshot restore file not found' do
+    let(:arguments) {['snapshot', 'restore', '--noprompt', '-l', 'test@test.foo', '-p', 'password', '--app', 'mockapp', '-f', 'foo.tar.gz']}
+
+    context 'when restoring a snapshot' do
+      it { expect { run }.should exit_with_code(130) }
+    end
+  end
+
 end
 
