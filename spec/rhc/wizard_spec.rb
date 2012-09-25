@@ -397,7 +397,7 @@ describe RHC::Wizard do
     end
 
     it "should show namespace" do
-      @wizard.setup_mock_domains('setnamespace')
+      @wizard.setup_mock_domain_and_applications('setnamespace')
       @wizard.run_next_stage
       output = $terminal.read
       output.should match("Checking for your namespace ... found namespace:")
@@ -405,11 +405,8 @@ describe RHC::Wizard do
     end
 
     it "should list apps" do
-      @wizard.stub_user_info([{"namespace" => "setnamespace"}],
-                             {"test1" => {},
-                              "test2" => {}
-                             }
-                            )
+      @wizard.setup_mock_domain_and_applications('setnamespace', 'test1', 'test2')
+      
       @wizard.run_next_stage
       output = $terminal.read
       output.should match("test1 - http://test1-setnamespace.#{@wizard.libra_server}/")
@@ -760,12 +757,18 @@ EOF
       self.stub(:"has_git?") { bool }
     end
     
-    def setup_mock_domains(*names)
+    def setup_mock_domain_and_applications(domain, *apps)
       @rest_client ||= stub_rhc_client_new
       @rest_client.stub(:domains) {
-        names.map do |name|
-          OpenStruct.new(:id => name)
-        end
+        [OpenStruct.new(
+          :id => domain,
+          :applications => apps.map {|app|
+            OpenStruct.new(
+              :name => app,
+              :app_url => "http://#{app}-#{domain}.#{@libra_server}/"
+            ) 
+          }
+        )]
       }
     end
 
