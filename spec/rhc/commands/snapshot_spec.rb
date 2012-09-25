@@ -5,11 +5,20 @@ require 'rhc/config'
 
 describe RHC::Commands::Snapshot do
 
+  APP_NAME = 'mockapp'
+
   before(:each) do
     RHC::Config.set_defaults
     @rc = MockRestClient.new
-    @app = @rc.add_domain("mockdomain").add_application 'mockapp', 'mock-1.0'
+    @app = @rc.add_domain("mockdomain").add_application APP_NAME, 'mock-1.0'
     @ssh_uri = URI.parse @app.ssh_url
+    filename = APP_NAME + '.tar.gz'
+    FileUtils.cp(File.expand_path('../../assets/targz_sample.tar.gz', __FILE__), filename)
+  end
+
+  after(:each) do
+    filename = APP_NAME + '.tar.gz'
+    File.delete filename if File.exist? filename
   end
 
   describe 'snapshot save' do
@@ -82,7 +91,13 @@ describe RHC::Commands::Snapshot do
         channel.should_receive(:on_data).and_yield(nil, 'foo')
         channel.should_receive(:on_extended_data).and_yield(nil, nil, 'foo')
         channel.should_receive(:on_close).and_yield(nil)
-        channel.should_receive(:send_data).with('foo')
+        lines = ''
+        File.open(File.expand_path('../../assets/targz_sample.tar.gz', __FILE__), 'rb') do |file|
+          file.chunk(1024) do |chunk|
+            lines << chunk
+          end
+        end
+        channel.should_receive(:send_data).with(lines)
         channel.should_receive(:eof!)
         session.should_receive(:loop)
       end
