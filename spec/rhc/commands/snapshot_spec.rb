@@ -6,13 +6,10 @@ require 'rhc/config'
 describe RHC::Commands::Snapshot do
 
   before(:each) do
-    #FakeFS.activate!
     RHC::Config.set_defaults
-  end
-
-  after(:each) do
-    #FakeFS::FileSystem.clear
-    #FakeFS.deactivate!
+    @rc = MockRestClient.new
+    @app = @rc.add_domain("mockdomain").add_application 'mockapp', 'mock-1.0'
+    @ssh_uri = URI.parse @app.ssh_url
   end
 
   describe 'snapshot save' do
@@ -20,35 +17,26 @@ describe RHC::Commands::Snapshot do
 
     context 'when saving a snapshot' do
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mockdomain")
-        app = domain.add_application 'mockapp', 'mock-1.0'
-        uri = URI.parse app.ssh_url
-        Kernel.should_receive(:`).with("ssh #{uri.user}@#{uri.host} 'snapshot' > #{app.name}.tar.gz")
+        Kernel.should_receive(:`).with("ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'snapshot' > #{@app.name}.tar.gz")
       end
       it { expect { run }.should exit_with_code(0) }
     end
 
     context 'when failing to save a snapshot' do
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mockdomain")
-        app = domain.add_application 'mockapp', 'mock-1.0'
+        Kernel.should_receive(:`).with("ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'snapshot' > #{@app.name}.tar.gz")
+        $?.stub(:exitstatus) { 1 }
       end
       it { expect { run }.should exit_with_code(130) }
     end
 
     context 'when saving a snapshot on windows' do
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mockdomain")
-        app = domain.add_application 'mockapp', 'mock-1.0'
         RHC::Helpers.stub(:windows?) do ; true; end
         RHC::Helpers.stub(:jruby?) do ; false ; end
         RHC::Helpers.stub(:linux?) do ; false ; end
-        uri = URI.parse app.ssh_url
         ssh = mock(Net::SSH)
-        Net::SSH.should_receive(:start).with(uri.host, uri.user).and_yield(ssh)
+        Net::SSH.should_receive(:start).with(@ssh_uri.host, @ssh_uri.user).and_yield(ssh)
         ssh.should_receive(:exec!).with("snapshot").and_yield(nil, :stdout, 'foo').and_yield(nil, :stderr, 'foo')
       end
       it { expect { run }.should exit_with_code(0) }
@@ -57,15 +45,11 @@ describe RHC::Commands::Snapshot do
 
     context 'when timing out on windows' do
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mockdomain")
-        app = domain.add_application 'mockapp', 'mock-1.0'
         RHC::Helpers.stub(:windows?) do ; true; end
         RHC::Helpers.stub(:jruby?) do ; false ; end
         RHC::Helpers.stub(:linux?) do ; false ; end
-        uri = URI.parse app.ssh_url
         ssh = mock(Net::SSH)
-        Net::SSH.should_receive(:start).with(uri.host, uri.user).and_raise(Timeout::Error)
+        Net::SSH.should_receive(:start).with(@ssh_uri.host, @ssh_uri.user).and_raise(Timeout::Error)
       end
       it { expect { run }.should exit_with_code(130) }
     end
@@ -77,30 +61,22 @@ describe RHC::Commands::Snapshot do
 
     context 'when restoring a snapshot' do
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mockdomain")
-        app = domain.add_application 'mockapp', 'mock-1.0'
-        uri = URI.parse app.ssh_url
         File.stub!(:exists?).and_return(true)
         RHC::TarGz.stub!(:contains).and_return(true)
-        Kernel.should_receive(:`).with("cat #{app.name}.tar.gz | ssh #{uri.user}@#{uri.host} 'restore INCLUDE_GIT'")
+        Kernel.should_receive(:`).with("cat #{@app.name}.tar.gz | ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'restore INCLUDE_GIT'")
       end
       it { expect { run }.should exit_with_code(0) }
     end
 
     context 'when restoring a snapshot on windows' do
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mockdomain")
-        app = domain.add_application 'mockapp', 'mock-1.0'
-        uri = URI.parse app.ssh_url
         RHC::Helpers.stub(:windows?) do ; true; end
         RHC::Helpers.stub(:jruby?) do ; false ; end
         RHC::Helpers.stub(:linux?) do ; false ; end
         ssh = mock(Net::SSH)
         session = mock(Net::SSH::Connection::Session)
         channel = mock(Net::SSH::Connection::Channel)
-        Net::SSH.should_receive(:start).with(uri.host, uri.user).and_return(session)
+        Net::SSH.should_receive(:start).with(@ssh_uri.host, @ssh_uri.user).and_return(session)
         session.should_receive(:open_channel).and_yield(channel)
         channel.should_receive(:exec).with("restore").and_yield(nil, nil)
         channel.should_receive(:on_data).and_yield(nil, 'foo')
@@ -115,15 +91,11 @@ describe RHC::Commands::Snapshot do
 
     context 'when timing out on windows' do
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mockdomain")
-        app = domain.add_application 'mockapp', 'mock-1.0'
         RHC::Helpers.stub(:windows?) do ; true; end
         RHC::Helpers.stub(:jruby?) do ; false ; end
         RHC::Helpers.stub(:linux?) do ; false ; end
-        uri = URI.parse app.ssh_url
         ssh = mock(Net::SSH)
-        Net::SSH.should_receive(:start).with(uri.host, uri.user).and_raise(Timeout::Error)
+        Net::SSH.should_receive(:start).with(@ssh_uri.host, @ssh_uri.user).and_raise(Timeout::Error)
       end
       it { expect { run }.should exit_with_code(130) }
     end
