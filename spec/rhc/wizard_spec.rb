@@ -397,20 +397,22 @@ describe RHC::Wizard do
     end
 
     it "should show namespace" do
-      @wizard.setup_mock_domain_and_applications('setnamespace')
+      ns = 'setnamespace'
+      @wizard.setup_mock_domain_and_applications(ns)
       @wizard.run_next_stage
       output = $terminal.read
       output.should match("Checking for your namespace ... found namespace:")
-      output.should match("setnamespace")
+      output.should match(ns)
     end
 
     it "should list apps" do
-      @wizard.setup_mock_domain_and_applications('setnamespace', 'test1' => :default, 'test2' => :default)
+      ns = 'setnamespace'
+      @wizard.setup_mock_domain_and_applications(ns, 'test1' => :default, 'test2' => :default)
       
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match("test1 - http://test1-setnamespace.#{@wizard.libra_server}/")
-      output.should match("test2 - http://test2-setnamespace.#{@wizard.libra_server}/")
+      output.should match("test1 - http://test1-#{ns}.#{@wizard.libra_server}/")
+      output.should match("test2 - http://test2-#{ns}.#{@wizard.libra_server}/")
     end
 
     it "should show a thank you message" do
