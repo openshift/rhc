@@ -12,7 +12,7 @@ module RHC
         say "\nCartridges:"
         carts.each do |c|
           connection_url = c.property(:cart_data, :connection_url) || c.property(:cart_data, :job_url) || c.property(:cart_data, :monitoring_url)
-          value = connection_url ? " - #{connection_url['value']}" : ""
+          value = connection_url ? " - #{connection_url['value']}".rstrip : ""
           say "  #{c.name}#{value}"
         end
       else
