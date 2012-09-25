@@ -152,9 +152,8 @@ describe RHC::Wizard do
     end
 
     it "should upload ssh key as default" do
-      RHC::Rest::Client.stub(:sshkeys) { {} }
       @rest_client.stub(:sshkeys) {[]}
-      @rest_client.stub(:add_key) {{}}
+      @wizard.stub(:get_preferred_key_name) { 'default' }
       $terminal.write_line('yes')
       @wizard.run_next_stage
     end
