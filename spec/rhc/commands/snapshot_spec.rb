@@ -6,32 +6,25 @@ require 'rhc/config'
 describe RHC::Commands::Snapshot do
 
   before(:each) do
-    FakeFS.activate!
+    #FakeFS.activate!
     RHC::Config.set_defaults
-    File.open(File.expand_path('../../../lib/rhc/usage_templates/command_help.erb', __FILE__), 'w') do |f|
-      f.write("foo")
-    end
   end
 
   after(:each) do
-    FakeFS::FileSystem.clear
-    FakeFS.deactivate!
+    #FakeFS::FileSystem.clear
+    #FakeFS.deactivate!
   end
 
   describe 'snapshot save' do
-    let(:arguments) {['snapshot', 'save', '--noprompt', '--config', '/tmp/test.conf', '-l', 'test@test.foo', '-p', 'password', '--app', 'mockapp', '-f', '/tmp/snapshot.tar.gz']}
+    let(:arguments) {['snapshot', 'save', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p', 'password', '--app', 'mockapp']}
 
     context 'when saving a snapshot' do
       before(:each) do
-        Dir.mkdir('/tmp/')
-        File.open('/tmp/test.conf', 'w') do |f|
-          f.write("rhlogin=test@test.foo")
-        end
         @rc = MockRestClient.new
         domain = @rc.add_domain("mockdomain")
         app = domain.add_application 'mockapp', 'mock-1.0'
         uri = URI.parse app.ssh_url
-        Kernel.should_receive(:`).with("ssh #{uri.user}@#{uri.host} 'snapshot' > /tmp/snapshot.tar.gz")
+        Kernel.should_receive(:`).with("ssh #{uri.user}@#{uri.host} 'snapshot' > #{app.name}.tar.gz")
       end
       it { expect { run }.should exit_with_code(0) }
     end
@@ -47,10 +40,6 @@ describe RHC::Commands::Snapshot do
 
     context 'when saving a snapshot on windows' do
       before(:each) do
-        Dir.mkdir('/tmp/')
-        File.open('/tmp/test.conf', 'w') do |f|
-          f.write("rhlogin=test@test.foo")
-        end
         @rc = MockRestClient.new
         domain = @rc.add_domain("mockdomain")
         app = domain.add_application 'mockapp', 'mock-1.0'
@@ -84,31 +73,23 @@ describe RHC::Commands::Snapshot do
   end
 
   describe 'snapshot restore' do
-    let(:arguments) {['snapshot', 'restore', '--noprompt', '--config', '/tmp/test.conf', '-l', 'test@test.foo', '-p', 'password', '--app', 'mockapp', '-', '/tmp/snapshot.tar.gz']}
+    let(:arguments) {['snapshot', 'restore', '--noprompt', '-l', 'test@test.foo', '-p', 'password', '--app', 'mockapp']}
 
     context 'when restoring a snapshot' do
       before(:each) do
-        Dir.mkdir('/tmp/')
-        File.open('/tmp/test.conf', 'w') do |f|
-          f.write("rhlogin=test@test.foo")
-        end
         @rc = MockRestClient.new
         domain = @rc.add_domain("mockdomain")
         app = domain.add_application 'mockapp', 'mock-1.0'
         uri = URI.parse app.ssh_url
         File.stub!(:exists?).and_return(true)
         RHC::TarGz.stub!(:contains).and_return(true)
-        Kernel.should_receive(:`).with("cat /tmp/snapshot.tar.gz | ssh #{uri.user}@#{uri.host} 'restore INCLUDE_GIT'")
+        Kernel.should_receive(:`).with("cat #{app.name}.tar.gz | ssh #{uri.user}@#{uri.host} 'restore INCLUDE_GIT'")
       end
       it { expect { run }.should exit_with_code(0) }
     end
 
     context 'when restoring a snapshot on windows' do
       before(:each) do
-        Dir.mkdir('/tmp/')
-        File.open('/tmp/test.conf', 'w') do |f|
-          f.write("rhlogin=test@test.foo")
-        end
         @rc = MockRestClient.new
         domain = @rc.add_domain("mockdomain")
         app = domain.add_application 'mockapp', 'mock-1.0'
