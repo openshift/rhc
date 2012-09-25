@@ -59,23 +59,8 @@ module RHC::Commands
             say "No applications.  You can use 'rhc app create' to create new applications."
           else
             apps.each_with_index do |a,i|
-              carts = a.cartridges
               section(:top => (i == 0 ? 1 : 2)) do
-                header "%s @ %s" % [a.name, a.app_url]
-                say "Created: #{date(a.creation_time)}"
-                #say "         UUID: #{a.uuid}"
-                say "Git URL: #{a.git_url}" if a.git_url
-                say "Aliases: #{a.aliases.join(', ')}" if a.aliases and not a.aliases.empty?
-                if carts.present?
-                  say "\nCartridges:"
-                  carts.each do |c|
-                    connection_url = c.property(:cart_data, :connection_url) || c.property(:cart_data, :job_url) || c.property(:cart_data, :monitoring_url)
-                    value = connection_url ? " - #{connection_url['value']}" : ""
-                    say "  #{c.name}#{value}"
-                  end
-                else
-                  say "Cartridges: none"
-                end
+                say_app_info(a)
               end
             end
           end

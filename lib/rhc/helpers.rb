@@ -21,6 +21,9 @@ module RHC
 
     extend self
 
+    MAX_RETRIES = 7
+    DEFAULT_DELAY_THROTTLE = 2.0
+
     def disable_deprecated?
       # 1) default for now is false
       # 2) when releasing a 1.0 beta flip this to true
@@ -93,6 +96,29 @@ module RHC
     #
     # Output helpers
     #
+
+    def debug(msg)
+      puts "DEBUG: #{msg}" if debug?
+    end
+
+    def deprecated_command(correct,short = false)
+      deprecated("This command is deprecated. Please use '#{correct}' instead.",short)
+    end
+
+    def deprecated_option(deprecated,new)
+      deprecated("The option '#{deprecated}' is deprecated. Please use '#{new}' instead")
+    end
+
+    def deprecated(msg,short = false)
+      info = " For porting and testing purposes you may switch this %s to a %s by setting the DISABLE_DEPRECATED environment variable to %d.  It is not recommended to do so in a production environment as this option may be removed in future releases."
+
+      msg << info unless short
+      if RHC::Helpers.disable_deprecated?
+        raise DeprecatedError.new(msg % ['error','warning',0])
+      else
+        warn "Warning: #{msg}\n" % ['warning','error',1]
+      end
+    end
 
     def say(msg)
       super
@@ -224,6 +250,16 @@ module RHC
     def jruby? ; RUBY_PLATFORM =~ /java/i end
     def windows? ; RUBY_PLATFORM =~ /win(32|dows|ce)|djgpp|(ms|cyg|bcc)win|mingw32/i end
     def unix? ; !jruby? && !windows? end
+    
+    # common SSH key display format in ERB
+    def ssh_key_display_format
+      ERB.new <<-FORMAT
+       Name: <%= key.name %>
+       Type: <%= key.type %>
+Fingerprint: <%= key.fingerprint %>
+
+      FORMAT
+    end
 
   end
 end

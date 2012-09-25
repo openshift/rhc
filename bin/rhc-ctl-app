@@ -3,6 +3,15 @@
 require 'rhc/coverage_helper'
 
 require 'rhc-common'
+if ARGV.include? "--alias"
+  RHC::Helpers.deprecated_command('rhc alias (add|remove)',true)
+elsif ARGV.include? "-e" or ARGV.include? "--embed"
+  RHC::Helpers.deprecated_command('rhc cartridge (add|remove)',true)
+elsif ARGV.include? "-L" or ARGV.include? "--embed-list"
+  RHC::Helpers.deprecated_command('rhc cartridge list',true)
+else
+  RHC::Helpers.deprecated_command('rhc app (start|stop|force-stop|restart|reload|status|destroy|tidy)',true)
+end
 
 embed_mapper = { 'add' => 'configure', 'remove' => 'deconfigure' }
 

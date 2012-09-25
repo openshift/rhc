@@ -4,6 +4,9 @@ require 'rhc/coverage_helper'
 
 require 'rhc-common'
 
+puts "Warning: This command is deprecated and will be removed in the future. Please use 'rhc snapshot' instead."
+puts""
+
 #
 # print help
 #

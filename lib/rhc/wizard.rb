@@ -85,13 +85,12 @@ module RHC
         @password = RHC::get_password if @password.nil?
       end
 
-      # Confirm username / password works:
-      user_info = RHC::get_user_info(@libra_server, @username, @password, RHC::Config.default_proxy, true)
-
       # instantiate a REST client that stages can use
-      # TODO: use only REST calls in the wizard
       end_point = "https://#{@libra_server}/broker/rest/api"
       @rest_client = RHC::Rest::Client.new(end_point, @username, @password)
+      
+      # confirm that the REST client can connect
+      return false unless @rest_client.user
 
       true
     end
@@ -136,86 +135,50 @@ EOF
       true
     end
 
-    def ssh_keygen_fallback(ssh_pub_key_file_path)
-      `ssh-keygen -lf #{ssh_pub_key_file_path} 2>&1`.split(' ')[1]
-    end
-
+    # return true if the account has the public key defined by
+    # RHC::Config::ssh_pub_key_file_path
     def ssh_key_uploaded?
-      @ssh_keys = RHC::get_ssh_keys(@libra_server, @username, @password, RHC::Config.default_proxy)
-      additional_ssh_keys = @ssh_keys['keys']
-
-      local_fingerprint = nil
-      begin
-        local_fingerprint = Net::SSH::KeyFactory.load_public_key(RHC::Config.ssh_pub_key_file_path).fingerprint
-      rescue NoMethodError #older net/ssh (mac for example)
-        local_fingerprint = ssh_keygen_fallback RHC::Config.ssh_pub_key_file_path
-      end
-
-      return true if @ssh_keys['fingerprint'] == local_fingerprint
-      additional_ssh_keys.each do |name, keyval|
-        return true if keyval['fingerprint'] == local_fingerprint
-      end
-
-      false
+      @ssh_keys ||= @rest_client.sshkeys
+      @ssh_keys.any? { |k| k.fingerprint == fingerprint_for_default_key }
     end
 
-    def upload_ssh_key
-      additional_ssh_keys = @ssh_keys['keys']
-      known_keys = []
+    def existing_keys_info
+      return unless @ssh_keys
+      # TODO: This ERB format is shared with RHC::Commands::Sshkey; should be refactored
+      @ssh_keys.inject("Current Keys: \n") do |result, key|
+        erb = ::RHC::Helpers.ssh_key_display_format
+        result += format(key, erb)
+      end
+    end
 
+    def get_preferred_key_name
       paragraph do
         say "You can enter a name for your key, or leave it blank to use the default name. " \
             "Using the same name as an existing key will overwrite the old key."
       end
+      key_name = 'default'
 
-      section(:top => 1) { say 'Current Keys:' }
-      if @ssh_keys['fingerprint'].nil?
-        section(:bottom => 1) { say "    None" }
-      else
-        known_keys << 'default'
-        section do
-          say "    default - #{@ssh_keys['fingerprint']}"
-        end
-      end
-
-      if additional_ssh_keys && additional_ssh_keys.kind_of?(Hash)
-        section(:bottom => 1) do
-          additional_ssh_keys.each do |name, keyval|
-            say "    #{name} - #{keyval['fingerprint']}"
-            known_keys.push(name)
-          end
-        end
-      end
-
-      if @ssh_keys['fingerprint'].nil?
-        key_name = "default"
+      if @ssh_keys.empty?
         paragraph do
-          say "Since you do not have any keys associated with your OpenShift account, " \
-              "your new key will be uploaded as the default key"
+          say <<-DEFAULT_KEY_UPLOAD_MSG
+Since you do not have any keys associated with your OpenShift account,
+your new key will be uploaded as the 'default' key
+          DEFAULT_KEY_UPLOAD_MSG
         end
       else
-        key_fingerprint = nil
-        key_valid = true
-        begin
-          key_fingerprint = Net::SSH::KeyFactory.load_public_key(RHC::Config.ssh_pub_key_file_path).fingerprint
-        rescue NoMethodError #older net/ssh (mac for example)
-          key_fingerprint = ssh_keygen_fallback RHC::Config.ssh_pub_key_file_path
-          if $?.exitstatus != 0
-            key_valid = false
-          end
-        rescue Net::SSH::Exception, NotImplementedError
-          key_valid = false
-        end
+        section(:top => 1) { say existing_keys_info }
 
-        if ! key_valid
+        key_fingerprint = fingerprint_for_default_key
+        unless key_fingerprint
           paragraph do
-            say "Your ssh public key at #{RHC::Config.ssh_pub_key_file_path} can not be read. " \
-                "The setup can not continue until you manually remove or fix both of your " \
-                "public and private keys id_rsa keys."
-            end
-          return false
+            say <<-CONFIG_KEY_INVALID
+Your ssh public key at #{RHC::Config.ssh_pub_key_file_path} is invalid or unreadable.
+The setup can not continue until you manually remove or fix both of your
+public and private keys id_rsa keys.
+            CONFIG_KEY_INVALID
+          end
+          return nil
         end
-
         pubkey_default_name = key_fingerprint[0, 12].gsub(/[^0-9a-zA-Z]/,'')
         paragraph do
           key_name =  ask("Provide a name for this key: ") do |q|
@@ -225,33 +188,41 @@ EOF
         end
       end
 
-      if known_keys.include?(key_name)
-        section do
-          say "Key already exists!  Updating key #{key_name} .. "
-          add_or_update_key('update', key_name, RHC::Config.ssh_pub_key_file_path, @username, @password)
-        end
-      else
-        section do
-          say "Sending new key #{key_name} .. "
-          add_or_update_key('add', key_name, RHC::Config.ssh_pub_key_file_path, @username, @password)
-        end
+      key_name
+    end
+
+    def upload_ssh_key
+      key_name = get_preferred_key_name
+      return false unless key_name
+
+      if !@ssh_keys.empty? && @ssh_keys.any? { |k| k.name == key_name }
+        say "Key with the name #{key_name} already exists. Deleting... "
+        @rest_client.delete_key key_name
       end
+
+      say "Uploading key '#{key_name}' from #{RHC::Config::ssh_pub_key_file_path}"
+
+      type, content, comment = ssh_key_triple_for_default_key
+
+      say "type: %s\ncontent: %s\nfingerprint: %s" % [type, content, fingerprint_for_default_key]
+
+      @rest_client.add_key key_name, content, type
       true
     end
 
     def upload_ssh_key_stage
-      unless ssh_key_uploaded?
-        upload = false
-        section do
-          upload = agree "Your public ssh key must be uploaded to the OpenShift server.  Would you like us to upload it for you? (yes/no) "
-        end
+      return true if ssh_key_uploaded?
 
-        if upload
-          upload_ssh_key
-        else
-          paragraph do
-            say "You can upload your ssh key at a later time using the 'rhc sshkey' command"
-          end
+      upload = false
+      section do
+        upload = agree "Your public ssh key must be uploaded to the OpenShift server.  Would you like us to upload it for you? (yes/no) "
+      end
+
+      if upload
+        upload_ssh_key
+      else
+        paragraph do
+          say "You can upload your ssh key at a later time using the 'rhc sshkey' command"
         end
       end
       true
@@ -294,14 +265,13 @@ EOF
     def config_namespace_stage
       paragraph do
         say "Checking for your namespace ... "
-        user_info = RHC::get_user_info(@libra_server, @username, @password, RHC::Config.default_proxy, true)
-        domains = user_info['user_info']['domains']
+        domains = @rest_client.domains
         if domains.length == 0
           say "not found"
           ask_for_namespace
         else
           say "found namespace:"
-          domains.each { |d| say "    #{d['namespace']}" }
+          domains.each { |d| say "    #{d.id}" }
         end
       end
 
@@ -312,33 +282,30 @@ EOF
       section do
         say "Checking for applications ... "
       end
-      user_info = RHC::get_user_info(@libra_server, @username, @password, RHC::Config.default_proxy, true)
-      apps = user_info['app_info']
+      
+      apps = @rest_client.domains.inject([]) do |list, domain|
+        list += domain.applications
+      end
+      
       if !apps.nil? and !apps.empty?
         section(:bottom => 1) do
           say "found"
-          apps.each do |app_name, app_info|
-            app_url = nil
-            unless user_info['user_info']['domains'].empty?
-              app_url = "http://#{app_name}-#{user_info['user_info']['domains'][0]['namespace']}.#{user_info['user_info']['rhc_domain']}/"
-            end
-
-            if app_url.nil?
-              say "    * #{app_name} - no public url (you need to add a namespace)"
+          apps.each do |app|
+            if app.app_url.nil? && app.u
+              say "    * #{app.name} - no public url (you need to add a namespace)"
             else
-              say "    * #{app_name} - #{app_url}"
+              say "    * #{app.name} - #{app.app_url}"
             end
           end
         end
       else
         section(:bottom => 1) { say "none found" }
         paragraph do
-          say "Below is a list of the types of application " \
-              "you can create: "
+          say "Below is a list of the types of application you can create: \n"
 
-          application_types = RHC::get_cartridges_list @libra_server, RHC::Config.default_proxy
-          application_types.each do |cart|
-            say "    * #{cart} - rhc app create -t #{cart} -a <app name>"
+          application_types = @rest_client.cartridges
+          application_types.sort {|a,b| a.name <=> b.name }.each do |cart|
+            say "    * #{cart.name} - rhc app create -t #{cart.name} -a <app name>"
           end
         end
       end
