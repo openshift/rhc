@@ -397,7 +397,7 @@ describe RHC::Wizard do
     end
 
     it "should show namespace" do
-      @wizard.stub_user_info([{"namespace" => "setnamespace"}])
+      @wizard.setup_mock_domains('setnamespace')
       @wizard.run_next_stage
       output = $terminal.read
       output.should match("Checking for your namespace ... found namespace:")
@@ -758,6 +758,15 @@ EOF
 
     def setup_mock_has_git(bool)
       self.stub(:"has_git?") { bool }
+    end
+    
+    def setup_mock_domains(*names)
+      @rest_client ||= stub_rhc_client_new
+      @rest_client.stub(:domains) {
+        names.map do |name|
+          OpenStruct.new(:id => name)
+        end
+      }
     end
 
     def windows=(bool)
