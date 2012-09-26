@@ -77,6 +77,24 @@ describe RHC::Commands::Snapshot do
       it { expect { run }.should exit_with_code(0) }
     end
 
+    context 'when trying to restore a snapshot with invalid file' do
+      before(:each) do
+        File.stub!(:exists?).and_return(true)
+        RHC::TarGz.stub!(:contains).and_return(false)
+      end
+      it { expect { run }.should exit_with_code(130) }
+    end
+
+    context 'when restoring a snapshot and failing to ssh' do
+      before(:each) do
+        File.stub!(:exists?).and_return(true)
+        RHC::TarGz.stub!(:contains).and_return(true)
+        Kernel.should_receive(:`).with("cat #{@app.name}.tar.gz | ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'restore INCLUDE_GIT'")
+        $?.stub(:exitstatus) { 1 }
+      end
+      it { expect { run }.should exit_with_code(130) }
+    end
+
     context 'when restoring a snapshot on windows' do
       before(:each) do
         RHC::Helpers.stub(:windows?) do ; true; end
@@ -119,7 +137,6 @@ describe RHC::Commands::Snapshot do
 
   describe 'snapshot restore file not found' do
     let(:arguments) {['snapshot', 'restore', '--noprompt', '-l', 'test@test.foo', '-p', 'password', '--app', 'mockapp', '-f', 'foo.tar.gz']}
-
     context 'when restoring a snapshot' do
       it { expect { run }.should exit_with_code(130) }
     end
