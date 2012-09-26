@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 0.99.2
+Version: 0.99.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -114,6 +114,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Sep 26 2012 Adam Miller <admiller@redhat.com> 0.99.3-1
+- BZ858144 Lost threaddump help doc in man rhc (calfonso@redhat.com)
+
 * Thu Sep 20 2012 Adam Miller <admiller@redhat.com> 0.99.2-1
 - Updated rhc cucumber tests (fotios@redhat.com)
 - Merge pull request #161 from calfonso/master (openshift+bot@redhat.com)
