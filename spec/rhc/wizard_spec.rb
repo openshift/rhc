@@ -645,11 +645,25 @@ describe RHC::Wizard do
       end
       FakeFS.activate!
     end
+    
+    context "when REST Client gets ValidationException for #add_domain" do
+      it "prints the exception message" do
+        msg = "Resource conflict"
+        wizard = FirstRunWizardDriver.new
+        wizard.rest_client.stub(:add_domain) { raise RHC::Rest::ValidationException, msg }
+        $terminal.write_line "testnamespace" # try to add a namespace
+        $terminal.write_line '' # the above input will raise exception.
+                                # we now skip configuring namespace.
+        wizard.send(:ask_for_namespace)
+        output = $terminal.read
+        output.should match msg
+      end
+    end
   end
 
   module WizardDriver
 
-    attr_accessor :mock_user, :libra_server, :config_path, :ssh_dir
+    attr_accessor :mock_user, :libra_server, :config_path, :ssh_dir, :rest_client
     def initialize(*args)
       RHC::Config.home_dir = '/home/mock_user'
       super *args
