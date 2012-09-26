@@ -226,6 +226,12 @@ module RestSpecHelper
     end
   end
 
+  class MockRestGearGroup < RHC::Rest::GearGroup
+    def initialize
+      @gears = [{'state' => 'started', 'id' => 'fakegearid'}]
+    end
+  end
+
   class MockRestApplication < RHC::Rest::Application
     def fakeuuid
       "fakeuuidfortests#{@name}"
@@ -262,6 +268,11 @@ module RestSpecHelper
       c = MockRestCartridge.new(name, type, self)
       @cartridges << c
       c
+    end
+
+    def gear_groups
+      # we don't have heavy interaction with gear groups yet so keep this simple
+      @gear_groups ||= [MockRestGearGroup.new]
     end
 
     def cartridges

@@ -303,6 +303,31 @@ describe RHC::Commands::App do
     end
   end
 
+  describe 'app show --apache' do
+    let(:arguments) { ['app', 'show', 'app1', '--apache', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+
+    context 'when run' do
+      before(:each) do
+        @rc = MockRestClient.new
+        @domain = @rc.add_domain("mockdomain")
+        @domain.add_application("app1", "mock_type")
+      end
+      it { run_output.should match("started") }
+    end
+  end
+
+  describe 'app status' do
+    let(:arguments) { ['app', 'status', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+
+    context 'when run' do
+      before(:each) do
+        @rc = MockRestClient.new
+        @domain = @rc.add_domain("mockdomain")
+        @domain.add_application("app1", "mock_type")
+      end
+      it { run_output.should match("started") }
+    end
+  end
 
   describe 'app actions' do
 

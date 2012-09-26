@@ -20,6 +20,11 @@ module RHC
         rest_method "LIST_CARTRIDGES"
       end
 
+      def gear_groups
+        debug "Getting all gear groups for application #{name}"
+        rest_method "GET_GEAR_GROUPS"
+      end
+
       def start
         debug "Starting application #{name}"
         rest_method 'START', :event => "start"

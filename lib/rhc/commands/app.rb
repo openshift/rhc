@@ -197,7 +197,7 @@ module RHC::Commands
     summary "Clean out the application's logs and tmp directories and tidy up the git repo on the server"
     syntax "<app> [--namespace namespace] [--app app]"
     argument :app, "he name of the application you are stopping", ["-a", "--app app"], :context => :app_context
-    option ["-n", "--namespace namespace"], "Namespace of the application the cartrdige belongs to", :context => :namespace_context, :required => true
+    option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
     def tidy(app)
       app_action app, :tidy
 
@@ -208,12 +208,29 @@ module RHC::Commands
     summary "Show information about an application"
     syntax "<app> [--namespace namespace] [--app app]"
     argument :app, "The name of the application you are getting information on", ["-a", "--app app"], :context => :app_context
-    option ["-n", "--namespace namespace"], "Namespace of the application the cartrdige belongs to", :context => :namespace_context, :required => true
+    option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
+    option ["--apache"], "Get the current status of the application"
     def show(app)
       rest_domain = rest_client.find_domain(options.namespace)
-      rest_app = rest_domain.find_application(options.app)
-      say_app_info(rest_app)
+      rest_app = rest_domain.find_application(app)
+      unless options.apache
+        say_app_info(rest_app)
+      else
+        rest_app.gear_groups.each do |gg|
+          say gg.gears.first['state']
+        end
+      end
       0
+    end
+
+    summary "Show status of an application's gears"
+    syntax "<app> [--namespace namespace] [--app app]"
+    argument :app, "The name of the application you are getting information on", ["-a", "--app app"], :context => :app_context
+    option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
+    def status(app)
+      # TODO: add a way to deprecate this and alias to show --apache
+      options.apache = true
+      show(app)
     end
 
     private

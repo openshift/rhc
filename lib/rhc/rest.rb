@@ -10,6 +10,7 @@ module RHC
     autoload :Domain,      'rhc/rest/domain'
     autoload :Key,         'rhc/rest/key'
     autoload :User,        'rhc/rest/user'
+    autoload :GearGroup,   'rhc/rest/gear_group'
 
     class Exception < RuntimeError
       attr_reader :code
@@ -134,6 +135,12 @@ module RHC
         return keys
       when 'key'
         return Key.new(data)
+      when 'gear_groups'
+        gears = Array.new
+        data.each do |gear_json|
+          gears.push(GearGroup.new(gear_json))
+        end
+        return gears
       else
       data
       end
