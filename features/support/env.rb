@@ -118,11 +118,14 @@ AfterConfiguration do |config|
 
   # Modify the .ssh/config so the git and ssh commands can succeed
   keyfile = RHCHelper::Sshkey.keyfile_path('key1')
-  File.open('/root/.ssh/config','w',0600) do |f|
-    f.puts "Host *"
-    f.puts "\tStrictHostKeyChecking no"
-    f.puts "\tIdentityFile #{keyfile}"
-    f.puts "\tIdentityFile /root/.ssh/id_rsa"
+  begin
+    File.open('/root/.ssh/config','w',0600) do |f|
+      f.puts "Host *"
+      f.puts "\tStrictHostKeyChecking no"
+      f.puts "\tIdentityFile #{keyfile}"
+      f.puts "\tIdentityFile /root/.ssh/id_rsa"
+    end
+  rescue Errno::ENOENT, Errno::EACCES
   end
   File.chmod(0600,keyfile)
 
