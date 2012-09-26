@@ -227,6 +227,7 @@ module RHC::Commands
     syntax "<app> [--namespace namespace] [--app app]"
     argument :app, "The name of the application you are getting information on", ["-a", "--app app"], :context => :app_context
     option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
+    deprecated "rhc app show --apache"
     def status(app)
       # TODO: add a way to deprecate this and alias to show --apache
       options.apache = true

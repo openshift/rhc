@@ -135,6 +135,7 @@ class RHC::Commands::Base
         :class => self,
         :method => method
       }));
+
       @options = nil
     end
 
@@ -156,7 +157,9 @@ class RHC::Commands::Base
     def self.syntax(value)
       options[:syntax] = value
     end
-
+    def self.deprecated(msg)
+      options[:deprecated] = msg
+    end
     def self.suppress_wizard
       @suppress_wizard = true
     end
