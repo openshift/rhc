@@ -532,7 +532,6 @@ describe RHC::Wizard do
   context "Check SSHWizard" do
     it "should generate and upload keys since the user does not have them" do
       wizard = SSHWizardDriver.new
-      wizard.stub_rhc_client_new
       key_name = 'default'
       $terminal.write_line("yes\n#{key_name}\n")
 
@@ -827,7 +826,7 @@ EOF
     include WizardDriver
 
     def initialize
-      super 'mock_user@foo.bar', 'password'
+      super RestSpecHelper::MockRestClient.new
     end
   end
 end

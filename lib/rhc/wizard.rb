@@ -559,9 +559,8 @@ EOF
       STAGES
     end
 
-    def initialize(username, password)
-      @username = username
-      @password = password
+    def initialize(rest_client)
+      @rest_client = rest_client
       super RHC::Config
     end
   end

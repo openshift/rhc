@@ -281,7 +281,7 @@ module RHC::Commands
       end
 
       def check_sshkeys!
-        wizard = RHC::SSHWizard.new(config.username, config.password)
+        wizard = RHC::SSHWizard.new(rest_client)
         wizard.run
       end
 

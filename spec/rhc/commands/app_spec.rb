@@ -240,7 +240,7 @@ describe RHC::Commands::App do
       end
 
       # don't run wizard here because we test this elsewhere
-      wizard_instance = RHC::SSHWizard.new('test@test.foo', 'password')
+      wizard_instance = RHC::SSHWizard.new(@rc)
       wizard_instance.stub(:ssh_key_uploaded?) { true }
       RHC::SSHWizard.stub(:new) { wizard_instance }
       RHC::Config.stub(:should_run_ssh_wizard?) { false }
