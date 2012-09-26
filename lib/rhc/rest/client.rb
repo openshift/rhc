@@ -6,7 +6,6 @@ module RHC
   module Rest
     class Client < Base
       def initialize(end_point, username, password, use_debug=false)
-        # use mydebug for legacy reasons
         @debug = use_debug
         debug "Connecting to #{end_point}"
 
@@ -27,7 +26,7 @@ module RHC
         puts "*"*10
         request = new_request(:url => end_point, :method => :get, :headers => @@headers)
 
-        super :links => request(request)
+        super({:links => request(request)}, use_debug)
       end
 
       def add_domain(id)

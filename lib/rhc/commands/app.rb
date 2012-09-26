@@ -241,7 +241,7 @@ module RHC::Commands
         rest_domain = rest_client.find_domain(options.namespace)
         rest_app = rest_domain.find_application(app)
         result = rest_app.send action, *args
-        [result, rest_app, rest_domain]
+        result
       end
 
       def create_app(name, cartridge, rest_domain, gear_size=nil, scale=nil)

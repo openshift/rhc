@@ -130,6 +130,12 @@ module RHC::Commands
     option ["--timeout timeout"], "Timeout, in seconds, for the session"
     alias_action :"app cartridge status", :root_command => true, :deprecated => true
     def status(cartridge)
+      rest_domain = rest_client.find_domain(options.namespace)
+      rest_app = rest_domain.find_application(options.app)
+      rest_cartridge = find_cartridge(rest_app, cartridge)
+      msg = rest_cartridge.status
+      say msg
+      0
     end
 
     summary "Reload the cartridge's configuration"

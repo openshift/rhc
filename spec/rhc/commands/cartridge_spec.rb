@@ -155,6 +155,25 @@ describe RHC::Commands::Cartridge do
     end
   end
 
+  describe 'cartridge status' do
+    let(:arguments) { ['cartridge', 'status', 'mock_cart-1', '-a', 'app1','--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+
+    before(:each) do
+      @rc = MockRestClient.new
+      @domain = @rc.add_domain("mock_domain")
+      @app = @domain.add_application("app1", "mock_type")
+      @app.add_cartridge('mock_cart-1')
+    end
+
+    context 'when run' do
+      it { run_output.should match('started') }
+    end
+
+    context 'when run with cart stopped' do
+      before(:each) { @app.find_cartridge('mock_cart-1').stop }
+      it { run_output.should match('stopped') }
+    end
+  end
 
   describe 'cartridge start' do
     let(:arguments) { ['cartridge', 'start', 'mock_cart-1', '-a', 'app1','--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }

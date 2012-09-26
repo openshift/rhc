@@ -101,48 +101,48 @@ module RHC
       when 'domains'
         domains = Array.new
         data.each do |domain_json|
-          domains.push(Domain.new(domain_json))
+          domains.push(Domain.new(domain_json, @debug))
         end
         return domains
       when 'domain'
-        return Domain.new(data)
+        return Domain.new(data, @debug)
       when 'applications'
         apps = Array.new
         data.each do |app_json|
-          apps.push(Application.new(app_json))
+          apps.push(Application.new(app_json, @debug))
         end
         return apps
       when 'application'
         message = result['messages'].first['text']
-        app = Application.new(data)
+        app = Application.new(data, @debug)
         app.add_message(message)
         return app
       when 'cartridges'
         carts = Array.new
         data.each do |cart_json|
-          carts.push(Cartridge.new(cart_json))
+          carts.push(Cartridge.new(cart_json, @debug))
         end
         return carts
       when 'cartridge'
-        return Cartridge.new(data)
+        return Cartridge.new(data, @debug)
       when 'user'
-        return User.new(data)
+        return User.new(data, @debug)
       when 'keys'
         keys = Array.new
         data.each do |key_json|
-          keys.push(Key.new(key_json))
+          keys.push(Key.new(key_json, @debug))
         end
         return keys
       when 'key'
-        return Key.new(data)
+        return Key.new(data, @debug)
       when 'gear_groups'
         gears = Array.new
         data.each do |gear_json|
-          gears.push(GearGroup.new(gear_json))
+          gears.push(GearGroup.new(gear_json, @debug))
         end
         return gears
       else
-      data
+        data
       end
     end
 

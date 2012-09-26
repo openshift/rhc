@@ -320,21 +320,29 @@ module RestSpecHelper
       @type = type
       @app = app
       @properties = properties
+      @status_message = "started"
     end
 
     def destroy
       @app.cartridges.delete self
     end
 
+    def status
+      @status_message
+    end
+
     def start
+      @status_message = "started"
       @app
     end
 
     def stop
+      @status_message = "stopped"
       @app
     end
 
     def restart
+      @status_message = "started"
       @app
     end
 
