@@ -70,6 +70,19 @@ module RHC
         end
       end
 
+      context "#gear_groups" do
+        before(:each) do
+          stub_api_request(:any, app_links['GET_GEAR_GROUPS']['relative']).
+            to_return(mock_gear_groups_response())
+        end
+        it "returns a list of all gear groups the current application" do
+          app   = app_obj
+          gear_groups = app.gear_groups
+          gear_groups.length.should equal(1)
+          gear_groups[0].should be_an_instance_of RHC::Rest::GearGroup
+        end
+      end
+
       # These application control tests are subtle; the key lies in making sure the
       # webmock specifies the expected body that is sent in the request.
       # This is currently of the form "event=foo"
