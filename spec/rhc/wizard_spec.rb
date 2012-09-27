@@ -661,6 +661,21 @@ describe RHC::Wizard do
         output.should match msg
       end
     end
+    
+    it "should update the key correctly" do
+      key_name = 'default'
+      wizard = FirstRunWizardDriver.new
+      key_data = wizard.get_mock_key_data
+      wizard.ssh_keys = key_data
+      wizard.stub(:get_preferred_key_name) { key_name }
+      wizard.stub(:ssh_key_triple_for_default_key) { wizard.pub_key.chomp.split }
+      wizard.stub(:fingerprint_for_default_key) { "" } # this value is irrelevant
+      wizard.rest_client.stub(:find_key) { key_data.detect { |k| k.name == key_name } }
+      
+      wizard.send(:upload_ssh_key)
+      output = $terminal.read
+      output.should match 'Updating'
+    end
   end
 
   module WizardDriver
@@ -770,7 +785,12 @@ EOF
       @ssh_keys = data
     end
 
-    class Sshkey < OpenStruct; end
+    class Sshkey < OpenStruct
+      def update(type, content)
+        self.type = type
+        self.content = content
+      end
+    end
 
     def get_mock_key_data
       [
