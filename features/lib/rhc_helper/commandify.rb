@@ -76,6 +76,7 @@ module RHCHelper
         when /create/
           args << "-r #{@repo} "
           args << "-t #{@type} "
+          args << "-s " unless @scalable.nil?
         when /add-alias/
           raise "No alias set" unless @alias
           args << "--alias #{@alias} "

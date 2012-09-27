@@ -49,8 +49,8 @@ When /^(\d+) (.+) applications are created$/ do |app_count, type|
   @app = old_app
 end
 
-When /^a (.+) application is created$/ do |type|
-  @app = App.create_unique(type)
+When /^a (scaled){0,1}(.+) application is created$/ do |scaled, type|
+  @app = App.create_unique(type.strip, scaled)
   @app.rhc_app_create
 end
 
@@ -104,4 +104,8 @@ Then /^the application should not exist$/ do
 end
 
 Then /^it should succeed$/ do
+end
+
+Then /^the application should be scalable/ do
+  Then "the haproxy-1.4 cartridge should be running"
 end
