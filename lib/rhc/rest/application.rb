@@ -25,6 +25,11 @@ module RHC
         rest_method "GET_GEAR_GROUPS"
       end
 
+      def tidy
+        debug "Starting application #{name}"
+        rest_method 'TIDY', :event => "tidy"
+      end
+
       def start
         debug "Starting application #{name}"
         rest_method 'START', :event => "start"
