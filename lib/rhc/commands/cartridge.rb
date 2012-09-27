@@ -165,7 +165,7 @@ module RHC::Commands
 
       def properties_table(cartridge)
         items = []
-        cartridge.properties[:cart_data].each do |key, prop|
+        (cartridge.properties[:cart_data] || []).each do |key, prop|
           items << [prop["name"], prop["value"]]
         end
         table items, :join => " = "
