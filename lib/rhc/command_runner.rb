@@ -21,6 +21,10 @@ module RHC
       end
       global_option('-v', '--version', 'Display version information') { say version; return }
       global_option('--trace', 'Display backtrace when an error occurs') { trace = true }
+      global_option('--timeout', 'Set the timeout in seconds for network commands') do
+        # FIXME: Refactor so we don't have to use a global var here
+        $rest_timeout = @options.timeout ? @options.timeout.to_i : nil
+      end
 
       parse_global_options
       remove_global_options options, @args

@@ -7,9 +7,8 @@ module RHC::Commands
     default_action :show
 
     summary "Define a namespace for your applications to share."
-    syntax "<namespace> [--timeout timeout]"
+    syntax "<namespace>"
     argument :namespace, "Namespace for your application(s) (alphanumeric)", ["-n", "--namespace namespace"]
-    option ["--timeout timeout"], "Timeout, in seconds, for the session"
     def create(namespace)
       paragraph { say "Creating domain with namespace '#{namespace}'" }
       rest_client.add_domain(namespace)
@@ -23,9 +22,8 @@ module RHC::Commands
     end
 
     summary "Change current namespace (will change application urls)"
-    syntax "<namespace> [--timeout timeout]"
+    syntax "<namespace>"
     argument :namespace, "Namespace to change", ["-n", "--namespace namespace"]
-    option ["--timeout timeout"], "Timeout, in seconds, for the session"
     alias_action :alter
     def update(namespace)
       # TODO: Support multiple domains.  Right now we assume one domain so
@@ -72,7 +70,6 @@ module RHC::Commands
     end
 
     summary "Run a status check on your domain"
-    option ["--timeout timeout"], "Timeout, in seconds, for the session"
     def status
       args = []
 
@@ -87,9 +84,8 @@ module RHC::Commands
     end
 
     summary "Deletes your domain."
-    syntax "<namespace> [--timeout timeout]"
+    syntax "<namespace>"
     argument :namespace, "Namespace you wish to destroy", ["-n", "--namespace namespace"]
-    option ["--timeout timeout"], "Timeout, in seconds, for the session"
     alias_action :destroy
     def delete(namespace)
       domain = rest_client.find_domain namespace
