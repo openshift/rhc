@@ -58,6 +58,11 @@ module RHC
       end
       alias :delete :destroy
 
+      def reload
+        debug "Reload application #{name}"
+        rest_method "RELOAD", :event => "reload"
+      end
+
       def threaddump
         debug "Running thread dump for #{name}"
         rest_method "THREAD_DUMP", :event => "thread-dump"
