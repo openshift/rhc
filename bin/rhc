@@ -1,33 +1,8 @@
 #!/usr/bin/env ruby
-#
-# print help
-#
 require 'rhc/coverage_helper'
 
 # Require rhc-common for wizard invocation
 require 'rhc-common'
-
-def p_usage(exit_code = 255)
-    puts <<USAGE
-
-Usage: rhc (<resource> | --help) [<command>] [<args>]
-Command line tool for performing operations related to your rhcloud account.
-
-List of resources
-  domain             Manage the namespace for the registered rhcloud user.
-  threaddump         Trigger a thread dump for jbossas, jbosseap, and ruby applications.
-  app                Manage applications within the rhcloud account.
-  sshkey             Manage multiple keys for the registered rhcloud user.
-  port-forward       Forward remote ports to the workstation
-  server             Display information about the status of the service.
-  setup              Run the setup wizard to configure your account.
-
-See 'rhc <resource> --help' for more applicable commands and argumments on a specific resource.
-USAGE
-
-exit exit_code
-end
-
 
 def get_args
   ARGV.shift
@@ -37,17 +12,6 @@ def get_args
     args += " #{a}"
   end
   args
-end
-
-def run_setup_wizard_if_needed
-  if not (RHC::Config.has_local_config? or
-          RHC::Config.has_opts_config? or
-          ARGV.include?('--noprompt') or
-          ARGV.include?('--help') or
-          ARGV.include?('-h'))
-    RHC::Wizard.new(RHC::Config).run
-  end
-  ARGV.delete('--noprompt')
 end
 
 begin
