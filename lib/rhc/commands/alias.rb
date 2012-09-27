@@ -7,6 +7,7 @@ module RHC::Commands
     syntax "<command> <application> <alias> [--namespace namespace]"
     default_action :help
 
+    summary "Add a custom domain name for the application"
     syntax "<application> <alias> [--namespace namespace]"
     argument :app, "Application name (required)", []
     argument :app_alias, "Custom domain name for the application", []
@@ -20,6 +21,7 @@ module RHC::Commands
       0
     end
 
+    summary "Remove a custom domain name for the application"
     syntax "<application> <alias> [--namespace namespace]"
     argument :app, "Application name (required)", []
     argument :app_alias, "Custom domain name for the application", []
