@@ -195,18 +195,18 @@ public and private keys id_rsa keys.
       key_name = get_preferred_key_name
       return false unless key_name
 
-      if !@ssh_keys.empty? && @ssh_keys.any? { |k| k.name == key_name }
-        say "Key with the name #{key_name} already exists. Deleting... "
-        @rest_client.delete_key key_name
-      end
-
-      say "Uploading key '#{key_name}' from #{RHC::Config::ssh_pub_key_file_path}"
-
       type, content, comment = ssh_key_triple_for_default_key
-
       say "type: %s\ncontent: %s\nfingerprint: %s" % [type, content, fingerprint_for_default_key]
 
-      @rest_client.add_key key_name, content, type
+      if !@ssh_keys.empty? && @ssh_keys.any? { |k| k.name == key_name }
+        say "Key with the name #{key_name} already exists. Updating... "
+        key = @rest_client.find_key(key_name)
+        key.update(type, content)
+      else
+        say "Uploading key '#{key_name}' from #{RHC::Config::ssh_pub_key_file_path}"
+        @rest_client.add_key key_name, content, type
+      end
+      
       true
     end
 

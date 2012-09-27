@@ -225,10 +225,12 @@ describe RHC::Wizard do
     it "should find out that you have not uploaded the default key and ask to name the key" do
       key_data = @wizard.get_mock_key_data
       @wizard.ssh_keys = key_data
+      key_name = '73ce2cc1'
       
       fingerprint, short_name = @wizard.get_key_fingerprint
+      @wizard.rest_client.stub(:find_key) { key_data.detect{|k| k.name == key_name} }
       $terminal.write_line('yes')
-      $terminal.write_line('73ce2cc1') # answering with an existing key name
+      $terminal.write_line(key_name) # answering with an existing key name
       @wizard.run_next_stage
       output = $terminal.read
       key_data.each do |key|
