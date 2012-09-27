@@ -22,6 +22,8 @@ module RHC
         @@headers["User-Agent"] = RHC::Helpers.user_agent rescue nil
         #first get the API
         RestClient.proxy = ENV['http_proxy']
+        puts RestClient.proxy
+        puts "*"*10
         request = new_request(:url => end_point, :method => :get, :headers => @@headers)
 
         super({:links => request(request)}, use_debug)
