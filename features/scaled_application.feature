@@ -1,13 +1,14 @@
-@application @domain_required
-Feature: Application Operations
+@scaled_application @domain_required
+Feature: Scaled Application Operations
 
   @init
-  Scenario: Application Creation
-    When a php-5.3 application is created
+  Scenario: Scaled Application Creation
+    When a scaled php-5.3 application is created
     Then the application should be accessible
+    Then the application should be scalable
 
   # The state in these examples should be able to be broken into before hooks when we update cucumber
-  Scenario Outline: Running Application Commands
+  Scenario Outline: Running Scaled Application Commands
     Given we have a <state> application
     When the application is <command>
     Then <what> should <status>

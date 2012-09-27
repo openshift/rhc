@@ -16,14 +16,14 @@ Transform /^application with(.*)$/ do |embed_type|
 end
 
 # Use the transformed array so we can reuse this step for all combinations
-Given /^an existing (or new )?(.+) (application with.*)$/ do |create,type, embeds|
+Given /^an existing (or new )?(scaled )?(.+) (application with.*)$/ do |create, scaled, type, embeds|
   options = { :type => type }
   options[:embed] = embeds if embeds
-
+  options[:scalable] = scaled if scaled
   @app = App.find_on_fs(options)
 
   if create && @app.nil?
-    When "a #{type} application is created"
+    When "a #{scaled}#{type} application is created"
     embeds.each do |embed|
       When "the #{embed} cartridge is added"
     end
@@ -49,8 +49,8 @@ When /^(\d+) (.+) applications are created$/ do |app_count, type|
   @app = old_app
 end
 
-When /^a (scaled){0,1}(.+) application is created$/ do |scaled, type|
-  @app = App.create_unique(type.strip, scaled)
+When /^a (scaled )?(.+) application is created$/ do |scaled, type|
+  @app = App.create_unique(type, scaled)
   @app.rhc_app_create
 end
 
