@@ -336,14 +336,19 @@ describe RHC::Wizard do
 
   context "Repeat run of rhc setup with everything set" do
     before(:all) do
+      @namespace = 'testnamespace'
       @wizard = RerunWizardDriver.new
+      @rest_client = RestSpecHelper::MockRestClient.new
+      domain = @rest_client.add_domain(@namespace)
+      domain.add_application('test1', 'mock_standalone_cart-1')
+      domain.add_application('test2', 'mock_standalone_cart-2')
       @wizard.setup_mock_config("old_mock_user@bar.baz")
       @wizard.setup_mock_ssh(true)
+      @wizard.setup_mock_domain_and_applications(@namespace, 'test1' => :default, 'test2' => :default)
       @wizard.run_next_stage # we can skip testing the greeting
     end
 
     it "should ask password input with default login(use a different one)" do
-      @wizard.stub_rhc_client_new
       $terminal.write_line(@wizard.mock_user)
       $terminal.write_line "password"
 
@@ -387,22 +392,17 @@ describe RHC::Wizard do
     end
 
     it "should show namespace" do
-      ns = 'setnamespace'
-      @wizard.setup_mock_domain_and_applications(ns)
       @wizard.run_next_stage
       output = $terminal.read
       output.should match("Checking for your namespace ... found namespace:")
-      output.should match(ns)
+      output.should match(@namespace)
     end
 
     it "should list apps" do
-      ns = 'setnamespace'
-      @wizard.setup_mock_domain_and_applications(ns, 'test1' => :default, 'test2' => :default)
-      
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match("test1 - http://test1-#{ns}.#{@wizard.libra_server}/")
-      output.should match("test2 - http://test2-#{ns}.#{@wizard.libra_server}/")
+      output.should match("test1 - https://test1-#{@namespace}.#{@wizard.libra_server}/")
+      output.should match("test2 - https://test2-#{@namespace}.#{@wizard.libra_server}/")
     end
 
     it "should show a thank you message" do
@@ -668,7 +668,7 @@ describe RHC::Wizard do
       RHC::Config.home_dir = '/home/mock_user'
       super *args
       @ssh_dir = "#{RHC::Config.home_dir}/.ssh/"
-      @libra_server = 'mock.openshift.redhat.com'
+      @libra_server = 'fake.foo'
       @mock_user = 'mock_user@foo.bar'
       @current_wizard_stage = nil
       @platform_windows = false
@@ -733,7 +733,7 @@ EOF
     end
     
     def setup_mock_domain_and_applications(domain, apps = {})
-      @rest_client ||= stub_rhc_client_new
+      stub_rhc_client_new
       apps_ary = []
       apps.each do |app, url|
         apps_ary.push OpenStruct.new(
@@ -742,7 +742,7 @@ EOF
           :u => true
         )
       end
-                
+
       @rest_client.stub(:domains) {
         [OpenStruct.new(:id => domain, :applications => apps_ary)]
       }
