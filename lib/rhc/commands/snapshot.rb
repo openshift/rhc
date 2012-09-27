@@ -8,10 +8,10 @@ module RHC::Commands
 
     summary "Pull down application snapshot for the specified application."
     syntax "<application>"
-    option ["-n", "--namespace namespace"], "Namespace of the application you are port forwarding to", :context => :namespace_context, :required => true
+    option ["-n", "--namespace namespace"], "Namespace of the application you are saving a snapshot", :context => :namespace_context, :required => true
     option ["-f", "--filepath filepath"], "Local path to save tarball (default: ./$APPNAME.tar.gz)"
-    argument :app, "Application you are port forwarding to (required)", ["-a", "--app app"]
-    alias_action :"app snapshot", :root_command => true, :deprecated => true
+    argument :app, "Application you are saving a snapshot (required)", ["-a", "--app app"]
+    alias_action :"app snapshot save", :root_command => true, :deprecated => true
     def save(app)
       ssh_uri = URI.parse(rest_client.find_domain(options.namespace).find_application(app).ssh_url)
       filename = options.filepath ? options.filepath : "#{app}.tar.gz"
@@ -52,10 +52,10 @@ module RHC::Commands
 
     summary "Restores a previously saved snapshot."
     syntax "<application>"
-    option ["-n", "--namespace namespace"], "Namespace of the application you are port forwarding to", :context => :namespace_context, :required => true
+    option ["-n", "--namespace namespace"], "Namespace of the application you are saving a snapshot", :context => :namespace_context, :required => true
     option ["-f", "--filepath filepath"], "Local path to save tarball (default: ./$APPNAME.tar.gz)"
-    argument :app, "Application you are port forwarding to (required)", ["-a", "--app app"]
-    alias_action :"app snapshot", :root_command => true, :deprecated => true
+    argument :app, "Application you are saving a snapshot (required)", ["-a", "--app app"]
+    alias_action :"app snapshot restore", :root_command => true, :deprecated => true
     def restore(app)
 
       filename = options.filepath ? options.filepath : "#{app}.tar.gz"
