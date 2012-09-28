@@ -28,9 +28,9 @@ module RHC
         return
       end
       global_option('-v', '--version', 'Display version information') { say version; return }
-      global_option('--timeout', 'Set the timeout in seconds for network commands') do
+      global_option('--timeout seconds', Integer, 'Set the timeout in seconds for network commands') do |value|
         # FIXME: Refactor so we don't have to use a global var here
-        $rest_timeout = @options.timeout ? @options.timeout.to_i : nil
+        $rest_timeout = value
       end
 
       # remove these because we monkey patch Commands to process all options

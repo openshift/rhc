@@ -114,6 +114,7 @@ describe RHC::Commands::Base do
       context 'and when test is called' do
         it { expects_running('static', 'test').should call(:test).on(instance).with(no_args) }
       end
+
       context 'and when execute is called with argument' do
         it { expects_running('static', 'execute', 'simplearg').should call(:execute).on(instance).with('simplearg') }
       end

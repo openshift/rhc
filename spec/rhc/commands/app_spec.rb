@@ -29,7 +29,7 @@ describe RHC::Commands::App do
   end
 
   describe 'app create' do
-    let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart-1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+    let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart-1', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     context 'when run' do
       before(:each) do
