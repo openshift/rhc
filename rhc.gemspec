@@ -24,6 +24,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency      'commander',    '>= 4.0'
   s.add_runtime_dependency      'highline',     '>= 1.5.1'
   s.add_runtime_dependency      'rest-client',  '>= 1.6'
+  s.add_runtime_dependency      'open4'
   s.add_development_dependency  'rake'
   s.add_development_dependency  'webmock',      '>= 1.6'
   s.add_development_dependency  'rspec',        '~> 1.3'
@@ -31,6 +32,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency  'thor'
   s.add_development_dependency  'cucumber'
   s.add_development_dependency  'dnsruby'
-  s.add_development_dependency  'open4'
   s.add_development_dependency  'activesupport', '~> 3.0'
 end

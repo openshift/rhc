@@ -1,4 +1,4 @@
-require 'open3'
+require 'open4'
 
 module RHC
   module GitHelpers
@@ -34,24 +34,15 @@ module RHC
       exitstatus = nil
       err = nil
       paragraph do
-        Open3.popen3(clone_cmd) do |stdin, stdout, stderr, wait_thr|
+        Open4.popen4(clone_cmd) do |pid, stdin, stdout, stderr|
           stdin.close
           say stdout.read
           err = stderr.read
-
-          unless wait_thr.nil?
-            exitstatus = wait_thr.value.exitstatus
-          else
-            # in Ruby 1.8 there is no good way to get the stderr and exitstatus
-            # without relying on the external Open4 rubygem
-            # so assume if there any bytes on the stderr stream, an error occured
-            exitstatus = 1 unless err.strip.empty?
-          end
         end
         say "done"
       end
 
-      raise RHC::GitException, "Error in git clone - #{err}" if exitstatus != 0
+      raise RHC::GitException, "Error in git clone - #{err}" if $?.exitstatus != 0
     end
     # :nocov:
   end
