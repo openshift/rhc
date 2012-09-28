@@ -38,7 +38,15 @@ module RHC
           stdin.close
           say stdout.read
           err = stderr.read
-          exitstatus = wait_thr.value.exitstatus
+
+          unless wait_thr.nil?
+            exitstatus = wait_thr.value.exitstatus
+          else
+            # in Ruby 1.8 there is no good way to get the stderr and exitstatus
+            # without relying on the external Open4 rubygem
+            # so assume if there any bytes on the stderr stream, an error occured
+            exitstatus = 1 unless err.strip.empty?
+          end
         end
         say "done"
       end
