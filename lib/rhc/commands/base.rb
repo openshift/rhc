@@ -16,9 +16,6 @@ class RHC::Commands::Base
                  config=nil)
     @options, @config = options, config
     @messages = []
-
-    # apply timeout here even though it isn't quite a global
-    $rest_timeout = @options.timeout ? @options.timeout.to_i : nil
   end
 
   def validate_args_and_options(args_metadata, options_metadata, args)
@@ -50,7 +47,7 @@ class RHC::Commands::Base
     fill_args = args.reverse
     args_metadata.each_with_index do |arg_meta, i|
       # check options
-      value = @options.__hash__[arg_meta[:name]]
+      value = @options.__hash__[arg_meta[:option_symbol]] unless arg_meta[:option_symbol].nil?
       if value
         arg_slots[i] = value
       elsif arg_meta[:arg_type] == :list
@@ -192,7 +189,12 @@ class RHC::Commands::Base
       raise ArgumentError("Only the last argument descriptor for an action can be a list") if arg_type == :list and list_argument_defined?
       list_argument_defined true if arg_type == :list
 
-      args_metadata << {:name => name, :description => description, :switches => switches, :arg_type => arg_type}
+      option_symbol = Commander::Runner.switch_to_sym(switches.last)
+      args_metadata << {:name => name,
+                        :description => description,
+                        :switches => switches,
+                        :option_symbol => option_symbol,
+                        :arg_type => arg_type}
     end
 
     def self.default_action(action)
