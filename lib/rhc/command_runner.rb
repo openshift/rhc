@@ -60,6 +60,24 @@ module RHC
       end
     end
 
+    # override to handle the OptionParser::AmbiguousOption case due to
+    # --trace and --timeout clasing on -t
+    def parse_global_options
+
+      parser = options.inject(OptionParser.new) do |options, option|
+        options.on *option[:args], &global_option_proc(option[:switches], &option[:proc])
+      end
+
+      options = @args.dup
+      begin
+        parser.parse!(options)
+      rescue OptionParser::InvalidOption, OptionParser::AmbiguousOption => e
+        # Remove the offending args and retry.
+        options = options.reject { |o| e.args.include?(o) }
+        retry
+      end
+    end
+
     def provided_arguments
       @args[0, @args.find_index { |arg| arg.start_with?('-') } || @args.length]
     end
