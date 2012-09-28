@@ -107,6 +107,11 @@ class RHC::Commands::Base
       end
     end
 
+    def help(*args)
+      ac = Commander::Runner.instance.active_command
+      Commander::Runner.instance.command(:help).run(ac.name, *args)
+    end
+
     def debug?
       @options.debug
     end
