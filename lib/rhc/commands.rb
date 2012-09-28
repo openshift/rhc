@@ -1,6 +1,32 @@
 require 'commander'
 require 'rhc/helpers'
 
+## monkey patch option parsing to also parse global options all at once
+#  to avoid conflicts and side effects of similar short switches
+module Commander
+  class Command
+    def parse_options_and_call_procs *args
+      return args if args.empty?
+      opts = OptionParser.new
+      runner = Commander::Runner.instance
+      # add global options
+      runner.options.each do |option|
+        opts.on *option[:args],
+                &runner.global_option_proc(option[:switches], &option[:proc])
+
+      end
+
+      # add command options
+      @options.each do |option|
+        opts.on(*option[:args], &option[:proc])
+        opts
+      end
+
+      opts.parse! args
+    end
+  end
+end
+
 module RHC
   module Commands
     def self.load

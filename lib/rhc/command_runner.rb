@@ -26,8 +26,12 @@ module RHC
         $rest_timeout = @options.timeout ? @options.timeout.to_i : nil
       end
 
-      parse_global_options
-      remove_global_options options, @args
+      # remove these because we monkey patch Commands to process all options
+      # at once, avoiding conflicts between the global and command options
+      # code left here just in case someone compares this with the original
+      # commander code
+      #parse_global_options
+      #remove_global_options options, @args
 
       unless trace
         begin
