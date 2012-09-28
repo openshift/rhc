@@ -113,9 +113,10 @@ module RHC
         end
         return apps
       when 'application'
-        message = result['messages'].first['text']
         app = Application.new(data, @debug)
-        app.add_message(message)
+        result['messages'].each do |message|
+          app.add_message(message['text']) if message['field'].nil? or message['field'] == 'result'
+        end
         return app
       when 'cartridges'
         carts = Array.new
