@@ -142,7 +142,6 @@ MESSAGE
           raise e
         end
       end
-      alias :delete :destroy
     end
   end
 end
