@@ -28,6 +28,18 @@ describe RHC::Commands::App do
     FakeFS.deactivate!
   end
 
+  describe 'app default' do
+    before(:each) do
+      FakeFS.deactivate!
+      @rc = MockRestClient.new
+    end
+
+    context 'app' do
+      let(:arguments) { ['app', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+      it { run_output.should match('Usage:') }
+    end
+  end
+
   describe 'app create' do
     let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart-1', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 

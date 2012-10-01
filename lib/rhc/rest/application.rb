@@ -132,14 +132,14 @@ module RHC
           debug ssh_cmd
           ssh_ruby(host, uuid, remote_cmd)
         rescue SocketError => e
-          msg <<MESSAGE
+          msg =<<MESSAGE
 Could not connect: #{e.message}
 You can try to run this manually if you have ssh installed:
 #{ssh_cmd}
 
 MESSAGE
-          debug "DEBUG: #{e.debug}\n"
-          raise e
+          debug "DEBUG: #{e.message}\n"
+          raise SocketError, msg
         end
       end
     end

@@ -17,9 +17,6 @@ module RHC::Commands
         rest_app.tail(options)
       rescue Interrupt
         results { say "Terminating..." }
-      rescue SocketError => e
-        results { say "#{e.message}" }
-        exit 1
       end
       0
     end
