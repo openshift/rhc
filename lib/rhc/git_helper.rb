@@ -31,15 +31,25 @@ module RHC
       clone_cmd = "git clone #{git_url}#{repo_dir}"
       debug "Running #{clone_cmd}"
 
-      exitstatus = nil
       err = nil
-      paragraph do
-        Open4.popen4(clone_cmd) do |pid, stdin, stdout, stderr|
-          stdin.close
-          say stdout.read
-          err = stderr.read
+      if RHC::Helpers.windows?
+        # windows does not support Open4 so redirect stderr to stdin
+        # and print the whole output which is not as clean
+        output = %x[#{clone_cmd} 2>&1]
+        if $?.exitstatus != 0
+          err = output
+        else
+          say output
         end
-        say "done"
+      else
+        paragraph do
+          Open4.popen4(clone_cmd) do |pid, stdin, stdout, stderr|
+            stdin.close
+            say stdout.read
+            err = stderr.read
+          end
+          say "done"
+        end
       end
 
       raise RHC::GitException, "Error in git clone - #{err}" if $?.exitstatus != 0
