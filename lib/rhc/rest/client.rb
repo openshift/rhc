@@ -87,7 +87,7 @@ module RHC
           if regex
             filtered.push(cart) if cart.name.match(regex) and (type.nil? or cart.type == type)
           else
-            filtered.push(cart) if cart.name == name and (type.nil? or cart.type == type)
+            filtered.push(cart) if (name.nil? or cart.name == name) and (type.nil? or cart.type == type)
           end
         end
         return filtered

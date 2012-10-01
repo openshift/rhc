@@ -303,7 +303,7 @@ public and private keys id_rsa keys.
         paragraph do
           say "Below is a list of the types of application you can create: \n"
 
-          application_types = @rest_client.cartridges
+          application_types = @rest_client.find_cartridges :type => "standalone"
           application_types.sort {|a,b| a.name <=> b.name }.each do |cart|
             say "    * #{cart.name} - rhc app create -t #{cart.name} -a <app name>"
           end
