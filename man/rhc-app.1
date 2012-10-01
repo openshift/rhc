@@ -14,7 +14,7 @@ Creates and controls a rhcloud.com application.  To see
 the list of all applications use the
 .BR "rhc domain show" (1) 
 command.  Note that
-.BR destroy
+.BR delete
 is not reversible and will stop your application and
 then remove the application and repo from the remote
 server.  No local changes are made.
@@ -23,11 +23,11 @@ server.  No local changes are made.
 .IP create
 Bind a registered rhcloud user to a domain in rhcloud.
 .IP show
-Display information about a user
+Display information about an application
 .IP start
-Starts the application (includes embedded)
+Starts the application (includes all cartridges)
 .IP stop
-Stops the application (includes embedded)
+Stops the application (includes all cartridges)
 .IP force-stop
 Stops all application processes
 .IP restart
@@ -36,35 +36,13 @@ Restart the application
 Reloads application configuration
 .IP status
 Returns application status
-.IP destroy
-Destroys the application. This is not reversible and will stop your application and 
+.IP delete
+Deletes the application. This is not reversible and will stop your application and 
 then remove the application and repo from the remote server.  No local changes are made.
 .IP tidy
 Garbage collects the git repo and empties log/tmp dirs
-.IP tail
-Tail the logs of an application
-.IP snapshot [save|restore]
-Saves/Restores an application snapshot to/from a tarball at the location specified using --filepath (default: ./$APPNAME.tar.gz)
-.IP cartridge <action> 
-Manage an embedded cartridge for the application
-
-.SH LIST OF CARTRIDGE ACTIONS
-.IP list
-List of supported embedded cartridges
-.IP add
-Add an embedded application
-.IP remove
-Remove an embedded application
-.IP stop
-Stop the embedded application
-.IP start
-Start the embedded application
-.IP restart
-Restart the embedded application
-.IP status
-Returns embedded application status
-.IP reload
-Reloads embedded application configuration
+.IP git-clone
+Clone and configure an application's git repository
 
 .SH "OPTIONS"
 .IP "\-l|\-\-rhlogin login"
@@ -75,22 +53,14 @@ RHLogin password
 Name of application to create
 .IP "\-t|\-\-type framework_type"
 Framework type to create. Currently at least python-2.6, jenkins-1.4, ruby-1.8, diy-0.1, php-5.3, jbossas-7, jbosseap-6.0, and perl-5.10 are supported. To obtain the full, most recent list, use the -h flag.
-.IP \-c|\-\-cartridge
-Specify the embedded cartrige to add/manage (required for the cartridge command)
 .IP \-g|\-\-gear\-size
 The size of the gear for this app ([small|medium], defaults to small)
 .IP \-r|\-\-repo
 Git Repo path (defaults to ./$app_name) (applicable to the create command)
-.IP \-n|\-\-nogit
+.IP \-\-no-git
 Only create remote space, don't pull it locally (applicable to the create command)
 .IP \-\-no-dns
-Skip DNS check. Must be used in combination with \-\-nogit
-.IP \-f|\-\-filepath
-Applicable in case of snapshot, restore, and log command
-.IP \-o|\-\-opts
-Options to pass to the server-side (linux based) tail command (applicable to tail command only) (-f is implicit.  See the linux tail man page full list of options.) (Ex: --opts '-n 100')
-.IP \-b|\-\-bypass
-Bypass any TOS/SLA warnings and notifications
+Skip DNS check. Must be used in combination with \-\-no-git
 .IP \-d|\-\-debug
 Enable debugging / verbose output
 .IP \-h|\-\-help
