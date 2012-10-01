@@ -40,7 +40,7 @@ module RHCHelper
 
     def status
       result = ""
-      rhc_app_cartridge('status') do |exitstatus, out, err, arg|
+      rhc_cartridge('status') do |exitstatus, out, err, arg|
         result = out
       end
 
