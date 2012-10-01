@@ -23,6 +23,7 @@ end
 # These assumptions help to ensure any steps that are run independently have the same state as after the @init step
 {
   :application => 'an existing or new php-5.3 application without an embedded cartridge',
+  :scaled_application => 'an existing or new scaled php-5.3 application without an embedded cartridge',
   :domain => 'we have an existing domain',
   :client => 'we have the client tools setup',
   :single_cartridge => 'an existing or new php-5.3 application with an embedded mysql-5.1 cartridge',

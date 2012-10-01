@@ -25,7 +25,7 @@ module RHCHelper
     end
 
     def from_json(json)
-      app = App.new(json['type'], json['name'])
+      app = App.new(json['type'], json['name'], json['scalable'])
       app.embed = json['embed']
       app.mysql_user = json['mysql_user']
       app.mysql_password = json['mysql_password']
