@@ -373,6 +373,7 @@ describe RHC::Wizard do
       key_data = @wizard.get_mock_key_data
       key_data.delete_if { |k| k.name == '73ce2cc1' }
       @rest_client.stub(:sshkeys) { key_data }
+      @rest_client.stub(:find_key) { key_data.detect {|k| k.name == 'default' } }
 
       @wizard.run_next_stage # key config is pretty much a noop here
 
