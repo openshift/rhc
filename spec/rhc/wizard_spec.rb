@@ -385,7 +385,7 @@ describe RHC::Wizard do
       @wizard.run_next_stage
 
       output = $terminal.read
-      output.should match("Uploading key #{key_name}")
+      output.should match("Key with the name #{key_name} already exists. Updating")
     end
 
     it "should check for client tools and find them" do
