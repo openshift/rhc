@@ -77,6 +77,7 @@ module RHCHelper
           args << "-r #{@repo} "
           args << "-t #{@type} "
           args << "-s " unless @scalable.nil?
+          args << "--noprompt "
         when /add-alias/
           raise "No alias set" unless @alias
           args << "--alias #{@alias} "
@@ -124,7 +125,7 @@ module RHCHelper
   # Begin Post Processing Callbacks
   #
   def app_create_callback(exitcode, stdout, stderr, arg)
-    match = stdout.split.map {|line| line.match(SSH_OUTPUT_PATTERN)}.compact[0]
+    match = stdout.match(UUID_OUTPUT_PATTERN)
     @uid = match[1] if match
     raise "UID not parsed from app create output" unless @uid
     persist

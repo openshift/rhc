@@ -24,14 +24,6 @@ module RHCHelper
       @file = "#{TEMP_DIR}/#{$namespace}.json"
     end
 
-    def legacy_rhc_app_cartridge(cmd)
-      full_cmd = "rhc app cartridge #{cmd} -l #{$username} -p #{$password} -a #{@app_name}"
-      full_cmd += " -c #{@name}" if cmd != "list"
-      run(full_cmd, nil) do |exitstatus, out, err, arg|
-        yield exitstatus, out, err, arg if block_given?
-      end
-    end
-
     def rhc_cartridge(cmd)
       full_cmd = "rhc cartridge #{cmd} -l #{$username} -p #{$password} -a #{@app_name}"
       full_cmd += " #{@name}" if cmd != "list"
@@ -48,7 +40,7 @@ module RHCHelper
 
     def status
       result = ""
-      legacy_rhc_app_cartridge('status') do |exitstatus, out, err, arg|
+      rhc_app_cartridge('status') do |exitstatus, out, err, arg|
         result = out
       end
 

@@ -92,6 +92,8 @@ module RHC::Commands
         end
       end
 
+      say_app_info(rest_app)
+
       if issues?
         output_issues(rest_app)
       else

@@ -21,5 +21,5 @@ Feature: Application Operations
       | running | shown     | it              | succeed |
       | running | stopped   | the application | not be accessible |
       | stopped | started   | the application | be accessible |
-      | running | destroyed | the application | not exist |
+      | running | deleted   | the application | not exist |
 

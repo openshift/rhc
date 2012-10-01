@@ -67,7 +67,8 @@ When /^the application is (\w+)$/ do |command|
     :stopped => :stop,
     :shown   => :show,
     :tidied  => :tidy,
-    :snapshot => :snapshot_save
+    :snapshot => :snapshot_save,
+    :deleted => :delete
   }
 
   # Use an alias if it exists, or just remove 'ed' (like from started)
