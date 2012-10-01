@@ -372,19 +372,20 @@ describe RHC::Wizard do
     it "should check for ssh keys, not find it on the server and update existing key" do
       key_data = @wizard.get_mock_key_data
       key_data.delete_if { |k| k.name == '73ce2cc1' }
+      key_name = 'default'
       @rest_client.stub(:sshkeys) { key_data }
-      @rest_client.stub(:find_key) { key_data.detect {|k| k.name == 'default' } }
+      @rest_client.stub(:find_key) { key_data.detect {|k| k.name == key_name } }
 
       @wizard.run_next_stage # key config is pretty much a noop here
 
       $terminal.write_line('yes')
-      $terminal.write_line('default')
+      $terminal.write_line(key_name)
 
       # run the key check stage
       @wizard.run_next_stage
 
       output = $terminal.read
-      output.should match("Uploading key 'default'")
+      output.should match("Uploading key #{key_name}")
     end
 
     it "should check for client tools and find them" do
