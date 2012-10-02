@@ -51,7 +51,7 @@ module RHCHelper
     end
 
     def self.update(prefix="update")
-      old_namespace = $namespace
+      $old_namespace = $namespace
       $namespace = unique_namespace(prefix)
       rhc_domain_update
 

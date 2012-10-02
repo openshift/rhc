@@ -64,11 +64,13 @@ module RHCHelper
       case cmd
         when /domain show/
           # domain show doesn't take arguments
+        when /domain update/
+          args << "#{$old_namespace} #{$namespace}"
         when /domain /
           raise "No namespace set" unless $namespace
           # use legacy switch for specifying namespace to verify older interface
           # should switch to using argument once all commands are moved over
-          args << "-n #{$namespace} "
+          args << "#{$namespace} "
         when /snapshot/
           args << "-f #{@snapshot} "
         when /create/
