@@ -112,7 +112,7 @@ describe RHC::Commands::Domain do
   end
 
   describe 'update' do
-    let(:arguments) { ['domain', 'update', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password', 'alterednamespace'] }
+    let(:arguments) { ['domain', 'update', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password', 'olddomain', 'alterednamespace'] }
 
     context 'when no issues with ' do
       before(:each) do
@@ -136,12 +136,12 @@ describe RHC::Commands::Domain do
         expect { run }.should exit_with_code(127)
         @rc.domains.empty?.should be_true
       end
-      it { run_output.should match("No domains are registered to the user test@test.foo") }
+      it { run_output.should match("does not exist") }
     end
   end
 
   describe 'alter alias' do
-    let(:arguments) { ['domain', 'alter', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password', 'alterednamespace'] }
+    let(:arguments) { ['domain', 'alter', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password', 'olddomain', 'alterednamespace'] }
 
     context 'when no issues with ' do
       before(:each) do
