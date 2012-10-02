@@ -69,8 +69,6 @@ module RHCHelper
           # use legacy switch for specifying namespace to verify older interface
           # should switch to using argument once all commands are moved over
           args << "-n #{$namespace} "
-        when /destroy/
-          args << "-b "
         when /snapshot/
           args << "-f #{@snapshot} "
         when /create/

@@ -60,7 +60,7 @@ module RHCHelper
     end
 
     def remove
-      rhc_cartridge('remove')
+      rhc_cartridge('remove --confirm')
     end
   end
 end
