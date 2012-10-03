@@ -11,7 +11,7 @@ module RHC::Commands
     summary "List supported embedded cartridges"
     alias_action :"app cartridge list", :root_command => true, :deprecated => true
     def list
-      carts = rest_client.cartridges.collect { |c| c.name }
+      carts = rest_client.find_cartridges(:type => 'embedded').collect { |c| c.name }
       results { say "#{carts.join(', ')}" }
       0
     end
