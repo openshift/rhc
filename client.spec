@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 0.99.3
+Version: 0.99.4
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -114,6 +114,18 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Oct 03 2012 Adam Miller <admiller@redhat.com> 0.99.4-1
+- Merge pull request #167 from J5/bugfix (openshift+bot@redhat.com)
+- Merge pull request #165 from BanzaiMan/fix-commit-6dffb48
+  (openshift+bot@redhat.com)
+- seperate out scaled tests and add hooks (johnp@redhat.com)
+- add cucumber tests for scalable apps (johnp@redhat.com)
+- contain server messages in rest models instead of passing as a seperate hash
+  (johnp@redhat.com)
+- Ensure that there is at least one SSH key exists for the account before
+  running "rhc sshkey list". (asari.ruby@gmail.com)
+- Avoid bombing on systems that do not have /root. (asari.ruby@gmail.com)
+
 * Wed Sep 26 2012 Adam Miller <admiller@redhat.com> 0.99.3-1
 - BZ858144 Lost threaddump help doc in man rhc (calfonso@redhat.com)
 
