@@ -51,8 +51,8 @@ module RHCHelper
     def get_args(cmd, arg0=nil, debug=true)
       args = " "
       args << "-l #{$username} "
-      args << "-p #{$password} "
-      args << "-d " if debug
+      args << "-p \"#{$password}\" "
+      args << "--debug " if debug
 
       # Add the application name for all application commands
       if cmd =~ /app/

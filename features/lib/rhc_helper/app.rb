@@ -92,6 +92,17 @@ module RHCHelper
       persist
     end
 
+    def is_created?
+      # Get a REST client to verify the application is on the server
+      client = RHC::Rest::Client.new($end_point, $username, $password)
+      begin
+        client.domains[0].find_application(name)
+      rescue
+        return false
+      end
+      true
+    end
+
     def cartridge(name)
       @embed_helpers[name] = RHCHelper::Cartridge.new(self, name) unless @embed_helpers.include?(name)
       @embed_helpers[name]

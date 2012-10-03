@@ -26,11 +26,11 @@ end
 Then /^the (.+) cartridge should be (.*)$/ do |name,status|
   expected = case status.to_sym
              when :running
-               "RESULT:\n(.+) is running|RESULT:\n(\n|.)+Uptime:"
+               "(.+) is running|Uptime:"
              when :stopped
-               "RESULT:\n(.+) stopped"
+               "(.+) stopped"
              when :removed
-               "Response code was 400"
+               "Invalid cartridge specified: '#{name}'"
              end
   @app.cartridge(name).status.should match(expected)
 end

@@ -62,7 +62,7 @@ module RHCHelper
           f.write($namespace)
         end
       else
-        $namespace = old_namespace
+        $namespace = $old_namespace
       end
     end
 
