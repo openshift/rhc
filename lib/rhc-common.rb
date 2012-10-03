@@ -872,9 +872,9 @@ LOOKSGOOD
   def self.snapshot_restore(rhc_domain, namespace, app_name, app_uuid, filename, debug=false)
     if File.exists? filename
 
-      if ! RHC::Helpers.windows? and ! RHC::TarGz.contains filename, './*/' + app_name
+      if ! RHC::Helpers.windows? and ! RHC::TarGz.contains filename, "./#{app_uuid}/"
 
-        puts "Archive at #{filename} does not contain the target application: ./*/#{app_name}"
+        puts "Archive at #{filename} does not contain the target application: ./#{app_uuid}/"
         puts "If you created this archive rather than exported with rhc-snapshot, be sure"
         puts "the directory structure inside the archive starts with ./<app_uuid>/"
         puts "i.e.: tar -czvf <app_name>.tar.gz ./<app_uuid>/"

@@ -91,7 +91,7 @@ unless user_info['app_info'][app]
     exit 101
 end
 
-opt['files'] = "#{opt['app']}/logs/*" unless opt['files']
+opt['files'] = "*/log*/*" unless opt['files']
 file_glob = "#{opt['files']}"
 app_uuid = user_info['app_info'][app]['uuid']
 namespace = user_info['user_info']['domains'][0]['namespace']
