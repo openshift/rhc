@@ -126,13 +126,17 @@ module RHC::Commands
                 "Use with caution as this operation is permanent."
     syntax "<app> [--namespace namespace]"
     option ["-n", "--namespace namespace"], "Namespace to add your application to", :context => :namespace_context, :required => true
+    option ["-b", "--bypass"], "DEPRECATED Please use '--confirm'", :deprecated => {:key => :confirm, :value => true}
+    option ["--confirm"], "Deletes the application without prompting the user"
     argument :app, "The application you wish to delete", ["-a", "--app name"]
     alias_action :destroy, :deprecated => true
     def delete(app)
       rest_domain = rest_client.find_domain(options.namespace)
       rest_app = rest_domain.find_application(app)
+      do_delete = true
 
-      do_delete = agree "Are you sure you wish to delete the '#{rest_app.name}' application? (yes/no)"
+      do_delete = agree "Are you sure you wish to delete the '#{rest_app.name}' application? (yes/no)" unless options.confirm
+
       if do_delete
         paragraph { say "Deleting application '#{rest_app.name}'" }
         rest_app.destroy

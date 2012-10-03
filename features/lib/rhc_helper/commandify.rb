@@ -62,6 +62,8 @@ module RHCHelper
 
       # Command specific arguments
       case cmd
+        when /app delete/
+          args << "--confirm "
         when /domain show/
           # domain show doesn't take arguments
         when /domain update/
