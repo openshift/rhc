@@ -5,7 +5,12 @@ module RHC
 
       if carts.length == 0
         valid_carts = rest_obj.cartridges.collect { |c| c.name if c.type == type }.compact
-        raise RHC::CartridgeNotFoundException, "Invalid cartridge specified: '#{cartridge_name}'. Valid cartridges are (#{valid_carts.join(', ')})."
+        if valid_carts.length > 0
+          msg = "Valid cartridges are (#{valid_carts.join(', ')})."
+        else
+          msg = "No cartridges have been added to this app."
+        end
+        raise RHC::CartridgeNotFoundException, "Invalid cartridge specified: '#{cartridge_name}'. #{msg}"
       elsif carts.length > 1
         msg = "Multiple cartridge versions match your criteria. Please specify one."
         carts.each { |cart| msg += "\n  #{cart.name}" }
