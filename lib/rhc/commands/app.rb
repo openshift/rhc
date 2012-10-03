@@ -72,7 +72,7 @@ module RHC::Commands
         unless dns_propagated? rest_app.host
           add_issue("We were unable to lookup your hostname (#{rest_app.host}) in a reasonable amount of time and can not clone your application.",
                     "Clone your git repo",
-                    "rhc app clone #{rest_app.name}")
+                    "rhc app git-clone #{rest_app.name}")
 
           output_issues(rest_app)
           return 0
@@ -86,7 +86,7 @@ module RHC::Commands
             unless RHC::Helpers.windows? and windows_nslookup_bug?(rest_app)
               add_issue("We were unable to clone your application's git repo - #{e}",
                         "Clone your git repo",
-                        "rhc app clone #{rest_app.name}")
+                        "rhc app git-clone #{rest_app.name}")
             end
           end
         end
@@ -412,7 +412,7 @@ We recommend you wait a few minutes then clone your git repository manually.
 WINSOCKISSUE
           add_issue(issue,
                     "Clone your git repo",
-                    "rhc app clone #{rest_app.name}")
+                    "rhc app git-clone #{rest_app.name}")
 
           return true
         end
@@ -437,7 +437,7 @@ WARNING:  Your application was created successfully but had problems during
   If you can't get your application '#{rest_app.name}' running in the browser,
   you can try destroying and recreating the application:
 
-    $ rhc app destroy #{rest_app.name} --confirm
+    $ rhc app delete #{rest_app.name} --confirm
 
   If this doesn't work for you, let us know in the forums or in IRC and we'll
   make sure to get you up and running.
