@@ -60,6 +60,7 @@ describe RHC::Commands::App do
       before(:each) do
         @rc = MockRestClient.new
         domain = @rc.add_domain("mockdomain")
+        @rc.stub(:cartridges) { [] }
       end
       it { expect { run }.should raise_error(RHC::CartridgeNotFoundException) }
     end
