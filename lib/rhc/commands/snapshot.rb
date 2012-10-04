@@ -4,7 +4,7 @@ module RHC::Commands
     summary "Pull down application snapshot for a user."
     syntax "<action>"
     alias_action :"app snapshot", :root_command => true
-    default_action :save
+    default_action :help
 
     summary "Pull down application snapshot for the specified application."
     syntax "<application>"
