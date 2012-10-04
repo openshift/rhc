@@ -39,6 +39,8 @@ module RHC::Commands
              ).each { |s| say "  #{s}" }
       end
 
+      raise RHC::DomainNotFoundException.new("No domains found. Please create a domain with 'rhc domain create <namespace>' before creating applications.") if rest_client.domains.empty?
+
       rest_domain = rest_client.find_domain(options.namespace)
 
       # check to make sure the right options are set for enabling jenkins
