@@ -150,7 +150,7 @@ module RHC::Commands
     summary "Start the application"
     syntax "<app> [--namespace namespace] [--app app]"
     argument :app, "The name of the application you are stopping", ["-a", "--app app"], :context => :app_context
-    option ["-n", "--namespace namespace"], "Namespace of the application the cartrdige belongs to", :context => :namespace_context, :required => true
+    option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
     def start(app)
       app_action app, :start
 
@@ -161,7 +161,7 @@ module RHC::Commands
     summary "Stop the application"
     syntax "<app> [--namespace namespace] [--app app]"
     argument :app, "The name of the application you are stopping", ["-a", "--app app"], :context => :app_context
-    option ["-n", "--namespace namespace"], "Namespace of the application the cartrdige belongs to", :context => :namespace_context, :required => true
+    option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
     def stop(app)
       app_action app, :stop
 
@@ -172,7 +172,7 @@ module RHC::Commands
     summary "Stops all application processes"
     syntax "<app> [--namespace namespace] [--app app]"
     argument :app, "The name of the application you are stopping", ["-a", "--app app"], :context => :app_context
-    option ["-n", "--namespace namespace"], "Namespace of the application the cartrdige belongs to", :context => :namespace_context, :required => true
+    option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
     def force_stop(app)
       app_action app, :stop, true
 
@@ -183,7 +183,7 @@ module RHC::Commands
     summary "Restart the application"
     syntax "<app> [--namespace namespace] [--app app]"
     argument :app, "The name of the application you are stopping", ["-a", "--app app"], :context => :app_context
-    option ["-n", "--namespace namespace"], "Namespace of the application the cartrdige belongs to", :context => :namespace_context, :required => true
+    option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
     def restart(app)
       app_action app, :restart
 
@@ -194,7 +194,7 @@ module RHC::Commands
     summary "Reload the application's configuration"
     syntax "<app> [--namespace namespace] [--app app]"
     argument :app, "The name of the application you are stopping", ["-a", "--app app"], :context => :app_context
-    option ["-n", "--namespace namespace"], "Namespace of the application the cartrdige belongs to", :context => :namespace_context, :required => true
+    option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
     def reload(app)
       app_action app, :reload
 
