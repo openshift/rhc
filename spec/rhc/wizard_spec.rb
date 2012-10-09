@@ -240,9 +240,8 @@ describe RHC::Wizard do
       output.should match("|#{short_name}|") # prompt with the default name
     end
 
-    it "should check for client tools via package kit and find them" do
-      @wizard.setup_mock_package_kit(true)
-
+    it "should check for client tools and find them" do
+      @wizard.setup_mock_has_git(true)
       @wizard.run_next_stage
       output = $terminal.read
       output.should match("Checking for git \.\.\. found")
@@ -505,32 +504,6 @@ describe RHC::Wizard do
       @wizard.stub(:login_stage) { nil }
       @wizard.run().should be_nil
     end
-
-    it "should cover package kit install steps" do
-      @wizard.libra_server = nil
-      @wizard.stub_rhc_client_new
-      @wizard.setup_mock_ssh
-      @wizard.setup_mock_package_kit(false)
-
-      @rest_client.stub(:get_ssh_keys) { [] }
-      mock_carts = ['ruby', 'python', 'jbosseap']
-      @rest_client.stub(:cartridges) { mock_carts }
-      # we need to do this because get_character does not get caught
-      # by our mock terminal
-      @wizard.stub(:get_character) {ask ""}
-
-      $terminal.write_line ""
-      $terminal.write_line "password"
-      $terminal.write_line("no")
-      $terminal.write_line("yes")
-      $terminal.write_line("")
-      $terminal.write_line("")
-
-      @wizard.run().should be_true
-
-      output = $terminal.read
-      output.should match("You may safely continue while the installer is running")
-    end
   end
 
   context "Check SSHWizard" do
@@ -556,41 +529,11 @@ describe RHC::Wizard do
   end
 
   context "Check odds and ends" do
-    it "should call dbus_send_session_method and get multiple return values" do
-      wizard = FirstRunWizardDriver.new
-      wizard.stub(:dbus_send_exec) do |cmd|
-        "\\nboolean true\\nboolean false\\nstring hello\\nother world\\n"
-      end
-      results = wizard.send(:dbus_send_session_method, "test", "foo.bar", "bar/baz", "alpha.Beta", "")
-      results.should == [true, false, "hello", "world"]
-    end
-
-    it "should call dbus_send_session_method and get one return value" do
-      wizard = FirstRunWizardDriver.new
-      wizard.stub(:dbus_send_exec) do |cmd|
-        "\\nstring hello world\\n"
-      end
-      results = wizard.send(:dbus_send_session_method, "test", "foo.bar", "bar/baz", "alpha.Beta", "")
-      results.should == "hello world"
-    end
 
     it "should cause has_git? to catch an exception and return false" do
       wizard = FirstRunWizardDriver.new
       wizard.stub(:git_version_exec){ raise "Fake Exception" }
       wizard.send(:has_git?).should be_false
-    end
-
-    it "should cause package_kit_install to catch exception and call generic_unix_install_check" do
-      wizard = RerunWizardDriver.new
-      wizard.setup_mock_package_kit(false)
-      wizard.stub(:dbus_send_exec) do |cmd|
-        "Error: mock error" if cmd.start_with?("dbus-send")
-      end
-      wizard.send(:package_kit_install)
-
-      output = $terminal.read
-      output.should match("Checking for git ... needs to be installed")
-      output.should match("Automated installation of client tools is not supported")
     end
 
     it "should cause ssh_key_upload? to catch NoMethodError and call the fallback to get the fingerprint" do
@@ -732,25 +675,10 @@ EOF
       end
     end
 
-    def setup_mock_package_kit(bool)
-      ENV['PATH'] = '/usr/bin' unless ENV['PATH']
-      ENV['DBUS_SESSION_BUS_ADDRESS'] = "present" unless ENV['DBUS_SESSION_BUS_ADDRESS']
-      unless File.exists?('/usr/bin/dbus-send')
-        FileUtils.mkdir_p '/usr/bin/'
-        File.open('/usr/bin/dbus-send', 'w') { |f| f.write('dummy') }
-      end
-
-      setup_mock_has_git(false)
-
-      self.stub(:dbus_send_session_method) do
-        bool
-      end
-    end
-
     def setup_mock_has_git(bool)
       self.stub(:"has_git?") { bool }
     end
-    
+
     def setup_mock_domain_and_applications(domain, apps = {})
       stub_rhc_client_new
       apps_ary = []

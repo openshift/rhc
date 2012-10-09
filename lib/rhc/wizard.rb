@@ -229,13 +229,8 @@ public and private keys id_rsa keys.
     end
 
     ##
-    # Attempts install various tools if they aren't currently installed on the
-    # users system.  If we can't automate the install, alert the user that they
-    # should manually install them
-    #
-    # On Unix we rely on PackageKit (which mostly just covers modern Linux flavors
-    # such as Fedora, Suse, Debian and Ubuntu). On Windows we will give instructions
-    # and links for the tools they should install
+    # Alert the user that they should manually install tools if they are not
+    # currently available
     #
     # Unix Tools:
     #  git
@@ -248,16 +243,10 @@ public and private keys id_rsa keys.
       if windows?
         windows_install
       else
-        # we use command line tools for dbus since the dbus gem is not cross
-        # platform and compiles itself on the host system when installed
         paragraph do
           say "We will now check to see if you have the necessary client tools installed."
         end
-        if has_dbus_send?
-          package_kit_install
-        else
-          generic_unix_install_check
-        end
+        generic_unix_install_check
       end
       true
     end
@@ -369,96 +358,6 @@ public and private keys id_rsa keys.
       end
     end
 
-    def dbus_send_exec(name, service, obj_path, iface, stringafied_params, wait_for_reply)
-      # :nocov: dbus_send_exec is not safe to run on a test system
-      method = "#{iface}.#{name}"
-      print_reply = ""
-      print_reply = "--print-reply" if wait_for_reply
-
-      cmd = "dbus-send --session #{print_reply} --type=method_call \
-            --dest=#{service} #{obj_path} #{method} #{stringafied_params}"
-      `cmd 2>&1`
-      # :nocov:
-    end
-
-    def dbus_send_session_method(name, service, obj_path, iface, stringafied_params, wait_for_reply=true)
-      output = dbus_send_exec(name, service, obj_path, iface, stringafied_params, wait_for_reply)
-      raise output if output.start_with?('Error') and !$?.success?
-
-      # parse the output
-      results = []
-      output.split('\n').each_with_index do |line, i|
-        if i != 0 # discard first line
-          param_type, value = line.chomp.split(" ", 2)
-
-          case param_type
-          when "boolean"
-            results << (value == 'true')
-          when "string"
-            results << value
-          else
-            say "unknown type #{param_type} - treating as string"
-            results << value
-          end
-        end
-      end
-
-      if results.length == 0
-        return nil
-      elsif results.length == 1
-        return results[0]
-      else
-        return results
-      end
-    end
-
-    ##
-    # calls package kit methods using dbus_send
-    #
-    # name - method name
-    # iface - either 'Query' or 'Modify'
-    # stringafied_params - string of params in the format of dbus-send
-    #  e.g. "int32:10 string:'hello world'"
-    #
-    def package_kit_method(name, iface, stringafied_params, wait_for_reply=true)
-      service = "org.freedesktop.PackageKit"
-      obj_path = "/org/freedesktop/PackageKit"
-      full_iface = "org.freedesktop.PackageKit.#{iface}"
-      dbus_send_session_method name, service, obj_path, full_iface, stringafied_params, wait_for_reply
-    end
-    def package_kit_git_installed?
-      package_kit_method('IsInstalled', 'Query', 'string:git string:')
-    end
-
-    def package_kit_install
-      section(:top => 1) do
-        say "Checking for git ... "
-      end
-
-      begin
-        # double check due to slight differences in older platforms
-        if has_git? or package_kit_git_installed?
-          section(:bottom => 1) { say "found" }
-        else
-          section(:bottom => 1) { say "needs to be installed" }
-          install = false
-          section do
-            install = agree "Would you like to install git with the system installer? (yes/no) "
-          end
-          if install
-            package_kit_method('InstallPackageNames', 'Modify', 'uint32:0 array:string:"git" string:', false)
-            paragraph do
-              say "You may safely continue while the installer is running or " \
-                  "you can wait until it has finished.  Press any key to continue:"
-              get_character
-            end
-          end
-        end
-      rescue
-        generic_unix_install_check false
-      end
-    end
-
     def generic_unix_install_check(show_action=true)
       section(:top => 1) { say "Checking for git ... " } if show_action
       if has_git?
@@ -499,11 +398,6 @@ EOF
       $?.success?
     rescue
       false
-    end
-
-    def has_dbus_send?
-      bus = ENV['DBUS_SESSION_BUS_ADDRESS']
-      exe? 'dbus-send' and !bus.nil? and bus.length > 0
     end
   end
 

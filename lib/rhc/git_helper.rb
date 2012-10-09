@@ -37,7 +37,7 @@ module RHC
         # and print the whole output which is not as clean
         output = %x[#{clone_cmd} 2>&1]
         if $?.exitstatus != 0
-          err = output
+          err = output + " - Check to make sure you have correctly installed git and it is added to your path."
         else
           say output
         end
