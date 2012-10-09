@@ -182,7 +182,7 @@ public and private keys id_rsa keys.
         end
         hostname = Socket.gethostname.gsub(/\..*\z/,'')
         username = @username ? @username.gsub(/@.*/, '') : ''
-        pubkey_default_name = "cli_key_#{username}_#{hostname}"
+        pubkey_default_name = "clikey#{username}#{hostname}".gsub(/[^A-Za-z0-9]/,'')
         
         paragraph do
           key_name =  ask("Provide a name for this key: ") do |q|
