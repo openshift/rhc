@@ -125,7 +125,7 @@ module RHC
       def tail(options)
         debug "Tail in progress for #{name}"
 
-        file_glob = options.files ? options.files : "#{name}/logs/*"
+        file_glob = options.files ? options.files : "#{cartridges.first.name}/logs/*"
         remote_cmd = "tail#{options.opts ? ' --opts ' + Base64::encode64(options.opts).chomp : ''} #{file_glob}"
         ssh_cmd = "ssh -t #{uuid}@#{host} '#{remote_cmd}'"
         begin
