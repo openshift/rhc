@@ -79,19 +79,20 @@ module RHC
       end
 
       #Find Cartridge by name
-      def find_cartridge(name, options={})
-        debug "Finding cartridge #{name} in app #{self.name}"
+      def find_cartridge(sought, options={})
+        debug "Finding cartridge #{sought} in app #{name}"
 
         type = options[:type]
 
-        cartridges.each { |cart| return cart if cart.name == name and (type.nil? or cart.type == type) }
+        cartridges.each { |cart| return cart if cart.name == sought and (type.nil? or cart.type == type) }
 
         suggested_msg = ""
-        unless cartridges.empty?
+        valid_cartridges = cartridges.select {|c| type.nil? or c.type == type}
+        unless valid_cartridges.empty?
           suggested_msg = "\n\nValid cartridges:"
-          cartridges.each { |cart| suggested_msg += "\n#{cart.name}" if type.nil? or cart.type == type }
+          valid_cartridges.each { |cart| suggested_msg += "\n#{cart.name}" }
         end
-        raise RHC::CartridgeNotFoundException.new("Cartridge #{name} can't be found in application #{@name}.#{suggested_msg}")
+        raise RHC::CartridgeNotFoundException.new("Cartridge #{sought} can't be found in application #{name}.#{suggested_msg}")
       end
 
       #Find Cartridges by name or regex
