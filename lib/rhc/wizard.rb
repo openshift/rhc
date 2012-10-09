@@ -306,7 +306,7 @@ public and private keys id_rsa keys.
 
           application_types = @rest_client.find_cartridges :type => "standalone"
           application_types.sort {|a,b| a.name <=> b.name }.each do |cart|
-            say "    * #{cart.name} - rhc app create -t #{cart.name} -a <app name>"
+            say "    * #{cart.name} - rhc app create <app name> #{cart.name}"
           end
         end
       end
