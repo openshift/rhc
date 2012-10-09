@@ -77,7 +77,7 @@ module RHC
     global_option '-p', '--password password', "OpenShift password"
     global_option '-d', '--debug', "Turn on debugging"
 
-    global_option '--noprompt', "Do not ask for input"
+    global_option '--noprompt', "Suppress the interactive setup wizard from running before a command"
     global_option '--config FILE', "Path of a different config file"
     def config
       raise "Operations requiring configuration must define a config accessor"
