@@ -25,7 +25,7 @@ module RHC
       STAGES
     end
 
-    def initialize(config)
+    def initialize(config, opts=nil)
       @config = config
       @config_path = config.config_path
       if @libra_server.nil?
@@ -33,6 +33,7 @@ module RHC
         # if not set, set to default
         @libra_server = @libra_server ?  @libra_server : "openshift.redhat.com"
       end
+      @config.config_user opts.rhlogin if opts && opts.rhlogin
     end
 
     # Public: Runs the setup wizard to make sure ~/.openshift and ~/.ssh are correct
@@ -78,8 +79,13 @@ module RHC
     def login_stage
       # get_password adds an extra untracked newline so set :bottom to -1
       section(:top => 1, :bottom => -1) do
-        @username = ask("To connect to #{@libra_server} enter your OpenShift login (email or Red Hat login id): ") do |q|
-          q.default = RHC::Config.default_rhlogin
+        if @config.has_opts? && @config.opts_login
+          @username = @config.opts_login
+          say "Using #{@username}, which was given on the command line"
+        else
+          @username = ask("To connect to #{@libra_server} enter your OpenShift login (email or Red Hat login id): ") do |q|
+            q.default = RHC::Config.default_rhlogin
+          end
         end
 
         @password = RHC::Config.password
@@ -427,8 +433,8 @@ EOF
   end
 
   class RerunWizard < Wizard
-    def initialize(config)
-      super
+    def initialize(config, login=nil)
+      super(config, login)
     end
 
     def greeting_stage
