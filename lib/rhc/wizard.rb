@@ -4,6 +4,7 @@ require 'rhc/ssh_key_helpers'
 require 'highline/system_extensions'
 require 'net/ssh'
 require 'fileutils'
+require 'socket'
 
 module RHC
   class Wizard
@@ -179,7 +180,10 @@ public and private keys id_rsa keys.
           end
           return nil
         end
-        pubkey_default_name = key_fingerprint[0, 12].gsub(/[^0-9a-zA-Z]/,'')
+        hostname = Socket.gethostname.gsub(/\..*\z/,'')
+        username = @username ? @username.gsub(/@.*/, '') : ''
+        pubkey_default_name = "cli_key_#{username}_#{hostname}"
+        
         paragraph do
           key_name =  ask("Provide a name for this key: ") do |q|
             q.default = pubkey_default_name
