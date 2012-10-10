@@ -244,6 +244,7 @@ module RestSpecHelper
 
   class MockRestGearGroup < RHC::Rest::GearGroup
     def initialize
+      @cartridges = [{'name' => 'fake_geargroup_cart-0.1'}]
       @gears = [{'state' => 'started', 'id' => 'fakegearid'}]
     end
   end
