@@ -19,6 +19,18 @@ module RHC
     end
   end
 
+  class CartridgeNotFoundException < Exception
+    def initialize(message="Cartridge not found")
+      super message, 154
+    end
+  end
+
+  class MultipleCartridgesException < Exception
+    def initialize(message="Multiple cartridge found")
+      super message, 155
+    end
+  end
+
   class KeyNotFoundException < Exception
     def initialize(message="SSHKey not found")
       super message, 118
