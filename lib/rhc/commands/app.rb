@@ -217,15 +217,17 @@ module RHC::Commands
     syntax "<app> [--namespace namespace] [--app app]"
     argument :app, "The name of the application you are getting information on", ["-a", "--app app"], :context => :app_context
     option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
-    option ["--apache"], "Get the current status of the application"
+    option ["--state"], "Get the current status of the application"
     def show(app)
       rest_domain = rest_client.find_domain(options.namespace)
       rest_app = rest_domain.find_application(app)
-      unless options.apache
+      unless options.state
         say_app_info(rest_app)
       else
-        rest_app.gear_groups.each do |gg|
-          say gg.gears.first['state']
+        results do
+          rest_app.gear_groups.each do |gg|
+            say "Geargroup #{gg.cartridges.collect { |c| c['name'] }.join('+')} is #{gg.gears.first['state']}"
+          end
         end
       end
       0
@@ -235,10 +237,10 @@ module RHC::Commands
     syntax "<app> [--namespace namespace] [--app app]"
     argument :app, "The name of the application you are getting information on", ["-a", "--app app"], :context => :app_context
     option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
-    deprecated "rhc app show --apache"
+    deprecated "rhc app show --state"
     def status(app)
       # TODO: add a way to deprecate this and alias to show --apache
-      options.apache = true
+      options.state = true
       show(app)
     end
 

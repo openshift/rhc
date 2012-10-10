@@ -316,8 +316,8 @@ describe RHC::Commands::App do
     end
   end
 
-  describe 'app show --apache' do
-    let(:arguments) { ['app', 'show', 'app1', '--apache', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+  describe 'app show --state' do
+    let(:arguments) { ['app', 'show', 'app1', '--state', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     context 'when run' do
       before(:each) do
