@@ -127,8 +127,12 @@ module RHC::Commands
       rest_domain = rest_client.find_domain(options.namespace)
       rest_app = rest_domain.find_application(options.app)
       rest_cartridge = find_cartridge(rest_app, cartridge)
-      msg = rest_cartridge.status
-      say msg
+      msgs = rest_cartridge.status
+      results {
+        msgs.each do |msg|
+          say msg['message']
+        end
+      }
       0
     end
 
