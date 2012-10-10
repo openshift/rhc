@@ -621,6 +621,24 @@ describe RHC::Wizard do
       output = $terminal.read
       output.should match 'Updating'
     end
+    
+    it 'should pick a usable SSH key name' do
+      key_name = 'default'
+      wizard = FirstRunWizardDriver.new
+      key_data = wizard.get_mock_key_data
+      Socket.stub(:gethostname) { key_name }
+      $terminal.write_line("\n") # to accept default key name
+      wizard.ssh_keys = key_data
+      wizard.stub(:ssh_key_triple_for_default_key) { wizard.pub_key.chomp.split }
+      wizard.stub(:fingerprint_for_default_key) { "" } # this value is irrelevant
+      wizard.rest_client.stub(:add_key) { true }
+      
+      wizard.send(:upload_ssh_key)
+      output = $terminal.read
+      # since the clashing key name is short, we expect to present
+      # a key name with "1" attached to it.
+      output.should match "|" + key_name + "1" + "|"
+    end
   end
 
   module WizardDriver
