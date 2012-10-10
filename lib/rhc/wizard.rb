@@ -4,6 +4,7 @@ require 'rhc/ssh_key_helpers'
 require 'highline/system_extensions'
 require 'net/ssh'
 require 'fileutils'
+require 'socket'
 
 module RHC
   class Wizard
@@ -179,7 +180,15 @@ public and private keys id_rsa keys.
           end
           return nil
         end
-        pubkey_default_name = key_fingerprint[0, 12].gsub(/[^0-9a-zA-Z]/,'')
+        hostname = Socket.gethostname.gsub(/\..*\z/,'')
+        username = @username ? @username.gsub(/@.*/, '') : ''
+        pubkey_base_name = "#{username}#{hostname}".gsub(/[^A-Za-z0-9]/,'').slice(0,16)
+        pubkey_default_name = find_unique_key_name(
+          :keys => @ssh_keys,
+          :base => pubkey_base_name,
+          :max_length => RHC::DEFAULT_MAX_LENGTH
+        )
+        
         paragraph do
           key_name =  ask("Provide a name for this key: ") do |q|
             q.default = pubkey_default_name
@@ -189,6 +198,22 @@ public and private keys id_rsa keys.
       end
 
       key_name
+    end
+    
+    # given the base name and the maximum length,
+    # find a name that does not clash with what is in opts[:keys]
+    def find_unique_key_name(opts)
+      keys = opts[:keys] || @ssh_keys
+      base = opts[:base] || 'default'
+      max  = opts[:max_length] || RHC::DEFAULT_MAX_LENGTH # in rhc-common.rb
+      key_name_suffix = 1
+      candidate = base
+      while @ssh_keys.detect { |k| k.name == candidate }
+        candidate = base.slice(0, max - key_name_suffix.to_s.length) +
+          key_name_suffix.to_s
+        key_name_suffix += 1
+      end
+      candidate
     end
 
     def upload_ssh_key
