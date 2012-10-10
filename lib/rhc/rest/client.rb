@@ -1,12 +1,22 @@
 require 'base64'
 require 'rhc/json'
 require 'rhc/rest/base'
+require 'uri'
 
 module RHC
   module Rest
     class Client < Base
-      def initialize(end_point, username, password, use_debug=false)
+      attr_reader :server_api_versions, :client_api_versions
+      # Keep the list of supported API versions here
+      # The list may not necessarily be sorted; we will select the last
+      # matching one supported by the server.
+      # See #api_version_negotiated
+      CLIENT_API_VERSIONS = [1.0, 1.1, 1.2]
+      
+      def initialize(end_point, username, password, use_debug=false, preferred_api_versions = CLIENT_API_VERSIONS)
         @debug = use_debug
+        @end_point = end_point
+        @server_api_versions = []
         debug "Connecting to #{end_point}"
 
         credentials = nil
@@ -20,11 +30,37 @@ module RHC
         # :nocov:
         @@headers["Authorization"] = "Basic #{credentials}"
         @@headers["User-Agent"] = RHC::Helpers.user_agent rescue nil
-        #first get the API
         RestClient.proxy = ENV['http_proxy']
-        request = new_request(:url => end_point, :method => :get, :headers => @@headers)
-
-        super({:links => request(request)}, use_debug)
+        
+        # if API version negotiation is unsuccessful, execute this
+        default_request = new_request(:url => @end_point, :method => :get, :headers => @@headers)
+        
+        # we'll be popping from preferred_api_versions in the while loop below
+        # so we need to dup the versions we prefer
+        @client_api_versions = preferred_api_versions.dup
+        
+        begin
+          while !api_version_negotiated && !preferred_api_versions.empty?
+            api_version = preferred_api_versions.pop
+            debug "Trying API version #{api_version}"
+            
+            @@headers["Accept"] = "application/json; version=#{api_version}"
+            request = new_request(:url => @end_point, :method => :get, :headers => @@headers)
+            begin
+              json_response = ::RHC::Json.decode(request.execute)
+              @server_api_versions = json_response['supported_api_versions']
+              links = json_response['data']
+            rescue RestClient::NotAcceptable
+              # try the next version
+              debug "API version #{api_version} was rejected by the server"
+            end
+          end
+          debug "Negotiated API version #{api_version_negotiated}" if api_version_negotiated
+          warn_about_api_versions
+        rescue Exception => e
+          raise ResourceAccessException.new("Failed to access resource: #{e.message}")
+        end
+        super({:links => links || request(default_request)}, use_debug)
       end
 
       def add_domain(id)
@@ -118,6 +154,35 @@ module RHC
         debug "Logout/Close client"
       end
       alias :close :logout
+      
+      
+      ### API version related methods
+      def api_version_match?
+        ! api_version_negotiated.nil?
+      end
+      
+      # return the API version that the server and this client agreed on
+      def api_version_negotiated
+        return nil unless @server_api_versions
+        client_api_versions.reverse. # choose the last API version listed
+          detect { |v| @server_api_versions.include? v }
+      end
+      
+      def api_version_current?
+        current_client_api_version == api_version_negotiated
+      end
+      
+      def current_client_api_version
+        client_api_versions.last
+      end
+      
+      def warn_about_api_versions
+        if !api_version_match?
+          # API versions did not match
+          warn "WARNING: API version mismatch. This client supports #{client_api_versions.join(', ')} 
+but server at #{URI.parse(@end_point).host} supports #{@server_api_versions.join(', ')}."
+        end
+      end
     end
   end
 end
