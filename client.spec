@@ -22,6 +22,7 @@ Requires:      rubygem-test-unit
 Requires:      rubygem-net-ssh
 Requires:      rubygem-archive-tar-minitar
 Requires:      rubygem-commander
+Requires:      rubygem-open4
 Requires:      git
 Obsoletes:     rhc-rest
 Provides:      rubygem-rhc

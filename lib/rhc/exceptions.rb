@@ -19,9 +19,29 @@ module RHC
     end
   end
 
+  class CartridgeNotFoundException < Exception
+    def initialize(message="Cartridge not found")
+      super message, 154
+    end
+  end
+
+  class MultipleCartridgesException < Exception
+    def initialize(message="Multiple cartridge found")
+      super message, 155
+    end
+  end
+
   class KeyNotFoundException < Exception
     def initialize(message="SSHKey not found")
       super message, 118
+    end
+  end
+
+  # Makes sense to use its own exit code since this is different from a
+  # resource error
+  class GitException < Exception
+    def initialize(message="Git returned an error")
+      super message, 216
     end
   end
 
@@ -66,6 +86,18 @@ module RHC
   class PortForwardFailedException < Exception
     def initialize(message="Port forward failed")
       super message, 1
+    end
+  end
+
+  class SnapshotSaveException < Exception
+    def initialize(message="Error trying to save snapshot")
+      super message, 130
+    end
+  end
+
+  class SnapshotRestoreException < Exception
+    def initialize(message="Error trying to restore snapshot")
+      super message, 130
     end
   end
 end

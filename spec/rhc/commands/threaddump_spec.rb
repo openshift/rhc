@@ -69,13 +69,13 @@ describe RHC::Commands::Threaddump do
   end
 
   describe 'threaddump' do
-    let(:arguments) { ['threaddump',  '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password', 'mock_app_0'] }
+    let(:arguments) { ['threaddump', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password', 'mock_app_0'] }
     context 'with no issues' do
       it { expect { run }.should exit_with_code(0) }
     end
   end
   describe 'threaddump no args' do
-    let(:arguments) { ['threaddump'] }
+    let(:arguments) { ['threaddump', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
     context 'args not supplied' do
       it { expect { run }.should exit_with_code(1) }
     end

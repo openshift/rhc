@@ -6,6 +6,14 @@ module RHC
       commands.keys.find_all { |name| name if /^#{name}\b/.match arg_string }
     end
 
+    def options_parse_trace
+      if @args.include? "--trace"
+        @args.delete "--trace"
+        return true
+      end
+      false
+    end
+
     # override so we can do our own error handling
     def run!
       trace = false
@@ -20,10 +28,20 @@ module RHC
         return
       end
       global_option('-v', '--version', 'Display version information') { say version; return }
-      global_option('-t', '--trace', 'Display backtrace when an error occurs') { trace = true }
+      global_option('--timeout seconds', Integer, 'Set the timeout in seconds for network commands') do |value|
+        # FIXME: Refactor so we don't have to use a global var here
+        $rest_timeout = value
+      end
 
-      parse_global_options
-      remove_global_options options, @args
+      # remove these because we monkey patch Commands to process all options
+      # at once, avoiding conflicts between the global and command options
+      # code left here just in case someone compares this with the original
+      # commander code
+      #parse_global_options
+      #remove_global_options options, @args
+
+      # special case --trace because we need to use it in the runner
+      trace = options_parse_trace
 
       unless trace
         begin

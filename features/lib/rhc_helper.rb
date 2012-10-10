@@ -5,8 +5,8 @@ require 'tmpdir'
 ### Some shared constant declarations
 module RHCHelper
   TEMP_DIR = File.join(Dir.tmpdir, "rhc") unless const_defined?(:TEMP_DIR)
-  # The regex to parse the ssh output from the create app results
-  SSH_OUTPUT_PATTERN = %r|ssh://([^@]+)@([^/]+)| unless const_defined?(:SSH_OUTPUT_PATTERN)
+  # The regex to parse the UUID output from the create app results
+  UUID_OUTPUT_PATTERN = %r|UUID:\s*(.+)| unless const_defined?(:UUID_OUTPUT_PATTERN)
   # Regex to parse passwords out of logging messages
   PASSWORD_REGEX = / -p [^\s]* / unless const_defined?(:PASSWORD_REGEX)
 end

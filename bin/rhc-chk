@@ -129,17 +129,8 @@ end
 #
 # Check for proxy environment
 #
-if ENV['http_proxy']
-  if ENV['http_proxy']!~/^(\w+):\/\// then
-    ENV['http_proxy']="http://" + ENV['http_proxy']
-  end
-  proxy_uri=URI.parse(ENV['http_proxy'])
-  $http = Net::HTTP::Proxy(proxy_uri.host, proxy_uri.port, proxy_uri.user, proxy_uri.password)
-  $debuginfo['environment']['proxy'] = "#{proxy_uri.user}:#{proxy_uri.password}@#{proxy_uri.host}:#{proxy_uri.port}"
-else
-  $http = Net::HTTP
-  $debuginfo['environment']['proxy'] = "none"
-end
+$http = RHC::Config.default_proxy
+$debuginfo['environment']['proxy'] = (RHC::Config.using_proxy? ? ENV['http_proxy'] : "none")
 
 #####################################
 #     Done setting up environment   #

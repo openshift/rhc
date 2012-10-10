@@ -22,6 +22,8 @@ Given /^an existing (or new )?(scaled )?(.+) (application with.*)$/ do |create, 
   options[:scalable] = scaled if scaled
   @app = App.find_on_fs(options)
 
+  @app = nil if @app.nil? or not @app.is_created?
+
   if create && @app.nil?
     When "a #{scaled}#{type} application is created"
     embeds.each do |embed|
@@ -67,7 +69,8 @@ When /^the application is (\w+)$/ do |command|
     :stopped => :stop,
     :shown   => :show,
     :tidied  => :tidy,
-    :snapshot => :snapshot_save
+    :snapshot => :snapshot_save,
+    :deleted => :delete
   }
 
   # Use an alias if it exists, or just remove 'ed' (like from started)

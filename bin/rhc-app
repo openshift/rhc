@@ -5,6 +5,18 @@ require 'rhc/coverage_helper'
 require 'rhc-common'
 require 'base64'
 
+if ["add-alias", "remove-alias"].include? ARGV[0]
+  RHC::Helpers.deprecated_command('rhc alias (add|remove)',true)
+elsif "snapshot" == ARGV[0]
+  RHC::Helpers.deprecated_command('rhc snapshot (save|restore)',true)
+elsif "tail" == ARGV[0]
+  RHC::Helpers.deprecated_command('rhc tail',true)
+elsif "cartridge" == ARGV[0]
+  RHC::Helpers.deprecated_command('rhc cartridge (add|remove|status|stop|start|restart|reload)',true)
+else
+  RHC::Helpers.deprecated_command('rhc app (create|delete|show|stop|force-stop|start|restart|reload|tidy)',true)
+end
+
 $embed_mapper = { 'add' => 'configure', 'remove' => 'deconfigure' }
 
 #

@@ -4,6 +4,7 @@ require 'rhc/ssh_key_helpers'
 require 'highline/system_extensions'
 require 'net/ssh'
 require 'fileutils'
+require 'socket'
 
 module RHC
   class Wizard
@@ -85,13 +86,12 @@ module RHC
         @password = RHC::get_password if @password.nil?
       end
 
-      # Confirm username / password works:
-      user_info = RHC::get_user_info(@libra_server, @username, @password, RHC::Config.default_proxy, true)
-
       # instantiate a REST client that stages can use
-      # TODO: use only REST calls in the wizard
       end_point = "https://#{@libra_server}/broker/rest/api"
       @rest_client = RHC::Rest::Client.new(end_point, @username, @password)
+      
+      # confirm that the REST client can connect
+      return false unless @rest_client.user
 
       true
     end
@@ -136,87 +136,59 @@ EOF
       true
     end
 
-    def ssh_keygen_fallback(ssh_pub_key_file_path)
-      `ssh-keygen -lf #{ssh_pub_key_file_path} 2>&1`.split(' ')[1]
-    end
-
+    # return true if the account has the public key defined by
+    # RHC::Config::ssh_pub_key_file_path
     def ssh_key_uploaded?
-      @ssh_keys = RHC::get_ssh_keys(@libra_server, @username, @password, RHC::Config.default_proxy)
-      additional_ssh_keys = @ssh_keys['keys']
-
-      local_fingerprint = nil
-      begin
-        local_fingerprint = Net::SSH::KeyFactory.load_public_key(RHC::Config.ssh_pub_key_file_path).fingerprint
-      rescue NoMethodError #older net/ssh (mac for example)
-        local_fingerprint = ssh_keygen_fallback RHC::Config.ssh_pub_key_file_path
-      end
-
-      return true if @ssh_keys['fingerprint'] == local_fingerprint
-      additional_ssh_keys.each do |name, keyval|
-        return true if keyval['fingerprint'] == local_fingerprint
-      end
-
-      false
+      @ssh_keys ||= @rest_client.sshkeys
+      @ssh_keys.any? { |k| k.fingerprint == fingerprint_for_default_key }
     end
 
-    def upload_ssh_key
-      additional_ssh_keys = @ssh_keys['keys']
-      known_keys = []
+    def existing_keys_info
+      return unless @ssh_keys
+      # TODO: This ERB format is shared with RHC::Commands::Sshkey; should be refactored
+      @ssh_keys.inject("Current Keys: \n") do |result, key|
+        erb = ::RHC::Helpers.ssh_key_display_format
+        result += format(key, erb)
+      end
+    end
 
+    def get_preferred_key_name
       paragraph do
         say "You can enter a name for your key, or leave it blank to use the default name. " \
             "Using the same name as an existing key will overwrite the old key."
       end
+      key_name = 'default'
 
-      section(:top => 1) { say 'Current Keys:' }
-      if @ssh_keys['fingerprint'].nil?
-        section(:bottom => 1) { say "    None" }
-      else
-        known_keys << 'default'
-        section do
-          say "    default - #{@ssh_keys['fingerprint']}"
-        end
-      end
-
-      if additional_ssh_keys && additional_ssh_keys.kind_of?(Hash)
-        section(:bottom => 1) do
-          additional_ssh_keys.each do |name, keyval|
-            say "    #{name} - #{keyval['fingerprint']}"
-            known_keys.push(name)
-          end
-        end
-      end
-
-      if @ssh_keys['fingerprint'].nil?
-        key_name = "default"
+      if @ssh_keys.empty?
         paragraph do
-          say "Since you do not have any keys associated with your OpenShift account, " \
-              "your new key will be uploaded as the default key"
+          say <<-DEFAULT_KEY_UPLOAD_MSG
+Since you do not have any keys associated with your OpenShift account,
+your new key will be uploaded as the 'default' key
+          DEFAULT_KEY_UPLOAD_MSG
         end
       else
-        key_fingerprint = nil
-        key_valid = true
-        begin
-          key_fingerprint = Net::SSH::KeyFactory.load_public_key(RHC::Config.ssh_pub_key_file_path).fingerprint
-        rescue NoMethodError #older net/ssh (mac for example)
-          key_fingerprint = ssh_keygen_fallback RHC::Config.ssh_pub_key_file_path
-          if $?.exitstatus != 0
-            key_valid = false
-          end
-        rescue Net::SSH::Exception, NotImplementedError
-          key_valid = false
-        end
+        section(:top => 1) { say existing_keys_info }
 
-        if ! key_valid
+        key_fingerprint = fingerprint_for_default_key
+        unless key_fingerprint
           paragraph do
-            say "Your ssh public key at #{RHC::Config.ssh_pub_key_file_path} can not be read. " \
-                "The setup can not continue until you manually remove or fix both of your " \
-                "public and private keys id_rsa keys."
-            end
-          return false
+            say <<-CONFIG_KEY_INVALID
+Your ssh public key at #{RHC::Config.ssh_pub_key_file_path} is invalid or unreadable.
+The setup can not continue until you manually remove or fix both of your
+public and private keys id_rsa keys.
+            CONFIG_KEY_INVALID
+          end
+          return nil
         end
-
-        pubkey_default_name = key_fingerprint[0, 12].gsub(/[^0-9a-zA-Z]/,'')
+        hostname = Socket.gethostname.gsub(/\..*\z/,'')
+        username = @username ? @username.gsub(/@.*/, '') : ''
+        pubkey_base_name = "#{username}#{hostname}".gsub(/[^A-Za-z0-9]/,'').slice(0,16)
+        pubkey_default_name = find_unique_key_name(
+          :keys => @ssh_keys,
+          :base => pubkey_base_name,
+          :max_length => RHC::DEFAULT_MAX_LENGTH
+        )
+        
         paragraph do
           key_name =  ask("Provide a name for this key: ") do |q|
             q.default = pubkey_default_name
@@ -225,46 +197,65 @@ EOF
         end
       end
 
-      if known_keys.include?(key_name)
-        section do
-          say "Key already exists!  Updating key #{key_name} .. "
-          add_or_update_key('update', key_name, RHC::Config.ssh_pub_key_file_path, @username, @password)
-        end
-      else
-        section do
-          say "Sending new key #{key_name} .. "
-          add_or_update_key('add', key_name, RHC::Config.ssh_pub_key_file_path, @username, @password)
-        end
+      key_name
+    end
+    
+    # given the base name and the maximum length,
+    # find a name that does not clash with what is in opts[:keys]
+    def find_unique_key_name(opts)
+      keys = opts[:keys] || @ssh_keys
+      base = opts[:base] || 'default'
+      max  = opts[:max_length] || RHC::DEFAULT_MAX_LENGTH # in rhc-common.rb
+      key_name_suffix = 1
+      candidate = base
+      while @ssh_keys.detect { |k| k.name == candidate }
+        candidate = base.slice(0, max - key_name_suffix.to_s.length) +
+          key_name_suffix.to_s
+        key_name_suffix += 1
       end
+      candidate
+    end
+
+    def upload_ssh_key
+      key_name = get_preferred_key_name
+      return false unless key_name
+
+      type, content, comment = ssh_key_triple_for_default_key
+      say "type: %s\ncontent: %s\nfingerprint: %s" % [type, content, fingerprint_for_default_key]
+
+      if !@ssh_keys.empty? && @ssh_keys.any? { |k| k.name == key_name }
+        say "Key with the name #{key_name} already exists. Updating... "
+        key = @rest_client.find_key(key_name)
+        key.update(type, content)
+      else
+        say "Uploading key '#{key_name}' from #{RHC::Config::ssh_pub_key_file_path}"
+        @rest_client.add_key key_name, content, type
+      end
+      
       true
     end
 
     def upload_ssh_key_stage
-      unless ssh_key_uploaded?
-        upload = false
-        section do
-          upload = agree "Your public ssh key must be uploaded to the OpenShift server.  Would you like us to upload it for you? (yes/no) "
-        end
+      return true if ssh_key_uploaded?
 
-        if upload
-          upload_ssh_key
-        else
-          paragraph do
-            say "You can upload your ssh key at a later time using the 'rhc sshkey' command"
-          end
+      upload = false
+      section do
+        upload = agree "Your public ssh key must be uploaded to the OpenShift server.  Would you like us to upload it for you? (yes/no) "
+      end
+
+      if upload
+        upload_ssh_key
+      else
+        paragraph do
+          say "You can upload your ssh key at a later time using the 'rhc sshkey' command"
         end
       end
       true
     end
 
     ##
-    # Attempts install various tools if they aren't currently installed on the
-    # users system.  If we can't automate the install, alert the user that they
-    # should manually install them
-    #
-    # On Unix we rely on PackageKit (which mostly just covers modern Linux flavors
-    # such as Fedora, Suse, Debian and Ubuntu). On Windows we will give instructions
-    # and links for the tools they should install
+    # Alert the user that they should manually install tools if they are not
+    # currently available
     #
     # Unix Tools:
     #  git
@@ -277,16 +268,10 @@ EOF
       if windows?
         windows_install
       else
-        # we use command line tools for dbus since the dbus gem is not cross
-        # platform and compiles itself on the host system when installed
         paragraph do
           say "We will now check to see if you have the necessary client tools installed."
         end
-        if has_dbus_send?
-          package_kit_install
-        else
-          generic_unix_install_check
-        end
+        generic_unix_install_check
       end
       true
     end
@@ -294,14 +279,13 @@ EOF
     def config_namespace_stage
       paragraph do
         say "Checking for your namespace ... "
-        user_info = RHC::get_user_info(@libra_server, @username, @password, RHC::Config.default_proxy, true)
-        domains = user_info['user_info']['domains']
+        domains = @rest_client.domains
         if domains.length == 0
           say "not found"
           ask_for_namespace
         else
           say "found namespace:"
-          domains.each { |d| say "    #{d['namespace']}" }
+          domains.each { |d| say "    #{d.id}" }
         end
       end
 
@@ -312,33 +296,31 @@ EOF
       section do
         say "Checking for applications ... "
       end
-      user_info = RHC::get_user_info(@libra_server, @username, @password, RHC::Config.default_proxy, true)
-      apps = user_info['app_info']
+      
+      apps = @rest_client.domains.inject([]) do |list, domain|
+        list += domain.applications
+      end
+      
       if !apps.nil? and !apps.empty?
         section(:bottom => 1) do
           say "found"
-          apps.each do |app_name, app_info|
-            app_url = nil
-            unless user_info['user_info']['domains'].empty?
-              app_url = "http://#{app_name}-#{user_info['user_info']['domains'][0]['namespace']}.#{user_info['user_info']['rhc_domain']}/"
-            end
-
-            if app_url.nil?
-              say "    * #{app_name} - no public url (you need to add a namespace)"
+          apps.each do |app|
+            if app.app_url.nil? && app.u
+              say "    * #{app.name} - no public url (you need to add a namespace)"
             else
-              say "    * #{app_name} - #{app_url}"
+              say "    * #{app.name} - #{app.app_url}"
             end
           end
         end
       else
         section(:bottom => 1) { say "none found" }
         paragraph do
-          say "Below is a list of the types of application " \
-              "you can create: "
+          say "Run 'rhc app create' to create your first application.\n\n"
+          say "Below is a list of the types of application you can create: \n"
 
-          application_types = RHC::get_cartridges_list @libra_server, RHC::Config.default_proxy
-          application_types.each do |cart|
-            say "    * #{cart} - rhc app create -t #{cart} -a <app name>"
+          application_types = @rest_client.find_cartridges :type => "standalone"
+          application_types.sort {|a,b| a.name <=> b.name }.each do |cart|
+            say "    * #{cart.name} - rhc app create <app name> #{cart.name}"
           end
         end
       end
@@ -401,96 +383,6 @@ EOF
       end
     end
 
-    def dbus_send_exec(name, service, obj_path, iface, stringafied_params, wait_for_reply)
-      # :nocov: dbus_send_exec is not safe to run on a test system
-      method = "#{iface}.#{name}"
-      print_reply = ""
-      print_reply = "--print-reply" if wait_for_reply
-
-      cmd = "dbus-send --session #{print_reply} --type=method_call \
-            --dest=#{service} #{obj_path} #{method} #{stringafied_params}"
-      `cmd 2>&1`
-      # :nocov:
-    end
-
-    def dbus_send_session_method(name, service, obj_path, iface, stringafied_params, wait_for_reply=true)
-      output = dbus_send_exec(name, service, obj_path, iface, stringafied_params, wait_for_reply)
-      raise output if output.start_with?('Error') and !$?.success?
-
-      # parse the output
-      results = []
-      output.split('\n').each_with_index do |line, i|
-        if i != 0 # discard first line
-          param_type, value = line.chomp.split(" ", 2)
-
-          case param_type
-          when "boolean"
-            results << (value == 'true')
-          when "string"
-            results << value
-          else
-            say "unknown type #{param_type} - treating as string"
-            results << value
-          end
-        end
-      end
-
-      if results.length == 0
-        return nil
-      elsif results.length == 1
-        return results[0]
-      else
-        return results
-      end
-    end
-
-    ##
-    # calls package kit methods using dbus_send
-    #
-    # name - method name
-    # iface - either 'Query' or 'Modify'
-    # stringafied_params - string of params in the format of dbus-send
-    #  e.g. "int32:10 string:'hello world'"
-    #
-    def package_kit_method(name, iface, stringafied_params, wait_for_reply=true)
-      service = "org.freedesktop.PackageKit"
-      obj_path = "/org/freedesktop/PackageKit"
-      full_iface = "org.freedesktop.PackageKit.#{iface}"
-      dbus_send_session_method name, service, obj_path, full_iface, stringafied_params, wait_for_reply
-    end
-    def package_kit_git_installed?
-      package_kit_method('IsInstalled', 'Query', 'string:git string:')
-    end
-
-    def package_kit_install
-      section(:top => 1) do
-        say "Checking for git ... "
-      end
-
-      begin
-        # double check due to slight differences in older platforms
-        if has_git? or package_kit_git_installed?
-          section(:bottom => 1) { say "found" }
-        else
-          section(:bottom => 1) { say "needs to be installed" }
-          install = false
-          section do
-            install = agree "Would you like to install git with the system installer? (yes/no) "
-          end
-          if install
-            package_kit_method('InstallPackageNames', 'Modify', 'uint32:0 array:string:"git" string:', false)
-            paragraph do
-              say "You may safely continue while the installer is running or " \
-                  "you can wait until it has finished.  Press any key to continue:"
-              get_character
-            end
-          end
-        end
-      rescue
-        generic_unix_install_check false
-      end
-    end
-
     def generic_unix_install_check(show_action=true)
       section(:top => 1) { say "Checking for git ... " } if show_action
       if has_git?
@@ -531,11 +423,6 @@ EOF
       $?.success?
     rescue
       false
-    end
-
-    def has_dbus_send?
-      bus = ENV['DBUS_SESSION_BUS_ADDRESS']
-      exe? 'dbus-send' and !bus.nil? and bus.length > 0
     end
   end
 
@@ -592,9 +479,8 @@ EOF
       STAGES
     end
 
-    def initialize(username, password)
-      @username = username
-      @password = password
+    def initialize(rest_client)
+      @rest_client = rest_client
       super RHC::Config
     end
   end
