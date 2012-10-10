@@ -16,13 +16,13 @@ module RHC
     def git_config_set(key, value)
       unset_cmd = "git config --unset-all #{key}"
       config_cmd = "git config --add #{key} #{value}"
-      cmd = "(#{unset_cmd}; #{config_cmd})"
-
-      debug "Running #{cmd} 2>&1"
       debug "Adding #{key} = #{value} to git config"
-
-      output = %x[#{cmd} 2>&1]
-      raise RHC::GitException, "Error while adding config values to git - #{output}" unless output.empty?
+      commands = [unset_cmd, config_cmd]
+      commands.each do |cmd|
+        debug "Running #{cmd} 2>&1"
+        output = %x[#{cmd} 2>&1]
+        raise RHC::GitException, "Error while adding config values to git - #{output}" unless output.empty?
+      end  
     end
 
     def git_clone_repo(git_url, repo_dir)
