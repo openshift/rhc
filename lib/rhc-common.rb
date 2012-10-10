@@ -872,67 +872,56 @@ LOOKSGOOD
   def self.snapshot_restore(rhc_domain, namespace, app_name, app_uuid, filename, debug=false)
     if File.exists? filename
 
-      if ! RHC::Helpers.windows? and ! RHC::TarGz.contains filename, "./#{app_uuid}/"
+      include_git = RHC::Helpers.windows? ? false : RHC::TarGz.contains(filename, './*/git')
 
-        puts "Archive at #{filename} does not contain the target application: ./#{app_uuid}/"
-        puts "If you created this archive rather than exported with rhc-snapshot, be sure"
-        puts "the directory structure inside the archive starts with ./<app_uuid>/"
-        puts "i.e.: tar -czvf <app_name>.tar.gz ./<app_uuid>/"
-        return 255
+      ssh_cmd = "cat #{filename} | ssh #{app_uuid}@#{app_name}-#{namespace}.#{rhc_domain} 'restore#{include_git ? ' INCLUDE_GIT' : ''}'"
+      puts "Restoring from snapshot #{filename}..."
+      puts ssh_cmd if debug
+      puts 
 
-      else
-
-        include_git = RHC::Helpers.windows? ? false : RHC::TarGz.contains(filename, './*/git')
-
-        ssh_cmd = "cat #{filename} | ssh #{app_uuid}@#{app_name}-#{namespace}.#{rhc_domain} 'restore#{include_git ? ' INCLUDE_GIT' : ''}'"
-        puts "Restoring from snapshot #{filename}..."
-        puts ssh_cmd if debug
-        puts 
-
-        begin
-          if ! RHC::Helpers.windows?
-            output = `#{ssh_cmd}`
-            if $?.exitstatus != 0
-              puts output
-              puts "Error in trying to restore snapshot.  You can try to restore manually by running:"
-              puts
-              puts ssh_cmd
-              puts
-              return 1
-            end
-          else
-            ssh = Net::SSH.start("#{app_name}-#{namespace}.#{rhc_domain}", app_uuid)
-            ssh.open_channel do |channel|
-              channel.exec("restore#{include_git ? ' INCLUDE_GIT' : ''}") do |ch, success|
-                channel.on_data do |ch, data|
-                  puts data
-                end
-                channel.on_extended_data do |ch, type, data|
-                  puts data
-                end
-                channel.on_close do |ch|
-                  puts "Terminating..."
-                end
-                File.open(filename, 'rb') do |file|
-                  file.chunk(1024) do |chunk|
-                    channel.send_data chunk
-                  end
-                end
-                channel.eof!
-              end
-            end
-            ssh.loop
+      begin
+        if ! RHC::Helpers.windows?
+          output = `#{ssh_cmd}`
+          if $?.exitstatus != 0
+            puts output
+            puts "Error in trying to restore snapshot.  You can try to restore manually by running:"
+            puts
+            puts ssh_cmd
+            puts
+            return 1
           end
-        rescue Exception => e
-          puts e.backtrace
-          puts "Error in trying to restore snapshot.  You can try to restore manually by running:"
-          puts
-          puts ssh_cmd
-          puts
-          return 1
+        else
+          ssh = Net::SSH.start("#{app_name}-#{namespace}.#{rhc_domain}", app_uuid)
+          ssh.open_channel do |channel|
+            channel.exec("restore#{include_git ? ' INCLUDE_GIT' : ''}") do |ch, success|
+              channel.on_data do |ch, data|
+                puts data
+              end
+              channel.on_extended_data do |ch, type, data|
+                puts data
+              end
+              channel.on_close do |ch|
+                puts "Terminating..."
+              end
+              File.open(filename, 'rb') do |file|
+                file.chunk(1024) do |chunk|
+                  channel.send_data chunk
+                end
+              end
+              channel.eof!
+            end
+          end
+          ssh.loop
         end
-
+      rescue Exception => e
+        puts e.backtrace
+        puts "Error in trying to restore snapshot.  You can try to restore manually by running:"
+        puts
+        puts ssh_cmd
+        puts
+        return 1
       end
+
     else
       puts "Archive not found: #{filename}"
       return 255
