@@ -323,7 +323,7 @@ module RestSpecHelper
       @type = type
       @app = app
       @properties = properties
-      @status_message = "started"
+      @status_messages = [{"message" => "started", "gear_id" => "123"}]
     end
 
     def destroy
@@ -331,21 +331,21 @@ module RestSpecHelper
     end
 
     def status
-      @status_message
+      @status_messages
     end
 
     def start
-      @status_message = "started"
+      @status_messages = [{"message" => "started", "gear_id" => "123"}]
       @app
     end
 
     def stop
-      @status_message = "stopped"
+      @status_messages = [{"message" => "stopped", "gear_id" => "123"}]
       @app
     end
 
     def restart
-      @status_message = "started"
+      @status_messages = [{"message" => "started", "gear_id" => "123"}]
       @app
     end
 
