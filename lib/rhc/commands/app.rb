@@ -217,7 +217,7 @@ module RHC::Commands
     syntax "<app> [--namespace namespace] [--app app]"
     argument :app, "The name of the application you are getting information on", ["-a", "--app app"], :context => :app_context
     option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
-    option ["--state"], "Get the current status of the application"
+    option ["--state"], "Get the current state of the application's gears"
     def show(app)
       rest_domain = rest_client.find_domain(options.namespace)
       rest_app = rest_domain.find_application(app)
