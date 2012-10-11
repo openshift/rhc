@@ -23,7 +23,3 @@ Feature: Existing Domain Operations
     When domain is deleted
     Then domains should be empty
 
-  Scenario: Domain Update Fails
-    When domain is deleted
-    When domain is updated
-    Then the domain command should fail with an exitcode of 127

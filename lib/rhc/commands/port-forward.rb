@@ -9,7 +9,6 @@ module RHC::Commands
     summary "Forward remote ports to the workstation"
     option ["-n", "--namespace namespace"], "Namespace of the application you are port forwarding to", :context => :namespace_context, :required => true
     argument :app, "Application you are port forwarding to (required)", ["-a", "--app app"]
-    option ["--timeout timeout"], "Timeout, in seconds, for the session"
     def run(app)
 
       rest_domain = rest_client.find_domain options.namespace

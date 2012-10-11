@@ -1,6 +1,32 @@
 require 'commander'
 require 'rhc/helpers'
 
+## monkey patch option parsing to also parse global options all at once
+#  to avoid conflicts and side effects of similar short switches
+module Commander
+  class Command
+    def parse_options_and_call_procs *args
+      return args if args.empty?
+      opts = OptionParser.new
+      runner = Commander::Runner.instance
+      # add global options
+      runner.options.each do |option|
+        opts.on *option[:args],
+                &runner.global_option_proc(option[:switches], &option[:proc])
+
+      end
+
+      # add command options
+      @options.each do |option|
+        opts.on(*option[:args], &option[:proc])
+        opts
+      end
+
+      opts.parse! args
+    end
+  end
+end
+
 module RHC
   module Commands
     def self.load
@@ -27,12 +53,10 @@ module RHC
       command_name = Commander::Runner.instance.command_name_from_args
       command = Commander::Runner.instance.active_command
 
+      new_cmd = deprecated[command_name]
       if deprecated[command_name]
-        msg = "The command 'rhc #{command_name}' is deprecated.  Please use 'rhc #{command.name}' instead."
-
-        raise DeprecatedError.new("#{msg} For porting and testing purposes you may switch this error to a warning by setting the DISABLE_DEPRECATED environment variable to 0.  It is not recommended to do so in a production environment as this command may be removed in future releases.") if RHC::Helpers.disable_deprecated?
-
-        warn "Warning: #{msg} For porting and testing purposes you may switch this warning to an error by setting the DISABLE_DEPRECATED environment variable to 1.  This command may be removed in future releases."
+        new_cmd = "rhc #{command.name}" if new_cmd == true
+        RHC::Helpers.deprecated_command new_cmd
       end
     end
 
@@ -63,6 +87,8 @@ module RHC
             c.option *option_data
             o[:arg] = Commander::Runner.switch_to_sym(o[:switches].last)
           end
+
+          deprecated[name] = opts[:deprecated] unless opts[:deprecated].nil?
 
           args_metadata = opts[:args] || []
           args_metadata.each do |arg_meta|

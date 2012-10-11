@@ -254,22 +254,48 @@ describe RHC::Config do
     end
   end
 
-  context "Odds and ends including error conditions" do
-    it "should return a direct http connection" do
-      proxy = RHC::Config.default_proxy
-      proxy.should == Net::HTTP
-    end
-
-    it "should retrun a proxy http connection" do
+  context "Proxy ENV variable parsing" do
+    before do
       RHC::Config.initialize
-      ENV['http_proxy'] = "fakeproxy.foo:8080"
-      proxy = RHC::Config.default_proxy
-      # returns a generic class so we check to make sure it is not a
-      # Net::HTTP class and rely on simplecov to make sure the proxy
-      # code path was run
-      proxy.should_not == Net::HTTP
+      ['http_proxy','HTTP_PROXY'].each do |var|
+        ENV[var] = nil
+      end
     end
 
+    it "should return a direct http connection" do
+      RHC::Config.using_proxy?.should_not == true
+    end
+
+    ['http_proxy','HTTP_PROXY'].each do |var|
+      it "should retrun a proxy http connection for #{var}" do
+        ENV[var] = "fakeproxy.foo:8080"
+        # returns a generic class so we check to make sure it is not a
+        # Net::HTTP class and rely on simplecov to make sure the proxy
+        # code path was run
+        RHC::Config.using_proxy?.should == true
+      end
+    end
+
+    context "it should have the correct values" do
+      let(:vars){ RHC::Config.proxy_vars }
+      before do
+        ENV['http_proxy'] = "my_user:my_pass@fakeproxy.foo:8080"
+      end
+
+      {
+        :user => 'my_user',
+        :pass => 'my_pass',
+        :address => 'fakeproxy.foo',
+        :port => 8080
+      }.each do |var,expected|
+        it "for #{var}" do
+          vars[var].should == expected
+        end
+      end
+    end
+  end
+
+  context "Configuration file parsing" do
     it "should exit if config file can't be read" do
       ConfigHelper.write_out_config(ConfigHelper.global_config_path,
                                     "global.openshift.redhat.com",
@@ -325,6 +351,6 @@ class ConfigHelper
       f.write("libra_server = #{server}\n") unless server.nil?
       f.write("default_rhlogin = #{login}\n\n") unless login.nil?
       other.each { |key, value| f.write("#{key}=#{value}\n") }
+    end
   end
-end
 end

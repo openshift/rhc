@@ -27,8 +27,13 @@ describe RHC::CLI do
       it_should_behave_like 'an invalid command'
     end
 
-    context 'with help and invalid command' do
+    context 'with --help and invalid command' do
       before(:each) { @arguments = ['invalidcommand', '--help'] }
+      it_should_behave_like 'an invalid command'
+    end
+
+    context 'with help and invalid command' do
+      before(:each) { @arguments = ['help', 'invalidcommand'] }
       it_should_behave_like 'an invalid command'
     end
 

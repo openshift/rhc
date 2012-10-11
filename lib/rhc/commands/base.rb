@@ -6,16 +6,16 @@ require 'rhc/config'
 require 'rhc/commands'
 require 'rhc/exceptions'
 require 'rhc/context_helper'
+require 'rhc/output_helper'
 class RHC::Commands::Base
 
   attr_writer :options, :config
+  attr_reader :messages
 
   def initialize(options=Commander::Command::Options.new,
                  config=nil)
     @options, @config = options, config
-
-    # apply timeout here even though it isn't quite a global
-    $rest_timeout = @options.timeout ? @options.timeout.to_i : nil
+    @messages = []
   end
 
   def validate_args_and_options(args_metadata, options_metadata, args)
@@ -23,7 +23,21 @@ class RHC::Commands::Base
     options_metadata.each do |option_meta|
       arg = option_meta[:arg]
 
+      # Check to see if we've provided a value for an option tagged as deprecated
+      if (!(val = @options.__hash__[arg]).nil? && dep_info = option_meta[:deprecated])
+        # Get the arg for the correct option and what the value should be
+        (correct_arg, default) = dep_info.values_at(:key, :value)
+        # Set the default value for the correct option to the passed value
+        ## Note: If this isn't triggered, then the original default will be honored
+        ## If the user specifies any value for the correct option, it will be used
+        options.default correct_arg => default
+        # Alert the users if they're using a deprecated option
+        (correct, incorrect) = [options_metadata.find{|x| x[:arg] == correct_arg },option_meta].flatten.map{|x| x[:switches].join(", ") }
+        deprecated_option(incorrect, correct)
+      end
+
       context_helper = option_meta[:context_helper]
+
       @options.__hash__[arg] = self.send(context_helper) if @options.__hash__[arg].nil? and context_helper
       raise ArgumentError.new("Missing required option '#{arg}'.") if option_meta[:required] and @options.__hash__[arg].nil?
     end
@@ -33,7 +47,7 @@ class RHC::Commands::Base
     fill_args = args.reverse
     args_metadata.each_with_index do |arg_meta, i|
       # check options
-      value = @options.__hash__[arg_meta[:name]]
+      value = @options.__hash__[arg_meta[:option_symbol]] unless arg_meta[:option_symbol].nil?
       if value
         arg_slots[i] = value
       elsif arg_meta[:arg_type] == :list
@@ -53,6 +67,7 @@ class RHC::Commands::Base
   protected
     include RHC::Helpers
     include RHC::ContextHelpers
+    include RHC::OutputHelpers
 
     attr_reader :options, :config
 
@@ -86,12 +101,20 @@ class RHC::Commands::Base
           username = ask "To connect to #{openshift_server} enter your OpenShift login (email or Red Hat login id): "
           config.config_user(username)
         end
-        password = RHC::Config.password || RHC::get_password
+        config.password = config.password || RHC::get_password
 
-        RHC::Rest::Client.new(openshift_rest_node, username, password, @options.debug)
+        RHC::Rest::Client.new(openshift_rest_node, username, config.password, @options.debug)
       end
     end
 
+    def help(*args)
+      ac = Commander::Runner.instance.active_command
+      Commander::Runner.instance.command(:help).run(ac.name, *args)
+    end
+
+    def debug?
+      @options.debug
+    end
 
     class InvalidCommand < StandardError ; end
 
@@ -105,7 +128,7 @@ class RHC::Commands::Base
       return if private_method_defined? method
       return if protected_method_defined? method
 
-      method_name = method.to_s == 'run' ? nil : method.to_s
+      method_name = method.to_s == 'run' ? nil : method.to_s.gsub("_", "-")
       name = [method_name]
       name.unshift(self.object_name).compact!
       raise InvalidCommand, "Either object_name must be set or a non default method defined" if name.empty?
@@ -114,6 +137,7 @@ class RHC::Commands::Base
         :class => self,
         :method => method
       }));
+
       @options = nil
     end
 
@@ -126,8 +150,8 @@ class RHC::Commands::Base
         end
     end
 
-    def self.description(value)
-      options[:description] = value
+    def self.description(*args)
+      options[:description] = args.join(' ')
     end
     def self.summary(value)
       options[:summary] = value
@@ -135,7 +159,9 @@ class RHC::Commands::Base
     def self.syntax(value)
       options[:syntax] = value
     end
-
+    def self.deprecated(msg)
+      options[:deprecated] = msg
+    end
     def self.suppress_wizard
       @suppress_wizard = true
     end
@@ -158,7 +184,8 @@ class RHC::Commands::Base
       options_metadata << {:switches => switches,
                            :description => description,
                            :context_helper => options[:context],
-                           :required => options[:required]
+                           :required => options[:required],
+                           :deprecated => options[:deprecated]
                           }
     end
 
@@ -167,7 +194,12 @@ class RHC::Commands::Base
       raise ArgumentError("Only the last argument descriptor for an action can be a list") if arg_type == :list and list_argument_defined?
       list_argument_defined true if arg_type == :list
 
-      args_metadata << {:name => name, :description => description, :switches => switches, :arg_type => arg_type}
+      option_symbol = Commander::Runner.switch_to_sym(switches.last)
+      args_metadata << {:name => name,
+                        :description => description,
+                        :switches => switches,
+                        :option_symbol => option_symbol,
+                        :arg_type => arg_type}
     end
 
     def self.default_action(action)

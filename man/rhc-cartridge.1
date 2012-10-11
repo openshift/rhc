@@ -1,0 +1,70 @@
+.\" Process this file with
+.\" groff -man -Tascii rhc-cartridge.1
+.\" 
+.TH "RHC_CARTRIDGE" "1" "OCTOBER 2012" "Linux" "User Manuals"
+.SH "NAME"
+rhc cartridge \- Add and manage application cartridges
+
+.SH "SYNOPSIS"
+.B rhc cartridge (<command> | --help) [<args>]
+
+.SH "DESCRIPTION"
+.B rhc cartridge - 
+Support cartridges such as mysql can be added to an application to provide
+extra functionality to the application while running on the same gear. Note that
+.BR remove
+is not reversible and will remove the application cartridge along with
+all of its data.
+
+.SH LIST OF COMMANDS
+.IP list
+List supported cartridges
+.IP add
+Add a cartridge to your application
+.IP show
+Show useful information about a cartridge
+.IP remove
+Remove a cartridge from your application. This is not reversible and will 
+remove the application cartridge along with all of its data.
+.IP start
+Start a cartridge
+.IP stop
+Stop a cartridge
+.IP restart
+Restart a cartridge
+.IP status
+Get current the status of a cartridge
+.IP reload
+Reload the cartridge's configuration
+
+.SH "OPTIONS"
+.IP "\-l|\-\-rhlogin login"
+Red Hat login (RHN or OpenShift login with OpenShift access)
+.IP "\-p|\-\-password password"
+RHLogin password
+.IP "\-a|\-\-app application_name"
+Name of the application that the cartridge resides in
+.IP "\-c|\-\-cartridge cartridge_name"
+Name of the cartridge you are adding or modifying
+.IP \-d|\-\-debug
+Enable debugging / verbose output
+.IP \-h|\-\-help
+Display help menu
+.IP \-\-config
+Alternate full pathname for the config file
+.IP \-\-timeout
+Timeout value, in seconds, for the connection (default is 10)
+
+.SH "BUGS"
+Please contact the Red Hat OpenShift team.
+Forums: https://openshift.redhat.com/community/forums/openshift
+IRC: #openshift on irc.freenode.net
+
+.SH "AUTHOR"
+John Palmieri <johnp@redhat.com>
+
+.SH "SEE ALSO"
+.BR rhc-app (1),
+.BR rhc-domain (1),
+.BR rhc-sshkey (1),
+.BR express.conf (5)

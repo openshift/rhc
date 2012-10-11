@@ -2,7 +2,6 @@ Usage: <%= program :name %> (<resource> | --help) [<action>] [<args>]
 <%= program :description %>
 
 List of Commands and Resources
-  app                Manage applications within the OpenShift account.
 <% for name, command in @commands.sort -%>
 	<%- unless alias? name or name == "help" or name.include?(" ") or command.summary.nil? -%>  <%="%-18s %s\n" % [command.name, command.summary || command.description] %><%- end -%>
 <%- end -%>

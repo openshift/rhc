@@ -87,13 +87,13 @@ You can also use rhc-snapshot to restore an application from an existing snapsho
     rhc-snapshot -a eat -r ./eat.tar.gz
 
 
-rhc-tail-files
+rhc tail
 ===========
 
-rhc-tail-files is used tail the logs or any files within an application.  The example below uses the 
+rhc tail is used to tail the logs or any files within an application.  The example below uses the 
 default log location of '<application_name>/logs/*'.
 
-    rhc-tail-files -a eat
+    rhc tail -a eat
     
 Upon successful execution, the application logs will be tailed in your terminal.  Use ctrl+c to cancel.
 

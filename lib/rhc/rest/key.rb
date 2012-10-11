@@ -1,35 +1,21 @@
+require 'rhc/rest/base'
+
 module RHC
   module Rest
-    class Key
-      include Rest
+    class Key < Base
       attr_reader :name, :type, :content
-      def initialize(args)
-        @name = args[:name] || args["name"]
-        @type = args[:type] || args["type"]
-        @content = args[:content] || args["content"]
-        @links = args[:links] || args["links"]
-      end
 
-      # Update Key
       def update(type, content)
-        logger.debug "Updating key #{self.name}" if @mydebug
-        url = @links['UPDATE']['href']
-        method =  @links['UPDATE']['method']
-        payload = {:type => type, :content => content}
-        request = new_request(:url => url, :method => method, :headers => @@headers, :payload => payload)
-        return request(request)
+        debug "Updating key #{self.name}"
+        rest_method "UPDATE", :type => type, :content => content
       end
 
-      #Delete Key
       def destroy
-        logger.debug "Deleting key #{self.name}" if @mydebug
-        url = @links['DELETE']['href']
-        method =  @links['DELETE']['method']
-        request = new_request(:url => url, :method => method, :headers => @@headers)
-        return request(request)
+        debug "Deleting key #{self.name}"
+        rest_method "DELETE"
       end
       alias :delete :destroy
-      
+
       def fingerprint
         begin
           public_key = Net::SSH::KeyFactory.load_data_public_key("#{type} #{content}")
@@ -37,7 +23,6 @@ module RHC
         rescue NotImplementedError, OpenSSL::PKey::PKeyError => e
           'Invalid key'
         end
-        
       end
     end
   end

@@ -51,8 +51,8 @@ module RHCHelper
     def get_args(cmd, arg0=nil, debug=true)
       args = " "
       args << "-l #{$username} "
-      args << "-p #{$password} "
-      args << "-d " if debug
+      args << "-p \"#{$password}\" "
+      args << "--debug " if debug
 
       # Add the application name for all application commands
       if cmd =~ /app/
@@ -62,21 +62,24 @@ module RHCHelper
 
       # Command specific arguments
       case cmd
+        when /app delete/
+          args << "--confirm "
         when /domain show/
           # domain show doesn't take arguments
+        when /domain update/
+          args << "#{$old_namespace} #{$namespace}"
         when /domain /
           raise "No namespace set" unless $namespace
           # use legacy switch for specifying namespace to verify older interface
           # should switch to using argument once all commands are moved over
-          args << "-n #{$namespace} "
-        when /destroy/
-          args << "-b "
+          args << "#{$namespace} "
         when /snapshot/
           args << "-f #{@snapshot} "
         when /create/
           args << "-r #{@repo} "
           args << "-t #{@type} "
           args << "-s " unless @scalable.nil?
+          args << "--noprompt "
         when /add-alias/
           raise "No alias set" unless @alias
           args << "--alias #{@alias} "
@@ -124,7 +127,7 @@ module RHCHelper
   # Begin Post Processing Callbacks
   #
   def app_create_callback(exitcode, stdout, stderr, arg)
-    match = stdout.split.map {|line| line.match(SSH_OUTPUT_PATTERN)}.compact[0]
+    match = stdout.match(UUID_OUTPUT_PATTERN)
     @uid = match[1] if match
     raise "UID not parsed from app create output" unless @uid
     persist
