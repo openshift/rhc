@@ -77,14 +77,6 @@ describe RHC::Commands::Snapshot do
       it { expect { run }.should exit_with_code(0) }
     end
 
-    context 'when trying to restore a snapshot with invalid file' do
-      before(:each) do
-        File.stub!(:exists?).and_return(true)
-        RHC::TarGz.stub!(:contains).and_return(false)
-      end
-      it { expect { run }.should exit_with_code(130) }
-    end
-
     context 'when restoring a snapshot and failing to ssh' do
       before(:each) do
         File.stub!(:exists?).and_return(true)
