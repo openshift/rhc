@@ -116,6 +116,10 @@ module RHC
     def opts_login=(username)
       @opts.add('default_rhlogin', username)
     end
+    
+    def opts_login
+      @opts['default_rhlogin']
+    end
 
     # password is not allowed in config files and can only be passed on comman line
     def password=(password)
@@ -169,6 +173,10 @@ module RHC
 
     def has_opts_config?
       !@opts_config.nil?
+    end
+    
+    def has_opts?
+      !@opts.nil?
     end
 
     def should_run_ssh_wizard?
