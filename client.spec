@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 0.99.5
+Version: 0.99.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -115,6 +115,291 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Oct 15 2012 Adam Miller <admiller@redhat.com> 0.99.6-1
+- BZ863937  Need update rhc app tail to rhc tail for output of rhc threaddump
+  command (calfonso@redhat.com)
+- Merge pull request #176 from jwhonce/dev/bz863962 (openshift+bot@redhat.com)
+- Merge pull request #177 from fabianofranz/master (openshift+bot@redhat.com)
+- Fixed spec tests for /openshift/rhc/pull/176 (ffranz@redhat.com)
+- Fix for Bug 863962 (jhonce@redhat.com)
+- Fix BZ829919: Look up defined OpenShift user name before prompting the user
+  for it. (asari.ruby@gmail.com)
+- Merge pull request #169 from J5/commands-merge-master
+  (openshift+bot@redhat.com)
+- Fixed spec tests for cartridge status (ffranz@redhat.com)
+- Fixes BZ861556 (ffranz@redhat.com)
+- fix geargroups mock (johnp@redhat.com)
+- Change description for --state flag (johnp@redhat.com)
+- switch --apache to be --state and fix output to show geargroups
+  (johnp@redhat.com)
+- Fixes BZ861556 (ffranz@redhat.com)
+- Merge pull request #30 from BanzaiMan/dev/hasari/bz829929 (johnp@redhat.com)
+- Adding tito releaser for onprem (calfonso@redhat.com)
+- Fixes BZ864770 (ffranz@redhat.com)
+- Spec for BZ829929. (asari.ruby@gmail.com)
+- Come up with a unique name for the key name. (asari.ruby@gmail.com)
+- Remove known illegal characters from the default key name we present.
+  (asari.ruby@gmail.com)
+- Fix BZ829929. SSH key name to be a bit more decipherable than a stripped key
+  fingerprint. Leaving the fingerprint code for now, to verify that the key is
+  usable. (asari.ruby@gmail.com)
+- BZ863963 Unable to tail app logs via rhc tail (calfonso@redhat.com)
+- Cucumber feature to confirm BZ844246. (asari.ruby@gmail.com)
+- add --scaling to app man page (johnp@redhat.com)
+- make noprompt help clearer and disallow using noprompt with rhc setup
+  (johnp@redhat.com)
+- simplify wizard by pulling proof of concept packagekit installer
+  (johnp@redhat.com)
+- Use the new flag-less syntax for 'rhc app create' (asari.ruby@gmail.com)
+- [Bug 863915] Fix some typos in the app commands docs (johnp@redhat.com)
+- Address BZ830307: suggest running 'rhc app create' when no application is
+  found. (asari.ruby@gmail.com)
+- Address the unclear error message pointed out by
+  https://bugzilla.redhat.com/show_bug.cgi?id=860922#c3 (asari.ruby@gmail.com)
+- remove some debug output (johnp@redhat.com)
+- fix typos (johnp@redhat.com)
+- Defaults to help action in rhc snapshot (ffranz@redhat.com)
+- seperate out scaled tests and add hooks (johnp@redhat.com)
+- raise a useful error when user tries to create app without a domain
+  (johnp@redhat.com)
+- Test the output for the case when no valid cartridges exist for the user
+  (asari.ruby@gmail.com)
+- Display helpful message when the app has no cartridge. (asari.ruby@gmail.com)
+- fixes for cucumber tests (should now pass) (johnp@redhat.com)
+- Fixes BZ861533 (ffranz@redhat.com)
+- only show embedded carts in rhc (johnp@redhat.com)
+- add --confirm option and deprecate -b option for app delete
+  (johnp@redhat.com)
+- update domain update test (johnp@redhat.com)
+- update the domain man file (johnp@redhat.com)
+- spec file fixes for rhc domain update (johnp@redhat.com)
+- change domain update to require specifying the old domain (johnp@redhat.com)
+- some small test fixes (johnp@redhat.com)
+- cover rhc help invalidcommand code path (johnp@redhat.com)
+- simplify tail and get 100%% spec coverage (johnp@redhat.com)
+- use the new status command not the legacy in cart tests (johnp@redhat.com)
+- Fix the message in spec. (asari.ruby@gmail.com)
+- update tests to new api (johnp@redhat.com)
+- Match spec's expectation with the REST client's message.
+  (asari.ruby@gmail.com)
+- Stub the default key (asari.ruby@gmail.com)
+- remove some debugs puts (johnp@redhat.com)
+- s/rhc-app/rhc app (johnp@redhat.com)
+- remove legacy man pages (johnp@redhat.com)
+- add new cartridge man file and update app man file (johnp@redhat.com)
+- [bug 861540] fix listing carts by type (johnp@redhat.com)
+- remove a duplicate alias (johnp@redhat.com)
+- [bug 861556] special case windows exec for git clone (johnp@redhat.com)
+- BZ860976 Have not the list of action in rhc alias --help
+  (calfonso@redhat.com)
+- US2814 Refactor RHC alias commands (calfonso@redhat.com)
+- US2816 Refactor RHC tail command (calfonso@redhat.com)
+- add a help method that prints out help for the active command
+  (johnp@redhat.com)
+- fix timeout (johnp@redhat.com)
+- we don't parse globals seperatly from command options anymore
+  (johnp@redhat.com)
+- special case --trace option parsing (johnp@redhat.com)
+- Fixes BZ 861305 (ffranz@redhat.com)
+- [bug 860978] remove clash from --rhlogin option and -r on app create
+  (johnp@redhat.com)
+- move open4 from being a development dep to a runtime one (johnp@redhat.com)
+- [Bug 861330] Fix for detecting git errors under ruby 1.8 (johnp@redhat.com)
+- allow switches to be a different name from the argument they fill
+  (johnp@redhat.com)
+- override commander's parse_global_options to catch AmbiguousOption
+  (johnp@redhat.com)
+- remove another local timeout option (johnp@redhat.com)
+- implement timeout as a global option (johnp@redhat.com)
+- remove -t for global option --trace because it clashes with local options
+  (johnp@redhat.com)
+- implement reload in rest app model (johnp@redhat.com)
+- implement tidy on rest app model (johnp@redhat.com)
+- remove unused code (johnp@redhat.com)
+- remove app from help template as it is autogenerated now (johnp@redhat.com)
+- don't iterate over nil (johnp@redhat.com)
+- Fixes BZ860913 (ffranz@redhat.com)
+- 100%% code coverage in Wizard, to accompany the previous change.
+  (asari.ruby@gmail.com)
+- During 'setup', update the existing key on the account via
+  RHC::Rest::Key#update. (asari.ruby@gmail.com)
+- use the mocking facilities of rest_spec_helper to set up tests
+  (johnp@redhat.com)
+- add a way to deprecate a method, not just an alias (johnp@redhat.com)
+- add status to cartridges (johnp@redhat.com)
+- 100%% code coverage on Wizard. (asari.ruby@gmail.com)
+- initial gear group coverage (johnp@redhat.com)
+- add getting applicaiton status (johnp@redhat.com)
+- add new gear_group model (johnp@redhat.com)
+- pass the rest_client to the SSHWizard not the user and password
+  (johnp@redhat.com)
+- US2817: 100%% code coverage (ffranz@redhat.com)
+- add spec test for app show (johnp@redhat.com)
+- US2817: minor spec tests improvements (ffranz@redhat.com)
+- US2817: better handling of snapshot sample files while running spec tests
+  (ffranz@redhat.com)
+- US2817: spec tests and coverage, now stubbing exit status (ffranz@redhat.com)
+- US2817: spec tests and coverage (ffranz@redhat.com)
+- US2817: spec tests and coverage (ffranz@redhat.com)
+- Remove #stub_user_info from the Wizard mock. (asari.ruby@gmail.com)
+- DRY up namespace definitions. (asari.ruby@gmail.com)
+- Rather than testing the procedure to set up the SSH keys locally in the RSpec
+  execution environment, assume that the key exists already, so that the output
+  is accurately compared. (asari.ruby@gmail.com)
+- Fix up what Highline should get to get the spec to pass.
+  (asari.ruby@gmail.com)
+- Tweak the stubbing method to allow stubbing of applications that have no
+  public URLs. (asari.ruby@gmail.com)
+- Stub a domain and applications simultaneously. (asari.ruby@gmail.com)
+- Set up mock RHC::Rest::Domain object through REST client.
+  (asari.ruby@gmail.com)
+- make output look nicer for rhc app create (johnp@redhat.com)
+- Modified proxy parsing in rhc-common.rb (fotios@redhat.com)
+- deprecate rhc-app and related binaries (johnp@redhat.com)
+- Stub Wizard#get_preferred_key_name here. I'm actually having a hard time
+  actually stubbing a minimally appropriate method here; the subsequent
+  "$terminal.write_line" 'yes' in this situation should result in accepting
+  'default' as the key name, so stub that instead as a compromise.
+  (asari.ruby@gmail.com)
+- Stub REST client call. (asari.ruby@gmail.com)
+- Somehow stubbing here is not working. Changed the output to match, since the
+  existing matchers test what the stub should return, but the output from the
+  wizard. (asari.ruby@gmail.com)
+- Stub REST client (asari.ruby@gmail.com)
+- Stub correct object. (asari.ruby@gmail.com)
+- add app show and use the app output helper in domain (johnp@redhat.com)
+- add an output helper for shared output (johnp@redhat.com)
+- Fixed variable used for creating scaled apps (fotios@redhat.com)
+- test deprecated options (johnp@redhat.com)
+- 100%% app command spec coverage (johnp@redhat.com)
+- test jenkins enablement under various conditions (johnp@redhat.com)
+- be more specific which error we are looking for in spec tests
+  (johnp@redhat.com)
+- use Kernel.sleep instead of sleep so we can stub it out to speed tests
+  (johnp@redhat.com)
+- add application create spec tests (johnp@redhat.com)
+- US2817: minor adjustments (ffranz@redhat.com)
+- US2817: improved wording (ffranz@redhat.com)
+- US2817: added basic structure for rhc app snapshot spec tests
+  (ffranz@redhat.com)
+- US2817: refactored rhc snapshot restore (ffranz@redhat.com)
+- US2817: refactored rhc snapshot save (ffranz@redhat.com)
+- US2817: deprecated rhc-snapshot, created basic refactoring structure
+  (ffranz@redhat.com)
+- fix some spec tests failing due to internal changes (johnp@redhat.com)
+- add mock user class and have wizard spec use the rest_spec_helper mock
+  classes (johnp@redhat.com)
+- some cleanup for option deprecation (johnp@redhat.com)
+- DRY up #find_key between RHC::Rest::Client and RHC::Rest::User.
+  (asari.ruby@gmail.com)
+- Removing intermediate local variable and avoiding shadowing outer-scope
+  variable with the block-local one. (asari.ruby@gmail.com)
+- Rename fingerprint_for helper as fingerprint_for_local_key.
+  (asari.ruby@gmail.com)
+- Created deprecated context for command line options (fotios@redhat.com)
+- DRYed up functionality for alerting users of deprecated commands and optoins
+  (fotios@redhat.com)
+- Eradicate remaining non-REST calls. (asari.ruby@gmail.com)
+- split up the windows dns fallback methods for testing purposes
+  (johnp@redhat.com)
+- set config.password when getting the password from user input
+  (johnp@redhat.com)
+- print out the messages from the server when creating app (johnp@redhat.com)
+- add rhc app tidy (johnp@redhat.com)
+- contain server messages in rest models instead of passing as a seperate hash
+  (johnp@redhat.com)
+- enable code coverage here (asari.ruby@gmail.com)
+- Move SSH key file loading and fingerprint computation to ssh_key_helpers.
+  (asari.ruby@gmail.com)
+- Revert "Move #find_key closer to other SSH key methods."
+  (asari.ruby@gmail.com)
+- No local variable is necessary. (asari.ruby@gmail.com)
+- Raise these exceptions here, so that refactoring (in the future) can work
+  better. (asari.ruby@gmail.com)
+- 100%% code coverage in wizard.rb. (asari.ruby@gmail.com)
+- Move SSH key display format to a single location. (asari.ruby@gmail.com)
+- This spec needs fingerprints. (asari.ruby@gmail.com)
+- Revert "Under some circumstances, RestClient may fail to connect to the
+  OpenShift server. (I observed this with MRI 1.9.3 on Mac OS X 10.8.1.)"
+  (asari.ruby@gmail.com)
+- #set_expected_key_name_and_action was used for differentiating 'update' and
+  'add' for SSH key management during the workflow. This is no longer
+  supported. (asari.ruby@gmail.com)
+- Move #find_key closer to other SSH key methods. (asari.ruby@gmail.com)
+- Shortcut the spec logic by returning 'true'. (asari.ruby@gmail.com)
+- One more usage of RHC.get_ssh_keys to be removed. (asari.ruby@gmail.com)
+- RHC::Wizard#ssh_key_upload? no longer triggers #ssh_keygen_fallback unless
+  keys exist for the REST client. (asari.ruby@gmail.com)
+- Under some circumstances, RestClient may fail to connect to the OpenShift
+  server. (I observed this with MRI 1.9.3 on Mac OS X 10.8.1.)
+  (asari.ruby@gmail.com)
+- In Wizard#ssh_keygen_fallback, return correct value. (asari.ruby@gmail.com)
+- More fixes in Specs. (asari.ruby@gmail.com)
+- Starting work on US2872. Streamline 'rhc setup' workflow using the new REST
+  API. (asari.ruby@gmail.com)
+- initial app tests (johnp@redhat.com)
+- update mock classes for rhc app tests (johnp@redhat.com)
+- make sure commands return 0 (johnp@redhat.com)
+- add ability to send input with spec_helper run command (johnp@redhat.com)
+- add tests for app uuid context (johnp@redhat.com)
+- dry and othewise cleanup the rest modules (johnp@redhat.com)
+- add context helper spec tests (johnp@redhat.com)
+- spec test fixes (johnp@redhat.com)
+- more spec test fixes (johnp@redhat.com)
+- fix tests for methods with underscore as underscore now turns into dash
+  (johnp@redhat.com)
+- add app start, stop, force-stop, restart, reload (johnp@redhat.com)
+- cartridge - switch to using the cartridge helper (johnp@redhat.com)
+- apps - use cartridge helper to find cartridges based on regex
+  (johnp@redhat.com)
+- properly handle types in the rest_client find_cartridges method
+  (johnp@redhat.com)
+- move find_cartridge to a helper so the app command can use it
+  (johnp@redhat.com)
+- add cartridge show command for showing properties of a cartridge
+  (johnp@redhat.com)
+- dry up cartridge regex search and add display for cartridge properties
+  (johnp@redhat.com)
+- add a multiple cartridge exception (johnp@redhat.com)
+- add regex matching for application cartridges (johnp@redhat.com)
+- dry up some of teh cartridge commands (johnp@redhat.com)
+- remove legacy command code path from rhc binary (johnp@redhat.com)
+- add app delete command (johnp@redhat.com)
+- minor fixups and nicer output for app commands (johnp@redhat.com)
+- move git code into a git helper (johnp@redhat.com)
+- fixed some typos and add debug spew to app context (johnp@redhat.com)
+- use the uuid in the git config to fill in the app context (johnp@redhat.com)
+- add git-clone action; configure git repo and ssh keys (johnp@redhat.com)
+- get host from rest application model (johnp@redhat.com)
+- allow multiline descriptions (johnp@redhat.com)
+- when adding command transform underscores in method names to dashes
+  (johnp@redhat.com)
+- provide the host from the rest model (johnp@redhat.com)
+- almost complete first pass implementation of rhc app create
+  (johnp@redhat.com)
+- modify the find_application method to search based on cartridge
+  (johnp@redhat.com)
+- add GitException class (johnp@redhat.com)
+- add constants to the helper (johnp@redhat.com)
+- fix syntax (johnp@redhat.com)
+- we really need a debug output helper so people don't use if @debug
+  (johnp@redhat.com)
+- framework for app create command (johnp@redhat.com)
+- remove noprompt from config since we just use the option (johnp@redhat.com)
+- fixes missed in merge (johnp@redhat.com)
+- add back noprompt which was lost in merge (johnp@redhat.com)
+- have integration tests test the new cartridge api (johnp@redhat.com)
+- 100%% spec coverage for cartridge command (johnp@redhat.com)
+- spec test cartridge start, stop, restart and reload (johnp@redhat.com)
+- add the ability to deprecate interfaces (johnp@redhat.com)
+- implemented cartridge start, stop, restart, reload, remove (johnp@redhat.com)
+- implement find_cartridge for the rest application model (johnp@redhat.com)
+- stub out cartridge commands with metadata and add deprecated to aliases
+  (johnp@redhat.com)
+- Revert "remove cartridge spec so we can merge with master" (johnp@redhat.com)
+- Revert "remove cartridge for now so that the infrastructure can be marged"
+  (johnp@redhat.com)
+
 * Thu Oct 04 2012 Adam Miller <admiller@redhat.com> 0.99.5-1
 - Merge pull request #171 from mrunalp/dev/typeless (dmcphers@redhat.com)
 - Fix for BZ 861067. (mpatel@redhat.com)
