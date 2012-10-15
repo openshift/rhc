@@ -14,6 +14,13 @@ module RHC
       false
     end
 
+    def options_parse_version
+      if @args.include? "--version" or @args.include? "-v"
+        say version
+        exit 0
+      end
+    end
+
     # override so we can do our own error handling
     def run!
       trace = false
@@ -42,6 +49,9 @@ module RHC
 
       # special case --trace because we need to use it in the runner
       trace = options_parse_trace
+
+      # special case --version so it is processed before an invalid command
+      options_parse_version
 
       unless trace
         begin
