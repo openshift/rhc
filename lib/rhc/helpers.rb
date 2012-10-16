@@ -110,13 +110,13 @@ module RHC
     end
 
     def deprecated(msg,short = false)
-      info = " For porting and testing purposes you may switch this %s to a %s by setting the DISABLE_DEPRECATED environment variable to %d.  It is not recommended to do so in a production environment as this option may be removed in future releases."
+      info = " For porting and testing purposes you may switch this %s to %s by setting the DISABLE_DEPRECATED environment variable to %d.  It is not recommended to do so in a production environment as this option may be removed in future releases."
 
       msg << info unless short
       if RHC::Helpers.disable_deprecated?
-        raise DeprecatedError.new(msg % ['error','warning',0])
+        raise DeprecatedError.new(msg % ['an error','a warning',0])
       else
-        warn "Warning: #{msg}\n" % ['warning','error',1]
+        warn "Warning: #{msg}\n" % ['a warning','an error',1]
       end
     end
 
