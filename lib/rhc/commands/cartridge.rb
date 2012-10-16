@@ -5,7 +5,7 @@ module RHC::Commands
   class Cartridge < Base
     summary "Manage your application cartridges"
     syntax "<action>"
-    alias_action :"app cartridge", :root_command => true
+    alias_action :"app cartridge", :root_command => true, :deprecated => true
     default_action :list
 
     summary "List supported embedded cartridges"
