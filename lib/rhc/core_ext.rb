@@ -48,24 +48,23 @@ class HighLine
     text.each_line do |line|
       word = []
       i = chars_in_line = 0
-      chars = line.to_s.split(//)
+      chars = line.split(//)
       while i < chars.length do
         c = chars[i]
-        # escape character probably means color code
+        color_code = nil
+        # escape character probably means color code, let's check
         if c == "\e"
-          escape = line[i..-1].match(/\e\[\d{1,2}m/)
+          color_code = line[i..-1].match(/\e\[\d{1,2}m/)
           # it's a color code
-          if escape != nil
-            i += escape[0].length
-            wrapped_text << word.join << escape[0]
+          if color_code
+            i += color_code[0].length
+            # first the existing word buffer then the color code
+            wrapped_text << word.join << color_code[0]
             word.clear
-          else
-            word << c
-            chars_in_line += 1
-            i += 1
           end
-        # not an escape char
-        else
+        end
+        # not a color code sequence
+        if !color_code
           chars_in_line += 1
           # time to wrap the line?
           if chars_in_line == @wrap_at
@@ -78,6 +77,7 @@ class HighLine
             wrapped_text << word.join << ' '
             word.clear
             chars_in_line += 1
+          # any other character
           else
             word << c
           end
