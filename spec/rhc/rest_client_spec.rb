@@ -35,7 +35,7 @@ module RHC
       context "#new" do
         before do
           stub_api_request(:get, '').
-            to_return({ :body   => { :data => client_links }.to_json,
+            to_return({ :body   => { :data => client_links, :supported_api_versions => [1.0, 1.1] }.to_json,
                         :status => 200
                       })
           stub_api_request(:get, 'api_error').
@@ -64,11 +64,65 @@ module RHC
             should raise_error("Failed to access resource: Other Error")
         end
       end
+      
+      describe "#new" do
+        context "when server supports API versions [1.0, 1.1]" do
+          before :each do
+            stub_api_request(:get, '').
+              to_return({ :body   => { :data => client_links, :supported_api_versions => [1.0, 1.1] }.to_json,
+                          :status => 200
+                        })
+            stub_api_request(:get, 'api_error').
+              to_raise(RestClient::ExceptionWithResponse.new('API Error'))
+            stub_api_request(:get, 'other_error').
+              to_raise(Exception.new('Other Error'))
+          end
+          
+          context "when client is instantiated with [1.0, 1.1] as the preferred API versions" do
+            before :each do
+              @client = RHC::Rest::Client.new(mock_href, mock_user, mock_pass, false, [1.0, 1.1])
+            end
+            it "settles on 1.1 as the API version" do
+              @client.api_version_negotiated.should == 1.1
+            end
+          end
+          
+          context "when client is instantiated with [1.1, 1.0] as the preferred API versions" do
+            before :each do
+              @client = RHC::Rest::Client.new(mock_href, mock_user, mock_pass, false, [1.1, 1.0])
+            end
+            it "settles on 1.0 as the API version" do
+              @client.api_version_negotiated.should == 1.0
+            end
+          end
+          
+          context "when client is instantiated with [1.2, 1.3] as the preferred API versions" do
+            before :each do
+              @client = RHC::Rest::Client.new(mock_href, mock_user, mock_pass, false, [1.2, 1.3])
+            end
+            it "fails to negotiate an agreeable API version" do
+              @client.api_version_negotiated.should be_nil
+            end
+          end
+          
+          context "when client is instantiated with [1.1, 1.0, 1.3] as the preferred API versions" do
+            before :each do
+              @client = RHC::Rest::Client.new(mock_href, mock_user, mock_pass, false, [1.1, 1.0, 1.3])
+            end
+            it "settles on 1.0 as the API version" do
+              @client.api_version_negotiated.should == 1.0
+            end
+          end
+        end
+      end
 
       context "with an instantiated client " do
         before(:each) do
           stub_api_request(:get, '').
-            to_return({ :body   => { :data => client_links }.to_json,
+            to_return({ :body   => {
+                          :data => client_links,
+                          :supported_api_versions => [1.0, 1.1]
+                        }.to_json,
                         :status => 200
                       })
           @client = RHC::Rest::Client.new(mock_href, mock_user, mock_pass)
@@ -79,6 +133,7 @@ module RHC
             stub_api_request(:any, client_links['ADD_DOMAIN']['relative']).
               to_return({ :body   => {
                             :type => 'domain',
+                            :supported_api_versions => [1.0, 1.1],
                             :data => {
                               :id    => 'mock_domain',
                               :links => mock_response_links(mock_domain_links('mock_domain')),
@@ -381,7 +436,7 @@ module RHC
         shared_examples_for "a logout method" do
           before(:each) do
             stub_api_request(:get, '').
-              to_return({ :body   => { :data => client_links }.to_json,
+              to_return({ :body   => { :data => client_links, :supported_api_versions => [1.0, 1.1] }.to_json,
                           :status => 200
                         })
             @client = MockClient.new(mock_href, mock_user, mock_pass)
@@ -462,6 +517,43 @@ module RHC
           it_should_behave_like "a logout method"
         end
       end
+        
+      context "when server supports API versions 1.0 and 1.1" do
+        before :each do
+          stub_api_request(:get, '').
+            to_return({ :body   => {
+                          :data => client_links,
+                          :supported_api_versions => [1.0, 1.1]
+                        }.to_json,
+                        :status => 200
+                      })
+        end
+        
+        context "when client supports API version 1.1" do
+          before :each do
+            @client = RHC::Rest::Client.new(mock_href, mock_user, mock_pass, false, [1.1])
+          end
+            
+          describe "#api_version_negotiated" do
+            it "returns 1.1" do
+              @client.api_version_negotiated.to_s.should == '1.1'
+            end
+          end
+        end
+          
+        context "when client supports only API version 1.2" do
+          before :each do
+            @client = RHC::Rest::Client.new(mock_href, mock_user, mock_pass, false, [1.2])
+          end
+            
+          describe "#api_version_negotiated" do
+            it 'returns nil' do
+              @client.api_version_negotiated.should be_nil
+            end
+          end
+        end
+      end
+      
     end
   end
 end
