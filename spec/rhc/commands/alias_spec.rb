@@ -11,7 +11,7 @@ describe RHC::Commands::Alias do
     RHC::Config.set_defaults
     @rc = MockRestClient.new
     @rc.add_domain("mock_domain_0").add_application("mock_app_0", "ruby-1.8.7")
-    stub_api_request(:any, client_links['LIST_DOMAINS']['relative']).with(:headers => {'Accept'=>'application/json', 'Accept-Encoding'=>'gzip, deflate'}).
+    stub_api_request(:any, client_links['LIST_DOMAINS']['relative']).with(:headers => {'Accept-Encoding'=>'gzip, deflate'}).
             to_return({ :body   => {
                           :type => 'domains',
                           :data =>
@@ -24,7 +24,7 @@ describe RHC::Commands::Alias do
                         }.to_json,
                         :status => 200
                       })
-    stub_api_request(:any, domain_0_links['LIST_APPLICATIONS']['relative']).with(:headers => {'Accept'=>'application/json', 'Accept-Encoding'=>'gzip, deflate'}).
+    stub_api_request(:any, domain_0_links['LIST_APPLICATIONS']['relative']).with(:headers => {'Accept-Encoding'=>'gzip, deflate'}).
             to_return({ :body   => {
                     :type => 'applications',
                     :data =>
@@ -39,7 +39,7 @@ describe RHC::Commands::Alias do
                   }.to_json,
                   :status => 200
                 })
-    stub_api_request(:any, app_0_links['ADD_ALIAS']['relative']).with(:body => {:event => 'add-alias', :alias => 'www.foo.bar'}, :headers => {'Accept'=>'application/json', 'Accept-Encoding'=>'gzip, deflate', 'Content-Length'=>'33', 'Content-Type'=>'application/x-www-form-urlencoded'}).
+    stub_api_request(:any, app_0_links['ADD_ALIAS']['relative']).with(:body => {:event => 'add-alias', :alias => 'www.foo.bar'}, :headers => {'Accept-Encoding'=>'gzip, deflate', 'Content-Length'=>'33', 'Content-Type'=>'application/x-www-form-urlencoded'}).
             to_return({ :body   => {
                           :type => 'application',
                           :data =>
@@ -55,7 +55,7 @@ describe RHC::Commands::Alias do
                         }.to_json,
                         :status => 200
                       })
-stub_api_request(:any, app_0_links['REMOVE_ALIAS']['relative']).with(:body => {:event => 'remove-alias', :alias => 'www.foo.bar'}, :headers => {'Accept'=>'application/json', 'Accept-Encoding'=>'gzip, deflate', 'Content-Length'=>'36', 'Content-Type'=>'application/x-www-form-urlencoded'}).
+stub_api_request(:any, app_0_links['REMOVE_ALIAS']['relative']).with(:body => {:event => 'remove-alias', :alias => 'www.foo.bar'}, :headers => {'Accept-Encoding'=>'gzip, deflate', 'Content-Length'=>'36', 'Content-Type'=>'application/x-www-form-urlencoded'}).
             to_return({ :body   => {
                           :type => 'application',
                           :data =>
