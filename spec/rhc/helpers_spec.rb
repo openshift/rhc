@@ -4,6 +4,7 @@ require 'rhc/ssh_key_helpers'
 require 'rhc/core_ext'
 require 'highline/import'
 require 'rhc/config'
+require 'rhc/helpers'
 require 'date'
 
 describe RHC::Helpers do
@@ -252,5 +253,26 @@ describe OpenURI do
   context 'redirectable?' do
     specify('http to https') { OpenURI.redirectable?(URI.parse('http://foo.com'), URI.parse('https://foo.com')).should be_true }
     specify('https to http') { OpenURI.redirectable?(URI.parse('https://foo.com'), URI.parse('http://foo.com')).should be_false }
+  end
+end
+
+describe HighLine do
+  before(:all) do
+    $terminal.wrap_at = 1;
+  end
+  it "should wrap the terminal" do
+    say "123456789"
+    output = $terminal.read
+    output.should match "1\n2\n3\n4\n5\n6\n7\n8\n9"
+  end
+  it "should wrap the terminal when using colors" do
+    say $terminal.color("123456789", :red)
+    output = $terminal.read
+    output.should match "1\n2\n3\n4\n5\n6\n7\n8\n9"
+  end
+  it "should wrap when contains spaces" do
+    say "123 4 56 789"
+    output = $terminal.read
+    output.should match "1\n2\n3\n4\n5\n6\n7\n8\n9"
   end
 end
