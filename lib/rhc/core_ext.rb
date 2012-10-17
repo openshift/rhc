@@ -41,30 +41,53 @@ module OpenURI
 end
 
 # Some versions of highline get in an infinite loop when trying to wrap.
-# Copied from the 1.6.16 version of highline. Fixes BZ 866530.
+# Fixes BZ 866530.
 class HighLine
   def wrap( text )
-    wrapped = [ ]
+    wrapped_text = []
     text.each_line do |line|
-      # take into account color escape sequences when wrapping
-      line_clean = clean_up_line(line)
-      line_clean_wrapped = line_clean.clone
-      while line_clean_wrapped =~ /([^\n]{#{@wrap_at + 1},})/
-        search = $1.dup
-        replace = $1.dup
-        if index = replace.rindex(" ", @wrap_at)
-          replace[index, 1] = "\n"
-          replace.sub!(/\n[ \t]+/, "\n")
-          line_clean_wrapped.sub!(search, replace)
+      word = []
+      i = chars_in_line = 0
+      chars = line.to_s.split(//)
+      while i < chars.length do
+        c = chars[i]
+        # escape character probably means color code
+        if c == "\e"
+          escape = line.match(/\e\[\d{1,2}m/, i)
+          # it's a color code
+          if escape != nil
+            i += escape[0].length
+            wrapped_text << word.join << escape[0]
+            word.clear
+          else
+            word << c
+            chars_in_line += 1
+            i += 1
+          end
+        # not an escape char
         else
-          line_clean_wrapped[$~.begin(1) + @wrap_at, 0] = "\n"
+          chars_in_line += 1
+          # time to wrap the line?
+          if chars_in_line == @wrap_at
+            wrapped_text.pop if wrapped_text.last =~ / /
+            wrapped_text << "\n"
+            chars_in_line = 0
+          end
+          # space, so move the word to wrapped buffer and start a new word
+          if c =~ / /
+            wrapped_text << word.join << ' '
+            word.clear
+            chars_in_line += 1
+          else
+            word << c
+          end
+          i += 1
         end
       end
-      wrapped << line.sub(line_clean, line_clean_wrapped)
+      # moves the rest of the word buffer
+      wrapped_text << word.join
     end
-    return wrapped.join
+    return wrapped_text.join
   end
-  def clean_up_line( string_with_escapes )
-    string_with_escapes.to_s.gsub(/\e\[\d{1,2}m/, "")
-  end
+
 end

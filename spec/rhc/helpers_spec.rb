@@ -257,22 +257,34 @@ describe OpenURI do
 end
 
 describe HighLine do
-  before(:all) do
-    $terminal.wrap_at = 1;
+  it "should wrap the terminal" do
+    $terminal.wrap_at = 10
+    say "Lorem ipsum dolor sit amet"
+    output = $terminal.read
+    output.should match "Lorem\nipsum\ndolor sit\namet"
   end
   it "should wrap the terminal" do
-    say "123456789"
+    $terminal.wrap_at = 16
+    say "Lorem ipsum dolor sit amet"
     output = $terminal.read
-    output.should match "1\n2\n3\n4\n5\n6\n7\n8\n9"
+    output.should match "Lorem ipsum\ndolor sit amet"
   end
-  it "should wrap the terminal when using colors" do
-    say $terminal.color("123456789", :red)
+  it "should not wrap the terminal" do
+    $terminal.wrap_at = 50
+    say "Lorem ipsum dolor sit amet"
     output = $terminal.read
-    output.should match "1\n2\n3\n4\n5\n6\n7\n8\n9"
+    output.should match "Lorem ipsum dolor sit amet"
   end
-  it "should wrap when contains spaces" do
-    say "123 4 56 789"
+  it "should wrap the terminal when using color codes" do
+    $terminal.wrap_at = 10
+    say $terminal.color("Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet", :red)
     output = $terminal.read
-    output.should match "1\n2\n3\n4\n5\n6\n7\n8\n9"
+    output.should match "Lorem\nipsum\ndolor sit\namet Lorem\nipsum\ndolor sit\namet"
+  end
+  it "should wrap the terminal with other escape characters" do
+    $terminal.wrap_at = 10
+    say "Lorem ipsum dolor sit am\eet"
+    output = $terminal.read
+    output.should match "Lorem\nipsum\ndolor sit\nam\eet"
   end
 end
