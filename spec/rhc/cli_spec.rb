@@ -15,6 +15,29 @@ describe RHC::CLI do
     it('should contain the arguments') { run_output.should include(@arguments[0]) }
     it('should reference --help') { run_output.should =~ / help\b/ }
   end
+  
+  shared_examples_for 'version output' do
+    let(:arguments) { @arguments }
+    it 'should contain version output' do
+      run_output.should =~ /rhc \d+\.\d+(:?\.d+)?/
+    end
+  end
+  
+  describe "--version" do
+    context "by itself" do
+      before :each do
+        @arguments = ['--version']
+      end
+      it_should_behave_like 'version output'
+    end
+    
+    context 'given as "-v"' do
+      before :each do
+        @arguments = ['-v']
+      end
+      it_should_behave_like 'version output'
+    end
+  end
 
   describe '#start' do
     context 'with no arguments' do
