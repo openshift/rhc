@@ -24,7 +24,7 @@ module RHC::Commands
       begin
 
         if ! RHC::Helpers.windows?
-          output = Kernel.` ssh_cmd
+          output = Kernel.send(:`, ssh_cmd)
           if $?.exitstatus != 0
             debug output
             raise RHC::SnapshotSaveException.new "Error in trying to save snapshot. You can try to save manually by running:\n#{ssh_cmd}"

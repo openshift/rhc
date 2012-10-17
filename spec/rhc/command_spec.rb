@@ -44,21 +44,18 @@ describe RHC::Commands::Base do
       it("should register itself") { expect { subject }.to change(commands, :length).by(1) }
       it("should have an object name") { subject.object_name.should == 'test' }
       it("should run with wizard") do
-        FakeFS.activate!
+        FakeFS do
+          wizard_run = false
+          RHC::Wizard.stub!(:new) do |config|
+            RHC::Wizard.unstub!(:new)
+            w = RHC::Wizard.new(config)
+            w.stub!(:run) { wizard_run = true }
+            w
+          end
 
-        wizard_run = false
-        RHC::Wizard.stub!(:new) do |config|
-          RHC::Wizard.unstub!(:new)
-          w = RHC::Wizard.new(config)
-          w.stub!(:run) { wizard_run = true }
-          w
+          expects_running('test').should call(:run).on(instance).with(no_args)
+          wizard_run.should be_true
         end
-
-        expects_running('test').should call(:run).on(instance).with(no_args)
-        wizard_run.should be_true
-
-        FakeFS::FileSystem.clear
-        FakeFS.deactivate!
       end
     end
 
@@ -170,23 +167,18 @@ describe RHC::Commands::Base do
 
   describe "rest_client" do
     before do
-      FakeFS.activate!
       RHC::Rest::Client.stub!(:new) { |openshift_rest_node, username, password, debug| @username = username; @password = password; true}
     end
 
     it "should ask for username" do
-      $terminal.write_line("testuser@foo.bar")
-      $terminal.write_line("password")
-      subject.send(:rest_client).should be_true
-      @username.should == "testuser@foo.bar"
-      subject.send(:config)["default_rhlogin"].should == @username
-      @password.should == "password"
-    end
-
-    after do
-      FakeFS::FileSystem.clear
-      FakeFS.deactivate!
+      FakeFS do
+        $terminal.write_line("testuser@foo.bar")
+        $terminal.write_line("password")
+        subject.send(:rest_client).should be_true
+        @username.should == "testuser@foo.bar"
+        subject.send(:config)["default_rhlogin"].should == @username
+        @password.should == "password"
+      end
     end
   end
-
 end

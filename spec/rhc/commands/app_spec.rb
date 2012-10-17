@@ -6,6 +6,7 @@ require 'rhc/config'
 describe RHC::Commands::App do
   before(:each) do
     FakeFS.activate!
+    FakeFS::FileSystem.clear
     RHC::Config.set_defaults
     @instance = RHC::Commands::App.new
     RHC::Commands::App.stub(:new) do
@@ -24,7 +25,6 @@ describe RHC::Commands::App do
   end
 
   after(:each) do
-    FakeFS::FileSystem.clear
     FakeFS.deactivate!
   end
 
