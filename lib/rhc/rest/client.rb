@@ -42,7 +42,7 @@ module RHC
         begin
           while !api_version_negotiated && !preferred_api_versions.empty?
             api_version = preferred_api_versions.pop
-            debug "Trying API version #{api_version}"
+            debug "Checking API version #{api_version}"
             
             @@headers["Accept"] = "application/json; version=#{api_version}"
             request = new_request(:url => @end_point, :method => :get, :headers => @@headers)
@@ -52,10 +52,10 @@ module RHC
               links = json_response['data']
             rescue RestClient::NotAcceptable
               # try the next version
-              debug "API version #{api_version} was rejected by the server"
+              debug "Server does not support API version #{api_version}"
             end
           end
-          debug "Negotiated API version #{api_version_negotiated}" if api_version_negotiated
+          debug "Using API version #{api_version_negotiated}" if api_version_negotiated
           warn_about_api_versions
         rescue Exception => e
           raise ResourceAccessException.new("Failed to access resource: #{e.message}")
