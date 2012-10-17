@@ -1,6 +1,7 @@
 # From Rails core_ext/object.rb
 require 'rhc/json'
 require 'open-uri'
+require 'highline'
 
 class Object
   def present?
@@ -36,5 +37,30 @@ module OpenURI
     # However this is ad hoc.  It should be extensible/configurable.
     uri1.scheme.downcase == uri2.scheme.downcase ||
     (/\A(?:http|ftp)\z/i =~ uri1.scheme && /\A(?:https?|ftp)\z/i =~ uri2.scheme)
+  end
+end
+
+# Some versions of highline get in an infinite loop when trying to wrap
+# copied from the 1.6.16 version of highline
+class HighLine
+  def wrap( text )
+    wrapped = [ ]
+    text.each_line do |line|
+      # take into account color escape sequences when wrapping
+      wrap_at = @wrap_at + (line.length - actual_length(line))
+      while line =~ /([^\n]{#{wrap_at + 1},})/
+        search  = $1.dup
+        replace = $1.dup
+        if index = replace.rindex(" ", wrap_at)
+          replace[index, 1] = "\n"
+          replace.sub!(/\n[ \t]+/, "\n")
+          line.sub!(search, replace)
+        else
+          line[$~.begin(1) + wrap_at, 0] = "\n"
+        end
+      end
+      wrapped << line
+    end
+    return wrapped.join
   end
 end
