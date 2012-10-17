@@ -54,7 +54,7 @@ class HighLine
         color_code = nil
         # escape character probably means color code, let's check
         if c == "\e"
-          color_code = line[i..-1].match(/\e\[\d{1,2}m/)
+          color_code = line[i..i+6].match(/\e\[\d{1,2}m/)
           # it's a color code
           if color_code
             i += color_code[0].length
