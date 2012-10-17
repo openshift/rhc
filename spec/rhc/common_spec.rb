@@ -17,12 +17,13 @@ describe RHC do
     context " creating a scaling app" do
       before do
         stub_request(:get, mock_href('broker/rest/api', true)).
-          to_return({ :body   => { :data => client_links }.to_json,
+          to_return({ :body   => { :data => client_links, :supported_api_versions => [1.0, 1.1] }.to_json,
                       :status => 200
                     })
         stub_request(:any, mock_href(client_links['LIST_DOMAINS']['relative'], true)).
           to_return({ :body   => {
                         :type => 'domains',
+                        :supported_api_versions => [1.0, 1.1],
                         :data =>
                         [{ :id    => 'mock_domain',
                            :links => domain_links,
