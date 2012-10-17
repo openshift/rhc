@@ -34,6 +34,7 @@ module RHC
         @libra_server = @libra_server ?  @libra_server : "openshift.redhat.com"
       end
       @config.config_user opts.rhlogin if opts && opts.rhlogin
+      @debug = config['debug']
     end
 
     # Public: Runs the setup wizard to make sure ~/.openshift and ~/.ssh are correct
@@ -47,6 +48,7 @@ module RHC
     def run
       stages.each do |stage|
         # FIXME: cleanup if we fail
+        debug "Running #{stage}"
         if (self.send stage).nil?
           return nil
         end
@@ -429,6 +431,10 @@ EOF
       $?.success?
     rescue
       false
+    end
+    
+    def debug?
+      @debug
     end
   end
 
