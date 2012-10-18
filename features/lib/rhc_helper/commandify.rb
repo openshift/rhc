@@ -79,6 +79,7 @@ module RHCHelper
           args << "-r #{@repo} "
           args << "-t #{@type} "
           args << "-s " unless @scalable.nil?
+          args << "-g #{@gear_profile} " unless @gear_profile.nil?
           args << "--noprompt "
         when /add-alias/
           raise "No alias set" unless @alias
@@ -129,7 +130,11 @@ module RHCHelper
   def app_create_callback(exitcode, stdout, stderr, arg)
     match = stdout.match(UUID_OUTPUT_PATTERN)
     @uid = match[1] if match
+    match = stdout.match(GEAR_PROFILE_OUTPUT_PATTERN)
+    @gear_profile = nil
+    @gear_profile = match[1] if match
     raise "UID not parsed from app create output" unless @uid
+    raise "Gear Profile not parsed from app create output" unless @gear_profile
     persist
   end
 
