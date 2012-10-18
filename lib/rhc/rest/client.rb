@@ -34,40 +34,29 @@ module RHC
         @@headers["User-Agent"] = RHC::Helpers.user_agent rescue nil
         RestClient.proxy = ENV['http_proxy']
         
-        # if API version negotiation is unsuccessful, execute this
-        default_request = new_request(:url => @end_point, :method => :get, :headers => @@headers)
-        
-        # we'll be popping from preferred_api_versions in the while loop below
-        # so we need to dup the versions we prefer
-        @client_api_versions = preferred_api_versions.dup
-        
+        # API version negotiation
         begin
-          while !api_version_negotiated && !preferred_api_versions.empty?
-            api_version = preferred_api_versions.pop
-            debug "Checking API version #{api_version}"
-            
-            @@headers["Accept"] = "application/json; version=#{api_version}"
-            req = new_request(:url => @end_point, :method => :get, :headers => @@headers)
-            begin
-              links = versioned_links(req)
-            rescue RestClient::NotAcceptable
-              # try the next version
-              debug "Server does not support API version #{api_version}"
+          debug "Client supports API versions #{preferred_api_versions.join(', ')}"
+          @client_api_versions = preferred_api_versions
+          default_request = new_request(:url => @end_point, :method => :get, :headers => @@headers)
+          @server_api_versions, links = api_info(default_request)
+          debug "Server supports API versions #{@server_api_versions.join(', ')}"
+        
+          if api_version_negotiated
+            unless server_api_version_current?
+              debug "Client API version #{api_version_negotiated} is not current. Refetching API"
+              # need to re-fetch API
+              @@headers["Accept"] = "application/json; version=#{api_version_negotiated}"
+              req = new_request(:url => @end_point, :method => :get, :headers => @@headers)
+              @server_api_versions, links = api_info req
             end
+          else
+            warn_about_api_versions
           end
-          
-          debug "Using API version #{api_version_negotiated}" if api_version_negotiated
-          if @server_api_versions.empty?
-            # the list was never fetched from the server, because all our
-            # attempts failed
-            links = versioned_links(default_request)
-            @@headers.delete "Accept"
-          end
-          
-          warn_about_api_versions
         rescue Exception => e
           raise ResourceAccessException.new("Failed to access resource: #{e.message}")
         end
+
         super({:links => links}, use_debug)
       end
 
@@ -169,14 +158,13 @@ module RHC
         ! api_version_negotiated.nil?
       end
       
-      # return the API version that the server and this client agreed on
+      # return the API version that the server and this client can agree on
       def api_version_negotiated
-        return nil unless @server_api_versions
         client_api_versions.reverse. # choose the last API version listed
           detect { |v| @server_api_versions.include? v }
       end
       
-      def api_version_current?
+      def client_api_version_current?
         current_client_api_version == api_version_negotiated
       end
       
@@ -184,14 +172,15 @@ module RHC
         client_api_versions.last
       end
       
+      def server_api_version_current?
+        @server_api_versions && @server_api_versions.max == api_version_negotiated
+      end
+      
       def warn_about_api_versions
         if !api_version_match?
-          # API versions did not match
           warn "WARNING: API version mismatch. This client supports #{client_api_versions.join(', ')} but
 server at #{URI.parse(@end_point).host} supports #{@server_api_versions.join(', ')}."
-          if !client_api_versions.empty? && client_api_versions.max < @server_api_versions.min
-            warn "The client version is outdated; please consider updating 'rhc'. We will continue, but you may encounter problems."
-          end
+          warn "The client version may be outdated; please consider updating 'rhc'. We will continue, but you may encounter problems."
         end
       end
       
@@ -200,10 +189,10 @@ server at #{URI.parse(@end_point).host} supports #{@server_api_versions.join(', 
       end
       
       private
-      def versioned_links(req)
+      # execute +req+ with RestClient, and return [server_api_versions, links]
+      def api_info(req)
         json_response = ::RHC::Json.decode(req.execute)
-        @server_api_versions = json_response['supported_api_versions']
-        links = json_response['data']        
+        [ json_response['supported_api_versions'], json_response['data'] ]
       end
     end
   end
