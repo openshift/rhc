@@ -96,7 +96,7 @@ module RHC
 
       # instantiate a REST client that stages can use
       end_point = "https://#{@libra_server}/broker/rest/api"
-      @rest_client = RHC::Rest::Client.new(end_point, @username, @password)
+      @rest_client = RHC::Rest::Client.new(end_point, @username, @password, @debug)
       
       # confirm that the REST client can connect
       return false unless @rest_client.user
