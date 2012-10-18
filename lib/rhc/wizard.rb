@@ -34,6 +34,7 @@ module RHC
         @libra_server = @libra_server ?  @libra_server : "openshift.redhat.com"
       end
       @config.config_user opts.rhlogin if opts && opts.rhlogin
+      @debug = config['debug']
     end
 
     # Public: Runs the setup wizard to make sure ~/.openshift and ~/.ssh are correct
@@ -47,6 +48,7 @@ module RHC
     def run
       stages.each do |stage|
         # FIXME: cleanup if we fail
+        debug "Running #{stage}"
         if (self.send stage).nil?
           return nil
         end
@@ -94,7 +96,7 @@ module RHC
 
       # instantiate a REST client that stages can use
       end_point = "https://#{@libra_server}/broker/rest/api"
-      @rest_client = RHC::Rest::Client.new(end_point, @username, @password)
+      @rest_client = RHC::Rest::Client.new(end_point, @username, @password, @debug)
       
       # confirm that the REST client can connect
       return false unless @rest_client.user
@@ -429,6 +431,10 @@ EOF
       $?.success?
     rescue
       false
+    end
+    
+    def debug?
+      @debug
     end
   end
 
