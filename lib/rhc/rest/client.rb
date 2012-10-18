@@ -6,6 +6,8 @@ require 'uri'
 module RHC
   module Rest
     class Client < Base
+      include RHC::Helpers
+      
       attr_reader :server_api_versions, :client_api_versions
       # Keep the list of supported API versions here
       # The list may not necessarily be sorted; we will select the last
@@ -45,22 +47,28 @@ module RHC
             debug "Checking API version #{api_version}"
             
             @@headers["Accept"] = "application/json; version=#{api_version}"
-            request = new_request(:url => @end_point, :method => :get, :headers => @@headers)
+            req = new_request(:url => @end_point, :method => :get, :headers => @@headers)
             begin
-              json_response = ::RHC::Json.decode(request.execute)
-              @server_api_versions = json_response['supported_api_versions']
-              links = json_response['data']
+              links = versioned_links(req)
             rescue RestClient::NotAcceptable
               # try the next version
               debug "Server does not support API version #{api_version}"
             end
           end
+          
           debug "Using API version #{api_version_negotiated}" if api_version_negotiated
+          if @server_api_versions.empty?
+            # the list was never fetched from the server, because all our
+            # attempts failed
+            links = versioned_links(default_request)
+            @@headers.delete "Accept"
+          end
+          
           warn_about_api_versions
         rescue Exception => e
           raise ResourceAccessException.new("Failed to access resource: #{e.message}")
         end
-        super({:links => links || request(default_request)}, use_debug)
+        super({:links => links}, use_debug)
       end
 
       def add_domain(id)
@@ -179,9 +187,23 @@ module RHC
       def warn_about_api_versions
         if !api_version_match?
           # API versions did not match
-          warn "WARNING: API version mismatch. This client supports #{client_api_versions.join(', ')} 
-but server at #{URI.parse(@end_point).host} supports #{@server_api_versions.join(', ')}."
+          warn "WARNING: API version mismatch. This client supports #{client_api_versions.join(', ')} but
+server at #{URI.parse(@end_point).host} supports #{@server_api_versions.join(', ')}."
+          if !client_api_versions.empty? && client_api_versions.max < @server_api_versions.min
+            warn "The client version is outdated; please consider updating 'rhc'. We will continue, but you may encounter problems."
+          end
         end
+      end
+      
+      def debug?
+        @debug
+      end
+      
+      private
+      def versioned_links(req)
+        json_response = ::RHC::Json.decode(req.execute)
+        @server_api_versions = json_response['supported_api_versions']
+        links = json_response['data']        
       end
     end
   end

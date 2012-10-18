@@ -555,6 +555,18 @@ module RHC
             end
           end
         end
+        
+        context "when client supports only API version 0.9" do
+          describe "#new" do
+            it "warns user that it is outdated" do
+              capture do
+                @client = RHC::Rest::Client.new(mock_href, mock_user, mock_pass, false, [0.9])
+                @output.rewind
+                @output.read.should =~ /client version is outdated/
+              end
+            end
+          end
+        end
       end
       
     end
