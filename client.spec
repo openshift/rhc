@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 0.99.8
+Version: 0.99.9
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -115,6 +115,13 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Oct 18 2012 Adam Miller <admiller@redhat.com> 0.99.9-1
+- Merge pull request #186 from
+  smarterclayton/bug_821107_allow_unknown_ssh_keys_to_be_uploaded
+  (openshift+bot@redhat.com)
+- Bug 821107 - Allow an unrecognizable SSH key to be uploaded
+  (ccoleman@redhat.com)
+
 * Thu Oct 18 2012 Adam Miller <admiller@redhat.com> 0.99.8-1
 - These superfluous 'Accept' headers were throwing off specs on Linux.
   (asari.ruby@gmail.com)
