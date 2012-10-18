@@ -53,8 +53,8 @@ module RHC
       command_name = Commander::Runner.instance.command_name_from_args
       command = Commander::Runner.instance.active_command
 
-      new_cmd = deprecated[command_name]
-      if deprecated[command_name]
+      new_cmd = deprecated[command_name.to_sym]
+      if new_cmd
         new_cmd = "rhc #{command.name}" if new_cmd == true
         RHC::Helpers.deprecated_command new_cmd
       end
@@ -88,7 +88,7 @@ module RHC
             o[:arg] = Commander::Runner.switch_to_sym(o[:switches].last)
           end
 
-          deprecated[name] = opts[:deprecated] unless opts[:deprecated].nil?
+          deprecated[name.to_sym] = opts[:deprecated] unless opts[:deprecated].nil?
 
           args_metadata = opts[:args] || []
           args_metadata.each do |arg_meta|
@@ -107,7 +107,7 @@ module RHC
                 # prepend the current resource
                 alias_components = name.split(" ")
                 alias_components[-1] = a[:action]
-                alias_cmd = alias_components.join(' ')
+                alias_cmd = alias_components.join(' ').to_sym
               end
 
               deprecated[alias_cmd] = true if a[:deprecated]
