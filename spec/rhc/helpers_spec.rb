@@ -287,4 +287,10 @@ describe HighLine do
     output = $terminal.read
     output.should match "Lorem\nipsum\ndolor sit\nam\eet"
   end
+  it "should wrap the terminal when words are smaller than wrap length" do
+    $terminal.wrap_at = 3
+    say "Antidisestablishmentarianism"
+    output = $terminal.read
+    output.should match "Ant\nidi\nses\ntab\nlis\nhme\nnta\nria\nnis\nm"
+  end
 end

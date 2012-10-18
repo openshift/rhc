@@ -25,6 +25,15 @@ class File
   end
 end
 
+class String
+  # Wrap string by the given length, and join it with the given character.
+  # The method doesn't distinguish between words, it will only work based on
+  # the length.
+  def wrap(wrap_length=80, char="\n")
+    scan(/.{#{wrap_length}}|.+/).join(char)
+  end
+end
+
 #
 # Allow http => https redirection, see 
 # http://bugs.ruby-lang.org/issues/859 to 1.8.7 for rough
@@ -43,7 +52,7 @@ end
 # Some versions of highline get in an infinite loop when trying to wrap.
 # Fixes BZ 866530.
 class HighLine
-  def wrap( text )
+  def wrap(text)
     wrapped_text = []
     text.each_line do |line|
       word = []
@@ -59,7 +68,7 @@ class HighLine
           if color_code
             i += color_code[0].length
             # first the existing word buffer then the color code
-            wrapped_text << word.join << color_code[0]
+            wrapped_text << word.join.wrap(@wrap_at) << color_code[0]
             word.clear
           end
         end
@@ -74,7 +83,7 @@ class HighLine
           end
           # space, so move the word to wrapped buffer and start a new word
           if c =~ / /
-            wrapped_text << word.join << ' '
+            wrapped_text << word.join.wrap(@wrap_at) << ' '
             word.clear
             chars_in_line += 1
           # any other character
@@ -85,7 +94,7 @@ class HighLine
         end
       end
       # moves the rest of the word buffer
-      wrapped_text << word.join
+      wrapped_text << word.join.wrap(@wrap_at)
     end
     return wrapped_text.join
   end
