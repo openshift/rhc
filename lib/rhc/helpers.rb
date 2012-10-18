@@ -98,7 +98,7 @@ module RHC
     #
 
     def debug(msg)
-      puts "DEBUG: #{msg}" if debug?
+      $stderr.puts "DEBUG: #{msg}" if debug?
     end
 
     def deprecated_command(correct,short = false)
