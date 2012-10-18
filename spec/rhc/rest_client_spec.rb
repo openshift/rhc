@@ -562,7 +562,7 @@ module RHC
               capture do
                 @client = RHC::Rest::Client.new(mock_href, mock_user, mock_pass, false, [0.9])
                 @output.rewind
-                @output.read.should =~ /client version is outdated/
+                @output.read.should =~ /client version may be outdated/
               end
             end
           end
