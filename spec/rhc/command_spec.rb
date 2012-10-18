@@ -45,6 +45,7 @@ describe RHC::Commands::Base do
       it("should have an object name") { subject.object_name.should == 'test' }
       it("should run with wizard") do
         FakeFS do
+          RHC::Config.set_defaults
           wizard_run = false
           RHC::Wizard.stub!(:new) do |config|
             RHC::Wizard.unstub!(:new)
@@ -167,6 +168,7 @@ describe RHC::Commands::Base do
 
   describe "rest_client" do
     before do
+      mock_terminal
       RHC::Rest::Client.stub!(:new) { |openshift_rest_node, username, password, debug| @username = username; @password = password; true}
     end
 
