@@ -35,9 +35,10 @@ module RHC::Commands
     end
 
     summary 'Add SSH key to the user account'
-    syntax '<name> <SSH Key file>'
+    syntax '<name> <path to SSH key file>'
     argument :name, 'Name for this key', []
     argument :key, 'SSH public key filepath', []
+    option ['--confirm'], 'Bypass key validation'
     def add(name, key)
       type, content, comment = ssh_key_triple_for(key)
 
@@ -45,7 +46,12 @@ module RHC::Commands
       begin
         Net::SSH::KeyFactory.load_data_public_key "#{type} #{content}"
       rescue NotImplementedError, OpenSSL::PKey::PKeyError, Net::SSH::Exception => e
-        raise ::RHC::KeyDataInvalidException.new("File '#{key}' contains invalid data")
+        debug e.inspect
+        if options.confirm
+          warn 'The key you are uploading is not recognized.  You may not be able to authenticate to your application through Git or SSH.'
+        else
+          raise ::RHC::KeyDataInvalidException.new("File '#{key}' does not appear to be a recognizable key file (#{e}). You may specify the '--confirm' flag to add the key anyway.")
+        end
       end
 
       rest_client.add_key(name, content, type)
