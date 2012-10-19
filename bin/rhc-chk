@@ -5,6 +5,7 @@ require 'rhc/coverage_helper'
 require 'rhc-common'
 require 'net/http'
 require 'net/https'
+require 'net/ssh'
 require 'rbconfig'
 require 'yaml'
 require 'tempfile'
@@ -357,16 +358,24 @@ class Test3_SSH < Test::Unit::TestCase
   end
 
   def agent_key_fingerprints
-    @@agent_keys.nil? ? nil : @@agent_keys.map{|x| x.to_s.split("\n")[1..-2].join('') }
+    @@agent_keys.nil? ? nil : @@agent_keys.map{|x| x.fingerprint }
   end
 
   def libra_public_key
-    @@local_ssh_pubkey ||= (
-    fp = File.open(@libra_kpfile)
-      fp.gets.split(' ')[1]
+    @@local_ssh_pubkey ||= libra_public_key_content.split(' ')[1]
+  end
+
+  def libra_public_key_content
+    @@local_ssh_pubkey_content ||= (
+      fp = File.open(@libra_kpfile)
+      fp.gets
     )
   ensure
     fp.close if fp
+  end
+
+  def libra_public_key_fingerprint
+    Net::SSH::KeyFactory.load_data_public_key(libra_public_key_content).fingerprint
   end
 
   def test_01_local_files
@@ -381,7 +390,7 @@ class Test3_SSH < Test::Unit::TestCase
   def test_02_ssh_agent
     require_agent_keys
 
-    assert agent_key_names.include?(File.expand_path(@libra_kfile)) ,error_for(:pubkey_not_loaded, ": #{@libra_kpfile}")
+    assert agent_key_fingerprints.include?(libra_public_key_fingerprint) ,error_for(:pubkey_not_loaded, ": #{@libra_kpfile}")
   end
 
   def test_03_remote_ssh_keys
