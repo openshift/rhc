@@ -8,10 +8,10 @@ describe RHC::Config do
     ENV['http_proxy'] = nil
     mock_terminal
     FakeFS.activate!
+    FakeFS::FileSystem.clear
   end
 
   after(:all) do
-    FakeFS::FileSystem.clear
     FakeFS.deactivate!
   end
 
