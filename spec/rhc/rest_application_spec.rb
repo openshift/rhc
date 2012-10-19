@@ -11,20 +11,19 @@ module RHC
     describe Application do
       # make sure auth is set up for the Application object since we are not
       # calling it from RHC::Rest::Client
-      credentials = Base64.strict_encode64("#{mock_user}:#{mock_pass}")
-      @@headers["Authorization"] = "Basic #{credentials}"
-      @@headers["User-Agent"] = RHC::Helpers.user_agent
 
       let (:app_links) { mock_response_links(mock_app_links('mock_domain','mock_app')) }
       let (:app_obj) {
-        RHC::Rest::Application.new({ 'domain_id'       => 'mock_domain',
+        obj = RHC::Rest::Application.new({ 'domain_id'       => 'mock_domain',
                                      'name'            => 'mock_app',
                                      'creation_time'   => Time.now.to_s,
                                      'uuid'            => 1234,
                                      'aliases'         => ['alias1','alias2'],
                                      'server_identity' => mock_uri,
                                      'links'           => app_links
-                                   })
+                                   });
+         obj.set_auth_header(mock_user, mock_pass)
+         obj
       }
       context "#new" do
         it "returns an application object" do

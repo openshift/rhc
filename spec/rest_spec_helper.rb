@@ -280,6 +280,10 @@ module RestSpecHelper
       end
       @framework = type
       @messages = []
+      @user = mock_user
+      @pass = mock_pass
+      @headers = {:accept => :json}
+      set_auth_header
     end
 
     def destroy

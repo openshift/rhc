@@ -47,14 +47,14 @@ module RHC
         it "returns a client object from the required arguments" do
           credentials = Base64.strict_encode64(mock_user + ":" + mock_pass)
           client      = RHC::Rest::Client.new(mock_href, mock_user, mock_pass)
-          @@headers['Authorization'].should == "Basic #{credentials}"
+          client.headers['Authorization'].should == "Basic #{credentials}"
           client.send(:links).should == client_links
         end
         it "does not add newlines to username and password > 60 characters" do
           username = "a" * 45
           password = "p" * 45
           client   = RHC::Rest::Client.new(mock_href, mock_user, mock_pass)
-          @@headers['Authorization'].should_not match("\n")
+          client.headers['Authorization'].should_not match("\n")
         end
         it "raises an error message if the API cannot be connected" do
           expect { MockClient.new(mock_href('api_error'), mock_user, mock_pass) }.should raise_error
@@ -267,6 +267,7 @@ module RHC
           end
           it "returns application objects for matching application IDs" do
             domain = @client.domains[0]
+            domain.set_auth_header(mock_user, mock_pass)
             domain.applications.each do |app|
               match = domain.find_application(app.name)
               match.class.should                              == RHC::Rest::Application
@@ -309,6 +310,7 @@ module RHC
             carts = @client.cartridges
             carts.length.should equal(2)
             (0..1).each do |idx|
+              carts[idx].set_auth_header(mock_user, mock_pass)
               carts[idx].class.should                          == RHC::Rest::Cartridge
               carts[idx].name.should  == "mock_cart_#{idx}"
               carts[idx].type.should  == "mock_cart_#{idx}_type"

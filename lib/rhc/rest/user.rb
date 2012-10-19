@@ -11,7 +11,7 @@ module RHC
       end
 
       def keys
-        debug "Getting all keys for user #{login}"
+        debug "Getting all keys for user #{login} with headers: #{@headers}"
         rest_method "LIST_KEYS"
       end
 

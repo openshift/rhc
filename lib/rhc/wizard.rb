@@ -100,7 +100,7 @@ module RHC
       
       # confirm that the REST client can connect
       return false unless @rest_client.user
-
+      
       true
     end
 
