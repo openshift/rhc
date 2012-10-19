@@ -15,14 +15,14 @@ module RHCHelper
     include Httpify
 
     # attributes to represent the general information of the application
-    attr_accessor :name, :type, :hostname, :repo, :embed, :snapshot, :uid, :alias, :scalable
+    attr_accessor :name, :type, :hostname, :repo, :embed, :snapshot, :uid, :alias, :scalable, :gear_profile
 
     # mysql connection information
     attr_accessor :mysql_hostname, :mysql_user, :mysql_password, :mysql_database
 
     # Create the data structure for a test application
-    def initialize(type, name, scalable=false)
-      @name, @type, @scalable = name, type, scalable
+    def initialize(type, name, scalable=false, gear_profile=nil)
+      @name, @type, @scalable, @gear_profile = name, type, scalable, gear_profile
       @hostname = "#{name}-#{$namespace}.#{$domain}"
       @repo = "#{TEMP_DIR}/#{$namespace}_#{name}_repo"
       @file = "#{TEMP_DIR}/#{$namespace}.json"
@@ -47,7 +47,7 @@ module RHCHelper
       end
     end
 
-    def self.create_unique(type, scalable, prefix="test")
+    def self.create_unique(type, scalable, gear_profile=nil, prefix="test")
       # Get a REST client to verify the application name
       client = RHC::Rest::Client.new($end_point, $username, $password)
 
@@ -68,7 +68,7 @@ module RHCHelper
         next if test_names.index(name)
 
         # Create the app
-        app = App.new(type, name, scalable)
+        app = App.new(type, name, scalable, gear_profile)
         app.persist
         return app
       end

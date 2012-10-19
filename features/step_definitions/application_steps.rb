@@ -51,8 +51,8 @@ When /^(\d+) (.+) applications are created$/ do |app_count, type|
   @app = old_app
 end
 
-When /^a (scaled )?(.+) application is created$/ do |scaled, type|
-  @app = App.create_unique(type, scaled)
+When /^a (scaled )?(.+) application is created(?: with a (.*) gear)?$/ do |scaled, type, gear_profile|
+  @app = App.create_unique(type, scaled, gear_profile)
   @app.rhc_app_create
 end
 
@@ -111,4 +111,8 @@ end
 
 Then /^the application should be scalable/ do
   Then "the haproxy-1.4 cartridge should be running"
+end
+
+Then /^the application should have a (.*) gear$/ do |gear_profile|
+  @app.gear_profile.should match("#{gear_profile}")
 end

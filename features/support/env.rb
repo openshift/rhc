@@ -110,6 +110,18 @@ unless ENV['NO_CLEAN']
     end
   end
 
+  # Cleanup all geared test applications
+  client = RHC::Rest::Client.new($end_point, "user_with_multiple_gear_sizes@test.com", $password)
+  client.domains.each do |domain|
+    domain.applications.each do |app|
+      if app.name.start_with?("test")
+        _log "    Deleting application #{app.name}"
+        app.delete
+      end
+    end
+    domain.delete
+  end
+
   _log "  Application cleanup complete"
   _log "--------------------------------------------------------------------------------------------------"
   _log "\n\n"

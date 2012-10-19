@@ -8,6 +8,10 @@ Before('@sshkey','@key1') do
 end
 
 # Defined the required hooks first so we make sure we have everything we need
+Before('@geared_user_required') do
+  $username = "user_with_multiple_gear_sizes@test.com"
+end
+
 Before('@domain_required') do
   When 'we have an existing domain'
 end
