@@ -103,7 +103,7 @@ module RHC::Commands
           end
         rescue Timeout::Error, Errno::EADDRNOTAVAIL, Errno::EADDRINUSE, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed => e
           debug e.backtrace
-          raise RHC::SnapshotRestoreException.new "Error in trying to restore snapshot. You can try to save manually by running:\n#{ssh_cmd}"
+          raise RHC::SnapshotRestoreException.new "Error in trying to restore snapshot. You can try to restore manually by running:\n#{ssh_cmd}"
         end
 
       else
