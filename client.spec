@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 0.99.9
+Version: 0.99.10
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -115,6 +115,31 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Oct 19 2012 Adam Miller <admiller@redhat.com> 0.99.10-1
+- Merge pull request #184 from fabianofranz/master (openshift+bot@redhat.com)
+- Fixed BZ841170 (ffranz@redhat.com)
+- Merge pull request #172 from fotioslindiakos/origin_cucumber
+  (dmcphers@redhat.com)
+- Merge pull request #189 from J5/bugfix (dmcphers@redhat.com)
+- Merge pull request #185 from BanzaiMan/dev/hasari/bz861030
+  (dmcphers@redhat.com)
+- Updated cucumber tests to register user for origin (fotios@redhat.com)
+- Fixed line wrap for single words larger than the terminal size
+  (ffranz@redhat.com)
+- Merge remote-tracking branch 'upstream/master' (ffranz@redhat.com)
+- make sure all deprecated keys are symbols (johnp@redhat.com)
+- Pass debug option to the REST client as well. (asari.ruby@gmail.com)
+- Decreased the range of the string to match for a color code, improves
+  performance (ffranz@redhat.com)
+- Other minor readability improvements (ffranz@redhat.com)
+- Fixed match method call for Ruby 1.8 (ffranz@redhat.com)
+- Merge remote-tracking branch 'upstream/master' (ffranz@redhat.com)
+- Improved Highline monkey patch to allow inline color codes
+  (ffranz@redhat.com)
+- Rebase the master branch (asari.ruby@gmail.com)
+- Merge remote-tracking branch 'upstream/master' (ffranz@redhat.com)
+- Fixes BZ 866530 (ffranz@redhat.com)
+
 * Thu Oct 18 2012 Adam Miller <admiller@redhat.com> 0.99.9-1
 - Merge pull request #186 from
   smarterclayton/bug_821107_allow_unknown_ssh_keys_to_be_uploaded
