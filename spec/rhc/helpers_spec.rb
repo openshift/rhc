@@ -4,6 +4,7 @@ require 'rhc/ssh_key_helpers'
 require 'rhc/core_ext'
 require 'highline/import'
 require 'rhc/config'
+require 'rhc/helpers'
 require 'date'
 
 describe RHC::Helpers do
@@ -246,5 +247,44 @@ describe OpenURI do
   context 'redirectable?' do
     specify('http to https') { OpenURI.redirectable?(URI.parse('http://foo.com'), URI.parse('https://foo.com')).should be_true }
     specify('https to http') { OpenURI.redirectable?(URI.parse('https://foo.com'), URI.parse('http://foo.com')).should be_false }
+  end
+end
+
+describe HighLine do
+  it "should wrap the terminal" do
+    $terminal.wrap_at = 10
+    say "Lorem ipsum dolor sit amet"
+    output = $terminal.read
+    output.should match "Lorem\nipsum\ndolor sit\namet"
+  end
+  it "should wrap the terminal" do
+    $terminal.wrap_at = 16
+    say "Lorem ipsum dolor sit amet"
+    output = $terminal.read
+    output.should match "Lorem ipsum\ndolor sit amet"
+  end
+  it "should not wrap the terminal" do
+    $terminal.wrap_at = 50
+    say "Lorem ipsum dolor sit amet"
+    output = $terminal.read
+    output.should match "Lorem ipsum dolor sit amet"
+  end
+  it "should wrap the terminal when using color codes" do
+    $terminal.wrap_at = 10
+    say $terminal.color("Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet", :red)
+    output = $terminal.read
+    output.should match "Lorem\nipsum\ndolor sit\namet Lorem\nipsum\ndolor sit\namet"
+  end
+  it "should wrap the terminal with other escape characters" do
+    $terminal.wrap_at = 10
+    say "Lorem ipsum dolor sit am\eet"
+    output = $terminal.read
+    output.should match "Lorem\nipsum\ndolor sit\nam\eet"
+  end
+  it "should wrap the terminal when words are smaller than wrap length" do
+    $terminal.wrap_at = 3
+    say "Antidisestablishmentarianism"
+    output = $terminal.read
+    output.should match "Ant\nidi\nses\ntab\nlis\nhme\nnta\nria\nnis\nm"
   end
 end

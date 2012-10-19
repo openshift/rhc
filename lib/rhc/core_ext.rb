@@ -1,6 +1,7 @@
 # From Rails core_ext/object.rb
 require 'rhc/json'
 require 'open-uri'
+require 'highline'
 
 class Object
   def present?
@@ -24,6 +25,15 @@ class File
   end
 end
 
+class String
+  # Wrap string by the given length, and join it with the given character.
+  # The method doesn't distinguish between words, it will only work based on
+  # the length.
+  def wrap(wrap_length=80, char="\n")
+    scan(/.{#{wrap_length}}|.+/).join(char)
+  end
+end
+
 #
 # Allow http => https redirection, see 
 # http://bugs.ruby-lang.org/issues/859 to 1.8.7 for rough
@@ -37,4 +47,56 @@ module OpenURI
     uri1.scheme.downcase == uri2.scheme.downcase ||
     (/\A(?:http|ftp)\z/i =~ uri1.scheme && /\A(?:https?|ftp)\z/i =~ uri2.scheme)
   end
+end
+
+# Some versions of highline get in an infinite loop when trying to wrap.
+# Fixes BZ 866530.
+class HighLine
+  def wrap(text)
+    wrapped_text = []
+    text.each_line do |line|
+      word = []
+      i = chars_in_line = 0
+      chars = line.split(//)
+      while i < chars.length do
+        c = chars[i]
+        color_code = nil
+        # escape character probably means color code, let's check
+        if c == "\e"
+          color_code = line[i..i+6].match(/\e\[\d{1,2}m/)
+          # it's a color code
+          if color_code
+            i += color_code[0].length
+            # first the existing word buffer then the color code
+            wrapped_text << word.join.wrap(@wrap_at) << color_code[0]
+            word.clear
+          end
+        end
+        # not a color code sequence
+        if !color_code
+          chars_in_line += 1
+          # time to wrap the line?
+          if chars_in_line == @wrap_at
+            wrapped_text.pop if wrapped_text.last =~ / /
+            wrapped_text << "\n"
+            chars_in_line = 0
+          end
+          # space, so move the word to wrapped buffer and start a new word
+          if c =~ / /
+            wrapped_text << word.join.wrap(@wrap_at) << ' '
+            word.clear
+            chars_in_line += 1
+          # any other character
+          else
+            word << c
+          end
+          i += 1
+        end
+      end
+      # moves the rest of the word buffer
+      wrapped_text << word.join.wrap(@wrap_at)
+    end
+    return wrapped_text.join
+  end
+
 end
