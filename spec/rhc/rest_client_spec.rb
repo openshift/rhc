@@ -439,22 +439,25 @@ module RHC
               to_return({ :body   => { :data => client_links, :supported_api_versions => [1.0, 1.1] }.to_json,
                           :status => 200
                         })
-            @client = MockClient.new(mock_href, mock_user, mock_pass)
           end
           context "debug mode is on" do
             it "writes a message to the logger" do
-              @client.use_debug
-              @client.logger # starts our mock logger
-              eval '@client.' + logout_method.to_s
-              @client.logged.should =~ /Logout\/Close client$/
+              capture do
+                @client = MockClient.new(mock_href, mock_user, mock_pass, true)
+                @client.send logout_method.to_sym
+                $stderr.rewind
+                $stderr.read.should =~ /Logout\/Close client$/
+              end
             end
           end
           context "debug mode is off" do
             it "does nothing" do
-              @client = MockClient.new(mock_href, mock_user, mock_pass)
-              @client.logger # starts our mock logger
-              eval '@client.' + logout_method.to_s
-              @client.logged.should == ''
+              capture do
+                @client = MockClient.new(mock_href, mock_user, mock_pass, false)
+                @client.send logout_method.to_sym
+                $stderr.rewind
+                $stderr.read.should == ''
+              end
             end
           end
         end
@@ -549,6 +552,18 @@ module RHC
           describe "#api_version_negotiated" do
             it 'returns nil' do
               @client.api_version_negotiated.should be_nil
+            end
+          end
+        end
+        
+        context "when client supports only API version 0.9" do
+          describe "#new" do
+            it "warns user that it is outdated" do
+              capture do
+                @client = RHC::Rest::Client.new(mock_href, mock_user, mock_pass, false, [0.9])
+                @output.rewind
+                @output.read.should =~ /client version may be outdated/
+              end
             end
           end
         end
