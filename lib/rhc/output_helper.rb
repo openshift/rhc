@@ -2,11 +2,13 @@ module RHC
   module OutputHelpers
     def say_app_info(app)
       header "%s @ %s" % [app.name, app.app_url]
-      say "Created: #{date(app.creation_time)}"
-      say "   UUID: #{app.uuid}"
-      say "Git URL: #{app.git_url}" if app.git_url
-      say "SSH URL: #{app.ssh_url}" if app.ssh_url
-      say "Aliases: #{app.aliases.join(', ')}" if app.aliases and not app.aliases.empty?
+      say "  Created: #{date(app.creation_time)}"
+      say "     UUID: #{app.uuid}"
+      say "Gear Size: #{app.gear_profile}"
+      say " Scalable: #{app.scalable}"
+      say "  Git URL: #{app.git_url}" if app.git_url
+      say "  SSH URL: #{app.ssh_url}" if app.ssh_url
+      say "  Aliases: #{app.aliases.join(', ')}" if app.aliases and not app.aliases.empty?
       carts = app.cartridges
       if carts.present?
         say "\nCartridges:"
