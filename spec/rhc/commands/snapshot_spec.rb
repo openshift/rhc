@@ -26,6 +26,7 @@ describe RHC::Commands::Snapshot do
 
     context 'when saving a snapshot' do
       before(:each) do
+        `(exit 0)`
         Kernel.should_receive(:`).with("ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'snapshot' > #{@app.name}.tar.gz")
       end
       it { expect { run }.should exit_with_code(0) }
@@ -33,8 +34,8 @@ describe RHC::Commands::Snapshot do
 
     context 'when failing to save a snapshot' do
       before(:each) do
+        `(exit 1)`
         Kernel.should_receive(:`).with("ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'snapshot' > #{@app.name}.tar.gz")
-        $?.stub(:exitstatus) { 1 }
       end
       it { expect { run }.should exit_with_code(130) }
     end
@@ -72,6 +73,7 @@ describe RHC::Commands::Snapshot do
       before(:each) do
         File.stub!(:exists?).and_return(true)
         RHC::TarGz.stub!(:contains).and_return(true)
+        `(exit 0)`
         Kernel.should_receive(:`).with("cat #{@app.name}.tar.gz | ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'restore INCLUDE_GIT'")
       end
       it { expect { run }.should exit_with_code(0) }
