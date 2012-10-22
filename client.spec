@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 0.99.10
+Version: 0.99.11
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -115,6 +115,36 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Oct 22 2012 Adam Miller <admiller@redhat.com> 0.99.11-1
+- Merge pull request #192 from calfonso/master (openshift+bot@redhat.com)
+- Merge pull request #187 from
+  smarterclayton/avoid_creating_conf_file_during_spec_tests
+  (openshift+bot@redhat.com)
+- Merge pull request #188 from BanzaiMan/dev/hasari/bz867708
+  (dmcphers@redhat.com)
+- BZ868119 - Need to add jbossews in the description of rhc threaddump -h
+  (calfonso@redhat.com)
+- Merge pull request #190 from J5/bugfix2 (openshift+bot@redhat.com)
+- Merge remote-tracking branch 'origin/master' into
+  avoid_creating_conf_file_during_spec_tests (ccoleman@redhat.com)
+- Match the change in warning output. (asari.ruby@gmail.com)
+- Invert API fetching logic so that we issue network request at most twice.
+  (asari.ruby@gmail.com)
+- When the versions supported by the REST Client is completely out of date,
+  suggest updating and exit with error status. (asari.ruby@gmail.com)
+- Fix debug command specs by looking at the correct IO object.
+  (asari.ruby@gmail.com)
+- Debug message should go to $stderr. (asari.ruby@gmail.com)
+- Add gear size and scalable to app show output (johnp@redhat.com)
+- add gear test (johnp@redhat.com)
+- Ensure various configuration/filesystem resets are called
+  (ccoleman@redhat.com)
+- Replace FakeFS.activate! with FakeFS &block wherever possible, move
+  Filesystem clear to before rather than after, delete common_spec, use a more
+  predictable exit code stubbing mechanism for snapshot tests, and make sure
+  wizard is using the default config when it starts. (ccoleman@redhat.com)
+- setup_spec.rb was unintentionally creating config files (ccoleman@redhat.com)
+
 * Fri Oct 19 2012 Adam Miller <admiller@redhat.com> 0.99.10-1
 - Merge pull request #184 from fabianofranz/master (openshift+bot@redhat.com)
 - Fixed BZ841170 (ffranz@redhat.com)
