@@ -1,4 +1,5 @@
 require 'rhc/commands/base'
+
 module RHC::Commands
   class Snapshot < Base
     summary "Pull down application snapshot for a user."
@@ -62,7 +63,7 @@ module RHC::Commands
 
       if File.exists? filename
 
-        include_git = RHC::Helpers.windows? ? false : RHC::TarGz.contains(filename, './*/git')
+        include_git = RHC::Helpers.windows? ? true : RHC::TarGz.contains(filename, './*/git')
 
         ssh_uri = URI.parse(rest_client.find_domain(options.namespace).find_application(app).ssh_url)
 

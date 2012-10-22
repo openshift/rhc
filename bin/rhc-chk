@@ -375,7 +375,7 @@ class Test3_SSH < Test::Unit::TestCase
   end
 
   def libra_public_key_fingerprint
-    Net::SSH::KeyFactory.load_data_public_key(libra_public_key_content).fingerprint
+    @@local_ssh_pubkey_fingerprint ||= Net::SSH::KeyFactory.load_data_public_key(libra_public_key_content).fingerprint
   end
 
   def test_01_local_files
