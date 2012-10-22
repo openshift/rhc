@@ -9,11 +9,12 @@ require 'rest_spec_helper'
 describe RHC::Wizard do
   before(:all) do
     mock_terminal
+    RHC::Config.set_defaults
     FakeFS.activate!
+    FakeFS::FileSystem.clear
   end
 
   after(:all) do
-    FakeFS::FileSystem.clear
     FakeFS.deactivate!
   end
 
