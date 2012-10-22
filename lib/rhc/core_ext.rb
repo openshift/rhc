@@ -59,7 +59,9 @@ class HighLine
     word = []
 
     while i < line.length
-      c = line[i]
+      # we have to give a length to the index because ruby 1.8 returns the
+      # byte code when using a single fixednum index
+      c = line[i, 1]
       color_code = nil
       # escape character probably means color code, let's check
       if c == "\e"
@@ -80,7 +82,7 @@ class HighLine
 
         # time to wrap the line?
         if chars_in_line == @wrap_at
-          if c == ' ' or line[i+1] == ' ' or word.length == @wrap_at
+          if c == ' ' or line[i+1, 1] == ' ' or word.length == @wrap_at
             wrapped_line << word.join
             word.clear
           end
@@ -92,8 +94,8 @@ class HighLine
           word = word.join.lstrip.split(//)
           chars_in_line = word.length
 
-          if line[i+1] == ' '
-            i += 1 while line[i+1] == ' '
+          if line[i+1, 1] == ' '
+            i += 1 while line[i+1, 1] == ' '
           end
 
         else
