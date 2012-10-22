@@ -52,51 +52,72 @@ end
 # Some versions of highline get in an infinite loop when trying to wrap.
 # Fixes BZ 866530.
 class HighLine
+
+  def wrap_line(line)
+    wrapped_line = []
+    i = chars_in_line = 0
+    word = []
+
+    while i < line.length
+      c = line[i]
+      color_code = nil
+      # escape character probably means color code, let's check
+      if c == "\e"
+        color_code = line[i..i+6].match(/\e\[\d{1,2}m/)
+        if color_code
+          # first the existing word buffer then the color code
+          wrapped_line << word.join.wrap(@wrap_at) << color_code[0]
+          word.clear
+
+          i += color_code[0].length
+        end
+      end
+
+      # visible character
+      if !color_code
+        chars_in_line += 1
+        word << c
+
+        # time to wrap the line?
+        if chars_in_line == @wrap_at
+          if c == ' ' or line[i+1] == ' ' or word.length == @wrap_at
+            wrapped_line << word.join
+            word.clear
+          end
+
+          wrapped_line[-1].rstrip!
+          wrapped_line << "\n"
+
+          # consume any spaces at the begining of the next line
+          word = word.join.lstrip.split(//)
+          chars_in_line = word.length
+
+          if line[i+1] == ' '
+            i += 1 while line[i+1] == ' '
+          end
+
+        else
+          if c == ' '
+            wrapped_line << word.join
+            word.clear
+          end
+        end
+
+        i += 1
+      end
+    end
+
+    wrapped_line << word.join
+    wrapped_line.join
+  end
+
   def wrap(text)
     wrapped_text = []
     text.each_line do |line|
-      word = []
-      i = chars_in_line = 0
-      chars = line.split(//)
-      while i < chars.length do
-        c = chars[i]
-        color_code = nil
-        # escape character probably means color code, let's check
-        if c == "\e"
-          color_code = line[i..i+6].match(/\e\[\d{1,2}m/)
-          # it's a color code
-          if color_code
-            i += color_code[0].length
-            # first the existing word buffer then the color code
-            wrapped_text << word.join.wrap(@wrap_at) << color_code[0]
-            word.clear
-          end
-        end
-        # not a color code sequence
-        if !color_code
-          chars_in_line += 1
-          # time to wrap the line?
-          if chars_in_line == @wrap_at
-            wrapped_text.pop if wrapped_text.last =~ / /
-            wrapped_text << "\n"
-            chars_in_line = 0
-          end
-          # space, so move the word to wrapped buffer and start a new word
-          if c =~ / /
-            wrapped_text << word.join.wrap(@wrap_at) << ' '
-            word.clear
-            chars_in_line += 1
-          # any other character
-          else
-            word << c
-          end
-          i += 1
-        end
-      end
-      # moves the rest of the word buffer
-      wrapped_text << word.join.wrap(@wrap_at)
+      wrapped_text << wrap_line(line.rstrip)
     end
-    return wrapped_text.join
+
+    return wrapped_text.join("\n")
   end
 
 end
