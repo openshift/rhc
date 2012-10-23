@@ -99,7 +99,7 @@ describe RHC::Commands::Snapshot do
         channel = mock(Net::SSH::Connection::Channel)
         Net::SSH.should_receive(:start).with(@ssh_uri.host, @ssh_uri.user).and_return(session)
         session.should_receive(:open_channel).and_yield(channel)
-        channel.should_receive(:exec).with("restore").and_yield(nil, nil)
+        channel.should_receive(:exec).with("restore INCLUDE_GIT").and_yield(nil, nil)
         channel.should_receive(:on_data).and_yield(nil, 'foo')
         channel.should_receive(:on_extended_data).and_yield(nil, nil, 'foo')
         channel.should_receive(:on_close).and_yield(nil)
