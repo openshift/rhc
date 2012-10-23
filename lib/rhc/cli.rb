@@ -20,7 +20,7 @@ module RHC
     extend Commander::Delegates
 
     def self.set_terminal
-      $terminal.wrap_at = HighLine::SystemExtensions.terminal_size.first - 5 rescue 80 if $stdin.tty?
+      $terminal.wrap_at = HighLine::SystemExtensions.terminal_size.first rescue 80 if $stdin.tty?
       # FIXME: ANSI terminals are not default on windows but we may just be
       #        hitting a bug in highline if windows does support another method.
       #        This is a safe fix for now but needs more research.
