@@ -115,8 +115,9 @@ class HighLine
 
   def wrap(text)
     wrapped_text = []
-    text.each_line do |line|
-      wrapped_text << wrap_line(line.rstrip)
+    lines = text.split(/\r?\n/)
+    lines.each_with_index do |line, i|
+      wrapped_text << wrap_line(i == lines.length - 1 ? line : line.rstrip)
     end
 
     return wrapped_text.join("\n")
