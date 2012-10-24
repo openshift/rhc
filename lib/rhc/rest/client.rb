@@ -1,6 +1,7 @@
 require 'base64'
 require 'rhc/json'
 require 'rhc/rest/base'
+require 'rhc/helpers'
 require 'uri'
 
 module RHC
