@@ -100,4 +100,16 @@ module RHC
       super message, 130
     end
   end
+
+  class MissingScalingValueException < Exception
+    def initialize(message="Must provide either a min or max value for scaling")
+      super message, 1
+    end
+  end
+
+  class CartridgeNotScalableException < Exception
+    def initialize(message="Cartridge is not scalable")
+      super message, 1
+    end
+  end
 end

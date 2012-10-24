@@ -94,7 +94,7 @@ module RHC::Commands
         end
       end
 
-      say_app_info(rest_app)
+      display_app(rest_app,rest_app.cartridges,rest_app.scalable_carts.first)
 
       if issues?
         output_issues(rest_app)
@@ -222,7 +222,7 @@ module RHC::Commands
       rest_domain = rest_client.find_domain(options.namespace)
       rest_app = rest_domain.find_application(app)
       unless options.state
-        say_app_info(rest_app)
+        display_app(rest_app,rest_app.cartridges,rest_app.scalable_carts.first)
       else
         results do
           rest_app.gear_groups.each do |gg|
