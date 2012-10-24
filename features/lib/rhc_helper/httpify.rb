@@ -53,12 +53,19 @@ module RHCHelper
       start   = Time.now
 
       # Helper function to log message and sleep
-      def my_sleep(start,uri,e,options)
-        err_str = "Connection inacessible for %s (%s) - %.2f seconds"
-        logger.info(err_str % [uri,e.class,Time.now - start])
-        logger.info "Sleeping for %d seconds, retrying" % options[:sleep]
+      def my_sleep(status,expected,start,options)
+        [
+          ["Expecting", expected.class],
+          ["Received", status.class ],
+          ["Elapsed", Time.now - start ],
+        ].each do |values|
+            logger.info "%10s: %s" % values
+          end
         sleep options[:sleep]
       end
+
+      expected = options[:expected]
+      expected = (expected.to_s =~ /^Net/) ? expected.new(nil,nil,nil) : expected.new
 
       begin
         timeout(options[:timeout]) do
@@ -75,18 +82,21 @@ module RHCHelper
                          # Pass these up so we can check them
                          return e
                        end
-            logger.debug "Received: %s" % response
 
             case response
-            # Catch any response if we're expecting it
-            when options[:expected]
+              # Catch any response if we're expecting it or redirection
+            when expected.class, Net::HTTPRedirection
               break
-            # Retry these responses
+              # Retry these responses
             when Net::HTTPServiceUnavailable, SocketError
-              my_sleep(start,uri,response,options)
+              my_sleep(response,expected,start,options)
             else
-              # Some other response
-              break
+              case expected
+              when Net::HTTPServiceUnavailable
+                my_sleep(response,expected,start,options)
+              else
+                break
+              end
             end
           end
         end
@@ -111,10 +121,10 @@ module RHCHelper
       return response
     end
 
-    def is_inaccessible?
-      check_response({
+    def is_inaccessible?(options = {})
+      check_response(options.merge({
         :expected => Net::HTTPServiceUnavailable
-      })
+      }))
     end
 
     def is_accessible?(options = {})

@@ -6,6 +6,7 @@ SimpleCov.at_exit{ SimpleCov.result.format! } if defined? SimpleCov
 require 'rhc_helper'
 require 'rhc/rest'
 require 'rhc/config'
+require 'rhc/helpers'
 
 def set_path
   ENV["PATH"] = "#{ENV['RHC_LOCAL_PATH']}:#{ENV['PATH']}" if ENV['RHC_LOCAL_PATH']

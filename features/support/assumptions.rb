@@ -34,10 +34,16 @@ Given /^we have a (.*) (.*) cartridge$/ do |status,type|
 end
 
 Given /^we have a (stopped|running) application$/ do |state|
+  (before,after) = case state
+                   when "stopped"
+                     ["not be accessible","stopped"]
+                   when "running"
+                     ["be accessible","started"]
+                   end
+
   begin
-    When "the application should not be accessible"
-    When "the application is started" if state == "running"
+    When "the application should #{before}"
   rescue Spec::Expectations::ExpectationNotMetError
-    When "the application is stopped" if state == "stopped"
+    When "the application is #{after}"
   end
 end

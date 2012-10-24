@@ -62,5 +62,21 @@ module RHCHelper
     def remove
       rhc_cartridge('remove --confirm')
     end
+
+    def scale(values)
+      status = nil
+      rhc_cartridge("scale #{values}") do |exitstatus, out, err, arg|
+        status = exitstatus
+      end
+      status
+    end
+
+    def show
+      result = ""
+      rhc_cartridge('show') do |exitstatus, out, err, arg|
+        result = out
+      end
+      result
+    end
   end
 end
