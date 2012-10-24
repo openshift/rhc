@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 0.99.11
+Version: 0.99.12
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -115,6 +115,18 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Oct 24 2012 Adam Miller <admiller@redhat.com> 0.99.12-1
+- Fixed line wrapping, will not insert a new line if last line ends with
+  space(s) (ffranz@redhat.com)
+- Fixed a missing require in the rest client (ffranz@redhat.com)
+- Merge pull request #194 from J5/bugfix2 (openshift+bot@redhat.com)
+- use length index on strings so ruby 1.8 returns a string (johnp@redhat.com)
+- some wrapping fixes (johnp@redhat.com)
+- Fixed spec tests for rhc snapshot restore (ffranz@redhat.com)
+- Merge remote-tracking branch 'upstream/master' (ffranz@redhat.com)
+- Fixes BZ 847947 (ffranz@redhat.com)
+- Merge remote-tracking branch 'upstream/master' (ffranz@redhat.com)
+
 * Mon Oct 22 2012 Adam Miller <admiller@redhat.com> 0.99.11-1
 - Merge pull request #192 from calfonso/master (openshift+bot@redhat.com)
 - Merge pull request #187 from
