@@ -39,8 +39,8 @@ describe RHC::Commands::Domain do
       it { expect { run }.should exit_with_code(0) }
       it "should match output" do
         output = run_output
-        output.should match(/Applications in onedomain\:/)
-        output.should match(/No applications.  You can use/)
+        output.should match(/Applications in onedomain/)
+        output.should match(/No applications. You can use/)
       end
     end
 
@@ -53,8 +53,8 @@ describe RHC::Commands::Domain do
       it { expect { run }.should exit_with_code(0) }
       it "should match output" do
         output = run_output
-        output.should match("Applications in firstdomain\:")
-        output.should_not match("Applications in seconddomain\:")
+        output.should match("Applications in firstdomain")
+        output.should_not match("Applications in seconddomain")
       end
     end
 
@@ -90,7 +90,7 @@ describe RHC::Commands::Domain do
       it "should match output" do
         output = run_output
         output.should match("app_no_carts")
-        output.should match("Cartridges: none")
+        output.should match(/Cartridges$\n\s+[=]*\s+None/)
       end
     end
   end

@@ -1,3 +1,7 @@
+Before('@clean') do
+  clean_applications(true)
+end
+
 Before('@sshkey') do
   Sshkey.remove "key1"
   Sshkey.remove "key2"

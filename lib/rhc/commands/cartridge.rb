@@ -32,10 +32,8 @@ module RHC::Commands
       rest_cartridge = rest_app.add_cartridge(cart.name)
       say "Success"
 
-      paragraph do
-        header "Useful #{cart.name} properties"
-        properties_table(rest_cartridge).each { |s| say "  #{s}" }
-      end
+      display_cart(rest_cartridge)
+
       0
     end
 
@@ -47,12 +45,10 @@ module RHC::Commands
     def show(cartridge)
       rest_domain = rest_client.find_domain(options.namespace)
       rest_app = rest_domain.find_application(options.app)
-      rest_cartridge = find_cartridge rest_app, cartridge
+      rest_cartridge = find_cartridge rest_app, cartridge, nil
 
-      paragraph do
-        header "#{rest_cartridge.name} properties"
-        properties_table(rest_cartridge).each { |s| say "  #{s}" }
-      end
+      display_cart(rest_cartridge,rest_cartridge.properties[:cart_data])
+
       0
     end
 
@@ -149,23 +145,45 @@ module RHC::Commands
       0
     end
 
+    summary "Set the scaling range of a cartridge"
+    syntax "<cartridge> [--timeout timeout] [--namespace namespace] [--app app] [--min min] [--max max]"
+    argument :cart_type, "The name of the cartridge you are reloading", ["-c", "--cartridge cartridge"]
+    option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
+    option ["-a", "--app app"], "Application the cartridge belongs to", :context => :app_context, :required => true
+    option ["--timeout timeout"], "Timeout, in seconds, for the session"
+    option ["--min min", Integer], "Minimum scaling value"
+    option ["--max max", Integer], "Maximum scaling value"
+    def scale(cartridge)
+      raise RHC::MissingScalingValueException unless options.min || options.max
+
+      rest_domain = rest_client.find_domain(options.namespace)
+      rest_app = rest_domain.find_application(options.app)
+      rest_cartridge = find_cartridge rest_app, cartridge, nil
+
+      raise RHC::CartridgeNotScalableException unless rest_cartridge.scalable?
+
+      cart = rest_cartridge.set_scales({
+        :scales_from => options.min,
+        :scales_to   => options.max
+      })
+
+      results do
+        say "Success: Scaling values updated"
+        display_cart(cart)
+      end
+
+      0
+    end
+
     private
-      include RHC::CartridgeHelpers
+    include RHC::CartridgeHelpers
 
-      def cartridge_action(cartridge, action)
-        rest_domain = rest_client.find_domain(options.namespace)
-        rest_app = rest_domain.find_application(options.app)
-        rest_cartridge = find_cartridge rest_app, cartridge
-        result = rest_cartridge.send action
-        [result, rest_cartridge, rest_app, rest_domain]
-      end
-
-      def properties_table(cartridge)
-        items = []
-        (cartridge.properties[:cart_data] || []).each do |key, prop|
-          items << [prop["name"], prop["value"]]
-        end
-        table items, :join => " = "
-      end
+    def cartridge_action(cartridge, action)
+      rest_domain = rest_client.find_domain(options.namespace)
+      rest_app = rest_domain.find_application(options.app)
+      rest_cartridge = find_cartridge rest_app, cartridge
+      result = rest_cartridge.send action
+      [result, rest_cartridge, rest_app, rest_domain]
+    end
   end
 end

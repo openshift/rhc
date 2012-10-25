@@ -158,12 +158,54 @@ module RHC
       end
     end
 
-    def header(s)
-      say s
-      say "=" * s.length
+    # This will format table headings for a consistent look and feel
+    #   If a heading isn't explicitly defined, it will attempt to look up the parts
+    #   If those aren't found, it will capitalize the string
+    def table_heading(value)
+      # Set the default proc to look up undefined values
+      headings = Hash.new do |hash,key|
+        items = key.to_s.split('_')
+        # Look up each piece individually
+        hash[key] = items.length > 1 ?
+          # Recusively look up the heading for the parts
+          items.map{|x| headings[x.to_sym]}.join(' ') :
+          # Capitalize if this part isn't defined
+          items.first.capitalize
+      end
+
+      # Predefined headings (or parts of headings)
+      headings.merge!({
+        :creation_time  => "Created",
+        :uuid           => "UUID",
+        :current_scale  => "Current",
+        :scales_from    => "Minimum",
+        :scales_to      => "Maximum",
+        :url            => "URL",
+        :ssh            => "SSH",
+        :gear_profile   => "Gear Size"
+      })
+
+      headings[value]
     end
 
-      ##
+    def header(s,opts = {})
+      @indent ||= 0
+      indent s
+      indent "="*s.length
+      if block_given?
+        @indent += 1
+        yield
+        @indent -= 1
+      end
+    end
+
+    INDENT = 2
+    def indent(str)
+      @indent ||= 0
+      say "%s%s" % [" " * @indent * INDENT,str]
+    end
+
+    ##
     # section
     #
     # highline helper mixin which correctly formats block of say and ask
@@ -250,7 +292,7 @@ module RHC
     def jruby? ; RUBY_PLATFORM =~ /java/i end
     def windows? ; RUBY_PLATFORM =~ /win(32|dows|ce)|djgpp|(ms|cyg|bcc)win|mingw32/i end
     def unix? ; !jruby? && !windows? end
-    
+
     # common SSH key display format in ERB
     def ssh_key_display_format
       ERB.new <<-FORMAT

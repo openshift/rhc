@@ -271,7 +271,13 @@ module RestSpecHelper
         @embedded = {"haproxy-1.4" => {:info => ""}}
       end
       @__json_args__= {:links => mock_response_links(mock_app_links('mock_domain_0', 'mock_app_0'))}
-      add_cartridge(type, false) if type
+      cart = add_cartridge(type, false) if type
+      if scale
+        cart.scales_to = -1
+        cart.scales_from = 2
+        cart.current_scale = 2
+        cart.scales_with = "haproxy-1.4"
+      end
       @framework = type
       @messages = []
     end
@@ -318,12 +324,16 @@ module RestSpecHelper
   end
 
   class MockRestCartridge < RHC::Rest::Cartridge
+    attr_accessor :scales_to, :scales_from, :current_scale, :scales_with
     def initialize(name, type, app=nil, properties={:cart_data => {:connection_url => {'name' => 'connection_url', 'value' => "http://fake.url" }}})
       @name = name
       @type = type
       @app = app
       @properties = properties
       @status_messages = [{"message" => "started", "gear_id" => "123"}]
+      @scales_from = 1
+      @scales_to = 1
+      @current_scale = 1
     end
 
     def destroy
@@ -351,6 +361,13 @@ module RestSpecHelper
 
     def reload
       @app
+    end
+
+    def set_scales(values)
+      values.delete_if{|k,v| v.nil? }
+      @scales_from = values[:scales_from] if values[:scales_from]
+      @scales_to = values[:scales_to] if values[:scales_to]
+      self
     end
   end
 
