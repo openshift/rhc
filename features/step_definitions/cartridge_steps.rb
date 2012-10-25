@@ -58,7 +58,7 @@ Then /^the (\w+) scaling value should be (.*)$/ do |minmax,value|
   match_string = [expected,value].join(" = ")
   regex = Regexp.new(/\s+#{match_string}/)
 
-  @app.cartridge(@cartridge_name).show.should match regex
+  @app.cartridge(@cartridge_name).send(:show).should match(regex)
 end
 
 Then /^it should fail with code (\d+)$/ do |code|
