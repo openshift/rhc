@@ -85,6 +85,27 @@ _log "  Creating New Namespace: #{$namespace.nil?}"
 _log "--------------------------------------------------------------------------------------------------"
 _log "\n\n"
 
+def clean_applications(leave_domain = false)
+  users = [$username,'user_with_multiple_gear_sizes@test.com']
+
+  _log "  Cleaning up test applications..."
+
+  users.each do |user|
+    _log "\tUser: #{user}"
+    client = RHC::Rest::Client.new($end_point, user, $password)
+    client.domains.each do |domain|
+      _log "\t\tDomain: #{domain.id}"
+      domain.applications.each do |app|
+        if app.name.start_with?("test")
+          _log "\t\t\tApplication: #{app.name}"
+          app.delete
+        end
+      end
+      domain.delete unless leave_domain
+    end
+  end
+end
+
 unless ENV['NO_CLEAN']
   _log "--------------------------------------------------------------------------------------------------"
   _log "               Resetting environment"
@@ -97,33 +118,12 @@ unless ENV['NO_CLEAN']
   _log "  Replacing express.conf with the specified libra_server"
   File.open(RHC::Config::local_config_path, 'w') {|f| f.write("libra_server=#{URI.parse($end_point).host}") }
 
-  _log "  Cleaning up test applications..."
+  # Clean up temp dir
   FileUtils.rm_rf RHCHelper::TEMP_DIR
 
-  # Cleanup all test applications
-  client = RHC::Rest::Client.new($end_point, $username, $password)
-  client.domains.each do |domain|
-    domain.applications.each do |app|
-      if app.name.start_with?("test")
-        _log "    Deleting application #{app.name}"
-        app.delete
-      end
-    end
-  end
+  # Clean up applications
+  clean_applications
 
-  # Cleanup all geared test applications
-  client = RHC::Rest::Client.new($end_point, "user_with_multiple_gear_sizes@test.com", $password)
-  client.domains.each do |domain|
-    domain.applications.each do |app|
-      if app.name.start_with?("test")
-        _log "    Deleting application #{app.name}"
-        app.delete
-      end
-    end
-    domain.delete
-  end
-
-  _log "  Application cleanup complete"
   _log "--------------------------------------------------------------------------------------------------"
   _log "\n\n"
 end
