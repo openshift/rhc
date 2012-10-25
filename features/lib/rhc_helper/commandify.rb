@@ -133,8 +133,24 @@ module RHCHelper
     match = stdout.match(GEAR_PROFILE_OUTPUT_PATTERN)
     @gear_profile = nil
     @gear_profile = match[1] if match
-    raise "UID not parsed from app create output" unless @uid
-    raise "Gear Profile not parsed from app create output" unless @gear_profile
+
+    def no_match(expected,actual)
+      logger.debug("-"*20)
+      logger.debug("Expected:\n%s" % expected)
+      logger.debug("Actual:\n%s" % actual)
+      logger.debug("-"*20)
+    end
+
+    unless @uid
+      no_match(UUID_OUTPUT_PATTERN, stdout)
+      raise "UID not parsed from app create output"
+    end
+
+    unless @uid
+      no_match(GEAR_PROFILE_OUTPUT_PATTERN, stdout)
+      raise "Gear Profile not parsed from app create output"
+    end
+
     persist
   end
 
