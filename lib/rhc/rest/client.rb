@@ -55,7 +55,7 @@ module RHC
           raise ResourceAccessException.new("Failed to access resource: #{e.message}")
         end
 
-        super({:links => links}, use_debug, @headers)
+        super({:links => links}, use_debug, @api_version)
       end
 
       def add_domain(id)
