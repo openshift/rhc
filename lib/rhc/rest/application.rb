@@ -5,10 +5,23 @@ module RHC
   module Rest
     class Application < Base
       include Rest
+
       attr_reader :domain_id, :name, :creation_time, :uuid, :aliases,
                   :git_url, :app_url, :gear_profile, :framework,
                   :scalable, :health_check_path, :embedded, :gear_count,
-                  :ssh_url, :scale_min, :scale_max
+                  :ssh_url
+
+      # Query helper to say consistent with cartridge
+      def scalable?
+        scalable
+      end
+
+      def scalable_carts
+        return [] unless scalable?
+        carts = cartridges.select(&:scalable?)
+        scales_with = carts.map(&:scales_with)
+        carts.delete_if{|x| scales_with.include?(x.name)}
+      end
 
       def add_cartridge(name)
         debug "Adding cartridge #{name}"

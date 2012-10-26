@@ -1,4 +1,4 @@
-@multiple_cartridge @domain_required
+@multiple_cartridge @domain_required @clean
 Feature: Multiple Cartridge Tests
 
   @init

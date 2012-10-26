@@ -45,23 +45,8 @@ module RHC::Commands
     def show
       domain = rest_client.domains.first
 
-      if domain
-        paragraph do
-          say "Applications in #{domain.id}:"
-          apps = domain.applications
-          if apps.length == 0
-            say "No applications.  You can use 'rhc app create' to create new applications."
-          else
-            apps.each_with_index do |a,i|
-              section(:top => (i == 0 ? 1 : 2)) do
-                say_app_info(a)
-              end
-            end
-          end
-        end
-      else
-        say "No domain exists.  You can use 'rhc domain create' to create a namespace for applications." unless domain
-      end
+      display_domain(domain)
+
       0
     end
 

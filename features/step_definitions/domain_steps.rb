@@ -30,8 +30,8 @@ end
 Then /^the default domain action output should equal the show action output$/ do
   Domain.domain_output.should match($namespace)
 
-  domain_output = Domain.domain_output.lines
-  domain_show_output = Domain.domain_show_output.lines
+  domain_output = Domain.domain_output.lines.sort
+  domain_show_output = Domain.domain_show_output.lines.sort
 
   # check line by line while ignoring debug output which is timestamped
   domain_output.zip(domain_show_output) do |a, b|

@@ -3,7 +3,7 @@ require 'rhc/rest/base'
 module RHC
   module Rest
     class Cartridge < Base
-      attr_reader :type, :name, :properties, :status_messages
+      attr_reader :type, :name, :properties, :status_messages, :scales_to, :scales_from, :scales_with, :current_scale
       def initialize(args, use_debug=false)
         @properties = {}
         props = args[:properties] || args["properties"] || []
@@ -16,9 +16,13 @@ module RHC
         super
       end
 
+      def scalable?
+        [scales_to,scales_from].map{|x| x > 1 || x == -1}.inject(:|)
+      end
+
       def property(category, key)
-         category = properties[category]
-         category ? category[key] : nil
+        category = properties[category]
+        category ? category[key] : nil
       end
 
       def status
@@ -52,6 +56,17 @@ module RHC
         rest_method "DELETE"
       end
       alias :delete :destroy
+
+      def set_scales(values)
+        values.delete_if{|k,v| v.nil? }
+        debug "Setting scales = %s" % values.map{|k,v| "#{k}: #{v}"}.join(" ")
+        rest_method "UPDATE", values
+      end
+
+      def connection_info
+        info = property(:cart_data, :connection_url) || property(:cart_data, :job_url) || property(:cart_data, :monitoring_url)
+        info ?  info["value"].rstrip : nil
+      end
     end
   end
 end

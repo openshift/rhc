@@ -314,6 +314,16 @@ describe RHC::Commands::App do
       end
       it { run_output.should match("app1 @ https://app1-mockdomain.fake.foo/") }
     end
+
+    context 'when run with scaled app' do
+      before(:each) do
+        @rc = MockRestClient.new
+        @domain = @rc.add_domain("mockdomain")
+        @domain.add_application("app1", "mock_type",true)
+      end
+      it { run_output.should match("app1 @ https://app1-mockdomain.fake.foo/") }
+      it { run_output.should match("Scaled x2") }
+    end
   end
 
   describe 'app show --state' do
