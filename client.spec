@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 0.99.12
+Version: 0.99.13
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -115,6 +115,17 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Oct 26 2012 Adam Miller <admiller@redhat.com> 0.99.13-1
+- Don't cleanup applications if NO_CLEAN is specified (fotios@redhat.com)
+- Fixed spec syntax problem for Ruby 1.8 (fotios@redhat.com)
+- Clean up applications before scenarios with @clean tag (fotios@redhat.com)
+- Added more explicit output to failed app creation (fotios@redhat.com)
+- Better debug output for failed app creation (fotios@redhat.com)
+- Fixed parsing of cartridge show (fotios@redhat.com)
+- Added cucumber tests for US2615 and fixed some errors (fotios@redhat.com)
+- Added spec tests for US2615 (fotios@redhat.com)
+- Added scaling support for US2615 (fotios@redhat.com)
+
 * Wed Oct 24 2012 Adam Miller <admiller@redhat.com> 0.99.12-1
 - Fixed line wrapping, will not insert a new line if last line ends with
   space(s) (ffranz@redhat.com)
