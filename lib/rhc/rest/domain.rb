@@ -22,7 +22,8 @@ module RHC
         if options[:scale]
           timeout = 300 # 5 minute timeout for scalable app
         end
-
+        
+        debug "headers: @headers"
         rest_method "ADD_APPLICATION", payload, timeout
       end
 

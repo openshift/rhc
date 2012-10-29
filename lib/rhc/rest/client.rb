@@ -23,32 +23,28 @@ module RHC
         debug "Connecting to #{end_point}"
 
         credentials = nil
-        userpass = "#{username}:#{password}"
-        # :nocov: version dependent code
-        if RUBY_VERSION.to_f == 1.8
-          credentials = Base64.encode64(userpass).delete("\n")
-        else
-          credentials = Base64.strict_encode64(userpass)
-        end
-        # :nocov:
-        @@headers["Authorization"] = "Basic #{credentials}"
-        @@headers["User-Agent"] = RHC::Helpers.user_agent rescue nil
+        @user = username
+        @pass = password
+        @headers = {:accept => :json}
+        @headers.merge! auth_header(@user, @pass)
+        @headers["User-Agent"] = RHC::Helpers.user_agent rescue nil
         RestClient.proxy = ENV['http_proxy']
         
         # API version negotiation
         begin
           debug "Client supports API versions #{preferred_api_versions.join(', ')}"
           @client_api_versions = preferred_api_versions
-          default_request = new_request(:url => @end_point, :method => :get, :headers => @@headers)
+          default_request = new_request(:url => @end_point, :method => :get, :headers => @headers)
           @server_api_versions, links = api_info(default_request)
           debug "Server supports API versions #{@server_api_versions.join(', ')}"
         
           if api_version_negotiated
+            @api_version = api_version_negotiated
             unless server_api_version_current?
               debug "Client API version #{api_version_negotiated} is not current. Refetching API"
               # need to re-fetch API
-              @@headers["Accept"] = "application/json; version=#{api_version_negotiated}"
-              req = new_request(:url => @end_point, :method => :get, :headers => @@headers)
+              @headers["Accept"] = "application/json; version=#{api_version_negotiated}"
+              req = new_request(:url => @end_point, :method => :get, :headers => @headers)
               @server_api_versions, links = api_info req
             end
           else
@@ -58,7 +54,7 @@ module RHC
           raise ResourceAccessException.new("Failed to access resource: #{e.message}")
         end
 
-        super({:links => links}, use_debug)
+        super({:links => links}, use_debug, @api_version)
       end
 
       def add_domain(id)
