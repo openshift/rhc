@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 0.99.13
+Version: 0.99.14
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -115,6 +115,10 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Oct 29 2012 Adam Miller <admiller@redhat.com> 0.99.14-1
+- Merge pull request #196 from J5/commands-merge-master (ccoleman@redhat.com)
+- add arch document (johnp@redhat.com)
+
 * Fri Oct 26 2012 Adam Miller <admiller@redhat.com> 0.99.13-1
 - Don't cleanup applications if NO_CLEAN is specified (fotios@redhat.com)
 - Fixed spec syntax problem for Ruby 1.8 (fotios@redhat.com)
