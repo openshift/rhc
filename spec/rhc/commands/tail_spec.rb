@@ -30,5 +30,15 @@ describe RHC::Commands::Tail do
       before (:each) { @app.stub(:tail) { raise Interrupt.new } }
       it { expect { run }.should exit_with_code(0) }
     end
+
+    context 'when the server only supports version 1.0' do
+      before :each do
+        # we are going to cheat in order to set the server api versions
+        # without setting up a separate mock REST client
+        @rc.instance_variable_set(:@server_api_versions, [1.0])
+      end
+
+      it { expect { run }.should exit_with_code 1 }
+    end
   end
 end

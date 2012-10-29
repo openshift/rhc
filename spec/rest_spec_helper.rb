@@ -146,6 +146,8 @@ module RestSpecHelper
       @domains = []
       @user = MockRestUser.new(RHC::Config.username)
       @__json_args__= {:links => mock_response_links(mock_client_links)}
+      @client_api_versions = [1.0, 1.1, 1.2]
+      @server_api_versions = [1.2]
     end
 
     def user
