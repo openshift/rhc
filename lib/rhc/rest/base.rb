@@ -30,6 +30,7 @@ module RHC
         h = {}
         username ||= @user
         password ||= @pass
+        @user, @pass = username, password
         if Base64.class.respond_to? :strict_encode64
           credentials = Base64.strict_encode64("#{username}:#{password}")
         else
