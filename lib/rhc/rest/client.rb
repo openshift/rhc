@@ -199,7 +199,6 @@ server at #{URI.parse(@end_point).host} supports #{@server_api_versions.join(', 
           raise APIVersionRequirementNotMetException.new <<-WARN
 This client cannot support API version #{api_version}.
 Supported versions are: #{@server_api_versions.join("\n")}.
-Will continue using #{api_version_negotiated}.
           WARN
         end
       end
