@@ -15,7 +15,7 @@ module RHC
       # matching one supported by the server.
       # See #api_version_negotiated
       CLIENT_API_VERSIONS = [1.0, 1.1, 1.2]
-      
+
       def initialize(end_point, username, password, use_debug=false, preferred_api_versions = CLIENT_API_VERSIONS)
         @debug = use_debug
         @end_point = end_point
@@ -29,7 +29,7 @@ module RHC
         @headers.merge! auth_header(@user, @pass)
         @headers["User-Agent"] = RHC::Helpers.user_agent rescue nil
         RestClient.proxy = ENV['http_proxy']
-        
+
         # API version negotiation
         begin
           debug "Client supports API versions #{preferred_api_versions.join(', ')}"
@@ -37,7 +37,7 @@ module RHC
           default_request = new_request(:url => @end_point, :method => :get, :headers => @headers)
           @server_api_versions, links = api_info(default_request)
           debug "Server supports API versions #{@server_api_versions.join(', ')}"
-        
+
           if api_version_negotiated
             @api_version = api_version_negotiated
             unless server_api_version_current?
@@ -153,31 +153,31 @@ module RHC
         debug "Logout/Close client"
       end
       alias :close :logout
-      
-      
+
+
       ### API version related methods
       def api_version_match?
         ! api_version_negotiated.nil?
       end
-      
+
       # return the API version that the server and this client can agree on
       def api_version_negotiated
         client_api_versions.reverse. # choose the last API version listed
           detect { |v| @server_api_versions.include? v }
       end
-      
+
       def client_api_version_current?
         current_client_api_version == api_version_negotiated
       end
-      
+
       def current_client_api_version
         client_api_versions.last
       end
-      
+
       def server_api_version_current?
         @server_api_versions && @server_api_versions.max == api_version_negotiated
       end
-      
+
       def warn_about_api_versions
         if !api_version_match?
           warn "WARNING: API version mismatch. This client supports #{client_api_versions.join(', ')} but
@@ -187,7 +187,7 @@ server at #{URI.parse(@end_point).host} supports #{@server_api_versions.join(', 
       end
 
       def ensure_api_version(api_version)
-        return self if api_version <= api_version_negotiated
+        return self if api_version.to_f <= api_version_negotiated
         # choose the right-most supported api version that maches the criterion
         choice_api_version = @server_api_versions.sort.reverse.detect { |v|
           api_version <= v
@@ -206,7 +206,7 @@ Supported versions are: #{@server_api_versions.join("\n")}.
       def debug?
         @debug
       end
-      
+
       private
       # execute +req+ with RestClient, and return [server_api_versions, links]
       def api_info(req)
