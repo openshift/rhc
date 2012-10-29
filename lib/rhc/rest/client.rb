@@ -196,9 +196,11 @@ server at #{URI.parse(@end_point).host} supports #{@server_api_versions.join(', 
         if choice_api_version
           @headers.merge! headers_with_api choice_api_version
         else
-          warn "This client cannot support API version #{api_version}.
+          raise APIVersionRequirementNotMetException.new <<-WARN
+This client cannot support API version #{api_version}.
 Supported versions are: #{@server_api_versions.join("\n")}.
-Will continue using #{api_version_negotiated}."
+Will continue using #{api_version_negotiated}.
+          WARN
         end
       end
 

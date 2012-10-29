@@ -76,11 +76,9 @@ module RHC
 
           context "when passed '1.2' as the minimum version" do
             it "warns the user" do
-              capture do
+              lambda {
                 client = RHC::Rest::Client.at_least(mock_href, mock_user, mock_pass, 1.2)
-                @output.rewind
-                @output.read.should =~ /client cannot support/
-              end
+              }.should raise_exception APIVersionRequirementNotMetException
             end
           end
 
