@@ -57,6 +57,11 @@ module RHC
         super({:links => links}, use_debug, @api_version)
       end
 
+      def self.at_least(end_point, username, password, api_version)
+        client = Client.new(end_point, username, password)
+        client.ensure_api_version(api_version)
+      end
+
       def add_domain(id)
         debug "Adding domain #{id}"
         rest_method "ADD_DOMAIN", :id => id
@@ -180,7 +185,23 @@ server at #{URI.parse(@end_point).host} supports #{@server_api_versions.join(', 
           warn "The client version may be outdated; please consider updating 'rhc'. We will continue, but you may encounter problems."
         end
       end
-      
+
+      def ensure_api_version(api_version)
+        return self if api_version <= api_version_negotiated
+        # choose the right-most supported api version that maches the criterion
+        choice_api_version = @server_api_versions.sort.reverse.detect { |v|
+          api_version <= v
+        }
+
+        if choice_api_version
+          @headers.merge! headers_with_api choice_api_version
+        else
+          warn "This client cannot support API version #{api_version}.
+Supported versions are: #{@server_api_versions.join("\n")}.
+Will continue using #{api_version_negotiated}."
+        end
+      end
+
       def debug?
         @debug
       end
