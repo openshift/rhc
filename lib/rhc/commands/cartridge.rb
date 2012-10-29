@@ -32,7 +32,7 @@ module RHC::Commands
       rest_cartridge = rest_app.add_cartridge(cart.name)
       say "Success"
 
-      display_cart(rest_cartridge)
+      display_cart(rest_cartridge,rest_cartridge.properties[:cart_data])
 
       0
     end
