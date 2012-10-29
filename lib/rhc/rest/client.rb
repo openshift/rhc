@@ -10,7 +10,6 @@ module RHC
       include RHC::Helpers
       
       attr_reader :server_api_versions, :client_api_versions
-      attr_accessor :headers
       # Keep the list of supported API versions here
       # The list may not necessarily be sorted; we will select the last
       # matching one supported by the server.
@@ -27,7 +26,7 @@ module RHC
         @user = username
         @pass = password
         @headers = {:accept => :json}
-        set_auth_header(@user, @pass)
+        @headers.merge! auth_header(@user, @pass)
         @headers["User-Agent"] = RHC::Helpers.user_agent rescue nil
         RestClient.proxy = ENV['http_proxy']
         

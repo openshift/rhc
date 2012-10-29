@@ -13,21 +13,21 @@ module RHC
         @debug = use_debug
         @__json_args__ = json_args
         @messages = []
-        @headers = {:accept => :json}
-        set_auth_header
+        @headers ||= {:accept => :json}
+        @headers.merge! auth_header
         @headers["User-Agent"] = RHC::Helpers.user_agent
         if api_version
           @api_version = api_version
-          headers["Accept"] = "application/json;version=#{api_version}"
+          @headers["Accept"] = "application/json;version=#{api_version}"
         end
       end
 
       def add_message(msg)
         @messages << msg
       end
-      
-      # set up 'Authorization' header based on @user and @pass
-      def set_auth_header(username = nil, password = nil)
+
+      def auth_header(username = nil, password = nil)
+        h = {}
         username ||= @user
         password ||= @pass
         if Base64.class.respond_to? :strict_encode64
@@ -35,7 +35,8 @@ module RHC
         else
           credentials = Base64.encode64("#{username}:#{password}").delete("\n")
         end
-        @headers["Authorization"] = "Basic #{credentials}"
+        h["Authorization"] = "Basic #{credentials}"
+        h
       end
 
       private

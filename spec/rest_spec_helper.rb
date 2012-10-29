@@ -283,7 +283,7 @@ module RestSpecHelper
       @user = mock_user
       @pass = mock_pass
       @headers = {:accept => :json}
-      set_auth_header
+      @headers.merge! auth_header
     end
 
     def destroy

@@ -22,7 +22,7 @@ module RHC
                                      'server_identity' => mock_uri,
                                      'links'           => app_links
                                    });
-         obj.set_auth_header(mock_user, mock_pass)
+         obj.headers.merge! obj.auth_header(mock_user, mock_pass)
          obj
       }
       context "#new" do
