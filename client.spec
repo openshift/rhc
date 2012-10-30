@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.0.1
+Version: 1.0.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -115,6 +115,11 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Oct 30 2012 Adam Miller <admiller@redhat.com> 1.0.2-1
+- Merge pull request #204 from smarterclayton/reach_100_percent_coverage
+  (ccoleman@redhat.com)
+- Regression in test coverage, fixing by adding tests (ccoleman@redhat.com)
+
 * Tue Oct 30 2012 Adam Miller <admiller@redhat.com> 1.0.1-1
 - bumping spec to 1.0.0 (dmcphers@redhat.com)
 - BZ870334: Fixing output when adding cartridge (fotios@redhat.com)
