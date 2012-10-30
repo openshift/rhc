@@ -112,4 +112,10 @@ module RHC
       super message, 1
     end
   end
+
+  class APIVersionRequirementNotMetException < Exception
+    def initialize(message="API version does not meet requirements")
+      super message, 1
+    end
+  end
 end

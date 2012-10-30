@@ -39,6 +39,10 @@ module RHC
         h
       end
 
+      def headers_with_api(version)
+        { "Accept" => "application/json;version=#{version}" }
+      end
+
       private
         def debug(msg)
           logger.debug(msg) if @debug

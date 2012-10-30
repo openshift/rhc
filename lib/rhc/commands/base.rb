@@ -91,9 +91,9 @@ class RHC::Commands::Base
     # to the OpenShift API that transforms intent
     # and options, to remote calls, and then handle
     # the output (or failures) into exceptions and
-    # formatted object output.  Most interactions 
+    # formatted object output.  Most interactions
     # should be through this call pattern.
-    def rest_client
+    def rest_client(opts = {})
       @rest_client ||= begin
         username = config.username
         unless username
@@ -104,6 +104,8 @@ class RHC::Commands::Base
 
         RHC::Rest::Client.new(openshift_rest_node, username, config.password, @options.debug)
       end
+      @rest_client.ensure_api_version(opts[:at_least]) if opts[:at_least]
+      @rest_client
     end
 
     def help(*args)

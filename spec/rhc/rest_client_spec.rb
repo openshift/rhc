@@ -64,7 +64,36 @@ module RHC
             should raise_error("Failed to access resource: Other Error")
         end
       end
-      
+
+      describe ".at_least" do
+        context "when server supports API versions [1.0, 1.1]" do
+          before :each do
+            stub_api_request(:get, '').
+              to_return({ :body   => { :data => client_links, :supported_api_versions => [1.0, 1.1] }.to_json,
+                          :status => 200
+                        })
+          end
+
+          context "when passed '1.2' as the minimum version" do
+            it "warns the user" do
+              lambda {
+                client = RHC::Rest::Client.at_least(mock_href, mock_user, mock_pass, 1.2)
+              }.should raise_exception APIVersionRequirementNotMetException
+            end
+          end
+
+          context "when passed '0.9' as the minimum version" do
+            it "chooses the latest supported version, 1.1" do
+              capture do
+                client = RHC::Rest::Client.at_least(mock_href, mock_user, mock_pass, 0.9)
+                client.headers['Accept'].should =~ /version=1\.1/
+                client.should be_an_instance_of RHC::Rest::Client
+              end
+            end
+          end
+        end
+      end
+
       describe "#new" do
         context "when server supports API versions [1.0, 1.1]" do
           before :each do
