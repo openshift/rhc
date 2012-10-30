@@ -85,6 +85,10 @@ module RHC
 
 
   module Rest
+    #API_VERSION = '1.1'
+    @@headers = {:accept => :json}
+    #@@headers = {:accept => "application/json;version=#{RHC::Rest::VERSION}"}
+
     def logger
       Logger.new(STDOUT)
     end
@@ -97,26 +101,19 @@ module RHC
       when 'domains'
         domains = Array.new
         data.each do |domain_json|
-          dom = Domain.new(domain_json, @debug, @api_version)
-          dom.set_auth_header(@user, @pass)
-          domains.push(dom)
+          domains.push(Domain.new(domain_json, @debug))
         end
         return domains
       when 'domain'
-        dom = Domain.new(data, @debug, @api_version)
-        dom.set_auth_header(@user, @pass)
-        return dom
+        return Domain.new(data, @debug)
       when 'applications'
         apps = Array.new
         data.each do |app_json|
-          app = Application.new(app_json, @debug, @api_version)
-          app.set_auth_header(@user, @pass)
-          apps.push(app)
+          apps.push(Application.new(app_json, @debug))
         end
         return apps
       when 'application'
-        app = Application.new(data, @debug, @api_version)
-        app.set_auth_header(@user, @pass)
+        app = Application.new(data, @debug)
         result['messages'].each do |message|
           app.add_message(message['text']) if message['field'].nil? or message['field'] == 'result'
         end
@@ -124,37 +121,25 @@ module RHC
       when 'cartridges'
         carts = Array.new
         data.each do |cart_json|
-          cart = Cartridge.new(cart_json, @debug, @api_version)
-          cart.set_auth_header(@user, @pass)
-          carts.push(cart)
+          carts.push(Cartridge.new(cart_json, @debug))
         end
         return carts
       when 'cartridge'
-        cart = Cartridge.new(data, @debug, @api_version)
-        cart.set_auth_header(@user, @pass)
-        return cart
+        return Cartridge.new(data, @debug)
       when 'user'
-        user = User.new(data, @debug, @api_version)
-        user.set_auth_header(@user, @pass)
-        return user
+        return User.new(data, @debug)
       when 'keys'
         keys = Array.new
         data.each do |key_json|
-          key = Key.new(key_json, @debug, @api_version)
-          key.set_auth_header(@user, @pass)
-          keys.push(key)
+          keys.push(Key.new(key_json, @debug))
         end
         return keys
       when 'key'
-        key = Key.new(data, @debug, @api_version)
-        key.set_auth_header(@user, @pass)
-        return key
+        return Key.new(data, @debug)
       when 'gear_groups'
         gears = Array.new
         data.each do |gear_json|
-          g = GearGroup.new(gear_json, @debug, @api_version)
-          g.set_auth_header(@user, @pass)
-          gears.push(g)
+          gears.push(GearGroup.new(gear_json, @debug))
         end
         return gears
       else
@@ -171,12 +156,11 @@ module RHC
 
     def request(request)
       begin
-        @headers = request.headers
         response = request.execute
         #set cookie
         rh_sso = response.cookies['rh_sso']
         if not rh_sso.nil?
-          @headers["cookie"] = "rh_sso=#{rh_sso}"
+          @@headers["cookie"] = "rh_sso=#{rh_sso}"
         end
         return parse_response(response) unless response.nil? or response.code == 204
       rescue RestClient::RequestTimeout => e
