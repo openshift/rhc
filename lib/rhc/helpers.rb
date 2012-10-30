@@ -1,4 +1,5 @@
 require 'commander/user_interaction'
+require 'rhc/version'
 require 'rhc/config'
 require 'rhc/commands'
 require 'rhc/output_helpers'
