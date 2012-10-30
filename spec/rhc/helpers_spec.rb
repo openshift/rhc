@@ -48,6 +48,12 @@ describe RHC::Helpers do
     end.should == ['10 2','3  40']
   end
 
+  it("should generate table rows"){ subject.send(:make_table, [1,2]).should == [1,2] }
+  it("should generate a table"){ subject.send(:make_table, 1).should == [1] }
+  it("should output a table") do 
+    subject.send(:display_no_info, 'test').should == ['This test has no information to show']
+  end
+
   it "should parse an RFC3339 date" do
     d = subject.datetime_rfc3339('2012-06-24T20:48:20-04:00')
     d.day.should == 24

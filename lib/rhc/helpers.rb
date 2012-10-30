@@ -1,6 +1,7 @@
 require 'commander/user_interaction'
 require 'rhc/config'
 require 'rhc/commands'
+require 'rhc/output_helpers'
 
 OptionParser.accept(URI) {|s,| URI.parse(s) if s}
 
@@ -18,6 +19,7 @@ module RHC
     # helpers always have Commander UI available
     include Commander::UI
     include Commander::UI::AskForClass
+    include RHC::OutputHelpers
 
     extend self
 

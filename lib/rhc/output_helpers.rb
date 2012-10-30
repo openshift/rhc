@@ -133,81 +133,81 @@ module RHC
     end
 
     private
-    def say_table(heading,values,opts = {})
-      @table_displayed = true
-      table = make_table(values,opts)
+      def say_table(heading,values,opts = {})
+        @table_displayed = true
+        table = make_table(values,opts)
 
-      # Go through all the table rows
-      _proc = proc{
-        table.each do |s|
-          # Remove trailing = (like for cartridges list)
-          indent s.gsub(/\s*=\s*$/,'')
-        end
-      }
+        # Go through all the table rows
+        _proc = proc{
+          table.each do |s|
+            # Remove trailing = (like for cartridges list)
+            indent s.gsub(/\s*=\s*$/,'')
+          end
+        }
 
-      # Make sure we nest properly
-      if heading
-        header heading do
+        # Make sure we nest properly
+        if heading
+          header heading do
+            _proc.call
+          end
+        else
           _proc.call
         end
-      else
-        _proc.call
       end
-    end
 
-    # This uses the array of properties to retrieve them from an object
-    def get_properties(object,*properties)
-      Hash[properties.map do |prop|
-        # Either send the property to the object or yield it
-        value = block_given? ? yield(prop) : object.send(prop)
-        # Some values (like date) need some special handling
-        value = format_value(prop,value)
+      # This uses the array of properties to retrieve them from an object
+      def get_properties(object,*properties)
+        Hash[properties.map do |prop|
+          # Either send the property to the object or yield it
+          value = block_given? ? yield(prop) : object.send(prop)
+          # Some values (like date) need some special handling
+          value = format_value(prop,value)
 
-        [prop,value]
-      end]
-    end
-
-    # Format some special values
-    def format_value(prop,value)
-      case prop
-      when :creation_time
-        date(value)
-      when :scales_from,:scales_to
-        (value == -1 ? "available gears" : value)
-      else
-        value
+          [prop,value]
+        end]
       end
-    end
 
-    # Make the rows for the table
-    #   If we pass a hash, it will manipulate it into a nice table
-    #   Arrays and single vars will just be passed back as arrays
-    def make_table(values,opts = {})
-      case values
-      when Hash
-        # Loop through the values in case we need to fix them
-        _values = values.inject({}) do |h,(k,v)|
-          # Format the keys based on the table_heading function
-          #  If we pass :preserve_keys, we leave them alone (like for cart names)
-          key = opts[:preserve_keys] ? k : table_heading(k)
-
-          # Replace empty or nil values with spaces
-          #  If we pass :delete, we assume those are not needed
-          if v.blank?
-            h[key] = "" unless opts[:delete]
-          else
-            h[key] = v.to_s
-          end
-          h
+      # Format some special values
+      def format_value(prop,value)
+        case prop
+        when :creation_time
+          date(value)
+        when :scales_from,:scales_to
+          (value == -1 ? "available gears" : value)
+        else
+          value
         end
-        # Join the values into rows
-        table _values, :join => " = "
-        # Create a simple array
-      when Array
-        values
-      else
-        [values]
       end
-    end
+
+      # Make the rows for the table
+      #   If we pass a hash, it will manipulate it into a nice table
+      #   Arrays and single vars will just be passed back as arrays
+      def make_table(values,opts = {})
+        case values
+        when Hash
+          # Loop through the values in case we need to fix them
+          _values = values.inject({}) do |h,(k,v)|
+            # Format the keys based on the table_heading function
+            #  If we pass :preserve_keys, we leave them alone (like for cart names)
+            key = opts[:preserve_keys] ? k : table_heading(k)
+
+            # Replace empty or nil values with spaces
+            #  If we pass :delete, we assume those are not needed
+            if v.blank?
+              h[key] = "" unless opts[:delete]
+            else
+              h[key] = v.to_s
+            end
+            h
+          end
+          # Join the values into rows
+          table _values, :join => " = "
+          # Create a simple array
+        when Array
+          values
+        else
+          [values]
+        end
+      end
   end
 end
