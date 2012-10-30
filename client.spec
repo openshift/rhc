@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.0.0
+Version: 1.0.1
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -115,6 +115,17 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Oct 30 2012 Adam Miller <admiller@redhat.com> 1.0.1-1
+- bumping spec to 1.0.0 (dmcphers@redhat.com)
+- BZ870334: Fixing output when adding cartridge (fotios@redhat.com)
+- Merge pull request #197 from BanzaiMan/dev/hasari/bug/no_headers_class_var
+  (openshift+bot@redhat.com)
+- Replace unsightly #set_auth_header with appropriate #merge! and #auth_header
+  calls. (asari.ruby@gmail.com)
+- Pass @api_version, a String, here, not an Array. (asari.ruby@gmail.com)
+- Eradicate the class variable @@headers from the RHC::Rest::Base hierarchy.
+  (asari.ruby@gmail.com)
+
 * Mon Oct 29 2012 Adam Miller <admiller@redhat.com> 0.99.14-1
 - Merge pull request #196 from J5/commands-merge-master (ccoleman@redhat.com)
 - add arch document (johnp@redhat.com)
