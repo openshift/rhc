@@ -4,18 +4,13 @@ module RHC
   module Rest
     class Cartridge < Base
       attr_reader :type, :name, :properties, :status_messages, :scales_to, :scales_from, :scales_with, :current_scale
-      def initialize(args, use_debug=false, api_version = nil)
+      def initialize(args, use_debug=false)
         @properties = {}
         props = args[:properties] || args["properties"] || []
         props.each do |p|
           category = @properties[:"#{p['type']}"] || {}
           category[:"#{p['name']}"] = p
           @properties[:"#{p['type']}"] = category
-        end
-        @headers = {:accept => :json}
-        if api_version
-          @api_version = api_version
-          @headers = {"Accept" => "application/json;version=#{api_version}"}
         end
 
         super
