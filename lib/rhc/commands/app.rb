@@ -62,15 +62,24 @@ module RHC::Commands
       end
 
       # add jenkins-client cart
-      begin
-        setup_jenkins_client(rest_app) if jenkins_rest_app
-      rescue Exception => e
-        add_issue("Jenkins client failed to install - #{e}",
-                  "Install the jenkins client",
-                  "rhc cartridge add jenkins-client -a #{rest_app.name}")
+      if jenkins_rest_app
+        attempts = 1
+        while (!(dns_propagated?(rest_app.host) && dns_propagated?(jenkins_rest_app.host)) && attempts < 3)
+          debug "Server could not be contacted, sleep and then retry: attempt #{attempts}"
+          sleep(10)
+          attempts += 1
+        end
+        begin
+          setup_jenkins_client(rest_app)
+        rescue Exception => e
+          add_issue("Jenkins client failed to install - #{e}",
+                    "Install the jenkins client",
+                    "rhc cartridge add jenkins-client -a #{rest_app.name}")
+        end
       end
 
       if options.dns
+        say "Your application's domain name is being propagated worldwide (this might take a minute)..."
         unless dns_propagated? rest_app.host
           add_issue("We were unable to lookup your hostname (#{rest_app.host}) in a reasonable amount of time and can not clone your application.",
                     "Clone your git repo",
@@ -273,11 +282,10 @@ module RHC::Commands
         rest_app
       end
 
-      def dns_propagated?(host)
+      def dns_propagated?(host, sleep_time=2)
         #
         # Confirm that the host exists in DNS
         #
-        say "Your application's domain name is being propagated worldwide (this might take a minute)..."
         debug "Start checking for application dns @ '#{host}'"
 
         found = false
@@ -286,7 +294,6 @@ module RHC::Commands
         Kernel.sleep 5
 
         # Now start checking for DNS
-        sleep_time = 2
         for i in 0..MAX_RETRIES-1
           found = host_exist?(host)
           break if found
@@ -377,12 +384,13 @@ a different application name." if jenkins_app_name == app_name
         debug "Creating a new jenkins application"
         rest_app = create_app(jenkins_app_name, "jenkins-1.4", rest_domain)
 
+        say "Jenkins domain name is being propagated worldwide (this might take a minute)..."
         # If we can't get the dns we can't install the client so return nil
         dns_propagated?(rest_app.host) ? rest_app : nil
 
       end
       def setup_jenkins_client(rest_app)
-        rest_app.add_cartridge("jenkins-client-1.4")
+        rest_app.add_cartridge("jenkins-client-1.4", 180)
       end
 
       def run_nslookup(host)

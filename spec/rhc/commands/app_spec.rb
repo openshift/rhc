@@ -177,6 +177,32 @@ describe RHC::Commands::App do
     end
   end
 
+  describe 'app create enable-jenkins with dns propagation timing out' do
+    let(:arguments) { ['app', 'create', 'app1', '--trace', 'mock_unique_standalone_cart', '--enable-jenkins', 'jenkins', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+
+    before(:each) do
+      @rc = MockRestClient.new
+      @domain = @rc.add_domain("mockdomain")
+      @instance.stub(:check_jenkins) { nil }
+      @jenkins_passed = true
+      @instance.stub(:dns_propagated?) do |host|
+        @dns_propagated = true
+        if host.match("jenkins") 
+          if @jenkins_passed
+            @jenkins_passed = false
+          else
+            @dns_propagated = false
+          end
+        end
+        @dns_propagated
+      end
+    end
+
+    it "should create a jenkins app and a regular app with an embedded jenkins client but time out one time" do
+      expect { run }.should exit_with_code(0)
+    end
+  end
+
   describe 'dns app create warnings' do
     let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
