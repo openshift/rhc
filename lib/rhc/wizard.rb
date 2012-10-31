@@ -34,7 +34,7 @@ module RHC
         @libra_server = @libra_server ?  @libra_server : "openshift.redhat.com"
       end
       @config.config_user opts.rhlogin if opts && opts.rhlogin
-      @debug = config['debug']
+      @debug = opts.debug if opts.respond_to? :debug
     end
 
     # Public: Runs the setup wizard to make sure ~/.openshift and ~/.ssh are correct
