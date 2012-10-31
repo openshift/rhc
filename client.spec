@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.0.2
+Version: 1.0.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -115,6 +115,18 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Oct 31 2012 Adam Miller <admiller@redhat.com> 1.0.3-1
+- Merge pull request #203 from BanzaiMan/master (openshift+bot@redhat.com)
+- Look at the Right Stuff™ to set the debug flag (asari.ruby@gmail.com)
+- rhc_extended is failing because cucumber is not loading through bundler
+  (ccoleman@redhat.com)
+- Revert "Eradicate the class variable @@headers from the RHC::Rest::Base"
+  (ccoleman@redhat.com)
+- Revert "Pass @api_version, a String, here, not an Array."
+  (ccoleman@redhat.com)
+- Revert "Replace unsightly #set_auth_header with appropriate #merge! and
+  #auth_header calls." (ccoleman@redhat.com)
+
 * Tue Oct 30 2012 Adam Miller <admiller@redhat.com> 1.0.2-1
 - Merge pull request #204 from smarterclayton/reach_100_percent_coverage
   (ccoleman@redhat.com)
