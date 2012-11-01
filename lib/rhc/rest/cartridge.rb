@@ -65,7 +65,7 @@ module RHC
 
       def connection_info
         info = property(:cart_data, :connection_url) || property(:cart_data, :job_url) || property(:cart_data, :monitoring_url)
-        info ?  info["value"].rstrip : nil
+        info ? (info["value"] || '').rstrip : nil
       end
     end
   end
