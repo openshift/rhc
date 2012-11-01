@@ -62,26 +62,31 @@ module RHC::Commands
       end
 
       if jenkins_rest_app
-        success, attempts, setup_jenkins_client_issue = false, 1, nil
-        while (!success && attempts < MAX_RETRIES)
+        attempts, setup_jenkins_client_status = 1, { :code => nil, :message => nil }
+        while (setup_jenkins_client_status[:code] != 0 && attempts < MAX_RETRIES)
           begin
             setup_jenkins_client(rest_app)
-            success = true
+            setup_jenkins_client_status = { :code => 0, :message => "Success" }
           rescue RHC::Rest::ValidationException => e
-            # added jenkins cartridge without reporting success previously
-            success = true if attempts > 1
+            # already added jenkins cartridge without being able to report success
+            setup_jenkins_client_status = { :code => 0, :message => e.message }
+          rescue RHC::Rest::ServerErrorException => e
+            # server sent status 500, it's usually code 157 (error downloading Jenkins /jnlpJars/jenkins-cli.jar)
             attempts += 1
+            debug "Jenkins server could not be contacted, sleep and then retry: attempt #{attempts}\n    #{e.message}"
+            sleep(15)
+            setup_jenkins_client_status = { :code => e.code ? e.code : 1, :message => e.message }
           rescue Exception => e
-            # usually timeout adding jenkins cartridge or another jenkins availability issue
-            setup_jenkins_client_issue = e.message
+            # timeout and other exceptions
             attempts += 1
-            debug "Jenkins server could not be contacted, sleep and then retry: attempt #{attempts}"
-            sleep(5)
+            debug "Problem adding Jenkins cartridge, sleep and then retry: attempt #{attempts}\n    #{e.message}"
+            sleep(15)
+            setup_jenkins_client_status = { :code => 1, :message => e.message }
           end
         end
-        add_issue("Jenkins client failed to install - #{setup_jenkins_client_issue}",
+        add_issue("Jenkins client failed to install - #{setup_jenkins_client_status[:message]}",
                   "Install the jenkins client",
-                  "rhc cartridge add jenkins-client -a #{rest_app.name}") if !success
+                  "rhc cartridge add jenkins-client -a #{rest_app.name}") if setup_jenkins_client_status[:code] != 0
       end
 
       if options.dns
@@ -109,7 +114,7 @@ module RHC::Commands
         end
       end
 
-      display_app(rest_app,rest_app.cartridges,rest_app.scalable_carts.first)
+      display_app(rest_app, rest_app.cartridges, rest_app.scalable_carts.first)
 
       if issues?
         output_issues(rest_app)
