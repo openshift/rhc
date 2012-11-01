@@ -181,22 +181,11 @@ describe RHC::Commands::App do
   describe 'app create jenkins install with retries' do
     let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--enable-jenkins', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
-    context 'when run with validation error in jenkins-client setup' do
-      before(:each) do
-        @rc = MockRestClient.new
-        @domain = @rc.add_domain("mockdomain")
-        @instance.stub(:setup_jenkins_client) { raise RHC::Rest::ValidationException.new "Cartridge already added" }
-      end
-      it "should fail embedding jenkins cartridge" do
-        run_output.should match("Success")
-      end
-    end
-
     context 'when run with server error in jenkins-client setup' do
       before(:each) do
         @rc = MockRestClient.new
         @domain = @rc.add_domain("mockdomain")
-        @instance.stub(:setup_jenkins_client) { raise  RHC::Rest::ServerErrorException.new("Server error", 157) }
+        @instance.stub(:setup_jenkins_client) { raise RHC::Rest::ServerErrorException.new("Server error", 157) }
       end
       it "should fail embedding jenkins cartridge" do
         run_output.should match("Jenkins client failed to install")
