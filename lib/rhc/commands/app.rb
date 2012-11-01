@@ -61,21 +61,27 @@ module RHC::Commands
                   "rhc cartridge add jenkins-client -a #{rest_app.name}")
       end
 
-      # add jenkins-client cart
       if jenkins_rest_app
-        attempts = 1
-        while (!(dns_propagated?(rest_app.host) && dns_propagated?(jenkins_rest_app.host)) && attempts < 3)
-          debug "Server could not be contacted, sleep and then retry: attempt #{attempts}"
-          sleep(10)
-          attempts += 1
+        success, attempts, setup_jenkins_client_issue = false, 1, nil
+        while (!success && attempts < MAX_RETRIES)
+          begin
+            setup_jenkins_client(rest_app)
+            success = true
+          rescue RHC::Rest::ValidationException => e
+            # added jenkins cartridge without reporting success previously
+            success = true if attempts > 1
+            attempts += 1
+          rescue Exception => e
+            # usually timeout adding jenkins cartridge or another jenkins availability issue
+            setup_jenkins_client_issue = e.message
+            attempts += 1
+            debug "Jenkins server could not be contacted, sleep and then retry: attempt #{attempts}"
+            sleep(5)
+          end
         end
-        begin
-          setup_jenkins_client(rest_app)
-        rescue Exception => e
-          add_issue("Jenkins client failed to install - #{e}",
-                    "Install the jenkins client",
-                    "rhc cartridge add jenkins-client -a #{rest_app.name}")
-        end
+        add_issue("Jenkins client failed to install - #{setup_jenkins_client_issue}",
+                  "Install the jenkins client",
+                  "rhc cartridge add jenkins-client -a #{rest_app.name}") if !success
       end
 
       if options.dns
@@ -389,8 +395,9 @@ a different application name." if jenkins_app_name == app_name
         dns_propagated?(rest_app.host) ? rest_app : nil
 
       end
+
       def setup_jenkins_client(rest_app)
-        rest_app.add_cartridge("jenkins-client-1.4", 180)
+        rest_app.add_cartridge("jenkins-client-1.4")
       end
 
       def run_nslookup(host)

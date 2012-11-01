@@ -8,6 +8,7 @@ describe RHC::Commands::App do
     FakeFS.activate!
     FakeFS::FileSystem.clear
     RHC::Config.set_defaults
+    RHC::Helpers::MAX_RETRIES = 3
     @instance = RHC::Commands::App.new
     RHC::Commands::App.stub(:new) do
       @instance.stub(:git_config_get) { "" }
@@ -177,28 +178,16 @@ describe RHC::Commands::App do
     end
   end
 
-  describe 'app create enable-jenkins with dns propagation timing out' do
-    let(:arguments) { ['app', 'create', 'app1', '--trace', 'mock_unique_standalone_cart', '--enable-jenkins', 'jenkins', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+  describe 'app create jenkins install with retries' do
+    let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--enable-jenkins', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     before(:each) do
       @rc = MockRestClient.new
       @domain = @rc.add_domain("mockdomain")
-      @instance.stub(:check_jenkins) { nil }
-      @jenkins_passed = true
-      @instance.stub(:dns_propagated?) do |host|
-        @dns_propagated = true
-        if host.match("jenkins") 
-          if @jenkins_passed
-            @jenkins_passed = false
-          else
-            @dns_propagated = false
-          end
-        end
-        @dns_propagated
-      end
+      @instance.stub(:setup_jenkins_client) { raise RHC::Rest::ValidationException.new "Cartridge already added" }
     end
 
-    it "should create a jenkins app and a regular app with an embedded jenkins client but time out one time" do
+    it "should create a jenkins app and a regular app with an embedded jenkins client" do
       expect { run }.should exit_with_code(0)
     end
   end
