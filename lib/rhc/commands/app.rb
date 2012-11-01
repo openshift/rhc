@@ -114,7 +114,10 @@ module RHC::Commands
       if issues?
         output_issues(rest_app)
       else
-        results { rest_app.messages.each { |msg| say msg } }
+        results { 
+          rest_app.messages.each { |msg| say msg } 
+          jenkins_rest_app.messages.each { |msg| say msg } if options.enable_jenkins and jenkins_rest_app
+        }
       end
 
       0
