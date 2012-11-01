@@ -403,7 +403,7 @@ a different application name." if jenkins_app_name == app_name
       end
 
       def setup_jenkins_client(rest_app)
-        rest_app.add_cartridge("jenkins-client-1.4", 180)
+        rest_app.add_cartridge("jenkins-client-1.4", 300)
       end
 
       def run_nslookup(host)
