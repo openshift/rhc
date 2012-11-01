@@ -23,9 +23,9 @@ module RHC
         carts.delete_if{|x| scales_with.include?(x.name)}
       end
 
-      def add_cartridge(name)
+      def add_cartridge(name, timeout=nil)
         debug "Adding cartridge #{name}"
-        rest_method "ADD_CARTRIDGE", :name => name
+        rest_method "ADD_CARTRIDGE", {:name => name}, timeout
       end
 
       def cartridges

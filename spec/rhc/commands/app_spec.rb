@@ -8,6 +8,7 @@ describe RHC::Commands::App do
     FakeFS.activate!
     FakeFS::FileSystem.clear
     RHC::Config.set_defaults
+    RHC::Helpers::MAX_RETRIES = 3
     @instance = RHC::Commands::App.new
     RHC::Commands::App.stub(:new) do
       @instance.stub(:git_config_get) { "" }
@@ -175,6 +176,22 @@ describe RHC::Commands::App do
         run_output.should match("Jenkins client failed to install")
       end
     end
+  end
+
+  describe 'app create jenkins install with retries' do
+    let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--enable-jenkins', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+
+    context 'when run with server error in jenkins-client setup' do
+      before(:each) do
+        @rc = MockRestClient.new
+        @domain = @rc.add_domain("mockdomain")
+        @instance.stub(:setup_jenkins_client) { raise RHC::Rest::ServerErrorException.new("Server error", 157) }
+      end
+      it "should fail embedding jenkins cartridge" do
+        run_output.should match("Jenkins client failed to install")
+      end
+    end
+
   end
 
   describe 'dns app create warnings' do

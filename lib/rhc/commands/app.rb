@@ -61,16 +61,34 @@ module RHC::Commands
                   "rhc cartridge add jenkins-client -a #{rest_app.name}")
       end
 
-      # add jenkins-client cart
-      begin
-        setup_jenkins_client(rest_app) if jenkins_rest_app
-      rescue Exception => e
-        add_issue("Jenkins client failed to install - #{e}",
+      if jenkins_rest_app
+        success, attempts, exit_code, exit_message = false, 1, 157, nil
+        while (!success && exit_code == 157 && attempts < MAX_RETRIES)
+          begin
+            setup_jenkins_client(rest_app)
+            success = true
+          rescue RHC::Rest::ServerErrorException => e
+            if (e.code == 157)
+              # error downloading Jenkins /jnlpJars/jenkins-cli.jar
+              attempts += 1
+              debug "Jenkins server could not be contacted, sleep and then retry: attempt #{attempts}\n    #{e.message}"
+              sleep(10)
+            end
+            exit_code = e.code
+            exit_message = e.message
+          rescue Exception => e
+            # timeout and other exceptions
+            exit_code = 1
+            exit_message = e.message
+          end
+        end
+        add_issue("Jenkins client failed to install - #{exit_message}",
                   "Install the jenkins client",
-                  "rhc cartridge add jenkins-client -a #{rest_app.name}")
+                  "rhc cartridge add jenkins-client -a #{rest_app.name}") if !success
       end
 
       if options.dns
+        say "Your application's domain name is being propagated worldwide (this might take a minute)..."
         unless dns_propagated? rest_app.host
           add_issue("We were unable to lookup your hostname (#{rest_app.host}) in a reasonable amount of time and can not clone your application.",
                     "Clone your git repo",
@@ -94,12 +112,15 @@ module RHC::Commands
         end
       end
 
-      display_app(rest_app,rest_app.cartridges,rest_app.scalable_carts.first)
+      display_app(rest_app, rest_app.cartridges, rest_app.scalable_carts.first)
 
       if issues?
         output_issues(rest_app)
       else
-        results { rest_app.messages.each { |msg| say msg } }
+        results { 
+          rest_app.messages.each { |msg| say msg } 
+          jenkins_rest_app.messages.each { |msg| say msg } if options.enable_jenkins and jenkins_rest_app
+        }
       end
 
       0
@@ -273,11 +294,10 @@ module RHC::Commands
         rest_app
       end
 
-      def dns_propagated?(host)
+      def dns_propagated?(host, sleep_time=2)
         #
         # Confirm that the host exists in DNS
         #
-        say "Your application's domain name is being propagated worldwide (this might take a minute)..."
         debug "Start checking for application dns @ '#{host}'"
 
         found = false
@@ -286,7 +306,6 @@ module RHC::Commands
         Kernel.sleep 5
 
         # Now start checking for DNS
-        sleep_time = 2
         for i in 0..MAX_RETRIES-1
           found = host_exist?(host)
           break if found
@@ -377,12 +396,14 @@ a different application name." if jenkins_app_name == app_name
         debug "Creating a new jenkins application"
         rest_app = create_app(jenkins_app_name, "jenkins-1.4", rest_domain)
 
+        say "Jenkins domain name is being propagated worldwide (this might take a minute)..."
         # If we can't get the dns we can't install the client so return nil
         dns_propagated?(rest_app.host) ? rest_app : nil
 
       end
+
       def setup_jenkins_client(rest_app)
-        rest_app.add_cartridge("jenkins-client-1.4")
+        rest_app.add_cartridge("jenkins-client-1.4", 300)
       end
 
       def run_nslookup(host)

@@ -223,7 +223,7 @@ module RHC
       when 500
         messages.each do |message|
           if message['severity'].upcase == "ERROR"
-            raise ServerErrorException, message['text']
+            raise ServerErrorException.new(message['text'], message["exit_code"] ? message["exit_code"].to_i : nil)
           end
         end
       when 503
