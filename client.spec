@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.0.3
+Version: 1.0.4
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -115,6 +115,25 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Nov 01 2012 Adam Miller <admiller@redhat.com> 1.0.4-1
+- Merge pull request #206 from fabianofranz/master (openshift+bot@redhat.com)
+- Increased the timeout to add jenkins cartridge to app (now the same as when
+  creating scaling apps) (ffranz@redhat.com)
+- Increased the timeout to add jenkins cartridge to app (now the same as when
+  creating scaling apps) (ffranz@redhat.com)
+- Increased the timeout to add jenkins cartridge to app (now the same as when
+  creating scaling apps) (ffranz@redhat.com)
+- Checking for specific exit_code = 157 when adding jenkins cartridge to the
+  app being created (ffranz@redhat.com)
+- Checking for specific exit_code = 157 when adding jenkins cartridge to the
+  app being created (ffranz@redhat.com)
+- Bug 872084 - URL value lookup is not safe (ccoleman@redhat.com)
+- Will display jenkins creds when jenkins cartridge is created through app
+  creation (with --enable-jenkins) (ffranz@redhat.com)
+- Will retry when adding the jenkins cartridge to apps created with --enable-
+  jenkins (ffranz@redhat.com)
+- Fixes BZ870258 (ffranz@redhat.com)
+
 * Wed Oct 31 2012 Adam Miller <admiller@redhat.com> 1.0.3-1
 - Merge pull request #203 from BanzaiMan/master (openshift+bot@redhat.com)
 - Look at the Right Stuff™ to set the debug flag (asari.ruby@gmail.com)
