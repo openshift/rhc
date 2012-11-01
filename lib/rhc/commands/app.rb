@@ -68,8 +68,6 @@ module RHC::Commands
             setup_jenkins_client(rest_app)
             success = true
           rescue RHC::Rest::ServerErrorException => e
-            puts e.inspect
-            puts e.code if e.code
             if (e.code == 157)
               # error downloading Jenkins /jnlpJars/jenkins-cli.jar
               attempts += 1
@@ -79,7 +77,6 @@ module RHC::Commands
             exit_code = e.code
             exit_message = e.message
           rescue Exception => e
-            puts e.inspect
             # timeout and other exceptions
             exit_code = 1
             exit_message = e.message
@@ -406,7 +403,7 @@ a different application name." if jenkins_app_name == app_name
       end
 
       def setup_jenkins_client(rest_app)
-        rest_app.add_cartridge("jenkins-client-1.4", 300)
+        rest_app.add_cartridge("jenkins-client-1.4", 180)
       end
 
       def run_nslookup(host)
