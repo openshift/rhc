@@ -72,7 +72,7 @@ module RHC::Commands
               # error downloading Jenkins /jnlpJars/jenkins-cli.jar
               attempts += 1
               debug "Jenkins server could not be contacted, sleep and then retry: attempt #{attempts}\n    #{e.message}"
-              sleep(10)
+              Kernel.sleep(10)
             end
             exit_code = e.code
             exit_message = e.message

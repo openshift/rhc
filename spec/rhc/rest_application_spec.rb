@@ -2,10 +2,6 @@ require 'spec_helper'
 require 'rest_spec_helper'
 require 'base64'
 
-Spec::Runner.configure do |configuration|
-  include(RestSpecHelper)
-end
-
 module RHC
   module Rest
     describe Application do

@@ -2,10 +2,6 @@ require 'spec_helper'
 require 'rest_spec_helper'
 require 'rhc/rest'
 
-Spec::Runner.configure do |configuration|
-  include(RestSpecHelper)
-end
-
 # We have to make an object to test the RHC::Rest module
 class RHCRest
   include RHC::Rest
@@ -21,7 +17,6 @@ module MockRestResponse
 end
 
 module RHC
-  include RestSpecHelper
 
   describe Rest do
     subject{ RHCRest.new }
