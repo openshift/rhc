@@ -188,10 +188,10 @@ describe RHC::Commands::App do
         @instance.stub(:setup_jenkins_client) { raise RHC::Rest::ServerErrorException.new("Server error", 157) }
       end
       it "should fail embedding jenkins cartridge" do
+        Kernel.should_receive(:sleep).and_return(true)
         run_output.should match("Jenkins client failed to install")
       end
     end
-
   end
 
   describe 'dns app create warnings' do

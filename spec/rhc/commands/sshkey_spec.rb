@@ -112,17 +112,18 @@ describe RHC::Commands::Sshkey do
     context "when attempting to add an existing but inaccessible key" do
       let(:arguments) { %w[sshkey add --noprompt --config test.conf -l test@test.foo -p password foobar inaccessible_key.pub] }
       
-      before :all do
-        @inaccessible_key = 'inaccessible_key.pub'
-        File.new(@inaccessible_key, 'w+')
-        File.chmod(0000, @inaccessible_key)
-      end
+      #before :all do
+      #  @inaccessible_key = 'inaccessible_key.pub'
+      #  File.new(@inaccessible_key, 'w+')
+      #  File.chmod(0000, @inaccessible_key)
+      #end
       
-      after :all do
-        File.delete @inaccessible_key
-      end
+      #after :all do
+      #  File.delete @inaccessible_key
+      #end
     
       it "exits with status code Errno::EACCES::Errno" do
+        File.should_receive(:open).and_raise(Errno::EACCES)
         expect { run }.should exit_with_code(128)
       end
       

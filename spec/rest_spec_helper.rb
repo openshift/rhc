@@ -379,3 +379,7 @@ module RestSpecHelper
     end
   end
 end
+
+Spec::Runner.configure do |configuration|
+  include(RestSpecHelper)
+end
