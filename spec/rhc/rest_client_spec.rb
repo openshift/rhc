@@ -4,10 +4,6 @@ require 'stringio'
 require 'rest_spec_helper'
 require 'rhc/rest/client'
 
-Spec::Runner.configure do |configuration|
-  include(RestSpecHelper)
-end
-
 # This object is used in a few cases where we need to inspect
 # the logged output.
 class MockClient < RHC::Rest::Client
