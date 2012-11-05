@@ -4,7 +4,9 @@ require 'uri'
 module RHC::Commands
   class PortForward < Base
 
-    IP_AND_PORT = /[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\:[0-9]{1,5}/
+    UP_TO_256 = /25[0-5]|2[0-4][0-9]|[01]?(?:[0-9][0-9]?)/
+    UP_TO_65535 = /6553[0-5]|655[0-2][0-9]|65[0-4][0-9][0-9]|6[0-4][0-9][0-9][0-9]|[0-5]?(?:[0-9][0-9]{,3})/
+    IP_AND_PORT = /\b#{UP_TO_256}\.#{UP_TO_256}\.#{UP_TO_256}\.#{UP_TO_256}\:#{UP_TO_65535}\b/
 
     summary "Forward remote ports to the workstation"
     option ["-n", "--namespace namespace"], "Namespace of the application you are port forwarding to", :context => :namespace_context, :required => true
