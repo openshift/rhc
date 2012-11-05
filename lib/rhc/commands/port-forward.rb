@@ -14,7 +14,7 @@ module RHC::Commands
       rest_domain = rest_client.find_domain options.namespace
       rest_app = rest_domain.find_application app
 
-      raise RHC::ScaledApplicationsNotSupportedException.new "This utility does not currently support scaled applications. You will need to set up port forwarding manually." if (rest_app.embedded.keys.any?{ |k| k =~ /\Ahaproxy/ })
+      #raise RHC::ScaledApplicationsNotSupportedException.new "This utility does not currently support scaled applications. You will need to set up port forwarding manually." if rest_app.scalable?
 
       ssh_uri = URI.parse(rest_app.ssh_url)
       say "Using #{rest_app.ssh_url}..." if options.debug
