@@ -1,5 +1,6 @@
 require 'rhc/commands/base'
 require 'uri'
+require 'rbconfig'
 
 module RHC::Commands
   class PortForward < Base
@@ -18,6 +19,7 @@ module RHC::Commands
 
       #raise RHC::ScaledApplicationsNotSupportedException.new "This utility does not currently support scaled applications. You will need to set up port forwarding manually." if rest_app.scalable?
 
+      mac = RbConfig::CONFIG['host_os'] =~ /^darwin/
       ssh_uri = URI.parse(rest_app.ssh_url)
       say "Using #{rest_app.ssh_url}..." if options.debug
 
@@ -29,6 +31,7 @@ module RHC::Commands
         say "Checking available ports..."
 
         Net::SSH.start(ssh_uri.host, ssh_uri.user) do |ssh|
+          debug "starting"
 
           ssh.exec! "rhc-list-ports" do |channel, stream, data|
             if stream == :stderr
@@ -54,7 +57,9 @@ module RHC::Commands
               say "Forwarding ports, use ctl + c to stop"
               hosts_and_ports.each do |host_and_port|
                 host, port = host_and_port.split(/:/)
-                ssh.forward.local(host, port.to_i, host, port.to_i)
+                args = [port.to_i, host, port.to_i]
+                args.unshift(host) unless mac
+                ssh.forward.local(*args)
               end
               ssh.loop { true }
             end
@@ -67,7 +72,11 @@ module RHC::Commands
 
       rescue Timeout::Error, Errno::EADDRNOTAVAIL, Errno::EADDRINUSE, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed => e
         ssh_cmd = "ssh -N "
-        hosts_and_ports.each { |port| ssh_cmd << "-L #{port}:#{port} " }
+        hosts_and_ports.each do |desc|
+          host, port = desc.split(/:/)
+          port_spec = mac ? "-L #{port}:#{host}:#{port} " : "-L #{host}:#{port}:#{host}:#{port} "
+          ssh_cmd << port_spec
+        end
         ssh_cmd << "#{ssh_uri.user}@#{ssh_uri.host}"
         raise RHC::PortForwardFailedException.new("#{e.message if options.debug}\nError trying to forward ports. You can try to forward manually by running:\n" + ssh_cmd)
       end
