@@ -1,6 +1,5 @@
 require 'rhc/commands/base'
 require 'uri'
-require 'rbconfig'
 
 module RHC::Commands
   class PortForward < Base
@@ -19,7 +18,6 @@ module RHC::Commands
 
       #raise RHC::ScaledApplicationsNotSupportedException.new "This utility does not currently support scaled applications. You will need to set up port forwarding manually." if rest_app.scalable?
 
-      mac = RbConfig::CONFIG['host_os'] =~ /^darwin/
       ssh_uri = URI.parse(rest_app.ssh_url)
       say "Using #{rest_app.ssh_url}..." if options.debug
 
@@ -58,7 +56,7 @@ module RHC::Commands
               hosts_and_ports.each do |host_and_port|
                 host, port = host_and_port.split(/:/)
                 args = [port.to_i, host, port.to_i]
-                args.unshift(host) unless mac
+                args.unshift(host) unless mac?
                 ssh.forward.local(*args)
               end
               ssh.loop { true }
@@ -74,7 +72,7 @@ module RHC::Commands
         ssh_cmd = "ssh -N "
         hosts_and_ports.each do |desc|
           host, port = desc.split(/:/)
-          port_spec = mac ? "-L #{port}:#{host}:#{port} " : "-L #{host}:#{port}:#{host}:#{port} "
+          port_spec = mac? ? "-L #{port}:#{host}:#{port} " : "-L #{host}:#{port}:#{host}:#{port} "
           ssh_cmd << port_spec
         end
         ssh_cmd << "#{ssh_uri.user}@#{ssh_uri.host}"

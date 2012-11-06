@@ -3,6 +3,7 @@ require 'rhc/version'
 require 'rhc/config'
 require 'rhc/commands'
 require 'rhc/output_helpers'
+require 'rbconfig'
 
 OptionParser.accept(URI) {|s,| URI.parse(s) if s}
 
@@ -297,6 +298,7 @@ module RHC
     def jruby? ; RUBY_PLATFORM =~ /java/i end
     def windows? ; RUBY_PLATFORM =~ /win(32|dows|ce)|djgpp|(ms|cyg|bcc)win|mingw32/i end
     def unix? ; !jruby? && !windows? end
+    def mac? ; RbConfig::CONFIG['host_os'] =~ /^darwin/ end
 
     # common SSH key display format in ERB
     def ssh_key_display_format
