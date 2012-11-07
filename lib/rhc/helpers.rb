@@ -139,6 +139,9 @@ module RHC
     def error(msg, *args)
       say color(msg, :red)
     end
+    def info(msg, *args)
+      say color(msg, :blue)
+    end
 
     def color(s, color)
       $terminal.color(s, color)

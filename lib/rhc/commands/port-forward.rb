@@ -82,7 +82,7 @@ module RHC::Commands
       #raise RHC::ScaledApplicationsNotSupportedException.new "This utility does not currently support scaled applications. You will need to set up port forwarding manually." if rest_app.scalable?
 
       ssh_uri = URI.parse(rest_app.ssh_url)
-      say "Using #{rest_app.ssh_url}..." if options.debug
+      info "Using #{rest_app.ssh_url}..." if options.debug
 
       hosts_and_ports = []
       hosts_and_ports_descriptions = []
@@ -103,7 +103,7 @@ module RHC::Commands
                 raise RHC::PermissionDeniedException.new "Permission denied." if line =~ /permission denied/i
                 if line =~ /\A\s*(\S+) -> #{IP_AND_PORT}/
                   debug fs = ForwardingSpec.new($1, $2, $3.to_i)
-                  say fs.inspect
+                  info fs.inspect
                   forwarding_specs << fs
                 else
                   debug line
@@ -158,7 +158,7 @@ Error forwarding #{fs}. You can try to forward manually by running:
               end
 
               forwarding_specs.sort.each do |fs|
-                say fs.message
+                success fs.message
               end
 
               unless forwarding_specs.any? {|conn| conn.bound }
