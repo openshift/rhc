@@ -75,10 +75,15 @@ describe RHC::Commands::PortForward do
         ssh = mock(Net::SSH)
         uri = URI.parse app.ssh_url
         Net::SSH.should_receive(:start).with(uri.host, uri.user).and_yield(ssh).twice
-        ssh.should_receive(:exec!).with("rhc-list-ports").and_yield(nil, :stdout, '127.0.0.1:3306')
+#        ssh.should_receive(:exec!).with("rhc-list-ports").and_yield(nil, :stdout, '127.0.0.1:3306')
+        ssh.should_receive(:exec!).with("rhc-list-ports").and_yield(nil, :stderr, 'mysql -> 127.0.0.1:3306')
         forward = mock(Net::SSH::Service::Forward)
         ssh.should_receive(:forward).and_return(forward)
-        forward.should_receive(:local).with('127.0.0.1', 3306, '127.0.0.1', 3306)
+        if mac?
+          forward.should_receive(:local).with(3306, '127.0.0.1', 3306)
+        else
+          forward.should_receive(:local).with('127.0.0.1', 3306, '127.0.0.1', 3306)
+        end
         ssh.should_receive(:loop)
       end
       it "should run successfully" do
