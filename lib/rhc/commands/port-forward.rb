@@ -6,30 +6,38 @@ module RHC::Commands
     include RHC::Helpers
     include Enumerable
     # class to specify how SSH port forwarding should be performed
-    attr_accessor :remote_host, :remote_port, :local_port, :bound
+    attr_accessor :remote_host, :port_to, :port_from, :bound
     attr_reader :service
 
-    def initialize(service, remote_host, remote_port, local_port = nil)
+    def initialize(service, remote_host, port_to, port_from = nil)
       @service     = service
       @remote_host = remote_host
-      @remote_port = remote_port
-      @local_port  = local_port || remote_port # match ports if possible
+      @port_to = port_to
+      @port_from  = port_from || port_to # match ports if possible
       @bound       = false
     end
 
     def inspect
-      "#{service}: forwarding local port #{local_port} to #{remote_host}:#{remote_port}"
+      # Use this for general description
+      mac? ? "#{service}: forwarding localhost:#{port_from} to #{remote_host}:#{port_to}" :
+        "#{service}: forwarding remote port #{remote_host}:#{port_to}"
+    end
+
+    def message
+      # Use this for telling users when port forwarding was successful
+      mac? ?  "#{service}: localhost:#{port_from} now forwards to remote port #{remote_host}:#{port_to}" :
+        "#{service}: now forwarding remote port #{remote_host}:#{port_to}"
     end
 
     def to_cmd_arg
       # string to be used in a direct SSH command
-      mac? ? " -L #{local_port}:#{remote_host}:#{remote_port} " :
-        " -L #{remote_host}:#{local_port}:#{remote_host}:#{remote_port} "
+      mac? ? " -L #{port_from}:#{remote_host}:#{port_to} " :
+        " -L #{remote_host}:#{port_from}:#{remote_host}:#{port_to} "
     end
 
     def to_fwd_args
       # array of arguments to be passed to Net::SSH::Service::Forward#local
-      args = [local_port.to_i, remote_host, remote_port.to_i]
+      args = [port_from.to_i, remote_host, port_to.to_i]
       args.unshift(remote_host) unless mac?
       args
     end
@@ -40,7 +48,7 @@ module RHC::Commands
       elsif !@bound && other.bound
         1
       else
-        order_by_attrs(self, other, :service, :remote_host, :local_port)
+        order_by_attrs(self, other, :service, :remote_host, :port_from)
       end
     end
 
@@ -136,13 +144,12 @@ module RHC::Commands
                     ssh.forward.local(*args)
                     fs.bound = true
                   rescue Errno::EADDRINUSE
-                    debug "trying local port #{fs.local_port}"
-                    fs.local_port += 1
+                    debug "trying local port #{fs.port_from}"
+                    fs.port_from += 1
                   rescue Timeout::Error, Errno::EADDRNOTAVAIL, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed => e
                     ssh_cmd = "ssh -N #{fs.to_cmd_arg} #{ssh_uri.user}@#{ssh_uri.host}"
                     warn <<-WARN
-Error forwarding local port #{fs.local_port} to remote port #{fs.remote_port} on #{fs.remote_host}.
-You can try to forward manually by running:
+Error forwarding #{fs}. You can try to forward manually by running:
 #{ssh_cmd}
                     WARN
                     given_up = true
@@ -151,7 +158,7 @@ You can try to forward manually by running:
               end
 
               forwarding_specs.sort.each do |fs|
-                say "#{fs.service}: local port #{fs.local_port} now forwards to remote port #{fs.remote_port} on #{fs.remote_host}"
+                say fs.message
               end
 
               unless forwarding_specs.any? {|conn| conn.bound }
