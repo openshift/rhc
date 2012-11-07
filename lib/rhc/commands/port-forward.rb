@@ -4,6 +4,7 @@ require 'uri'
 module RHC::Commands
   class ForwardingSpec
     include RHC::Helpers
+    include Enumerable
     # class to specify how SSH port forwarding should be performed
     attr_accessor :remote_host, :remote_port, :local_port, :bound
     attr_reader :service
@@ -33,6 +34,27 @@ module RHC::Commands
       args
     end
 
+    def <=>(other)
+      if @bound && !other.bound
+        -1
+      elsif !@bound && other.bound
+        1
+      else
+        order_by_attrs(self, other, :service, :remote_host, :local_port)
+      end
+    end
+
+    def order_by_attrs(this, other, *attrs)
+      # compare _this_ and _other_ by examining their _attrs_ in order
+      while attribute = attrs.shift do
+        if this.send(attribute) != other.send(attribute)
+          return this.send(attribute) <=> other.send(attribute)
+        end
+      end
+      0
+    end
+
+    private :order_by_attrs
   end
 
   class PortForward < Base
@@ -109,12 +131,10 @@ module RHC::Commands
                 given_up = nil
                 while !fs.bound && ! given_up
                   begin
-                    raise Errno::EADDRNOTAVAIL
                     args = fs.to_fwd_args
                     debug args.inspect
                     ssh.forward.local(*args)
                     fs.bound = true
-                    say "#{fs.service}: local port #{fs.local_port} now forwards to remote port #{fs.remote_port} on #{fs.remote_host}"
                   rescue Errno::EADDRINUSE
                     debug "trying local port #{fs.local_port}"
                     fs.local_port += 1
@@ -129,6 +149,11 @@ You can try to forward manually by running:
                   end
                 end
               end
+
+              forwarding_specs.sort.each do |fs|
+                say "#{fs.service}: local port #{fs.local_port} now forwards to remote port #{fs.remote_port} on #{fs.remote_host}"
+              end
+
               unless forwarding_specs.any? {|conn| conn.bound }
                 warn "No ports have been bound"
                 raise Interrupt
