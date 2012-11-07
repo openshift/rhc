@@ -18,15 +18,15 @@ describe RHC::Commands::PortForward do
         domain = @rc.add_domain("mockdomain")
         domain.add_application 'mockapp', 'mock-1.0', true
       end
-      it "should error out" do
-        expect { run }.should exit_with_code(128)
-      end
-      it "should match the app state" do
-        @rc.domains[0].id.should == 'mockdomain'
-        @rc.domains[0].applications.size.should == 1
-        @rc.domains[0].applications[0].name.should == 'mockapp'
-      end
-      it { run_output.should match("This utility does not currently support scaled applications. You will need to set up port forwarding manually.") }
+#     it "should error out" do
+#        expect { run }.should exit_with_code(128)
+#      end
+#      it "should match the app state" do
+#        @rc.domains[0].id.should == 'mockdomain'
+#        @rc.domains[0].applications.size.should == 1
+#        @rc.domains[0].applications[0].name.should == 'mockapp'
+#      end
+#      it { run_output.should match("This utility does not currently support scaled applications. You will need to set up port forwarding manually.") }
     end
 
     context 'when port forwarding an app without ports to forward' do
