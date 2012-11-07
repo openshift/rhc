@@ -12,23 +12,6 @@ describe RHC::Commands::PortForward do
   describe 'run' do
     let(:arguments) { ['port-forward', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p', 'password', '--app', 'mockapp'] }
 
-    context 'when port forwarding a scaled app' do
-      before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mockdomain")
-        domain.add_application 'mockapp', 'mock-1.0', true
-      end
-#     it "should error out" do
-#        expect { run }.should exit_with_code(128)
-#      end
-#      it "should match the app state" do
-#        @rc.domains[0].id.should == 'mockdomain'
-#        @rc.domains[0].applications.size.should == 1
-#        @rc.domains[0].applications[0].name.should == 'mockapp'
-#      end
-#      it { run_output.should match("This utility does not currently support scaled applications. You will need to set up port forwarding manually.") }
-    end
-
     context 'when port forwarding an app without ports to forward' do
       before(:each) do
         @rc = MockRestClient.new
@@ -117,7 +100,6 @@ describe RHC::Commands::PortForward do
         ssh = mock(Net::SSH)
         uri = URI.parse app.ssh_url
         Net::SSH.should_receive(:start).with(uri.host, uri.user).and_yield(ssh).twice
-        #ssh.should_receive(:exec!).with("rhc-list-ports").and_yield(nil, :stdout, '127.0.0.1:3306')
         ssh.should_receive(:exec!).with("rhc-list-ports").and_yield(nil, :stderr, 'mysql -> 127.0.0.1:3306')
         forward = mock(Net::SSH::Service::Forward)
         ssh.should_receive(:forward).and_return(forward)
