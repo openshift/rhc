@@ -84,7 +84,6 @@ module RHC::Commands
       ssh_uri = URI.parse(rest_app.ssh_url)
       info "Using #{rest_app.ssh_url}..." if options.debug
 
-      hosts_and_ports = []
       hosts_and_ports_descriptions = []
 
       forwarding_specs = []
@@ -163,7 +162,7 @@ Error forwarding #{fs}. You can try to forward manually by running:
 
               unless forwarding_specs.any? {|conn| conn.bound }
                 warn "No ports have been bound"
-                raise Interrupt
+                return
               end
               ssh.loop { true }
             end
@@ -176,11 +175,6 @@ Error forwarding #{fs}. You can try to forward manually by running:
 
       rescue Timeout::Error, Errno::EADDRNOTAVAIL, Errno::EADDRINUSE, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed => e
         ssh_cmd = "ssh -N "
-        hosts_and_ports.each do |desc|
-          host, port = desc.split(/:/)
-          port_spec = mac? ? "-L #{port}:#{host}:#{port} " : "-L #{host}:#{port}:#{host}:#{port} "
-          ssh_cmd << port_spec
-        end
         ssh_cmd << "#{ssh_uri.user}@#{ssh_uri.host}"
         raise RHC::PortForwardFailedException.new("#{e.message if options.debug}\nError trying to forward ports. You can try to forward manually by running:\n" + ssh_cmd)
       end
