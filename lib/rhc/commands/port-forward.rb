@@ -134,7 +134,8 @@ module RHC::Commands
 #                ssh.forward.local(*args)
 #              end
               forwarding_specs.each do |fs|
-                while !fs.bound
+                given_up = nil
+                while !fs.bound && !given_up
                   begin
                     args = fs.to_fwd_args
                     debug args.inspect
@@ -149,6 +150,7 @@ module RHC::Commands
 Error forwarding #{fs}. You can try to forward manually by running:
 #{ssh_cmd}
                     WARN
+                    given_up = true
                   end
                 end
               end
