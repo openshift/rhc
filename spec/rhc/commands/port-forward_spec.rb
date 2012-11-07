@@ -81,7 +81,7 @@ describe RHC::Commands::PortForward do
         forward.should_receive(:local).with('127.0.0.1', 3306, '127.0.0.1', 3306)
         ssh.should_receive(:loop)
       end
-      it "should error out as no ports to forward" do
+      it "should run successfully" do
         expect { run }.should exit_with_code(0)
         @rc.domains[0].id.should == 'mockdomain'
         @rc.domains[0].applications.size.should == 1
