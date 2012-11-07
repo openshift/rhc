@@ -132,7 +132,7 @@ describe RHC::Commands::PortForward do
         ssh.should_receive(:forward).and_raise(Errno::ECONNREFUSED)
       end
       it "should error out" do
-        expect { run }.should exit_with_code(1)
+        expect { run }.should exit_with_code(0)
       end
       it { run_output.should include("ssh -N") }
       it { run_output.should include("Error forwarding") }
