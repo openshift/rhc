@@ -132,7 +132,7 @@ describe RHC::Commands::PortForward do
         ssh.should_receive(:forward).and_raise(Errno::ECONNREFUSED)
       end
       it "should error out" do
-        expect { run }.should exit_with_code(1)
+        expect { run }.should exit_with_code(0)
       end
       it { run_output.should include("ssh -N") }
       it { run_output.should include("Error forwarding") }
@@ -156,7 +156,7 @@ describe RHC::Commands::PortForward do
         else
           forward.should_receive(:local).with('127.0.0.1', 8080, '127.0.0.1', 8080)
           forward.should_receive(:local).with('127.0.0.2', 8080, '127.0.0.2', 8080).and_raise(Errno::EADDRINUSE)
-          forward.should_receive(:local).with('127.0.0.1', 8081, '127.0.0.2', 8080)
+          forward.should_receive(:local).with('127.0.0.2', 8081, '127.0.0.2', 8080)
         end
         ssh.should_receive(:loop).and_raise(Interrupt.new)
       end
