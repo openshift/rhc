@@ -78,8 +78,6 @@ module RHC::Commands
       rest_domain = rest_client.find_domain options.namespace
       rest_app = rest_domain.find_application app
 
-      #raise RHC::ScaledApplicationsNotSupportedException.new "This utility does not currently support scaled applications. You will need to set up port forwarding manually." if rest_app.scalable?
-
       ssh_uri = URI.parse(rest_app.ssh_url)
       info "Using #{rest_app.ssh_url}..." if options.debug
 
@@ -108,15 +106,6 @@ module RHC::Commands
                 end
 
               end
-            else
-#              data.each_line do |line|
-#                line.chomp!
-#                if ((not line =~ /scale/i) and IP_AND_PORT.match(line))
-#                  hosts_and_ports << line 
-#                  host, port = line.split /:/
-#                  forwarding_specs << ForwardingSpec.new(host, port.to_i)
-#                end
-#              end
             end
           end
 
@@ -127,12 +116,6 @@ module RHC::Commands
           begin
             Net::SSH.start(ssh_uri.host, ssh_uri.user) do |ssh|
               say "Forwarding ports, use ctl + c to stop"
-#              hosts_and_ports.each do |host_and_port|
-#                host, port = host_and_port.split(/:/)
-#                args = [port.to_i, host, port.to_i]
-#                args.unshift(host) unless mac?
-#                ssh.forward.local(*args)
-#              end
               forwarding_specs.each do |fs|
                 given_up = nil
                 while !fs.bound && !given_up
