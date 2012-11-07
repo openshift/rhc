@@ -95,7 +95,7 @@ module RHC::Commands
                 raise RHC::PermissionDeniedException.new "Permission denied." if line =~ /permission denied/i
                 if line =~ /\A\s*(\S+) -> #{IP_AND_PORT}/
                   debug fs = ForwardingSpec.new($1, $2, $3.to_i)
-                  say "Forwarding #{fs.inspect}"
+                  say fs.inspect
                   forwarding_specs << fs
                 else
                   debug line
