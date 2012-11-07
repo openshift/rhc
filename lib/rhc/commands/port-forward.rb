@@ -19,20 +19,17 @@ module RHC::Commands
 
     def inspect
       # Use this for general description
-      mac? ? "#{service}: forwarding localhost:#{port_from} to #{remote_host}:#{port_to}" :
-        "#{service}: forwarding remote port #{remote_host}:#{port_to}"
+      mac? ? "#{service}: forwarding localhost:#{port_from} to #{remote_host}:#{port_to}" : "#{service}: forwarding remote port #{remote_host}:#{port_to}"
     end
 
     def message
       # Use this for telling users when port forwarding was successful
-      mac? ?  "#{service}: localhost:#{port_from} now forwards to remote port #{remote_host}:#{port_to}" :
-        "#{service}: now forwarding remote port #{remote_host}:#{port_to}"
+      mac? ?  "#{service}: localhost:#{port_from} now forwards to remote port #{remote_host}:#{port_to}" : "#{service}: now forwarding remote port #{remote_host}:#{port_to}"
     end
 
     def to_cmd_arg
       # string to be used in a direct SSH command
-      mac? ? " -L #{port_from}:#{remote_host}:#{port_to} " :
-        " -L #{remote_host}:#{port_from}:#{remote_host}:#{port_to} "
+      mac? ? " -L #{port_from}:#{remote_host}:#{port_to} " : " -L #{remote_host}:#{port_from}:#{remote_host}:#{port_to} "
     end
 
     def to_fwd_args
@@ -42,6 +39,7 @@ module RHC::Commands
       args
     end
 
+    # :nocov: These are for sorting. No need to test for coverage.
     def <=>(other)
       if @bound && !other.bound
         -1
@@ -61,6 +59,7 @@ module RHC::Commands
       end
       0
     end
+    # :nocov:
 
     private :order_by_attrs
   end
@@ -135,8 +134,7 @@ module RHC::Commands
 #                ssh.forward.local(*args)
 #              end
               forwarding_specs.each do |fs|
-                given_up = nil
-                while !fs.bound && ! given_up
+                while !fs.bound
                   begin
                     args = fs.to_fwd_args
                     debug args.inspect
@@ -147,11 +145,11 @@ module RHC::Commands
                     fs.port_from += 1
                   rescue Timeout::Error, Errno::EADDRNOTAVAIL, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed => e
                     ssh_cmd = "ssh -N #{fs.to_cmd_arg} #{ssh_uri.user}@#{ssh_uri.host}"
-                    warn <<-WARN
+                    msg = <<-WARN
 Error forwarding #{fs}. You can try to forward manually by running:
 #{ssh_cmd}
                     WARN
-                    given_up = true
+                    raise RHC::PortForwardFailedException.new("#{e.message if options.debug}\n#{msg}")
                   end
                 end
               end

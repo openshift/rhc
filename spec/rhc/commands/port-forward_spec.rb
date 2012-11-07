@@ -77,13 +77,13 @@ describe RHC::Commands::PortForward do
       it { run_output.should include("Forwarding ports, use ctl + c to stop") }
     end
 
-    context 'when port forwarding an app with ports to forward' do
+    context 'when host is unreachable' do
       before(:each) do
         @rc = MockRestClient.new
         domain = @rc.add_domain("mockdomain")
         app = domain.add_application 'mockapp', 'mock-1.0'
       end
-      it "should error out if ssh host is unreachable" do
+      it "should error out" do
         expect { run }.should exit_with_code(1)
         @rc.domains[0].id.should == 'mockdomain'
         @rc.domains[0].applications.size.should == 1
@@ -107,6 +107,56 @@ describe RHC::Commands::PortForward do
           forward.should_receive(:local).with(3306, '127.0.0.1', 3306)
         else
           forward.should_receive(:local).with('127.0.0.1', 3306, '127.0.0.1', 3306)
+        end
+        ssh.should_receive(:loop).and_raise(Interrupt.new)
+      end
+      it "should exit when user interrupts" do
+        expect { run }.should exit_with_code(0)
+        @rc.domains[0].id.should == 'mockdomain'
+        @rc.domains[0].applications.size.should == 1
+        @rc.domains[0].applications[0].name.should == 'mockapp'
+      end
+      it { run_output.should include("Ending port forward") }
+    end
+
+    context 'when host refuses connection' do
+      before(:each) do
+        @rc = MockRestClient.new
+        domain = @rc.add_domain("mockdomain")
+        app = domain.add_application 'mockapp', 'mock-1.0'
+        ssh = mock(Net::SSH)
+        uri = URI.parse app.ssh_url
+        Net::SSH.should_receive(:start).with(uri.host, uri.user).and_yield(ssh).twice
+        ssh.should_receive(:exec!).with("rhc-list-ports").and_yield(nil, :stderr, 'mysql -> 127.0.0.1:3306')
+        forward = mock(Net::SSH::Service::Forward)
+        ssh.should_receive(:forward).and_raise(Errno::ECONNREFUSED)
+      end
+      it "should error out" do
+        expect { run }.should exit_with_code(1)
+      end
+      it { run_output.should include("ssh -N") }
+      it { run_output.should include("Error forwarding") }
+    end
+
+    context 'when port forwarding a scaled app with ports to forward' do
+      before(:each) do
+        @rc = MockRestClient.new
+        domain = @rc.add_domain("mockdomain")
+        app = domain.add_application 'mockapp', 'mock-1.0'
+        ssh = mock(Net::SSH)
+        uri = URI.parse app.ssh_url
+        Net::SSH.should_receive(:start).with(uri.host, uri.user).and_yield(ssh).twice
+        ssh.should_receive(:exec!).with("rhc-list-ports").and_yield(nil, :stderr, "httpd -> 127.0.0.1:8080\nhttpd -> 127.0.0.2:8080")
+        forward = mock(Net::SSH::Service::Forward)
+        ssh.should_receive(:forward).at_least(3).times.and_return(forward)
+        if mac?
+          forward.should_receive(:local).with(8080, '127.0.0.1', 8080)
+          forward.should_receive(:local).with(8080, '127.0.0.2', 8080).and_raise(Errno::EADDRINUSE)
+          forward.should_receive(:local).with(8081, '127.0.0.2', 8080)
+        else
+          forward.should_receive(:local).with('127.0.0.1', 8080, '127.0.0.1', 8080)
+          forward.should_receive(:local).with('127.0.0.2', 8080, '127.0.0.2', 8080).and_raise(Errno::EADDRINUSE)
+          forward.should_receive(:local).with('127.0.0.1', 8081, '127.0.0.2', 8080)
         end
         ssh.should_receive(:loop).and_raise(Interrupt.new)
       end
