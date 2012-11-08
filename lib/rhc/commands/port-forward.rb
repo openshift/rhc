@@ -84,8 +84,6 @@ module RHC::Commands
       ssh_uri = URI.parse(rest_app.ssh_url)
       info "Using #{rest_app.ssh_url}..." if options.debug
 
-      hosts_and_ports_descriptions = []
-
       forwarding_specs = []
 
       begin
@@ -114,8 +112,6 @@ module RHC::Commands
 
           raise RHC::NoPortsToForwardException.new "There are no available ports to forward for this application. Your application may be stopped." if forwarding_specs.length == 0
 
-          hosts_and_ports_descriptions.each { |description| say "Binding #{description}..." }
-
           begin
             Net::SSH.start(ssh_uri.host, ssh_uri.user) do |ssh|
               say "Forwarding ports, use ctl + c to stop"
@@ -123,6 +119,7 @@ module RHC::Commands
                 given_up = nil
                 while !fs.bound && !given_up
                   begin
+                    say "Binding #{fs.inspect}"
                     args = fs.to_fwd_args
                     debug args.inspect
                     ssh.forward.local(*args)
