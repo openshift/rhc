@@ -82,6 +82,9 @@ describe RHC::Commands::PortForward do
         @rc = MockRestClient.new
         domain = @rc.add_domain("mockdomain")
         app = domain.add_application 'mockapp', 'mock-1.0'
+        ssh = mock(Net::SSH)
+        uri = URI.parse app.ssh_url
+        Net::SSH.should_receive(:start).and_raise(Errno::EHOSTUNREACH)
       end
       it "should error out" do
         expect { run }.should exit_with_code(1)
