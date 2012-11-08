@@ -123,7 +123,6 @@ module RHC::Commands
                 given_up = nil
                 while !fs.bound && !given_up
                   begin
-                    say "Binding #{fs.inspect}"
                     args = fs.to_fwd_args
                     debug args.inspect
                     ssh.forward.local(*args)
