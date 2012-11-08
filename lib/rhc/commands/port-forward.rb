@@ -5,7 +5,7 @@ module RHC::Commands
   class ForwardingSpec
     include RHC::Helpers
     include Enumerable
-    # class to specify how SSH port forwarding should be performed
+    # class to represent how SSH port forwarding should be performed
     attr_accessor :remote_host, :port_to, :port_from, :bound
     attr_reader :service
 
