@@ -12,8 +12,8 @@ module RHC::Commands
     def initialize(service, remote_host, port_to, port_from = nil)
       @service     = service
       @remote_host = remote_host
-      @port_to = port_to
-      @port_from  = port_from || port_to # match ports if possible
+      @port_to     = port_to
+      @port_from   = port_from || port_to # match ports if possible
       @bound       = false
     end
 
@@ -54,7 +54,9 @@ module RHC::Commands
     end
 
     def order_by_attrs(other, *attrs)
-      # compare self and _other_ by examining their _attrs_ in order
+      # compare self and "other" by examining their "attrs" in order
+      # attrs should be an array of symbols to which self and "other"
+      # respond when sent.
       while attribute = attrs.shift do
         if self.send(attribute) != other.send(attribute)
           return self.send(attribute) <=> other.send(attribute)
@@ -87,17 +89,19 @@ module RHC::Commands
       forwarding_specs = []
 
       begin
-
         say "Checking available ports..."
 
         Net::SSH.start(ssh_uri.host, ssh_uri.user) do |ssh|
-          debug "starting"
-
           ssh.exec! "rhc-list-ports" do |channel, stream, data|
             if stream == :stderr
               data.each_line do |line|
                 line.chomp!
+                # FIXME: This is really brittle; there must be a better way
+                # for the server to tell us that permission (what permission?)
+                # is denied.
                 raise RHC::PermissionDeniedException.new "Permission denied." if line =~ /permission denied/i
+                # ...and also which services are available for the application
+                # for us to forward ports for.
                 if line =~ /\A\s*(\S+) -> #{IP_AND_PORT}/
                   debug fs = ForwardingSpec.new($1, $2, $3.to_i)
                   info fs.inspect
