@@ -160,6 +160,7 @@ Error forwarding #{fs}. You can try to forward manually by running:
 
       rescue Timeout::Error, Errno::EADDRNOTAVAIL, Errno::EADDRINUSE, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed => e
         ssh_cmd = "ssh -N "
+        forwarding_specs.each {|fs| ssh_cmd << fs.to_cmd_arg } 
         ssh_cmd << "#{ssh_uri.user}@#{ssh_uri.host}"
         raise RHC::PortForwardFailedException.new("#{e.message if options.debug}\nError trying to forward ports. You can try to forward manually by running:\n" + ssh_cmd)
       end
