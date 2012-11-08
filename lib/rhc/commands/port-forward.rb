@@ -49,15 +49,15 @@ module RHC::Commands
       elsif !@bound && other.bound
         1
       else
-        order_by_attrs(self, other, :service, :remote_host, :port_from)
+        order_by_attrs(other, :service, :remote_host, :port_from)
       end
     end
 
-    def order_by_attrs(this, other, *attrs)
-      # compare _this_ and _other_ by examining their _attrs_ in order
+    def order_by_attrs(other, *attrs)
+      # compare self and _other_ by examining their _attrs_ in order
       while attribute = attrs.shift do
-        if this.send(attribute) != other.send(attribute)
-          return this.send(attribute) <=> other.send(attribute)
+        if self.send(attribute) != other.send(attribute)
+          return self.send(attribute) <=> other.send(attribute)
         end
       end
       0
