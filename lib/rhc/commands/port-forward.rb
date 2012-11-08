@@ -19,12 +19,15 @@ module RHC::Commands
 
     def inspect
       # Use this for general description
-      mac? ? "#{service}: forwarding localhost:#{port_from} to #{remote_host}:#{port_to}" : "#{service}: forwarding remote port #{remote_host}:#{port_to}"
+      pt = mac? ? "local port #{port_from} to #{remote_host}:#{port_to}" : "remote port #{remote_host}:#{port_to}"
+      bound_msg = @bound ? "bound" : "not bound"
+      "#{service}: forwarding #{pt}; #{bound_msg}"
     end
 
     def message
       # Use this for telling users when port forwarding was successful
-      mac? ?  "#{service}: localhost:#{port_from} now forwards to remote port #{remote_host}:#{port_to}" : "#{service}: now forwarding remote port #{remote_host}:#{port_to}"
+      pt = mac? ? "local port #{port_from} to " : ""
+      "#{service}: now forwarding #{pt}remote port #{remote_host}:#{port_to}"
     end
 
     def to_cmd_arg
