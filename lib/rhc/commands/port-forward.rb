@@ -133,10 +133,7 @@ module RHC::Commands
                     fs.port_from += 1
                   rescue Timeout::Error, Errno::EADDRNOTAVAIL, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed => e
                     ssh_cmd = "ssh -N #{fs.to_cmd_arg} #{ssh_uri.user}@#{ssh_uri.host}"
-                    warn <<-WARN
-Error forwarding #{fs}. You can try to forward manually by running:
-#{ssh_cmd}
-                    WARN
+                    warn "Error forwarding #{fs}. You can try to forward manually by running:\n#{ssh_cmd}"
                     given_up = true
                   end
                 end
