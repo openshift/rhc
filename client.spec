@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.1.1
+Version: 1.1.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -115,6 +115,13 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Nov 08 2012 Adam Miller <admiller@redhat.com> 1.1.2-1
+- Allow specs to be run individually.  Stub sleep for jenkins so spec tests are
+  fast again. (ccoleman@redhat.com)
+- Spec failure when run from stdinput and without tty (ccoleman@redhat.com)
+- Spec failure when running as root - user has access to all files.  Use mock
+  instead. (ccoleman@redhat.com)
+
 * Thu Nov 01 2012 Adam Miller <admiller@redhat.com> 1.1.1-1
 - bump_minor_versions for sprint 20 (admiller@redhat.com)
 
