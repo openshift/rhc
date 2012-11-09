@@ -6,8 +6,9 @@ module RHC::Commands
     include RHC::Helpers
     include Enumerable
     # class to represent how SSH port forwarding should be performed
-    attr_accessor :port_from, :bound
+    attr_accessor :port_from
     attr_reader :remote_host, :port_to, :host_from, :service
+    attr_writer :bound
 
     def initialize(service, remote_host, port_to, port_from = nil)
       @service     = service
@@ -30,11 +31,15 @@ module RHC::Commands
       args
     end
 
+    def bound?
+      @bound
+    end
+
     # :nocov: These are for sorting. No need to test for coverage.
     def <=>(other)
-      if @bound && !other.bound
+      if bound? && !other.bound?
         -1
-      elsif !@bound && other.bound
+      elsif !bound? && other.bound?
         1
       else
         order_by_attrs(other, :service, :remote_host, :port_from)
@@ -120,7 +125,7 @@ module RHC::Commands
               say "Forwarding ports"
               forwarding_specs.each do |fs|
                 given_up = nil
-                while !fs.bound && !given_up
+                while !fs.bound? && !given_up
                   begin
                     args = fs.to_fwd_args
                     debug args.inspect
@@ -135,7 +140,7 @@ module RHC::Commands
                 end
               end
 
-              bound_ports = forwarding_specs.select { |fs| fs.bound }
+              bound_ports = forwarding_specs.select(&:bound?)
               if bound_ports.length > 0
                 items = bound_ports.map do |fs|
                   [fs.service, "#{fs.host_from}:#{fs.port_from}", " => ", "#{fs.remote_host}:#{fs.port_to.to_s}"]
@@ -144,7 +149,7 @@ module RHC::Commands
               end
 
               # for failed port forwarding attempts
-              failed_port_forwards = forwarding_specs.select { |fs| !fs.bound }
+              failed_port_forwards = forwarding_specs.select { |fs| !fs.bound? }
               if failed_port_forwards.length > 0
                 ssh_cmd_arg = failed_port_forwards.map { |fs| fs.to_cmd_arg }.join(" ")
                 ssh_cmd = "ssh -N #{ssh_cmd_arg} #{ssh_uri.user}@#{ssh_uri.host}"
@@ -153,7 +158,7 @@ module RHC::Commands
                 say "Press CTRL-C to terminate port forwarding"
               end
 
-              unless forwarding_specs.any? {|conn| conn.bound }
+              unless forwarding_specs.any?(&:bound?)
                 warn "No ports have been bound"
                 return
               end
@@ -168,7 +173,7 @@ module RHC::Commands
 
       rescue Timeout::Error, Errno::EADDRNOTAVAIL, Errno::EADDRINUSE, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed => e
         ssh_cmd = ["ssh","-N"]
-        unbound_fs = forwarding_specs.select { |fs| !fs.bound }
+        unbound_fs = forwarding_specs.select { |fs| !fs.bound? }
         ssh_cmd += unbound_fs.map { |fs| fs.to_cmd_arg }
         ssh_cmd += ["#{ssh_uri.user}@#{ssh_uri.host}"]
         raise RHC::PortForwardFailedException.new("#{e.message + "\n" if options.debug}Error trying to forward ports. You can try to forward manually by running:\n" + ssh_cmd.join(" "))
