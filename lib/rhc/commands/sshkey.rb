@@ -13,11 +13,12 @@ module RHC::Commands
     summary 'Display all the SSH keys for the user account'
     syntax ''
     def list
+      keys = rest_client.sshkeys
+
       results do
-        result = rest_client.sshkeys.inject('') do |r, key|
+        result = keys.inject('') do |r, key|
           r += format(key, erb)
         end
-
         say result
       end
 

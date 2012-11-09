@@ -33,8 +33,8 @@ module RHC
         # :nocov:
         @@headers["Authorization"] = "Basic #{credentials}"
         @@headers["User-Agent"] = RHC::Helpers.user_agent rescue nil
-        RestClient.proxy = ENV['http_proxy']
-        
+        RestClient.proxy = URI.parse(ENV['http_proxy']).to_s if ENV['http_proxy']
+
         # API version negotiation
         begin
           debug "Client supports API versions #{preferred_api_versions.join(', ')}"
@@ -42,7 +42,7 @@ module RHC
           default_request = new_request(:url => @end_point, :method => :get, :headers => @@headers)
           @server_api_versions, links = api_info(default_request)
           debug "Server supports API versions #{@server_api_versions.join(', ')}"
-        
+
           if api_version_negotiated
             unless server_api_version_current?
               debug "Client API version #{api_version_negotiated} is not current. Refetching API"
@@ -54,8 +54,6 @@ module RHC
           else
             warn_about_api_versions
           end
-        rescue Exception => e
-          raise ResourceAccessException.new("Failed to access resource: #{e.message}")
         end
 
         super({:links => links}, use_debug)
@@ -192,8 +190,10 @@ server at #{URI.parse(@end_point).host} supports #{@server_api_versions.join(', 
       private
       # execute +req+ with RestClient, and return [server_api_versions, links]
       def api_info(req)
-        json_response = ::RHC::Json.decode(req.execute)
-        [ json_response['supported_api_versions'], json_response['data'] ]
+        request(req) do |response|
+          json_response = ::RHC::Json.decode(response)
+          [ json_response['supported_api_versions'], json_response['data'] ]
+        end
       end
     end
   end
