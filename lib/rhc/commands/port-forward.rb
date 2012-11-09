@@ -170,6 +170,9 @@ module RHC::Commands
       end
 
       return 0
+    rescue RestClient::Exception => e
+      error "Connection to #{openshift_server} failed: #{e.message}"
+      return 1
     end
   end
 end

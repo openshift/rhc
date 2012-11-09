@@ -83,6 +83,16 @@ describe RHC::Commands::PortForward do
       it { run_output.should include("Error trying to forward ports.") }
     end
 
+    context 'when REST client connection times out' do
+      before(:each) do
+        @rc.should_receive(:find_domain).and_raise(RestClient::ServerBrokeConnection)
+      end
+      it "should error out" do
+        expect { run }.should exit_with_code(1)
+      end
+      it { run_output.should match("Connection.*failed:") }
+    end
+
     context 'when port forwarding an app with ports to forward' do
       before(:each) do
         Net::SSH.should_receive(:start).with(@uri.host, @uri.user).and_yield(@ssh).twice
