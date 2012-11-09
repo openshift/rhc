@@ -139,9 +139,6 @@ module RHC
     def error(msg, *args)
       say color(msg, :red)
     end
-    def info(msg, *args)
-      say color(msg, :blue)
-    end
 
     def color(s, color)
       $terminal.color(s, color)
@@ -151,19 +148,27 @@ module RHC
       count == 1 ? "#{count} #{s}" : "#{count} #{s}s"
     end
 
+    # given an array of arrays "items", construct an array of strings that can
+    # be used to print in tabular form.
     def table(items, opts={}, &block)
       items = items.map &block if block_given?
-      columns = []
-      max = items.each do |item|
+      widths = []
+      items.each do |item|
         item.each_with_index do |s, i|
           item[i] = s.to_s
-          columns[i] = [columns[i] || 0, s.length].max if s.respond_to?(:length)
+          widths[i] = [widths[i] || 0, s.length].max if s.respond_to?(:length)
         end
       end
       align = opts[:align] || []
       join = opts[:join] || ' '
+      if opts[:header]
+        sep = opts[:separator] || "="
+        ary = Array.new(opts[:header].length)
+        items.unshift ary.each_with_index {|obj, idx| ary[idx] = sep.to_s * (widths[idx] || 1)}
+        items.unshift(opts[:header])
+      end
       items.map do |item|
-        item.each_with_index.map{ |s,i| s.send((align[i] == :right ? :rjust : :ljust), columns[i], ' ') }.join(join).strip
+        item.each_with_index.map{ |s,i| s.send((align[i] == :right ? :rjust : :ljust), widths[i], ' ') }.join(join).strip
       end
     end
 

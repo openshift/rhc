@@ -7,27 +7,15 @@ module RHC::Commands
     include Enumerable
     # class to represent how SSH port forwarding should be performed
     attr_accessor :port_from, :bound
-    attr_reader :remote_host, :port_to, :service
+    attr_reader :remote_host, :port_to, :host_from, :service
 
     def initialize(service, remote_host, port_to, port_from = nil)
       @service     = service
       @remote_host = remote_host
       @port_to     = port_to
+      @host_from   = mac? ? "localhost" : remote_host # forward locally on a Mac
       @port_from   = port_from || port_to # match ports if possible
       @bound       = false
-    end
-
-    def inspect
-      # Use this for general description
-      pt = mac? ? "local port #{port_from} to #{remote_host}:#{port_to}" : "remote port #{remote_host}:#{port_to}"
-      bound_msg = @bound ? "bound" : "not bound"
-      "#{service}: forwarding #{pt}; #{bound_msg}"
-    end
-
-    def message
-      # Use this for telling users when port forwarding was successful
-      pt = mac? ? "local port #{port_from} to " : ""
-      "#{service}: now forwarding #{pt}remote port #{remote_host}:#{port_to}"
     end
 
     def to_cmd_arg
@@ -104,7 +92,6 @@ module RHC::Commands
                 # for us to forward ports for.
                 if line =~ /\A\s*(\S+) -> #{IP_AND_PORT}/
                   debug fs = ForwardingSpec.new($1, $2, $3.to_i)
-                  info fs.inspect
                   forwarding_specs << fs
                 else
                   debug line
@@ -118,7 +105,7 @@ module RHC::Commands
 
           begin
             Net::SSH.start(ssh_uri.host, ssh_uri.user) do |ssh|
-              say "Forwarding ports, use ctl + c to stop"
+              say "Forwarding ports"
               forwarding_specs.each do |fs|
                 given_up = nil
                 while !fs.bound && !given_up
@@ -136,8 +123,12 @@ module RHC::Commands
                 end
               end
 
-              forwarding_specs.sort.each do |fs|
-                success fs.message if fs.bound
+              bound_ports = forwarding_specs.select { |fs| fs.bound }
+              if bound_ports.length > 0
+                items = bound_ports.map do |fs|
+                  [fs.service, "#{fs.host_from}:#{fs.port_from}", " => ", "#{fs.remote_host}:#{fs.port_to.to_s}"]
+                end
+                table(items, :header => ["Service", "Connect to", "    ", "Forward to"]).each { |s| success "  #{s}" }
               end
 
               # for failed port forwarding attempts
@@ -146,6 +137,8 @@ module RHC::Commands
                 ssh_cmd_arg = failed_port_forwards.map { |fs| fs.to_cmd_arg }.join(" ")
                 ssh_cmd = "ssh -N #{ssh_cmd_arg} #{ssh_uri.user}@#{ssh_uri.host}"
                 warn "Error forwarding some port(s). You can try to forward manually by running:\n#{ssh_cmd}"
+              else
+                say "Press CTRL-C to terminate port forwarding"
               end
 
               unless forwarding_specs.any? {|conn| conn.bound }

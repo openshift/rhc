@@ -67,7 +67,7 @@ describe RHC::Commands::PortForward do
         @rc.domains[0].applications.size.should == 1
         @rc.domains[0].applications[0].name.should == 'mockapp'
       end
-      it { run_output.should include("Forwarding ports, use ctl + c to stop") }
+      it { run_output.should match(/Forwarding ports.*Press CTRL-C/m) }
     end
 
     context 'when host is unreachable' do
