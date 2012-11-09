@@ -113,7 +113,7 @@ module RHC::Commands
               gears = gg.gears
               true if gears.any? { |g| g["state"] == "stopped" }
             }
-              warn "Application #{rest_app.name} is stopped. Please restart the application and try again"
+              warn "Application #{rest_app.name} is stopped. Please restart the application and try again."
               return 1
             else
               raise RHC::NoPortsToForwardException.new "There are no available ports to forward for this application. Your application may be stopped." 
