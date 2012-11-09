@@ -150,11 +150,12 @@ module RHC
     def new_request(options)
       # user specified timeout takes presidence
       options[:timeout] = $rest_timeout || options[:timeout]
+      options[:open_timeout] ||= 4
 
       RestClient::Request.new options
     end
 
-    def request(request)
+    def request(request, &block)
       begin
         response = request.execute
         #set cookie
@@ -162,25 +163,44 @@ module RHC
         if not rh_sso.nil?
           @@headers["cookie"] = "rh_sso=#{rh_sso}"
         end
-        return parse_response(response) unless response.nil? or response.code == 204
+        if block_given? 
+          yield response
+        else
+          parse_response(response) unless response.nil? or response.code == 204
+        end
       rescue RestClient::RequestTimeout => e
         raise TimeoutException.new("Connection to server timed out. It is possible the operation finished without being able to report success. Use 'rhc domain show' or 'rhc app status' to check the status of your applications.") 
       rescue RestClient::ServerBrokeConnection => e
         raise ConnectionException.new("Connection to server got interrupted: #{e.message}")
       rescue RestClient::ExceptionWithResponse => e
-        process_error_response(e.response)
+        process_error_response(e.response, request.url)
+      rescue SocketError => e
+        raise ConnectionException.new("Unable to connect to the server (#{e.message})."\
+                                      "#{RestClient.proxy.present? ? " Check that you have correctly specified your proxy server '#{RestClient.proxy}' as well as your OpenShift server '#{request.url}'." : " Check that you have correctly specified your OpenShift server '#{request.url}'."}")
       rescue => e
+        logger.debug e.backtrace.join("\n  ") if @debug
         raise ResourceAccessException.new("Failed to access resource: #{e.message}")
       end
     end
 
-    def process_error_response(response)
-      messages = Array.new
+    def generic_error(url)
+      ServerErrorException.new(
+        "The server did not respond correctly. This may be an issue "\
+        "with the server configuration or with your connection to the "\
+        "server (such as a Web proxy or firewall)."\
+        "#{RestClient.proxy.present? ? " Please verify that your proxy server is working correctly (#{RestClient.proxy}) and that you can access the OpenShift server #{url}" : "Please verify that you can access the OpenShift server #{url}"}",
+        129)
+    end
+
+    def process_error_response(response, url=nil)
+      messages = []
+      parse_error = nil
       begin
         result = RHC::Json.decode(response)
-        messages = result['messages']
+        messages = Array(result['messages'])
       rescue => e
-        logger.debug "Response did not include a message from server" if @mydebug
+        logger.debug "Response did not include a message from server: #{e.message}" if @debug
+        parse_error = generic_error(url)
       end
       case response.code
       when 401
@@ -191,12 +211,14 @@ module RHC
             raise RequestDeniedException, message['text']
           end
         end
+        raise RequestDeniedException.new("Forbidden")
       when 404
         messages.each do |message|
           if message['severity'].upcase == "ERROR"
             raise ResourceNotFoundException, message['text']
           end
         end
+        raise ResourceNotFoundException.new(url)
       when 409
         messages.each do |message|
           if message['severity'] and message['severity'].upcase == "ERROR"
@@ -213,7 +235,7 @@ module RHC
             e = ValidationException.new(message["text"], message["field"], message["code"])
           end
         end
-        raise e
+        raise e || parse_error || ValidationException.new('Not valid')
       when 400
         messages.each do |message|
           if message['severity'].upcase == "ERROR"
@@ -232,9 +254,11 @@ module RHC
             raise ServiceUnavailableException, message['text']
           end
         end
+        raise ServiceUnavailableException
       else
-        raise ResourceAccessException, "Server returned error code with no output: #{response.code}"
+        raise ServerErrorException, "Server returned an unexpected error code: #{response.code}"
       end
+      raise parse_error || generic_error(url)
     end
   end
 end
