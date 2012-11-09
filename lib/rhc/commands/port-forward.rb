@@ -6,8 +6,8 @@ module RHC::Commands
     include RHC::Helpers
     include Enumerable
     # class to represent how SSH port forwarding should be performed
-    attr_accessor :remote_host, :port_to, :port_from, :bound
-    attr_reader :service
+    attr_accessor :port_from, :bound
+    attr_reader :remote_host, :port_to, :service
 
     def initialize(service, remote_host, port_to, port_from = nil)
       @service     = service
