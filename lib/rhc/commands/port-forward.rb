@@ -32,7 +32,7 @@ module RHC::Commands
 
     def to_cmd_arg
       # string to be used in a direct SSH command
-      mac? ? " -L #{port_from}:#{remote_host}:#{port_to} " : " -L #{remote_host}:#{port_from}:#{remote_host}:#{port_to} "
+      mac? ? "-L #{port_from}:#{remote_host}:#{port_to}" : "-L #{remote_host}:#{port_from}:#{remote_host}:#{port_to}"
     end
 
     def to_fwd_args
@@ -131,15 +131,21 @@ module RHC::Commands
                     debug "trying local port #{fs.port_from}"
                     fs.port_from += 1
                   rescue Timeout::Error, Errno::EADDRNOTAVAIL, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed => e
-                    ssh_cmd = "ssh -N #{fs.to_cmd_arg} #{ssh_uri.user}@#{ssh_uri.host}"
-                    warn "Error forwarding #{fs}. You can try to forward manually by running:\n#{ssh_cmd}"
                     given_up = true
                   end
                 end
               end
 
               forwarding_specs.sort.each do |fs|
-                success fs.message
+                success fs.message if fs.bound
+              end
+
+              # for failed port forwarding attempts
+              failed_port_forwards = forwarding_specs.select { |fs| !fs.bound }
+              if failed_port_forwards.length > 0
+                ssh_cmd_arg = failed_port_forwards.map { |fs| fs.to_cmd_arg }.join(" ")
+                ssh_cmd = "ssh -N #{ssh_cmd_arg} #{ssh_uri.user}@#{ssh_uri.host}"
+                warn "Error forwarding some port(s). You can try to forward manually by running:\n#{ssh_cmd}"
               end
 
               unless forwarding_specs.any? {|conn| conn.bound }
@@ -156,10 +162,11 @@ module RHC::Commands
         end
 
       rescue Timeout::Error, Errno::EADDRNOTAVAIL, Errno::EADDRINUSE, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed => e
-        ssh_cmd = "ssh -N "
-        forwarding_specs.each {|fs| ssh_cmd << fs.to_cmd_arg } 
-        ssh_cmd << "#{ssh_uri.user}@#{ssh_uri.host}"
-        raise RHC::PortForwardFailedException.new("#{e.message if options.debug}\nError trying to forward ports. You can try to forward manually by running:\n" + ssh_cmd)
+        ssh_cmd = ["ssh","-N"]
+        unbound_fs = forwarding_specs.select { |fs| !fs.bound }
+        ssh_cmd += unbound_fs.map { |fs| fs.to_cmd_arg }
+        ssh_cmd += ["#{ssh_uri.user}@#{ssh_uri.host}"]
+        raise RHC::PortForwardFailedException.new("#{e.message + "\n" if options.debug}Error trying to forward ports. You can try to forward manually by running:\n" + ssh_cmd.join(" "))
       end
 
       return 0
