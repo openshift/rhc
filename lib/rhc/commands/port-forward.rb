@@ -100,8 +100,20 @@ module RHC::Commands
               end
             end
           end
-
-          raise RHC::NoPortsToForwardException.new "There are no available ports to forward for this application. Your application may be stopped." if forwarding_specs.length == 0
+          
+          if forwarding_specs.length == 0
+            # check if the gears have been stopped
+            ggs = rest_app.gear_groups
+            if ggs.any? { |gg|
+              gears = gg.gears
+              true if gears.any? { |g| g["state"] == "stopped" }
+            }
+              warn "Application #{rest_app.name} is stopped. Please restart the application and try again"
+              return 1
+            else
+              raise RHC::NoPortsToForwardException.new "There are no available ports to forward for this application. Your application may be stopped." 
+            end
+          end
 
           begin
             Net::SSH.start(ssh_uri.host, ssh_uri.user) do |ssh|

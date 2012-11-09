@@ -20,6 +20,20 @@ describe RHC::Commands::PortForward do
       @ssh = mock(Net::SSH)
     end
 
+    context 'when port forwarding for a down appl' do
+      before(:each) do
+        Net::SSH.should_receive(:start).with(@uri.host, @uri.user).and_yield(@ssh)
+        @ssh.should_receive(:exec!).with("rhc-list-ports").and_yield(nil, :stderr, '127.0.0.1:3306')
+        @gg = MockRestGearGroup.new
+        @app.should_receive(:gear_groups).and_return([@gg])
+        @gg.should_receive(:gears).and_return([{'state' => 'stopped', 'id' => 'fakegearid'}])
+      end
+      it "should error out and suggest restarting the application" do
+        expect { run }.should exit_with_code(1)
+      end
+      it { run_output.should match(/Application \S+ is stopped\..*restart/m) }
+    end
+
     context 'when port forwarding an app without ports to forward' do
       before(:each) do
         Net::SSH.should_receive(:start).with(@uri.host, @uri.user).and_yield(@ssh)
