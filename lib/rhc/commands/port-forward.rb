@@ -72,7 +72,7 @@ module RHC::Commands
       rest_app = rest_domain.find_application app
 
       ssh_uri = URI.parse(rest_app.ssh_url)
-      info "Using #{rest_app.ssh_url}..." if options.debug
+      say "Using #{rest_app.ssh_url}..." if options.debug
 
       forwarding_specs = []
 
