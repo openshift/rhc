@@ -113,6 +113,8 @@ module RHC
     end
 
     def deprecated(msg,short = false)
+      HighLine::use_color = false if windows? # handle deprecated commands that does not start through highline
+
       info = " For porting and testing purposes you may switch this %s to %s by setting the DISABLE_DEPRECATED environment variable to %d.  It is not recommended to do so in a production environment as this option may be removed in future releases."
 
       msg << info unless short
