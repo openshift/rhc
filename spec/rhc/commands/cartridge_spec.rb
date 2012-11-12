@@ -34,9 +34,7 @@ describe RHC::Commands::Cartridge do
       before(:each) do
         @rc = MockRestClient.new
       end
-      it {
-        succeed_with_message "mock_cart-1, mock_cart-2, unique_mock_cart-1"
-      }
+      it { succeed_with_message /mock_cart-1.*mock_cart-2.*unique_mock_cart-1/m }
     end
   end
 
@@ -47,9 +45,7 @@ describe RHC::Commands::Cartridge do
       before(:each) do
         @rc = MockRestClient.new
       end
-      it {
-        succeed_with_message "mock_cart-1, mock_cart-2, unique_mock_cart-1"
-      }
+      it { succeed_with_message /mock_cart-1.*mock_cart-2.*unique_mock_cart-1/m }
     end
   end
 

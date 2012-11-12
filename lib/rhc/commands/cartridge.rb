@@ -11,8 +11,24 @@ module RHC::Commands
     summary "List supported embedded cartridges"
     alias_action :"app cartridge list", :root_command => true, :deprecated => true
     def list
-      carts = rest_client.find_cartridges(:type => 'embedded').collect { |c| c.name }
-      results { say "#{carts.join(', ')}" }
+      list = rest_client.cartridges.
+        map{ |c| [c.name, c.display_name || '', c.type == 'standalone' ? 'Y' : ''] }.
+        sort do |a,b|
+          if a[2] == 'Y' && b[2] == ''
+            -1
+          elsif a[2] == '' && b[2] == 'Y'
+            1
+          else
+            a[1].downcase <=> b[1].downcase
+          end
+        end
+      list.unshift ['==========', '=========', '=============']
+      list.unshift ['Short Name', 'Full name', 'New apps only']
+
+      paragraph{ say "Use the short name of a cartridge when interacting with your applications." }
+
+      say table(list).join("\n")
+
       0
     end
 

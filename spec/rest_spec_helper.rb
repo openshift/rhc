@@ -157,11 +157,11 @@ module RestSpecHelper
     end
 
     def cartridges
-      [MockRestCartridge.new("mock_standalone_cart-1", "standalone"),
+      [MockRestCartridge.new("mock_cart-1", "embedded"), # code should sort this to be after standalone
+       MockRestCartridge.new("mock_standalone_cart-1", "standalone"),
        MockRestCartridge.new("mock_standalone_cart-2", "standalone"),
        MockRestCartridge.new("mock_unique_standalone_cart-1", "standalone"),
        MockRestCartridge.new("jenkins-1.4", "standalone"),
-       MockRestCartridge.new("mock_cart-1", "embedded"),
        MockRestCartridge.new("mock_cart-2", "embedded"),
        MockRestCartridge.new("unique_mock_cart-1", "embedded"),
        MockRestCartridge.new("jenkins-client-1.4", "embedded")]
@@ -324,7 +324,7 @@ module RestSpecHelper
   end
 
   class MockRestCartridge < RHC::Rest::Cartridge
-    attr_accessor :scales_to, :scales_from, :current_scale, :scales_with
+    attr_accessor :scales_to, :scales_from, :current_scale, :scales_with, :display_name
     def initialize(name, type, app=nil, properties={:cart_data => {:connection_url => {'name' => 'connection_url', 'value' => "http://fake.url" }}})
       @name = name
       @type = type

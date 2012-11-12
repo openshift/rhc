@@ -7,6 +7,7 @@ module RHCHelper
   #
   class Cartridge
     extend Runnable
+    extend Commandify
     extend Persistable
     include Loggable
     include Runnable
@@ -19,16 +20,22 @@ module RHCHelper
     # Create the data structure for a test cartridge
     def initialize(app, name)
       @name = name
-      @app_name = app.name
+      @app_name = app.name unless app.nil?
       @hostname = "#{@app_name}-#{$namespace}.#{$domain}"
       @file = "#{TEMP_DIR}/#{$namespace}.json"
     end
 
     def rhc_cartridge(cmd)
-      full_cmd = "rhc cartridge #{cmd} -l #{$username} -p #{$password} -a #{@app_name}"
+      full_cmd = "rhc cartridge #{cmd} -l #{$username} -p #{$password} #{@app_name ? "-a #{@app_name}" : ""}"
       full_cmd += " #{@name}" if cmd != "list"
       run(full_cmd, nil) do |exitstatus, out, err, arg|
         yield exitstatus, out, err, arg if block_given?
+      end
+    end
+
+    def self.list
+      rhc_cartridge_list do |exitstatus, out, err, arg|
+        return [exitstatus, out, err, arg]
       end
     end
 
