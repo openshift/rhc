@@ -47,6 +47,10 @@ When /^the (\w+) scaling value is set to (.*)$/ do |minmax,value|
   @exitcode = @app.cartridge(@cartridge_name).send(:scale,"--#{minmax} #{value}")
 end
 
+When /^we list cartridges$/ do
+  @exitcode, @cartridge_output = Cartridge.list
+end
+
 Then /^the (\w+) scaling value should be (.*)$/ do |minmax,value|
   expected = {
     :min => "Minimum",
@@ -63,4 +67,10 @@ end
 
 Then /^it should fail with code (\d+)$/ do |code|
   @exitcode.should == code.to_i
+end
+
+Then /^the list should contain the cartridge ([^\s]+) with display name "([^"]+)"$/ do |name, display_name|
+  line = @cartridge_output.each_line.find{ |s| s.include?(name) }
+  line.should_not be_nil
+  line.should match(display_name)
 end

@@ -11,7 +11,7 @@ module RHCHelper
         cmd = get_cmd(sym)
 
         # Get any blocks that should be run after processing
-        cmd_callback = get_cmd_callback(cmd, args[0])
+        cmd_callback = get_cmd_callback(cmd, args[0]) || block
 
         # Add arguments to the command
         cmd << get_args(cmd, args[0])
@@ -85,8 +85,7 @@ module RHCHelper
           raise "No alias set" unless @alias
           args << "--alias #{@alias} "
         when /cartridge/
-          raise "No cartridge supplied" unless arg0
-          args << "-c #{arg0}"
+          args << "-c #{arg0}" if arg0
         when /sshkey/
           # in RHCHelper::Sshkey, we pass *args to method_missing here, so that
           # we _know_ that arg0 is an Array.

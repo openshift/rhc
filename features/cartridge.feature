@@ -22,3 +22,13 @@ Feature: Single Cartridge Tests
       | running | restarted | running |
       | running | stopped   | stopped |
       | stopped | started   | running |
+
+  Scenario Outline: Cartridge List
+    When we list cartridges
+    Then the list should contain the cartridge <cart> with display name "<name>"
+
+    Examples:
+      | cart        | name          |
+      | php-5.3     | PHP 5.3       |
+      | mongodb-2.2 | MongoDB NoSQL |
+      | cron-1.4    | Cron 1.4      |
