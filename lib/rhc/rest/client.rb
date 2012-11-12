@@ -14,7 +14,7 @@ module RHC
       # The list may not necessarily be sorted; we will select the last
       # matching one supported by the server.
       # See #api_version_negotiated
-      CLIENT_API_VERSIONS = [1.0, 1.1, 1.2]
+      CLIENT_API_VERSIONS = [1.0, 1.1, 1.2, 1.3]
       
       def initialize(end_point, username, password, use_debug=false, preferred_api_versions = CLIENT_API_VERSIONS)
         @debug = use_debug
