@@ -69,7 +69,7 @@ fi
 LC_ALL=en_US.UTF-8
 
 # Package the gem
-rake --trace package
+rake --trace -- package
 
 mkdir -p .%{gemdir}
 # Ignore dependencies here because these will be handled by rpm 
