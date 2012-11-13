@@ -25,7 +25,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency      'highline',     '>= 1.5.1'
   s.add_runtime_dependency      'rest-client',  '>= 1.6'
   s.add_runtime_dependency      'open4'
-  s.add_development_dependency  'rake'
+  s.add_development_dependency  'rake',         '>= 0.8.7', '<= 0.9.2.2'
   s.add_development_dependency  'webmock',      '>= 1.6'
   s.add_development_dependency  'rspec',        '~> 1.3'
   s.add_development_dependency  'fakefs',       '>= 0.4'
