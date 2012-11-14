@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.1.6
+Version: 1.1.7
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -115,6 +115,15 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Nov 14 2012 Adam Miller <admiller@redhat.com> 1.1.7-1
+- Merge pull request #216 from BanzaiMan/dev/hasari/bz870891
+  (openshift+bot@redhat.com)
+- With Ruby19 as the default, the UTF-8 characters in the client.spec cause an
+  issue with building and loading cucumber. (ccoleman@redhat.com)
+- Fix Bug 870891 - User should not be prompted for authentication when running
+  'rhc cartridge list' (asari.ruby@gmail.com)
+- Fixes BZ876126 (ffranz@redhat.com)
+
 * Wed Nov 14 2012 Adam Miller <admiller@redhat.com> 1.1.6-1
 - Merge pull request #214 from abhgupta/agupta-dev (openshift+bot@redhat.com)
 - Merge pull request #213 from fabianofranz/master (openshift+bot@redhat.com)
