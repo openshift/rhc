@@ -174,6 +174,8 @@ module RHC
           date(value)
         when :scales_from,:scales_to
           (value == -1 ? "available gears" : value)
+        when :aliases
+          value.join ' '
         else
           value
         end
