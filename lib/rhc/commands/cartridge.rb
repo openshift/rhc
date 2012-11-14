@@ -11,6 +11,7 @@ module RHC::Commands
     summary "List supported embedded cartridges"
     alias_action :"app cartridge list", :root_command => true, :deprecated => true
     def list
+      rest_client = RHC::Rest::Client.new(openshift_rest_node, nil, nil)
       list = rest_client.cartridges.
         map{ |c| [c.name, c.display_name || '', c.type == 'standalone' ? 'Y' : ''] }.
         sort do |a,b|
