@@ -1,7 +1,7 @@
 .\" Process this file with
 .\" groff -man -Tascii rhc-port-forward.1
 .\" 
-.TH "RHC_PORT_FORWARD" "1" "DECEMBER 2011" "Linux" "User Manuals"
+.TH "RHC_PORT_FORWARD" "1" "NOVEMBER 2012" "Linux" "User Manuals"
 .SH "NAME"
 rhc port\-forward \- Securely forward ports from your application's remote running services to your local host
 .SH "SYNOPSIS"
@@ -16,7 +16,7 @@ rhc port\-forward \- Securely forward ports from your application's remote runni
 .B ]
 .B [\-\-timeout
 .I #
-.B ] \-a
+.B ]
 .I application_name
 .SH "DESCRIPTION"
 .B rhc port\-forward
@@ -34,7 +34,7 @@ where your application is running available on your local machine so it can be u
 just as if it was your machine's port. This port is then available to other programs
 on your local host, outside the SSH session.
 
-For example, let's say your application makes use of the 
+For example, suppose that your application has the 
 MySQL cartridge, which usually runs on port 3306. With 
 .I rhc port\-forward 
 you could connect to your application's database from a tool 
@@ -44,8 +44,33 @@ to a host like
 .I 127.0.250.1:3306 
 for example).
 
-Note that the service will be forwarded locally on the same port number it
-is running on the remove server.
+The
+.I rhc port\-forward
+output contains 3 columns. For example:
+
+.nf
+Forwarding ports
+  Service  Connect to              Forward to
+  ======== ================== ==== ==================
+  java     127.0.250.129:3528  =>  127.0.250.129:3528
+  java     127.0.250.129:4447  =>  127.0.250.129:4447
+  java     127.0.250.129:5445  =>  127.0.250.129:5445
+  java     127.0.250.129:5455  =>  127.0.250.129:5455
+  java     127.0.250.129:8080  =>  127.0.250.129:8080
+  java     127.0.250.129:9990  =>  127.0.250.129:9990
+  java     127.0.250.129:9999  =>  127.0.250.129:9999
+  postgres 127.0.250.129:5432  =>  127.0.250.129:5432
+.fi
+
+To connect to the service listening on the port on the host listed in the last column,
+open a TCP connection to the host and port listed in the middle column.
+
+.SH "CONSIDERATIONS FOR SCALED APPLICATIONS"
+There is a known limitation for scaled applications where
+.I rhc port\-forward
+is unable to forward some ports.
+
+See https://bugzilla.redhat.com/show_bug.cgi?id=876247
 .SH "OPTIONS"
 .IP "\-l|\-\-rhlogin login"
 Red Hat login (RHN or OpenShift login with OpenShift access)
@@ -89,7 +114,7 @@ Please contact the Red Hat OpenShift team.
 Forums: https://openshift.redhat.com/community/forums/openshift
 IRC: #openshift on irc.freenode.net
 .SH "AUTHOR"
-Fabiano Franz <ffranz@redhat.com>
+Fabiano Franz <ffranz@redhat.com>, Hiro Asari <hasari@redhat.com>
 .SH "SEE ALSO"
 .BR rhc\-chk (1),
 .BR rhc\-create\-app(1),
