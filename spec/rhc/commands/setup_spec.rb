@@ -32,6 +32,19 @@ describe RHC::Commands::Setup do
     end
   end
 
+  context 'when -d is passed' do
+    let(:arguments) { ['setup', '-d', '-l', 'test@test.foo'] }
+    # 'y' for the password prompt
+    let(:input) { ['', 'y', '', ''] }
+
+    before(:each){ @rc = MockRestClient.new }
+
+    it("succeeds"){ FakeFS{ expect { run input }.should exit_with_code 0 } }
+    it("the output includes debug output") do
+      FakeFS{ run_output( input ).should match 'DEBUG' }
+    end
+  end
+
   context 'when -l is used to specify the user name' do
     let(:arguments) { ['setup', '-l', 'test@test.foo'] }
     # 'y' for the password prompt
