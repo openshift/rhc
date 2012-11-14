@@ -34,8 +34,6 @@ Provides OpenShift client libraries.
 
 %prep
 %setup -q
-pwd
-rake --trace version["%{version}"]
 
 %build
 for f in bin/rhc*
@@ -68,20 +66,22 @@ then
   cp "conf/express.conf" $RPM_BUILD_ROOT/etc/openshift/
 fi
 
+LC_ALL=en_US.UTF-8
+
 # Package the gem
 rake --trace package
 
 mkdir -p .%{gemdir}
 # Ignore dependencies here because these will be handled by rpm 
 gem install --install-dir $RPM_BUILD_ROOT/%{gemdir} --bindir $RPM_BUILD_ROOT/%{_bindir} --local -V --force --rdoc --ignore-dependencies \
-     pkg/rhc-%{gemversion}.gem
+     pkg/rhc-%{version}.gem
 
 # Copy the bash autocompletion script
 mkdir -p "$RPM_BUILD_ROOT/etc/bash_completion.d/"
 cp autocomplete/rhc $RPM_BUILD_ROOT/etc/bash_completion.d/rhc
 
-cp LICENSE $RPM_BUILD_ROOT/%{gemdir}/gems/rhc-%{gemversion}/LICENSE
-cp COPYRIGHT $RPM_BUILD_ROOT/%{gemdir}/gems/rhc-%{gemversion}/COPYRIGHT
+cp LICENSE $RPM_BUILD_ROOT/%{gemdir}/gems/rhc-%{version}/LICENSE
+cp COPYRIGHT $RPM_BUILD_ROOT/%{gemdir}/gems/rhc-%{version}/COPYRIGHT
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -107,10 +107,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/rhc-port-forward
 %{_mandir}/man1/rhc*
 %{_mandir}/man5/express*
-%{gemdir}/gems/rhc-%{gemversion}/
-%{gemdir}/cache/rhc-%{gemversion}.gem
-%{gemdir}/doc/rhc-%{gemversion}
-%{gemdir}/specifications/rhc-%{gemversion}.gemspec
+%{gemdir}/gems/rhc-%{version}/
+%{gemdir}/cache/rhc-%{version}.gem
+%{gemdir}/doc/rhc-%{version}
+%{gemdir}/specifications/rhc-%{version}.gemspec
 %config(noreplace) %{_sysconfdir}/openshift/express.conf
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
