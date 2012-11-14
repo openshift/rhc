@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.1.5
+Version: 1.1.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -115,6 +115,12 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Nov 14 2012 Adam Miller <admiller@redhat.com> 1.1.6-1
+- Merge pull request #214 from abhgupta/agupta-dev (openshift+bot@redhat.com)
+- Merge pull request #213 from fabianofranz/master (openshift+bot@redhat.com)
+- specifying rake gem version range (abhgupta@redhat.com)
+- Fixes BZ875373 (ffranz@redhat.com)
+
 * Tue Nov 13 2012 Adam Miller <admiller@redhat.com> 1.1.5-1
 - Add a Cucumber test to cover cartridge list (ccoleman@redhat.com)
 - Bug 875878 - Show a more complete cartridge list (ccoleman@redhat.com)
