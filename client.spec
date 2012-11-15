@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.1.7
+Version: 1.1.8
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -115,6 +115,21 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Nov 15 2012 Adam Miller <admiller@redhat.com> 1.1.8-1
+- Address BZ868451: Display what we think are superfluous arguments. Detecting
+  what the user meant as an action may be too difficult. (asari.ruby@gmail.com)
+- Merge pull request #220 from fotioslindiakos/BZ840938
+  (openshift+bot@redhat.com)
+- Merge pull request #217 from BanzaiMan/dev/hasari/bz874027
+  (openshift+bot@redhat.com)
+- Merge pull request #219 from BanzaiMan/dev/hasari/bz861030
+  (dmcphers@redhat.com)
+- Fixing DNS resolution for hostexist? (fotios@redhat.com)
+- Long overdue spec (asari.ruby@gmail.com)
+- Fix BZ861030 for good. #debug is actually looked up via #method_missing, so
+  #respond_to? returns nil (asari.ruby@gmail.com)
+- We should not support API version 1.0 going forward. (asari.ruby@gmail.com)
+
 * Wed Nov 14 2012 Adam Miller <admiller@redhat.com> 1.1.7-1
 - Merge pull request #216 from BanzaiMan/dev/hasari/bz870891
   (openshift+bot@redhat.com)
