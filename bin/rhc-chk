@@ -526,8 +526,13 @@ class CheckRunner < Test::Unit::UI::Console::TestRunner
   end
 end
 
-Test::Unit::AutoRunner::RUNNERS[:console] = proc do |r|
-  CheckRunner
+# Need to register the default runner differently using the standard test-unit and the gem
+proc{|*r| CheckRunner}.tap do |_proc|
+  if Test::Unit::AutoRunner.respond_to?(:register_runner)
+    Test::Unit::AutoRunner.register_runner(:console, _proc)
+  else
+    Test::Unit::AutoRunner::RUNNERS[:console] = _proc
+  end
 end
 
 ############################
