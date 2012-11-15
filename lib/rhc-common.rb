@@ -471,7 +471,8 @@ end
   # Check if host exists
   #
   def self.hostexist?(host)
-      dns = Resolv::DNS.new
+      # Patch for BZ840938 to support Ruby 1.8 on machines without /etc/resolv.conf
+      dns = Resolv::DNS.new((Resolv::DNS::Config.default_config_hash || {}))
       resp = dns.getresources(host, Resolv::DNS::Resource::IN::A)
       return resp.any?
   end
