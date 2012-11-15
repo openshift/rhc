@@ -59,7 +59,7 @@ class RHC::Commands::Base
       end
     end
 
-    raise ArgumentError.new("Too many arguments passed in.") unless fill_args.empty?
+    raise ArgumentError.new("Too many arguments passed in: #{fill_args.reverse.join(" ")}") unless fill_args.empty?
 
     arg_slots
   end
