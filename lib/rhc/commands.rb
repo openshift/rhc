@@ -66,7 +66,13 @@ module RHC
               options.help or
               config.has_local_config? or
               config.has_opts_config?)
-        RHC::Wizard.new(config).run
+
+        RHC::Helpers.warn(
+          [
+          "It looks like you have not run 'rhc setup' yet.",
+          "The setup command will help you get started and ensure your system is properly configured for OpenShift"
+          ].join("\n"),
+            :stderr => true)
       end
     end
 
