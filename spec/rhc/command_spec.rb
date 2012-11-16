@@ -55,7 +55,9 @@ describe RHC::Commands::Base do
           end
 
           expects_running('test').should call(:run).on(instance).with(no_args)
-          wizard_run.should be_true
+          wizard_run.should be_false
+
+          stderr.should match("It looks like you have not run 'rhc setup' yet")
         end
       end
     end
@@ -151,10 +153,7 @@ describe RHC::Commands::Base do
       context 'and when deprecated alias is called' do
         it do
           expects_running('static', 'exe', "arg").should call(:execute).on(instance).with('arg')
-          $stderr.seek(0)
-          # some systems might redirect warnings to stderr
-          output = "#{$stderr.read} #{$terminal.read}"
-          output.should match("Warning: This command is deprecated. Please use 'rhc static execute' instead.")
+          stderr.should match("Warning: This command is deprecated. Please use 'rhc static execute' instead.")
         end
       end
 
