@@ -11,24 +11,23 @@ module RHC::Commands
     default_action :help
 
     summary "Create an application and adds it to a domain"
-    syntax "<name> <cartridge> [... <other cartridges>][--namespace namespace]"
-    option ["-n", "--namespace namespace"], "Namespace to add your application to", :context => :namespace_context, :required => true
-    option ["-g", "--gear-size size"], "The  size  of the gear for this app. Available gear sizes depend on the type of account you have."
-    option ["-s", "--scaling"], "Enable scaling for this application"
-    option ["-r", "--repo dir"], "Git Repo path (defaults to ./$app_name) (applicable to the  create command)"
-    option ["--[no-]git"], "Only  create  remote space, don't pull it locally"
-    option ["--nogit"], "DEPRECATED! Only  create  remote space, don't pull it locally", :deprecated => {:key => :git, :value => false}
-    option ["--[no-]dns"], "Skip DNS check. Must be used in combination with --no-git"
-    option ["--enable-jenkins [server_name]"], "Indicates to create a Jenkins application (if not already available)  and  embed the Jenkins client into this application. The default name will be 'jenkins' if not specified. Note that --no-dns is ignored for the creation of the Jenkins application."
-    argument :name, "The name you wish to give your application", ["-a", "--app name"]
-    argument :cartridge, "The first cartridge added to the application. Usually a web framework", ["-t", "--type cartridge"]
-    argument :additional_cartridges, "A list of other cartridges such as databases you wish to add. Cartridges can also be added later using 'rhc cartridge add'", [], :arg_type => :list
-    def create(name, cartridge, additional_cartridges)
+    syntax "<name> <cartridge> [-n namespace]"
+    option ["-n", "--namespace namespace"], "Namespace for the application", :context => :namespace_context, :required => true
+    option ["-g", "--gear-size size"], "Gear size controls how much memory and CPU your cartridges can use."
+    option ["-s", "--scaling"], "Enable scaling for the web cartridge."
+    option ["-r", "--repo dir"], "Path to the Git repository (defaults to ./$app_name)"
+    option ["--[no-]git"], "Skip creating the local Git repository."
+    option ["--nogit"], "DEPRECATED: Skip creating the local Git repository.", :deprecated => {:key => :git, :value => false}
+    option ["--[no-]dns"], "Skip waiting for the application DNS name to resolve. Must be used in combination with --no-git"
+    option ["--enable-jenkins [server_name]"], "Enable Jenkins builds for this application (will create a Jenkins application if not already available). The default name will be 'jenkins' if not specified."
+    argument :name, "Name for your application", ["-a", "--app name"]
+    argument :cartridge, "The web framework this application should use", ["-t", "--type cartridge"]
+    #argument :additional_cartridges, "A list of other cartridges such as databases you wish to add. Cartridges can also be added later using 'rhc cartridge add'", [], :arg_type => :list
+    def create(name, cartridge)
       options.default \
         :dns => true,
         :git => true
 
-      warnings = []
       header "Creating application '#{name}'"
       paragraph do
         table({"Namespace:" => options.namespace,
