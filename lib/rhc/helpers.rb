@@ -4,6 +4,8 @@ require 'rhc/config'
 require 'rhc/commands'
 require 'rhc/output_helpers'
 
+require 'resolv'
+
 OptionParser.accept(URI) {|s,| URI.parse(s) if s}
 
 module RHC
@@ -308,5 +310,13 @@ Fingerprint: <%= key.fingerprint %>
       FORMAT
     end
 
+    #
+    # Check if host exists
+    #
+    def host_exists?(host)
+      # Patch for BZ840938 to support Ruby 1.8 on machines without /etc/resolv.conf
+      dns = Resolv::DNS.new((Resolv::DNS::Config.default_config_hash || {}))
+      dns.getresources(host, Resolv::DNS::Resource::IN::A).any?
+    end
   end
 end
