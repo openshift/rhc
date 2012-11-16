@@ -306,7 +306,7 @@ module RHC::Commands
 
         # Now start checking for DNS
         for i in 0..MAX_RETRIES-1
-          found = host_exist?(host)
+          found = host_exists?(host)
           break if found
 
           say "    retry # #{i+1} - Waiting for DNS: #{host}"
@@ -317,13 +317,6 @@ module RHC::Commands
         debug "End checking for application dns @ '#{host} - found=#{found}'"
 
         found
-      end
-
-      def host_exist?(host)
-        # :nocov:
-        dns = Resolv::DNS.new
-        dns.getresources(host, Resolv::DNS::Resource::IN::A).any?
-        # :nocov:
       end
 
       def check_sshkeys!

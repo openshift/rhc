@@ -471,10 +471,7 @@ end
   # Check if host exists
   #
   def self.hostexist?(host)
-      # Patch for BZ840938 to support Ruby 1.8 on machines without /etc/resolv.conf
-      dns = Resolv::DNS.new((Resolv::DNS::Config.default_config_hash || {}))
-      resp = dns.getresources(host, Resolv::DNS::Resource::IN::A)
-      return resp.any?
+    RHC::Helpers.host_exists?(host)
   end
   
   def self.create_app(libra_server, net_http, user_info, app_name, app_type, rhlogin, password, repo_dir=nil, no_dns=false, no_git=false, is_embedded_jenkins=false, gear_size='small',scale=false)
