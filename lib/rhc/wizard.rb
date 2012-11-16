@@ -324,7 +324,7 @@ public and private keys id_rsa keys.
         section(:bottom => 1) { say "none found" }
         paragraph do
           say "Run 'rhc app create' to create your first application.\n\n"
-          say "Below is a list of the types of application you can create: \n"
+          say "Below is a list of the types of application you can create:"
 
           application_types = @rest_client.find_cartridges :type => "standalone"
           application_types.sort {|a,b| a.name <=> b.name }.each do |cart|
