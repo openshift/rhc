@@ -449,8 +449,8 @@ EOF
       end
 
       paragraph do
-        say "We'll help get you setup with just a couple of questions. " \
-            "You can skip this in the future by copying your config's around:"
+        say "We will help you get set up with just a couple of questions. " \
+            "You can skip this in the future by copying your configuration files around:"
       end
 
       paragraph do
