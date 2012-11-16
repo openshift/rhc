@@ -314,9 +314,11 @@ Fingerprint: <%= key.fingerprint %>
     # Check if host exists
     #
     def host_exists?(host)
+      # :nocov:
       # Patch for BZ840938 to support Ruby 1.8 on machines without /etc/resolv.conf
       dns = Resolv::DNS.new((Resolv::DNS::Config.default_config_hash || {}))
       dns.getresources(host, Resolv::DNS::Resource::IN::A).any?
+      # :nocov:
     end
   end
 end
