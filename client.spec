@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.1.8
+Version: 1.1.9
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -115,6 +115,18 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Nov 16 2012 Adam Miller <admiller@redhat.com> 1.1.9-1
+- Merge pull request #226 from fotioslindiakos/BZ840938 (dmcphers@redhat.com)
+- Fixed spec test for dns lookup (fotios@redhat.com)
+- Moved host_exists to helpers and made deprecated rhc-common use it
+  (fotios@redhat.com)
+- Bug 876715 - Remove the additional_cartridges help which is wrong
+  (ccoleman@redhat.com)
+- Merge pull request #222 from fotioslindiakos/BZ874848
+  (openshift+bot@redhat.com)
+- Change the way the custom test runner is loaded for rhc-chk
+  (fotios@redhat.com)
+
 * Thu Nov 15 2012 Adam Miller <admiller@redhat.com> 1.1.8-1
 - Address BZ868451: Display what we think are superfluous arguments. Detecting
   what the user meant as an action may be too difficult. (asari.ruby@gmail.com)
