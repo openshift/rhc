@@ -97,7 +97,7 @@ class RHC::Commands::Base
       @rest_client ||= begin
         username = config.username
         unless username
-          username = ask "To connect to #{openshift_server} enter your OpenShift login (email or Red Hat login id): "
+          username = ask "Login to #{openshift_server}: "
           config.config_user(username)
         end
         config.password = config.password || RHC::get_password

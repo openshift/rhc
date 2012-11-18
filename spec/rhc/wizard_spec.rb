@@ -26,9 +26,8 @@ describe RHC::Wizard do
     it "should print out first run greeting" do
       @wizard.run_next_stage
       greeting = $terminal.read
-      greeting.count("\n").should >= 7
-      greeting.should match(Regexp.escape("It looks like you have not configured or used OpenShift client tools on this computer."))
-      greeting.should match(Regexp.escape("\n#{@wizard.config_path}\n"))
+      greeting.count("\n").should >= 3
+      greeting.should match(/OpenShift Client Tools \(RHC\) Setup Wizard/)
     end
 
     it "should ask for login and hide password input" do
@@ -41,8 +40,8 @@ describe RHC::Wizard do
       @wizard.run_next_stage
 
       output = $terminal.read
-      output.should match("OpenShift login")
-      output.should =~ /(#{Regexp.escape("Password: ********\n")})$/
+      output.should match("Login to ")
+      output.should match(/Password: [\*]{8}$/)
     end
 
     it "should write out a config" do
@@ -111,9 +110,7 @@ describe RHC::Wizard do
     it "should print out repeat run greeting" do
       @wizard.run_next_stage
       greeting = $terminal.read
-      greeting.count("\n").should == 7
-      greeting.should match(Regexp.escape("Starting Interactive Setup for OpenShift's command line interface"))
-      greeting.should match(Regexp.escape("#{@wizard.config_path}\n"))
+      greeting.should match(/OpenShift Client Tools \(RHC\) Setup Wizard/)
     end
 
     it "should ask for login and hide password input" do
@@ -124,8 +121,8 @@ describe RHC::Wizard do
       @wizard.run_next_stage
 
       output = $terminal.read
-      output.should match("OpenShift login")
-      output.should =~ /(#{Regexp.escape("Password: ********\n")})$/
+      output.should match("Login to ")
+      output.should match(/Password: [\*]{8}$/)
     end
 
     it "should write out a config" do
@@ -432,8 +429,8 @@ describe RHC::Wizard do
       @wizard.run_next_stage
 
       output = $terminal.read
-      output.should match("OpenShift login")
-      output.should =~ /(#{Regexp.escape("Password: ********\n")})$/
+      output.should match("Login to ")
+      output.should match(/Password: [\*]{8}$/)
     end
 
     it "should write out a config" do

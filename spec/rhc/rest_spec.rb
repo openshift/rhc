@@ -2,9 +2,14 @@ require 'spec_helper'
 require 'rest_spec_helper'
 require 'rhc/rest'
 
-# We have to make an object to test the RHC::Rest module
 class RHCRest
   include RHC::Rest
+  def debug?
+    false
+  end
+  def debug
+    raise "Unchecked debug"
+  end
 end
 
 module MockRestResponse
