@@ -1,6 +1,7 @@
 require 'spec_helper'
 require 'rhc/helpers'
 require 'rhc/ssh_key_helpers'
+require 'rhc/cartridge_helpers'
 require 'rhc/core_ext'
 require 'highline/import'
 require 'rhc/config'
@@ -292,5 +293,35 @@ describe HighLine do
     say "Antidisestablishmentarianism"
     output = $terminal.read
     output.should match "Ant\nidi\nses\ntab\nlis\nhme\nnta\nria\nnis\nm"
+  end
+end
+
+describe RHC::CartridgeHelpers do
+  before(:each) do
+    mock_terminal
+    @tests = HelperTests.new
+  end
+
+  subject do
+    Class.new(Object) do
+      include RHC::CartridgeHelpers
+
+      def config
+        @config ||= RHC::Config.new
+      end
+    end.new
+  end
+
+  describe '#find_cartridge' do
+    let(:cartridges){ [] }
+    let(:find_cartridges){ [] }
+    let(:rest_obj) do
+      Object.new.tap do |o|
+        o.stub(:find_cartridges).and_return(find_cartridges)
+        o.stub(:cartridges).and_return(cartridges)
+      end
+    end
+
+    it { expect{ subject.find_cartridge(rest_obj, 'foo') }.should raise_error(RHC::CartridgeNotFoundException, 'Invalid cartridge specified: \'foo\'. No cartridges have been added to this app.') }
   end
 end

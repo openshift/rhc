@@ -71,7 +71,7 @@ module RHC
 
       def cartridges
         debug "Getting all cartridges"
-        rest_method "LIST_CARTRIDGES"
+        rest_method("LIST_CARTRIDGES")
       end
 
       def user

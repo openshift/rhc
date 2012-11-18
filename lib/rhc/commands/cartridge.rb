@@ -1,5 +1,5 @@
 require 'rhc/commands/base'
-require 'rhc/cartridge_helper'
+require 'rhc/cartridge_helpers'
 
 module RHC::Commands
   class Cartridge < Base
@@ -193,14 +193,14 @@ module RHC::Commands
     end
 
     private
-    include RHC::CartridgeHelpers
+      include RHC::CartridgeHelpers
 
-    def cartridge_action(cartridge, action)
-      rest_domain = rest_client.find_domain(options.namespace)
-      rest_app = rest_domain.find_application(options.app)
-      rest_cartridge = find_cartridge rest_app, cartridge
-      result = rest_cartridge.send action
-      [result, rest_cartridge, rest_app, rest_domain]
-    end
+      def cartridge_action(cartridge, action)
+        rest_domain = rest_client.find_domain(options.namespace)
+        rest_app = rest_domain.find_application(options.app)
+        rest_cartridge = find_cartridge rest_app, cartridge
+        result = rest_cartridge.send action
+        [result, rest_cartridge, rest_app, rest_domain]
+      end
   end
 end

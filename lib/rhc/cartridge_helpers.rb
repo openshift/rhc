@@ -1,5 +1,6 @@
 module RHC
   module CartridgeHelpers
+
     def find_cartridge(rest_obj, cartridge_name, type="embedded")
       carts = rest_obj.find_cartridges :regex => cart_regex(cartridge_name), :type => type
 
