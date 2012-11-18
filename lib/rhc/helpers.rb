@@ -82,6 +82,10 @@ module RHC
     global_option '-p', '--password password', "OpenShift password"
     global_option '-d', '--debug', "Turn on debugging"
 
+    global_option('--timeout seconds', Integer, 'Set the timeout in seconds for network commands') do |value|
+      # FIXME: Refactor so we don't have to use a global var here
+      $rest_timeout = value
+    end
     global_option '--noprompt', "Suppress the interactive setup wizard from running before a command"
     global_option '--config FILE', "Path of a different config file"
     def config
@@ -133,6 +137,9 @@ module RHC
     end
     def success(msg, *args)
       say color(msg, :green)
+    end
+    def info(msg, *args)
+      say color(msg, :cyan)
     end
     def warn(msg, *args)
       say color(msg, :yellow)

@@ -42,28 +42,37 @@ describe RHC::Commands::App do
   end
 
   describe 'app create' do
-    let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart-1', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+    before(:each) do
+      @rc = MockRestClient.new
+      domain = @rc.add_domain("mockdomain")
+    end
 
-    context 'when run' do
-      before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mockdomain")
-      end
+    context 'when run without a cart' do
+      before{ FakeFS.deactivate! }
+      let(:arguments) { ['app', 'create', 'app1', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+      it { run_output.should match(/mock_standalone_cart-1.*Every application needs a web cartridge/m) }
+    end
+
+    context 'when run with a valid cart' do
+      let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart-1', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
       it { expect { run }.should exit_with_code(0) }
       it { run_output.should match("Success") }
     end
-  end
 
-  describe 'app create no cart found error' do
-    let(:arguments) { ['app', 'create', 'app1', 'nomatch_cart', '--trace', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
-
-    context 'when run' do
+    context 'when no cartridges are returned' do
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mockdomain")
+        domain = @rc.domains.first
         @rc.stub(:cartridges) { [] }
+        domain.stub(:add_application).and_raise(RHC::Rest::ValidationException.new('Each application needs a web cartridge', '', '109'))
       end
-      it { expect { run }.should raise_error(RHC::CartridgeNotFoundException) }
+      context 'without trace' do
+        let(:arguments) { ['app', 'create', 'app1', 'nomatch_cart', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+        it { run_output.should match(/Valid cartridge types:.*Each application needs a web cartridge/m) }
+      end
+      context 'with trace' do
+        let(:arguments) { ['app', 'create', 'app1', 'nomatch_cart', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password', '--trace'] }
+        it { expect { run }.should raise_error(RHC::Rest::ValidationException) }
+      end
     end
   end
 

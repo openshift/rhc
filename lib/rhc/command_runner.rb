@@ -35,10 +35,6 @@ module RHC
         return
       end
       global_option('-v', '--version', 'Display version information') { say version; return }
-      global_option('--timeout seconds', Integer, 'Set the timeout in seconds for network commands') do |value|
-        # FIXME: Refactor so we don't have to use a global var here
-        $rest_timeout = value
-      end
 
       # remove these because we monkey patch Commands to process all options
       # at once, avoiding conflicts between the global and command options
@@ -71,9 +67,9 @@ module RHC
           OptionParser::MissingArgument => e
 
           help_bindings = CommandHelpBindings.new(active_command, commands, Commander::Runner.instance.options)
-          usage = RHC::HelpFormatter.new(self).render_command(help_bindings)
+          usage = RHC::HelpFormatter.new(self).render_command_syntax(help_bindings)
           RHC::Helpers.error e.message
-          say "\n#{usage}"
+          say "#{usage}"
           1
         rescue RHC::Exception, RHC::Rest::Exception => e
           RHC::Helpers.error e.message
@@ -100,18 +96,16 @@ module RHC
         c.syntax = 'rhc help <command>'
         c.description = 'Display global or <command> help documentation.'
         c.when_called do |args, options|
+          cmd = (1..args.length).reverse_each.map{ |n| args[0,n].join(' ') }.find{ |cmd| command_exists?(cmd) }
+
           if args.empty?
             say help_formatter.render
+          elsif cmd.nil?
+            RHC::Helpers.error "The command '#{program :name} #{provided_arguments.join(' ')}' is not recognized.\n"
+            say "See '#{program :name} help' for a list of valid commands."
+            next
           else
-            command = command args.join(' ')
-            begin
-              require_valid_command command
-            rescue InvalidCommandError => e
-              RHC::Helpers.error "The command '#{program :name} #{provided_arguments.join(' ')}' is not recognized.\n"
-              say "See '#{program :name} help' for a list of valid commands."
-              next
-            end
-
+            command = command(cmd)
             help_bindings = CommandHelpBindings.new command, commands, Commander::Runner.instance.options
             say help_formatter.render_command help_bindings
           end
