@@ -21,6 +21,11 @@ describe RHC::Commands::Snapshot do
     File.delete filename if File.exist? filename
   end
 
+  describe 'snapshot without an action' do
+    let(:arguments) {['snapshot', '--trace', '--noprompt']}
+    it('should raise') { expect{ run }.should raise_error(ArgumentError, /Please specify an action to take/) }
+  end
+
   describe 'snapshot save' do
     let(:arguments) {['snapshot', 'save', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p', 'password', '--app', 'mockapp']}
 
