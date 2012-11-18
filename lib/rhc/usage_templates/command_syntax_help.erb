@@ -1,0 +1,11 @@
+Usage: rhc <%= @command.name %> <%= @command.syntax %>
+<% unless @command.options.blank? or @command.options.all?{ |o| o[:hide] } -%>
+Pass '--help' to see the full list of options
+<% end -%>
+<% unless @actions.nil? or @actions.empty? -%>
+
+List of Actions
+<% for action in @actions -%>
+  <%= "%-18s %s\n" % [action[:name], action[:summary]] -%>
+<% end -%>
+<% end -%>

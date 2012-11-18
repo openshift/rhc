@@ -1,7 +1,7 @@
 require 'rhc/commands/base'
 require 'resolv'
 require 'rhc/git_helper'
-require 'rhc/cartridge_helper'
+require 'rhc/cartridge_helpers'
 
 module RHC::Commands
   class App < Base
@@ -11,6 +11,7 @@ module RHC::Commands
     default_action :help
 
     summary "Create an application and adds it to a domain"
+    description "Create an application in your domain. You can see a list of all valid cartridge types by running 'rhc cartridge list'."
     syntax "<name> <cartridge> [-n namespace]"
     option ["-n", "--namespace namespace"], "Namespace for the application", :context => :namespace_context, :required => true
     option ["-g", "--gear-size size"], "Gear size controls how much memory and CPU your cartridges can use."
@@ -21,9 +22,11 @@ module RHC::Commands
     option ["--[no-]dns"], "Skip waiting for the application DNS name to resolve. Must be used in combination with --no-git"
     option ["--enable-jenkins [server_name]"], "Enable Jenkins builds for this application (will create a Jenkins application if not already available). The default name will be 'jenkins' if not specified."
     argument :name, "Name for your application", ["-a", "--app name"]
-    argument :cartridge, "The web framework this application should use", ["-t", "--type cartridge"]
+    argument :cartridges, "The web framework this application should use", ["-t", "--type cartridge"], :arg_type => :list
     #argument :additional_cartridges, "A list of other cartridges such as databases you wish to add. Cartridges can also be added later using 'rhc cartridge add'", [], :arg_type => :list
-    def create(name, cartridge)
+    def create(name, cartridges)
+      cartridge = check_cartridges(cartridges).first
+
       options.default \
         :dns => true,
         :git => true
@@ -268,6 +271,42 @@ module RHC::Commands
       include RHC::GitHelpers
       include RHC::CartridgeHelpers
 
+      def standalone_cartridges
+        @standalone_cartridges ||= rest_client.cartridges.select{ |c| c.type == 'standalone' }
+      end
+
+      def check_cartridges(cartridge_names)
+        cartridge_names = Array(cartridge_names).map{ |s| s.strip if s && s.length > 0 }.compact
+
+        unless cartridge_name = cartridge_names.first
+          section(:bottom => 1){ list_cartridges }
+          raise ArgumentError.new "Every application needs a web cartridge to handle incoming web requests. Please provide the short name of one of the carts listed above."
+        end
+
+        unless standalone_cartridges.find{ |c| c.name == cartridge_name }
+          matching_cartridges = standalone_cartridges.select{ |c| c.name.include?(cartridge_name) }
+          if matching_cartridges.length == 1
+            cartridge_names[0] = use_cart(matching_cartridges.first, cartridge_name)
+          elsif matching_cartridges.present?
+            paragraph { list_cartridges(matching_cartridges) }
+            raise RHC::MultipleCartridgesException.new("There are multiple web cartridges named '#{cartridge_name}'.  Please provide the short name of your desired cart.")
+          end
+        end
+        cartridge_names.first(1)
+      end
+
+      def use_cart(cart, for_cartridge_name)
+        info "Using #{cart.name}#{cart.display_name ? " (#{cart.display_name})" : ''} instead of '#{for_cartridge_name}'"
+        cart.name
+      end
+
+      def list_cartridges(cartridges=standalone_cartridges)
+        carts = cartridges.map{ |c| [c.name, c.display_name || ''] }.sort{ |a,b| a[1].downcase <=> b[1].downcase }
+        carts.unshift ['==========', '=========']
+        carts.unshift ['Short Name', 'Full name']
+        say table(carts).join("\n")
+      end
+
       def app_action(app, action, *args)
         rest_domain = rest_client.find_domain(options.namespace)
         rest_app = rest_domain.find_application(app)
@@ -281,16 +320,17 @@ module RHC::Commands
         app_options[:scale] = scale if scale
         app_options[:debug] = true if @debug
 
-        debug "Creating application '#{name}' with these options - #{app_options}.inspect"
-
-        rest_cartridge = find_cartridge rest_client, cartridge, "standalone"
-        app_options[:cartridge] = rest_cartridge.name
-
+        debug "Creating application '#{name}' with these options - #{app_options.inspect}"
         rest_app = rest_domain.add_application name, app_options
-
         debug "'#{rest_app.name}' created"
 
         rest_app
+      rescue RHC::Rest::Exception => e
+        if e.code == 109
+          paragraph{ say "Valid cartridge types:" }
+          paragraph{ list_cartridges }
+        end
+        raise
       end
 
       def dns_propagated?(host, sleep_time=2)
