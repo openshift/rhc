@@ -1,4 +1,4 @@
-Usage: rhc <%= @command.name %> <%= @command.syntax %>
+Usage: <%= Array(program :name).first %> <%= @command.name %> <%= @command.syntax %>
 
 <%= @command.description || @command.summary %>
 <% unless @actions.nil? or @actions.empty? -%>
