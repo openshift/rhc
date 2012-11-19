@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.1.9
+Version: 1.1.10
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -115,6 +115,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Nov 19 2012 Adam Miller <admiller@redhat.com> 1.1.10-1
+- Bug 876715 - Users don't know what cart types to add. (ccoleman@redhat.com)
+
 * Fri Nov 16 2012 Adam Miller <admiller@redhat.com> 1.1.9-1
 - Merge pull request #226 from fotioslindiakos/BZ840938 (dmcphers@redhat.com)
 - Fixed spec test for dns lookup (fotios@redhat.com)
