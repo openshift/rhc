@@ -66,7 +66,7 @@ module RHC
           OptionParser::InvalidArgument,
           OptionParser::MissingArgument => e
 
-          help_bindings = CommandHelpBindings.new(active_command, commands, Commander::Runner.instance.options)
+          help_bindings = CommandHelpBindings.new(active_command, commands, self)
           usage = RHC::HelpFormatter.new(self).render_command_syntax(help_bindings)
           RHC::Helpers.error e.message
           say "#{usage}"
@@ -106,7 +106,7 @@ module RHC
             next
           else
             command = command(cmd)
-            help_bindings = CommandHelpBindings.new command, commands, Commander::Runner.instance.options
+            help_bindings = CommandHelpBindings.new command, commands, self
             say help_formatter.render_command help_bindings
           end
         end
@@ -115,7 +115,7 @@ module RHC
   end
 
   class CommandHelpBindings
-    def initialize(command, instance_commands, global_options)
+    def initialize(command, instance_commands, runner)
       @command = command
       @actions = instance_commands.collect do |command_name, command_class|
         next if command_class.summary.nil?
@@ -124,7 +124,11 @@ module RHC
         m and command_name == command_class.name ? {:name => m[1], :summary => command_class.summary || ""} : nil
       end
       @actions.compact!
-      @global_options = global_options
+      @global_options = runner.options
+      @runner = runner
+    end
+    def program(*args)
+      @runner.program *args
     end
   end
 end

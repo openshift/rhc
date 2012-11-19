@@ -59,20 +59,10 @@ module RHC
     private
 
     def greeting_stage
-      paragraph do
-        say "Starting Interactive Setup for OpenShift's command line interface"
-      end
+      info "OpenShift Client Tools (RHC) Setup Wizard"
 
       paragraph do
-        say "It looks like you have not configured or used OpenShift " \
-            "client tools on this computer. " \
-            "We'll help you configure the client tools with a few quick questions. " \
-            "You can skip this in the future by copying your configuration files to other machines you use to manage your OpenShift account:"
-      end
-
-      paragraph do
-        say "#{@config_path}"
-        say "#{RHC::Config.home_dir}/.ssh/"
+        say "This wizard will help you upload your SSH keys, set your application namespace, and check that other programs like Git are properly installed."
       end
 
       true
@@ -83,9 +73,9 @@ module RHC
       section(:top => 1, :bottom => -1) do
         if @config.has_opts? && @config.opts_login
           @username = @config.opts_login
-          say "Using #{@username}, which was given on the command line"
+          say "Using #{@username}"
         else
-          @username = ask("To connect to #{@libra_server} enter your OpenShift login (email or Red Hat login id): ") do |q|
+          @username = ask("Login to #{@libra_server}: ") do |q|
             q.default = RHC::Config.default_rhlogin
           end
         end
@@ -441,24 +431,6 @@ EOF
   class RerunWizard < Wizard
     def initialize(config, login=nil)
       super(config, login)
-    end
-
-    def greeting_stage
-      paragraph do
-        say "Starting Interactive Setup for OpenShift's command line interface"
-      end
-
-      paragraph do
-        say "We will help you get set up with just a couple of questions. " \
-            "You can skip this in the future by copying your configuration files around:"
-      end
-
-      paragraph do
-        say "    #{@config_path}"
-        say "    #{RHC::Config.home_dir}/.ssh/"
-      end
-
-      true
     end
 
     def create_config_stage

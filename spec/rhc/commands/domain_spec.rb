@@ -9,14 +9,18 @@ describe RHC::Commands::Domain do
   end
 
   describe 'default action' do
-    let(:arguments) { ['domain', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
-
     context 'when run with no domains' do
+      let(:arguments) { ['domain', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
       before(:each) do
         @rc = MockRestClient.new
       end
       it { expect { run }.should exit_with_code(0) }
       it { run_output.should match(/No domain exists.  You can use/) }
+    end
+    context 'when help is shown' do
+      let(:arguments) { ['domain', '--noprompt', '--help'] }
+      it { expect { run }.should exit_with_code(0) }
+      it { run_output.should match(/The default action for this resource is 'show'/) }
     end
   end
 

@@ -1,13 +1,7 @@
-Usage: rhc <%= @command.name %> <%= @command.syntax %>
+Usage: <%= Array(program :name).first %> <%= @command.name %> <%= @command.syntax %>
 
 <%= @command.description || @command.summary %>
-<% unless @actions.nil? or @actions.empty? -%>
-
-List of Actions
-<% for action in @actions -%>
-  <%= "%-18s %s\n" % [action[:name], action[:summary]] -%>
-<% end -%>
-<% end -%>
+<% if @actions.blank? -%>
 <% unless @command.options.blank? or @command.options.all?{ |o| o[:hide] } -%>
 
 Options for <%= @command.name %>
@@ -20,8 +14,14 @@ Global Options
 <% for option in @global_options -%><% next if option[:hide] -%>
   <%= "%-25s %s\n" % [option[:switches].join(', '), option[:description]] -%>
 <% end -%>
-<%#-
-  Other Attrs we may wish to use:
+<% else -%>
 
-   * @examples - for description, command in @examples
--%>
+List of Actions
+<% for action in @actions -%>
+  <%= "%-18s %s\n" % [action[:name], action[:summary]] -%>
+<% end -%>
+<% if @command.default_action? -%>
+
+The default action for this resource is '<%= @command.default_action %>'
+<% end -%>
+<% end -%>

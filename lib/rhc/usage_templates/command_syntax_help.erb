@@ -1,4 +1,4 @@
-Usage: rhc <%= @command.name %> <%= @command.syntax %>
+Usage: <%= Array(program :name).first %> <%= @command.name %><%= " #{@command.syntax}" if @command.syntax %>
 <% unless @command.options.blank? or @command.options.all?{ |o| o[:hide] } -%>
 Pass '--help' to see the full list of options
 <% end -%>

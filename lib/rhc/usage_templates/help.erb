@@ -1,5 +1,5 @@
-Usage: <%= program :name %> (<resource> | --help) [<action>] [<args>]
-<%= program :description %>
+Usage: <%= Array(program :name).first %> <resource> [<action>] [--help] [<args>]
+<%= Array(program :description).first %>
 
 List of Commands and Resources
 <% for name, command in @commands.sort -%>
@@ -13,7 +13,7 @@ Global Options
 <% end -%>
 <%- end -%>
 
-See '<%= program :name %> help <resource>' for more specifics on each resource or command.
+See '<%= Array(program :name).first %> help <resource>' for more specifics on each resource or command.
 <% if program :help -%>
   <% for title, body in program(:help) %>
   <%= $terminal.color title.to_s.upcase, :bold %>:

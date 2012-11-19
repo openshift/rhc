@@ -18,9 +18,14 @@ module RHC
         @messages << msg
       end
 
+      protected
+        def debug?
+          @debug
+        end
+
       private
-        def debug(msg)
-          logger.debug(msg) if @debug
+        def debug(msg, obj=nil)
+          logger.debug("#{msg}#{obj ? " #{obj}" : ''}") if debug?
         end
 
         def rest_method(link_name, payload={}, timeout=nil)
@@ -28,7 +33,6 @@ module RHC
           method =  links[link_name]['method']
 
           request = new_request(:url => url, :method => method, :headers => @@headers, :payload => payload, :timeout => timeout)
-          debug "Request: #{request.inspect}"
           request(request)
         end
 
