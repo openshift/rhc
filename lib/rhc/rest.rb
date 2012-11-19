@@ -16,7 +16,7 @@ module RHC
       attr_reader :code
       def initialize(message=nil, code=nil)
         super(message)
-        @code = code
+        @code = (Integer(code) rescue code)
       end
     end
 
@@ -222,17 +222,16 @@ module RHC
       when 409
         messages.each do |message|
           if message['severity'] and message['severity'].upcase == "ERROR"
-            raise ValidationException, message['text']
+            raise ValidationException.new(message['text'], message['field'], message['exit_code'])
           end
         end
       when 422
-        #puts response
         e = nil
         messages.each do |message|
           if e and e.field == message["field"]
             e.message << " #{message["text"]}"
           else
-            e = ValidationException.new(message["text"], message["field"], message["code"])
+            e = ValidationException.new(message["text"], message["field"], message["exit_code"])
           end
         end
         raise e || parse_error || ValidationException.new('Not valid')
