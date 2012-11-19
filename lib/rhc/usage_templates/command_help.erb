@@ -8,7 +8,7 @@ List of Actions
   <%= "%-18s %s\n" % [action[:name], action[:summary]] -%>
 <% end -%>
 <% end -%>
-<% unless @command.options.nil? or @command.options.empty? or @command.options.all?{ |o| o[:hide] } -%>
+<% unless @command.options.blank? or @command.options.all?{ |o| o[:hide] } -%>
 
 Options for <%= @command.name %>
 <% for option in @command.options -%><% next if option[:hide] -%>
