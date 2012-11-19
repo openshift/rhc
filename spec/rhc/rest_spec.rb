@@ -278,7 +278,7 @@ module RHC
                                             :method  => 'get',
                                             :headers => {:accept => :json}
                                             )
-          lambda { subject.request(request) }.should raise_error(RHC::Rest::TimeoutException, "Connection to server timed out. It is possible the operation finished without being able to report success. Use 'rhc domain show' or 'rhc app status' to check the status of your applications.")
+          lambda { subject.request(request) }.should raise_error(RHC::Rest::TimeoutException, /Connection to server timed out. It is possible/)
         end
       end
 

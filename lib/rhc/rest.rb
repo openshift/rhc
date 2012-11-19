@@ -171,17 +171,24 @@ module RHC
           parse_response(response) unless response.nil? or response.code == 204
         end
       rescue RestClient::RequestTimeout => e
-        raise TimeoutException.new("Connection to server timed out. It is possible the operation finished without being able to report success. Use 'rhc domain show' or 'rhc app status' to check the status of your applications.") 
+        raise TimeoutException.new(
+          "Connection to server timed out. "\
+          "It is possible the operation finished without being able "\
+          "to report success. Use 'rhc domain show' or 'rhc app show' "\
+          "to see the status of your applications.")
       rescue RestClient::ServerBrokeConnection => e
-        raise ConnectionException.new("Connection to server got interrupted: #{e.message}")
+        raise ConnectionException.new(
+          "Connection to server got interrupted: #{e.message}")
       rescue RestClient::ExceptionWithResponse => e
         process_error_response(e.response, request.url)
       rescue SocketError => e
-        raise ConnectionException.new("Unable to connect to the server (#{e.message})."\
-                                      "#{RestClient.proxy.present? ? " Check that you have correctly specified your proxy server '#{RestClient.proxy}' as well as your OpenShift server '#{request.url}'." : " Check that you have correctly specified your OpenShift server '#{request.url}'."}")
+        raise ConnectionException.new(
+          "Unable to connect to the server (#{e.message})."\
+          "#{RestClient.proxy.present? ? " Check that you have correctly specified your proxy server '#{RestClient.proxy}' as well as your OpenShift server '#{request.url}'." : " Check that you have correctly specified your OpenShift server '#{request.url}'."}")
       rescue => e
         logger.debug e.backtrace.join("\n  ") if debug?
-        raise ResourceAccessException.new("Failed to access resource: #{e.message}")
+        raise ResourceAccessException.new(
+          "Failed to access resource: #{e.message}")
       end
     end
 
