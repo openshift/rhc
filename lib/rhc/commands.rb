@@ -5,6 +5,11 @@ require 'rhc/helpers'
 #  to avoid conflicts and side effects of similar short switches
 module Commander
   class Command
+    attr_accessor :default_action
+    def default_action?
+      default_action.present?
+    end
+
     def parse_options_and_call_procs *args
       return args if args.empty?
       opts = OptionParser.new
@@ -81,6 +86,7 @@ module RHC
           c.description = opts[:description]
           c.summary = opts[:summary]
           c.syntax = opts[:syntax]
+          c.default_action = opts[:default]
 
           (options_metadata = opts[:options] || []).each do |o|
             option_data = [o[:switches], o[:description]].flatten(1)

@@ -97,7 +97,7 @@ class RHC::Commands::Base
       @rest_client ||= begin
         username = config.username
         unless username
-          username = ask "To connect to #{openshift_server} enter your OpenShift login (email or Red Hat login id): "
+          username = ask "Login to #{openshift_server}: "
           config.config_user(username)
         end
         config.password = config.password || RHC::get_password
@@ -107,8 +107,7 @@ class RHC::Commands::Base
     end
 
     def help(*args)
-      ac = Commander::Runner.instance.active_command
-      Commander::Runner.instance.command(:help).run(ac.name, *args)
+      raise ArgumentError, "Please specify an action to take"
     end
 
     def debug?
@@ -202,6 +201,7 @@ class RHC::Commands::Base
     end
 
     def self.default_action(action)
+      options[:default] = action unless action == :help
       define_method(:run) { |*args| send(action, *args) }
     end
 

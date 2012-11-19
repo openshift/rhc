@@ -101,19 +101,19 @@ module RHC
       when 'domains'
         domains = Array.new
         data.each do |domain_json|
-          domains.push(Domain.new(domain_json, @debug))
+          domains.push(Domain.new(domain_json, debug?))
         end
         return domains
       when 'domain'
-        return Domain.new(data, @debug)
+        return Domain.new(data, debug?)
       when 'applications'
         apps = Array.new
         data.each do |app_json|
-          apps.push(Application.new(app_json, @debug))
+          apps.push(Application.new(app_json, debug?))
         end
         return apps
       when 'application'
-        app = Application.new(data, @debug)
+        app = Application.new(data, debug?)
         result['messages'].each do |message|
           app.add_message(message['text']) if message['field'].nil? or message['field'] == 'result'
         end
@@ -121,25 +121,25 @@ module RHC
       when 'cartridges'
         carts = Array.new
         data.each do |cart_json|
-          carts.push(Cartridge.new(cart_json, @debug))
+          carts.push(Cartridge.new(cart_json, debug?))
         end
         return carts
       when 'cartridge'
-        return Cartridge.new(data, @debug)
+        return Cartridge.new(data, debug?)
       when 'user'
-        return User.new(data, @debug)
+        return User.new(data, debug?)
       when 'keys'
         keys = Array.new
         data.each do |key_json|
-          keys.push(Key.new(key_json, @debug))
+          keys.push(Key.new(key_json, debug?))
         end
         return keys
       when 'key'
-        return Key.new(data, @debug)
+        return Key.new(data, debug?)
       when 'gear_groups'
         gears = Array.new
         data.each do |gear_json|
-          gears.push(GearGroup.new(gear_json, @debug))
+          gears.push(GearGroup.new(gear_json, debug?))
         end
         return gears
       else
@@ -157,7 +157,9 @@ module RHC
 
     def request(request, &block)
       begin
+        debug "Request: #{request.inspect}" if debug?
         response = request.execute
+        debug "Response: #{response}" if debug?
         #set cookie
         rh_sso = response.cookies['rh_sso']
         if not rh_sso.nil?
@@ -169,17 +171,24 @@ module RHC
           parse_response(response) unless response.nil? or response.code == 204
         end
       rescue RestClient::RequestTimeout => e
-        raise TimeoutException.new("Connection to server timed out. It is possible the operation finished without being able to report success. Use 'rhc domain show' or 'rhc app status' to check the status of your applications.") 
+        raise TimeoutException.new(
+          "Connection to server timed out. "\
+          "It is possible the operation finished without being able "\
+          "to report success. Use 'rhc domain show' or 'rhc app show' "\
+          "to see the status of your applications.")
       rescue RestClient::ServerBrokeConnection => e
-        raise ConnectionException.new("Connection to server got interrupted: #{e.message}")
+        raise ConnectionException.new(
+          "Connection to server got interrupted: #{e.message}")
       rescue RestClient::ExceptionWithResponse => e
         process_error_response(e.response, request.url)
       rescue SocketError => e
-        raise ConnectionException.new("Unable to connect to the server (#{e.message})."\
-                                      "#{RestClient.proxy.present? ? " Check that you have correctly specified your proxy server '#{RestClient.proxy}' as well as your OpenShift server '#{request.url}'." : " Check that you have correctly specified your OpenShift server '#{request.url}'."}")
+        raise ConnectionException.new(
+          "Unable to connect to the server (#{e.message})."\
+          "#{RestClient.proxy.present? ? " Check that you have correctly specified your proxy server '#{RestClient.proxy}' as well as your OpenShift server '#{request.url}'." : " Check that you have correctly specified your OpenShift server '#{request.url}'."}")
       rescue => e
-        logger.debug e.backtrace.join("\n  ") if @debug
-        raise ResourceAccessException.new("Failed to access resource: #{e.message}")
+        logger.debug e.backtrace.join("\n  ") if debug?
+        raise ResourceAccessException.new(
+          "Failed to access resource: #{e.message}")
       end
     end
 
@@ -199,7 +208,7 @@ module RHC
         result = RHC::Json.decode(response)
         messages = Array(result['messages'])
       rescue => e
-        logger.debug "Response did not include a message from server: #{e.message}" if @debug
+        logger.debug "Response did not include a message from server: #{e.message}" if debug?
         parse_error = generic_error(url)
       end
       case response.code
