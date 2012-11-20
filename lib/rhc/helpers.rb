@@ -132,17 +132,16 @@ module RHC
     end
 
     def say(msg, *args)
-      old_terminal = $terminal
-      $terminal = HighLine.new(nil,$stderr) if Hash[*args][:stderr]
-      # The actual say command only expects a message
-      super(msg)
+      if Hash[*args][:stderr]
+        $stderr.puts msg
+      else
+        super(msg)
+      end
       msg
-    ensure
-      $terminal = old_terminal
     end
 
     def success(msg, *args)
-      say color(msg,:green), *args
+      say color(msg, :green), *args
     end
 
     def info(msg, *args)
@@ -150,11 +149,11 @@ module RHC
     end
 
     def warn(msg, *args)
-      say color(msg,:yellow), *args
+      say color(msg, :yellow), *args
     end
 
     def error(msg, *args)
-      say color(msg,:red), *args
+      say color(msg, :red), *args
     end
 
     def color(s, color)
