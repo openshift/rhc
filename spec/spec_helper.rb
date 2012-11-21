@@ -25,6 +25,12 @@ require 'rhc/cli'
 
 include WebMock::API
 
+def stderr
+  $stderr.rewind
+  # some systems might redirect warnings to stderr
+  [$stderr,$terminal].map(&:read).delete_if{|x| x.strip.empty?}.join(' ')
+end
+
 module Commander::UI
   alias :enable_paging_old :enable_paging
   def enable_paging
