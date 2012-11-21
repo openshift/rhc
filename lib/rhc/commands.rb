@@ -68,7 +68,7 @@ module RHC
               config.has_opts_config?)
 
         RHC::Helpers.warn(
-          "You have not yet configured the OpenShift client tools.\nPlease run 'rhc setup'.",
+          "You have not yet configured the OpenShift client tools. Please run 'rhc setup'.",
             :stderr => true)
       end
     end
