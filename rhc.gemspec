@@ -18,6 +18,18 @@ Gem::Specification.new do |s|
   s.executables  = Dir['bin/*'].map{ |f| File.basename(f) }
   s.require_path = 'lib'
 
+  s.post_install_message = %q{If this is your first time installing the RHC tools, please run 'rhc setup'}
+
+  # Format the post install message with some nice separators
+  sep = "=" * s.post_install_message.lines.to_a.map(&:chomp).map(&:length).max
+  s.post_install_message = [
+    sep,
+    nil,
+    s.post_install_message,
+    nil,
+    sep
+  ].join("\n")
+
   s.add_dependency              'net-ssh',      '>= 2.0.11'
   s.add_dependency              'archive-tar-minitar'
   s.add_dependency              'test-unit' # used by rhc domain status in ruby 1.9
