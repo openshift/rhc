@@ -387,6 +387,7 @@ module RHC::Commands
       end
 
       def enable_jenkins?
+        # legacy issue, commander 4.0.x will place the option in the hash with nil value (BZ878407)
         options.__hash__.has_key?(:enable_jenkins)
       end
 
