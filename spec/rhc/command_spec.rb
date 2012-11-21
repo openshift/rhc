@@ -57,7 +57,7 @@ describe RHC::Commands::Base do
           expects_running('test').should call(:run).on(instance).with(no_args)
           wizard_run.should be_false
 
-          stderr.should match("It looks like you have not run 'rhc setup' yet")
+          stderr.should match("You have not yet configured the OpenShift client tools")
         end
       end
     end
