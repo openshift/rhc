@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.1.10
+Version: 1.1.11
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -115,6 +115,15 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Nov 21 2012 Dan McPherson <dmcphers@redhat.com> 1.1.11-1
+- Minor tweak to output (ccoleman@redhat.com)
+- Fixing spec test (fotios@redhat.com)
+- Modified warning as per Hiro's comments (fotios@redhat.com)
+- Fixes for clayton's comments (fotios@redhat.com)
+- Created STDERR helper to match new error messages (fotios@redhat.com)
+- Made wizard not run by default, but show a message instead
+  (fotios@redhat.com)
+
 * Mon Nov 19 2012 Adam Miller <admiller@redhat.com> 1.1.10-1
 - Bug 876715 - Users don't know what cart types to add. (ccoleman@redhat.com)
 
