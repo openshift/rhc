@@ -46,7 +46,7 @@ module RHC::Commands
       rest_domain = rest_client.find_domain(options.namespace)
 
       # check to make sure the right options are set for enabling jenkins
-      jenkins_rest_app = check_jenkins(name, rest_domain) if options.enable_jenkins
+      jenkins_rest_app = check_jenkins(name, rest_domain) if enable_jenkins?
 
       # create the main app
       rest_app = create_app(name, cartridge, rest_domain,
@@ -55,7 +55,7 @@ module RHC::Commands
       # create a jenkins app if not available
       # don't error out if there are issues, setup warnings instead
       begin
-        jenkins_rest_app = setup_jenkins_app(rest_domain) if options.enable_jenkins and jenkins_rest_app.nil?
+        jenkins_rest_app = setup_jenkins_app(rest_domain) if enable_jenkins? and jenkins_rest_app.nil?
       rescue Exception => e
         add_issue("Jenkins failed to install - #{e}",
                   "Installing jenkins and jenkins-client",
@@ -121,7 +121,7 @@ module RHC::Commands
       else
         results { 
           rest_app.messages.each { |msg| say msg } 
-          jenkins_rest_app.messages.each { |msg| say msg } if options.enable_jenkins and jenkins_rest_app
+          jenkins_rest_app.messages.each { |msg| say msg } if enable_jenkins? and jenkins_rest_app
         }
       end
 
@@ -386,8 +386,13 @@ module RHC::Commands
         end
       end
 
+      def enable_jenkins?
+        # legacy issue, commander 4.0.x will place the option in the hash with nil value (BZ878407)
+        options.__hash__.has_key?(:enable_jenkins)
+      end
+
       def jenkins_app_name
-        return "jenkins" if options.enable_jenkins == true or options.enable_jenkins == "true"
+        return "jenkins" if options.enable_jenkins == true || options.enable_jenkins == "true" || (enable_jenkins? && options.enable_jenkins.nil?)
         return options.enable_jenkins if options.enable_jenkins.is_a?(String)
         nil
       end
