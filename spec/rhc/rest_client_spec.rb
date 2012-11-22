@@ -441,8 +441,8 @@ module RHC
               capture do
                 @client = MockClient.new(mock_href, mock_user, mock_pass, true)
                 @client.send logout_method.to_sym
-                $stderr.rewind
-                $stderr.read.should =~ /Logout\/Close client$/
+
+                stderr.should match(/Logout\/Close client$/)
               end
             end
           end
@@ -451,8 +451,7 @@ module RHC
               capture do
                 @client = MockClient.new(mock_href, mock_user, mock_pass, false)
                 @client.send logout_method.to_sym
-                $stderr.rewind
-                $stderr.read.should == ''
+                stderr.should be_empty
               end
             end
           end
