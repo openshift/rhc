@@ -78,6 +78,14 @@ module RHCHelper
       status
     end
 
+    def storage(cartridge, args)
+      output = nil
+      rhc_cartridge("storage #{cartridge} #{args}") do |exitstatus, out, err, arg|
+        output = out.split(" ")[-1]
+      end
+      output
+    end
+
     def show
       result = ""
       rhc_cartridge('show') do |exitstatus, out, err, arg|

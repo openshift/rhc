@@ -46,13 +46,13 @@ module RHC
   end
 
   class DeprecatedError < RuntimeError; end
-  
+
   class KeyFileNotExistentException < Exception
     def initialize(message="SSH Key file not found")
       super message, 128
     end
   end
-  
+
   class KeyFileAccessDeniedException < Exception
     def initialize(message = "Insufficient acces to SSH Key file")
       super message, 128
@@ -103,6 +103,24 @@ module RHC
 
   class CartridgeNotScalableException < Exception
     def initialize(message="Cartridge is not scalable")
+      super message, 1
+    end
+  end
+
+  class AdditionalStorageArgumentsException < Exception
+    def initialize(message="Only one storage action can be performed at a time.")
+      super message, 1
+    end
+  end
+
+  class AdditionalStorageValueException < Exception
+    def initialize(message="The amount format must be a number, optionally followed by 'GB' (ex.: 5GB)")
+      super message, 1
+    end
+  end
+
+  class AdditionalStorageRemoveException < Exception
+    def initialize(message="The amount of additional storage to be removed exceeds the total amount in use. Add the -f flag to override.")
       super message, 1
     end
   end

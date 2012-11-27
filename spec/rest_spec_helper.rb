@@ -111,6 +111,8 @@ module RestSpecHelper
       carts << {
         :name  => "mock_cart_#{carts.length}",
         :type  => "mock_cart_#{carts.length}_type",
+        :base_gear_storage => 1,
+        :additional_gear_storage => 0,
         :links => mock_response_links(mock_cart_links('mock_domain','mock_app',"mock_cart_#{carts.length}"))
       }
     end
@@ -138,6 +140,10 @@ module RestSpecHelper
       }.to_json,
       :status => 200
     }
+  end
+
+  def mock_cart_properties
+    {:cart_data => {:connection_url => {'name' => 'connection_url', 'value' => "http://fake.url" }}}
   end
 
   class MockRestClient < RHC::Rest::Client
@@ -286,9 +292,9 @@ module RestSpecHelper
       @domain.applications.delete self
     end
 
-    def add_cartridge(name, embedded=true)
+    def add_cartridge(name, embedded=true, additional_storage=0)
       type = embedded ? "embedded" : "standalone"
-      c = MockRestCartridge.new(name, type, self)
+      c = MockRestCartridge.new(name, type, self, mock_cart_properties, additional_storage)
       @cartridges << c
       c
     end
@@ -324,9 +330,10 @@ module RestSpecHelper
   end
 
   class MockRestCartridge < RHC::Rest::Cartridge
-    attr_accessor :scales_to, :scales_from, :current_scale, :scales_with, :display_name
-    def initialize(name, type, app=nil, properties={:cart_data => {:connection_url => {'name' => 'connection_url', 'value' => "http://fake.url" }}})
+    attr_accessor :scales_to, :scales_from, :current_scale, :scales_with, :display_name, :base_gear_storage, :additional_gear_storage
+    def initialize(name, type, app=nil, properties=mock_cart_properties, additional_storage=0)
       @name = name
+      @display_name = name
       @type = type
       @app = app
       @properties = properties
@@ -334,6 +341,8 @@ module RestSpecHelper
       @scales_from = 1
       @scales_to = 1
       @current_scale = 1
+      @base_gear_storage = 1
+      @additional_gear_storage = additional_storage
     end
 
     def destroy
@@ -367,6 +376,11 @@ module RestSpecHelper
       values.delete_if{|k,v| v.nil? }
       @scales_from = values[:scales_from] if values[:scales_from]
       @scales_to = values[:scales_to] if values[:scales_to]
+      self
+    end
+
+    def set_storage(values)
+      @additional_gear_storage = values[:additional_storage]
       self
     end
   end
