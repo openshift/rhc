@@ -3,6 +3,8 @@ require 'webmock/rspec'
 require 'fakefs/safe'
 require 'rbconfig'
 
+require 'pry' if ENV['PRY']
+
 # chmod isn't implemented in the released fakefs gem
 # but is in git.  Once the git version is released we
 # should remove this and actively check permissions
@@ -11,8 +13,9 @@ class FakeFS::File
     # noop
   end
 
-  # Epic fail - FakeFS manages to redefine this to '/'
-  const_set('PATH_SEPARATOR', ":")
+  # FakeFS incorrectly assigns this to '/'
+  remove_const(:PATH_SEPARATOR) rescue nil
+  const_set(:PATH_SEPARATOR, ":")
 
   def self.executable?(path)
     # if the file exists we will assume it is executable
@@ -120,17 +123,37 @@ module ClassSpecHelpers
   end
 
   def capture(&block)
+    old_stdout = $stdout
     old_stderr = $stderr
     old_terminal = $terminal
     @input = StringIO.new
     @output = StringIO.new
+    $stdout = @output
     $stderr = (@error = StringIO.new)
     $terminal = MockHighLineTerminal.new @input, @output
     yield
+    @output.string
   ensure
+    $stdout = old_stdout
     $stderr = old_stderr
     $terminal = old_terminal
-    @output.to_s
+  end
+
+  def capture_all(&block)
+    old_stdout = $stdout
+    old_stderr = $stderr
+    old_terminal = $terminal
+    @input = StringIO.new
+    @output = StringIO.new
+    $stdout = @output
+    $stderr = @output
+    $terminal = MockHighLineTerminal.new @input, @output
+    yield
+    @output.string
+  ensure
+    $stdout = old_stdout
+    $stderr = old_stderr
+    $terminal = old_terminal
   end
 
   def run(input=[])
@@ -154,6 +177,21 @@ module ClassSpecHelpers
   def user_agent_header
     lambda do |request|
       request.headers['User-Agent'] =~ %r{\Arhc/\d+\.\d+.\d+ \(.*?ruby.*?\)}
+    end
+  end
+
+  def base_config(&block)
+    config = RHC::Config.new
+    config.stub(:load_config_files)
+    defaults = config.instance_variable_get(:@defaults)
+    yield config, defaults if block_given?
+    RHC::Config.stub(:default).and_return(config)
+  end
+
+  def user_config
+    base_config do |config, defaults|
+      defaults.add 'default_rhlogin', 'test_user'
+      defaults.add 'password', 'test pass'
     end
   end
 end

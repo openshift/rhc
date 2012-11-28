@@ -3,7 +3,7 @@ require 'rhc/rest/base'
 module RHC
   module Rest
     class Key < Base
-      attr_reader :name, :type, :content
+      define_attr :name, :type, :content
 
       def update(type, content)
         debug "Updating key #{self.name}"

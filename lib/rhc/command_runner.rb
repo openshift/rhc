@@ -7,7 +7,7 @@ module RHC
     end
 
     def options_parse_trace
-      if @args.include? "--trace"
+      if @args.include?("--trace") || @args.include?("--debug")
         @args.delete "--trace"
         return true
       end
@@ -29,12 +29,12 @@ module RHC
       trap('INT') { abort program(:int_message) } if program(:int_message)
       trap('INT') { program(:int_block).call } if program(:int_block)
 
-      global_option('-h', '--help', 'Display help documentation') do
+      global_option('-h', '--help', 'Help on any command') do
         args = @args - %w[-h --help]
         command(:help).run(*args)
         return
       end
-      global_option('-v', '--version', 'Display version information') { say version; return }
+      global_option('--version', 'Display version information', :hide => true) { say version; return }
 
       # remove these because we monkey patch Commands to process all options
       # at once, avoiding conflicts between the global and command options
@@ -111,24 +111,6 @@ module RHC
           end
         end
       end
-    end
-  end
-
-  class CommandHelpBindings
-    def initialize(command, instance_commands, runner)
-      @command = command
-      @actions = instance_commands.collect do |command_name, command_class|
-        next if command_class.summary.nil?
-        m = /^#{command.name} ([^ ]+)/.match(command_name)
-        # if we have a match and it is not an alias then we can use it
-        m and command_name == command_class.name ? {:name => m[1], :summary => command_class.summary || ""} : nil
-      end
-      @actions.compact!
-      @global_options = runner.options
-      @runner = runner
-    end
-    def program(*args)
-      @runner.program *args
     end
   end
 end

@@ -49,6 +49,28 @@ module OpenURI
   end
 end
 
+class Hash
+  def stringify_keys!
+    keys.each do |key|
+      v = delete(key)
+      if v.is_a? Hash
+        v.stringify_keys!
+      elsif v.is_a? Array
+        v.each{ |value| value.stringify_keys! if value.is_a? Hash }
+      end
+      self[(key.to_s rescue key) || key] = v
+    end
+    self
+  end
+  def slice!(*args)
+    s = []
+    args.inject([]) do |a, k|
+      s << [k, delete(k)] if has_key?(k)
+    end
+    s
+  end
+end
+
 # Some versions of highline get in an infinite loop when trying to wrap.
 # Fixes BZ 866530.
 class HighLine
@@ -122,5 +144,4 @@ class HighLine
 
     return wrapped_text.join("\n")
   end
-
 end

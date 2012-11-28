@@ -2,14 +2,33 @@ require 'rhc/vendor/parseconfig'
 require 'rhc/core_ext'
 
 module RHC
+
+  module ConfigEnv
+    def conf_name
+      'express.conf'
+    end
+    def home_conf_dir
+      File.join(home_dir, '.openshift')
+    end
+    def local_config_path
+      File.join(home_conf_dir, conf_name)
+    end
+    def ssh_dir
+      File.join(home_dir, '.ssh')
+    end
+    def ssh_priv_key_file_path
+      File.join(ssh_dir, 'id_rsa')
+    end
+    def ssh_pub_key_file_path
+      File.join(ssh_dir, 'id_rsa.pub')
+    end
+  end
+
   class Config
+    include ConfigEnv
 
     def self.default
-      @default ||= begin
-        RHC::Config.new
-      end.tap do |c|
-        c.read_config_files
-      end
+      @default ||= RHC::Config.new
     end
 
     def self.method_missing(method, *args, &block)
@@ -27,67 +46,32 @@ module RHC
 
     def initialize
       set_defaults
-
-      _gem_cfg = File.join(File.expand_path(File.dirname(__FILE__) + "/../../conf"), @conf_name)
-      @global_config_path = File.exists?(@_linux_cfg) ? @_linux_cfg : _gem_cfg
     end
 
     def read_config_files
-      @global_config = RHC::Vendor::ParseConfig.new(@global_config_path) if File.exists?(@global_config_path)
-      @local_config = RHC::Vendor::ParseConfig.new(File.expand_path(@local_config_path)) if File.exists?(@local_config_path)
-    rescue Errno::EACCES => e
-      raise Errno::EACCES.new("Could not open config file: #{e.message}")
+      load_config_files
     end
 
     def set_defaults
       @defaults = RHC::Vendor::ParseConfig.new()
+      @opts  = RHC::Vendor::ParseConfig.new() # option switches that override config file
+
+      @env_config = RHC::Vendor::ParseConfig.new()
       @global_config = nil
       @local_config = nil
       @opts_config = nil # config file passed in the options
-      @opts  = RHC::Vendor::ParseConfig.new() # option switches that override config file
+
       @default_proxy = nil
-      @env_config = RHC::Vendor::ParseConfig.new()
 
       @defaults.add('libra_server', 'openshift.redhat.com')
       @env_config.add('libra_server', ENV['LIBRA_SERVER']) if ENV['LIBRA_SERVER']
-      #
-      # Config paths... /etc/openshift/express.conf or $GEM/conf/express.conf -> ~/.openshift/express.conf
-      #
-      @conf_name = 'express.conf'
-      @home_dir = File.expand_path("~")
-      @home_conf_path = File.join(@home_dir, '.openshift')
-      @local_config_path = File.join(@home_conf_path, @conf_name)
 
-      # config path passed in on the command line
       @opts_config_path = nil
-
-      # authoritive config path
-      # this can be @local_config_path or @opts_config_path
-      # @opts_config_path trumps
-      # this is used to determine where config options should be written to
-      # when a script modifies the config such as in rhc setup
-      @config_path = @local_config_path
-
-      @ssh_priv_key_file_path = "#{@home_dir}/.ssh/id_rsa"
-      @ssh_pub_key_file_path = "#{@home_dir}/.ssh/id_rsa.pub"
-
-      @_linux_cfg = '/etc/openshift/' + @conf_name
-      @global_config_path = @_linux_cfg
-    end
-
-    # used for tests
-    def home_dir=(home_dir)
-      @home_dir=home_dir
-      @home_conf_path = File.join(@home_dir, '.openshift')
-      @local_config_path = File.join(@home_conf_path, @conf_name)
-      @local_config = nil
-      @local_config = RHC::Vendor::ParseConfig.new(File.expand_path(@local_config_path)) if File.exists?(@local_config_path)
-      @ssh_priv_key_file_path = "#{@home_dir}/.ssh/id_rsa"
-      @ssh_pub_key_file_path = "#{@home_dir}/.ssh/id_rsa.pub"
     end
 
     def [](key)
-      raise KeyError("Please use RHC::Config.password to access the password config") if key == "password"
+      #raise KeyError("Please use RHC::Config.password to access the password config") if key == "password"
+      lazy_init
 
       # evaluate in cascading order
       configs = [@opts, @opts_config, @env_config, @local_config, @global_config, @defaults]
@@ -116,7 +100,7 @@ module RHC
     def opts_login=(username)
       @opts.add('default_rhlogin', username)
     end
-    
+
     def opts_login
       @opts['default_rhlogin']
     end
@@ -127,29 +111,23 @@ module RHC
     end
 
     def password
-      @opts['password']
+      self['password']
     end
 
-    def set_local_config(confpath, must_exist=true)
-      begin
-        @local_config_path = File.expand_path(confpath)
-        @config_path = @local_config_path if @opts_config_path.nil?
-        @local_config = RHC::Vendor::ParseConfig.new(@local_config_path)
-      rescue Errno::EACCES => e
-        if must_exist
-          raise Errno::EACCES.new "Could not open config file: #{e.message}"
-        end
-      end
+    def set_local_config(conf_path, must_exist=true)
+      conf_path = File.expand_path(conf_path)
+      @config_path = conf_path if @opts_config_path.nil?
+      @local_config = RHC::Vendor::ParseConfig.new(conf_path)
+    rescue Errno::EACCES => e
+      raise Errno::EACCES.new "Could not open config file: #{e.message}" if must_exist
     end
 
-    def set_opts_config(confpath)
-      begin
-        @opts_config_path = File.expand_path(confpath)
-        @config_path = @opts_config_path
-        @opts_config = RHC::Vendor::ParseConfig.new(@opts_config_path) if File.exists?(@opts_config_path)
-      rescue Errno::EACCES => e
-        raise Errno::EACCES.new "Could not open config file: #{e.message}"
-      end
+    def set_opts_config(conf_path)
+      @opts_config_path = File.expand_path(conf_path)
+      @config_path = @opts_config_path
+      @opts_config = RHC::Vendor::ParseConfig.new(@opts_config_path) if File.exists?(@opts_config_path)
+    rescue Errno::EACCES => e
+      raise Errno::EACCES.new "Could not open config file: #{e.message}"
     end
 
     def check_cpath(opts)
@@ -163,11 +141,18 @@ module RHC
       end
     end
 
+    def global_config_path
+      linux_cfg = '/etc/openshift/' + conf_name
+      File.exists?(linux_cfg) ? linux_cfg : File.join(File.expand_path(File.dirname(__FILE__) + "/../../conf"), conf_name)
+    end
+
     def has_global_config?
+      lazy_init
       !@global_config.nil?
     end
 
     def has_local_config?
+      lazy_init
       !@local_config.nil?
     end
 
@@ -180,7 +165,7 @@ module RHC
     end
 
     def should_run_ssh_wizard?
-      not File.exists? @ssh_priv_key_file_path
+      not File.exists? ssh_priv_key_file_path
     end
 
     ##
@@ -190,23 +175,15 @@ module RHC
     # this is used to determine where config options should be written to
     # when a script modifies the config such as in rhc setup
     def config_path
-      @config_path
-    end
-
-    def local_config_path
-      @local_config_path
-    end
-
-    def home_conf_path
-      @home_conf_path
+      @config_path ||= local_config_path
     end
 
     def home_dir
-      @home_dir
+      RHC::Config.home_dir
     end
 
-    def ssh_pub_key_file_path
-      @ssh_pub_key_file_path
+    def home_conf_path
+      home_conf_dir
     end
 
     def default_rhlogin
@@ -238,5 +215,26 @@ module RHC
         [x,default_proxy.instance_variable_get("@proxy_#{x}")]
       end]
     end
+
+    private
+      # Allow mocking of the home dir
+      def self.home_dir
+        #raise "Why am I not stubbed?"
+        File.expand_path('~')
+      end
+
+      def load_config_files
+        @global_config = RHC::Vendor::ParseConfig.new(global_config_path) if File.exists?(global_config_path)
+        @local_config = RHC::Vendor::ParseConfig.new(File.expand_path(local_config_path)) if File.exists?(local_config_path)
+      rescue Errno::EACCES => e
+        raise Errno::EACCES.new("Could not open config file: #{e.message}")
+      end
+
+      def lazy_init
+        unless @loaded
+          load_config_files
+          @loaded = true
+        end
+      end
   end
 end

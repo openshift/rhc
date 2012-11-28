@@ -1,7 +1,6 @@
 require 'spec_helper'
 require 'rest_spec_helper'
 require 'rhc/commands/domain'
-require 'rhc/config'
 
 describe RHC::Commands::Domain do
   before(:each) do
@@ -14,8 +13,8 @@ describe RHC::Commands::Domain do
       before(:each) do
         @rc = MockRestClient.new
       end
-      it { expect { run }.should exit_with_code(0) }
-      it { run_output.should match(/No domain exists.  You can use/) }
+      it { expect { run }.should exit_with_code(1) }
+      it { run_output.should match(/In order to deploy applications.*rhc domain create/) }
     end
     context 'when help is shown' do
       let(:arguments) { ['domain', '--noprompt', '--help'] }
@@ -31,8 +30,8 @@ describe RHC::Commands::Domain do
       before(:each) do
         @rc = MockRestClient.new
       end
-      it { expect { run }.should exit_with_code(0) }
-      it { run_output.should match(/No domain exists.  You can use/) }
+      it { expect { run }.should exit_with_code(1) }
+      it { run_output.should match(/In order to deploy applications.*rhc domain create/) }
     end
 
     context 'when run with one domain no apps' do
@@ -43,8 +42,7 @@ describe RHC::Commands::Domain do
       it { expect { run }.should exit_with_code(0) }
       it "should match output" do
         output = run_output
-        output.should match(/Applications in onedomain/)
-        output.should match(/No applications. You can use/)
+        output.should match("The domain onedomain exists but has no applications. You can use")
       end
     end
 
@@ -57,7 +55,7 @@ describe RHC::Commands::Domain do
       it { expect { run }.should exit_with_code(0) }
       it "should match output" do
         output = run_output
-        output.should match("Applications in firstdomain")
+        output.should match("The domain firstdomain exists but has no applications. You can use")
         output.should_not match("Applications in seconddomain")
       end
     end
@@ -94,7 +92,7 @@ describe RHC::Commands::Domain do
       it "should match output" do
         output = run_output
         output.should match("app_no_carts")
-        output.should match(/Cartridges$\n\s+[=]*\s+None/)
+        output.should match(/127.0.0.1\s*$/m)
       end
     end
   end

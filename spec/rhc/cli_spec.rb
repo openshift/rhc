@@ -2,6 +2,14 @@ require 'spec_helper'
 
 describe RHC::CLI do
 
+  shared_examples_for 'a global help page' do
+    let(:arguments) { @arguments or raise "no arguments" }
+    it('should contain the program description') { run_output.should =~ /Command line interface for OpenShift/ }
+    it('should describe getting started') { run_output.should =~ /Getting started:/ }
+    it('should describe basic command') { run_output.should =~ /Working with apps:/ }
+    it('should mention the help command') { run_output.should =~ /See 'rhc help <command>'/ }
+  end
+
   shared_examples_for 'a help page' do
     let(:arguments) { @arguments or raise "no arguments" }
     it('should contain the program description') { run_output.should =~ /Command line interface for OpenShift/ }
@@ -42,7 +50,7 @@ describe RHC::CLI do
   describe '#start' do
     context 'with no arguments' do
       before(:each) { @arguments = [] }
-      it_should_behave_like 'a help page'
+      it_should_behave_like 'a global help page'
     end
 
     context 'with an invalid command' do
@@ -62,17 +70,17 @@ describe RHC::CLI do
 
     context 'with --help' do
       before(:each){ @arguments = ['--help'] }
-      it_should_behave_like 'a help page'
+      it_should_behave_like 'a global help page'
     end
 
     context 'with -h' do
       before(:each){ @arguments = ['-h'] }
-      it_should_behave_like 'a help page'
+      it_should_behave_like 'a global help page'
     end
 
     context 'with help' do
       before(:each){ @arguments = ['help'] }
-      it_should_behave_like 'a help page'
+      it_should_behave_like 'a global help page'
     end
   end
 

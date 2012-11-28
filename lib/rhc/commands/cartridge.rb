@@ -8,7 +8,7 @@ module RHC::Commands
     alias_action :"app cartridge", :root_command => true, :deprecated => true
     default_action :list
 
-    summary "List supported embedded cartridges"
+    summary "List available cartridges"
     alias_action :"app cartridge list", :root_command => true, :deprecated => true
     def list
       rest_client = RHC::Rest::Client.new(openshift_rest_node, nil, nil)
@@ -49,7 +49,7 @@ module RHC::Commands
       rest_cartridge = rest_app.add_cartridge(cart.name)
       say "Success"
 
-      display_cart(rest_cartridge,rest_cartridge.properties[:cart_data])
+      display_cart(rest_cartridge)
 
       0
     end
@@ -64,7 +64,7 @@ module RHC::Commands
       rest_app = rest_domain.find_application(options.app)
       rest_cartridge = find_cartridge rest_app, cartridge, nil
 
-      display_cart(rest_cartridge,rest_cartridge.properties[:cart_data])
+      display_cart(rest_cartridge)
 
       0
     end

@@ -4,7 +4,7 @@ module RHC
   module Rest
     class GearGroup < Base
       include Rest
-      attr_reader :gears, :cartridges
+      define_attr :gears, :cartridges
     end
   end
 end

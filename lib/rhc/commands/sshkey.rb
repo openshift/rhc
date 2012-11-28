@@ -1,10 +1,8 @@
-#! /usr/bin/env ruby
-
 require 'rhc/commands/base'
 
 module RHC::Commands
   class Sshkey < Base
-    include RHC::SSHKeyHelpers
+    include RHC::SSHHelpers
 
     summary 'Manage multiple keys for the registered rhcloud user.'
     syntax '<action>'

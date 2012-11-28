@@ -18,9 +18,45 @@
 require 'net/ssh'
 require 'rhc/vendor/sshkey'
 
-
 module RHC
-  module SSHKeyHelpers
+  module SSHHelpers
+    # Public: Run ssh command on remote host
+    #
+    # host - The String of the remote hostname to ssh to.
+    # username - The String username of the remote user to ssh as.
+    # command - The String command to run on the remote host.
+    #
+    # Examples
+    #
+    #  ssh_ruby('myapp-t.rhcloud.com',
+    #            '109745632b514e9590aa802ec015b074',
+    #            'rhcsh tail -f $OPENSHIFT_LOG_DIR/*"')
+    #  # => true
+    #
+    # Returns true on success
+    def ssh_ruby(host, username, command)
+      debug "Opening Net::SSH connection to #{host}, #{username}, #{command}"
+      Net::SSH.start(host, username) do |session|
+        #:nocov:
+        session.open_channel do |channel|
+          channel.request_pty do |ch, success|
+            say "pty could not be obtained" unless success
+          end
+
+          channel.on_data do |ch, data|
+            puts data
+          end
+          channel.exec command
+        end
+        session.loop
+        #:nocov:
+      end
+    rescue Errno::ECONNREFUSED => e
+      raise RHC::SSHConnectionRefused.new(host, username)
+    rescue SocketError => e
+      raise RHC::ConnectionFailed, "The connection to #{host} failed: #{e.message}"
+    end
+
     # Public: Generate an SSH key and store it in ~/.ssh/id_rsa
     #
     # type - The String type RSA or DSS.
@@ -29,7 +65,7 @@ module RHC
     #
     # Examples
     #
-    #  generate_ssh_key_ruby()
+    #  generate_ssh_key_ruby
     #  # => /home/user/.ssh/id_rsa.pub
     #
     # Returns nil on failure or public key location as a String on success
@@ -37,22 +73,25 @@ module RHC
       key = RHC::Vendor::SSHKey.generate(:type => type,
                                          :bits => bits,
                                          :comment => comment)
-      ssh_dir = "#{RHC::Config.home_dir}/.ssh"
-      if File.exists?("#{ssh_dir}/id_rsa")
-        say "SSH key already exists: #{ssh_dir}/id_rsa.  Reusing..."
+      ssh_dir = RHC::Config.ssh_dir
+      priv_key = RHC::Config.ssh_priv_key_file_path
+      pub_key = RHC::Config.ssh_pub_key_file_path
+
+      if File.exists?(priv_key)
+        say "SSH key already exists: #{priv_key}.  Reusing..."
         return nil
       else
         unless File.exists?(ssh_dir)
           FileUtils.mkdir_p(ssh_dir)
           File.chmod(0700, ssh_dir)
         end
-        File.open("#{ssh_dir}/id_rsa", 'w') {|f| f.write(key.private_key)}
-        File.chmod(0600, "#{ssh_dir}/id_rsa")
-        File.open("#{ssh_dir}/id_rsa.pub", 'w') {|f| f.write(key.ssh_public_key)}
+        File.open(priv_key, 'w') {|f| f.write(key.private_key)}
+        File.chmod(0600, priv_key)
+        File.open(pub_key, 'w') {|f| f.write(key.ssh_public_key)}
 
-        ssh_add if exe?('ssh-add')
+        ssh_add
       end
-      "#{ssh_dir}/id_rsa.pub"
+      pub_key
     end
 
     def exe?(executable)
@@ -60,7 +99,7 @@ module RHC
         File.executable?(File.join(directory, executable.to_s))
       end
     end
-    
+
     # Public: Format SSH key's core attributes (name, type, fingerprint)
     # in a given ERB template
     # 
@@ -88,15 +127,13 @@ module RHC
     rescue NoMethodError, NotImplementedError => e
       ssh_keygen_fallback key
       return nil
-      # :nocov: no reason to cover this case
     rescue OpenSSL::PKey::PKeyError, Net::SSH::Exception => e
       error e.message
       return nil
-      # :nocov:
     end
-    
+
     def fingerprint_for_default_key
-      fingerprint_for_local_key RHC::Config::ssh_pub_key_file_path
+      fingerprint_for_local_key RHC::Config.ssh_pub_key_file_path
     end
 
     # for an SSH public key specified by 'key', return a triple
@@ -114,15 +151,17 @@ module RHC
     end
     
     def ssh_key_triple_for_default_key
-      ssh_key_triple_for RHC::Config::ssh_pub_key_file_path
+      ssh_key_triple_for RHC::Config.ssh_pub_key_file_path
     end
 
     private
 
     def ssh_add
-      #:nocov:
-      `ssh-add 2&>1`
-      #:nocov:
+      if exe?('ssh-add')
+        #:nocov:
+        `ssh-add 2&>1`
+        #:nocov:
+      end
     end
   end
 end

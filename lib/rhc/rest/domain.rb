@@ -3,7 +3,7 @@ require 'rhc/rest/base'
 module RHC
   module Rest
     class Domain < Base
-      attr_reader :id
+      define_attr :id
 
       #Add Application to this domain
       # options

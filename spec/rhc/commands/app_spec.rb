@@ -114,7 +114,7 @@ describe RHC::Commands::App do
         @rc = MockRestClient.new
         domain = @rc.add_domain("mockdomain")
       end
-      it { expect { run }.should raise_error(ArgumentError, /The --no-dns option can't be used in conjunction with --enable-jenkins/) }
+      it { expect { run }.should_not raise_error(ArgumentError, /The --no-dns option can't be used in conjunction with --enable-jenkins/) }
     end
   end
 
@@ -147,19 +147,6 @@ describe RHC::Commands::App do
     end
   end
 
-  describe 'app create enable-jenkins named after existing app' do
-    let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--trace', '--enable-jenkins', 'app2', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
-
-    context 'when run' do
-      before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mockdomain")
-        domain.add_application("app2", "mock_unique_standalone_cart")
-      end
-      it { expect { run }.should raise_error(ArgumentError, /You have named your Jenkins application the same as an existing application/) }
-    end
-  end
-
   describe 'app create jenkins fails to install warnings' do
     let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--enable-jenkins', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
@@ -170,7 +157,7 @@ describe RHC::Commands::App do
 
     context 'when run with error in jenkins setup' do
       before(:each) do
-        @instance.stub(:setup_jenkins_app) { raise Exception }
+        @instance.stub(:add_jenkins_app) { raise Exception }
       end
       it "should print out jenkins warning" do
         run_output.should match("Jenkins failed to install")
@@ -179,7 +166,7 @@ describe RHC::Commands::App do
 
     context 'when run with error in jenkins-client setup' do
       before(:each) do
-        @instance.stub(:setup_jenkins_client) { raise Exception }
+        @instance.stub(:add_jenkins_cartridge) { raise Exception }
       end
       it "should print out jenkins warning" do
         run_output.should match("Jenkins client failed to install")
@@ -194,7 +181,7 @@ describe RHC::Commands::App do
       before(:each) do
         @rc = MockRestClient.new
         @domain = @rc.add_domain("mockdomain")
-        @instance.stub(:setup_jenkins_client) { raise RHC::Rest::ServerErrorException.new("Server error", 157) }
+        @instance.stub(:add_jenkins_cartridge) { raise RHC::Rest::ServerErrorException.new("Server error", 157) }
       end
       it "should fail embedding jenkins cartridge" do
         Kernel.should_receive(:sleep).and_return(true)
@@ -221,7 +208,8 @@ describe RHC::Commands::App do
     before(:each) do
       @rc = MockRestClient.new
       @domain = @rc.add_domain("mockdomain")
-      @instance.stub(:run_git_clone) { raise RHC::GitException }
+      @instance.stub(:git_clone_application) { raise RHC::GitException }
+      @instance.should_not_receive(:check_sshkeys!)
     end
 
     context 'when run with error in git clone' do
@@ -290,19 +278,6 @@ describe RHC::Commands::App do
     end
   end
 
-  describe 'app git-clone' do
-    let(:arguments) { ['app', 'git-clone', '--trace', '-a', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
-
-    context 'when run' do
-      before(:each) do
-        @rc = MockRestClient.new
-        @domain = @rc.add_domain("mockdomain")
-        @app = @domain.add_application("app1", "mock_unique_standalone_cart")
-      end
-      it { expect { run }.should exit_with_code(0) }
-    end
-  end
-
   describe 'app delete' do
     let(:arguments) { ['app', 'delete', '--trace', '-a', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
@@ -313,7 +288,7 @@ describe RHC::Commands::App do
       end
       it "should not remove app when no is sent as input" do
         @app = @domain.add_application("app1", "mock_type")
-        expect { run(["no"]) }.should exit_with_code(0)
+        expect { run(["no"]) }.should exit_with_code(1)
         @domain.applications.length.should == 1
         @domain.applications[0] == @app
       end
@@ -345,10 +320,12 @@ describe RHC::Commands::App do
       before(:each) do
         @rc = MockRestClient.new
         @domain = @rc.add_domain("mockdomain")
-        @domain.add_application("app1", "mock_type",true)
+        app = @domain.add_application("app1", "mock_type", true)
+        cart1 = app.add_cartridge('mock_cart-1')
+        cart2 = app.add_cartridge('mock_cart-2')
       end
       it { run_output.should match("app1 @ https://app1-mockdomain.fake.foo/") }
-      it { run_output.should match("Scaled x2") }
+      it { run_output.should match(/Scaling:.*x2/) }
     end
   end
 

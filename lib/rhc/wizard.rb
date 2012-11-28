@@ -1,8 +1,7 @@
-require 'rhc-common'
 require 'rhc/helpers'
-require 'rhc/ssh_key_helpers'
+require 'rhc/ssh_helpers'
+require 'rhc/git_helpers'
 require 'highline/system_extensions'
-require 'net/ssh'
 require 'fileutils'
 require 'socket'
 
@@ -10,7 +9,10 @@ module RHC
   class Wizard
     include HighLine::SystemExtensions
     include RHC::Helpers
-    include RHC::SSHKeyHelpers
+    include RHC::SSHHelpers
+    include RHC::GitHelpers
+
+    DEFAULT_MAX_LENGTH = 16
 
     STAGES = [:greeting_stage,
               :login_stage,
@@ -28,11 +30,7 @@ module RHC
     def initialize(config, opts=nil)
       @config = config
       @config_path = config.config_path
-      if @libra_server.nil?
-        @libra_server = config['libra_server']
-        # if not set, set to default
-        @libra_server = @libra_server ?  @libra_server : "openshift.redhat.com"
-      end
+      @libra_server = (opts && opts.server) || config['libra_server'] || "openshift.redhat.com"
       @config.config_user opts.rhlogin if opts && opts.rhlogin
       @debug = opts.debug if opts
     end
@@ -70,7 +68,7 @@ module RHC
 
     def login_stage
       # get_password adds an extra untracked newline so set :bottom to -1
-      section(:top => 1, :bottom => -1) do
+      paragraph do
         if @config.has_opts? && @config.opts_login
           @username = @config.opts_login
           say "Using #{@username}"
@@ -80,8 +78,8 @@ module RHC
           end
         end
 
-        @password = RHC::Config.password
-        @password = RHC::get_password if @password.nil?
+        @password = @opts.password if @opts
+        @password = ask("Password: ") { |q| q.echo = '*' } if @password.nil?
       end
 
       # instantiate a REST client that stages can use
@@ -109,8 +107,7 @@ EOF
         end
 
         paragraph do
-          say "Created local config file: " + @config_path
-          say "The #{File.basename(@config_path)} file contains user configuration, and can be transferred to different computers."
+          say "Creating #{@config_path} to store your configuration"
         end
 
         true
@@ -126,7 +123,7 @@ EOF
         paragraph do
           say "No SSH keys were found. We will generate a pair of keys for you."
         end
-        ssh_pub_key_file_path = generate_ssh_key_ruby()
+        ssh_pub_key_file_path = generate_ssh_key_ruby
         paragraph do
           say "    Created: #{ssh_pub_key_file_path}\n\n"
         end
@@ -181,16 +178,17 @@ public and private keys id_rsa keys.
         hostname = Socket.gethostname.gsub(/\..*\z/,'')
         username = @username ? @username.gsub(/@.*/, '') : ''
         pubkey_base_name = "#{username}#{hostname}".gsub(/[^A-Za-z0-9]/,'').slice(0,16)
-        pubkey_default_name = find_unique_key_name(
+        default_name = find_unique_key_name(
           :keys => @ssh_keys,
           :base => pubkey_base_name,
-          :max_length => RHC::DEFAULT_MAX_LENGTH
+          :max_length => DEFAULT_MAX_LENGTH
         )
         
         paragraph do
-          key_name =  ask("Provide a name for this key: ") do |q|
-            q.default = pubkey_default_name
-            q.validate = lambda { |p| RHC::check_key(p) }
+          key_name = ask("Provide a name for this key: ") do |q|
+            q.default = default_name
+            q.validate = /^[0-9a-zA-Z]*$/
+            q.responses[:not_valid]    = 'Your key name must be letters and numbers only.'
           end
         end
       end
@@ -203,7 +201,7 @@ public and private keys id_rsa keys.
     def find_unique_key_name(opts)
       keys = opts[:keys] || @ssh_keys
       base = opts[:base] || 'default'
-      max  = opts[:max_length] || RHC::DEFAULT_MAX_LENGTH # in rhc-common.rb
+      max  = opts[:max_length] || DEFAULT_MAX_LENGTH
       key_name_suffix = 1
       candidate = base
       while @ssh_keys.detect { |k| k.name == candidate }
@@ -266,9 +264,6 @@ public and private keys id_rsa keys.
       if windows?
         windows_install
       else
-        paragraph do
-          say "We will now check to see if you have the necessary client tools installed."
-        end
         generic_unix_install_check
       end
       true
@@ -276,14 +271,13 @@ public and private keys id_rsa keys.
 
     def config_namespace_stage
       paragraph do
-        say "Checking for your namespace ... "
+        say "Checking your namespace ... "
         domains = @rest_client.domains
         if domains.length == 0
-          say "not found"
+          warn "none"
           ask_for_namespace
         else
-          say "found namespace:"
-          domains.each { |d| say "    #{d.id}" }
+          success domains.map(&:id).join(', ')
         end
       end
 
@@ -293,36 +287,31 @@ public and private keys id_rsa keys.
     def show_app_info_stage
       section do
         say "Checking for applications ... "
-      end
-      
-      apps = @rest_client.domains.inject([]) do |list, domain|
-        list += domain.applications
-      end
-      
-      if !apps.nil? and !apps.empty?
-        section(:bottom => 1) do
-          say "found"
-          apps.each do |app|
-            if app.app_url.nil? && app.u
-              say "    * #{app.name} - no public url (you need to add a namespace)"
-            else
-              say "    * #{app.name} - #{app.app_url}"
+
+        apps = @rest_client.domains.map(&:applications).flatten
+
+        if !apps.nil? and !apps.empty?
+          success "found #{apps.length}"
+
+          paragraph do
+            indent do
+              say table(apps.map do |app|
+                [app.name, app.app_url]
+              end)
             end
           end
-        end
-      else
-        section(:bottom => 1) { say "none found" }
-        paragraph do
-          say "Run 'rhc app create' to create your first application.\n\n"
-          say "Below is a list of the types of application you can create: \n"
+        else
+          info "none"
 
-          application_types = @rest_client.find_cartridges :type => "standalone"
-          application_types.sort {|a,b| a.name <=> b.name }.each do |cart|
-            say "    * #{cart.name} - rhc app create <app name> #{cart.name}"
+          paragraph{ say "Run 'rhc app create' to create your first application." }
+          paragraph do
+            application_types = @rest_client.find_cartridges :type => "standalone"
+            say table(application_types.sort {|a,b| a.display_name <=> b.display_name }.map do |cart|
+              [' ', cart.display_name, "rhc app create <app name> #{cart.name}"]
+            end).join("\n")
           end
         end
       end
-
       true
     end
 
@@ -373,24 +362,28 @@ public and private keys id_rsa keys.
         first_pass = false
         paragraph do
           namespace = ask "Please enter a namespace or leave this blank if you wish to skip this step:" do |q|
-            q.validate  = lambda{ |p| RHC::check_namespace p }
-            q.responses[:not_valid]    = 'The namespace value must contain only letters and/or numbers (A-Za-z0-9):'
+            #q.validate  = lambda{ |p| RHC::check_namespace p }
+            #q.responses[:not_valid]    = 'The namespace value must contain only letters and/or numbers (A-Za-z0-9):'
             q.responses[:ask_on_error] = ''
           end
         end
       end
     end
 
-    def generic_unix_install_check(show_action=true)
-      section(:top => 1) { say "Checking for git ... " } if show_action
-      if has_git?
-        section(:bottom => 1) { say "found" }
-      else
-        section(:bottom => 1) { say "needs to be installed" }
-        paragraph do
-          say "Automated installation of client tools is not supported for " \
-              "your platform. You will need to manually install git for full " \
-              "OpenShift functionality."
+    def generic_unix_install_check
+      paragraph do 
+        say "Checking for git ... "
+
+        if has_git?
+          success("found #{git_version}") rescue success('found')
+        else
+          warn "needs to be installed"
+
+          paragraph do
+            say "Automated installation of client tools is not supported for " \
+                "your platform. You will need to manually install git for full " \
+                "OpenShift functionality."
+          end
         end
       end
     end
@@ -399,7 +392,8 @@ public and private keys id_rsa keys.
       # Finding windows executables is hard since they can get installed
       # in non standard directories.  Punt on this for now and simply
       # print out urls and some instructions
-      say <<EOF
+      warn <<EOF
+
 In order to fully interact with OpenShift you will need to install and configure a git client if you have not already done so.
 
 Documentation for installing other tools you will need for OpenShift can be found at https://#{@libra_server}/app/getting_started#install_client_tools
@@ -412,17 +406,6 @@ We recommend these free applications:
 EOF
     end
 
-    def git_version_exec
-      `git --version 2>&1`
-    end
-
-    def has_git?
-      git_version_exec
-      $?.success?
-    rescue
-      false
-    end
-    
     def debug?
       @debug
     end
@@ -437,8 +420,7 @@ EOF
       if File.exists? @config_path
         backup = "#{@config_path}.bak"
         paragraph do
-          say "Configuration file #{@config_path} already exists, " \
-              "backing up to #{backup}"
+          say "Saving previous configuration to #{backup}"
         end
         FileUtils.cp(@config_path, backup)
         FileUtils.rm(@config_path)
@@ -448,9 +430,8 @@ EOF
     end
 
     def finalize_stage
-      paragraph do
-        say "Thank you for setting up your system.  You can rerun this at any time " \
-            "by calling 'rhc setup'."
+      section(:top => 1, :bottom => 0) do
+        say "Your client tools are now configured."
       end
       true
     end

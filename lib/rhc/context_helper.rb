@@ -1,4 +1,4 @@
-require 'rhc/git_helper'
+require 'rhc/git_helpers'
 
 module RHC
   module ContextHelpers

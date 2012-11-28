@@ -2,6 +2,8 @@ source :rubygems
 
 gemspec
 
+gem 'pry' if ENV['PRY']
+
 gem 'simplecov', :require => false, :group => :test
 
 # Fedora 17 splits bigdecimal out into its own gem.  No other platform has bigdecimal as a gem.

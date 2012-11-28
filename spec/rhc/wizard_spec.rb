@@ -7,11 +7,16 @@ require 'ostruct'
 require 'rest_spec_helper'
 
 describe RHC::Wizard do
+
+  def mock_config
+    RHC::Config.stub(:home_dir).and_return('/home/mock_user')
+  end
   before(:all) do
     mock_terminal
-    RHC::Config.set_defaults
     FakeFS.activate!
     FakeFS::FileSystem.clear
+    mock_config
+    RHC::Config.initialize
   end
 
   after(:all) do
@@ -20,6 +25,7 @@ describe RHC::Wizard do
 
   context "First run of rhc" do
     before(:all) do
+      mock_config
       @wizard = FirstRunWizardDriver.new
     end
 
@@ -55,6 +61,7 @@ describe RHC::Wizard do
 
     it "should write out generated ssh keys" do
       @wizard.setup_mock_ssh
+
       private_key_file = File.join(@wizard.ssh_dir, "id_rsa")
       public_key_file = File.join(@wizard.ssh_dir, "id_rsa.pub")
       File.exists?(private_key_file).should be false
@@ -76,7 +83,7 @@ describe RHC::Wizard do
       @wizard.setup_mock_has_git(true)
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match("Checking for git \.\.\. found")
+      output.should match(/Checking for git .*found/)
     end
 
     it "should ask for a namespace" do
@@ -86,13 +93,13 @@ describe RHC::Wizard do
       $terminal.write_line("testnamespace")
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match("Checking for your namespace \.\.\. not found")
+      output.should match(/Checking your namespace .*none/)
     end
 
     it "should show app creation commands" do
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match 'Below is a list of'
+      output.should match('rhc app create <app name> mock_standalone_cart-1')
     end
 
     it "should show a thank you message" do
@@ -104,6 +111,7 @@ describe RHC::Wizard do
 
   context "Repeat run of rhc setup without anything set" do
     before(:all) do
+      mock_config
       @wizard = RerunWizardDriver.new
     end
 
@@ -136,6 +144,8 @@ describe RHC::Wizard do
 
     it "should write out generated ssh keys" do
       @wizard.setup_mock_ssh
+      @wizard.should_receive(:ssh_add).once.and_return(true)
+
       private_key_file = File.join(@wizard.ssh_dir, "id_rsa")
       public_key_file = File.join(@wizard.ssh_dir, "id_rsa.pub")
       File.exists?(private_key_file).should be false
@@ -156,7 +166,7 @@ describe RHC::Wizard do
       @wizard.setup_mock_has_git(false)
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match("Checking for git \.\.\. needs to be installed")
+      output.should match(/Checking for git .*needs to be installed/)
       output.should match("Automated installation of client tools is not supported for your platform")
     end
 
@@ -164,25 +174,25 @@ describe RHC::Wizard do
       $terminal.write_line("testnamespace")
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match("Checking for your namespace \.\.\. not found")
+      output.should match(/Checking your namespace .*none/)
     end
 
     it "should show app creation commands" do
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match 'Below is a list of'
+      output.should match('rhc app create <app name> mock_standalone_cart-1')
     end
 
     it "should show a thank you message" do
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match("Thank you")
+      output.should match("Your client tools are now configured.")
     end
   end
 
   context "Repeat run of rhc setup with config set" do
     before(:all) do
-      RHC::Config.set_defaults
+      mock_config
       @wizard = RerunWizardDriver.new
       @wizard.setup_mock_config
       @wizard.run_next_stage # we can skip testing the greeting
@@ -242,32 +252,33 @@ describe RHC::Wizard do
       @wizard.setup_mock_has_git(true)
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match("Checking for git \.\.\. found")
+      output.should match(/Checking for git .*found/)
     end
 
     it "should ask for a namespace" do
       $terminal.write_line("testnamespace")
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match("Checking for your namespace \.\.\. not found")
+      output.should match(/Checking your namespace .*none/)
     end
 
     it "should show app creation commands" do
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match 'Below is a list of'
+      output.should match('rhc app create <app name> mock_standalone_cart-1')
     end
 
     it "should show a thank you message" do
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match("Thank you")
+      output.should match("Your client tools are now configured")
     end
   end
 
   context "Repeat run of rhc setup with config and ssh keys set" do
 
     before(:all) do
+      mock_config
       @wizard = RerunWizardDriver.new
       @wizard.setup_mock_config
       @wizard.setup_mock_ssh(true)
@@ -310,31 +321,32 @@ describe RHC::Wizard do
       @wizard.setup_mock_has_git(true)
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match("Checking for git \.\.\. found")
+      output.should match(/Checking for git .*found/)
     end
 
     it "should ask for a namespace" do
       $terminal.write_line("testnamespace")
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match("Checking for your namespace \.\.\. not found")
+      output.should match(/Checking your namespace .*none/)
     end
 
     it "should show app creation commands" do
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match 'Below is a list of'
+      output.should match('rhc app create <app name> mock_standalone_cart-1')
     end
 
     it "should show a thank you message" do
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match("Thank you")
+      output.should match("Your client tools are now configured")
     end
   end
 
   context "Repeat run of rhc setup with everything set" do
     before(:all) do
+      mock_config
       @namespace = 'testnamespace'
       @wizard = RerunWizardDriver.new
       @rest_client = RestSpecHelper::MockRestClient.new
@@ -389,32 +401,33 @@ describe RHC::Wizard do
       @wizard.setup_mock_has_git(true)
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match("Checking for git \.\.\. found")
+      output.should match(/Checking for git .*found/)
     end
 
     it "should show namespace" do
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match("Checking for your namespace ... found namespace:")
+      output.should match(/Checking your namespace/)
       output.should match(@namespace)
     end
 
     it "should list apps" do
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match("test1 - https://test1-#{@namespace}.#{@wizard.libra_server}/")
-      output.should match("test2 - https://test2-#{@namespace}.#{@wizard.libra_server}/")
+      output.should match("test1 https://test1-#{@namespace}.#{@wizard.libra_server}/")
+      output.should match("test2 https://test2-#{@namespace}.#{@wizard.libra_server}/")
     end
 
     it "should show a thank you message" do
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match("Thank you")
+      output.should match("Your client tools are now configured")
     end
   end
 
   context "Repeat run of rhc setup with everything set but platform set to Windows" do
     before(:all) do
+      mock_config
       @wizard = RerunWizardDriver.new
       @wizard.windows = true
       @wizard.run_next_stage
@@ -469,14 +482,15 @@ describe RHC::Wizard do
       @wizard.setup_mock_domain_and_applications(nil, 'test1' => nil, 'test2' => nil)
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match("test1 - no public url")
-      output.should match("test2 - no public url")
+      output.should match("test1")
+      output.should match("test2")
     end
 
   end
 
   context "Do a complete run through the wizard" do
     before(:all) do
+      mock_config
       @wizard = FirstRunWizardDriver.new
     end
 
@@ -494,32 +508,34 @@ describe RHC::Wizard do
       $terminal.write_line('no')
       $terminal.write_line("")
 
-      @wizard.run().should be_true
+      @wizard.run.should be_true
     end
 
     it "should fail" do
       @wizard.stub_rhc_client_new
       @wizard.stub(:login_stage) { nil }
-      @wizard.run().should be_nil
+      @wizard.run.should be_nil
     end
   end
 
   context "Check SSHWizard" do
+    let(:wizard) { SSHWizardDriver.new }
+    before(:each) { mock_config }
+
     it "should generate and upload keys since the user does not have them" do
-      wizard = SSHWizardDriver.new
       key_name = 'default'
       $terminal.write_line("yes\n#{key_name}\n")
 
-      wizard.run().should be_true
+      wizard.run.should be_true
 
       output = $terminal.read
       output.should match("Uploading key '#{key_name}'")
     end
 
     it "should pass through since the user has keys already" do
-      wizard = SSHWizardDriver.new
       wizard.stub(:ssh_key_uploaded?) { true }
-      wizard.run().should be_true
+
+      wizard.run.should be_true
 
       output = $terminal.read
       output.should == ""
@@ -527,12 +543,7 @@ describe RHC::Wizard do
   end
 
   context "Check odds and ends" do
-
-    it "should cause has_git? to catch an exception and return false" do
-      wizard = FirstRunWizardDriver.new
-      wizard.stub(:git_version_exec){ raise "Fake Exception" }
-      wizard.send(:has_git?).should be_false
-    end
+    before(:each) { mock_config }
 
     it "should cause ssh_key_upload? to catch NoMethodError and call the fallback to get the fingerprint" do
       wizard = RerunWizardDriver.new
@@ -621,6 +632,7 @@ describe RHC::Wizard do
     end
     
     it 'should pick a usable SSH key name' do
+      File.exists?('1').should be_false
       key_name = 'default'
       wizard = FirstRunWizardDriver.new
       key_data = wizard.get_mock_key_data
@@ -636,16 +648,16 @@ describe RHC::Wizard do
       # since the clashing key name is short, we expect to present
       # a key name with "1" attached to it.
       output.should match "|" + key_name + "1" + "|"
+      File.exists?('1').should be_false
     end
   end
 
   module WizardDriver
 
-    attr_accessor :mock_user, :libra_server, :config_path, :ssh_dir, :rest_client
+    attr_accessor :mock_user, :libra_server, :config_path, :rest_client
     def initialize(*args)
-      RHC::Config.home_dir = '/home/mock_user'
+      args << RHC::Config.default if args.empty?
       super *args
-      @ssh_dir = "#{RHC::Config.home_dir}/.ssh/"
       @libra_server = 'fake.foo'
       @mock_user = 'mock_user@foo.bar'
       @current_wizard_stage = nil
@@ -669,8 +681,8 @@ describe RHC::Wizard do
     end
 
     def setup_mock_config(rhlogin=@mock_user)
-      FileUtils.mkdir_p File.dirname(@config_path)
-      File.open(@config_path, "w") do |file|
+      FileUtils.mkdir_p File.dirname(RHC::Config.local_config_path)
+      File.open(RHC::Config.local_config_path, "w") do |file|
         file.puts <<EOF
 # Default user login
 default_rhlogin='#{rhlogin}'
@@ -681,11 +693,13 @@ EOF
       end
 
       # reload config
-      @config.home_dir = '/home/mock_user'
+      @config = RHC::Config.initialize
+      RHC::Config.ssh_dir.should =~ /mock_user/
+      @config.ssh_dir.should =~ /mock_user/
     end
 
     def setup_mock_ssh(add_ssh_key=false)
-      FileUtils.mkdir_p @ssh_dir
+      FileUtils.mkdir_p ssh_dir
       if add_ssh_key
         setup_mock_ssh_keys
       end
@@ -709,6 +723,10 @@ EOF
       @rest_client.stub(:domains) {
         [OpenStruct.new(:id => domain, :applications => apps_ary)]
       }
+    end
+
+    def ssh_dir
+      @config.ssh_dir
     end
 
     def windows=(bool)
@@ -773,7 +791,7 @@ ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAgQDIXpBBs7g93z/5JqW5IJNJR8bG6DWhpL2vR2ROEfzG
 EOF
     end
 
-    def setup_mock_ssh_keys(dir=@ssh_dir)
+    def setup_mock_ssh_keys(dir=ssh_dir)
       private_key_file = File.join(dir, "id_rsa")
       public_key_file = File.join(dir, "id_rsa.pub")
       File.open(private_key_file, 'w') { |f| f.write priv_key }
@@ -781,27 +799,18 @@ EOF
       File.open(public_key_file, 'w') { |f| f.write pub_key }
     end
 
-    def config(local_conf_path)
-      conf = RHC::Config
-      conf.set_local_config(local_conf_path, false)
-      conf
+    def config(local_conf_path=nil)
+      @config.set_local_config(local_conf_path, false) if local_conf_path
+      @config
     end
   end
 
   class FirstRunWizardDriver < RHC::Wizard
     include WizardDriver
-
-    def initialize
-      super config('/home/mock_user/.openshift/express.conf')
-    end
   end
 
   class RerunWizardDriver < RHC::RerunWizard
     include WizardDriver
-
-    def initialize
-      super config('/home/mock_user/.openshift/express.conf')
-    end
   end
 
   class SSHWizardDriver < RHC::SSHWizard

@@ -8,10 +8,10 @@ describe RHC::Commands::Threaddump do
   let(:domain_1_links) { mock_response_links(mock_domain_links('mock_domain_1')) }
   let(:app_0_links)    { mock_response_links(mock_app_links('mock_domain_0', 'mock_app_0')) }
   before(:each) do
-    RHC::Config.set_defaults
+    user_config
     @rc = MockRestClient.new
     @rc.add_domain("mock_domain_0").add_application("mock_app_0", "ruby-1.8.7")
-    stub_api_request(:any, client_links['LIST_DOMAINS']['relative']).with(:headers => {'Accept-Encoding'=>'gzip, deflate'}).
+    stub_api_request(:any, client_links['LIST_DOMAINS']['relative']).
             to_return({ :body   => {
                           :type => 'domains',
                           :data =>
@@ -24,7 +24,7 @@ describe RHC::Commands::Threaddump do
                         }.to_json,
                         :status => 200
                       })
-    stub_api_request(:any, domain_0_links['LIST_APPLICATIONS']['relative']).with(:headers => {'Accept-Encoding'=>'gzip, deflate'}).
+    stub_api_request(:any, domain_0_links['LIST_APPLICATIONS']['relative']).
             to_return({ :body   => {
                     :type => 'applications',
                     :data =>
@@ -39,7 +39,7 @@ describe RHC::Commands::Threaddump do
                   }.to_json,
                   :status => 200
                 })
-    stub_api_request(:any, app_0_links['THREAD_DUMP']['relative']).with(:body => {:event => 'thread-dump'}, :headers => {'Accept-Encoding'=>'gzip, deflate', 'Content-Length'=>'17', 'Content-Type'=>'application/x-www-form-urlencoded'}).
+    stub_api_request(:post, app_0_links['THREAD_DUMP']['relative'], false).
             to_return({ :body   => {
                           :type => 'application',
                           :data =>
@@ -69,13 +69,13 @@ describe RHC::Commands::Threaddump do
   end
 
   describe 'threaddump' do
-    let(:arguments) { ['threaddump', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password', 'mock_app_0'] }
-    context 'with no issues' do
-      it { expect { run }.should exit_with_code(0) }
-    end
+    let(:arguments) { ['threaddump', 'mock_app_0'] }
+    it { expect { run }.should exit_with_code(0) }
+    it { run_output.should =~ /Application test thread dump complete/ }
   end
+
   describe 'threaddump no args' do
-    let(:arguments) { ['threaddump', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+    let(:arguments) { ['threaddump'] }
     context 'args not supplied' do
       it { expect { run }.should exit_with_code(1) }
     end
