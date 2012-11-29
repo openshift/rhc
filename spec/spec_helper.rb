@@ -1,6 +1,7 @@
 require 'coverage_helper'
 require 'webmock/rspec'
 require 'fakefs/safe'
+require 'rbconfig'
 
 # chmod isn't implemented in the released fakefs gem
 # but is in git.  Once the git version is released we
@@ -204,6 +205,10 @@ module CommanderInvocationMatchers
       "expect block to invoke '#{method}' on #{@object} with #{@args}"
     end    
   end  
+end
+
+def mac?
+  RbConfig::CONFIG['host_os'] =~ /^darwin/
 end
 
 Spec::Runner.configure do |config|
