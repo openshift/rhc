@@ -965,7 +965,10 @@ def config
 end
 
 def ask_password
-  return ask("Password: ") { |q| q.echo = '*' }
+  return ask("Password: ") { |q|
+    q.echo = '*'
+    q.whitespace = :chomp
+  }
 end
 
 def kfile_not_found
