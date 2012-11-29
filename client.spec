@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.2.1
+Version: 1.2.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -115,6 +115,36 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Nov 29 2012 Adam Miller <admiller@redhat.com> 1.2.2-1
+- Merge pull request #233 from fabianofranz/master (openshift+bot@redhat.com)
+- Merge pull request #235 from
+  smarterclayton/bug_876714_remove_wizard_from_general_user
+  (openshift+bot@redhat.com)
+- Minor tweak to output (ccoleman@redhat.com)
+- explicitly seperating rake target from rake arguments as rake --trace takes
+  an optional argument depending on version. (kraman@gmail.com)
+- Fixing spec test (fotios@redhat.com)
+- Modified warning as per Hiro's comments (fotios@redhat.com)
+- Added comment related to gem commander 4.0.x issue (ffranz@redhat.com)
+- Fixes BZ878407 (ffranz@redhat.com)
+- Fixes for clayton's comments (fotios@redhat.com)
+- Created STDERR helper to match new error messages (fotios@redhat.com)
+- Made wizard not run by default, but show a message instead
+  (fotios@redhat.com)
+- Bug 877526 - Update message to be correct (ccoleman@redhat.com)
+- When a command with a default action is shown in help, the default subcommand
+  should be listed.  When a command has no default action, it should raise an
+  ArgumentError showing the list of actions.  Global options should not be
+  displayed when displaying a bulk command help (ccoleman@redhat.com)
+- Commander 4.0.3 returns an array for all 'program :symbol' calls
+  (ccoleman@redhat.com)
+- Simplifications to wizard that will reduce wording (ccoleman@redhat.com)
+- Merge pull request #225 from BanzaiMan/dev/hasari/bz877532
+  (ccoleman@redhat.com)
+- Bug 876715 - Users don't know what cart types to add. (ccoleman@redhat.com)
+- Fixing message typo pointed out by BZ877532 (and then some).
+  (asari.ruby@gmail.com)
+
 * Sat Nov 17 2012 Adam Miller <admiller@redhat.com> 1.2.1-1
 - bump_minor_versions for sprint 21 (admiller@redhat.com)
 
