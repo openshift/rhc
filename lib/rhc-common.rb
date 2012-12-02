@@ -384,7 +384,7 @@ end
     rescue Exception => e
       puts "There was a problem communicating with the server. Response message: #{e.message}"
       puts "If you were disconnected it is possible the operation finished without being able to report success."
-      puts "You can use 'rhc domain show' and 'rhc app status' to learn about the status of your user and application(s)."
+      puts "You can use 'rhc domain show' and 'rhc app show --state' to learn about the status of your user and application(s)."
       exit 219
     end
   end
