@@ -11,7 +11,7 @@ Options for <%= @command.name %>
 <% end -%>
 
 Global Options
-<% for option in @global_options -%><% next if option[:hide] -%>
+<% for option in @global_options -%><% next if option[:hide] || @command.options.any?{ |o| (o[:switches] & option[:switches]).present? } -%>
   <%= "%-25s %s\n" % [option[:switches].join(', '), option[:description]] -%>
 <% end -%>
 <% else -%>

@@ -11,6 +11,7 @@ module RHC::Commands
                 "have to look it up."
     syntax "<app> [--namespace namespace]"
     option ["-n", "--namespace namespace"], "Namespace of the application", :context => :namespace_context, :required => true
+    option ["-r", "--repo dir"], "Path to the Git repository (defaults to ./$app_name)"
     argument :app, "The application you wish to clone", ["-a", "--app name"]
     alias_action 'app git-clone', :deprecated => true, :root_command => true
     # TODO: Implement default values for arguments once ffranz has added context arguments
@@ -18,7 +19,6 @@ module RHC::Commands
     def run(app_name)
       domain = rest_client.find_domain(options.namespace)
       app = domain.find_application(app_name)
-
       git_clone_application(app)
 
       0

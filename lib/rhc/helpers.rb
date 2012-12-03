@@ -398,6 +398,5 @@ module RHC
           @@margin = 0
         end
       end
->>>>>>> 805f507... * Remove references to rhc-common from within the new CLI commands
   end
 end
