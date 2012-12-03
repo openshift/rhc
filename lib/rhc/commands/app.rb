@@ -346,7 +346,7 @@ module RHC::Commands
 
         # Now start checking for DNS
         for i in 0..MAX_RETRIES-1
-          found = host_exists?(host)
+          found = host_exists?(host) || hosts_file_contains?(host)
           break if found
 
           say "    retry # #{i+1} - Waiting for DNS: #{host}"
