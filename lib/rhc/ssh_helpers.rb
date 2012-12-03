@@ -100,15 +100,6 @@ module RHC
       end
     end
 
-    # Public: Format SSH key's core attributes (name, type, fingerprint)
-    # in a given ERB template
-    # 
-    # key - an object to be formatted
-    # template - ERB template
-    def format(key, template)
-      template.result(binding)
-    end
-
 
     # For Net::SSH versions (< 2.0.11) that does not have
     # Net::SSH::KeyFactory.load_public_key, we drop to shell to get

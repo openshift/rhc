@@ -6,6 +6,7 @@ SimpleCov.at_exit{ SimpleCov.result.format! } if defined? SimpleCov
 require 'rhc_helper'
 require 'rhc/rest'
 require 'rhc/config'
+require 'rhc/commands'
 require 'rhc/helpers'
 require 'rhc/commands'
 

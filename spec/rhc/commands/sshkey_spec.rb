@@ -19,7 +19,7 @@ describe RHC::Commands::Sshkey do
       end
 
       it { expect { run }.should exit_with_code(0) }
-      it { run_output.should match("Name: mockkey") }
+      it { run_output.should match(/mockkey1 \(type: ssh-rsa\)/) }
     end
   end
   
@@ -34,7 +34,7 @@ describe RHC::Commands::Sshkey do
       end
 
       it { expect { run }.should exit_with_code(0) }
-      it { run_output.should match("Name: mockkey1") }
+      it { run_output.should match(/mockkey1 \(type: ssh-rsa\)/) }
     end
   end
   
@@ -74,7 +74,7 @@ describe RHC::Commands::Sshkey do
             f << 'ssh-rsa AADAQABAAABAQCnCOqK7/mmvZ9AtCAerxjAasJ1rSpfuWT4vNm1+O/Fh0Di3chTWjY9a0M2hEnqkqnVG589L9CqCUeT0kdc3Vgw3JEcacSUr1z7tLr9kO+p/D5lSdQYzDGGRFOZ0H6lc/y8iNxWV1VO/sJvKx6cr5zvKIn8Q6GvhVNOxlai0IOb9FJxLGK95GLpZ+elzh8Tc9giy7KfwheAwhV2JoF9uRltE5JP/CNs7w/E29i1Z+jlueuu8RVotLmhSVNJm91Ey7OCtoI1iBE0Wv/SucFe32Qi08RWTM/MaGGz93KQNOVRGjNkosJjPmP1qU6WGBfliDkJAZXB0b6sEcnx1fbVikwZ'
           end
           expect { run }.should exit_with_code(128)
-          expect { run_output.should match("Name: mockkey") }
+          expect { run_output.should match(/Name:.* mockkey/) }
           @rc.sshkeys.length.should == num_keys
         end
       end

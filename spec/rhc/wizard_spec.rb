@@ -234,7 +234,7 @@ describe RHC::Wizard do
       key_data = @wizard.get_mock_key_data
       @wizard.ssh_keys = key_data
       key_name = '73ce2cc1'
-      
+
       fingerprint, short_name = @wizard.get_key_fingerprint
       @wizard.rest_client.stub(:find_key) { key_data.detect{|k| k.name == key_name} }
       $terminal.write_line('yes')
@@ -242,7 +242,7 @@ describe RHC::Wizard do
       @wizard.run_next_stage
       output = $terminal.read
       key_data.each do |key|
-        output.should match("Name: #{key.name}")
+        output.should match(/#{key.name} \(type: ssh-rsa\)/)
         output.should match("Fingerprint: #{key.fingerprint}")
       end
       output.should match("|#{short_name}|") # prompt with the default name
@@ -753,6 +753,12 @@ EOF
       def update(type, content)
         self.type = type
         self.content = content
+      end
+      def type
+        @table[:type]
+      end
+      def type=(type)
+        @table[:type] = type
       end
     end
 

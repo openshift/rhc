@@ -12,7 +12,7 @@ require 'date'
 describe RHC::Helpers do
   before(:each) do
     mock_terminal
-    RHC::Config.set_defaults
+    user_config
   end
 
   subject do
@@ -86,8 +86,7 @@ describe RHC::Helpers do
   context 'with LIBRA_SERVER environment variable' do
     before do
       ENV['LIBRA_SERVER'] = 'test.com'
-      # need to reinit config to pick up env var
-      RHC::Config.initialize
+      user_config
     end
     its(:openshift_server) { should == 'test.com' }
     its(:openshift_url) { should == 'https://test.com' }

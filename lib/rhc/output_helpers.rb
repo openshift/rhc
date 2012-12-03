@@ -95,6 +95,20 @@ module RHC
       display_no_info("cartridge") unless @table_displayed
     end
 
+    def display_key(key, *properties)
+      properties = [:fingerprint] if properties.empty?
+      say_table(
+        properties.include?(:name) ? nil : format_key_header(key),
+        get_properties(key, *properties)
+      )
+    end
+
+    def format_key_header(key)
+      [
+        key.name,
+        "(type: #{key.type})",
+      ].compact.join(' ')
+    end
     #---------------------------
     # Misc information
     #---------------------------

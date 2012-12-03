@@ -60,21 +60,19 @@ module RHC
       cmd = "git clone #{git_url}#{destination}"
       debug "Running #{cmd}"
 
-      say "Calling 'git clone #{git_url}'"
+      #say "Calling 'git clone #{git_url}'"
 
       status, stdout, stderr = nil
 
-      paragraph do
-        if RHC::Helpers.windows?
-          #:nocov: TODO: Test block
-          system(cmd)
-          status = $?.exitstatus
-          #:nocov:
-        else
-          stdout, stderr = [$stdout, $stderr].map{ |t| RHC::Helpers::StringTee.new(t) }
-          status = Open4.spawn(cmd, 'stdout' => stdout, 'stderr' => stderr, 'raise' => false)
-          stdout, stderr = [stdout, stderr].map(&:string)
-        end
+      if RHC::Helpers.windows?
+        #:nocov: TODO: Test block
+        system(cmd)
+        status = $?.exitstatus
+        #:nocov:
+      else
+        stdout, stderr = [$stdout, $stderr].map{ |t| RHC::Helpers::StringTee.new(t) }
+        status = Open4.spawn(cmd, 'stdout' => stdout, 'stderr' => stderr, 'raise' => false)
+        stdout, stderr = [stdout, stderr].map(&:string)
       end
 
       if status != 0
@@ -82,7 +80,7 @@ module RHC
         when /fatal: destination path '[^']*' already exists and is not an empty directory./
           raise RHC::GitDirectoryExists, "The directory you are cloning into already exists."
         else
-          raise RHC::GitException, "Unable to clone your repository"
+          raise RHC::GitException, "Unable to clone your repository. Called Git with: #{cmd}"
         end
       end
 

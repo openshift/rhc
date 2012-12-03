@@ -141,10 +141,6 @@ module RHC
     @@indent = 0
     @@last_line_open = false
     def say(msg, *args)
-      @@section_bottom_last ||= 0
-
-      return unless msg.length > 0
-
       output = if Hash[*args][:stderr]
           $stderr
         else
@@ -152,9 +148,9 @@ module RHC
           $terminal.instance_variable_get(:@output)
         end
 
-
       Array(msg).each do |statement|
         statement = statement.to_str
+        next unless statement.present?
 
         template  = ERB.new(statement, nil, "%")
         statement = template.result(binding)
@@ -176,9 +172,11 @@ module RHC
       msg
     end
 
-    def ask(*args)
-      separate_blocks
-      super
+    [:ask, :agree].each do |sym|
+      define_method(sym) do |*args, &block|
+        separate_blocks
+        super(*args, &block)
+      end
     end
 
     def success(msg, *args)
@@ -326,8 +324,7 @@ module RHC
     #  top - top margin specified in lines
     #  bottom - bottom margin specified in line
     #
-    @@section_bottom_last = nil
-    @@margin = 0
+    @@margin = nil
     def section(params={}, &block)
       top = params[:top] || 0
       bottom = params[:bottom] || 0
@@ -336,17 +333,12 @@ module RHC
       top = 0 unless @@margin
       @@margin = [top, @@margin || 0].max
 
-      block.call
+      value = block.call
 
       say "\n" if @@last_line_open
       @@margin = [bottom, @@margin].max
-      #bottom_margin = 0
-      #until bottom_margin >= bottom
-      #  say "\n"
-      #  bottom_margin += 1
-      #end
 
-      @@section_bottom_last = bottom
+      value
     end
 
     ##
@@ -377,16 +369,6 @@ module RHC
     def unix? ; !jruby? && !windows? end
     def mac? ; RbConfig::CONFIG['host_os'] =~ /^darwin/ end
 
-    # common SSH key display format in ERB
-    def ssh_key_display_format
-      ERB.new <<-FORMAT
-       Name: <%= key.name %>
-       Type: <%= key.type %>
-Fingerprint: <%= key.fingerprint %>
-
-      FORMAT
-    end
-
     #
     # Check if host exists
     #
@@ -411,7 +393,7 @@ Fingerprint: <%= key.fingerprint %>
     private
 
       def separate_blocks
-        if @@margin && @@margin > 0 && !@@last_line_open
+        if (@@margin ||= 0) > 0 && !@@last_line_open
           $terminal.instance_variable_get(:@output).print "\n" * @@margin
           @@margin = 0
         end

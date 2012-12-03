@@ -27,6 +27,8 @@ module RHC
       STAGES
     end
 
+    attr_reader :rest_client
+
     def initialize(config, opts=nil)
       @config = config
       @config_path = config.config_path
@@ -84,10 +86,10 @@ module RHC
 
       # instantiate a REST client that stages can use
       end_point = "https://#{@libra_server}/broker/rest/api"
-      @rest_client = RHC::Rest::Client.new(end_point, @username, @password, @debug)
-      
+      self.rest_client = RHC::Rest::Client.new(end_point, @username, @password, @debug)
+
       # confirm that the REST client can connect
-      return false unless @rest_client.user
+      return false unless rest_client.user
 
       true
     end
@@ -134,47 +136,42 @@ EOF
     # return true if the account has the public key defined by
     # RHC::Config::ssh_pub_key_file_path
     def ssh_key_uploaded?
-      @ssh_keys ||= @rest_client.sshkeys
+      @ssh_keys ||= rest_client.sshkeys
       @ssh_keys.any? { |k| k.fingerprint == fingerprint_for_default_key }
     end
 
     def existing_keys_info
       return unless @ssh_keys
       # TODO: This ERB format is shared with RHC::Commands::Sshkey; should be refactored
-      @ssh_keys.inject("Current Keys: \n") do |result, key|
-        erb = ::RHC::Helpers.ssh_key_display_format
-        result += format(key, erb)
-      end
+      indent{ @ssh_keys.each{ |key| paragraph{ display_key(key) } } }
     end
 
     def get_preferred_key_name
-      paragraph do
-        say "You can enter a name for your key, or leave it blank to use the default name. " \
-            "Using the same name as an existing key will overwrite the old key."
-      end
       key_name = 'default'
 
       if @ssh_keys.empty?
         paragraph do
-          say <<-DEFAULT_KEY_UPLOAD_MSG
-Since you do not have any keys associated with your OpenShift account,
-your new key will be uploaded as the 'default' key
-          DEFAULT_KEY_UPLOAD_MSG
+          info "Since you do not have any keys associated with your OpenShift account, "\
+              "your new key will be uploaded as the 'default' key."
         end
       else
-        section(:top => 1) { say existing_keys_info }
+        paragraph do
+          say "You can enter a name for your key, or leave it blank to use the default name. " \
+              "Using the same name as an existing key will overwrite the old key."
+        end
+
+        paragraph { existing_keys_info }
 
         key_fingerprint = fingerprint_for_default_key
         unless key_fingerprint
           paragraph do
-            say <<-CONFIG_KEY_INVALID
-Your ssh public key at #{RHC::Config.ssh_pub_key_file_path} is invalid or unreadable.
-The setup can not continue until you manually remove or fix both of your
-public and private keys id_rsa keys.
-            CONFIG_KEY_INVALID
+            say "Your ssh public key at #{RHC::Config.ssh_pub_key_file_path} is invalid or unreadable. "\
+                "Setup can not continue until you manually remove or fix your "\
+                "public and private keys id_rsa keys."
           end
           return nil
         end
+
         hostname = Socket.gethostname.gsub(/\..*\z/,'')
         username = @username ? @username.gsub(/@.*/, '') : ''
         pubkey_base_name = "#{username}#{hostname}".gsub(/[^A-Za-z0-9]/,'').slice(0,16)
@@ -183,7 +180,7 @@ public and private keys id_rsa keys.
           :base => pubkey_base_name,
           :max_length => DEFAULT_MAX_LENGTH
         )
-        
+
         paragraph do
           key_name = ask("Provide a name for this key: ") do |q|
             q.default = default_name
@@ -217,35 +214,40 @@ public and private keys id_rsa keys.
       return false unless key_name
 
       type, content, comment = ssh_key_triple_for_default_key
-      say "type: %s\ncontent: %s\nfingerprint: %s" % [type, content, fingerprint_for_default_key]
-
-      if !@ssh_keys.empty? && @ssh_keys.any? { |k| k.name == key_name }
-        say "Key with the name #{key_name} already exists. Updating... "
-        key = @rest_client.find_key(key_name)
-        key.update(type, content)
-      else
-        say "Uploading key '#{key_name}' from #{RHC::Config::ssh_pub_key_file_path}"
-        @rest_client.add_key key_name, content, type
+      indent do
+        say table([['Type', type], ['Fingerprint', fingerprint_for_default_key]])
       end
-      
+
+      paragraph do
+        if !@ssh_keys.empty? && @ssh_keys.any? { |k| k.name == key_name }
+          say "Key with the name #{key_name} already exists. Updating ... "
+          key = rest_client.find_key(key_name)
+          key.update(type, content)
+        else
+          say "Uploading key '#{key_name}' from #{RHC::Config::ssh_pub_key_file_path} ... "
+          rest_client.add_key key_name, content, type
+        end
+        success "done"
+      end
+
       true
     end
 
     def upload_ssh_key_stage
       return true if ssh_key_uploaded?
 
-      upload = false
-      section do
-        upload = agree "Your public ssh key must be uploaded to the OpenShift server.  Would you like us to upload it for you? (yes/no) "
+      upload = paragraph do
+        agree "Your public SSH key must be uploaded to the OpenShift server to access code.  Upload now? (yes|no) "
       end
 
       if upload
         upload_ssh_key
       else
         paragraph do
-          say "You can upload your ssh key at a later time using the 'rhc sshkey' command"
+          info "You can upload your ssh key at a later time using the 'rhc sshkey' command"
         end
       end
+
       true
     end
 
@@ -272,9 +274,18 @@ public and private keys id_rsa keys.
     def config_namespace_stage
       paragraph do
         say "Checking your namespace ... "
-        domains = @rest_client.domains
+        domains = rest_client.domains
         if domains.length == 0
           warn "none"
+
+          paragraph do
+            say "Your namespace is unique to your account and is the suffix of the " \
+                "public URLs we assign to your applications. You may configure your " \
+                "namespace here or leave it blank and use 'rhc domain create' to " \
+                "create a namespace later.  You will not be able to create " \
+                "applications without first creating a namespace."
+          end
+
           ask_for_namespace
         else
           success domains.map(&:id).join(', ')
@@ -288,7 +299,7 @@ public and private keys id_rsa keys.
       section do
         say "Checking for applications ... "
 
-        apps = @rest_client.domains.map(&:applications).flatten
+        apps = rest_client.domains.map(&:applications).flatten
 
         if !apps.nil? and !apps.empty?
           success "found #{apps.length}"
@@ -305,7 +316,7 @@ public and private keys id_rsa keys.
 
           paragraph{ say "Run 'rhc app create' to create your first application." }
           paragraph do
-            application_types = @rest_client.find_cartridges :type => "standalone"
+            application_types = rest_client.find_cartridges :type => "standalone"
             say table(application_types.sort {|a,b| a.display_name <=> b.display_name }.map do |cart|
               [' ', cart.display_name, "rhc app create <app name> #{cart.name}"]
             end).join("\n")
@@ -327,46 +338,34 @@ public and private keys id_rsa keys.
 
     def config_namespace(namespace)
       # skip if string is empty
-      paragraph do
-        if namespace.nil? or namespace.chomp.length == 0
-          say "Skipping! You may create a namespace using 'rhc domain create'"
-          return true
-        end
+      if namespace.nil? or namespace.chomp.length == 0
+        paragraph{ info "You may create a namespace later through 'rhc domain create'" }
+        return true
+      end
 
-        begin
-          domain = @rest_client.add_domain(namespace)
+      begin
+        domain = rest_client.add_domain(namespace)
 
-          say "Your domain name '#{domain.id}' has been successfully created"
-        rescue RHC::Rest::ValidationException => e
-          say e.message
-          return false
-        end
+        success "Your domain name '#{domain.id}' has been successfully created"
+      rescue RHC::Rest::ValidationException => e
+        error e.message || "Unknown error during namespace creation."
+        return false
       end
       true
     end
 
     def ask_for_namespace
-      paragraph do
-        say "Your namespace is unique to your account and is the suffix of the " \
-            "public URLs we assign to your applications. You may configure your " \
-            "namespace here or leave it blank and use 'rhc domain create' to " \
-            "create a namespace later.  You will not be able to create " \
-            "applications without first creating a namespace."
-      end
-
       # Ask for a namespace at least once, configure the namespace if a valid,
       # non-blank string is provided.
-      namespace  = nil
-      first_pass = true
-      while first_pass or !config_namespace namespace do
-        first_pass = false
-        paragraph do
-          namespace = ask "Please enter a namespace or leave this blank if you wish to skip this step:" do |q|
+      namespace = nil
+      paragraph do
+        begin
+          namespace = ask "Please enter a namespace (letters and numbers only) |<none>|: " do |q|
             #q.validate  = lambda{ |p| RHC::check_namespace p }
             #q.responses[:not_valid]    = 'The namespace value must contain only letters and/or numbers (A-Za-z0-9):'
             q.responses[:ask_on_error] = ''
           end
-        end
+        end while !config_namespace(namespace)
       end
     end
 
@@ -409,6 +408,9 @@ EOF
     def debug?
       @debug
     end
+
+    protected
+      attr_writer :rest_client
   end
 
   class RerunWizard < Wizard
@@ -445,7 +447,7 @@ EOF
     end
 
     def initialize(rest_client)
-      @rest_client = rest_client
+      self.rest_client = rest_client
       super RHC::Config
     end
   end

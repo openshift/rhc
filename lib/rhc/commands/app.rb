@@ -32,6 +32,7 @@ module RHC::Commands
         :git => true
 
       paragraph do
+        header "Application Options"
         table({"Namespace:" => options.namespace,
                "Cartridge:" => cartridge,
                "Gear Size:" => options.gear_size || "default",
@@ -110,16 +111,17 @@ module RHC::Commands
             debug "Checking SSH keys through the wizard"
             check_sshkeys! unless options.noprompt
 
-            say "Cloning your application Git repository ... "
-            begin
-              git_clone_application(rest_app)
-              self.success "done"
-            rescue RHC::GitException => e
-              warn "#{e}"
-              unless RHC::Helpers.windows? and windows_nslookup_bug?(rest_app)
-                add_issue("We were unable to clone your application's git repo - #{e}",
-                          "Clone your git repo",
-                          "rhc git-clone #{rest_app.name}")
+            say "Downloading the application Git repository ..."
+            paragraph do
+              begin
+                git_clone_application(rest_app)
+              rescue RHC::GitException => e
+                warn "#{e}"
+                unless RHC::Helpers.windows? and windows_nslookup_bug?(rest_app)
+                  add_issue("We were unable to clone your application's git repo - #{e}",
+                            "Clone your git repo",
+                            "rhc git-clone #{rest_app.name}")
+                end
               end
             end
           end
@@ -131,7 +133,7 @@ module RHC::Commands
       if issues?
         output_issues(rest_app)
       else
-        results{ messages.each { |msg| say msg } }.blank? and "Application created"
+        results{ messages.each { |msg| success msg } }.blank? and "Application created"
       end
 
       0
@@ -153,7 +155,7 @@ module RHC::Commands
 
       unless options.confirm
         paragraph do
-          return 1 unless agree("Are you sure you wish to delete the '#{rest_app.name}' application? [yes|no]: ")
+          return 1 unless agree("Are you sure you wish to delete the '#{rest_app.name}' application? (yes|no): ")
         end
       end
 
