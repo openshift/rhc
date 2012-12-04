@@ -9,7 +9,7 @@ When /^'rhc sshkey (\S+)( .*?)?'(?: command)? is run$/ do |subcommand, rest|
 end
 
 Given "the existing keys are listed" do
-  When "'rhc sshkey list' is run"
+  step "'rhc sshkey list' is run"
 end
 
 Given /^the key "(.*?)" is (.*)$/ do |key,cmd|
@@ -19,12 +19,12 @@ Given /^the key "(.*?)" is (.*)$/ do |key,cmd|
         when "removed"
           "remove"
         end
-  When "'rhc sshkey #{cmd} \"#{key}\"' is run"
+  step "'rhc sshkey #{cmd} \"#{key}\"' is run"
 end
 
 When /^a new SSH key "(.*?)" is added as "(.*)"$/ do |keyfile, name|
   keyfile = Sshkey.keyfile_path(keyfile)
-  When "'rhc sshkey add #{name} #{keyfile}' is run"
+  step "'rhc sshkey add #{name} #{keyfile}' is run"
 end
 
 Then /^the command exits with status code (\d+)$/ do |arg1|
