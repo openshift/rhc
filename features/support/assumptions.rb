@@ -1,16 +1,16 @@
 Given 'we have the client tools setup' do
-  When 'the libra client tools'
-  When 'the client tools should be setup if needed'
+  step 'the libra client tools'
+  step 'the client tools should be setup if needed'
 end
 
 Given 'we have an existing domain' do
-  When 'we have the client tools setup'
-  When 'a new domain is needed and created'
+  step 'we have the client tools setup'
+  step 'a new domain is needed and created'
   begin
-    When 'the key "key1" is shown'
-    Then 'the output includes the key information for "key1"'
+    step 'the key "key1" is shown'
+    step 'the output includes the key information for "key1"'
   rescue Spec::Expectations::ExpectationNotMetError
-    Given 'a new SSH key "key1.pub" is added as "key1"'
+    step 'a new SSH key "key1.pub" is added as "key1"'
   end
 end
 
@@ -26,9 +26,9 @@ Given /^we have a (.*) (.*) cartridge$/ do |status,type|
   #  only try once
   retried = false
   begin
-    When "the #{type} cartridge should be #{status}"
+    step "the #{type} cartridge should be #{status}"
   rescue Spec::Expectations::ExpectationNotMetError
-    When "the #{type} cartridge is #{cmd}"
+    step "the #{type} cartridge is #{cmd}"
     (retried = true && retry) unless retried
   end
 end
@@ -42,8 +42,8 @@ Given /^we have a (stopped|running) application$/ do |state|
                    end
 
   begin
-    When "the application should #{before}"
+    step "the application should #{before}"
   rescue Spec::Expectations::ExpectationNotMetError
-    When "the application is #{after}"
+    step "the application is #{after}"
   end
 end

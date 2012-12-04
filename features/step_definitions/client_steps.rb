@@ -29,10 +29,10 @@ When /^the setup wizard is run$/ do
 end
 
 Then /^the client tools should be setup( if needed)?$/ do |setup|
-  configured = (RHC::Config.has_local_config? or RHC::Config.has_opts_config?)
+  configured = (RHC::Config.default_rhlogin)
 
   if !configured && setup
-    Then 'the setup wizard is run'
+    step 'the setup wizard is run'
     configured = (RHC::Config.has_local_config? or RHC::Config.has_opts_config?)
   end
 
