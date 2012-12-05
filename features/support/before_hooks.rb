@@ -13,7 +13,12 @@ end
 
 # Defined the required hooks first so we make sure we have everything we need
 Before('@geared_user_required') do
+  $old_username = $username
   $username = "user_with_multiple_gear_sizes@test.com"
+end
+After("@geared_user_required") do
+  $username = $old_username if $old_username
+  $old_username = nil
 end
 
 Before('@domain_required') do
