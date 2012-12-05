@@ -105,6 +105,10 @@ def clean_applications(leave_domain = false)
       end
       domain.delete unless leave_domain
     end
+    client.sshkeys.each do |key|
+      _log "\t\tKey: #{key.name}"
+      key.delete
+    end
   end
 end
 
@@ -149,7 +153,7 @@ AfterConfiguration do |config|
     end
   rescue Errno::ENOENT, Errno::EACCES
   end
-  File.chmod(0600,keyfile)
+  #File.chmod(0600,keyfile)
 
   # Setup the logger
   logger = Logger.new(File.join(RHCHelper::TEMP_DIR, "rhc_cucumber.log"))
