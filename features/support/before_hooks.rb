@@ -1,5 +1,6 @@
 Before('@clean') do
   clean_applications(true)
+  $keyed_users = []
 end
 
 Before('@sshkey') do
@@ -16,7 +17,7 @@ Before('@geared_user_required') do
   $old_username = $username
   $username = "user_with_multiple_gear_sizes@test.com"
 end
-After("@geared_user_required") do
+After do
   $username = $old_username if $old_username
   $old_username = nil
 end

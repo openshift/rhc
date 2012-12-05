@@ -7,7 +7,7 @@ class RHCRest
   def debug?
     false
   end
-  def debug
+  def debug(*args)
     raise "Unchecked debug"
   end
 end

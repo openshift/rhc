@@ -205,6 +205,13 @@ describe RHC::Helpers do
 
         it { capture{ expect{ subject.git_clone_repo("url", "repo") }.should raise_error(RHC::GitDirectoryExists) } }
       end
+
+      context "permission denied" do
+        let(:stderr){ "Permission denied (publickey,gssapi-mic)." }
+        let(:exit_status){ 1 }
+
+        it { capture{ expect{ subject.git_clone_repo("url", "repo") }.should raise_error(RHC::GitPermissionDenied) } }
+      end
     end
   end
 

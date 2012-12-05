@@ -43,8 +43,8 @@ module RHCHelper
         #err = stderr.read.strip
         stdout.close
         stderr.close
-        logger.debug("Standard Output:\n#{out}")
-        logger.debug("Standard Error:\n#{err}")
+        #logger.debug("Standard Output:\n#{out}")
+        #logger.debug("Standard Error:\n#{err}")
 
         # Allow a caller to pass in a block to process the output
         yield status.exitstatus, out, err, arg if block_given?

@@ -36,15 +36,20 @@ module RHCHelper
       #   2 - password
       #   3 - upload SSH keys
       #   4 - if no namespace is found, create namespace? (blank is no)
+      args = [$username, $password]
+      args << 'yes' unless ($keyed_users ||= []).include?($username)
+      args << '' # always skip namespace
       if $namespace
         # Namespace is already created, so don't pass anything in
         logger.info("Namespace (#{$namespace}) should be found by the wizard")
-        run("rhc setup", nil, [$username, $password, 'yes', ""])
+        run("rhc setup", nil, args)
       else
         # Pass in a blank value for namespace to create in the next step
+        args << ''
         logger.info("Skipping namespace creation")
-        run("rhc setup", nil, [$username, $password, 'yes', "", ""])
+        run("rhc setup", nil, args)
       end
+      $keyed_users << $username
     end
 
     def self.create_unique(type, scalable, gear_profile=nil, prefix="test")
