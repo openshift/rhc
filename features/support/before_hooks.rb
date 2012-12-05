@@ -24,6 +24,7 @@ After do
 end
 
 Before('@cartridge_storage_user_required') do
+  $old_username = $username
   $username = "user_with_extra_storage@test.com"
 end
 
