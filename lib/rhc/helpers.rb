@@ -345,5 +345,15 @@ Fingerprint: <%= key.fingerprint %>
       dns.getresources(host, Resolv::DNS::Resource::IN::A).any?
       # :nocov:
     end
+    
+    def hosts_file_contains?(host)
+      # :nocov:
+      resolver = Resolv::Hosts.new
+      begin
+        resolver.getaddress host
+      rescue Resolv::ResolvError
+      end
+      # :nocov:
+    end
   end
 end
