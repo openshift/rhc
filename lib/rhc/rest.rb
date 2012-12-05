@@ -156,10 +156,10 @@ module RHC
     end
 
     def request(request, &block)
+      tried = 0
       begin
         debug "Request: #{request.inspect}" if debug?
         response = request.execute
-        debug "Response: #{response}" if debug?
         #set cookie
         rh_sso = response.cookies['rh_sso']
         if not rh_sso.nil?
@@ -179,6 +179,11 @@ module RHC
       rescue RestClient::ServerBrokeConnection => e
         raise ConnectionException.new(
           "Connection to server got interrupted: #{e.message}")
+      rescue RestClient::BadGateway => e
+        retry if (tried += 1) < 2 && request.method.to_s.upcase == "GET"
+        raise ConnectionException.new(
+          "An error occurred while communicating with the server (#{e.message}). This problem may only be temporary."\
+          "#{RestClient.proxy.present? ? " Check that you have correctly specified your proxy server '#{RestClient.proxy}' as well as your OpenShift server '#{request.url}'." : " Check that you have correctly specified your OpenShift server '#{request.url}'."}")
       rescue RestClient::ExceptionWithResponse => e
         process_error_response(e.response, request.url)
       rescue SocketError => e
@@ -190,6 +195,8 @@ module RHC
         raise ResourceAccessException.new(
           "Failed to access resource: #{e.message}")
       end
+    ensure
+      debug "Response: #{response}" rescue nil if debug?
     end
 
     def generic_error(url)
