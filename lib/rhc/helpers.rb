@@ -383,11 +383,28 @@ module RHC
     def hosts_file_contains?(host)
       # :nocov:
       resolver = Resolv::Hosts.new
-      begin
-        resolver.getaddress host
-      rescue Resolv::ResolvError
-      end
+      resolver.getaddress host
+    rescue Resolv::ResolvError
       # :nocov:
+    end
+
+    # Run a command and export its output to the user.  Output is not capturable
+    # on all platforms.
+    def run_with_tee(cmd)
+      status, stdout, stderr = nil
+
+      if windows?
+        #:nocov: TODO: Test block
+        system(cmd)
+        status = $?.exitstatus
+        #:nocov:
+      else
+        stdout, stderr = [$stdout, $stderr].map{ |t| StringTee.new(t) }
+        status = Open4.spawn(cmd, 'stdout' => stdout, 'stderr' => stderr, 'quiet' => true)
+        stdout, stderr = [stdout, stderr].map(&:string)
+      end
+
+      [status, stdout, stderr]
     end
 
     private

@@ -7,7 +7,7 @@ module RHC
     end
 
     def options_parse_trace
-      if @args.include?("--trace") || @args.include?("--debug")
+      if @args.include?("--trace")
         @args.delete "--trace"
         return true
       end

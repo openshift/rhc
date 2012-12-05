@@ -47,13 +47,13 @@ module RHC
   class GitDirectoryExists < GitException; end
 
   class DeprecatedError < RuntimeError; end
-  
+
   class KeyFileNotExistentException < Exception
     def initialize(message="SSH Key file not found")
       super message, 128
     end
   end
-  
+
   class KeyFileAccessDeniedException < Exception
     def initialize(message = "Insufficient acces to SSH Key file")
       super message, 128

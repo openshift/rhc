@@ -60,25 +60,14 @@ module RHC
       cmd = "git clone #{git_url}#{destination}"
       debug "Running #{cmd}"
 
-      #say "Calling 'git clone #{git_url}'"
-
-      status, stdout, stderr = nil
-
-      if RHC::Helpers.windows?
-        #:nocov: TODO: Test block
-        system(cmd)
-        status = $?.exitstatus
-        #:nocov:
-      else
-        stdout, stderr = [$stdout, $stderr].map{ |t| RHC::Helpers::StringTee.new(t) }
-        status = Open4.spawn(cmd, 'stdout' => stdout, 'stderr' => stderr, 'raise' => false)
-        stdout, stderr = [stdout, stderr].map(&:string)
-      end
+      status, stdout, stderr = run_with_tee(cmd)
 
       if status != 0
         case stderr
         when /fatal: destination path '[^']*' already exists and is not an empty directory./
           raise RHC::GitDirectoryExists, "The directory you are cloning into already exists."
+        when /^Permission denied \(.*?publickey.*?\).$/
+          raise RHC::GitPermissionDenied, "You don't have permission to access this repository.  Check that your SSH public keys are correct."
         else
           raise RHC::GitException, "Unable to clone your repository. Called Git with: #{cmd}"
         end
