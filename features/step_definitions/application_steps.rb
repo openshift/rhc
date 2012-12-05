@@ -25,9 +25,9 @@ Given /^an existing (or new )?(scaled )?(.+) (application with.*)$/ do |create, 
   @app = nil if @app.nil? or not @app.is_created?
 
   if create && @app.nil?
-    When "a #{scaled}#{type} application is created"
+    step "a #{scaled}#{type} application is created"
     embeds.each do |embed|
-      When "the #{embed} cartridge is added"
+      step "the #{embed} cartridge is added"
     end
   end
 
@@ -45,7 +45,7 @@ end
 When /^(\d+) (.+) applications are created$/ do |app_count, type|
   old_app = @app
   @apps = app_count.to_i.times.collect do
-    Then "a #{type} application is created"
+    step "a #{type} application is created"
     @app
   end
   @app = old_app
@@ -88,7 +88,7 @@ end
 Then /^the applications should be accessible?$/ do
   old_app = @app
   @apps.each do |app|
-    Then "the application should be accessible"
+    step "the application should be accessible"
   end
   @app = old_app
 end
@@ -110,7 +110,7 @@ Then /^it should succeed$/ do
 end
 
 Then /^the application should be scalable/ do
-  Then "the haproxy-1.4 cartridge should be running"
+  step "the haproxy-1.4 cartridge should be running"
 end
 
 Then /^the application should have a (.*) gear$/ do |gear_profile|

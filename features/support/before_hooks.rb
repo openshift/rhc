@@ -8,7 +8,7 @@ Before('@sshkey') do
 end
 
 Before('@sshkey','@key1') do
-  Given 'a new SSH key "key1.pub" is added as "key1"'
+  step 'a new SSH key "key1.pub" is added as "key1"'
 end
 
 # Defined the required hooks first so we make sure we have everything we need
@@ -17,15 +17,15 @@ Before('@geared_user_required') do
 end
 
 Before('@domain_required') do
-  When 'we have an existing domain'
+  step 'we have an existing domain'
 end
 
 Before('@client_tools_required') do
-  When 'we have the client tools setup'
+  step 'we have the client tools setup'
 end
 
 Before('@single_cartridge','@init') do
-  When 'an existing or new php-5.3 application without an embedded cartridge'
+  step 'an existing or new php-5.3 application without an embedded cartridge'
 end
 
 # These assumptions help to ensure any steps that are run independently have the same state as after the @init step
@@ -38,6 +38,6 @@ end
   :multiple_cartridge => 'an existing or new php-5.3 application with embedded mysql-5.1 and phpmyadmin-3.4 cartridges',
 }.each do |tag,assumption|
     Before("@#{tag}",'~@init') do
-      When assumption
+      step assumption
     end
   end

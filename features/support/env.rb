@@ -7,6 +7,7 @@ require 'rhc_helper'
 require 'rhc/rest'
 require 'rhc/config'
 require 'rhc/helpers'
+require 'rhc/commands'
 
 def set_path
   ENV["PATH"] = "#{ENV['RHC_LOCAL_PATH']}:#{ENV['PATH']}" if ENV['RHC_LOCAL_PATH']
