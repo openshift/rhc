@@ -6,8 +6,8 @@ SimpleCov.at_exit{ SimpleCov.result.format! } if defined? SimpleCov
 require 'rhc_helper'
 require 'rhc/rest'
 require 'rhc/config'
-require 'rhc/helpers'
 require 'rhc/commands'
+require 'rhc/helpers'
 
 def set_path
   ENV["PATH"] = "#{ENV['RHC_LOCAL_PATH']}:#{ENV['PATH']}" if ENV['RHC_LOCAL_PATH']
@@ -151,7 +151,7 @@ AfterConfiguration do |config|
   File.chmod(0600,keyfile)
 
   # Setup the logger
-  logger = Logger.new(File.join(RHCHelper::TEMP_DIR, "cucumber.log"))
+  logger = Logger.new(File.join(RHCHelper::TEMP_DIR, "rhc_cucumber.log"))
   logger.level = Logger::DEBUG
   RHCHelper::Loggable.logger = logger
   $logger = logger
