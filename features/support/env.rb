@@ -6,8 +6,8 @@ SimpleCov.at_exit{ SimpleCov.result.format! } if defined? SimpleCov
 require 'rhc_helper'
 require 'rhc/rest'
 require 'rhc/config'
-require 'rhc/commands'
 require 'rhc/helpers'
+require 'rhc/commands'
 
 def set_path
   ENV["PATH"] = "#{ENV['RHC_LOCAL_PATH']}:#{ENV['PATH']}" if ENV['RHC_LOCAL_PATH']
@@ -119,6 +119,7 @@ unless ENV['NO_CLEAN']
   # Start with a clean config
   _log "  Replacing express.conf with the specified libra_server"
   File.open(RHC::Config::local_config_path, 'w') {|f| f.write("libra_server=#{URI.parse($end_point).host}") }
+  RHC::Config.initialize
 
   # Clean up temp dir
   FileUtils.rm_rf RHCHelper::TEMP_DIR

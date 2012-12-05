@@ -29,7 +29,7 @@ When /^the setup wizard is run$/ do
 end
 
 Then /^the client tools should be setup( if needed)?$/ do |setup|
-  configured = (RHC::Config.default_rhlogin)
+  configured = (RHC::Config.default_rhlogin && RHC::Config.default_rhlogin == $username)
 
   if !configured && setup
     step 'the setup wizard is run'

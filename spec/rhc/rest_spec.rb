@@ -269,6 +269,22 @@ module RHC
         end
       end
 
+      context "with a 502 (Bad Gateway) error" do
+        before{ stub_request(method, mock_href).to_return(:status => 502) }
+        let(:req){ RestClient::Request.new(:url => mock_href, :method => method) }
+        let(:method){ :get }
+
+        it("should make two requests"){ subject.request(req) rescue nil; WebMock.should have_requested(method, mock_href).twice }
+        it{ expect{ subject.request(req) }.should raise_error(RHC::Rest::ConnectionException, /communicating with the server.*temporary/i) }
+
+        context "on a POST request" do
+          let(:method){ :post }
+
+          it("should make one request"){ subject.request(req) rescue nil; WebMock.should have_requested(method, mock_href).once }
+          it{ expect{ subject.request(req) }.should raise_error(RHC::Rest::ConnectionException, /communicating with the server.*temporary/i) }
+        end
+      end
+
       context "with a request timeout" do
         before do
           stub_request(:get, mock_href).to_timeout
