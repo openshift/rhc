@@ -73,7 +73,7 @@ module RHC
         end
       end
 
-      success "Your application is now in '#{repo_dir}'"
+      success "Your application code is now in '#{repo_dir}'"
     end
   end
 end
