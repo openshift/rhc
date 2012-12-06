@@ -24,7 +24,7 @@ module RHCHelper
       output = nil
 
       # Don't let a command run more than 5 minutes
-      Timeout::timeout(120) do
+      Timeout::timeout(240) do
 
         stdout, stderr = (ENV['VERBOSE'] ? [$stdout, $stderr] : [logger, logger]).map{ |t| StringTee.new(t) }
         stdin = input.inject(StringIO.new){ |io, s| io.puts s; io }

@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.2.2
+Version: 1.2.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -115,6 +115,101 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Dec 05 2012 Adam Miller <admiller@redhat.com> 1.2.3-1
+- Merge pull request #243 from maxamillion/dev/admiller/bundle_gem_build
+  (ccoleman@redhat.com)
+- Back to 100%% tests (ccoleman@redhat.com)
+- Make env clean used keys, reset keys correctly for users
+  (ccoleman@redhat.com)
+- added bundle exec to build.sh (admiller@redhat.com)
+- Cucumber tasks should run setup again for geared users (ccoleman@redhat.com)
+- On GET requests, retry 502 proxy error exactly once (ccoleman@redhat.com)
+- Loading errors and ordering (ccoleman@redhat.com)
+- Error code 103 is used (ccoleman@redhat.com)
+- Use a different log file so other tests don't clobber us
+  (ccoleman@redhat.com)
+- Merge pull request #239 from BanzaiMan/resolv_with_host_file
+  (openshift+bot@redhat.com)
+- Merge pull request #240 from smarterclayton/bug_883204_fix_rhc_extended_more
+  (openshift+bot@redhat.com)
+- Merge pull request #238 from brevilo/fix_timeout_msg
+  (openshift+bot@redhat.com)
+- Use Resolv::Hosts to resolve hostnames when dns is not used.
+  (asari.ruby@gmail.com)
+- Merge pull request #237 from anthonyfok/ask_password_chomp
+  (openshift+bot@redhat.com)
+- Merge pull request #209 from BanzaiMan/dev/hasari/us2773
+  (openshift+bot@redhat.com)
+- Bug 883204 - Fix RHC Extended actual tests (ccoleman@redhat.com)
+- Update message since 'rhc app status' is deprecated (code@obock.de)
+- Prevent ask_password from stripping whitespace (anthony.t.fok@gmail.com)
+- Update the man page (asari.ruby@gmail.com)
+- Magic data. (I mean, a missing period/full stop.) (asari.ruby@gmail.com)
+- Use #bound? for more descriptive method name to check if the connection is
+  bound. Instance variable name remains the same. (asari.ruby@gmail.com)
+- When the application is down, the server does not return any port information
+  for us to use. Detect this situation (even though we have to make another API
+  call), and advise to users if the application is indeed down.
+  (asari.ruby@gmail.com)
+- Yeah, I removed this method. (asari.ruby@gmail.com)
+- Tweak the command output slightly. (asari.ruby@gmail.com)
+- Probably we should rescue problems with REST client. (asari.ruby@gmail.com)
+- Clean up error messages for the failed forwarding attempts.
+  (asari.ruby@gmail.com)
+- No reasonable use case for @remote_host and @port_to to change.
+  (asari.ruby@gmail.com)
+- Be less noisy. The same information is printed above. (asari.ruby@gmail.com)
+- Reformat so that indentation-based code folding works correctly.
+  (asari.ruby@gmail.com)
+- Refactor common code in RSpec examples. (asari.ruby@gmail.com)
+- Cosmetic changes. (asari.ruby@gmail.com)
+- Remove dead code and replace it with the appropriate message emitted at the
+  right time. (asari.ruby@gmail.com)
+- English is hard™. (asari.ruby@gmail.com)
+- Set up mocks correctly to simulate an unreachable host. This caused a spec
+  run to prompt for password on the Mac. (asari.ruby@gmail.com)
+- Passing "self" is kludgy. (asari.ruby@gmail.com)
+- I forgot to restore the "ssh" command message (asari.ruby@gmail.com)
+- clean up messages somewhat (asari.ruby@gmail.com)
+- Remove comments resulted from dead code (asari.ruby@gmail.com)
+- Ooops. Gotta avoid infinite loop. (asari.ruby@gmail.com)
+- On a second thought, we should not raise Exception here, since we are just
+  iterating over port forwarding specifications, not all of them failing.
+  (asari.ruby@gmail.com)
+- Exit with error code, yes. (asari.ruby@gmail.com)
+- Fix the expected message on non-Macs (asari.ruby@gmail.com)
+- Almost 100%% code coverage (asari.ruby@gmail.com)
+- Not using this to build the error messages (asari.ruby@gmail.com)
+- We no longer need this exception (asari.ruby@gmail.com)
+- Remove specs we do not need (asari.ruby@gmail.com)
+- All specs pass now. (asari.ruby@gmail.com)
+- Use info on STDERR to build port forwarding specs. (asari.ruby@gmail.com)
+- Fix description (asari.ruby@gmail.com)
+- Change colors so messages stand out. (asari.ruby@gmail.com)
+- Tweak messages on non-Mac platforms (asari.ruby@gmail.com)
+- #inspect already contains the text "forwarding" (asari.ruby@gmail.com)
+- These port forwarding specs need to be rewritten. (asari.ruby@gmail.com)
+- Provide means of grouping ForwardingSpecs easily. Currently, bound ones sort
+  before unbounded one, and then sorted according to the service name, remote
+  host name, and port. (asari.ruby@gmail.com)
+- Introduce RHC::Commands::ForwardingSpec to simply port forwarding handling.
+  If a local port is bound already (which is the case for a scaled app), try a
+  different port. * Old code is still left behind, and some cleanup is
+  necessary. (asari.ruby@gmail.com)
+- Move 'mac?' to Helpers. (asari.ruby@gmail.com)
+- On the Mac, port forwarding is not allowed on local machine except for the
+  loopback address. https://access.redhat.com/knowledge/docs/en-
+  US/OpenShift/2.0/html/User_Guide/sect-OpenShift-User_Guide-
+  Application_Maintenance_Monitoring_and_Troubleshooting-
+  Performing_Application_Maintenance_from_Your_Workstation.html#sect-OpenShift-
+  User_Guide-Port_Forwarding (asari.ruby@gmail.com)
+- Suppress warnings for unbalanced right brace '}'. (asari.ruby@gmail.com)
+- While it is highly unlikely that 'list-ports' will return a line that yields
+  a false positive, it is probably a good idea to defend against that
+  possibility. (asari.ruby@gmail.com)
+- Suspend throwing the exception while working on US2773.
+  (asari.ruby@gmail.com)
+
 * Thu Nov 29 2012 Adam Miller <admiller@redhat.com> 1.2.2-1
 - Merge pull request #233 from fabianofranz/master (openshift+bot@redhat.com)
 - Merge pull request #235 from
