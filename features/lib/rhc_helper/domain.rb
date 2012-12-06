@@ -27,13 +27,14 @@ module RHCHelper
 
     def self.create_if_needed(prefix="test")
       unless $namespace
-        $namespace = unique_namespace(prefix)
-        # Create the domain
-        rhc_domain_create
-
-        # Write the new domain to a file in the temp directory
-        File.open(File.join(RHCHelper::TEMP_DIR, 'namespace'), 'w') do |f|
-          f.write($namespace)
+        client = RHC::Rest::Client.new($end_point, $username, $password)
+        domain = client.domains.first
+        if domain
+          $namespace = domain.id
+        else
+          $namespace = unique_namespace(prefix)
+          # Create the domain
+          rhc_domain_create
         end
       end
     end
@@ -45,9 +46,6 @@ module RHCHelper
     def self.delete
       rhc_domain_delete
       $namespace = nil
-      # Write the new domain to a file in the temp directory
-      namespace_file = File.join(RHCHelper::TEMP_DIR, 'namespace')
-      File.delete(namespace_file) if File.exists?(namespace_file)
     end
 
     def self.update(prefix="update")
@@ -55,12 +53,8 @@ module RHCHelper
       $namespace = unique_namespace(prefix)
       rhc_domain_update
 
-      namespace_file = File.join(RHCHelper::TEMP_DIR, 'namespace')
       if @exitcode == 0
-        # Write the new domain to a file in the temp directory
-        File.open(namespace_file, 'w') do |f|
-          f.write($namespace)
-        end
+        $prev_namespace = nil
       else
         $namespace = $old_namespace
       end

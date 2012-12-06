@@ -15,15 +15,15 @@ end
 # Defined the required hooks first so we make sure we have everything we need
 Before('@geared_user_required') do
   $old_username = $username
-  $old_namespace = nil
+  $prev_namespace = nil
   $username = "user_with_multiple_gear_sizes@test.com"
   $namespace = nil
 end
 After do
   $username = $old_username if $old_username
-  $namespace = $old_namespace if $old_namespace
+  $namespace = $prev_namespace if $prev_namespace
   $old_username = nil
-  $old_namespace = nil
+  $prev_namespace = nil
 end
 
 Before('@cartridge_storage_user_required') do
@@ -53,6 +53,7 @@ end
   :multiple_cartridge => 'an existing or new php-5.3 application with embedded mysql-5.1 and phpmyadmin-3.4 cartridges',
 }.each do |tag,assumption|
     Before("@#{tag}",'~@init') do
+      puts "doing step #{assumption}"
       step assumption
     end
   end

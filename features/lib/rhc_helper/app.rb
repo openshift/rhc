@@ -44,7 +44,7 @@ module RHCHelper
         # Namespace is already created, so don't pass anything in
         logger.info("Namespace (#{$namespace}) should be found by the wizard")
         run("rhc setup", nil, args) do |exitstatus, out, err, arg|
-          raise "Unmatched namespace" unless out.include?($namespace)
+          raise "Unmatched namespace #{$namespace}" unless out.include?($namespace)
         end
       else
         # Pass in a blank value for namespace to create in the next step
