@@ -55,7 +55,7 @@ module RHCHelper
         logger.error("(#{$$}): Execution failed #{cmd} with exit_code: #{exit_code.to_s}")
       end
 
-      return exit_code
+      exit_code
     end
   end
 end
