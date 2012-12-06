@@ -73,22 +73,23 @@ module RHCHelper
             # Send the HTTP request
             response = begin
                          http = http_instance(uri,options[:http_timeout])
-                         logger.debug "Requesting: #{uri}"
+                         logger.debug "HTTP_CHECK: Requesting: #{uri}"
                          http.send_request(
                            options[:method].to_s.upcase, # Allow options to be a symbol
                            uri.request_uri, nil, headers
                          )
                        rescue Exception => e
                          # Pass these up so we can check them
-                         return e
+                         e
                        end
-
+            logger.debug "HTTP_CHECK: Response: #{response.class}"
             case response
               # Catch any response if we're expecting it or redirection
             when expected.class, Net::HTTPRedirection
               break
               # Retry these responses
-            when Net::HTTPServiceUnavailable, SocketError
+            when Net::HTTPServiceUnavailable, SocketError, Timeout::Error
+              logger.debug "HTTP_CHECK: Error #{response.message}"
               my_sleep(response,expected,start,options)
             else
               case expected
@@ -123,13 +124,17 @@ module RHCHelper
 
     def is_inaccessible?(options = {})
       check_response(options.merge({
-        :expected => Net::HTTPServiceUnavailable
+        :expected => Net::HTTPServiceUnavailable,
+        :http_timeout => 2,
+        :timeout => 60,
       }))
     end
 
     def is_accessible?(options = {})
       check_response(options.merge({
-        :expected => Net::HTTPSuccess
+        :expected => Net::HTTPSuccess,
+        :http_timeout => 20,
+        :timeout => 180,
       }))
     end
 

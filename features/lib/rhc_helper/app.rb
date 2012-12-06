@@ -38,6 +38,7 @@ module RHCHelper
       #   4 - if no namespace is found, create namespace? (blank is no)
       args = [$username, $password]
       args << 'yes' unless ($keyed_users ||= []).include?($username)
+      puts "User #{$username} has no keys" if args.length == 3
       args << '' # always skip namespace
       if $namespace
         # Namespace is already created, so don't pass anything in

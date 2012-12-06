@@ -1,4 +1,5 @@
 Before('@clean') do
+  puts "Cleaning applications and keys now"
   clean_applications(true)
   $keyed_users = []
 end
