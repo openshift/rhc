@@ -15,15 +15,16 @@ end
 # Defined the required hooks first so we make sure we have everything we need
 Before('@geared_user_required') do
   $old_username = $username
-  $prev_namespace = nil
   $username = "user_with_multiple_gear_sizes@test.com"
   $namespace = nil
 end
 After do
-  $username = $old_username if $old_username
-  $namespace = $prev_namespace if $prev_namespace
-  $old_username = nil
-  $prev_namespace = nil
+  if $old_username
+    $username = $old_username
+    $namespace = nil
+    $old_username = nil
+    $old_namespace = nil
+  end
 end
 
 Before('@cartridge_storage_user_required') do

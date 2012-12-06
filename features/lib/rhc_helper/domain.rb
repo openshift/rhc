@@ -54,7 +54,6 @@ module RHCHelper
       rhc_domain_update
 
       if @exitcode == 0
-        $prev_namespace = nil
       else
         $namespace = $old_namespace
       end
