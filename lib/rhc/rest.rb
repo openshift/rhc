@@ -159,7 +159,11 @@ module RHC
       tried = 0
       begin
         debug "Request: #{request.inspect}" if debug?
-        response = request.execute
+        begin
+          response = request.execute
+        ensure
+          debug "Response: #{response.inspect}" rescue nil if debug?
+        end
         #set cookie
         rh_sso = response.cookies['rh_sso']
         if not rh_sso.nil?
@@ -196,8 +200,6 @@ module RHC
         raise ResourceAccessException.new(
           "Failed to access resource: #{e.message}")
       end
-    ensure
-      debug "Response: #{response}" rescue nil if debug?
     end
 
     def generic_error(url)

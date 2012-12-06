@@ -1,7 +1,6 @@
 Before('@clean') do
   puts "Cleaning applications and keys now"
   clean_applications(true)
-  $keyed_users = []
 end
 
 Before('@sshkey') do
@@ -16,11 +15,15 @@ end
 # Defined the required hooks first so we make sure we have everything we need
 Before('@geared_user_required') do
   $old_username = $username
+  $old_namespace = nil
   $username = "user_with_multiple_gear_sizes@test.com"
+  $namespace = nil
 end
 After do
   $username = $old_username if $old_username
+  $namespace = $old_namespace if $old_namespace
   $old_username = nil
+  $old_namespace = nil
 end
 
 Before('@cartridge_storage_user_required') do

@@ -43,7 +43,9 @@ module RHCHelper
       if $namespace
         # Namespace is already created, so don't pass anything in
         logger.info("Namespace (#{$namespace}) should be found by the wizard")
-        run("rhc setup", nil, args)
+        run("rhc setup", nil, args) do |exitstatus, out, err, arg|
+          raise "Unmatched namespace" unless out.include?($namespace)
+        end
       else
         # Pass in a blank value for namespace to create in the next step
         args << ''
@@ -64,7 +66,7 @@ module RHCHelper
           test_names << app.name if app.name.start_with?(prefix)
         end
       end
-      
+
       loop do
         # Generate a random application name
         chars = ("1".."9").to_a
