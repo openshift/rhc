@@ -38,7 +38,7 @@ module RHC
       program :int_message,    " Interrupted\n"
 
       RHC::Commands.load.to_commander
-      exit(run! || 0)
+      run! || 0
     end
   end
 end

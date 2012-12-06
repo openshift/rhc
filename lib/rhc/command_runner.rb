@@ -7,9 +7,11 @@ module RHC
     end
 
     if Commander::VERSION == '4.0.3'
+      #:nocov:
       def program(*args)
         Array(super).first
       end
+      #:nocov:
     end
 
     def options_parse_trace
@@ -31,7 +33,6 @@ module RHC
     def run!
       trace = false
       require_program :version, :description
-
       #trap('INT') { abort program(:int_message) } if program(:int_message)
       #trap('INT') { program(:int_block).call } if program(:int_block)
 
@@ -80,12 +81,6 @@ module RHC
         rescue RHC::Exception, RHC::Rest::Exception => e
           RHC::Helpers.error e.message
           e.code.nil? ? 128 : e.code
-        rescue Interrupt
-          say "Interrupted\n"
-          1
-        rescue SystemExit => e
-          say "\n"
-          e.status
         end
       else
         run_active_command

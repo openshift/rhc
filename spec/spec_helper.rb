@@ -160,9 +160,10 @@ module ClassSpecHelpers
     #Commander::Runner.instance_variable_set :"@singleton", nil
     mock_terminal
     input.each { |i| $terminal.write_line(i) }
+    #"#{@output.string}\n#{$stderr.string}"
     RHC::CLI.start(arguments)
-    "#{@output.string}\n#{$stderr.string}"
   end
+
   def run_output(input=[])
     run(input)
   rescue SystemExit => e

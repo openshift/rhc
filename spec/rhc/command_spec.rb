@@ -80,6 +80,22 @@ describe RHC::Commands::Base do
       it("invokes the right method") { expects_running('static').should call(:run).on(instance).with(no_args) }
     end
 
+    context 'when a command calls exit' do
+      subject do 
+        Kernel.module_eval do 
+          class Failing < RHC::Commands::Base
+            def run
+              exit 2
+            end
+          end
+        end
+        Failing
+      end
+
+      it("invokes the right method") { expects_running('failing').should call(:run).on(instance).with(no_args) }
+      it{ expects_running('failing').should exit_with_code(2) }
+    end
+
     context 'when statically defined with no default method' do
       subject do
         Kernel.module_eval do
