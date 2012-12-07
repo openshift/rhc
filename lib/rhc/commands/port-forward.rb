@@ -69,6 +69,7 @@ module RHC::Commands
     IP_AND_PORT = /\b(#{UP_TO_256}(?:\.#{UP_TO_256}){3})\:(#{UP_TO_65535})\b/
 
     summary "Forward remote ports to the workstation"
+    syntax "<application>"
     option ["-n", "--namespace namespace"], "Namespace of the application you are port forwarding to", :context => :namespace_context, :required => true
     argument :app, "Application you are port forwarding to (required)", ["-a", "--app app"]
     def run(app)
