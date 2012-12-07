@@ -3,7 +3,7 @@ require 'rhc/rest/base'
 module RHC
   module Rest
     class Cartridge < Base
-      attr_reader :type, :name, :display_name, :properties, :status_messages, :scales_to, :scales_from, :scales_with, :current_scale
+      attr_reader :type, :name, :display_name, :properties, :status_messages, :scales_to, :scales_from, :scales_with, :current_scale, :base_gear_storage, :additional_gear_storage
       def initialize(args, use_debug=false)
         @properties = {}
         props = args[:properties] || args["properties"] || []
@@ -12,6 +12,10 @@ module RHC
           category[:"#{p['name']}"] = p
           @properties[:"#{p['type']}"] = category
         end
+
+        # Make sure that additional gear storage is an integer
+        # TODO:  This should probably be fixed in the broker
+        args['additional_gear_storage'] = args['additional_gear_storage'].to_i rescue 0
 
         super
       end
@@ -60,6 +64,11 @@ module RHC
       def set_scales(values)
         values.delete_if{|k,v| v.nil? }
         debug "Setting scales = %s" % values.map{|k,v| "#{k}: #{v}"}.join(" ")
+        rest_method "UPDATE", values
+      end
+
+      def set_storage(values)
+        debug "Setting additional storage: #{values[:additional_gear_storage]}GB"
         rest_method "UPDATE", values
       end
 

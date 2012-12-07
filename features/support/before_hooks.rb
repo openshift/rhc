@@ -23,6 +23,11 @@ After do
   $old_username = nil
 end
 
+Before('@cartridge_storage_user_required') do
+  $old_username = $username
+  $username = "user_with_extra_storage@test.com"
+end
+
 Before('@domain_required') do
   step 'we have an existing domain'
 end
