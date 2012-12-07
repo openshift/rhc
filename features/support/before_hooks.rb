@@ -18,6 +18,7 @@ Before('@geared_user_required') do
   $username = "user_with_multiple_gear_sizes@test.com"
   $namespace = nil
 end
+
 After do
   if $old_username
     $username = $old_username
@@ -30,6 +31,7 @@ end
 Before('@cartridge_storage_user_required') do
   $old_username = $username
   $username = "user_with_extra_storage@test.com"
+  $namespace = nil
 end
 
 Before('@domain_required') do
