@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.2.4
+Version: 1.2.5
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -115,6 +115,17 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Dec 07 2012 Adam Miller <admiller@redhat.com> 1.2.5-1
+- Merge pull request #244 from jtharris/BZ_880856 (dmcphers@redhat.com)
+- Merge pull request #245 from BanzaiMan/dev/hasari/bz880924
+  (openshift+bot@redhat.com)
+- Cleaning out version.rb rewrite in package.rake (jharris@redhat.com)
+- Setting  for cucumber @cartridge_storage_user_required context
+  (nhr@redhat.com)
+- Added cartridge storage capability and testing to rhc (jharris@redhat.com)
+- Update help text for 'port-forward' to include '<application>'.
+  (asari.ruby@gmail.com)
+
 * Thu Dec 06 2012 Adam Miller <admiller@redhat.com> 1.2.4-1
 - More tweaks to extended tests (ccoleman@redhat.com)
 
