@@ -2,7 +2,7 @@ module RHC
   module CartridgeHelpers
 
     def find_cartridge(rest_obj, cartridge_name, type="embedded")
-      carts = rest_obj.find_cartridges :regex => cart_regex(cartridge_name), :type => type
+      carts = find_cartridges(rest_obj, [cartridge_name], type)
 
       if carts.length == 0
         valid_carts = rest_obj.cartridges.collect { |c| c.name if c.type == type }.compact
@@ -20,6 +20,12 @@ module RHC
 
       carts[0]
     end
+
+    def find_cartridges(rest_obj, cartridge_list, type='embedded')
+      rest_obj.find_cartridges :regex => cartridge_list.collect { |c| cart_regex c }.join('|'), :type => type
+    end
+
+    private
 
     def cart_regex(cart)
       "^#{cart.rstrip}(-[0-9\.]+){0,1}$"

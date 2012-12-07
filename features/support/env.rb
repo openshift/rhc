@@ -88,7 +88,7 @@ _log "\n\n"
 
 def clean_applications(leave_domain = false)
   return if ENV['NO_CLEAN']
-  users = [$username,'user_with_multiple_gear_sizes@test.com']
+  users = [$username,'user_with_multiple_gear_sizes@test.com','user_with_extra_storage@test.com']
 
   _log "  Cleaning up test applications..."
 
