@@ -28,7 +28,7 @@ As an OpenShift user, I want to manage SSH keys with 'rhc sshkey' commands.
   @sshkey_add
   Scenario: invalid key name is given
     When a new SSH key "key1.pub" is added as "blah\\ss"
-    Then the command exits with status code 128
+    Then the command exits with status code 117
 
   @sshkey_add
   Scenario: invalid SSH key is added
