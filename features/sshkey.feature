@@ -43,14 +43,13 @@ As an OpenShift user, I want to manage SSH keys with 'rhc sshkey' commands.
   @sshkey_add @key1
   Scenario: SSH key with the same name already exists
     When a new SSH key "key2.pub" is added as "key1"
-    Then the command exits with status code 128
+    Then the command exits with status code 120
 
   @sshkey_add
   Scenario: SSH key with the identical content already exists
     Given a new SSH key "key1.pub" is added as "key1"
     And a new SSH key "key1.pub" is added as "key2"
-    Then the command exits with status code 128
-  
+    Then the command exits with status code 121  
 
   @sshkey_remove @key1
   Scenario: SSH key is deleted successfully
