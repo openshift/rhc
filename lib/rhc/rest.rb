@@ -158,11 +158,11 @@ module RHC
     def request(request, &block)
       tried = 0
       begin
-        debug "Request: #{request.inspect}"
+        debug "Request: #{request.inspect}" if debug?
         begin
           response = request.execute
         ensure
-          debug "Response: #{response.inspect}" rescue nil
+          debug "Response: #{response.inspect}" rescue nil if debug?
         end
         #set cookie
         rh_sso = response.cookies['rh_sso']
@@ -184,7 +184,7 @@ module RHC
         raise ConnectionException.new(
           "Connection to server got interrupted: #{e.message}")
       rescue RestClient::BadGateway => e
-        debug "ERROR: Received bad gateway from server, will retry once if this is a GET"
+        debug "ERROR: Received bad gateway from server, will retry once if this is a GET" if debug?
         retry if (tried += 1) < 2 && request.method.to_s.upcase == "GET"
         raise ConnectionException.new(
           "An error occurred while communicating with the server (#{e.message}). This problem may only be temporary."\
