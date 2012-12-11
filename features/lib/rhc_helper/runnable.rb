@@ -1,5 +1,7 @@
 require 'open4'
 require 'timeout'
+require 'iconv'
+require 'rubygems'
 
 module RHCHelper
   module Runnable
@@ -15,6 +17,10 @@ module RHCHelper
         tee << buf
         super
       end
+    end
+
+    def iconv_handler
+      @iconv ||= Iconv.new('UTF-8//IGNORE', 'UTF-8')
     end
 
     def run(cmd, arg=nil, input=[])
@@ -43,6 +49,16 @@ module RHCHelper
         #err = stderr.read.strip
         stdout.close
         stderr.close
+
+        # Force the output to ASCII-only characters or logger will barf.
+        if (Gem::Version.new(RUBY_VERSION.dup) <=> Gem::Version.new('1.9.3')) >= 0
+          out.encode!('UTF-8', 'UTF-8', :undef => :replace, :invalid => :replace)
+          err.encode!('UTF-8', 'UTF-8', :undef => :replace, :invalid => :replace)
+        else
+          out = iconv_handler.iconv(out + ' ')[0..-2]
+          err = iconv_handler.iconv(err + ' ')[0..-2]
+        end
+
         logger.debug("Standard Output:\n#{out}")
         logger.debug("Standard Error:\n#{err}")
 

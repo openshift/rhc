@@ -92,6 +92,9 @@ def clean_applications(leave_domain = false)
 
   _log "  Cleaning up test applications..."
 
+  $namespace = nil unless leave_domain
+  $keyed_users = []
+
   users.each do |user|
     _log "\tUser: #{user}"
     client = RHC::Rest::Client.new($end_point, user, $password)
@@ -144,6 +147,8 @@ AfterConfiguration do |config|
 
   # Modify the .ssh/config so the git and ssh commands can succeed
   keyfile = RHCHelper::Sshkey.keyfile_path('key1')
+  File.chmod(0600,keyfile)
+
   begin
     File.open('/root/.ssh/config','w',0600) do |f|
       f.puts "Host *"
@@ -153,7 +158,6 @@ AfterConfiguration do |config|
     end
   rescue Errno::ENOENT, Errno::EACCES
   end
-  #File.chmod(0600,keyfile)
 
   # Setup the logger
   logger = Logger.new(File.join(RHCHelper::TEMP_DIR, "rhc_cucumber.log"))
