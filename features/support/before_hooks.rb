@@ -56,7 +56,6 @@ end
   :multiple_cartridge => 'an existing or new php-5.3 application with embedded mysql-5.1 and phpmyadmin-3.4 cartridges',
 }.each do |tag,assumption|
     Before("@#{tag}",'~@init') do
-      puts "doing step #{assumption}"
       step assumption
     end
   end
