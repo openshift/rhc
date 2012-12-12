@@ -150,7 +150,7 @@ module RHC
     def new_request(options)
       # user specified timeout takes presidence
       options[:timeout] = $rest_timeout || options[:timeout]
-      options[:open_timeout] ||= 4
+      options[:open_timeout] ||= (options[:timeout] || 4)
 
       RestClient::Request.new options
     end
