@@ -41,6 +41,9 @@ module RHC::Commands
              ).each { |s| say "  #{s}" }
       end
 
+      raise ArgumentError, "You have named both your main application and your Jenkins application '#{name}'. In order to continue you'll need to specify a different name with --enable-jenkins or choose a different application name." if jenkins_app_name == name && enable_jenkins?
+
+      rest_app, rest_domain = nil
       raise RHC::DomainNotFoundException.new("No domains found. Please create a domain with 'rhc domain create <namespace>' before creating applications.") if rest_client.domains.empty?
 
       rest_domain = rest_client.find_domain(options.namespace)
@@ -119,8 +122,8 @@ module RHC::Commands
       if issues?
         output_issues(rest_app)
       else
-        results { 
-          rest_app.messages.each { |msg| say msg } 
+        results {
+          rest_app.messages.each { |msg| say msg }
           jenkins_rest_app.messages.each { |msg| say msg } if enable_jenkins? and jenkins_rest_app
         }
       end
