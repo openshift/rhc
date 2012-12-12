@@ -70,10 +70,10 @@ module RHCHelper
       begin
         timeout(options[:timeout]) do
           loop do
+            logger.debug "HTTP_CHECK: Requesting: #{uri}"
             # Send the HTTP request
             response = begin
                          http = http_instance(uri,options[:http_timeout])
-                         logger.debug "HTTP_CHECK: Requesting: #{uri}"
                          http.send_request(
                            options[:method].to_s.upcase, # Allow options to be a symbol
                            uri.request_uri, nil, headers

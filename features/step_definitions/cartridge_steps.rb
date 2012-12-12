@@ -19,6 +19,8 @@ When /^the (.+) cartridge is (stopped|(?:re)?started)$/ do |name,command|
           'start'
         when :restarted
           'restart'
+        else
+          raise "Unrecognized command type #{status}"
         end
   @app.cartridge(name).send(cmd)
 end
@@ -31,6 +33,8 @@ Then /^the (.+) cartridge should be (.*)$/ do |name,status|
                "(.+) stopped"
              when :removed
                "Invalid cartridge specified: '#{name}'"
+             else
+               raise "Unrecognized status type #{status}"
              end
   @app.cartridge(name).status.should match(expected)
 end
