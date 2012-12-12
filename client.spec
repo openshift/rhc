@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.2.5
+Version: 1.2.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -114,6 +114,25 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Dec 12 2012 Adam Miller <admiller@redhat.com> 1.2.6-1
+- Merge pull request #249 from jtharris/bz883725 (dmcphers@redhat.com)
+- Merge pull request #248 from brenton/spec1 (openshift+bot@redhat.com)
+- Removing webmock build require (bleanhar@redhat.com)
+- Bug 883725 - Allow 'jenkins' to be used as the application name
+  (ccoleman@redhat.com)
+- Reverted 'if debug?' logic (nhr@redhat.com)
+- Updated based on review feedback (nhr@redhat.com)
+- Additional corrections to sshkey cucumber tests (nhr@redhat.com)
+- Added keyed_user test to ensure that rhc is properly configured for snapshot
+  operations (nhr@redhat.com)
+- Updated test case to expect correct error code (nhr@redhat.com)
+- Rebased to collect all recent cucumber work (nhr@redhat.com)
+- Don't track previous namespace, just look it up the next time
+  (ccoleman@redhat.com)
+- Stop writing namespace to file (ccoleman@redhat.com)
+- Reset $namespace when switching users, clean_application should do the same,
+  better debug output (ccoleman@redhat.com)
+
 * Fri Dec 07 2012 Adam Miller <admiller@redhat.com> 1.2.5-1
 - Merge pull request #244 from jtharris/BZ_880856 (dmcphers@redhat.com)
 - Merge pull request #245 from BanzaiMan/dev/hasari/bz880924
