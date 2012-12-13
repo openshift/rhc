@@ -84,6 +84,7 @@ module RHC
     global_option '-d', '--debug', "Turn on debugging"
 
     global_option('--timeout seconds', Integer, 'Set the timeout in seconds for network commands') do |value|
+      abort(color("Timeout must be a positive integer",:red)) unless value > 0
       # FIXME: Refactor so we don't have to use a global var here
       $rest_timeout = value
     end
