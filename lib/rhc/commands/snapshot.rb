@@ -53,9 +53,9 @@ module RHC::Commands
 
     summary "Restores a previously saved snapshot."
     syntax "<application>"
-    option ["-n", "--namespace namespace"], "Namespace of the application you are saving a snapshot", :context => :namespace_context, :required => true
-    option ["-f", "--filepath filepath"], "Local path to save tarball (default: ./$APPNAME.tar.gz)"
-    argument :app, "Application you are saving a snapshot (required)", ["-a", "--app app"]
+    option ["-n", "--namespace namespace"], "Namespace of the application you are restoring a snapshot", :context => :namespace_context, :required => true
+    option ["-f", "--filepath filepath"], "Local path to restore tarball"
+    argument :app, "Application of which you are restoring a snapshot (required)", ["-a", "--app app"]
     alias_action :"app snapshot restore", :root_command => true, :deprecated => true
     def restore(app)
 

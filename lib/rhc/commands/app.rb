@@ -150,7 +150,7 @@ module RHC::Commands
     description "Deletes your application and all of its data from the server.",
                 "Use with caution as this operation is permanent."
     syntax "<app> [--namespace namespace]"
-    option ["-n", "--namespace namespace"], "Namespace to add your application to", :context => :namespace_context, :required => true
+    option ["-n", "--namespace namespace"], "Namespace your application belongs to", :context => :namespace_context, :required => true
     option ["-b", "--bypass"], "DEPRECATED Please use '--confirm'", :deprecated => {:key => :confirm, :value => true}
     option ["--confirm"], "Deletes the application without prompting the user"
     argument :app, "The application you wish to delete", ["-a", "--app name"]
@@ -228,7 +228,7 @@ module RHC::Commands
     summary "Clean out the application's logs and tmp directories and tidy up the git repo on the server"
     syntax "<app> [--namespace namespace] [--app app]"
     argument :app, "The name of the application you are tidying", ["-a", "--app app"], :context => :app_context
-    option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
+    option ["-n", "--namespace namespace"], "Namespace of the application belongs to", :context => :namespace_context, :required => true
     def tidy(app)
       app_action app, :tidy
 
@@ -256,10 +256,10 @@ module RHC::Commands
       0
     end
 
-    summary "Show status of an application's gears"
+    summary "DEPRECATED use 'show <app> --state' instead"
     syntax "<app> [--namespace namespace] [--app app]"
     argument :app, "The name of the application you are getting information on", ["-a", "--app app"], :context => :app_context
-    option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
+    option ["-n", "--namespace namespace"], "Namespace of the application belongs to", :context => :namespace_context, :required => true
     deprecated "rhc app show --state"
     def status(app)
       # TODO: add a way to deprecate this and alias to show --apache
