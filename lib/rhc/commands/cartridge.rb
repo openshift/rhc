@@ -163,11 +163,10 @@ module RHC::Commands
     end
 
     summary "Set the scaling range of a cartridge"
-    syntax "<cartridge> [--timeout timeout] [--namespace namespace] [--app app] [--min min] [--max max]"
+    syntax "<cartridge> [--namespace namespace] [--app app] [--min min] [--max max]"
     argument :cart_type, "The name of the cartridge you are reloading", ["-c", "--cartridge cartridge"]
     option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
     option ["-a", "--app app"], "Application the cartridge belongs to", :context => :app_context, :required => true
-    option ["--timeout timeout"], "Timeout, in seconds, for the session"
     option ["--min min", Integer], "Minimum scaling value"
     option ["--max max", Integer], "Maximum scaling value"
     def scale(cartridge)
@@ -193,11 +192,10 @@ module RHC::Commands
     end
 
     summary 'View/manipulate storage on a cartridge'
-    syntax '<cartridge> -a app [--show] [--add|--remove|--set amount] [--namespace namespace] [--timeout timeout]'
+    syntax '<cartridge> -a app [--show] [--add|--remove|--set amount] [--namespace namespace]'
     argument :cart_type, "The name of the cartridge", ["-c", "--cartridge cart_type"], :arg_type => :list
     option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
     option ["-a", "--app app"], "Application the cartridge belongs to", :context => :app_context, :required => true
-    option ["--timeout timeout"], "Timeout, in seconds, for the session"
     option ["--show"], "Show the current base and additional storage capacity"
     option ["--add amount"], "Add the indicated amount to the additional storage capacity"
     option ["--remove amount"], "Remove the indicated amount from the additional storage capacity"
