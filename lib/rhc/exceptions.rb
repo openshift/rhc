@@ -107,21 +107,23 @@ module RHC
     end
   end
 
-  class AdditionalStorageArgumentsException < Exception
-    def initialize(message="Only one storage action can be performed at a time.")
-      super message, 1
-    end
-  end
+# Commenting this out for US2438
 
-  class AdditionalStorageValueException < Exception
-    def initialize(message="The amount format must be a number, optionally followed by 'GB' (ex.: 5GB)")
-      super message, 1
-    end
-  end
-
-  class AdditionalStorageRemoveException < Exception
-    def initialize(message="The amount of additional storage to be removed exceeds the total amount in use. Add the -f flag to override.")
-      super message, 1
-    end
-  end
+#  class AdditionalStorageArgumentsException < Exception
+#    def initialize(message="Only one storage action can be performed at a time.")
+#      super message, 1
+#    end
+#  end
+#
+#  class AdditionalStorageValueException < Exception
+#    def initialize(message="The amount format must be a number, optionally followed by 'GB' (ex.: 5GB)")
+#      super message, 1
+#    end
+#  end
+#
+#  class AdditionalStorageRemoveException < Exception
+#    def initialize(message="The amount of additional storage to be removed exceeds the total amount in use. Add the -f flag to override.")
+#      super message, 1
+#    end
+#  end
 end
