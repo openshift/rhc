@@ -101,7 +101,7 @@ module RHC
       header cart.name do
         display_cart_properties(cart,properties) if properties
         display_cart_scaling_info(cart) if cart.scalable?
-        display_cart_storage_info(cart) if cart.additional_gear_storage > 0
+        #display_cart_storage_info(cart) if cart.additional_gear_storage > 0
         display_no_info("cartridge") unless @table_displayed
       end
     end
