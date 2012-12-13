@@ -101,7 +101,8 @@ module RHC
       header cart.name do
         display_cart_properties(cart,properties) if properties
         display_cart_scaling_info(cart) if cart.scalable?
-        display_cart_storage_info(cart) if cart.additional_gear_storage > 0
+        #  Commenting this out for US2438
+        # display_cart_storage_info(cart) if cart.additional_gear_storage > 0
         display_no_info("cartridge") unless @table_displayed
       end
     end
@@ -123,6 +124,8 @@ module RHC
         get_properties(cart,:current_scale,:scales_from,:scales_to)
     end
 
+=begin
+#  Commenting this out for US2438
     def display_cart_storage_info(cart, title="Storage Info")
       say_table \
         title,
@@ -135,6 +138,7 @@ module RHC
         display_cart_storage_info(cart, cart.display_name)
       end
     end
+=end
 
     #---------------------------
     # Misc information
@@ -188,8 +192,11 @@ module RHC
           date(value)
         when :scales_from,:scales_to
           (value == -1 ? "available gears" : value)
+=begin
+#  Commenting this out for US2438
         when :base_gear_storage,:additional_gear_storage
           ((value.nil? or value == 0) ? "None" : "#{value}GB")
+=end
         when :aliases
           value.join ' '
         else
