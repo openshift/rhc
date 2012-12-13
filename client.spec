@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.2.6
+Version: 1.2.7
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -114,6 +114,12 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Dec 13 2012 Adam Miller <admiller@redhat.com> 1.2.7-1
+- Temporarily remove cartridge storage commands from CLI (fotios@redhat.com)
+- Merge pull request #254 from fotioslindiakos/BZ884636
+  (openshift+bot@redhat.com)
+- Fix for BZ884636 (fotios@redhat.com)
+
 * Wed Dec 12 2012 Adam Miller <admiller@redhat.com> 1.2.6-1
 - Merge pull request #249 from jtharris/bz883725 (dmcphers@redhat.com)
 - Merge pull request #248 from brenton/spec1 (openshift+bot@redhat.com)
