@@ -237,6 +237,13 @@ describe RHC::Commands::Domain do
         @cmd.length.should == "rhc-chk --noprompt true --config test.conf --rhlogin test@test.foo --password password 2>&1".length
       end
     end
+
+    context '-d is passed' do
+      let(:arguments) { ['domain', 'status', '-d', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+      it "runs successfully" do
+        expect { run }.should exit_with_code(0)
+      end
+    end
   end
 
   describe 'help' do
