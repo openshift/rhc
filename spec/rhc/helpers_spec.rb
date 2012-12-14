@@ -51,7 +51,7 @@ describe RHC::Helpers do
 
   it("should generate table rows"){ subject.send(:make_table, [1,2]).should == [1,2] }
   it("should generate a table"){ subject.send(:make_table, 1).should == [1] }
-  it("should output a table") do 
+  it("should output a table") do
     subject.send(:display_no_info, 'test').should == ['This test has no information to show']
   end
 
@@ -86,7 +86,7 @@ describe RHC::Helpers do
   end
 
   context "without RHC::Config" do
-    subject do 
+    subject do
       Class.new(Object){ include RHC::Helpers }.new
     end
 
@@ -319,9 +319,10 @@ describe RHC::CartridgeHelpers do
       Object.new.tap do |o|
         o.stub(:find_cartridges).and_return(find_cartridges)
         o.stub(:cartridges).and_return(cartridges)
+        o.stub(:name).and_return('my_app')
       end
     end
 
-    it { expect{ subject.find_cartridge(rest_obj, 'foo') }.should raise_error(RHC::CartridgeNotFoundException, 'Invalid cartridge specified: \'foo\'. No cartridges have been added to this app.') }
+    it { expect{ subject.find_cartridge(rest_obj, 'foo') }.should raise_error(RHC::CartridgeNotFoundException, 'Cartridge \'foo\' cannot be found in application \'my_app\'.') }
   end
 end
