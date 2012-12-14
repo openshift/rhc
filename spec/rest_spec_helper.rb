@@ -162,6 +162,10 @@ module RestSpecHelper
       @domains
     end
 
+    def name
+      'mock-application'
+    end
+
     def cartridges
       [MockRestCartridge.new("mock_cart-1", "embedded"), # code should sort this to be after standalone
        MockRestCartridge.new("mock_standalone_cart-1", "standalone"),
