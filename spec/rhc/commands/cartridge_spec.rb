@@ -347,4 +347,95 @@ describe RHC::Commands::Cartridge do
       end
     end
   end
+
+=begin
+#  Commenting this out for US2438
+  describe 'cartridge storage' do
+    let(:cmd_base) { ['cartridge', 'storage'] }
+    let(:std_args) { ['-a', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] | (@extra_args || []) }
+    let(:cart_type) { ['mock_cart-1'] }
+
+    before(:each) do
+      @rc = MockRestClient.new
+      domain = @rc.add_domain("mock_domain")
+      app = domain.add_application("app1", "mock_type", false)
+      app.add_cartridge('mock_cart-1', true, 5)
+    end
+
+    context 'when run with no arguments' do
+      let(:arguments) { cmd_base | std_args }
+      it "should show a list of storage info for all carts" do
+        run_output.should match('mock_type')
+        run_output.should match('mock_cart-1')
+      end
+    end
+
+    context 'when run for a non-existent cartridge' do
+      let(:arguments) { cmd_base | ['bogus_cart'] | std_args }
+      it { fail_with_message("Cartridge bogus_cart can't be found in application", 154) }
+    end
+
+    context 'when run with -c flag' do
+      let(:arguments) { cmd_base | ['-c', 'mock_cart-1'] | std_args}
+      it "should show storage info for the indicated app and cart" do
+        run_output.should match('mock_cart-1')
+        run_output.should_not match('mock_type')
+      end
+
+      it "should set storage for the indicated app and cart" do
+        @extra_args = ["--set", "6GB"]
+        run_output.should match('6GB')
+      end
+    end
+
+    context 'when run with valid arguments' do
+      let(:arguments) { cmd_base | cart_type | std_args }
+      it "should show storage info for the indicated app and cart" do
+        @extra_args = ["--show"]
+        run_output.should match('mock_cart-1')
+        run_output.should_not match('mock_type')
+      end
+      it "should add storage for the indicated app and cart" do
+        @extra_args = ["--add", "5GB"]
+        run_output.should match('10GB')
+      end
+      it "should remove storage for the indicated app and cart" do
+        @extra_args = ["--remove", "5GB"]
+        run_output.should match('None')
+      end
+      it "should warn when told to remove more storage than the indicated app and cart have" do
+        @extra_args = ["--remove", "70GB"]
+        fail_with_message('The amount of additional storage to be removed exceeds the total amount in use')
+      end
+      it "should not warn when told to remove more storage than the indicated app and cart have when forced" do
+        @extra_args = ["--remove", "70GB", "--force"]
+        run_output.should match('None')
+      end
+      it "should set storage for the indicated app and cart" do
+        @extra_args = ["--set", "6GB"]
+        run_output.should match('6GB')
+      end
+      it "should work correctly with a bare number value" do
+        @extra_args = ["--set", "6"]
+        run_output.should match('6GB')
+      end
+    end
+
+    context 'when run with invalid arguments' do
+      let(:arguments) { cmd_base | cart_type | std_args }
+      it "should raise an error when multiple storage operations are provided" do
+        @extra_args = ["--show", "--add", "5GB"]
+        fail_with_message('Only one storage action can be performed at a time')
+      end
+      it "should raise an error when the storage amount is not provided" do
+        @extra_args = ["--set"]
+        fail_with_message('missing argument')
+      end
+      it "should raise an error when the storage amount is invalid" do
+        @extra_args = ["--set", "5ZB"]
+        fail_with_message("The amount format must be a number, optionally followed by 'GB'")
+      end
+    end
+  end
+=end
 end

@@ -102,7 +102,7 @@ describe RHC::Helpers do
   end
 
   context "without RHC::Config" do
-    subject do 
+    subject do
       Class.new(Object){ include RHC::Helpers }.new
     end
 
@@ -403,13 +403,23 @@ describe RHC::CartridgeHelpers do
   describe '#find_cartridge' do
     let(:cartridges){ [] }
     let(:find_cartridges){ [] }
-    let(:rest_obj) do
-      Object.new.tap do |o|
-        o.stub(:find_cartridges).and_return(find_cartridges)
-        o.stub(:cartridges).and_return(cartridges)
+    context "with a generic object" do
+      let(:rest_obj) do
+        Object.new.tap do |o|
+          o.stub(:find_cartridges).and_return(find_cartridges)
+          o.stub(:cartridges).and_return(cartridges)
+        end
       end
+      it { expect{ subject.find_cartridge(rest_obj, 'foo') }.should raise_error(RHC::CartridgeNotFoundException, 'Cartridge \'foo\' is not a valid cartridge name.') }
     end
-
-    it { expect{ subject.find_cartridge(rest_obj, 'foo') }.should raise_error(RHC::CartridgeNotFoundException, 'Invalid cartridge specified: \'foo\'. No cartridges have been added to this app.') }
+    context "with an Application" do
+      let(:rest_obj) do
+        RHC::Rest::Application.new('name' => 'my_app').tap do |o|
+          o.stub(:find_cartridges).and_return(find_cartridges)
+          o.stub(:cartridges).and_return(cartridges)
+        end
+      end
+      it { expect{ subject.find_cartridge(rest_obj, 'foo') }.should raise_error(RHC::CartridgeNotFoundException, 'Cartridge \'foo\' cannot be found in application \'my_app\'.') }
+    end
   end
 end

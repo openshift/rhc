@@ -10,6 +10,10 @@ module RHC
         supported_scales_to != supported_scales_from
       end
 
+      def additional_gear_storage
+        attribute(:additional_gear_storage).to_i rescue 0
+      end
+
       def display_name
         attribute(:display_name) || name
       end
@@ -63,6 +67,11 @@ module RHC
       def set_scales(values)
         values.delete_if{|k,v| v.nil? }
         debug "Setting scales = %s" % values.map{|k,v| "#{k}: #{v}"}.join(" ")
+        rest_method "UPDATE", values
+      end
+
+      def set_storage(values)
+        debug "Setting additional storage: #{values[:additional_gear_storage]}GB"
         rest_method "UPDATE", values
       end
 

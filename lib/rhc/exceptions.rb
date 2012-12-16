@@ -116,4 +116,25 @@ module RHC
       super "The server #{host} refused a connection with user #{user}.  The application may be unavailable.", 1
     end
   end
+
+=begin
+#  Commenting this out for US2438
+  class AdditionalStorageArgumentsException < Exception
+    def initialize(message="Only one storage action can be performed at a time.")
+      super message, 1
+    end
+  end
+
+  class AdditionalStorageValueException < Exception
+    def initialize(message="The amount format must be a number, optionally followed by 'GB' (ex.: 5GB)")
+      super message, 1
+    end
+  end
+
+  class AdditionalStorageRemoveException < Exception
+    def initialize(message="The amount of additional storage to be removed exceeds the total amount in use. Add the -f flag to override.")
+      super message, 1
+    end
+  end
+=end
 end

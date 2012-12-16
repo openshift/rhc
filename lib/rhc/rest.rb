@@ -152,7 +152,7 @@ module RHC
     def new_request(options)
       # user specified timeout takes presidence
       options[:timeout] = $rest_timeout || options[:timeout]
-      options[:open_timeout] ||= 4
+      options[:open_timeout] ||= (options[:timeout] || 4)
 
       RestClient::Request.new options
     end
@@ -161,7 +161,11 @@ module RHC
       tried = 0
       begin
         debug "Request: #{request.inspect}" if debug?
-        response = request.execute
+        begin
+          response = request.execute
+        ensure
+          debug "Response: #{response.inspect}" rescue nil if debug?
+        end
         #set cookie
         rh_sso = response.cookies['rh_sso']
         if not rh_sso.nil?
@@ -200,8 +204,6 @@ module RHC
       ensure
         debug "Response: #{response}" if debug?
       end
-    ensure
-      debug "Response: #{response}" rescue nil if debug?
     end
 
     def generic_error_message(url)

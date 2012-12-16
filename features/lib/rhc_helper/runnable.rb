@@ -17,6 +17,10 @@ module RHCHelper
       end
     end
 
+    def iconv_handler
+      @iconv ||= Iconv.new('UTF-8//IGNORE', 'UTF-8')
+    end
+
     def run(cmd, arg=nil, input=[])
       logger.info("Running: #{cmd}")
 
@@ -33,18 +37,8 @@ module RHCHelper
         status = Open4.spawn(cmd, 'stdout' => stdout, 'stderr' => stderr, 'stdin' => stdin, 'quiet' => true)
         out, err = [stdout, stderr].map(&:string)
 
-        #pid, stdin, stdout, stderr = Open4::popen4 cmd
-        #input.each {|line| stdin.puts line}
-        #stdin.close
-
-        # Block until the command finishes
-        #ignored, status = Process::waitpid2 pid
-        #out = stdout.read.strip
-        #err = stderr.read.strip
         stdout.close
         stderr.close
-        #logger.debug("Standard Output:\n#{out}")
-        #logger.debug("Standard Error:\n#{err}")
 
         # Allow a caller to pass in a block to process the output
         yield status.exitstatus, out, err, arg if block_given?

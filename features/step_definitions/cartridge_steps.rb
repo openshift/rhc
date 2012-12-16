@@ -19,6 +19,8 @@ When /^the (.+) cartridge is (stopped|(?:re)?started)$/ do |name,command|
           'start'
         when :restarted
           'restart'
+        else
+          raise "Unrecognized command type #{status}"
         end
   @app.cartridge(name).send(cmd)
 end
@@ -31,6 +33,8 @@ Then /^the (.+) cartridge should be (.*)$/ do |name,status|
                "(.+) stopped"
              when :removed
                "Invalid cartridge specified: '#{name}'"
+             else
+               raise "Unrecognized status type #{status}"
              end
   @app.cartridge(name).status.should match(expected)
 end
@@ -51,6 +55,10 @@ When /^we list cartridges$/ do
   @exitcode, @cartridge_output = Cartridge.list
 end
 
+When /^we (.+) storage for the (.+) cartridge$/ do |storage_action,cartridge|
+  @output = @app.cartridge(@cartridge_name).send(:storage, cartridge, "--#{storage_action}")
+end
+
 Then /^the (\w+) scaling value should be (.*)$/ do |minmax,value|
   expected = {
     :min => "Minimum",
@@ -63,6 +71,10 @@ Then /^the (\w+) scaling value should be (.*)$/ do |minmax,value|
   regex = Regexp.new(/\s+#{match_string}/)
 
   @app.cartridge(@cartridge_name).send(:show).should match(regex)
+end
+
+Then /^the additional cartridge storage amount should be (\w+)$/ do |value|
+  @output.should == value
 end
 
 Then /^it should fail with code (\d+)$/ do |code|

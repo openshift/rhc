@@ -88,6 +88,7 @@ module RHC
     def display_cart(cart, *properties)
       properties = [:scaling, :connection_info] if properties.empty?
       @table_displayed = false
+
       say_table \
         format_cart_header(cart),
         get_properties(cart, *properties),
@@ -109,6 +110,23 @@ module RHC
         "(type: #{key.type})",
       ].compact.join(' ')
     end
+
+=begin
+#  Commenting this out for US2438
+    def display_cart_storage_info(cart, title="Storage Info")
+      say_table \
+        title,
+        get_properties(cart,:base_gear_storage,:additional_gear_storage)
+    end
+
+    def display_cart_storage_list(carts)
+      carts.each do |cart|
+        puts
+        display_cart_storage_info(cart, cart.display_name)
+      end
+    end
+=end
+
     #---------------------------
     # Misc information
     #---------------------------
@@ -161,6 +179,11 @@ module RHC
           (value == -1 ? "available" : value)
         when :scaling
           format_scaling_info(value)
+=begin
+#  Commenting this out for US2438
+        when :base_gear_storage,:additional_gear_storage
+          ((value.nil? or value == 0) ? "None" : "#{value}GB")
+=end
         when :aliases
           value.join ' '
         else

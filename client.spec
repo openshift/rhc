@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.2.3
+Version: 1.3.1
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -13,7 +13,6 @@ Source0:       rhc-%{version}.tar.gz
 BuildRoot:     %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 BuildRequires: rubygem-rake
 BuildRequires: rubygem-rspec
-BuildRequires: rubygem-webmock
 BuildRequires: rubygem-cucumber
 Requires:      ruby >= 1.8.5
 Requires:      rubygem-parseconfig
@@ -115,6 +114,42 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Dec 12 2012 Adam Miller <admiller@redhat.com> 1.3.1-1
+- bump_minor_versions for sprint 22 (admiller@redhat.com)
+
+* Wed Dec 12 2012 Adam Miller <admiller@redhat.com> 1.2.6-1
+- Merge pull request #249 from jtharris/bz883725 (dmcphers@redhat.com)
+- Merge pull request #248 from brenton/spec1 (openshift+bot@redhat.com)
+- Removing webmock build require (bleanhar@redhat.com)
+- Bug 883725 - Allow 'jenkins' to be used as the application name
+  (ccoleman@redhat.com)
+- Reverted 'if debug?' logic (nhr@redhat.com)
+- Updated based on review feedback (nhr@redhat.com)
+- Additional corrections to sshkey cucumber tests (nhr@redhat.com)
+- Added keyed_user test to ensure that rhc is properly configured for snapshot
+  operations (nhr@redhat.com)
+- Updated test case to expect correct error code (nhr@redhat.com)
+- Rebased to collect all recent cucumber work (nhr@redhat.com)
+- Don't track previous namespace, just look it up the next time
+  (ccoleman@redhat.com)
+- Stop writing namespace to file (ccoleman@redhat.com)
+- Reset $namespace when switching users, clean_application should do the same,
+  better debug output (ccoleman@redhat.com)
+
+* Fri Dec 07 2012 Adam Miller <admiller@redhat.com> 1.2.5-1
+- Merge pull request #244 from jtharris/BZ_880856 (dmcphers@redhat.com)
+- Merge pull request #245 from BanzaiMan/dev/hasari/bz880924
+  (openshift+bot@redhat.com)
+- Cleaning out version.rb rewrite in package.rake (jharris@redhat.com)
+- Setting  for cucumber @cartridge_storage_user_required context
+  (nhr@redhat.com)
+- Added cartridge storage capability and testing to rhc (jharris@redhat.com)
+- Update help text for 'port-forward' to include '<application>'.
+  (asari.ruby@gmail.com)
+
+* Thu Dec 06 2012 Adam Miller <admiller@redhat.com> 1.2.4-1
+- More tweaks to extended tests (ccoleman@redhat.com)
+
 * Wed Dec 05 2012 Adam Miller <admiller@redhat.com> 1.2.3-1
 - Merge pull request #243 from maxamillion/dev/admiller/bundle_gem_build
   (ccoleman@redhat.com)

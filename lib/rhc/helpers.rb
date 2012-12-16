@@ -86,6 +86,7 @@ module RHC
     global_option '--server NAME', String, 'An OpenShift server hostname (default: openshift.redhat.com)'
 
     global_option('--timeout SECONDS', Integer, 'The timeout for operations') do |value|
+      abort(color("Timeout must be a positive integer",:red)) unless value > 0
       # FIXME: Refactor so we don't have to use a global var here
       $rest_timeout = value
     end
