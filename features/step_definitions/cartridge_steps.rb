@@ -61,14 +61,14 @@ end
 
 Then /^the (\w+) scaling value should be (.*)$/ do |minmax,value|
   expected = {
-    :min => "Minimum",
-    :max => "Maximum"
+    :min => "minimum",
+    :max => "maximum"
   }[minmax.to_sym]
 
-  value = (value == "-1" ? "available gears" : value)
+  value = (value == "-1" ? "available" : value)
 
-  match_string = [expected,value].join(" = ")
-  regex = Regexp.new(/\s+#{match_string}/)
+  match_string = [expected,value].join(": ")
+  regex = Regexp.new(/\b#{match_string}/)
 
   @app.cartridge(@cartridge_name).send(:show).should match(regex)
 end
