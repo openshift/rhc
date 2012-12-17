@@ -2,16 +2,17 @@ require 'spec_helper'
 require 'rest_spec_helper'
 require 'rhc/commands/alias'
 require 'rhc/config'
+
 describe RHC::Commands::Alias do
   let(:client_links)   { mock_response_links(mock_client_links) }
   let(:domain_0_links) { mock_response_links(mock_domain_links('mock_domain_0')) }
   let(:domain_1_links) { mock_response_links(mock_domain_links('mock_domain_1')) }
   let(:app_0_links)    { mock_response_links(mock_app_links('mock_domain_0', 'mock_app_0')) }
   before(:each) do
-    RHC::Config.set_defaults
+    user_config
     @rc = MockRestClient.new
     @rc.add_domain("mock_domain_0").add_application("mock_app_0", "ruby-1.8.7")
-    stub_api_request(:any, client_links['LIST_DOMAINS']['relative']).with(:headers => {'Accept-Encoding'=>'gzip, deflate'}).
+    stub_api_request(:any, client_links['LIST_DOMAINS']['relative']).
             to_return({ :body   => {
                           :type => 'domains',
                           :data =>
@@ -24,7 +25,7 @@ describe RHC::Commands::Alias do
                         }.to_json,
                         :status => 200
                       })
-    stub_api_request(:any, domain_0_links['LIST_APPLICATIONS']['relative']).with(:headers => {'Accept-Encoding'=>'gzip, deflate'}).
+    stub_api_request(:any, domain_0_links['LIST_APPLICATIONS']['relative']).
             to_return({ :body   => {
                     :type => 'applications',
                     :data =>
@@ -39,7 +40,8 @@ describe RHC::Commands::Alias do
                   }.to_json,
                   :status => 200
                 })
-    stub_api_request(:any, app_0_links['ADD_ALIAS']['relative']).with(:body => {:event => 'add-alias', :alias => 'www.foo.bar'}, :headers => {'Accept-Encoding'=>'gzip, deflate', 'Content-Length'=>'33', 'Content-Type'=>'application/x-www-form-urlencoded'}).
+    stub_api_request(:any, app_0_links['ADD_ALIAS']['relative'], false).
+            with(:body => {:event => 'add-alias', :alias => 'www.foo.bar'}).
             to_return({ :body   => {
                           :type => 'application',
                           :data =>
@@ -55,7 +57,8 @@ describe RHC::Commands::Alias do
                         }.to_json,
                         :status => 200
                       })
-stub_api_request(:any, app_0_links['REMOVE_ALIAS']['relative']).with(:body => {:event => 'remove-alias', :alias => 'www.foo.bar'}, :headers => {'Accept-Encoding'=>'gzip, deflate', 'Content-Length'=>'36', 'Content-Type'=>'application/x-www-form-urlencoded'}).
+    stub_api_request(:any, app_0_links['REMOVE_ALIAS']['relative'], false).
+            with(:body => {:event => 'remove-alias', :alias => 'www.foo.bar'}).
             to_return({ :body   => {
                           :type => 'application',
                           :data =>
@@ -108,16 +111,14 @@ stub_api_request(:any, app_0_links['REMOVE_ALIAS']['relative']).with(:body => {:
   end
 
   describe 'add alias' do
-    let(:arguments) { ['alias', 'add', 'mock_app_0', 'www.foo.bar', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password' ] }
-    context 'with no issues' do
-      it { expect { run }.should exit_with_code(0) }
-    end
+    let(:arguments) { ['alias', 'add', 'mock_app_0', 'www.foo.bar' ] }
+    it { expect { run }.should exit_with_code(0) }
+    it { run_output.should =~ /'add-alias' successful/m }
   end
 
   describe 'remove alias' do
-    let(:arguments) { ['alias', 'remove', 'mock_app_0', 'www.foo.bar', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password' ] }
-    context 'with no issues' do
-      it { expect { run }.should exit_with_code(0) }
-    end
+    let(:arguments) { ['alias', 'remove', 'mock_app_0', 'www.foo.bar' ] }
+    it { expect { run }.should exit_with_code(0) }
+    it { run_output.should =~ /'remove-alias' successful/m }
   end
 end

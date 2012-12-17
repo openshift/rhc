@@ -100,7 +100,7 @@ class RHC::Commands::Base
           username = ask "Login to #{openshift_server}: "
           config.config_user(username)
         end
-        config.password = config.password || RHC::get_password
+        config.password = config.password || ask("Password: ") { |q| q.echo = '*' }
 
         RHC::Rest::Client.new(openshift_rest_node, username, config.password, @options.debug)
       end

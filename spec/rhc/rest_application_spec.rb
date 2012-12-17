@@ -5,11 +5,14 @@ require 'base64'
 module RHC
   module Rest
     describe Application do
-      # make sure auth is set up for the Application object since we are not
-      # calling it from RHC::Rest::Client
-      credentials = Base64.strict_encode64("#{mock_user}:#{mock_pass}")
-      @@headers["Authorization"] = "Basic #{credentials}"
-      @@headers["User-Agent"] = RHC::Helpers.user_agent
+
+      before(:all) do
+        # make sure auth is set up for the Application object since we are not
+        # calling it from RHC::Rest::Client
+        credentials = Base64.strict_encode64("#{mock_user}:#{mock_pass}")
+        @@headers["Authorization"] = "Basic #{credentials}"
+        @@headers["User-Agent"] = RHC::Helpers.user_agent
+      end
 
       let (:app_links) { mock_response_links(mock_app_links('mock_domain','mock_app')) }
       let (:app_obj) {
@@ -52,7 +55,7 @@ module RHC
         it "returns a list of all cartridges in the current application" do
           app   = app_obj
           carts = app.cartridges
-          carts.length.should equal(2)
+          carts.length.should == 2
           (0..1).each do |idx|
             carts[idx].should be_an_instance_of RHC::Rest::Cartridge
             carts[idx].name.should == "mock_cart_#{idx}"
@@ -62,7 +65,7 @@ module RHC
           app   = app_obj
           carts = app.cartridges # Disregard the first request;
           carts = app.cartridges # 2nd request simulates empty response.
-          carts.length.should equal(0)
+          carts.length.should == 2
         end
       end
 

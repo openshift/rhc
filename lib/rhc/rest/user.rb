@@ -3,7 +3,7 @@ require 'rhc/rest/base'
 module RHC
   module Rest
     class User < Base
-      attr_reader :login
+      define_attr :login
 
       def add_key(name, content, type)
         debug "Add key #{name} of type #{type} for user #{login}"

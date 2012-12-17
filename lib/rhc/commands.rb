@@ -1,5 +1,4 @@
 require 'commander'
-require 'rhc/helpers'
 
 ## monkey patch option parsing to also parse global options all at once
 #  to avoid conflicts and side effects of similar short switches

@@ -182,6 +182,7 @@ module RHC
           it "returns an empty list when no domains exist" do
             # Disregard the first response; this is for the previous expectiation.
             domains = @client.domains
+            @client.instance_variable_set(:@domains, nil)
             domains = @client.domains
             domains.length.should equal(0)
           end

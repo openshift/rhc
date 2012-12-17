@@ -35,9 +35,10 @@ module RHC
       program :description,    'Command line interface for OpenShift.'
       program :version,        RHC::VERSION::STRING
       program :help_formatter, RHC::HelpFormatter
+      program :int_message,    " Interrupted\n"
 
       RHC::Commands.load.to_commander
-      exit(run! || 0)
+      run! || 0
     end
   end
 end

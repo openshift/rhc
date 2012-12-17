@@ -66,7 +66,7 @@ describe RHC::Commands::Setup do
         @wizard.stub!(:run).and_return(true)
         expect { run }.should exit_with_code(0)
       end
-      it('should output usage') { run_output.should match("Easy to use wizard for getting started") }
+      it('should output usage') { run_output.should match("Connects to OpenShift and sets up") }
     end
   end
 end

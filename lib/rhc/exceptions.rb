@@ -1,7 +1,7 @@
 module RHC
   class Exception < StandardError
     attr_reader :code
-    def initialize(message=nil, code=nil)
+    def initialize(message=nil, code=1)
       super(message)
       @code = code
     end
@@ -37,13 +37,14 @@ module RHC
     end
   end
 
-  # Makes sense to use its own exit code since this is different from a
-  # resource error
   class GitException < Exception
     def initialize(message="Git returned an error")
       super message, 216
     end
   end
+
+  class GitPermissionDenied < GitException; end
+  class GitDirectoryExists < GitException; end
 
   class DeprecatedError < RuntimeError; end
 
@@ -97,13 +98,22 @@ module RHC
 
   class MissingScalingValueException < Exception
     def initialize(message="Must provide either a min or max value for scaling")
-      super message, 1
+      super message
     end
   end
 
   class CartridgeNotScalableException < Exception
     def initialize(message="Cartridge is not scalable")
-      super message, 1
+      super message
+    end
+  end
+
+  class ConnectionFailed < Exception
+  end
+
+  class SSHConnectionRefused < ConnectionFailed
+    def initialize(host, user)
+      super "The server #{host} refused a connection with user #{user}.  The application may be unavailable.", 1
     end
   end
 

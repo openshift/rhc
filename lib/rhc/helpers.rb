@@ -1,7 +1,6 @@
 require 'commander/user_interaction'
 require 'rhc/version'
 require 'rhc/config'
-require 'rhc/commands'
 require 'rhc/output_helpers'
 require 'rbconfig'
 
@@ -47,12 +46,14 @@ module RHC
     end
 
     def date(s)
-      now = Time.now
+      now = Date.today
       d = datetime_rfc3339(s)
       if now.year == d.year
         return d.strftime('%l:%M %p').strip if now.yday == d.yday
+        d.strftime('%b %d %l:%M %p')
+      else
+        d.strftime('%b %d, %Y %l:%M %p')
       end
-      d.strftime('%b %d %l:%M %p')
     rescue ArgumentError
       "Unknown date"
     end
@@ -79,23 +80,30 @@ module RHC
     # Global config
     #
 
-    global_option '-l', '--rhlogin login', "OpenShift login"
-    global_option '-p', '--password password', "OpenShift password"
-    global_option '-d', '--debug', "Turn on debugging"
+    global_option '-l', '--rhlogin LOGIN', "OpenShift login"
+    global_option '-p', '--password PASSWORD', "OpenShift password"
+    global_option '-d', '--debug', "Turn on debugging", :hide => true
+    global_option '--server NAME', String, 'An OpenShift server hostname (default: openshift.redhat.com)'
 
-    global_option('--timeout seconds', Integer, 'Set the timeout in seconds for network commands') do |value|
+    global_option('--timeout SECONDS', Integer, 'The timeout for operations') do |value|
       abort(color("Timeout must be a positive integer",:red)) unless value > 0
       # FIXME: Refactor so we don't have to use a global var here
       $rest_timeout = value
     end
-    global_option '--noprompt', "Suppress the interactive setup wizard from running before a command"
-    global_option '--config FILE', "Path of a different config file"
+    global_option '--noprompt', "Suppress the interactive setup wizard from running before a command", :hide => true
+    global_option '--config FILE', "Path of a different config file", :hide => true
     def config
       raise "Operations requiring configuration must define a config accessor"
     end
+    global_option '--mock', "Run in mock mode", :hide => true do
+      #:nocov:
+      require 'rhc/rest/mock'
+      RHC::Rest::Mock.start
+      #:nocov:
+    end
 
     def openshift_server
-      config.get_value('libra_server')
+      options.server || config.get_value('libra_server') || "openshift.redhat.com"
     end
     def openshift_url
       "https://#{openshift_server}"
@@ -123,23 +131,53 @@ module RHC
     def deprecated(msg,short = false)
       HighLine::use_color = false if windows? # handle deprecated commands that does not start through highline
 
-      info = " For porting and testing purposes you may switch this %s to %s by setting the DISABLE_DEPRECATED environment variable to %d.  It is not recommended to do so in a production environment as this option may be removed in future releases."
-
+      info = " For porting and testing purposes you may switch this %s to %s by setting the DISABLE_DEPRECATED environment variable to %d.  It is not recommended to do so in a production environment as this option will be removed in a future release."
       msg << info unless short
-      if RHC::Helpers.disable_deprecated?
-        raise DeprecatedError.new(msg % ['an error','a warning',0])
-      else
-        warn "Warning: #{msg}\n" % ['a warning','an error',1]
-      end
+
+      raise DeprecatedError.new(msg % ['an error','a warning',0]) if disable_deprecated?
+
+      warn "Warning: #{msg}\n" % ['a warning','an error',1]
     end
 
+    @@indent = 0
+    @@last_line_open = false
     def say(msg, *args)
-      if Hash[*args][:stderr]
-        $stderr.puts msg
-      else
-        super(msg)
+      output = if Hash[*args][:stderr]
+          $stderr
+        else
+          separate_blocks
+          $terminal.instance_variable_get(:@output)
+        end
+
+      Array(msg).each do |statement|
+        statement = statement.to_str
+        next unless statement.present?
+
+        template  = ERB.new(statement, nil, "%")
+        statement = template.result(binding)
+
+        statement = wrap(statement) unless @wrap_at.nil?
+        statement = page_print(statement) unless @page_at.nil?
+
+        output.print(' ' * @@indent * INDENT) unless @@last_line_open
+
+        @@last_line_open = 
+          if statement[-1, 1] == " " or statement[-1, 1] == "\t"
+            output.print(statement)
+            output.flush
+          else
+            output.puts(statement)
+          end
       end
+
       msg
+    end
+
+    [:ask, :agree].each do |sym|
+      define_method(sym) do |*args, &block|
+        separate_blocks
+        super(*args, &block)
+      end
     end
 
     def success(msg, *args)
@@ -174,7 +212,7 @@ module RHC
       items.each do |item|
         item.each_with_index do |s, i|
           item[i] = s.to_s
-          widths[i] = [widths[i] || 0, s.length].max if s.respond_to?(:length)
+          widths[i] = [widths[i] || 0, item[i].length].max
         end
       end
       align = opts[:align] || []
@@ -186,7 +224,7 @@ module RHC
         items.unshift(opts[:header])
       end
       items.map do |item|
-        item.each_with_index.map{ |s,i| s.send((align[i] == :right ? :rjust : :ljust), widths[i], ' ') }.join(join).strip
+        item.each_with_index.map{ |s,i| s.send((align[i] == :right ? :rjust : :ljust), widths[i], ' ') }.join(join).rstrip
       end
     end
 
@@ -213,28 +251,50 @@ module RHC
         :scales_from    => "Minimum",
         :scales_to      => "Maximum",
         :url            => "URL",
-        :ssh            => "SSH",
+        :ssh_string     => "SSH",
+        :connection_info => "Connection URL",
         :gear_profile   => "Gear Size"
       })
 
       headings[value]
     end
 
-    def header(s,opts = {})
-      @indent ||= 0
-      indent s
-      indent "="*s.length
+    class StringTee < StringIO
+      attr_reader :tee
+      def initialize(other)
+        @tee = other
+        super()
+      end
+      def <<(buf)
+        tee << buf
+        super
+      end
+    end
+
+    #def tee(&block)
+    #  original = [$stdout, $stderr]
+    #  $stdout, $stderr = (tees = original.map{ |io| StringTee.new(io) })
+    #  yield
+    #ensure
+    #  $stdout, $stderr = original
+    #  tees.each(&:close_write).map(&:string)
+    #end
+
+    def header(s,opts = {}, &block)
+      say [s, "="*s.length]
       if block_given?
-        @indent += 1
-        yield
-        @indent -= 1
+        indent &block
       end
     end
 
     INDENT = 2
-    def indent(str)
-      @indent ||= 0
-      say "%s%s" % [" " * @indent * INDENT,str]
+    def indent(&block)
+      @@indent += 1
+      begin
+        yield
+      ensure
+        @@indent -= 1
+      end
     end
 
     ##
@@ -265,37 +325,21 @@ module RHC
     #  top - top margin specified in lines
     #  bottom - bottom margin specified in line
     #
-    @@section_bottom_last = 0
+    @@margin = nil
     def section(params={}, &block)
-      top = params[:top]
-      top = 0 if top.nil?
-      bottom = params[:bottom]
-      bottom = 0 if bottom.nil?
+      top = params[:top] || 0
+      bottom = params[:bottom] || 0
 
-      # add more newlines if top is greater than the last section's bottom margin
-      top_margin = @@section_bottom_last
+      # the first section cannot take a newline
+      top = 0 unless @@margin
+      @@margin = [top, @@margin || 0].max
 
-      # negitive previous bottoms indicate that an untracked newline was
-      # printed and so we do our best to negate it since we can't remove it
-      if top_margin < 0
-        top += top_margin
-        top_margin = 0
-      end
+      value = block.call
 
-      until top_margin >= top
-        say "\n"
-        top_margin += 1
-      end
+      say "\n" if @@last_line_open
+      @@margin = [bottom, @@margin].max
 
-      block.call
-
-      bottom_margin = 0
-      until bottom_margin >= bottom
-        say "\n"
-        bottom_margin += 1
-      end
-
-      @@section_bottom_last = bottom
+      value
     end
 
     ##
@@ -314,7 +358,7 @@ module RHC
     # to distinguish the final results of a command from other output
     #
     def results(&block)
-      paragraph do
+      section(:top => 1, :bottom => 0) do
         say "RESULT:"
         yield
       end
@@ -326,16 +370,6 @@ module RHC
     def unix? ; !jruby? && !windows? end
     def mac? ; RbConfig::CONFIG['host_os'] =~ /^darwin/ end
 
-    # common SSH key display format in ERB
-    def ssh_key_display_format
-      ERB.new <<-FORMAT
-       Name: <%= key.name %>
-       Type: <%= key.type %>
-Fingerprint: <%= key.fingerprint %>
-
-      FORMAT
-    end
-
     #
     # Check if host exists
     #
@@ -346,15 +380,41 @@ Fingerprint: <%= key.fingerprint %>
       dns.getresources(host, Resolv::DNS::Resource::IN::A).any?
       # :nocov:
     end
-    
+
     def hosts_file_contains?(host)
       # :nocov:
       resolver = Resolv::Hosts.new
-      begin
-        resolver.getaddress host
-      rescue Resolv::ResolvError
-      end
+      resolver.getaddress host
+    rescue Resolv::ResolvError
       # :nocov:
     end
+
+    # Run a command and export its output to the user.  Output is not capturable
+    # on all platforms.
+    def run_with_tee(cmd)
+      status, stdout, stderr = nil
+
+      if windows?
+        #:nocov: TODO: Test block
+        system(cmd)
+        status = $?.exitstatus
+        #:nocov:
+      else
+        stdout, stderr = [$stdout, $stderr].map{ |t| StringTee.new(t) }
+        status = Open4.spawn(cmd, 'stdout' => stdout, 'stderr' => stderr, 'quiet' => true)
+        stdout, stderr = [stdout, stderr].map(&:string)
+      end
+
+      [status, stdout, stderr]
+    end
+
+    private
+
+      def separate_blocks
+        if (@@margin ||= 0) > 0 && !@@last_line_open
+          $terminal.instance_variable_get(:@output).print "\n" * @@margin
+          @@margin = 0
+        end
+      end
   end
 end

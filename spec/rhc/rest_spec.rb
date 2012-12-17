@@ -7,13 +7,26 @@ class RHCRest
   def debug?
     false
   end
-  def debug
+  def debug(*args)
     raise "Unchecked debug"
   end
 end
 
 module MockRestResponse
   attr_accessor :code, :read
+end
+
+
+describe RHC::Rest::Cartridge do
+  context 'with a name' do
+    before{ subject.name = 'foo' }
+    its(:display_name){ should == 'foo' }
+
+    context 'when display name is present' do
+      before{ subject.display_name = 'bar' }
+      its(:display_name){ should == 'bar' }
+    end
+  end
 end
 
 module RHC

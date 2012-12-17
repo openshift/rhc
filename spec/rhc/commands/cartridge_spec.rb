@@ -280,7 +280,7 @@ describe RHC::Commands::Cartridge do
     end
 
     context 'when run' do
-      it { run_output.should match('Connection URL = http://fake.url') }
+      it { run_output.should match('Connection URL: http://fake.url') }
     end
   end
 
@@ -293,20 +293,21 @@ describe RHC::Commands::Cartridge do
         domain = @rc.add_domain("mock_domain")
         app = domain.add_application("app1", "mock_type", true)
       end
-      it { run_output.should match('Scaling Info') }
-      it { run_output.should match('Current = 2') }
-      it { run_output.should match('Minimum = 2') }
-      it { run_output.should match('Maximum = available gears') }
+      it { run_output.should match(/Scaling: .*x2 \(minimum/) }
+      it { run_output.should match('minimum: 2') }
+      it { run_output.should match('maximum: available') }
     end
   end
 
   describe 'cartridge scale' do
     let(:arguments) { ['cartridge', 'scale', @cart_type || 'mock_type', '-a', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] | (@extra_args || []) }
 
+    let(:current_scale) { 1 }
     before(:each) do
       @rc = MockRestClient.new
       domain = @rc.add_domain("mock_domain")
       app = domain.add_application("app1", "mock_type", scalable)
+      app.cartridges.first.stub(:current_scale).and_return(current_scale)
     end
 
     context 'when run with scalable app' do
@@ -318,12 +319,12 @@ describe RHC::Commands::Cartridge do
 
       it "with a min value" do
         @extra_args = ["--min","6"]
-        succeed_with_message "Minimum = 6"
+        succeed_with_message "minimum: 6"
       end
 
       it "with a max value" do
         @extra_args = ["--max","3"]
-        succeed_with_message 'Maximum = 3'
+        succeed_with_message 'maximum: 3'
       end
 
       it "with an invalid min value" do

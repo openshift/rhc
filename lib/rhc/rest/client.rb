@@ -20,19 +20,10 @@ module RHC
         @debug = use_debug
         @end_point = end_point
         @server_api_versions = []
+        @username, @password = username, password
         debug "Connecting to #{end_point}"
 
-        credentials = nil
-        userpass = "#{username}:#{password}"
-        # :nocov: version dependent code
-        if RUBY_VERSION.to_f == 1.8
-          credentials = Base64.encode64(userpass).delete("\n")
-        else
-          credentials = Base64.strict_encode64(userpass)
-        end
-        # :nocov:
-        @@headers["Authorization"] = "Basic #{credentials}"
-        @@headers["User-Agent"] = RHC::Helpers.user_agent rescue nil
+        add_headers(headers)
         RestClient.proxy = URI.parse(ENV['http_proxy']).to_s if ENV['http_proxy']
 
         # API version negotiation
@@ -54,6 +45,11 @@ module RHC
           else
             warn_about_api_versions
           end
+        rescue RHC::Rest::ResourceNotFoundException => e
+          raise ApiEndpointNotFound.new(
+            "The OpenShift server is not responding correctly.  Check "\
+            "that '#{end_point}' is the correct URL for your server. "\
+            "The server may be offline or misconfigured.")
         end
 
         super({:links => links}, use_debug)
@@ -61,12 +57,13 @@ module RHC
 
       def add_domain(id)
         debug "Adding domain #{id}"
+        @domains = nil
         rest_method "ADD_DOMAIN", :id => id
       end
 
       def domains
         debug "Getting all domains"
-        rest_method "LIST_DOMAINS"
+        @domains ||= rest_method "LIST_DOMAINS"
       end
 
       def cartridges
@@ -182,19 +179,41 @@ server at #{URI.parse(@end_point).host} supports #{@server_api_versions.join(', 
           warn "The client version may be outdated; please consider updating 'rhc'. We will continue, but you may encounter problems."
         end
       end
-      
+
       def debug?
         @debug
       end
-      
-      private
-      # execute +req+ with RestClient, and return [server_api_versions, links]
-      def api_info(req)
-        request(req) do |response|
-          json_response = ::RHC::Json.decode(response)
-          [ json_response['supported_api_versions'], json_response['data'] ]
+
+      protected
+        def add_headers(h)
+          h["User-Agent"] = RHC::Helpers.user_agent rescue nil
+          add_credentials(h)
         end
-      end
+
+        def add_credentials(h)
+          if @username
+            userpass = "#{@username}:#{@password}"
+            # :nocov: version dependent code
+            credentials = if RUBY_VERSION.to_f == 1.8
+              Base64.encode64(userpass).delete("\n")
+            else
+              Base64.strict_encode64(userpass)
+            end
+            # :nocov:
+            h["Authorization"] = "Basic #{credentials}"
+          end
+          h
+        end
+
+
+      private
+        # execute +req+ with RestClient, and return [server_api_versions, links]
+        def api_info(req)
+          request(req) do |response|
+            json_response = ::RHC::Json.decode(response)
+            [ json_response['supported_api_versions'], json_response['data'] ]
+          end
+        end
     end
   end
 end

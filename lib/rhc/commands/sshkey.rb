@@ -1,10 +1,8 @@
-#! /usr/bin/env ruby
-
 require 'rhc/commands/base'
 
 module RHC::Commands
   class Sshkey < Base
-    include RHC::SSHKeyHelpers
+    include RHC::SSHHelpers
 
     summary 'Manage multiple keys for the registered rhcloud user.'
     syntax '<action>'
@@ -13,14 +11,9 @@ module RHC::Commands
     summary 'Display all the SSH keys for the user account'
     syntax ''
     def list
-      keys = rest_client.sshkeys
+      keys = rest_client.sshkeys.each{ |key| paragraph{ display_key(key) } }
 
-      results do
-        result = keys.inject('') do |r, key|
-          r += format(key, erb)
-        end
-        say result
-      end
+      success "You have #{keys.length} SSH keys associated with your account."
 
       0
     end
@@ -30,7 +23,7 @@ module RHC::Commands
     argument :name, 'SSH key to display', []
     def show(name)
       key = rest_client.find_key(name)
-      say format(key, erb)
+      display_key(key)
 
       0
     end
@@ -70,13 +63,6 @@ module RHC::Commands
       results { say "SSH key '#{name}' has been removed" }
 
       0
-    end
-
-    private
-    # shared ERB template for formatting SSH Key
-    def erb
-      return @erb if @erb # cache
-      @erb = ::RHC::Helpers.ssh_key_display_format
     end
   end
 end

@@ -2,7 +2,7 @@ require 'rhc/commands/base'
 
 module RHC::Commands
   class Snapshot < Base
-    summary "Pull down application snapshot for a user."
+    summary "Save the current state of your application locally"
     syntax "<action>"
     alias_action :"app snapshot", :root_command => true
     default_action :help

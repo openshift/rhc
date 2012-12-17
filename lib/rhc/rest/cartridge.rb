@@ -1,32 +1,35 @@
 require 'rhc/rest/base'
+require 'pp'
 
 module RHC
   module Rest
     class Cartridge < Base
-      attr_reader :type, :name, :display_name, :properties, :status_messages, :scales_to, :scales_from, :scales_with, :current_scale, :base_gear_storage, :additional_gear_storage
-      def initialize(args, use_debug=false)
-        @properties = {}
-        props = args[:properties] || args["properties"] || []
-        props.each do |p|
-          category = @properties[:"#{p['type']}"] || {}
-          category[:"#{p['name']}"] = p
-          @properties[:"#{p['type']}"] = category
-        end
-
-        # Make sure that additional gear storage is an integer
-        # TODO:  This should probably be fixed in the broker
-        args['additional_gear_storage'] = args['additional_gear_storage'].to_i rescue 0
-
-        super
-      end
+      define_attr :type, :name, :display_name, :properties, :gear_profile, :status_messages, :scales_to, :scales_from, :scales_with, :current_scale, :supported_scales_to, :supported_scales_from, :tags
 
       def scalable?
-        [scales_to,scales_from].map{|x| x > 1 || x == -1}.inject(:|)
+        supported_scales_to != supported_scales_from
       end
 
-      def property(category, key)
-        category = properties[category]
-        category ? category[key] : nil
+      def additional_gear_storage
+        attribute(:additional_gear_storage).to_i rescue 0
+      end
+
+      def display_name
+        attribute(:display_name) || name
+      end
+
+      def scaling
+        {
+          :current_scale => current_scale,
+          :scales_from => scales_from,
+          :scales_to => scales_to,
+          :gear_profile => gear_profile
+        } if scalable?
+      end
+
+      def property(type, key)
+        key, type = key.to_s, type.to_s
+        properties.select{ |p| p['type'] == type }.find{ |p| p['name'] == key }
       end
 
       def status
@@ -75,6 +78,10 @@ module RHC
       def connection_info
         info = property(:cart_data, :connection_url) || property(:cart_data, :job_url) || property(:cart_data, :monitoring_url)
         info ? (info["value"] || '').rstrip : nil
+      end
+
+      def <=>(other)
+        name <=> other.name
       end
     end
   end

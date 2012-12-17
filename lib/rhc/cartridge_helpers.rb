@@ -7,7 +7,11 @@ module RHC
       if carts.length == 0
         valid_carts = rest_obj.cartridges.collect { |c| c.name if c.type == type }.compact
 
-        msg = "Cartridge '#{cartridge_name}' cannot be found in application '#{rest_obj.name}'."
+        msg = if RHC::Rest::Application === rest_obj
+                "Cartridge '#{cartridge_name}' cannot be found in application '#{rest_obj.name}'."
+              else
+                "Cartridge '#{cartridge_name}' is not a valid cartridge name."
+              end
 
         unless valid_carts.empty?
           msg += "  Valid cartridges are (#{valid_carts.join(', ')})."

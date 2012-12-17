@@ -1,4 +1,4 @@
-require 'rhc/git_helper'
+require 'rhc/git_helpers'
 
 module RHC
   module ContextHelpers
@@ -24,7 +24,7 @@ module RHC
     def namespace_context
       # right now we don't have any logic since we only support one domain
       # TODO: add domain lookup based on uuid
-      domain = rest_client.domains[0]
+      domain = rest_client.domains.first
       raise RHC::DomainNotFoundException, "No domains configured for this user.  You may create one using 'rhc domain create'." if domain.nil?
 
       domain.id
