@@ -191,6 +191,10 @@ public and private keys id_rsa keys.
           key_name =  ask("Provide a name for this key: ") do |q|
             q.default = pubkey_default_name
             q.validate = lambda { |p| RHC::check_key(p) }
+            # Since the validator prints the reason for the validation failure,
+            # suppress the message from Highline.
+            # See https://bugzilla.redhat.com/show_bug.cgi?id=886327
+            q.responses[:not_valid] = ''
           end
         end
       end
