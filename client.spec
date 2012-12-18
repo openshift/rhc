@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.3.1
+Version: 1.3.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -114,6 +114,47 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Dec 18 2012 Adam Miller <admiller@redhat.com> 1.3.2-1
+- Merge pull request #259 from smarterclayton/us3117_refactor_help_and_cleanup
+  (openshift+bot@redhat.com)
+- Merge pull request #250 from BanzaiMan/dev/hasari/bz865746
+  (openshift+bot@redhat.com)
+- Scaling string changes (ccoleman@redhat.com)
+- Fix failing cucumber test (string change in missing cart)
+  (ccoleman@redhat.com)
+- Merge remote-tracking branch 'origin/master' into
+  us3117_refactor_help_and_cleanup (ccoleman@redhat.com)
+- Merge pull request #257 from BanzaiMan/dev/hasari/bz887136
+  (openshift+bot@redhat.com)
+- Changing wording in cart not found exception. (jharris@redhat.com)
+- In 'rhc domain', detect '--debug' and finesse args so that 'rhc-chk' can run
+  in debug mode. (asari.ruby@gmail.com)
+- Merge pull request #256 from fotioslindiakos/US2438_cleanup_master
+  (openshift+bot@redhat.com)
+- Temporarily remove cartridge storage commands from CLI (fotios@redhat.com)
+- Merge pull request #247 from fotioslindiakos/BZ884636
+  (openshift+bot@redhat.com)
+- Fix help texts on CLI, as reported by
+  https://bugzilla.redhat.com/show_bug.cgi?id=865746 (asari.ruby@gmail.com)
+- Fix for BZ884636 (fotios@redhat.com)
+- Bug 883725 - Allow 'jenkins' to be used as the application name
+  (ccoleman@redhat.com)
+- Merge remote-tracking branch 'origin/master' into
+  us3117_refactor_help_and_cleanup (ccoleman@redhat.com)
+- Normalize exit trapping across commands, move up to bin/rhc level for it
+  (ccoleman@redhat.com)
+- Bug 883303 - Simplify how we handle SIGINT (ccoleman@redhat.com)
+- Additional cleanup steps for cucumber tests (ccoleman@redhat.com)
+- --debug should not --trace (ccoleman@redhat.com)
+- Add back check for env (ccoleman@redhat.com)
+- Tests are running again, hide --help, don't show duplicate options in help
+  (ccoleman@redhat.com)
+- SSHKey wizard cleanup, verify key setup works during app create
+  (ccoleman@redhat.com)
+- * Remove references to rhc-common from within the new CLI commands * Allow a
+  global --server option * Reduce complexity in config and allow for better
+  mocking * More test case simplification (ccoleman@redhat.com)
+
 * Wed Dec 12 2012 Adam Miller <admiller@redhat.com> 1.3.1-1
 - bump_minor_versions for sprint 22 (admiller@redhat.com)
 
