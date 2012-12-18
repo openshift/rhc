@@ -22,7 +22,6 @@ Given /^the libra client tools$/ do
 end
 
 When /^the setup wizard is run$/ do
-  puts "Running setup"
   RHCHelper::App.rhc_setup
 
   # Force a refresh of the loaded RHC state

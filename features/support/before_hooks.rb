@@ -1,5 +1,4 @@
 Before('@clean') do
-  puts "Cleaning applications and keys now"
   clean_applications(true)
 end
 
