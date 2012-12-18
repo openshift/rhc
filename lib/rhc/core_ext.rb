@@ -69,6 +69,10 @@ class Hash
     end
     s
   end
+  def reverse_merge!(other_hash)
+    # right wins if there is no left
+    merge!( other_hash ){|key,left,right| left }
+  end
 end
 
 # Some versions of highline get in an infinite loop when trying to wrap.

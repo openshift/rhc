@@ -1,5 +1,4 @@
 require 'rhc/rest/base'
-require 'pp'
 
 module RHC
   module Rest

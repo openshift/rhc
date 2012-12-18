@@ -84,6 +84,7 @@ module RHC
     global_option '-p', '--password PASSWORD', "OpenShift password"
     global_option '-d', '--debug', "Turn on debugging", :hide => true
     global_option '--server NAME', String, 'An OpenShift server hostname (default: openshift.redhat.com)'
+    global_option '-k', '--insecure', "Allow insecure SSL connections.  Potential security risk.", :hide => true
 
     global_option('--timeout SECONDS', Integer, 'The timeout for operations') do |value|
       abort(color("Timeout must be a positive integer",:red)) unless value > 0
@@ -103,7 +104,7 @@ module RHC
     end
 
     def openshift_server
-      options.server || config.get_value('libra_server') || "openshift.redhat.com"
+      options.server rescue nil || config.get_value('libra_server') || "openshift.redhat.com"
     end
     def openshift_url
       "https://#{openshift_server}"
