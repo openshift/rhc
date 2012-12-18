@@ -1,9 +1,6 @@
 #!/usr/bin/env ruby
 require 'rhc/coverage_helper'
 
-# Require rhc-common for wizard invocation
-require 'rhc-common'
-
 def get_args
   ARGV.shift
   args = ""

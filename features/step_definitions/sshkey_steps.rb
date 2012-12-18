@@ -35,11 +35,11 @@ end
 Then /^the output (does not include|includes) (.*)$/ do |includes,str|
   regex = case str
           when /^the key information for "(.*?)"$/
-            /Name: #{$1}/
+            /#{$1} \(type\: /
           when "deprecation warning"
             /deprecated/
           when "the key information"
-            /Name:.*Type:.*Fingerprint:/m
+            /type: .*?\n\s*=+\n\s*Fingerprint: /m
           end
   includes = case includes
              when "does not"
