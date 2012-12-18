@@ -31,97 +31,84 @@ module RHC
     end
 
     #---------------------------
-    # Domain information
-    #---------------------------
-
-    # This is a little different because we don't want to recreate the display_app function
-    def display_domain(domain)
-      say "No domain exists.  You can use 'rhc domain create' to create a namespace for applications." and return unless domain
-      header "Applications in %s" % domain.id do
-        domain.applications.each do |a|
-          display_app(a,a.cartridges,a.scalable_carts.first)
-        end.blank? and say "No applications. You can use 'rhc app create' to create new applications."
-      end
-    end
-
-    #---------------------------
     # Application information
     #---------------------------
-    def display_app(app,cartridges = nil,scalable_cart = nil)
-      heading = "%s @ %s" % [app.name, app.app_url]
+    def display_app(app,cartridges = nil)
+      heading = "%s @ %s (uuid: %s)" % [app.name, app.app_url, app.uuid]
       paragraph do
         header heading do
-          display_app_properties(app,:creation_time,:uuid,:gear_profile,:git_url,:ssh_url,:aliases)
+          section(:bottom => 1) do
+            display_app_properties(
+              app,
+              :creation_time,
+              :gear_profile,
+              :git_url,
+              :ssh_string,
+              :aliases)
+          end
           display_included_carts(cartridges) if cartridges
-          display_scaling_info(app,scalable_cart) if scalable_cart
         end
       end
     end
 
     def display_app_properties(app,*properties)
       say_table \
-        "Application Info",
+        nil,
         get_properties(app,*properties),
         :delete => true
     end
 
     def display_included_carts(carts)
-      properties = Hash[carts.map do |cart|
-        [cart.name,cart.connection_info]
-      end]
-
-      properties = "None" unless properties.present?
-
-      say_table \
-        "Cartridges",
-        properties,
-        :preserve_keys => true
+      carts.each do |c|
+        section(:bottom => 1) do
+          say_table \
+            format_cart_header(c),
+            get_properties(c, :scaling, :connection_info),
+            :delete => true
+        end
+      end
     end
 
-    def display_scaling_info(app,cart)
-      # Save these values for easier reuse
-      values = [:current_scale,:scales_from,:scales_to,:scales_with]
-      # Get the scaling properties we care about
-      properties = get_properties(cart,*values)
-      # Format the string for applications
-      properties = "Scaled x%d (minimum: %s, maximum: %s) with %s on %s gears" %
-        [properties.values_at(*values), app.gear_profile].flatten
+    def format_cart_header(cart)
+      [
+        cart.name, 
+        cart.name != cart.display_name ? "(#{cart.display_name})" : nil,
+      ].compact.join(' ')
+    end
 
-      say_table \
-        "Scaling Info",
-        properties
+    def format_scaling_info(scaling)
+      "x%d (minimum: %s, maximum: %s) on %s gears" %
+        [:current_scale, :scales_from, :scales_to, :gear_profile].map{ |key| format_value(key, scaling[key]) } if scaling
     end
 
     #---------------------------
     # Cartridge information
     #---------------------------
 
-    def display_cart(cart,properties = nil)
+    def display_cart(cart, *properties)
+      properties = [:scaling, :connection_info] if properties.empty?
       @table_displayed = false
-      header cart.name do
-        display_cart_properties(cart,properties) if properties
-        display_cart_scaling_info(cart) if cart.scalable?
-        #  Commenting this out for US2438
-        # display_cart_storage_info(cart) if cart.additional_gear_storage > 0
-        display_no_info("cartridge") unless @table_displayed
-      end
-    end
-
-    def display_cart_properties(cart,properties)
-      # We need to actually access the cart because it's not a simple hash
-      properties = get_properties(cart,*properties.keys) do |prop|
-        cart.property(:cart_data,prop)["value"]
-      end
 
       say_table \
-        "Properties",
-        properties
+        format_cart_header(cart),
+        get_properties(cart, *properties),
+        :delete => true
+      display_no_info("cartridge") unless @table_displayed
     end
 
-    def display_cart_scaling_info(cart)
-      say_table \
-        "Scaling Info",
-        get_properties(cart,:current_scale,:scales_from,:scales_to)
+    def display_key(key, *properties)
+      properties = [:fingerprint] if properties.empty?
+      say_table(
+        properties.include?(:name) ? nil : format_key_header(key),
+        get_properties(key, *properties)
+      )
+    end
+
+    def format_key_header(key)
+      [
+        key.name,
+        "(type: #{key.type})",
+      ].compact.join(' ')
     end
 
 =begin
@@ -147,42 +134,40 @@ module RHC
     def display_no_info(type)
       say_table \
         nil,
-        ["This #{type} has no information to show"]
+        [["This #{type} has no information to show"]]
     end
 
     private
       def say_table(heading,values,opts = {})
         @table_displayed = true
-        table = make_table(values,opts)
 
-        # Go through all the table rows
-        _proc = proc{
-          table.each do |s|
-            # Remove trailing = (like for cartridges list)
-            indent s.gsub(/\s*=\s*$/,'')
-          end
-        }
+        values = values.to_a if values.is_a? Hash
+        values.delete_if do |arr|
+          arr[0] = "#{table_heading(arr.first)}:" if arr[0].is_a? Symbol
+          opts[:delete] and arr.last.blank?
+        end
+
+        table = self.table(values)
 
         # Make sure we nest properly
         if heading
           header heading do
-            _proc.call
+            say table
           end
         else
-          _proc.call
+          say table
         end
       end
 
       # This uses the array of properties to retrieve them from an object
       def get_properties(object,*properties)
-        Hash[properties.map do |prop|
+        properties.map do |prop|
           # Either send the property to the object or yield it
           value = block_given? ? yield(prop) : object.send(prop)
           # Some values (like date) need some special handling
-          value = format_value(prop,value)
 
-          [prop,value]
-        end]
+          [prop, format_value(prop,value)]
+        end
       end
 
       # Format some special values
@@ -191,7 +176,9 @@ module RHC
         when :creation_time
           date(value)
         when :scales_from,:scales_to
-          (value == -1 ? "available gears" : value)
+          (value == -1 ? "available" : value)
+        when :scaling
+          format_scaling_info(value)
 =begin
 #  Commenting this out for US2438
         when :base_gear_storage,:additional_gear_storage
@@ -201,37 +188,6 @@ module RHC
           value.join ' '
         else
           value
-        end
-      end
-
-      # Make the rows for the table
-      #   If we pass a hash, it will manipulate it into a nice table
-      #   Arrays and single vars will just be passed back as arrays
-      def make_table(values,opts = {})
-        case values
-        when Hash
-          # Loop through the values in case we need to fix them
-          _values = values.inject({}) do |h,(k,v)|
-            # Format the keys based on the table_heading function
-            #  If we pass :preserve_keys, we leave them alone (like for cart names)
-            key = opts[:preserve_keys] ? k : table_heading(k)
-
-            # Replace empty or nil values with spaces
-            #  If we pass :delete, we assume those are not needed
-            if v.blank?
-              h[key] = "" unless opts[:delete]
-            else
-              h[key] = v.to_s
-            end
-            h
-          end
-          # Join the values into rows
-          table _values, :join => " = "
-          # Create a simple array
-        when Array
-          values
-        else
-          [values]
         end
       end
   end

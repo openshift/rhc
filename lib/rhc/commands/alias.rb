@@ -1,6 +1,6 @@
 require 'rhc/commands/base'
 require 'rhc/config'
-require 'rhc-common'
+
 module RHC::Commands
   class Alias < Base
     summary "Add or remove a custom domain name for the application"

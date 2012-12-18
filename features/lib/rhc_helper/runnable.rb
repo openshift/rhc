@@ -1,7 +1,5 @@
 require 'open4'
 require 'timeout'
-require 'iconv'
-require 'rubygems'
 
 module RHCHelper
   module Runnable
@@ -39,28 +37,8 @@ module RHCHelper
         status = Open4.spawn(cmd, 'stdout' => stdout, 'stderr' => stderr, 'stdin' => stdin, 'quiet' => true)
         out, err = [stdout, stderr].map(&:string)
 
-        #pid, stdin, stdout, stderr = Open4::popen4 cmd
-        #input.each {|line| stdin.puts line}
-        #stdin.close
-
-        # Block until the command finishes
-        #ignored, status = Process::waitpid2 pid
-        #out = stdout.read.strip
-        #err = stderr.read.strip
         stdout.close
         stderr.close
-
-        # Force the output to ASCII-only characters or logger will barf.
-        if (Gem::Version.new(RUBY_VERSION.dup) <=> Gem::Version.new('1.9.3')) >= 0
-          out.encode!('UTF-8', 'UTF-8', :undef => :replace, :invalid => :replace)
-          err.encode!('UTF-8', 'UTF-8', :undef => :replace, :invalid => :replace)
-        else
-          out = iconv_handler.iconv(out + ' ')[0..-2]
-          err = iconv_handler.iconv(err + ' ')[0..-2]
-        end
-
-        logger.debug("Standard Output:\n#{out}")
-        logger.debug("Standard Error:\n#{err}")
 
         # Allow a caller to pass in a block to process the output
         yield status.exitstatus, out, err, arg if block_given?
@@ -71,7 +49,7 @@ module RHCHelper
         logger.error("(#{$$}): Execution failed #{cmd} with exit_code: #{exit_code.to_s}")
       end
 
-      return exit_code
+      exit_code
     end
   end
 end

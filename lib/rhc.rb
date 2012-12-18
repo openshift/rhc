@@ -5,6 +5,8 @@
 require 'rest_client'
 require 'logger'
 
+require 'pry' if ENV['PRY']
+
 # Extend core methods
 require 'rhc/core_ext'
 
@@ -19,7 +21,4 @@ module RHC
 end
 
 require 'rhc/exceptions'
-
-# Replace me with proper autoloads on the module RHC
-require 'rhc-common'
 

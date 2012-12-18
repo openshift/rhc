@@ -1,16 +1,19 @@
 require 'base64'
 require 'rhc/json'
+require 'rhc/rest/attributes'
 
 module RHC
   module Rest
     class Base
       include Rest
+      include Attributes
+      extend AttributesClass
 
-      attr_reader :messages
+      define_attr :messages
 
-      def initialize(json_args={}, use_debug=false)
+      def initialize(json_args=nil, use_debug=false)
         @debug = use_debug
-        @__json_args__ = json_args
+        @attributes = (json_args || {}).stringify_keys!
         @messages = []
       end
 
@@ -29,23 +32,17 @@ module RHC
         end
 
         def rest_method(link_name, payload={}, timeout=nil)
-          url = links[link_name]['href']
-          method =  links[link_name]['method']
+          link = links[link_name.to_s]
+          raise "No link defined for #{link_name}" unless link
+          url = link['href']
+          method = link['method']
 
           request = new_request(:url => url, :method => method, :headers => @@headers, :payload => payload, :timeout => timeout)
           request(request)
         end
 
         def links
-          @__json_args__[:links] || @__json_args__['links']
-        end
-
-        def self.attr_reader(*names)
-          names.each do |name|
-            define_method(name) do
-              instance_variable_get("@#{name}") || @__json_args__[name] || @__json_args__[name.to_s]
-            end
-          end
+          attributes['links'] || {}
         end
     end
   end

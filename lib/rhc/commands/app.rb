@@ -1,6 +1,6 @@
 require 'rhc/commands/base'
 require 'resolv'
-require 'rhc/git_helper'
+require 'rhc/git_helpers'
 require 'rhc/cartridge_helpers'
 
 module RHC::Commands
@@ -10,8 +10,8 @@ module RHC::Commands
     syntax "<action>"
     default_action :help
 
-    summary "Create an application and adds it to a domain"
-    description "Create an application in your domain. You can see a list of all valid cartridge types by running 'rhc cartridge list'."
+    summary "Create an application"
+    description "Create an application. You can see a list of all valid cartridge types by running 'rhc cartridge list'."
     syntax "<name> <cartridge> [-n namespace]"
     option ["-n", "--namespace namespace"], "Namespace for the application", :context => :namespace_context, :required => true
     option ["-g", "--gear-size size"], "Gear size controls how much memory and CPU your cartridges can use."
@@ -31,8 +31,8 @@ module RHC::Commands
         :dns => true,
         :git => true
 
-      header "Creating application '#{name}'"
       paragraph do
+        header "Application Options"
         table({"Namespace:" => options.namespace,
                "Cartridge:" => cartridge,
                "Gear Size:" => options.gear_size || "default",
@@ -45,109 +45,100 @@ module RHC::Commands
 
       rest_app, rest_domain = nil
       raise RHC::DomainNotFoundException.new("No domains found. Please create a domain with 'rhc domain create <namespace>' before creating applications.") if rest_client.domains.empty?
-
       rest_domain = rest_client.find_domain(options.namespace)
 
-      # check to make sure the right options are set for enabling jenkins
-      jenkins_rest_app = check_jenkins(name, rest_domain) if enable_jenkins?
+      messages = []
 
-      # create the main app
-      rest_app = create_app(name, cartridge, rest_domain,
-                            options.gear_size, options.scaling)
+      paragraph do
+        say "Creating application '#{name}' ... "
 
-      # create a jenkins app if not available
-      # don't error out if there are issues, setup warnings instead
-      begin
-        jenkins_rest_app = setup_jenkins_app(rest_domain) if enable_jenkins? and jenkins_rest_app.nil?
-      rescue Exception => e
-        add_issue("Jenkins failed to install - #{e}",
-                  "Installing jenkins and jenkins-client",
-                  "rhc app create jenkins",
-                  "rhc cartridge add jenkins-client -a #{rest_app.name}")
+
+        # create the main app
+        rest_app = create_app(name, cartridge, rest_domain,
+                              options.gear_size, options.scaling)
+
+        messages.concat(rest_app.messages)
+
+        success "done"
       end
 
-      if jenkins_rest_app
-        success, attempts, exit_code, exit_message = false, 1, 157, nil
-        while (!success && exit_code == 157 && attempts < MAX_RETRIES)
-          begin
-            setup_jenkins_client(rest_app)
-            success = true
-          rescue RHC::Rest::ServerErrorException => e
-            if (e.code == 157)
-              # error downloading Jenkins /jnlpJars/jenkins-cli.jar
-              attempts += 1
-              debug "Jenkins server could not be contacted, sleep and then retry: attempt #{attempts}\n    #{e.message}"
-              Kernel.sleep(10)
+      build_app_exists = rest_app.building_app
+
+      if enable_jenkins?
+        unless build_app_exists
+          paragraph do
+            say "Setting up a Jenkins application ... "
+
+            begin
+              build_app_exists = add_jenkins_app(rest_domain)
+
+              success "done"
+              messages.concat(build_app_exists.messages)
+
+            rescue Exception => e
+              warn "not complete"
+              add_issue("Jenkins failed to install - #{e}",
+                        "Installing jenkins and jenkins-client",
+                        "rhc app create jenkins",
+                        "rhc cartridge add jenkins-client -a #{rest_app.name}")
             end
-            exit_code = e.code
-            exit_message = e.message
-          rescue Exception => e
-            # timeout and other exceptions
-            exit_code = 1
-            exit_message = e.message
           end
         end
-        add_issue("Jenkins client failed to install - #{exit_message}",
-                  "Install the jenkins client",
-                  "rhc cartridge add jenkins-client -a #{rest_app.name}") if !success
+
+        paragraph do
+          add_jenkins_client_to(rest_app, messages)
+        end if build_app_exists
       end
 
       if options.dns
-        say "Your application's domain name is being propagated worldwide (this might take a minute)..."
-        unless dns_propagated? rest_app.host
-          add_issue("We were unable to lookup your hostname (#{rest_app.host}) in a reasonable amount of time and can not clone your application.",
-                    "Clone your git repo",
-                    "rhc app git-clone #{rest_app.name}")
+        paragraph do
+          say "Waiting for your DNS name to be available ... "
+          if dns_propagated? rest_app.host
+            success "done"
+          else
+            warn "failure"
+            add_issue("We were unable to lookup your hostname (#{rest_app.host}) in a reasonable amount of time and can not clone your application.",
+                      "Clone your git repo",
+                      "rhc git-clone #{rest_app.name}")
 
-          output_issues(rest_app)
-          return 0
+            output_issues(rest_app)
+            return 0
+          end
         end
 
         if options.git
-          begin
-            run_git_clone(rest_app)
-          rescue RHC::GitException => e
-            warn "#{e}"
-            unless RHC::Helpers.windows? and windows_nslookup_bug?(rest_app)
-              add_issue("We were unable to clone your application's git repo - #{e}",
-                        "Clone your git repo",
-                        "rhc app git-clone #{rest_app.name}")
+          paragraph do
+            debug "Checking SSH keys through the wizard"
+            check_sshkeys! unless options.noprompt
+
+            say "Downloading the application Git repository ..."
+            paragraph do
+              begin
+                git_clone_application(rest_app)
+              rescue RHC::GitException => e
+                warn "#{e}"
+                unless RHC::Helpers.windows? and windows_nslookup_bug?(rest_app)
+                  add_issue("We were unable to clone your application's git repo - #{e}",
+                            "Clone your git repo",
+                            "rhc git-clone #{rest_app.name}")
+                end
+              end
             end
           end
         end
       end
 
-      display_app(rest_app, rest_app.cartridges, rest_app.scalable_carts.first)
+      display_app(rest_app, rest_app.cartridges)
 
       if issues?
         output_issues(rest_app)
       else
-        results {
-          rest_app.messages.each { |msg| say msg }
-          jenkins_rest_app.messages.each { |msg| say msg } if enable_jenkins? and jenkins_rest_app
-        }
+        results{ messages.each { |msg| success msg } }.blank? and "Application created"
       end
 
       0
     end
 
-    summary "Clone and configure an application's repository locally"
-    description "This is a convenience wrapper for 'git clone' with the added",
-                "benefit of adding configuration data such as the application's",
-                "UUID to the local repository.  It also automatically",
-                "figures out the git url from the application name so you don't",
-                "have to look it up."
-    syntax "<app> [--namespace namespace]"
-    option ["-n", "--namespace namespace"], "Namespace to add your application to", :context => :namespace_context, :required => true
-    argument :app, "The application you wish to clone", ["-a", "--app name"]
-    # TODO: Implement default values for arguments once ffranz has added context arguments
-    # argument :directory, "The name of a new directory to clone into", [], :default => nil
-    def git_clone(app)
-      rest_domain = rest_client.find_domain(options.namespace)
-      rest_app = rest_domain.find_application(app)
-      run_git_clone(rest_app)
-      0
-    end
 
     summary "Delete an application from the server"
     description "Deletes your application and all of its data from the server.",
@@ -161,15 +152,17 @@ module RHC::Commands
     def delete(app)
       rest_domain = rest_client.find_domain(options.namespace)
       rest_app = rest_domain.find_application(app)
-      do_delete = true
 
-      do_delete = agree "Are you sure you wish to delete the '#{rest_app.name}' application? (yes/no)" unless options.confirm
-
-      if do_delete
-        paragraph { say "Deleting application '#{rest_app.name}'" }
-        rest_app.destroy
-        results { say "Application '#{rest_app.name}' successfully deleted" }
+      unless options.confirm
+        paragraph do
+          return 1 unless agree("Are you sure you wish to delete the '#{rest_app.name}' application? (yes|no): ")
+        end
       end
+
+      say "Deleting application '#{rest_app.name}' ... "
+      rest_app.destroy
+      success "deleted"
+
       0
     end
 
@@ -244,18 +237,20 @@ module RHC::Commands
     argument :app, "The name of the application you are getting information on", ["-a", "--app app"], :context => :app_context
     option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
     option ["--state"], "Get the current state of the application's gears"
-    def show(app)
-      rest_domain = rest_client.find_domain(options.namespace)
-      rest_app = rest_domain.find_application(app)
-      unless options.state
-        display_app(rest_app,rest_app.cartridges,rest_app.scalable_carts.first)
-      else
+    def show(app_name)
+      domain = rest_client.find_domain(options.namespace)
+      app = domain.find_application(app_name)
+
+      if options.state
         results do
-          rest_app.gear_groups.each do |gg|
-            say "Geargroup #{gg.cartridges.collect { |c| c['name'] }.join('+')} is #{gg.gears.first['state']}"
+          app.gear_groups.each do |gg|
+            say "Gear group #{gg.cartridges.collect { |c| c['name'] }.join('+')} is #{gg.gears.first['state']}"
           end
         end
+      else
+        display_app(app, app.cartridges)
       end
+
       0
     end
 
@@ -273,6 +268,10 @@ module RHC::Commands
     private
       include RHC::GitHelpers
       include RHC::CartridgeHelpers
+
+      def check_sshkeys!
+        RHC::SSHWizard.new(rest_client).run
+      end
 
       def standalone_cartridges
         @standalone_cartridges ||= rest_client.cartridges.select{ |c| c.type == 'standalone' }
@@ -299,7 +298,7 @@ module RHC::Commands
       end
 
       def use_cart(cart, for_cartridge_name)
-        info "Using #{cart.name}#{cart.display_name ? " (#{cart.display_name})" : ''} instead of '#{for_cartridge_name}'"
+        info "Using #{cart.name}#{cart.display_name ? " (#{cart.display_name})" : ''} for '#{for_cartridge_name}'"
         cart.name
       end
 
@@ -324,7 +323,7 @@ module RHC::Commands
         app_options[:debug] = true if @debug
 
         debug "Creating application '#{name}' with these options - #{app_options.inspect}"
-        rest_app = rest_domain.add_application name, app_options
+        rest_app = rest_domain.add_application(name, app_options)
         debug "'#{rest_app.name}' created"
 
         rest_app
@@ -334,6 +333,48 @@ module RHC::Commands
           paragraph{ list_cartridges }
         end
         raise
+      end
+
+      def add_jenkins_app(rest_domain)
+        create_app(jenkins_app_name, "jenkins-1.4", rest_domain)
+      end
+
+      def add_jenkins_cartridge(rest_app)
+        rest_app.add_cartridge("jenkins-client-1.4", 300)
+      end
+
+      def add_jenkins_client_to(rest_app, messages)
+        say "Setting up Jenkins build ... "
+        successful, attempts, exit_code, exit_message = false, 1, 157, nil
+        while (!successful && exit_code == 157 && attempts < MAX_RETRIES)
+          begin
+            cartridge = add_jenkins_cartridge(rest_app)
+            successful = true
+
+            success "done"
+            messages.concat(cartridge.messages)
+
+          rescue RHC::Rest::ServerErrorException => e
+            if (e.code == 157)
+              # error downloading Jenkins /jnlpJars/jenkins-cli.jar
+              attempts += 1
+              debug "Jenkins server could not be contacted, sleep and then retry: attempt #{attempts}\n    #{e.message}"
+              Kernel.sleep(10)
+            end
+            exit_code = e.code
+            exit_message = e.message
+          rescue Exception => e
+            # timeout and other exceptions
+            exit_code = 1
+            exit_message = e.message
+          end
+        end
+        unless successful
+          warn "not complete"
+          add_issue("Jenkins client failed to install - #{exit_message}",
+                    "Install the jenkins client",
+                    "rhc cartridge add jenkins-client -a #{rest_app.name}")
+        end
       end
 
       def dns_propagated?(host, sleep_time=2)
@@ -362,88 +403,15 @@ module RHC::Commands
         found
       end
 
-      def check_sshkeys!
-        wizard = RHC::SSHWizard.new(rest_client)
-        wizard.run
-      end
-
-      def run_git_clone(rest_app)
-        debug "Pulling new repo down"
-
-        check_sshkeys! unless options.noprompt
-
-        repo_dir = options.repo || rest_app.name
-        git_clone_repo rest_app.git_url, repo_dir
-
-        configure_git rest_app
-
-        true
-      end
-
-      def configure_git(rest_app)
-        debug "Configuring git repo"
-
-        repo_dir = options.repo || rest_app.name
-        Dir.chdir(repo_dir) do |dir|
-          git_config_set "rhc.app-uuid", rest_app.uuid
-        end
-      end
-
       def enable_jenkins?
         # legacy issue, commander 4.0.x will place the option in the hash with nil value (BZ878407)
         options.__hash__.has_key?(:enable_jenkins)
       end
 
       def jenkins_app_name
-        return "jenkins" if options.enable_jenkins == true || options.enable_jenkins == "true" || (enable_jenkins? && options.enable_jenkins.nil?)
-        return options.enable_jenkins if options.enable_jenkins.is_a?(String)
-        nil
-      end
-
-      def check_jenkins(app_name, rest_domain)
-        debug "Checking if jenkins arguments are valid"
-        raise ArgumentError, "The --no-dns option can't be used in conjunction with --enable-jenkins when creating an application.  Either remove the --no-dns option or first install your application with --no-dns and then use 'rhc cartridge add' to embed the Jenkins client." unless options.dns
-
-
-        begin
-          jenkins_rest_app = rest_domain.find_application(:framework => "jenkins-1.4")
-        rescue RHC::ApplicationNotFoundException
-          debug "No Jenkins apps found during check"
-
-          # app name and jenkins app name are the same
-          raise ArgumentError, "You have named both your main application and your Jenkins application '#{app_name}'. In order to continue you'll need to specify a different name with --enable-jenkins or choose
-a different application name." if jenkins_app_name == app_name
-
-          # jenkins app name and existing app are the same
-          begin
-            rest_app = rest_domain.find_application(:name => jenkins_app_name)
-            raise ArgumentError, "You have named your Jenkins application the same as an existing application '#{app_name}'. In order to continue you'll need to specify a different name with --enable-jenkins or delete the current application using 'rhc app delete #{app_name}'"
-          rescue RHC::ApplicationNotFoundException
-          end
-
-          debug "Jenkins arguments valid"
-          return nil
-        end
-
-        say "Found existing Jenkins application: #{jenkins_rest_app.name}"
-        say "Ignoring user specified Jenkins app name : #{options.enable_jenkins}" if jenkins_rest_app.name != options.enable_jenkins and options.enable_jenkins.is_a?(String)
-
-        debug "Jenkins arguments valid"
-        jenkins_rest_app
-      end
-
-      def setup_jenkins_app(rest_domain)
-        debug "Creating a new jenkins application"
-        rest_app = create_app(jenkins_app_name, "jenkins-1.4", rest_domain)
-
-        say "Jenkins domain name is being propagated worldwide (this might take a minute)..."
-        # If we can't get the dns we can't install the client so return nil
-        dns_propagated?(rest_app.host) ? rest_app : nil
-
-      end
-
-      def setup_jenkins_client(rest_app)
-        rest_app.add_cartridge("jenkins-client-1.4", 300)
+        if options.enable_jenkins.is_a? String
+          options.enable_jenkins
+        end || "jenkins"
       end
 
       def run_nslookup(host)
@@ -477,7 +445,7 @@ We recommend you wait a few minutes then clone your git repository manually.
 WINSOCKISSUE
           add_issue(issue,
                     "Clone your git repo",
-                    "rhc app git-clone #{rest_app.name}")
+                    "rhc git-clone #{rest_app.name}")
 
           return true
         end

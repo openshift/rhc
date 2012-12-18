@@ -1,7 +1,5 @@
 require 'spec_helper'
-require 'rhc/commands/port-forward'
-require 'rhc/config'
-require 'uri'
+require 'rhc/commands/port_forward'
 
 describe RHC::Commands::PortForward do
 

@@ -6,10 +6,11 @@ module RHC
     class Application < Base
       include Rest
 
-      attr_reader :domain_id, :name, :creation_time, :uuid, :aliases,
+      define_attr :domain_id, :name, :creation_time, :uuid, :aliases,
                   :git_url, :app_url, :gear_profile, :framework,
                   :scalable, :health_check_path, :embedded, :gear_count,
-                  :ssh_url
+                  :ssh_url, :building_app
+      alias_method :domain_name, :domain_id
 
       # Query helper to say consistent with cartridge
       def scalable?
@@ -25,12 +26,13 @@ module RHC
 
       def add_cartridge(name, timeout=nil)
         debug "Adding cartridge #{name}"
+        @cartridges = nil
         rest_method "ADD_CARTRIDGE", {:name => name}, timeout
       end
 
       def cartridges
         debug "Getting all cartridges for application #{name}"
-        rest_method "LIST_CARTRIDGES"
+        @cartridges ||= rest_method "LIST_CARTRIDGES"
       end
 
       def gear_groups
@@ -134,27 +136,15 @@ module RHC
         @host ||= URI(app_url).host
       end
 
-      #Application log file tailing
-      def tail(options)
-        debug "Tail in progress for #{name}"
+      def ssh_string
+        uri = URI(ssh_url)
+        "#{uri.user}@#{uri.host}"
+      end
 
-        file_glob = options.files ? options.files : "#{cartridges.first.name}/logs/*"
-        remote_cmd = "tail#{options.opts ? ' --opts ' + Base64::encode64(options.opts).chomp : ''} #{file_glob}"
-        ssh_cmd = "ssh -t #{uuid}@#{host} '#{remote_cmd}'"
-        begin
-          #Use ssh -t to tail the logs
-          debug ssh_cmd
-          ssh_ruby(host, uuid, remote_cmd)
-        rescue SocketError => e
-          msg =<<MESSAGE
-Could not connect: #{e.message}
-You can try to run this manually if you have ssh installed:
-#{ssh_cmd}
-
-MESSAGE
-          debug "DEBUG: #{e.message}\n"
-          raise SocketError, msg
-        end
+      def <=>(other)
+        c = name <=> other.name
+        return c unless c == 0
+        domain_id <=> other.domain_id
       end
     end
   end
