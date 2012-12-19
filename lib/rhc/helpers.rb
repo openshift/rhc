@@ -104,7 +104,7 @@ module RHC
     end
 
     def openshift_server
-      options.server rescue nil || config.get_value('libra_server') || "openshift.redhat.com"
+      (options.server rescue nil) || config.get_value('libra_server') || "openshift.redhat.com"
     end
     def openshift_url
       "https://#{openshift_server}"

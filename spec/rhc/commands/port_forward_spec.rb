@@ -22,7 +22,7 @@ describe RHC::Commands::PortForward do
       before(:each) do
         Net::SSH.should_receive(:start).with(@uri.host, @uri.user).and_yield(@ssh)
         @ssh.should_receive(:exec!).with("rhc-list-ports").and_yield(nil, :stderr, '127.0.0.1:3306')
-        @gg = MockRestGearGroup.new
+        @gg = MockRestGearGroup.new(@rc)
         @app.should_receive(:gear_groups).and_return([@gg])
         @gg.should_receive(:gears).and_return([{'state' => 'stopped', 'id' => 'fakegearid'}])
       end

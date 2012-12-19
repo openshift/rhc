@@ -9,7 +9,6 @@ RestClient.proxy = URI.parse(ENV['http_proxy']).to_s if ENV['http_proxy']
 module RHC
   module Rest
     class Client < Base
-      include RHC::Helpers
 
       # Keep the list of supported API versions here
       # The list may not necessarily be sorted; we will select the last
@@ -19,26 +18,29 @@ module RHC
 
       def initialize(*args)
         options = args[0].is_a?(Hash) && args[0] || {}
-        end_point, username, password, use_debug, preferred_api_versions =
+        @end_point, @username, @password, @debug, @preferred_api_versions =
           if options.empty?
             args
           else
             [options[:url], options[:username], options[:password], options[:debug], options[:preferred_api_versions]]
           end
 
+        @debug ||= false
         @auth = options[:auth]
-        @headers ||= options[:headers] || {:accept => :json}
-        @preferred_api_versions ||= CLIENT_API_VERSIONS
-        @debug = use_debug || false
-        @end_point = end_point
-        @username, @password = username, password
-        debug "Connecting to #{end_point}"
+        headers.merge!(options[:headers]) if options[:headers]
+        add_headers(headers) #TODO remove me
 
-        add_headers(headers)
+        @preferred_api_versions ||= CLIENT_API_VERSIONS
+
+        debug "Connecting to #{@end_point}"
       end
 
       def api
         @api ||= RHC::Rest::Api.new(self, @preferred_api_versions)
+      end
+
+      def api_version_negotiated
+        api.api_version_negotiated
       end
 
       def add_domain(id)
@@ -145,7 +147,7 @@ module RHC
       def request(options, &block)
         tried = 0
         begin
-          request = new_request(options) unless options.is_a? RestClient::Request
+          request = options.is_a?(RestClient::Request) && options || new_request(options)
           debug "Request: #{request.inspect}" if debug?
           begin
             response = request.execute
@@ -205,7 +207,12 @@ module RHC
       end
 
       protected
-        attr_reader :headers, :auth
+        include RHC::Helpers
+
+        attr_reader :auth
+        def headers
+          @headers ||= {:accept => :json}
+        end
 
         def new_request(options)
           # user specified timeout takes presidence

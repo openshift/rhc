@@ -39,9 +39,12 @@ module RHC
         attr_reader :client
 
         def debug(msg, obj=nil)
-          client.debug("#{msg}#{obj ? " #{obj}" : ''}") if client.debug?
+          client.debug("#{msg}#{obj ? " #{obj}" : ''}") if client && client.debug?
         end
 
+        def debug?
+          client && client.debug?
+        end
     end
   end
 end

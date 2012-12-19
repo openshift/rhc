@@ -43,24 +43,17 @@ module RHC
         it "returns a client object from the required arguments" do
           credentials = Base64.strict_encode64(mock_user + ":" + mock_pass)
           client      = RHC::Rest::Client.new(mock_href, mock_user, mock_pass)
-          @@headers['Authorization'].should == "Basic #{credentials}"
-          client.send(:links).should == client_links
-        end
-        it "does not add newlines to username and password > 60 characters" do
-          username = "a" * 45
-          password = "p" * 45
-          client   = RHC::Rest::Client.new(mock_href, mock_user, mock_pass)
-          @@headers['Authorization'].should_not match("\n")
+          client.api.send(:links).should == client_links
         end
         it "raises an error message if the API cannot be connected" do
-          expect { MockClient.new(mock_href('api_error'), mock_user, mock_pass) }.should raise_error
+          expect { MockClient.new(mock_href('api_error'), mock_user, mock_pass).api }.should raise_error
         end
         it "raises a generic error for any other error condition" do
-          lambda{ RHC::Rest::Client.new(mock_href('other_error'), mock_user, mock_pass) }.
+          lambda{ RHC::Rest::Client.new(mock_href('other_error'), mock_user, mock_pass).api }.
             should raise_error("Failed to access resource: Other Error")
         end
       end
-      
+
       describe "#new" do
         context "when server supports API versions [1.0, 1.1]" do
           before :each do
@@ -73,40 +66,40 @@ module RHC
             stub_api_request(:get, 'other_error').
               to_raise(Exception.new('Other Error'))
           end
-          
+
           context "when client is instantiated with [1.0, 1.1] as the preferred API versions" do
             before :each do
               @client = RHC::Rest::Client.new(mock_href, mock_user, mock_pass, false, [1.0, 1.1])
             end
             it "settles on 1.1 as the API version" do
-              @client.api_version_negotiated.should == 1.1
+              @client.api.api_version_negotiated.should == 1.1
             end
           end
-          
+
           context "when client is instantiated with [1.1, 1.0] as the preferred API versions" do
             before :each do
               @client = RHC::Rest::Client.new(mock_href, mock_user, mock_pass, false, [1.1, 1.0])
             end
             it "settles on 1.0 as the API version" do
-              @client.api_version_negotiated.should == 1.0
+              @client.api.api_version_negotiated.should == 1.0
             end
           end
-          
+
           context "when client is instantiated with [1.2, 1.3] as the preferred API versions" do
             before :each do
               @client = RHC::Rest::Client.new(mock_href, mock_user, mock_pass, false, [1.2, 1.3])
             end
             it "fails to negotiate an agreeable API version" do
-              @client.api_version_negotiated.should be_nil
+              @client.api.api_version_negotiated.should be_nil
             end
           end
-          
+
           context "when client is instantiated with [1.1, 1.0, 1.3] as the preferred API versions" do
             before :each do
               @client = RHC::Rest::Client.new(mock_href, mock_user, mock_pass, false, [1.1, 1.0, 1.3])
             end
             it "settles on 1.0 as the API version" do
-              @client.api_version_negotiated.should == 1.0
+              @client.api.api_version_negotiated.should == 1.0
             end
           end
         end
@@ -535,7 +528,7 @@ module RHC
             
           describe "#api_version_negotiated" do
             it "returns 1.1" do
-              @client.api_version_negotiated.to_s.should == '1.1'
+              @client.api.api_version_negotiated.to_s.should == '1.1'
             end
           end
         end
@@ -547,7 +540,7 @@ module RHC
             
           describe "#api_version_negotiated" do
             it 'returns nil' do
-              @client.api_version_negotiated.should be_nil
+              @client.api.api_version_negotiated.should be_nil
             end
           end
         end
@@ -556,7 +549,7 @@ module RHC
           describe "#new" do
             it "warns user that it is outdated" do
               capture do
-                @client = RHC::Rest::Client.new(mock_href, mock_user, mock_pass, false, [0.9])
+                @client = RHC::Rest::Client.new(mock_href, mock_user, mock_pass, false, [0.9]).api
                 @output.rewind
                 @output.read.should =~ /client version may be outdated/
               end

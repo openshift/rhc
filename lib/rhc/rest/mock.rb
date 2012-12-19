@@ -150,11 +150,13 @@ module RHC::Rest::Mock
         end
       end
       @domains = []
-      @client_api_versions = RHC::Rest::Client::CLIENT_API_VERSIONS
-      @server_api_versions = @client_api_versions
-      @user = MockRestUser.new(config.username)
-      self.attributes = {:links => mock_response_links(mock_client_links)}
-      add_headers(headers.clear)
+      @user = MockRestUser.new(client, config.username)
+      @api = MockRestApi.new(client, config)
+      add_headers(headers)
+    end
+
+    def api
+      @api
     end
 
     def user
@@ -166,18 +168,18 @@ module RHC::Rest::Mock
     end
 
     def cartridges
-      [MockRestCartridge.new("mock_cart-1", "embedded"), # code should sort this to be after standalone
-       MockRestCartridge.new("mock_standalone_cart-1", "standalone"),
-       MockRestCartridge.new("mock_standalone_cart-2", "standalone"),
-       MockRestCartridge.new("mock_unique_standalone_cart-1", "standalone"),
-       MockRestCartridge.new("jenkins-1.4", "standalone"),
-       MockRestCartridge.new("mock_cart-2", "embedded"),
-       MockRestCartridge.new("unique_mock_cart-1", "embedded"),
-       MockRestCartridge.new("jenkins-client-1.4", "embedded")]
+      [MockRestCartridge.new(self, "mock_cart-1", "embedded"), # code should sort this to be after standalone
+       MockRestCartridge.new(self, "mock_standalone_cart-1", "standalone"),
+       MockRestCartridge.new(self, "mock_standalone_cart-2", "standalone"),
+       MockRestCartridge.new(self, "mock_unique_standalone_cart-1", "standalone"),
+       MockRestCartridge.new(self, "jenkins-1.4", "standalone"),
+       MockRestCartridge.new(self, "mock_cart-2", "embedded"),
+       MockRestCartridge.new(self, "unique_mock_cart-1", "embedded"),
+       MockRestCartridge.new(self, "jenkins-client-1.4", "embedded")]
     end
 
     def add_domain(id)
-      d = MockRestDomain.new(id, self)
+      d = MockRestDomain.new(self, id)
       @domains << d
       d
     end
@@ -195,14 +197,25 @@ module RHC::Rest::Mock
     end
   end
 
+  class MockRestApi < RHC::Rest::Api
+    include Helpers
+
+    def initialize(client, config)
+      @client = client
+      @client_api_versions = RHC::Rest::Client::CLIENT_API_VERSIONS
+      @server_api_versions = @client_api_versions
+      self.attributes = {:links => mock_response_links(mock_client_links)}
+    end
+  end
+
   class MockRestUser < RHC::Rest::User
     include Helpers
-    def initialize(login)
-      super({})
+    def initialize(client, login)
+      super({}, client)
       @login = login
       @keys = [
-        MockRestKey.new('mockkey1', 'ssh-rsa', 'AAAAB3NzaC1yc2EAAAADAQABAAABAQDNK8xT3O+kSltmCMsSqBfAgheB3YFJ9Y0ESJnFjFASVxH70AcCQAgdQSD/r31+atYShJdP7f0AMWiQUTw2tK434XSylnZWEyIR0V+j+cyOPdVQlns6D5gPOnOtweFF0o18YulwCOK8Q1H28GK8qyWhLe0FcMmxtKbbQgaVRvQdXZz4ThzutCJOyJm9xVb93+fatvwZW76oLLvfFJcJSOK2sgW7tJM2A83bm4mwixFDF7wO/+C9WA+PgPKJUIjvy1gZjBhRB+3b58vLOnYhPOgMNruJwzB+wJ3pg8tLJEjxSbHyyoi6OqMBs4BVV7LdzvwTDxEjcgtHVvaVNXgO5iRX'),
-        MockRestKey.new('mockkey2', 'ssh-dsa', 'AAAAB3NzaC1kc3MAAACBAPaaFj6Xjrjd8Dc4AAkJe0HigqaXMxj/87xHoV+nPgerHIceJWhPUWdW40lSASrgpAV9Eq4zzD+L19kgYdbMw0vSX5Cj3XtNOsow9MmMxFsYjTxCv4eSs/rLdGPaYZ5GVRPDu8tN42Bm8lj5o+ky3HzwW+mkQMZwcADQIgqtn6QhAAAAFQCirDfIMf/JoMOFf8CTnsTKWw/0zwAAAIAIQp6t2sLIp1d2TBfd/qLjOJA10rPADcnhBzWB/cd/oFJ8a/2nmxeSPR5Ov18T6itWqbKwvZw2UC0MrXoYbgcfVNP/ym1bCd9rB5hu1sg8WO4JIxA/47PZooT6PwTKVxHuENEzQyJL2o6ZJq+wuV0taLvm6IaM5TAZuEJ2p4TC/gAAAIBpLcVXZREa7XLY55nyidt/+UC+PxpjhPHOHbzL1OvWEaumN4wcJk/JZPppgXX9+WDkTm1SD891U0cXnGMTP0OZOHkOUHF2ZcfUe7p9kX4WjHs0OccoxV0Lny6MC4DjalJyaaEbijJHSUX3QlLcBOlPHJWpEpvWQ9P8AN4PokiGzA==')
+        MockRestKey.new(client, 'mockkey1', 'ssh-rsa', 'AAAAB3NzaC1yc2EAAAADAQABAAABAQDNK8xT3O+kSltmCMsSqBfAgheB3YFJ9Y0ESJnFjFASVxH70AcCQAgdQSD/r31+atYShJdP7f0AMWiQUTw2tK434XSylnZWEyIR0V+j+cyOPdVQlns6D5gPOnOtweFF0o18YulwCOK8Q1H28GK8qyWhLe0FcMmxtKbbQgaVRvQdXZz4ThzutCJOyJm9xVb93+fatvwZW76oLLvfFJcJSOK2sgW7tJM2A83bm4mwixFDF7wO/+C9WA+PgPKJUIjvy1gZjBhRB+3b58vLOnYhPOgMNruJwzB+wJ3pg8tLJEjxSbHyyoi6OqMBs4BVV7LdzvwTDxEjcgtHVvaVNXgO5iRX'),
+        MockRestKey.new(client, 'mockkey2', 'ssh-dsa', 'AAAAB3NzaC1kc3MAAACBAPaaFj6Xjrjd8Dc4AAkJe0HigqaXMxj/87xHoV+nPgerHIceJWhPUWdW40lSASrgpAV9Eq4zzD+L19kgYdbMw0vSX5Cj3XtNOsow9MmMxFsYjTxCv4eSs/rLdGPaYZ5GVRPDu8tN42Bm8lj5o+ky3HzwW+mkQMZwcADQIgqtn6QhAAAAFQCirDfIMf/JoMOFf8CTnsTKWw/0zwAAAIAIQp6t2sLIp1d2TBfd/qLjOJA10rPADcnhBzWB/cd/oFJ8a/2nmxeSPR5Ov18T6itWqbKwvZw2UC0MrXoYbgcfVNP/ym1bCd9rB5hu1sg8WO4JIxA/47PZooT6PwTKVxHuENEzQyJL2o6ZJq+wuV0taLvm6IaM5TAZuEJ2p4TC/gAAAIBpLcVXZREa7XLY55nyidt/+UC+PxpjhPHOHbzL1OvWEaumN4wcJk/JZPppgXX9+WDkTm1SD891U0cXnGMTP0OZOHkOUHF2ZcfUe7p9kX4WjHs0OccoxV0Lny6MC4DjalJyaaEbijJHSUX3QlLcBOlPHJWpEpvWQ9P8AN4PokiGzA==')
       ]
     end
 
@@ -211,16 +224,15 @@ module RHC::Rest::Mock
     end
 
     def add_key(name, type, content)
-      @keys << MockRestKey.new(name, type, content)
+      @keys << MockRestKey.new(client, name, type, content)
     end
   end
 
   class MockRestDomain < RHC::Rest::Domain
     include Helpers
-    def initialize(id, client)
-      super({})
+    def initialize(client, id)
+      super({}, client)
       @id = id
-      @client = client
       @applications = []
       self.attributes = {:links => mock_response_links(mock_domain_links('mock_domain_0'))}
     end
@@ -232,9 +244,8 @@ module RHC::Rest::Mock
 
     def destroy
       raise RHC::Rest::ClientErrorException.new("Applications must be empty.") unless @applications.empty?
-      @client.domains.delete_if { |d| d.id == @id }
+      client.domains.delete_if { |d| d.id == @id }
 
-      @client = nil
       @applications = nil
     end
 
@@ -244,7 +255,7 @@ module RHC::Rest::Mock
         gear_profile = type[:gear_profile]
         type = type[:cartridge]
       end
-      a = MockRestApplication.new(name, type, self, scale, gear_profile)
+      a = MockRestApplication.new(client, name, type, self, scale, gear_profile)
       builder = @applications.find{ |app| app.cartridges.map(&:name).any?{ |s| s =~ /^jenkins-[\d\.]+$/ } }
       a.building_app = builder.name if builder
       @applications << a
@@ -259,8 +270,8 @@ module RHC::Rest::Mock
 
   class MockRestGearGroup < RHC::Rest::GearGroup
     include Helpers
-    def initialize
-      super({})
+    def initialize(client=nil)
+      super({}, client)
       @cartridges = [{'name' => 'fake_geargroup_cart-0.1'}]
       @gears = [{'state' => 'started', 'id' => 'fakegearid'}]
     end
@@ -272,8 +283,8 @@ module RHC::Rest::Mock
       "fakeuuidfortests#{@name}"
     end
 
-    def initialize(name, type, domain, scale=nil, gear_profile='default')
-      super({})
+    def initialize(client, name, type, domain, scale=nil, gear_profile='default')
+      super({}, client)
       @name = name
       @domain = domain
       @cartridges = []
@@ -307,14 +318,14 @@ module RHC::Rest::Mock
 
     def add_cartridge(name, embedded=true)
       type = embedded ? "embedded" : "standalone"
-      c = MockRestCartridge.new(name, type, self)
+      c = MockRestCartridge.new(client, name, type, self)
       @cartridges << c
       c
     end
 
     def gear_groups
       # we don't have heavy interaction with gear groups yet so keep this simple
-      @gear_groups ||= [MockRestGearGroup.new]
+      @gear_groups ||= [MockRestGearGroup.new(client)]
     end
 
     def cartridges
@@ -344,8 +355,8 @@ module RHC::Rest::Mock
 
   class MockRestCartridge < RHC::Rest::Cartridge
     include Helpers
-    def initialize(name, type, app=nil, properties=[{'type' => 'cart_data', 'name' => 'connection_url', 'value' => "http://fake.url" }])
-      super({})
+    def initialize(client, name, type, app=nil, properties=[{'type' => 'cart_data', 'name' => 'connection_url', 'value' => "http://fake.url" }])
+      super({}, client)
       @name = name
       @type = type
       @app = app
@@ -394,8 +405,8 @@ module RHC::Rest::Mock
 
   class MockRestKey < RHC::Rest::Key
     include Helpers
-    def initialize(name, type, content)
-      super({})
+    def initialize(client, name, type, content)
+      super({}, client)
       @name    = name
       @type    = type
       @content = content

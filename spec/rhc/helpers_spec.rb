@@ -21,7 +21,7 @@ describe RHC::Helpers do
       include RHC::SSHHelpers
 
       def config
-        @config ||= RHC::Config
+        @config ||= RHC::Config.new
       end
       def options
         @options ||= OpenStruct.new([:server])

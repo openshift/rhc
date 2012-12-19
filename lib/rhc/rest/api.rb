@@ -17,18 +17,18 @@ module RHC
           unless server_api_version_current?
             debug "Client API version #{api_version_negotiated} is not current. Refetching API"
             # need to re-fetch API
-            @server_api_versions, links = api_info(:url => @end_point, :method => :get, :headers => {'Accept' => "application/json; version=#{api_version_negotiated}"})
+            @server_api_versions, links = api_info(:url => client.url, :method => :get, :headers => {'Accept' => "application/json; version=#{api_version_negotiated}"})
           end
         else
-            warn_about_api_versions
-          end
+          warn_about_api_versions
+        end
 
         attributes['links'] = links
 
       rescue RHC::Rest::ResourceNotFoundException => e
         raise ApiEndpointNotFound.new(
           "The OpenShift server is not responding correctly.  Check "\
-          "that '#{end_point}' is the correct URL for your server. "\
+          "that '#{client.url}' is the correct URL for your server. "\
           "The server may be offline or misconfigured.")
       end
 
@@ -58,10 +58,13 @@ module RHC
       def warn_about_api_versions
         if !api_version_match?
           warn "WARNING: API version mismatch. This client supports #{client_api_versions.join(', ')} but
-server at #{URI.parse(@end_point).host} supports #{@server_api_versions.join(', ')}."
+server at #{URI.parse(client.url).host} supports #{@server_api_versions.join(', ')}."
           warn "The client version may be outdated; please consider updating 'rhc'. We will continue, but you may encounter problems."
         end
       end
+
+      protected
+        include RHC::Helpers
 
       private
         # execute +req+ with RestClient, and return [server_api_versions, links]

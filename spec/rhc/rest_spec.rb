@@ -32,7 +32,7 @@ end
 module RHC
 
   describe Rest do
-    subject{ RHCRest.new }
+    subject{ RHC::Rest::Client.new }
 
     # logger function
     describe "#logger" do
@@ -48,7 +48,7 @@ module RHC
         let(:object) {{ :links => { :foo => 'bar' } }}
         it "deserializes to the encapsulated data" do
           json_response = { :data => object }.to_json
-          subject.parse_response(json_response).should have_same_attributes_as(object)
+          subject.send(:parse_response, json_response).should have_same_attributes_as(object)
         end
       end
 
@@ -65,7 +65,7 @@ module RHC
         it "deserializes to an application" do
           json_response = { :type => 'application', :data => object, :messages => [{'text' => 'test message'}]}.to_json
           app_obj       = RHC::Rest::Application.new(object)
-          subject.parse_response(json_response).should have_same_attributes_as(app_obj)
+          subject.send(:parse_response, json_response).should have_same_attributes_as(app_obj)
         end
       end
 
@@ -91,9 +91,9 @@ module RHC
           json_response = { :type => 'applications', :data => object }.to_json
           app_obj_1     = RHC::Rest::Application.new(object[0])
           app_obj_2     = RHC::Rest::Application.new(object[1])
-          subject.parse_response(json_response).length.should equal(2)
-          subject.parse_response(json_response)[0].should have_same_attributes_as(app_obj_1)
-          subject.parse_response(json_response)[1].should have_same_attributes_as(app_obj_2)
+          subject.send(:parse_response, json_response).length.should equal(2)
+          subject.send(:parse_response, json_response)[0].should have_same_attributes_as(app_obj_1)
+          subject.send(:parse_response, json_response)[1].should have_same_attributes_as(app_obj_2)
         end
       end
 
@@ -107,7 +107,7 @@ module RHC
         it "deserializes to a cartridge" do
           json_response = { :type => 'cartridge', :data => object }.to_json
           cart_obj      = RHC::Rest::Cartridge.new(object)
-          subject.parse_response(json_response).should have_same_attributes_as(cart_obj)
+          subject.send(:parse_response, json_response).should have_same_attributes_as(cart_obj)
         end
       end
 
@@ -126,9 +126,9 @@ module RHC
           json_response = { :type => 'cartridges', :data => object }.to_json
           cart_obj_1    = RHC::Rest::Cartridge.new(object[0])
           cart_obj_2    = RHC::Rest::Cartridge.new(object[1])
-          subject.parse_response(json_response).length.should equal(2)
-          subject.parse_response(json_response)[0].should have_same_attributes_as(cart_obj_1)
-          subject.parse_response(json_response)[1].should have_same_attributes_as(cart_obj_2)
+          subject.send(:parse_response, json_response).length.should equal(2)
+          subject.send(:parse_response, json_response)[0].should have_same_attributes_as(cart_obj_1)
+          subject.send(:parse_response, json_response)[1].should have_same_attributes_as(cart_obj_2)
         end
       end
 
@@ -141,7 +141,7 @@ module RHC
         it "deserializes to a domain" do
           json_response = { :type => 'domain', :data => object }.to_json
           dom_obj       = RHC::Rest::Domain.new(object)
-          subject.parse_response(json_response).should have_same_attributes_as(dom_obj)
+          subject.send(:parse_response, json_response).should have_same_attributes_as(dom_obj)
         end
       end
 
@@ -158,9 +158,9 @@ module RHC
           json_response = { :type => 'domains', :data => object }.to_json
           dom_obj_1     = RHC::Rest::Domain.new(object[0])
           dom_obj_2     = RHC::Rest::Domain.new(object[1])
-          subject.parse_response(json_response).length.should equal(2)
-          subject.parse_response(json_response)[0].should have_same_attributes_as(dom_obj_1)
-          subject.parse_response(json_response)[1].should have_same_attributes_as(dom_obj_2)
+          subject.send(:parse_response, json_response).length.should equal(2)
+          subject.send(:parse_response, json_response)[0].should have_same_attributes_as(dom_obj_1)
+          subject.send(:parse_response, json_response)[1].should have_same_attributes_as(dom_obj_2)
         end
       end
 
@@ -175,7 +175,7 @@ module RHC
         it "deserializes to a key" do
           json_response = { :type => 'key', :data => object }.to_json
           key_obj       = RHC::Rest::Key.new(object)
-          subject.parse_response(json_response).should have_same_attributes_as(key_obj)
+          subject.send(:parse_response, json_response).should have_same_attributes_as(key_obj)
         end
       end
 
@@ -196,9 +196,9 @@ module RHC
           json_response = { :type => 'keys', :data => object }.to_json
           key_obj_1     = RHC::Rest::Key.new(object[0])
           key_obj_2     = RHC::Rest::Key.new(object[1])
-          subject.parse_response(json_response).length.should equal(2)
-          subject.parse_response(json_response)[0].should have_same_attributes_as(key_obj_1)
-          subject.parse_response(json_response)[1].should have_same_attributes_as(key_obj_2)
+          subject.send(:parse_response, json_response).length.should equal(2)
+          subject.send(:parse_response, json_response)[0].should have_same_attributes_as(key_obj_1)
+          subject.send(:parse_response, json_response)[1].should have_same_attributes_as(key_obj_2)
         end
       end
 
@@ -211,7 +211,7 @@ module RHC
         it "deserializes to a user" do
           json_response = { :type => 'user', :data => object }.to_json
           user_obj      = RHC::Rest::User.new(object)
-          subject.parse_response(json_response).should have_same_attributes_as(user_obj)
+          subject.send(:parse_response, json_response).should have_same_attributes_as(user_obj)
         end
       end
     end
@@ -337,14 +337,10 @@ module RHC
         end
       end
 
-      context "with a socket errort" do
+      context "with a socket error" do
         before{ stub_request(:get, mock_href).to_raise(SocketError) }
         it "raises a resource access exception error" do
-          request = RestClient::Request.new(:url     => mock_href,
-                                            :method  => 'get',
-                                            :headers => {:accept => :json}
-                                            )
-          lambda { subject.request(request) }.should raise_error(RHC::Rest::ConnectionException, /unable to connect to the server/i)
+          expect{ subject.request(:url => mock_href, :method  => 'get', :headers => {:accept => :json}) }.should raise_error(RHC::Rest::ConnectionException, /unable to connect to the server/i)
         end
       end
 
@@ -398,13 +394,13 @@ module RHC
         let(:code){ 400 }
 
         it "raises a generic server error" do
-          lambda { subject.process_error_response(response) }.should raise_error(RHC::Rest::ServerErrorException)
+          lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ServerErrorException)
         end
 
         context "with a formatted JSON response" do
           let(:json){ {:messages => [{ :severity => 'error', :text => 'mock error message' }] } }
           it "raises a client error" do
-            lambda { subject.process_error_response(response) }.should raise_error(RHC::Rest::ClientErrorException, 'mock error message')
+            lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ClientErrorException, 'mock error message')
           end
         end
       end
@@ -413,7 +409,7 @@ module RHC
         let(:code){ 401 }
         let(:json){ {} }
         it "raises an 'unauthorized exception' error" do
-          lambda { subject.process_error_response(response) }.should raise_error(RHC::Rest::UnAuthorizedException, 'Not authenticated')
+          lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::UnAuthorizedException, 'Not authenticated')
         end
       end
 
@@ -421,13 +417,13 @@ module RHC
         let(:code){ 403 }
 
         it "raises a request denied error" do
-          lambda { subject.process_error_response(response) }.should raise_error(RHC::Rest::RequestDeniedException)
+          lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::RequestDeniedException)
         end
 
         context "with a formatted JSON response" do
           let(:json){ { :messages => [{ :severity => 'error', :text => 'mock error message' }] } }
           it "raises a 'request denied' error" do
-            lambda { subject.process_error_response(response) }.should raise_error(RHC::Rest::RequestDeniedException, 'mock error message')
+            lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::RequestDeniedException, 'mock error message')
           end
         end
       end
@@ -436,13 +432,13 @@ module RHC
         let(:code){ 404 }
 
         it "raises a Not Found error" do
-          lambda { subject.process_error_response(response) }.should raise_error(RHC::Rest::ResourceNotFoundException)
+          lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ResourceNotFoundException)
         end
 
         context "with a formatted JSON response" do
           let(:json){ { :messages => [{ :severity => 'error', :text => 'mock error message' }] } }
           it "raises a 'resource not found' error" do
-            lambda { subject.process_error_response(response) }.should raise_error(RHC::Rest::ResourceNotFoundException, 'mock error message')
+            lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ResourceNotFoundException, 'mock error message')
           end
         end
       end
@@ -451,13 +447,13 @@ module RHC
         let(:code){ 409 }
 
         it "raises a generic server error" do
-          lambda { subject.process_error_response(response) }.should raise_error(RHC::Rest::ServerErrorException)
+          lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ServerErrorException)
         end
 
         context "with a formatted JSON response" do
           let(:json){ { :messages => [{ :severity => 'error', :text => 'mock error message' }] } }
           it "raises a validation error" do
-            lambda { subject.process_error_response(response) }.should raise_error(RHC::Rest::ValidationException, 'mock error message')
+            lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ValidationException, 'mock error message')
           end
         end
       end
@@ -466,20 +462,20 @@ module RHC
         let(:code){ 422 }
 
         it "raises a generic server error" do
-          lambda { subject.process_error_response(response) }.should raise_error(RHC::Rest::ServerErrorException)
+          lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ServerErrorException)
         end
 
         context "with a single JSON message" do
           let(:json){ { :messages => [{ :severity => 'error', :text => 'mock error message' }] } }
           it "raises a validation error" do
-            lambda { subject.process_error_response(response) }.should raise_error(RHC::Rest::ValidationException, 'mock error message')
+            lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ValidationException, 'mock error message')
           end
         end
 
         context "with an empty JSON response" do
           let(:json){ {} }
           it "raises a validation error" do
-            lambda { subject.process_error_response(response) }.should raise_error(RHC::Rest::ValidationException, 'Not valid')
+            lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ValidationException, 'Not valid')
           end
         end
 
@@ -487,7 +483,7 @@ module RHC
           let(:json){ { :messages => [{ :field => 'error', :text => 'mock error message 1' },
                                        { :field => 'error', :text => 'mock error message 2' }] } }
           it "raises a validation error with concatenated messages" do
-            lambda { subject.process_error_response(response) }.should raise_error(RHC::Rest::ValidationException, 'mock error message 1 mock error message 2')
+            lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ValidationException, 'mock error message 1 mock error message 2')
           end
         end
       end
@@ -496,26 +492,26 @@ module RHC
         let(:code){ 500 }
 
         it "raises a generic server error" do
-          lambda { subject.process_error_response(response) }.should raise_error(RHC::Rest::ServerErrorException, /server did not respond correctly.*verify that you can access the OpenShift server/i)
+          lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ServerErrorException, /server did not respond correctly.*verify that you can access the OpenShift server/i)
         end
 
         context "when proxy is set" do
           before{ RestClient.should_receive(:proxy).twice.and_return('http://foo.com') }
           it "raises a generic server error with the proxy URL" do
-            lambda { subject.process_error_response(response) }.should raise_error(RHC::Rest::ServerErrorException, /foo\.com/i)
+            lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ServerErrorException, /foo\.com/i)
           end
         end
 
         context "when request url is present" do
           it "raises a generic server error with the request URL" do
-            lambda { subject.process_error_response(response, 'foo.bar') }.should raise_error(RHC::Rest::ServerErrorException, /foo\.bar/i)
+            lambda { subject.send(:process_error_response, response, 'foo.bar') }.should raise_error(RHC::Rest::ServerErrorException, /foo\.bar/i)
           end
         end
 
         context "with a formatted JSON response" do
           let(:json){ { :messages => [{ :severity => 'error', :text => 'mock error message' }] } }
           it "raises a server error" do
-            lambda { subject.process_error_response(response) }.should raise_error(RHC::Rest::ServerErrorException, 'mock error message')
+            lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ServerErrorException, 'mock error message')
           end
         end
       end
@@ -524,13 +520,13 @@ module RHC
         let(:code){ 503 }
 
         it "raises a 'service unavailable' error" do
-          lambda { subject.process_error_response(response) }.should raise_error(RHC::Rest::ServiceUnavailableException)
+          lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ServiceUnavailableException)
         end
 
         context "with a formatted JSON response" do
           let(:json){ { :messages => [{ :severity => 'error', :text => 'mock error message' }] } }
           it "raises a 'service unavailable' error" do
-            lambda { subject.process_error_response(response) }.should raise_error(RHC::Rest::ServiceUnavailableException, 'mock error message')
+            lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ServiceUnavailableException, 'mock error message')
           end
         end
       end
@@ -539,13 +535,13 @@ module RHC
         let(:code){ 999 }
 
         it "raises a generic server error" do
-          lambda { subject.process_error_response(response) }.should raise_error(RHC::Rest::ServerErrorException)
+          lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ServerErrorException)
         end
 
         context "with a formatted JSON response" do
           let(:json){ { :messages => [{ :severity => 'error', :text => 'mock error message' }] } }
           it "raises a resource access error" do
-            lambda { subject.process_error_response(response) }.should raise_error(RHC::Rest::ServerErrorException, 'Server returned an unexpected error code: 999')
+            lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ServerErrorException, 'Server returned an unexpected error code: 999')
           end
         end
       end
