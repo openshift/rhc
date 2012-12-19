@@ -11,13 +11,15 @@ require 'pry' if ENV['PRY']
 require 'rhc/core_ext'
 
 module RHC
-  autoload :Helpers,        'rhc/helpers'
-  autoload :Rest,           'rhc/rest'
-  autoload :HelpFormatter,  'rhc/help_formatter'
+  autoload :Auth,           'rhc/auth'
   autoload :CommandRunner,  'rhc/command_runner'
-  autoload :VERSION,        'rhc/version'
   autoload :Commands,       'rhc/commands'
   autoload :Config,         'rhc/config'
+  autoload :Helpers,        'rhc/helpers'
+  autoload :HelpFormatter,  'rhc/help_formatter'
+  autoload :Rest,           'rhc/rest'
+  autoload :TarGz,          'rhc/tar_gz'
+  autoload :VERSION,        'rhc/version'
 end
 
 require 'rhc/exceptions'
