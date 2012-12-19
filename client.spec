@@ -13,7 +13,6 @@ Source0:       rhc-%{version}.tar.gz
 BuildRoot:     %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 BuildRequires: rubygem-rake
 BuildRequires: rubygem-rspec
-BuildRequires: rubygem-cucumber
 Requires:      ruby >= 1.8.5
 Requires:      rubygem-parseconfig
 Requires:      rubygem-rest-client
@@ -66,6 +65,11 @@ then
 fi
 
 LC_ALL=en_US.UTF-8
+
+# We don't need this to build the RPM.  This will save us from having to deal
+# with the BuildRequires chain.
+rm tasks/cucumber.rake
+rm tasks/test.rake
 
 # Package the gem
 rake --trace -- package
