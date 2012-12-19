@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'rest_spec_helper'
 require 'rhc/commands/snapshot'
 require 'rhc/config'
-require 'rhc/targz'
+require 'rhc/tar_gz'
 
 describe RHC::Commands::Snapshot do
 

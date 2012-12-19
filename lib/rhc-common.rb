@@ -13,7 +13,7 @@ require 'rhc/rest'
 require 'rhc/helpers'
 require 'rhc/config'
 require 'rhc/wizard'
-require 'rhc/targz'
+require 'rhc/tar_gz'
 require 'rhc/json'
 
 module RHC

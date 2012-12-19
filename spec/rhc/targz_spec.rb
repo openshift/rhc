@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'rhc/targz'
+require 'rhc/tar_gz'
 
 describe RHC::TarGz do
 
