@@ -1,4 +1,5 @@
 require 'rhc/commands/base'
+require 'rhc/targz'
 
 module RHC::Commands
   class Snapshot < Base
