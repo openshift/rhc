@@ -252,7 +252,7 @@ module RHC::Rest::Mock
       a
     end
 
-    def applications
+    def applications(*args)
       @applications
     end
   end

@@ -16,14 +16,17 @@ module RHC
 
       let (:app_links) { mock_response_links(mock_app_links('mock_domain','mock_app')) }
       let (:app_obj) {
-        RHC::Rest::Application.new({ 'domain_id'       => 'mock_domain',
-                                     'name'            => 'mock_app',
-                                     'creation_time'   => Time.now.to_s,
-                                     'uuid'            => 1234,
-                                     'aliases'         => ['alias1','alias2'],
-                                     'server_identity' => mock_uri,
-                                     'links'           => app_links
-                                   })
+        args = {
+          'domain_id'       => 'mock_domain',
+          'name'            => 'mock_app',
+          'creation_time'   => Time.now.to_s,
+          'uuid'            => 1234,
+          'aliases'         => ['alias1','alias2'],
+          'server_identity' => mock_uri,
+          'links'           => app_links
+        }
+        args.merge!(attributes) if defined?(attributes)
+        RHC::Rest::Application.new(args)
       }
       context "#new" do
         it "returns an application object" do
@@ -47,25 +50,41 @@ module RHC
       end
 
       context "#cartridges" do
+        let(:num_carts){ 0 }
         before(:each) do
           stub_api_request(:any, app_links['LIST_CARTRIDGES']['relative']).
-            to_return(mock_cartridge_response(2)).
-            to_return(mock_cartridge_response(0))
+            to_return(mock_cartridge_response(num_carts))
         end
-        it "returns a list of all cartridges in the current application" do
-          app   = app_obj
-          carts = app.cartridges
-          carts.length.should == 2
-          (0..1).each do |idx|
-            carts[idx].should be_an_instance_of RHC::Rest::Cartridge
-            carts[idx].name.should == "mock_cart_#{idx}"
+        context "with carts" do
+          let(:num_carts){ 2 }
+          it "returns a list of all cartridges in the current application" do
+            app   = app_obj
+            carts = app.cartridges
+            carts.length.should == 2
+            (0..1).each do |idx|
+              carts[idx].should be_an_instance_of RHC::Rest::Cartridge
+              carts[idx].name.should == "mock_cart_#{idx}"
+            end
           end
         end
-        it "returns an empty list if the current app has no cartridges" do
-          app   = app_obj
-          carts = app.cartridges # Disregard the first request;
-          carts = app.cartridges # 2nd request simulates empty response.
-          carts.length.should == 2
+        context "without carts" do
+          it "returns an empty list" do
+            app   = app_obj
+            carts = app.cartridges
+            carts.length.should == 0
+          end
+        end
+        context "with carts included in initial reponse" do
+          let(:attributes){ {:cartridges => RHC::Json.decode(mock_cartridge_response(2)[:body])['data'] }}
+          it "returns a list of all cartridges in the current application" do
+            app   = app_obj
+            carts = app.cartridges
+            carts.length.should == 2
+            (0..1).each do |idx|
+              carts[idx].should be_an_instance_of RHC::Rest::Cartridge
+              carts[idx].name.should == "mock_cart_#{idx}"
+            end
+          end
         end
       end
 
