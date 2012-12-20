@@ -340,7 +340,7 @@ module RHC::Commands
       end
 
       def add_jenkins_cartridge(rest_app)
-        rest_app.add_cartridge("jenkins-client-1.4", 300)
+        rest_app.add_cartridge("jenkins-client-1.4")
       end
 
       def add_jenkins_client_to(rest_app, messages)

@@ -4,6 +4,7 @@ require 'rhc/commands/app'
 require 'rhc/config'
 
 describe RHC::Commands::App do
+  let!(:rest_client){ MockRestClient.new }
   before(:each) do
     FakeFS.activate!
     FakeFS::FileSystem.clear
@@ -32,7 +33,6 @@ describe RHC::Commands::App do
   describe 'app default' do
     before(:each) do
       FakeFS.deactivate!
-      @rc = MockRestClient.new
     end
 
     context 'app' do
@@ -43,8 +43,7 @@ describe RHC::Commands::App do
 
   describe 'app create' do
     before(:each) do
-      @rc = MockRestClient.new
-      domain = @rc.add_domain("mockdomain")
+      domain = rest_client.add_domain("mockdomain")
     end
 
     context 'when run without a cart' do
@@ -61,8 +60,8 @@ describe RHC::Commands::App do
 
     context 'when no cartridges are returned' do
       before(:each) do
-        domain = @rc.domains.first
-        @rc.stub(:cartridges) { [] }
+        domain = rest_client.domains.first
+        rest_client.stub(:cartridges) { [] }
         domain.stub(:add_application).and_raise(RHC::Rest::ValidationException.new('Each application needs a web cartridge', '', '109'))
       end
       context 'without trace' do
@@ -81,8 +80,7 @@ describe RHC::Commands::App do
 
     context 'when run' do
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mockdomain")
+        domain = rest_client.add_domain("mockdomain")
       end
       it { expect { run }.should raise_error(RHC::MultipleCartridgesException) }
     end
@@ -93,8 +91,7 @@ describe RHC::Commands::App do
 
     context 'when run' do
       before(:each) do
-        @rc = MockRestClient.new
-        @domain = @rc.add_domain("mockdomain")
+        @domain = rest_client.add_domain("mockdomain")
       end
       it "should create a jenkins app and a regular app with an embedded jenkins client" do
         expect { run }.should exit_with_code(0)
@@ -111,8 +108,7 @@ describe RHC::Commands::App do
 
     context 'when run' do
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mockdomain")
+        domain = rest_client.add_domain("mockdomain")
       end
       it { expect { run }.should_not raise_error(ArgumentError, /The --no-dns option can't be used in conjunction with --enable-jenkins/) }
     end
@@ -123,8 +119,7 @@ describe RHC::Commands::App do
 
     context 'when run' do
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mockdomain")
+        domain = rest_client.add_domain("mockdomain")
       end
       it { expect { run }.should raise_error(ArgumentError, /You have named both your main application and your Jenkins application/) }
     end
@@ -135,8 +130,7 @@ describe RHC::Commands::App do
 
     context 'when run' do
       before(:each) do
-        @rc = MockRestClient.new
-        @domain = @rc.add_domain("mockdomain")
+        @domain = rest_client.add_domain("mockdomain")
         @domain.add_application("jenkins", "jenkins-1.4")
       end
       it "should use existing jenkins" do
@@ -151,8 +145,7 @@ describe RHC::Commands::App do
     let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--enable-jenkins', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     before(:each) do
-      @rc = MockRestClient.new
-      @domain = @rc.add_domain("mockdomain")
+      @domain = rest_client.add_domain("mockdomain")
     end
 
     context 'when run with error in jenkins setup' do
@@ -179,8 +172,7 @@ describe RHC::Commands::App do
 
     context 'when run with server error in jenkins-client setup' do
       before(:each) do
-        @rc = MockRestClient.new
-        @domain = @rc.add_domain("mockdomain")
+        @domain = rest_client.add_domain("mockdomain")
         @instance.stub(:add_jenkins_cartridge) { raise RHC::Rest::ServerErrorException.new("Server error", 157) }
       end
       it "should fail embedding jenkins cartridge" do
@@ -195,8 +187,7 @@ describe RHC::Commands::App do
 
     context 'when run' do
       before(:each) do
-        @rc = MockRestClient.new
-        @domain = @rc.add_domain("dnserror")
+        @domain = rest_client.add_domain("dnserror")
       end
       it { run_output.should match("unable to lookup your hostname") }
     end
@@ -206,8 +197,7 @@ describe RHC::Commands::App do
     let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     before(:each) do
-      @rc = MockRestClient.new
-      @domain = @rc.add_domain("mockdomain")
+      @domain = rest_client.add_domain("mockdomain")
       @instance.stub(:git_clone_application) { raise RHC::GitException }
       @instance.should_not_receive(:check_sshkeys!)
     end
@@ -245,8 +235,7 @@ describe RHC::Commands::App do
     let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--noprompt', '--nogit', '--config', '/tmp/test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     before (:each) do
-      @rc = MockRestClient.new
-      @domain = @rc.add_domain("mockdomain")
+      @domain = rest_client.add_domain("mockdomain")
     end
 
     context 'when run' do
@@ -258,8 +247,7 @@ describe RHC::Commands::App do
     let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--config', '/tmp/test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     before (:each) do
-      @rc = MockRestClient.new
-      @domain = @rc.add_domain("mockdomain")
+      @domain = rest_client.add_domain("mockdomain")
       # fakefs is activated
       Dir.mkdir('/tmp/')
       File.open('/tmp/test.conf', 'w') do |f|
@@ -267,7 +255,7 @@ describe RHC::Commands::App do
       end
 
       # don't run wizard here because we test this elsewhere
-      wizard_instance = RHC::SSHWizard.new(@rc)
+      wizard_instance = RHC::SSHWizard.new(rest_client)
       wizard_instance.stub(:ssh_key_uploaded?) { true }
       RHC::SSHWizard.stub(:new) { wizard_instance }
       RHC::Config.stub(:should_run_ssh_wizard?) { false }
@@ -283,8 +271,7 @@ describe RHC::Commands::App do
 
     context 'when run' do
       before(:each) do
-        @rc = MockRestClient.new
-        @domain = @rc.add_domain("mockdomain")
+        @domain = rest_client.add_domain("mockdomain")
       end
       it "should not remove app when no is sent as input" do
         @app = @domain.add_application("app1", "mock_type")
@@ -309,8 +296,7 @@ describe RHC::Commands::App do
 
     context 'when run' do
       before(:each) do
-        @rc = MockRestClient.new
-        @domain = @rc.add_domain("mockdomain")
+        @domain = rest_client.add_domain("mockdomain")
         @domain.add_application("app1", "mock_type")
       end
       it { run_output.should match("app1 @ https://app1-mockdomain.fake.foo/") }
@@ -318,8 +304,7 @@ describe RHC::Commands::App do
 
     context 'when run with scaled app' do
       before(:each) do
-        @rc = MockRestClient.new
-        @domain = @rc.add_domain("mockdomain")
+        @domain = rest_client.add_domain("mockdomain")
         app = @domain.add_application("app1", "mock_type", true)
         cart1 = app.add_cartridge('mock_cart-1')
         cart2 = app.add_cartridge('mock_cart-2')
@@ -334,8 +319,7 @@ describe RHC::Commands::App do
 
     context 'when run' do
       before(:each) do
-        @rc = MockRestClient.new
-        @domain = @rc.add_domain("mockdomain")
+        @domain = rest_client.add_domain("mockdomain")
         @domain.add_application("app1", "mock_type")
       end
       it { run_output.should match("started") }
@@ -347,8 +331,7 @@ describe RHC::Commands::App do
 
     context 'when run' do
       before(:each) do
-        @rc = MockRestClient.new
-        @domain = @rc.add_domain("mockdomain")
+        @domain = rest_client.add_domain("mockdomain")
         @domain.add_application("app1", "mock_type")
       end
       it { run_output.should match("started") }
@@ -359,8 +342,7 @@ describe RHC::Commands::App do
   describe 'app actions' do
 
     before(:each) do
-      @rc = MockRestClient.new
-      domain = @rc.add_domain("mockdomain")
+      domain = rest_client.add_domain("mockdomain")
       app = domain.add_application("app1", "mock_type")
       app.add_cartridge('mock_cart-1')
     end

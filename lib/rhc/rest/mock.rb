@@ -14,6 +14,7 @@ module RHC::Rest::Mock
   end
 
   module Helpers
+
     def mock_user
       "test_user"
     end

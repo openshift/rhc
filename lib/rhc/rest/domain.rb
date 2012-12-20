@@ -18,12 +18,8 @@ module RHC
         options.each do |key, value|
           payload[key] = value
         end
-        timeout = nil
-        if options[:scale]
-          timeout = 300 # 5 minute timeout for scalable app
-        end
-
-        rest_method "ADD_APPLICATION", payload, timeout
+        options = {:timeout => options[:scale] && 0 || nil}
+        rest_method "ADD_APPLICATION", payload, options
       end
 
       def applications
@@ -34,7 +30,7 @@ module RHC
       def update(new_id)
         debug "Updating domain #{id} to #{new_id}"
         # 5 minute timeout as this may take time if there are a lot of apps
-        rest_method "UPDATE", {:id => new_id}, 300
+        rest_method "UPDATE", {:id => new_id}, {:timeout => 0}
       end
       alias :save :update
 

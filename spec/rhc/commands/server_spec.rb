@@ -5,6 +5,7 @@ require 'rhc/config'
 
 describe RHC::Commands::Server do
   before(:each){ user_config }
+  let(:rest_client) { MockRestClient.new }
 
   describe 'run against a different server' do
     let(:arguments) { ['server', '--server', 'foo.com', '-l', 'person', '-p', ''] }
@@ -23,8 +24,7 @@ describe RHC::Commands::Server do
 
     context 'when API is at version 1.2' do
       before do 
-        rc = MockRestClient.new
-        rc.stub(:api_version_negotiated).and_return('1.2')
+        rest_client.stub(:api_version_negotiated).and_return('1.2')
       end
       it('should output an error') { run_output.should =~ /Connected to foo.com.*Using API version 1.2/m }
       it { expect { run }.should exit_with_code(0) }

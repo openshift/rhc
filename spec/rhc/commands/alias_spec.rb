@@ -8,10 +8,10 @@ describe RHC::Commands::Alias do
   let(:domain_0_links) { mock_response_links(mock_domain_links('mock_domain_0')) }
   let(:domain_1_links) { mock_response_links(mock_domain_links('mock_domain_1')) }
   let(:app_0_links)    { mock_response_links(mock_app_links('mock_domain_0', 'mock_app_0')) }
+  let!(:rest_client){ MockRestClient.new }
   before(:each) do
     user_config
-    @rc = MockRestClient.new
-    @rc.add_domain("mock_domain_0").add_application("mock_app_0", "ruby-1.8.7")
+    rest_client.add_domain("mock_domain_0").add_application("mock_app_0", "ruby-1.8.7")
     stub_api_request(:any, client_links['LIST_DOMAINS']['relative']).
             to_return({ :body   => {
                           :type => 'domains',

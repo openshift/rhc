@@ -22,18 +22,15 @@ describe RHC::Commands::Cartridge do
     exit_with_code_and_message(code)
   end
 
-
   before(:each) do
     RHC::Config.set_defaults
   end
+  let!(:rest_client){ MockRestClient.new }
 
   describe 'run' do
     let(:arguments) { ['cartridge', '--trace', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     context 'when run' do
-      before(:each) do
-        @rc = MockRestClient.new
-      end
       it { succeed_with_message /mock_cart-1.*mock_cart-2.*unique_mock_cart-1/m }
     end
   end
@@ -42,9 +39,6 @@ describe RHC::Commands::Cartridge do
     let(:arguments) { ['cartridge', '--trace', '--noprompt', '--config', 'test.conf'] }
 
     context 'when run' do
-      before(:each) do
-        @rc = MockRestClient.new
-      end
       it { succeed_with_message /mock_cart-1.*mock_cart-2.*unique_mock_cart-1/m }
     end
   end
@@ -53,9 +47,6 @@ describe RHC::Commands::Cartridge do
     let(:arguments) { ['app', 'cartridge', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     context 'when run' do
-      before(:each) do
-        @rc = MockRestClient.new
-      end
       it { succeed_with_message /mock_cart-1.*mock_cart-2.*unique_mock_cart-1/m }
     end
   end
@@ -65,8 +56,7 @@ describe RHC::Commands::Cartridge do
 
     context 'when run' do
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mock_domain")
+        domain = rest_client.add_domain("mock_domain")
         app = domain.add_application("app1", "mock_type")
       end
       it {
@@ -80,8 +70,7 @@ describe RHC::Commands::Cartridge do
 
     context 'when run' do
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mock_domain")
+        domain = rest_client.add_domain("mock_domain")
         app = domain.add_application("app1", "mock_type")
         instance = RHC::Commands::Cartridge.new
         instance.stub(:git_config_get) { |key| app.uuid if key == "rhc.app-uuid" }
@@ -98,8 +87,7 @@ describe RHC::Commands::Cartridge do
 
     context 'when run' do
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mock_domain")
+        domain = rest_client.add_domain("mock_domain")
         app = domain.add_application("app1", "mock_type")
         instance = RHC::Commands::Cartridge.new
         instance.stub(:git_config_get) { |key| "" if key == "rhc.app-uuid" }
@@ -116,8 +104,7 @@ describe RHC::Commands::Cartridge do
 
     context 'when run' do
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mock_domain")
+        domain = rest_client.add_domain("mock_domain")
         app = domain.add_application("app1", "mock_type")
       end
       it {
@@ -131,8 +118,7 @@ describe RHC::Commands::Cartridge do
 
     context 'when run' do
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mock_domain")
+        domain = rest_client.add_domain("mock_domain")
         app = domain.add_application("app1", "mock_type")
       end
       it {
@@ -146,8 +132,7 @@ describe RHC::Commands::Cartridge do
 
     context 'when run' do
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mock_domain")
+        domain = rest_client.add_domain("mock_domain")
         app = domain.add_application("app1", "mock_type")
       end
       it {
@@ -161,8 +146,7 @@ describe RHC::Commands::Cartridge do
 
     context 'when run' do
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mock_domain")
+        domain = rest_client.add_domain("mock_domain")
         app = domain.add_application("app1", "mock_type")
         app.add_cartridge('mock_cart-1')
       end
@@ -177,8 +161,7 @@ describe RHC::Commands::Cartridge do
 
     context 'when run' do
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mock_domain")
+        domain = rest_client.add_domain("mock_domain")
         @app = domain.add_application("app1", "mock_type")
       end
       it "should remove cartridge" do
@@ -197,8 +180,7 @@ describe RHC::Commands::Cartridge do
     let(:arguments) { ['cartridge', 'status', 'mock_cart-1', '-a', 'app1','--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     before(:each) do
-      @rc = MockRestClient.new
-      @domain = @rc.add_domain("mock_domain")
+      @domain = rest_client.add_domain("mock_domain")
       @app = @domain.add_application("app1", "mock_type")
       @app.add_cartridge('mock_cart-1')
     end
@@ -218,8 +200,7 @@ describe RHC::Commands::Cartridge do
 
     context 'when run' do
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mock_domain")
+        domain = rest_client.add_domain("mock_domain")
         app = domain.add_application("app1", "mock_type")
         app.add_cartridge('mock_cart-1')
       end
@@ -232,8 +213,7 @@ describe RHC::Commands::Cartridge do
 
     context 'when run' do
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mock_domain")
+        domain = rest_client.add_domain("mock_domain")
         app = domain.add_application("app1", "mock_type")
         app.add_cartridge('mock_cart-1')
       end
@@ -246,8 +226,7 @@ describe RHC::Commands::Cartridge do
 
     context 'when run' do
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mock_domain")
+        domain = rest_client.add_domain("mock_domain")
         app = domain.add_application("app1", "mock_type")
         app.add_cartridge('mock_cart-1')
       end
@@ -260,8 +239,7 @@ describe RHC::Commands::Cartridge do
 
     context 'when run' do
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mock_domain")
+        domain = rest_client.add_domain("mock_domain")
         app = domain.add_application("app1", "mock_type")
         app.add_cartridge('mock_cart-1')
       end
@@ -273,8 +251,7 @@ describe RHC::Commands::Cartridge do
     let(:arguments) { ['cartridge', 'show', 'mock_cart-1', '-a', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     before(:each) do
-      @rc = MockRestClient.new
-      domain = @rc.add_domain("mock_domain")
+      domain = rest_client.add_domain("mock_domain")
       app = domain.add_application("app1", "mock_type")
       app.add_cartridge('mock_cart-1')
     end
@@ -289,8 +266,7 @@ describe RHC::Commands::Cartridge do
 
     context 'when run' do
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mock_domain")
+        domain = rest_client.add_domain("mock_domain")
         app = domain.add_application("app1", "mock_type", true)
       end
       it { run_output.should match(/Scaling: .*x2 \(minimum/) }
@@ -304,8 +280,7 @@ describe RHC::Commands::Cartridge do
 
     let(:current_scale) { 1 }
     before(:each) do
-      @rc = MockRestClient.new
-      domain = @rc.add_domain("mock_domain")
+      domain = rest_client.add_domain("mock_domain")
       app = domain.add_application("app1", "mock_type", scalable)
       app.cartridges.first.stub(:current_scale).and_return(current_scale)
     end
@@ -356,10 +331,9 @@ describe RHC::Commands::Cartridge do
     let(:cart_type) { ['mock_cart-1'] }
 
     before(:each) do
-      @rc = MockRestClient.new
-      domain = @rc.add_domain("mock_domain")
+      domain = rest_client.add_domain("mock_domain")
       app = domain.add_application("app1", "mock_type", false)
-      app.add_cartridge('mock_cart-1', true, 5)
+      app.add_cartridge('mock_cart-1', true)
     end
 
     context 'when run with no arguments' do

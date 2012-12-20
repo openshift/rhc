@@ -36,8 +36,7 @@ describe RHC::Commands::Setup do
     let(:arguments) { ['setup', '-d', '-l', 'test@test.foo'] }
     # 'y' for the password prompt
     let(:input) { ['', 'y', '', ''] }
-
-    before(:each){ @rc = MockRestClient.new }
+    let!(:rest_client){ MockRestClient.new }
 
     it("succeeds"){ FakeFS{ expect { run input }.should exit_with_code 0 } }
     it("the output includes debug output") do
@@ -49,8 +48,7 @@ describe RHC::Commands::Setup do
     let(:arguments) { ['setup', '-l', 'test@test.foo'] }
     # 'y' for the password prompt
     let(:input) { ['', 'y', '', ''] }
-
-    before(:each){ @rc = MockRestClient.new }
+    let!(:rest_client){ MockRestClient.new }
 
     it("succeeds"){ FakeFS{ expect { run input }.should exit_with_code 0 } }
     it("sets the user name to the value given by the command line") do

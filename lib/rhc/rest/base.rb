@@ -18,17 +18,17 @@ module RHC
         @messages << msg
       end
 
-      def rest_method(link_name, payload={}, timeout=nil)
+      def rest_method(link_name, payload={}, options={})
         link = links[link_name.to_s]
         raise "No link defined for #{link_name}" unless link
         url = link['href']
         method = link['method']
 
-        client.request(
+        client.request(options.merge({
           :url => url,
           :method => method,
           :payload => payload
-        )
+        }))
       end
 
       def links

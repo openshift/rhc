@@ -3,6 +3,7 @@ require 'rhc/commands/port_forward'
 
 describe RHC::Commands::PortForward do
 
+  let!(:rest_client){ MockRestClient.new }
   before(:each) do
     RHC::Config.set_defaults
   end
@@ -11,8 +12,7 @@ describe RHC::Commands::PortForward do
     let(:arguments) { ['port-forward', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p', 'password', '--app', 'mockapp'] }
 
     before :each do
-      @rc = MockRestClient.new
-      @domain = @rc.add_domain("mockdomain")
+      @domain = rest_client.add_domain("mockdomain")
       @app = @domain.add_application 'mockapp', 'mock-1.0'
       @uri = URI.parse @app.ssh_url
       @ssh = mock(Net::SSH)
@@ -22,7 +22,7 @@ describe RHC::Commands::PortForward do
       before(:each) do
         Net::SSH.should_receive(:start).with(@uri.host, @uri.user).and_yield(@ssh)
         @ssh.should_receive(:exec!).with("rhc-list-ports").and_yield(nil, :stderr, '127.0.0.1:3306')
-        @gg = MockRestGearGroup.new(@rc)
+        @gg = MockRestGearGroup.new(rest_client)
         @app.should_receive(:gear_groups).and_return([@gg])
         @gg.should_receive(:gears).and_return([{'state' => 'stopped', 'id' => 'fakegearid'}])
       end
@@ -39,9 +39,9 @@ describe RHC::Commands::PortForward do
       end
       it "should error out as no ports to forward" do
         expect { run }.should exit_with_code(102)
-        @rc.domains[0].id.should == 'mockdomain'
-        @rc.domains[0].applications.size.should == 1
-        @rc.domains[0].applications[0].name.should == 'mockapp'
+        rest_client.domains[0].id.should == 'mockdomain'
+        rest_client.domains[0].applications.size.should == 1
+        rest_client.domains[0].applications[0].name.should == 'mockapp'
       end
       it { run_output.should match("no available ports to forward.") }
     end
@@ -53,9 +53,9 @@ describe RHC::Commands::PortForward do
       end
       it "should error out as permission denied" do
         expect { run }.should exit_with_code(129)
-        @rc.domains[0].id.should == 'mockdomain'
-        @rc.domains[0].applications.size.should == 1
-        @rc.domains[0].applications[0].name.should == 'mockapp'
+        rest_client.domains[0].id.should == 'mockdomain'
+        rest_client.domains[0].applications.size.should == 1
+        rest_client.domains[0].applications[0].name.should == 'mockapp'
       end
       it { run_output.should match("Permission denied") }
     end
@@ -75,9 +75,9 @@ describe RHC::Commands::PortForward do
       end
       it "should run successfully" do
         expect { run }.should exit_with_code(0)
-        @rc.domains[0].id.should == 'mockdomain'
-        @rc.domains[0].applications.size.should == 1
-        @rc.domains[0].applications[0].name.should == 'mockapp'
+        rest_client.domains[0].id.should == 'mockdomain'
+        rest_client.domains[0].applications.size.should == 1
+        rest_client.domains[0].applications[0].name.should == 'mockapp'
       end
       it { run_output.should match(/Forwarding ports.*Press CTRL-C/m) }
     end
@@ -88,16 +88,16 @@ describe RHC::Commands::PortForward do
       end
       it "should error out" do
         expect { run }.should exit_with_code(1)
-        @rc.domains[0].id.should == 'mockdomain'
-        @rc.domains[0].applications.size.should == 1
-        @rc.domains[0].applications[0].name.should == 'mockapp'
+        rest_client.domains[0].id.should == 'mockdomain'
+        rest_client.domains[0].applications.size.should == 1
+        rest_client.domains[0].applications[0].name.should == 'mockapp'
       end
       it { run_output.should include("Error trying to forward ports.") }
     end
 
     context 'when REST client connection times out' do
       before(:each) do
-        @rc.should_receive(:find_domain).and_raise(RestClient::ServerBrokeConnection)
+        rest_client.should_receive(:find_domain).and_raise(RestClient::ServerBrokeConnection)
       end
       it "should error out" do
         expect { run }.should exit_with_code(1)
@@ -120,9 +120,9 @@ describe RHC::Commands::PortForward do
       end
       it "should exit when user interrupts" do
         expect { run }.should exit_with_code(0)
-        @rc.domains[0].id.should == 'mockdomain'
-        @rc.domains[0].applications.size.should == 1
-        @rc.domains[0].applications[0].name.should == 'mockapp'
+        rest_client.domains[0].id.should == 'mockdomain'
+        rest_client.domains[0].applications.size.should == 1
+        rest_client.domains[0].applications[0].name.should == 'mockapp'
       end
       it { run_output.should include("Ending port forward") }
     end
@@ -160,9 +160,9 @@ describe RHC::Commands::PortForward do
       end
       it "should exit when user interrupts" do
         expect { run }.should exit_with_code(0)
-        @rc.domains[0].id.should == 'mockdomain'
-        @rc.domains[0].applications.size.should == 1
-        @rc.domains[0].applications[0].name.should == 'mockapp'
+        rest_client.domains[0].id.should == 'mockdomain'
+        rest_client.domains[0].applications.size.should == 1
+        rest_client.domains[0].applications[0].name.should == 'mockapp'
       end
       it { run_output.should include("Ending port forward") }
     end
