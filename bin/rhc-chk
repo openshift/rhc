@@ -31,7 +31,7 @@ class Hash
         v.map {|e| e.deep_cleanse(key) if e.is_a? Hash}
       else
         if k.to_s == key
-          self[k] = "*" * v.length
+          self[k] = "*" * 12
         end
       end
     end
