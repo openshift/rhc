@@ -88,14 +88,9 @@ module RHC
 
     global_option('--timeout SECONDS', Integer, 'The timeout for operations') do |value|
       abort(color("Timeout must be a positive integer",:red)) unless value > 0
-      # FIXME: Refactor so we don't have to use a global var here
-      $rest_timeout = value
     end
     global_option '--noprompt', "Suppress the interactive setup wizard from running before a command", :hide => true
     global_option '--config FILE', "Path of a different config file", :hide => true
-    def config
-      raise "Operations requiring configuration must define a config accessor"
-    end
     global_option '--mock', "Run in mock mode", :hide => true do
       #:nocov:
       require 'rhc/rest/mock'
@@ -104,7 +99,7 @@ module RHC
     end
 
     def openshift_server
-      (options.server rescue nil) || config.get_value('libra_server') || "openshift.redhat.com"
+      (options.server rescue nil) || ENV['LIBRA_SERVER'] || "openshift.redhat.com"
     end
     def openshift_url
       "https://#{openshift_server}"

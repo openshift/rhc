@@ -153,7 +153,6 @@ module RHC::Rest::Mock
       @domains = []
       @user = MockRestUser.new(client, config.username)
       @api = MockRestApi.new(client, config)
-      add_headers(headers)
     end
 
     def api

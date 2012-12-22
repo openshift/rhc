@@ -95,14 +95,17 @@ class RHC::Commands::Base
     # should be through this call pattern.
     def rest_client
       @rest_client ||= begin
-        username = config.username
-        unless username
-          username = ask "Login to #{openshift_server}: "
-          config.config_user(username)
-        end
-        config.password = config.password || ask("Password: ") { |q| q.echo = '*' }
+        login = options.rhlogin || ask("Login to #{openshift_server}: ")
+        password = options.password || ask("Password: ") { |q| q.echo = '*' }
 
-        RHC::Rest::Client.new(openshift_rest_node, username, config.password, @options.debug)
+        RHC::Rest::Client.new(
+          :server => openshift_server,
+          :user => login,
+          :password => password,
+          :debug => options.debug,
+          :timeout => options.timeout,
+          :verify_ssl => options.insecure ? OpenSSL::SSL::VERIFY_NONE : OpenSSL::SSL::VERIFY_PEER,
+        )
       end
     end
 

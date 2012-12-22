@@ -5,9 +5,7 @@ require 'rhc/config'
 
 describe RHC::Commands::Sshkey do
   let!(:rest_client){ MockRestClient.new }
-  before(:each) do
-    RHC::Config.set_defaults
-  end
+  before{ user_config }
 
   describe 'list' do
 

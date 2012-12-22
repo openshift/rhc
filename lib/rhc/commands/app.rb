@@ -270,7 +270,7 @@ module RHC::Commands
       include RHC::CartridgeHelpers
 
       def check_sshkeys!
-        RHC::SSHWizard.new(rest_client).run
+        RHC::SSHWizard.new(rest_client, config, options).run
       end
 
       def standalone_cartridges

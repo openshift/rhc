@@ -124,7 +124,11 @@ module RHC
           end
 
           c.when_called do |args, options|
-            config = global_config_setup(options)
+            config = RHC::Config.new
+            config.set_opts_config(options.config) if options.config
+
+            options.default config.to_options
+            #config = global_config_setup(options)
             deprecated?
 
             cmd = opts[:class].new

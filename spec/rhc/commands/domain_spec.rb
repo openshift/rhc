@@ -201,7 +201,7 @@ describe RHC::Commands::Domain do
       it "runs" do 
         expect { run }.should exit_with_code(0)
         # check lengths here because different versions of ruby output the switches in different order
-        @cmd.length.should == "rhc-chk --noprompt true --config test.conf --rhlogin test@test.foo --password password 2>&1".length
+        @cmd.split.sort.should == "rhc-chk --server openshift.redhat.com --noprompt true --config test.conf --rhlogin test@test.foo --password password 2>&1".split.sort
       end
     end
 

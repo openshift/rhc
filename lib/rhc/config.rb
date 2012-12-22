@@ -27,10 +27,12 @@ module RHC
   class Config
     include ConfigEnv
 
+    # DEPRECATED - will be removed when old commands are gone
     def self.default
       @default ||= RHC::Config.new
     end
 
+    # DEPRECATED - will be removed when old commands are gone
     def self.method_missing(method, *args, &block)
       if default.respond_to?(method)
         default.send(method, *args, &block)
@@ -39,6 +41,7 @@ module RHC
       end
     end
 
+    # DEPRECATED - will be removed when old commands are gone
     def self.initialize
       @default = nil
       default
@@ -52,6 +55,7 @@ module RHC
       load_config_files
     end
 
+    # DEPRECATED - will be removed when old commands are gone
     def set_defaults
       @defaults = RHC::Vendor::ParseConfig.new()
       @opts  = RHC::Vendor::ParseConfig.new() # option switches that override config file
@@ -67,6 +71,30 @@ module RHC
       @env_config.add('libra_server', ENV['LIBRA_SERVER']) if ENV['LIBRA_SERVER']
 
       @opts_config_path = nil
+    end
+
+    def to_options
+      {
+        :rhlogin => 'default_rhlogin',
+        :server => 'libra_server',
+        :password => nil,
+        :timeout => [nil, :integer],
+        :insecure => [nil, :boolean]
+      }.inject({}) do |h, (name, opts)|
+          opts = Array(opts)
+          value = self[opts[0] || name.to_s]
+          if value
+            h[name] = case opts[1]
+                      when :integer
+                        Integer(value)
+                      when :boolean
+                        !!(value =~ /^\s*(y|yes|1|t|true)\s*$/i)
+                      else
+                        value
+                      end
+          end
+          h
+        end
     end
 
     def [](key)
@@ -88,6 +116,8 @@ module RHC
       self[key]
     end
 
+    ###############################################################
+    # BEGIN DEPRECATED - will be removed when old commands are gone
     def username
       self['default_rhlogin']
     end
@@ -113,6 +143,8 @@ module RHC
     def password
       self['password']
     end
+    # END DEPRECATED - will be removed when old commands are gone
+    ###############################################################
 
     def set_local_config(conf_path, must_exist=true)
       conf_path = File.expand_path(conf_path)
@@ -186,6 +218,7 @@ module RHC
       home_conf_dir
     end
 
+    # DEPRECATED - will be removed when old commands are gone
     def default_rhlogin
       get_value('default_rhlogin')
     end
@@ -206,10 +239,12 @@ module RHC
       )
     end
 
+    # DEPRECATED - will be removed when old commands are gone
     def using_proxy?
       default_proxy.instance_variable_get(:@is_proxy_class) || false
     end
 
+    # DEPRECATED - will be removed when old commands are gone
     def proxy_vars
       Hash[[:address,:user,:pass,:port].map do |x|
         [x,default_proxy.instance_variable_get("@proxy_#{x}")]
@@ -219,7 +254,6 @@ module RHC
     private
       # Allow mocking of the home dir
       def self.home_dir
-        #raise "Why am I not stubbed?"
         File.expand_path('~')
       end
 

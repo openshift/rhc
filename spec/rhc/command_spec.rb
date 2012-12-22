@@ -184,7 +184,11 @@ describe RHC::Commands::Base do
   describe "rest_client" do
     before do
       mock_terminal
-      RHC::Rest::Client.stub!(:new) { |openshift_rest_node, username, password, debug| @username = username; @password = password; true}
+      RHC::Rest::Client.stub!(:new) do |opts| 
+        @username = opts[:user]
+        @password = opts[:password]
+        true
+      end
     end
 
     it "should ask for username" do
@@ -193,7 +197,7 @@ describe RHC::Commands::Base do
         $terminal.write_line("password")
         subject.send(:rest_client).should be_true
         @username.should == "testuser@foo.bar"
-        subject.send(:config)["default_rhlogin"].should == @username
+        subject.send(:config)["default_rhlogin"].should be_nil
         @password.should == "password"
       end
     end

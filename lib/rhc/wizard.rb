@@ -8,9 +8,6 @@ require 'socket'
 module RHC
   class Wizard
     include HighLine::SystemExtensions
-    include RHC::Helpers
-    include RHC::SSHHelpers
-    include RHC::GitHelpers
 
     DEFAULT_MAX_LENGTH = 16
 
@@ -29,10 +26,11 @@ module RHC
 
     attr_reader :rest_client
 
-    def initialize(config, opts=nil)
+    def initialize(config=RHC::Config.new, opts=Commander::Command::Options.new)
       @config = config
+      @options = opts
+
       @config_path = config.config_path
-      @libra_server = (opts && opts.server) || config['libra_server'] || "openshift.redhat.com"
       @config.config_user opts.rhlogin if opts && opts.rhlogin
       @debug = opts.debug if opts
     end
@@ -56,6 +54,17 @@ module RHC
       true
     end
 
+    protected
+      include RHC::Helpers
+      include RHC::SSHHelpers
+      include RHC::GitHelpers
+      attr_reader :config, :options
+      attr_accessor :username, :password
+
+      def openshift_server
+        options.server || config['libra_server'] || "openshift.redhat.com"
+      end
+
     private
 
     def greeting_stage
@@ -69,29 +78,29 @@ module RHC
     end
 
     def login_stage
-      # get_password adds an extra untracked newline so set :bottom to -1
       paragraph do
-        if @config.has_opts? && @config.opts_login
-          @username = @config.opts_login
-          say "Using #{@username}"
-        else
-          @username = ask("Login to #{@libra_server}: ") do |q|
-            q.default = RHC::Config.default_rhlogin
+        self.username = if options.rhlogin
+            say "Using #{options.rhlogin} to login to #{openshift_server}"
+            options.rhlogin
+          else
+            ask("Login to #{openshift_server}: ") do |q|
+              q.default = config.username
+            end
           end
-        end
-
-        @password = @opts.password if @opts
-        @password = ask("Password: ") { |q| q.echo = '*' } if @password.nil?
+        self.password = options.password || ask("Password: ") { |q| q.echo = '*' } if @password.nil?
       end
 
-      # instantiate a REST client that stages can use
-      end_point = "https://#{@libra_server}/broker/rest/api"
-      self.rest_client = RHC::Rest::Client.new(end_point, @username, @password, @debug)
+      self.rest_client = RHC::Rest::Client.new(
+        :server => openshift_server,
+        :user => username,
+        :password => password,
+        :debug => options.debug,
+        :timeout => options.timeout,
+        :verify_ssl => options.insecure ? OpenSSL::SSL::VERIFY_NONE : OpenSSL::SSL::VERIFY_PEER,
+      )
 
       # confirm that the REST client can connect
-      return false unless rest_client.user
-
-      true
+      !!rest_client.user
     end
 
     def create_config_stage
@@ -100,10 +109,10 @@ module RHC
         File.open(@config_path, 'w') do |file|
           file.puts <<EOF
 # Default user login
-default_rhlogin='#{@username}'
+default_rhlogin='#{username}'
 
 # Server API
-libra_server = '#{@libra_server}'
+libra_server = '#{openshift_server}'
 EOF
 
         end
@@ -173,8 +182,8 @@ EOF
         end
 
         hostname = Socket.gethostname.gsub(/\..*\z/,'')
-        username = @username ? @username.gsub(/@.*/, '') : ''
-        pubkey_base_name = "#{username}#{hostname}".gsub(/[^A-Za-z0-9]/,'').slice(0,16)
+        userkey = username ? username.gsub(/@.*/, '') : ''
+        pubkey_base_name = "#{userkey}#{hostname}".gsub(/[^A-Za-z0-9]/,'').slice(0,16)
         default_name = find_unique_key_name(
           :keys => @ssh_keys,
           :base => pubkey_base_name,
@@ -395,7 +404,7 @@ EOF
 
 In order to fully interact with OpenShift you will need to install and configure a git client if you have not already done so.
 
-Documentation for installing other tools you will need for OpenShift can be found at https://#{@libra_server}/app/getting_started#install_client_tools
+Documentation for installing other tools you will need for OpenShift can be found at https://openshift.redhat.com/community/developers/install-the-client-tools
 
 We recommend these free applications:
 
@@ -414,10 +423,6 @@ EOF
   end
 
   class RerunWizard < Wizard
-    def initialize(config, login=nil)
-      super(config, login)
-    end
-
     def create_config_stage
       if File.exists? @config_path
         backup = "#{@config_path}.bak"
@@ -446,9 +451,9 @@ EOF
       STAGES
     end
 
-    def initialize(rest_client)
+    def initialize(rest_client, config, options)
       self.rest_client = rest_client
-      super RHC::Config
+      super config, options
     end
   end
 end

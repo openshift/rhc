@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'rest_spec_helper'
 require 'rhc/commands/port_forward'
 
 describe RHC::Commands::PortForward do

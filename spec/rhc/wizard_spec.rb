@@ -56,7 +56,7 @@ describe RHC::Wizard do
       File.readable?(@wizard.config_path).should be true
       cp = RHC::Vendor::ParseConfig.new @wizard.config_path
       cp["default_rhlogin"].should == @wizard.mock_user
-      cp["libra_server"].should == @wizard.libra_server
+      cp["libra_server"].should == @wizard.openshift_server
     end
 
     it "should write out generated ssh keys" do
@@ -139,7 +139,7 @@ describe RHC::Wizard do
       File.readable?(@wizard.config_path).should be true
       cp = RHC::Vendor::ParseConfig.new @wizard.config_path
       cp["default_rhlogin"].should == @wizard.mock_user
-      cp["libra_server"].should == @wizard.libra_server
+      cp["libra_server"].should == @wizard.openshift_server
     end
 
     it "should write out generated ssh keys" do
@@ -216,7 +216,7 @@ describe RHC::Wizard do
       File.readable?(@wizard.config_path).should be true
       cp = RHC::Vendor::ParseConfig.new @wizard.config_path
       cp["default_rhlogin"].should == @wizard.mock_user
-      cp["libra_server"].should == @wizard.libra_server
+      cp["libra_server"].should == @wizard.openshift_server
     end
 
     it "should write out generated ssh keys" do
@@ -303,7 +303,7 @@ describe RHC::Wizard do
       File.readable?(@wizard.config_path).should be true
       cp = RHC::Vendor::ParseConfig.new @wizard.config_path
       cp["default_rhlogin"].should == @wizard.mock_user
-      cp["libra_server"].should == @wizard.libra_server
+      cp["libra_server"].should == @wizard.openshift_server
     end
 
     it "should check for ssh keys and find a match" do
@@ -375,7 +375,7 @@ describe RHC::Wizard do
       File.readable?(@wizard.config_path).should be true
       cp = RHC::Vendor::ParseConfig.new @wizard.config_path
       cp["default_rhlogin"].should == @wizard.mock_user
-      cp["libra_server"].should == @wizard.libra_server
+      cp["libra_server"].should == @wizard.openshift_server
     end
 
     it "should check for ssh keys, not find it on the server and update existing key" do
@@ -414,8 +414,8 @@ describe RHC::Wizard do
     it "should list apps" do
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match("test1 https://test1-#{@namespace}.#{@wizard.libra_server}/")
-      output.should match("test2 https://test2-#{@namespace}.#{@wizard.libra_server}/")
+      output.should match("test1 https://test1-#{@namespace}.#{@wizard.openshift_server}/")
+      output.should match("test2 https://test2-#{@namespace}.#{@wizard.openshift_server}/")
     end
 
     it "should show a thank you message" do
@@ -452,7 +452,7 @@ describe RHC::Wizard do
       File.readable?(@wizard.config_path).should be true
       cp = RHC::Vendor::ParseConfig.new @wizard.config_path
       cp["default_rhlogin"].should == @wizard.mock_user
-      cp["libra_server"].should == @wizard.libra_server
+      cp["libra_server"].should == @wizard.openshift_server
     end
 
     it "should check for ssh keys and decline uploading them" do
@@ -495,7 +495,7 @@ describe RHC::Wizard do
     end
 
     it "should run" do
-      @wizard.libra_server = nil
+      @wizard.openshift_server = nil
       @wizard.stub_rhc_client_new
       @wizard.setup_mock_ssh
 
@@ -653,15 +653,15 @@ describe RHC::Wizard do
   end
 
   module WizardDriver
-
-    attr_accessor :mock_user, :libra_server, :config_path, :rest_client
+    attr_accessor :mock_user, :openshift_server, :config_path, :rest_client
     def initialize(*args)
-      args << RHC::Config.default if args.empty?
+      args = [RHC::Config.new, Commander::Command::Options.new] if args.empty?
       super *args
-      @libra_server = 'fake.foo'
+      raise "No options" if options.nil?
       @mock_user = 'mock_user@foo.bar'
       @current_wizard_stage = nil
       @platform_windows = false
+      self.openshift_server = 'fake.foo'
     end
 
     def run_next_stage
@@ -688,7 +688,7 @@ describe RHC::Wizard do
 default_rhlogin='#{rhlogin}'
 
 # Server API
-libra_server = '#{@libra_server}'
+libra_server = '#{openshift_server}'
 EOF
       end
 
@@ -715,7 +715,7 @@ EOF
       apps.each do |app, url|
         apps_ary.push OpenStruct.new(
           :name => app,
-          :app_url => url == :default ? "http://#{app}-#{domain}.#{@libra_server}/" : url,
+          :app_url => url == :default ? "http://#{app}-#{domain}.#{openshift_server}/" : url,
           :u => true
         )
       end
@@ -823,7 +823,7 @@ EOF
     include WizardDriver
 
     def initialize
-      super RestSpecHelper::MockRestClient.new
+      super RestSpecHelper::MockRestClient.new, RHC::Config.new, Commander::Command::Options.new
     end
   end
 end

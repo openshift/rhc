@@ -8,7 +8,7 @@ describe RHC::Commands::App do
   before(:each) do
     FakeFS.activate!
     FakeFS::FileSystem.clear
-    RHC::Config.set_defaults
+    user_config
     RHC::Helpers::MAX_RETRIES = 3
     @instance = RHC::Commands::App.new
     RHC::Commands::App.stub(:new) do
@@ -255,7 +255,7 @@ describe RHC::Commands::App do
       end
 
       # don't run wizard here because we test this elsewhere
-      wizard_instance = RHC::SSHWizard.new(rest_client)
+      wizard_instance = RHC::SSHWizard.new(rest_client, RHC::Config.new, Commander::Command::Options.new)
       wizard_instance.stub(:ssh_key_uploaded?) { true }
       RHC::SSHWizard.stub(:new) { wizard_instance }
       RHC::Config.stub(:should_run_ssh_wizard?) { false }

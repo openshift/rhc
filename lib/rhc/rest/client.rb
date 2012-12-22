@@ -1,4 +1,3 @@
-require 'base64'
 require 'rhc/json'
 require 'rhc/rest/base'
 require 'rhc/helpers'
@@ -18,19 +17,27 @@ module RHC
 
       def initialize(*args)
         options = args[0].is_a?(Hash) && args[0] || {}
-        @end_point, @username, @password, @debug, @preferred_api_versions =
+        @end_point, @debug, @preferred_api_versions =
           if options.empty?
+            options[:user] = args.delete_at(1)
+            options[:password] = args.delete_at(1)
             args
           else
-            [options[:url], options[:username], options[:password], options[:debug], options[:preferred_api_versions]]
+            [
+              options.delete(:url) ||
+                (options[:server] && "https://#{options.delete(:server)}/broker/rest/api"), 
+              options.delete(:debug),
+              options.delete(:preferred_api_versions)
+            ]
           end
 
-        @debug ||= false
-        @auth = options[:auth]
-        headers.merge!(options[:headers]) if options[:headers]
-        add_headers(headers) #TODO remove me
-
         @preferred_api_versions ||= CLIENT_API_VERSIONS
+        @debug ||= false
+
+        @auth = options.delete(:auth)
+
+        self.headers.merge!(options.delete(:headers)) if options[:headers]
+        self.options.merge!(options)
 
         debug "Connecting to #{@end_point}"
       end
@@ -152,7 +159,7 @@ module RHC
           begin
             response = request.execute
           ensure
-            debug "Response: #{response.inspect}" rescue nil if debug?
+            debug "Response: #{response.inspect}" if debug? && response
           end
 
           if block_given?
@@ -176,6 +183,7 @@ module RHC
             "An error occurred while communicating with the server (#{e.message}). This problem may only be temporary."\
             "#{RestClient.proxy.present? ? " Check that you have correctly specified your proxy server '#{RestClient.proxy}' as well as your OpenShift server '#{request.url}'." : " Check that you have correctly specified your OpenShift server '#{request.url}'."}")
         rescue RestClient::ExceptionWithResponse => e
+          debug "Response: #{e.response.code}, #{e.response.inspect}" if debug?
           auth.retry_auth?(e.response) and retry if auth
           process_error_response(e.response, request.url)
         rescue OpenSSL::SSL::SSLError => e
@@ -197,8 +205,6 @@ module RHC
           logger.debug e.backtrace.join("\n  ") if debug?
           raise ResourceAccessException.new(
             "Failed to access resource: #{e.message}")
-        ensure
-          debug "Response: #{response}" if debug?
         end
       end
 
@@ -211,17 +217,29 @@ module RHC
 
         attr_reader :auth
         def headers
-          @headers ||= {:accept => :json}
+          @headers ||= {
+            :accept => :json,
+            "User-Agent" => user_agent,
+          }
+        end
+
+        def user_agent
+          RHC::Helpers.user_agent
+        end
+
+        def options
+          @options ||= {
+            :verify_ssl => OpenSSL::SSL::VERIFY_PEER
+          }
         end
 
         def new_request(options)
-          # user specified timeout takes presidence
+          options.reverse_merge!(self.options)
           (options[:headers] ||= {}).reverse_merge!(headers)
-          options[:timeout] = $rest_timeout || options[:timeout]
           options[:open_timeout] ||= (options[:timeout] || 4)
-          options[:verify_ssl] ||= OpenSSL::SSL::VERIFY_PEER
 
           auth.to_request(options) if auth
+
           RestClient::Request.new options
         end
 
@@ -352,26 +370,6 @@ module RHC
             raise ServerErrorException, "Server returned an unexpected error code: #{response.code}"
           end
           raise parse_error || ServerErrorException.new(generic_error_message(url), 129)
-        end
-
-        def add_headers(h)
-          h["User-Agent"] = RHC::Helpers.user_agent rescue nil
-          add_credentials(h)
-        end
-
-        def add_credentials(h)
-          if @username
-            userpass = "#{@username}:#{@password}"
-            # :nocov: version dependent code
-            credentials = if RUBY_VERSION.to_f == 1.8
-              Base64.encode64(userpass).delete("\n")
-            else
-              Base64.strict_encode64(userpass)
-            end
-            # :nocov:
-            h["Authorization"] = "Basic #{credentials}"
-          end
-          h
         end
     end
   end

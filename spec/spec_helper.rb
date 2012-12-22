@@ -113,6 +113,9 @@ module ClassSpecHelpers
       @input.seek(reset_pos)
       result
     end
+    def close_write
+      @input.close_write
+    end
   end
 
   def mock_terminal
@@ -160,6 +163,7 @@ module ClassSpecHelpers
     #Commander::Runner.instance_variable_set :"@singleton", nil
     mock_terminal
     input.each { |i| $terminal.write_line(i) }
+    $terminal.close_write
     #"#{@output.string}\n#{$stderr.string}"
     RHC::CLI.start(arguments)
   end
@@ -187,12 +191,17 @@ module ClassSpecHelpers
     defaults = config.instance_variable_get(:@defaults)
     yield config, defaults if block_given?
     RHC::Config.stub(:default).and_return(config)
+    RHC::Config.stub(:new).and_return(config)
+    config
   end
 
   def user_config
     base_config do |config, defaults|
       defaults.add 'default_rhlogin', 'test_user'
       defaults.add 'password', 'test pass'
+    end.tap do |c|
+      c.to_options[:rhlogin].should == 'test_user'
+      c.to_options[:password].should == 'test pass'
     end
   end
 end

@@ -10,7 +10,7 @@ describe RHC::Commands::Snapshot do
 
   let!(:rest_client) { MockRestClient.new }
   before(:each) do
-    RHC::Config.set_defaults
+    user_config
     @app = rest_client.add_domain("mockdomain").add_application APP_NAME, 'mock-1.0'
     @ssh_uri = URI.parse @app.ssh_url
     filename = APP_NAME + '.tar.gz'
