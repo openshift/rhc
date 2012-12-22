@@ -10,12 +10,10 @@ require 'rhc/context_helper'
 class RHC::Commands::Base
 
   attr_writer :options, :config
-  attr_reader :messages
 
   def initialize(options=Commander::Command::Options.new,
-                 config=nil)
+                 config=RHC::Config.new)
     @options, @config = options, config
-    @messages = []
   end
 
   def validate_args_and_options(args_metadata, options_metadata, args)
@@ -69,23 +67,6 @@ class RHC::Commands::Base
     include RHC::ContextHelpers
 
     attr_reader :options, :config
-
-    #
-    # The implicit config object provides no defaults.
-    #
-    def config
-      @config ||= begin
-        RHC::Config.new
-      end
-    end
-
-    def application
-      #@application ||= ... identify current application or throw,
-      #                     indicating one is needed.  Should check
-      #                     options (commands which have it as an ARG
-      #                     should set it onto options), then check
-      #                     current git repo for remote, fail.
-    end
 
     # Return a client object capable of making calls
     # to the OpenShift API that transforms intent
