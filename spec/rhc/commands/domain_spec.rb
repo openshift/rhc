@@ -4,9 +4,7 @@ require 'rhc/commands/domain'
 
 describe RHC::Commands::Domain do
   let!(:rest_client){ MockRestClient.new }
-  before(:each) do
-    RHC::Config.set_defaults
-  end
+  before{ user_config }
 
   describe 'default action' do
     context 'when run with no domains' do
@@ -17,7 +15,7 @@ describe RHC::Commands::Domain do
     end
     context 'when help is shown' do
       let(:arguments) { ['domain', '--noprompt', '--help'] }
-      
+
       it { expect { run }.should exit_with_code(0) }
       it { run_output.should match(/The default action for this resource is 'show'/) }
     end

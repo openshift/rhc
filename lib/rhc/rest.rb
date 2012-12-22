@@ -83,8 +83,15 @@ module RHC
     #I/O Exceptions Connection timeouts, etc
     class ConnectionException < Exception; end
     class TimeoutException < ConnectionException; end
-  end
 
-  module Rest
+    class SSLConnectionFailed < ConnectionException
+      attr_reader :reason
+      def initialize(reason, message)
+        super message
+        @reason = reason
+      end
+    end
+    class CertificateVerificationFailed < SSLConnectionFailed; end
+    class SSLVersionRejected < SSLConnectionFailed; end
   end
 end

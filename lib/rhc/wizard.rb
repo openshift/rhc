@@ -65,6 +65,20 @@ module RHC
         options.server || config['libra_server'] || "openshift.redhat.com"
       end
 
+      # Keep in sync with RHC::Commands::Base#rest_client
+      def new_client_for_options
+        # rest-client doesn't accept ssl_version, see https://github.com/archiloque/rest-client/pull/140
+        OpenSSL::SSL::SSLContext::DEFAULT_PARAMS[:ssl_version] = options.ssl_version.to_s if options.ssl_version
+        RHC::Rest::Client.new(
+          :server => openshift_server,
+          :user => username,
+          :password => password,
+          :debug => options.debug,
+          :timeout => options.timeout,
+          :verify_ssl => options.insecure ? OpenSSL::SSL::VERIFY_NONE : OpenSSL::SSL::VERIFY_PEER,
+        )
+      end
+
     private
 
     def greeting_stage
@@ -90,17 +104,28 @@ module RHC
         self.password = options.password || ask("Password: ") { |q| q.echo = '*' } if @password.nil?
       end
 
-      self.rest_client = RHC::Rest::Client.new(
-        :server => openshift_server,
-        :user => username,
-        :password => password,
-        :debug => options.debug,
-        :timeout => options.timeout,
-        :verify_ssl => options.insecure ? OpenSSL::SSL::VERIFY_NONE : OpenSSL::SSL::VERIFY_PEER,
-      )
+      self.rest_client = new_client_for_options
 
-      # confirm that the REST client can connect
-      !!rest_client.user
+      begin
+        rest_client.api
+      rescue RHC::Rest::CertificateVerificationFailed => e
+        debug "Certificate validation failed: #{e.reason}"
+        unless options.insecure
+          warn "The server's certificate could not be verified, which means that a secure connection can't be established to '#{openshift_server}'."
+          if openshift_online_server?
+            paragraph{ warn "This may mean that a server between you and OpenShift is capable of accessing information sent from this client.  If you wish to continue without checking the certificate, please pass the -k (or --insecure) option to this command." }
+            return
+          else
+            paragraph{ warn "You may bypass this check, but any data you send to the server could be intercepted by others." }
+            return unless agree "Connect without checking the certificate? (yes|no): "
+            options.insecure = true
+            self.rest_client = new_client_for_options
+            retry
+          end
+        end
+      end
+
+      rest_client.user
     end
 
     def create_config_stage
@@ -437,8 +462,8 @@ EOF
     end
 
     def finalize_stage
-      section(:top => 1, :bottom => 0) do
-        say "Your client tools are now configured."
+      section :top => 1 do
+        success "Your client tools are now configured."
       end
       true
     end

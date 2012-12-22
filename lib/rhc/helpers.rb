@@ -83,8 +83,14 @@ module RHC
     global_option '-l', '--rhlogin LOGIN', "OpenShift login"
     global_option '-p', '--password PASSWORD', "OpenShift password"
     global_option '-d', '--debug', "Turn on debugging", :hide => true
+
     global_option '--server NAME', String, 'An OpenShift server hostname (default: openshift.redhat.com)'
     global_option '-k', '--insecure', "Allow insecure SSL connections.  Potential security risk.", :hide => true
+
+    OptionParser.accept(SSLVersion = Class.new){ |s| OpenSSL::SSL::SSLContext::METHODS.find{ |m| m.to_s.downcase == s.downcase } or raise OptionParser::InvalidOption.new("'#{s}' is not a valid SSL version (#{OpenSSL::SSL::SSLContext::METHODS.join(', ')})") }
+    global_option '--ssl-version VERSION', SSLVersion, "The version of SSL to use", :hide => true 
+    #do |value|
+    #end
 
     global_option('--timeout SECONDS', Integer, 'The timeout for operations') do |value|
       abort(color("Timeout must be a positive integer",:red)) unless value > 0
@@ -101,11 +107,11 @@ module RHC
     def openshift_server
       (options.server rescue nil) || ENV['LIBRA_SERVER'] || "openshift.redhat.com"
     end
+    def openshift_online_server?
+      openshift_server =~ /openshift.redhat.com$/i
+    end
     def openshift_url
       "https://#{openshift_server}"
-    end
-    def openshift_rest_node
-      "#{openshift_url}/broker/rest/api"
     end
 
     #

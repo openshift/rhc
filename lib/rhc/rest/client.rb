@@ -187,15 +187,22 @@ module RHC
           auth.retry_auth?(e.response) and retry if auth
           process_error_response(e.response, request.url)
         rescue OpenSSL::SSL::SSLError => e
-          raise ConnectionException.new(
-            case e.message
+          raise case e.message
             when /certificate verify failed/
-              "The server's certificate could not be verified, which means that a secure connection can't be established to the server '#{request.url}'.\n\n"\
-              "If your server is using a self-signed certificate, you may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties."
+              CertificateVerificationFailed.new(
+                e.message,
+                "The server's certificate could not be verified, which means that a secure connection can't be established to the server '#{request.url}'.\n\n"\
+                "If your server is using a self-signed certificate, you may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.")
+            when /$SSL_connect returned=1 errno=0 state=SSLv2\/v3 read server hello A/
+              SSLVersionRejected.new(
+                e.message,
+                "The server has rejected your connection attempt with an older SSL protocol.  Pass --ssl-version=sslv3 on the command line to connect to this server.")
             else
-              "A secure connection could not be established to the server (#{e.message}). You may disable secure connections to your server with the -k (or --insecure) option '#{request.url}'.\n\n"\
-              "If your server is using a self-signed certificate, you may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties."
-            end)
+              SSLConnectionFailed.new(
+                e.message,
+                "A secure connection could not be established to the server (#{e.message}). You may disable secure connections to your server with the -k (or --insecure) option '#{request.url}'.\n\n"\
+                "If your server is using a self-signed certificate, you may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.")
+            end
         rescue SocketError => e
           raise ConnectionException.new(
             "Unable to connect to the server (#{e.message})."\
