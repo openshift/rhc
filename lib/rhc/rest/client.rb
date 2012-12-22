@@ -193,10 +193,15 @@ module RHC
                 e.message,
                 "The server's certificate could not be verified, which means that a secure connection can't be established to the server '#{request.url}'.\n\n"\
                 "If your server is using a self-signed certificate, you may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.")
-            when /$SSL_connect returned=1 errno=0 state=SSLv2\/v3 read server hello A/
+            when /^SSL_connect returned=1 errno=0 state=SSLv2\/v3 read server hello A/
               SSLVersionRejected.new(
                 e.message,
                 "The server has rejected your connection attempt with an older SSL protocol.  Pass --ssl-version=sslv3 on the command line to connect to this server.")
+            when /^SSL_CTX_set_cipher_list:: no cipher match/
+              SSLVersionRejected.new(
+                e.message,
+                "The server has rejected your connection attempt because it does not support the requested SSL protocol version.\n\n"\
+                "Check with the administrator for a valid SSL version to use and pass --ssl-version=<version> on the command line to connect to this server.")
             else
               SSLConnectionFailed.new(
                 e.message,
