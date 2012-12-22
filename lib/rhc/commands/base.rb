@@ -79,15 +79,9 @@ class RHC::Commands::Base
         login = options.rhlogin || ask("Login to #{openshift_server}: ")
         password = options.password || ask("Password: ") { |q| q.echo = '*' }
 
-        # rest-client doesn't accept ssl_version, see https://github.com/archiloque/rest-client/pull/140
-        OpenSSL::SSL::SSLContext::DEFAULT_PARAMS[:ssl_version] = options.ssl_version.to_s if options.ssl_version
-        RHC::Rest::Client.new(
-          :server => openshift_server,
+        client_from_options(
           :user => login,
           :password => password,
-          :debug => options.debug,
-          :timeout => options.timeout,
-          :verify_ssl => options.insecure ? OpenSSL::SSL::VERIFY_NONE : OpenSSL::SSL::VERIFY_PEER,
         )
       end
     end

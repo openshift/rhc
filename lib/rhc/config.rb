@@ -78,6 +78,8 @@ module RHC
         :rhlogin => 'default_rhlogin',
         :server => 'libra_server',
         :password => nil,
+        :ssl_client_cert_file => nil,
+        :ssl_ca_file => nil,
         :timeout => [nil, :integer],
         :insecure => [nil, :boolean]
       }.inject({}) do |h, (name, opts)|

@@ -9,7 +9,7 @@ module RHC::Commands
     def run
       say "Connected to #{openshift_server}"
 
-      if openshift_server == 'openshift.redhat.com'
+      if openshift_online_server?
         status = decode_json(get("#{openshift_url}/app/status/status.json").body)
         open = status['open']
 

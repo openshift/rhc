@@ -65,17 +65,10 @@ module RHC
         options.server || config['libra_server'] || "openshift.redhat.com"
       end
 
-      # Keep in sync with RHC::Commands::Base#rest_client
       def new_client_for_options
-        # rest-client doesn't accept ssl_version, see https://github.com/archiloque/rest-client/pull/140
-        OpenSSL::SSL::SSLContext::DEFAULT_PARAMS[:ssl_version] = options.ssl_version.to_s if options.ssl_version
-        RHC::Rest::Client.new(
-          :server => openshift_server,
+        client_from_options(
           :user => username,
           :password => password,
-          :debug => options.debug,
-          :timeout => options.timeout,
-          :verify_ssl => options.insecure ? OpenSSL::SSL::VERIFY_NONE : OpenSSL::SSL::VERIFY_PEER,
         )
       end
 

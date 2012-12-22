@@ -72,7 +72,7 @@ module RHC
     end
 
     def get(uri, opts=nil, *args)
-      opts = {'User-Agent' => user_agent}.merge(opts || {})
+      opts = {'User-Agent' => user_agent}.merge!(ssl_options).merge!(opts || {})
       RestClient.get(uri, opts, *args)
     end
 
@@ -87,10 +87,12 @@ module RHC
     global_option '--server NAME', String, 'An OpenShift server hostname (default: openshift.redhat.com)'
     global_option '-k', '--insecure', "Allow insecure SSL connections.  Potential security risk.", :hide => true
 
-    OptionParser.accept(SSLVersion = Class.new){ |s| OpenSSL::SSL::SSLContext::METHODS.find{ |m| m.to_s.downcase == s.downcase } or raise OptionParser::InvalidOption.new("'#{s}' is not a valid SSL version (#{OpenSSL::SSL::SSLContext::METHODS.join(', ')})") }
+    OptionParser.accept(SSLVersion = Class.new){ |s| OpenSSL::SSL::SSLContext::METHODS.find{ |m| m.to_s.downcase == s.downcase } or raise OptionParser::InvalidOption.new(nil, "The provided SSL version '#{s}' is valid. Supported values: #{OpenSSL::SSL::SSLContext::METHODS.map(&:to_s).map(&:downcase).join(', ')}") }
     global_option '--ssl-version VERSION', SSLVersion, "The version of SSL to use", :hide => true 
-    #do |value|
-    #end
+    global_option '--ssl-ca-file FILE', "An SSL certificate CA file (may contain multiple certs)", :hide => true
+    global_option '--ssl-client-cert-file FILE', "An SSL x509 client certificate file", :hide => true do |value|
+      debug certificate_file(value)
+    end
 
     global_option('--timeout SECONDS', Integer, 'The timeout for operations') do |value|
       abort(color("Timeout must be a positive integer",:red)) unless value > 0
@@ -114,12 +116,40 @@ module RHC
       "https://#{openshift_server}"
     end
 
+    def client_from_options(opts)
+      # rest-client doesn't accept ssl_version, see https://github.com/archiloque/rest-client/pull/140
+      OpenSSL::SSL::SSLContext::DEFAULT_PARAMS[:ssl_version] = options.ssl_version.to_s if options.ssl_version
+      RHC::Rest::Client.new({
+          :server => openshift_server,
+          :debug => options.debug,
+          :timeout => options.timeout,
+        }.merge!(ssl_options).merge!(opts))
+    end
+
+    def ssl_options
+      {
+        :ssl_client_cert => certificate_file(options.ssl_client_cert),
+        :ssl_ca_file => options.ssl_ca_file && File.expand_path(options.ssl_ca_file),
+        :verify_ssl => options.insecure ? OpenSSL::SSL::VERIFY_NONE : OpenSSL::SSL::VERIFY_PEER,
+      }
+    end
+
+    def certificate_file(file)
+      file && OpenSSL::X509::Certificate.new(IO.read(File.expand_path(file)))
+    rescue => e
+      debug e
+      raise OptionParser::InvalidOption.new(nil, "The certificate '#{file}' cannot be loaded: #{e.message} (#{e.class})")
+    end
+
     #
     # Output helpers
     #
 
     def debug(msg)
       $stderr.puts "DEBUG: #{msg}" if debug?
+    end
+    def debug?
+      false
     end
 
     def deprecated_command(correct,short = false)
