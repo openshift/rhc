@@ -26,11 +26,13 @@ module RHC
 
     attr_reader :rest_client
 
+    #
+    # Running the setup wizard may change the contents of opts and config if
+    # the create_config_stage completes successfully.
+    #
     def initialize(config=RHC::Config.new, opts=Commander::Command::Options.new)
       @config = config
       @options = opts
-
-      @config_path = config.config_path
       @debug = opts.debug if opts
     end
 
@@ -44,9 +46,8 @@ module RHC
     # Returns nil on failure or true on success
     def run
       stages.each do |stage|
-        # FIXME: cleanup if we fail
         debug "Running #{stage}"
-        if (self.send stage).nil?
+        if self.send(stage).nil?
           return nil
         end
       end
@@ -65,10 +66,10 @@ module RHC
       end
 
       def new_client_for_options
-        client_from_options(
+        client_from_options({
           :user => username,
           :password => password,
-        )
+        })
       end
 
     private
@@ -121,29 +122,24 @@ module RHC
     end
 
     def create_config_stage
-      if !File.exists? @config_path
-        FileUtils.mkdir_p File.dirname(@config_path)
-        File.open(@config_path, 'w') do |file|
-          file.puts <<EOF
-# Default user login
-default_rhlogin='#{username}'
-
-# Server API
-libra_server = '#{openshift_server}'
-EOF
-
-        end
-
-        paragraph do
-          say "Creating #{@config_path} to store your configuration"
-        end
-
-        true
+      if File.exists? config.path
+        backup = "#{@config.path}.bak"
+        paragraph{ say "Saving previous configuration to #{backup}" }
+        FileUtils.cp(config.path, backup)
+        FileUtils.rm(config.path)
       end
 
-      # Read in @config_path now that it exists (was skipped before because it did
-      # not exist
-      RHC::Config.set_local_config(@config_path)
+      paragraph{ say "Creating #{config.path} to store your configuration" }
+
+      changed = Commander::Command::Options.new(options)
+      changed.rhlogin = username
+      changed.password = password
+
+      FileUtils.mkdir_p File.dirname(config.path)
+      config.save!(changed)
+      options.__replace__(changed)
+
+      true
     end
 
     def config_ssh_key_stage
@@ -440,18 +436,6 @@ EOF
   end
 
   class RerunWizard < Wizard
-    def create_config_stage
-      if File.exists? @config_path
-        backup = "#{@config_path}.bak"
-        paragraph do
-          say "Saving previous configuration to #{backup}"
-        end
-        FileUtils.cp(@config_path, backup)
-        FileUtils.rm(@config_path)
-      end
-      super
-      true
-    end
 
     def finalize_stage
       section :top => 1 do

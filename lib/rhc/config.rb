@@ -24,8 +24,60 @@ module RHC
     end
   end
 
+  #
+  # Responsible for encapsulating the loading and retrieval of OpenShift
+  # configuration files and converting them to commandline option 
+  # equivalents.  It also provides the converse option - converting a set
+  # of commandline options back into a config file.
+  #
+  # In general, the values stored in the config should be identical (require
+  # little or no type conversion) to their option form.  As new global 
+  # options are added, only this class should have to change to persist that
+  # option.
+  #
+  # During normal use, a new Config object should load the appropriate
+  # settings and those settings should be converted into commandline option
+  # defaults.
+  #
+  # TODO: Encapsulate config writing to the home location
+  # TODO: Allow the config object to initialized with a path
+  # TODO: Remove deprecated methods, remove extra sources.
+  #
   class Config
     include ConfigEnv
+
+    # Option name     [config_key      type           comment_string_for_config]
+    #                  if nil, == key  nil == string  won't be written to file if nil
+    OPTIONS = {
+      :server =>      ['libra_server', nil, 'The server to connect to'],
+      :rhlogin =>     ['default_rhlogin', nil, 'The OpenShift login name'],
+      :password =>    nil,
+      :timeout =>     [nil, :integer, 'The default timeout for network operations'],
+      :ssl_client_cert_file => [nil, :path_to_file, 'A client certificate file for use with your server'],
+      :ssl_ca_file => [nil, :path_to_file, 'A file containing CA one or more certificates'],
+      :insecure =>    [nil, :boolean, "If true, certificate errors will be ignored.\nWARNING: This may allow others to eavesdrop on your communication with OpenShift."]
+    }
+
+    def self.options_to_config(options)
+      OPTIONS.inject([]) do |arr, (name, opts)|
+        opts ||= []
+        next arr unless opts[2]
+        value = options[name]
+        arr.concat(opts[2].each_line.to_a.map(&:strip).map{ |s| "# #{s}" })
+        arr << "#{value.nil? ? '#' : ''}#{opts[0] || name}=#{self.type_to_config(opts[1], value)}"
+        arr << ""
+        arr
+      end.join("\n")
+    end
+
+    def self.type_to_config(type, value)
+      case type
+      when :integer, :boolean
+        value.nil? ? "<#{type}>" : value
+      else
+        "\"#{value.nil? ? "<#{type || 'string'}>" : value}\""
+      end
+    end
 
     # DEPRECATED - will be removed when old commands are gone
     def self.default
@@ -47,10 +99,12 @@ module RHC
       default
     end
 
+    # DEPRECATED - will be removed when old commands are gone
     def initialize
       set_defaults
     end
 
+    # DEPRECATED - will be removed when old commands are gone
     def read_config_files
       load_config_files
     end
@@ -74,15 +128,7 @@ module RHC
     end
 
     def to_options
-      {
-        :rhlogin => 'default_rhlogin',
-        :server => 'libra_server',
-        :password => nil,
-        :ssl_client_cert_file => nil,
-        :ssl_ca_file => nil,
-        :timeout => [nil, :integer],
-        :insecure => [nil, :boolean]
-      }.inject({}) do |h, (name, opts)|
+      OPTIONS.inject({}) do |h, (name, opts)|
           opts = Array(opts)
           value = self[opts[0] || name.to_s]
           if value
@@ -99,6 +145,13 @@ module RHC
         end
     end
 
+    def save!(options)
+      File.open(path, 'w'){ |f| f.puts self.class.options_to_config(options) }
+      @opts, @opts_config, @local_config, @global_config = nil
+      load_config_files
+      self
+    end
+
     def [](key)
       lazy_init
 
@@ -113,18 +166,17 @@ module RHC
       result
     end
 
+    # DEPRECATED - will be removed when old commands are gone
     def get_value(key)
       self[key]
     end
 
-    ###############################################################
-    # BEGIN DEPRECATED - will be removed when old commands are gone
+    # DEPRECATED - underlying value and command option needs to be migrated to login
     def username
       self['default_rhlogin']
     end
-    # END DEPRECATED - will be removed when old commands are gone
-    ###############################################################
 
+    # DEPRECATED - will be removed when old commands are gone
     def set_local_config(conf_path, must_exist=true)
       conf_path = File.expand_path(conf_path)
       @config_path = conf_path if @opts_config_path.nil?
@@ -133,6 +185,7 @@ module RHC
       raise Errno::EACCES.new "Could not open config file: #{e.message}" if must_exist
     end
 
+    # DEPRECATED - needs to be renamed to something cleaner
     def set_opts_config(conf_path)
       @opts_config_path = File.expand_path(conf_path)
       @config_path = @opts_config_path
@@ -141,6 +194,7 @@ module RHC
       raise Errno::EACCES.new "Could not open config file: #{e.message}"
     end
 
+    # DEPRECATED - will be removed when old commands are gone
     def check_cpath(opts)
       unless opts["config"].nil?
         opts_config_path = File.expand_path(opts["config"])
@@ -152,6 +206,7 @@ module RHC
       end
     end
 
+    # DEPRECATED - may be made private
     def global_config_path
       linux_cfg = '/etc/openshift/' + conf_name
       File.exists?(linux_cfg) ? linux_cfg : File.join(File.expand_path(File.dirname(__FILE__) + "/../../conf"), conf_name)
@@ -171,6 +226,7 @@ module RHC
       !@opts_config.nil?
     end
 
+    # DEPRECATED - should be moved to Helpers
     def should_run_ssh_wizard?
       not File.exists? ssh_priv_key_file_path
     end
@@ -183,6 +239,9 @@ module RHC
     # when a script modifies the config such as in rhc setup
     def config_path
       @config_path ||= local_config_path
+    end
+    def path
+      config_path
     end
 
     def home_dir
@@ -198,6 +257,7 @@ module RHC
       get_value('default_rhlogin')
     end
 
+    # DEPRECATED - will be removed when old commands are gone
     def default_proxy
       @default_proxy ||= (
         proxy = ENV['http_proxy'] || ENV['HTTP_PROXY']

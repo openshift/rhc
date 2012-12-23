@@ -1,4 +1,5 @@
 require 'commander'
+require 'commander/command'
 
 ## monkey patch option parsing to also parse global options all at once
 #  to avoid conflicts and side effects of similar short switches
@@ -37,13 +38,29 @@ end
 module Commander
   class Command
     class Options
-      def method_missing meth, *args, &block
-        meth.to_s =~ /=$/ ? @table[meth.to_s.chop.to_sym] = args.first : __fetch__(meth)
+      def initialize(init=nil)
+        @table = {}
+        default(init) if init
       end
-      def __fetch__(meth)
-        value = @table[meth]
+      def method_missing meth, *args, &block
+        meth.to_s =~ /=$/ ? self[meth.to_s.chop] = args.first : self[meth]
+      end
+      def []=(meth, value)
+        @table[meth.to_sym] = value
+      end
+      def [](meth)
+        value = @table[meth.to_sym]
         value = value.call if value.is_a? Proc
         value
+      end
+      def default defaults = {}
+        @table = @table.reverse_merge!(__to_hash__(defaults))
+      end
+      def __replace__(options)
+        @table = __to_hash__(options).dup
+      end
+      def __to_hash__(obj)
+        Options === obj ? obj.__hash__ : obj
       end
     end
   end

@@ -197,6 +197,10 @@ end
 describe Commander::Command::Options do
   it{ subject.foo = 'bar'; subject.foo.should == 'bar' }
   it{ subject.foo = lambda{ 'bar' }; subject.foo.should == 'bar' }
-  it{ subject.foo = lambda{ 'bar' }; subject.__fetch__(:foo).should == 'bar' }
+  it{ subject.foo = lambda{ 'bar' }; subject[:foo].should == 'bar' }
+  it{ subject.foo = lambda{ 'bar' }; subject['foo'].should == 'bar' }
   it{ subject.foo = lambda{ 'bar' }; subject.__hash__[:foo].should be_a Proc }
+  it{ subject[:foo] = lambda{ 'bar' }; subject.foo.should == 'bar' }
+  it{ subject['foo'] = lambda{ 'bar' }; subject.foo.should == 'bar' }
+  it{ Commander::Command::Options.new(:foo => 1).foo.should == 1 }
 end

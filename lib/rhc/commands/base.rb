@@ -35,9 +35,9 @@ class RHC::Commands::Base
       end
 
       if context_helper = option_meta[:context_helper]
-        options.default(arg => lambda{ self.send(context_helper) }) if @options.__hash__[arg].nil?
+        options[arg] = lambda{ self.send(context_helper) } if @options.__hash__[arg].nil?
       end
-      raise ArgumentError.new("Missing required option '#{arg}'.") if option_meta[:required] && @options.__fetch__(arg).nil?
+      raise ArgumentError.new("Missing required option '#{arg}'.") if option_meta[:required] && @options[arg].nil?
     end
 
     # process args
