@@ -182,24 +182,21 @@ describe RHC::Commands::Base do
   end
 
   describe "rest_client" do
-    before do
-      mock_terminal
-      RHC::Rest::Client.stub!(:new) do |opts| 
-        @username = opts[:user]
-        @password = opts[:password]
-        true
-      end
-    end
+    let(:auth){ mock }
+    before{ RHC::Auth::Basic.should_receive(:new).once.with(subject.send(:options)).and_return(auth) }
 
-    it "should ask for username" do
-      FakeFS do
-        $terminal.write_line("testuser@foo.bar")
-        $terminal.write_line("password")
-        subject.send(:rest_client).should be_true
-        @username.should == "testuser@foo.bar"
-        subject.send(:config)["default_rhlogin"].should be_nil
-        @password.should == "password"
-      end
+    it do
+      subject.should_receive(:client_from_options).with(:auth => auth)
+      subject.send(:rest_client)
     end
+    it { subject.send(:rest_client).should be_a(RHC::Rest::Client) }
+    it { subject.send(:rest_client).should equal subject.send(:rest_client) }
   end
+end
+
+describe Commander::Command::Options do
+  it{ subject.foo = 'bar'; subject.foo.should == 'bar' }
+  it{ subject.foo = lambda{ 'bar' }; subject.foo.should == 'bar' }
+  it{ subject.foo = lambda{ 'bar' }; subject.__fetch__(:foo).should == 'bar' }
+  it{ subject.foo = lambda{ 'bar' }; subject.__hash__[:foo].should be_a Proc }
 end

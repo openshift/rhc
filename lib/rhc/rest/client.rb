@@ -42,6 +42,83 @@ module RHC
         debug "Connecting to #{@end_point}"
       end
 
+      def debug?
+        @debug
+      end
+
+      def request(options, &block)
+        tried = 0
+        begin
+          request = options.is_a?(RestClient::Request) && options || new_request(options)
+          debug "Request: #{request.inspect}" if debug?
+          begin
+            response = request.execute
+          ensure
+            debug "Response: #{response.inspect}" if debug? && response
+          end
+
+          if block_given?
+            yield response
+          else
+            parse_response(response) unless response.nil? or response.code == 204
+          end
+        rescue RestClient::RequestTimeout => e
+          raise TimeoutException.new(
+            "Connection to server timed out. "\
+            "It is possible the operation finished without being able "\
+            "to report success. Use 'rhc domain show' or 'rhc app show' "\
+            "to see the status of your applications.")
+        rescue RestClient::ServerBrokeConnection => e
+          raise ConnectionException.new(
+            "Connection to server got interrupted: #{e.message}")
+        rescue RestClient::BadGateway => e
+          debug "ERROR: Received bad gateway from server, will retry once if this is a GET" if debug?
+          retry if (tried += 1) < 2 && request.method.to_s.upcase == "GET"
+          raise ConnectionException.new(
+            "An error occurred while communicating with the server (#{e.message}). This problem may only be temporary."\
+            "#{RestClient.proxy.present? ? " Check that you have correctly specified your proxy server '#{RestClient.proxy}' as well as your OpenShift server '#{request.url}'." : " Check that you have correctly specified your OpenShift server '#{request.url}'."}")
+        rescue RestClient::ExceptionWithResponse => e
+          debug "Response: #{e.response.code}, #{e.response.inspect}" if debug?
+          auth.retry_auth?(e.response) and retry if auth
+          process_error_response(e.response, request.url)
+        rescue OpenSSL::SSL::SSLError => e
+          raise case e.message
+            when /certificate verify failed/
+              CertificateVerificationFailed.new(
+                e.message,
+                "The server's certificate could not be verified, which means that a secure connection can't be established to the server '#{request.url}'.\n\n"\
+                "If your server is using a self-signed certificate, you may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.")
+            when /^SSL_connect returned=1 errno=0 state=SSLv2\/v3 read server hello A/
+              SSLVersionRejected.new(
+                e.message,
+                "The server has rejected your connection attempt with an older SSL protocol.  Pass --ssl-version=sslv3 on the command line to connect to this server.")
+            when /^SSL_CTX_set_cipher_list:: no cipher match/
+              SSLVersionRejected.new(
+                e.message,
+                "The server has rejected your connection attempt because it does not support the requested SSL protocol version.\n\n"\
+                "Check with the administrator for a valid SSL version to use and pass --ssl-version=<version> on the command line to connect to this server.")
+            else
+              SSLConnectionFailed.new(
+                e.message,
+                "A secure connection could not be established to the server (#{e.message}). You may disable secure connections to your server with the -k (or --insecure) option '#{request.url}'.\n\n"\
+                "If your server is using a self-signed certificate, you may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.")
+            end
+        rescue SocketError => e
+          raise ConnectionException.new(
+            "Unable to connect to the server (#{e.message})."\
+            "#{RestClient.proxy.present? ? " Check that you have correctly specified your proxy server '#{RestClient.proxy}' as well as your OpenShift server '#{request.url}'." : " Check that you have correctly specified your OpenShift server '#{request.url}'."}")
+        rescue => e
+          logger.debug e.class if debug?
+          logger.debug e.backtrace.join("\n  ") if debug?
+          raise ResourceAccessException.new(
+            "Failed to access resource: #{e.message}")
+        end
+      end
+
+      def url
+        @end_point
+      end
+
       def api
         @api ||= RHC::Rest::Api.new(self, @preferred_api_versions)
       end
@@ -49,6 +126,10 @@ module RHC
       def api_version_negotiated
         api.api_version_negotiated
       end
+
+      ################################################
+      # Delegate methods to API, should be moved there
+      # and then simply passed through.
 
       def add_domain(id)
         debug "Adding domain #{id}"
@@ -63,7 +144,7 @@ module RHC
 
       def cartridges
         debug "Getting all cartridges"
-        api.rest_method("LIST_CARTRIDGES")
+        api.rest_method("LIST_CARTRIDGES", nil, :lazy_auth => true)
       end
 
       def user
@@ -142,87 +223,6 @@ module RHC
         debug "Logout/Close client"
       end
       alias :close :logout
-
-      def debug?
-        @debug
-      end
-
-      def logger
-        Logger.new(STDOUT)
-      end
-
-      def request(options, &block)
-        tried = 0
-        begin
-          request = options.is_a?(RestClient::Request) && options || new_request(options)
-          debug "Request: #{request.inspect}" if debug?
-          begin
-            response = request.execute
-          ensure
-            debug "Response: #{response.inspect}" if debug? && response
-          end
-
-          if block_given?
-            yield response
-          else
-            parse_response(response) unless response.nil? or response.code == 204
-          end
-        rescue RestClient::RequestTimeout => e
-          raise TimeoutException.new(
-            "Connection to server timed out. "\
-            "It is possible the operation finished without being able "\
-            "to report success. Use 'rhc domain show' or 'rhc app show' "\
-            "to see the status of your applications.")
-        rescue RestClient::ServerBrokeConnection => e
-          raise ConnectionException.new(
-            "Connection to server got interrupted: #{e.message}")
-        rescue RestClient::BadGateway => e
-          debug "ERROR: Received bad gateway from server, will retry once if this is a GET" if debug?
-          retry if (tried += 1) < 2 && request.method.to_s.upcase == "GET"
-          raise ConnectionException.new(
-            "An error occurred while communicating with the server (#{e.message}). This problem may only be temporary."\
-            "#{RestClient.proxy.present? ? " Check that you have correctly specified your proxy server '#{RestClient.proxy}' as well as your OpenShift server '#{request.url}'." : " Check that you have correctly specified your OpenShift server '#{request.url}'."}")
-        rescue RestClient::ExceptionWithResponse => e
-          debug "Response: #{e.response.code}, #{e.response.inspect}" if debug?
-          auth.retry_auth?(e.response) and retry if auth
-          process_error_response(e.response, request.url)
-        rescue OpenSSL::SSL::SSLError => e
-          raise case e.message
-            when /certificate verify failed/
-              CertificateVerificationFailed.new(
-                e.message,
-                "The server's certificate could not be verified, which means that a secure connection can't be established to the server '#{request.url}'.\n\n"\
-                "If your server is using a self-signed certificate, you may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.")
-            when /^SSL_connect returned=1 errno=0 state=SSLv2\/v3 read server hello A/
-              SSLVersionRejected.new(
-                e.message,
-                "The server has rejected your connection attempt with an older SSL protocol.  Pass --ssl-version=sslv3 on the command line to connect to this server.")
-            when /^SSL_CTX_set_cipher_list:: no cipher match/
-              SSLVersionRejected.new(
-                e.message,
-                "The server has rejected your connection attempt because it does not support the requested SSL protocol version.\n\n"\
-                "Check with the administrator for a valid SSL version to use and pass --ssl-version=<version> on the command line to connect to this server.")
-            else
-              SSLConnectionFailed.new(
-                e.message,
-                "A secure connection could not be established to the server (#{e.message}). You may disable secure connections to your server with the -k (or --insecure) option '#{request.url}'.\n\n"\
-                "If your server is using a self-signed certificate, you may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.")
-            end
-        rescue SocketError => e
-          raise ConnectionException.new(
-            "Unable to connect to the server (#{e.message})."\
-            "#{RestClient.proxy.present? ? " Check that you have correctly specified your proxy server '#{RestClient.proxy}' as well as your OpenShift server '#{request.url}'." : " Check that you have correctly specified your OpenShift server '#{request.url}'."}")
-        rescue => e
-          logger.debug e.class if debug?
-          logger.debug e.backtrace.join("\n  ") if debug?
-          raise ResourceAccessException.new(
-            "Failed to access resource: #{e.message}")
-        end
-      end
-
-      def url
-        @end_point
-      end
 
       protected
         include RHC::Helpers
@@ -382,6 +382,11 @@ module RHC
             raise ServerErrorException, "Server returned an unexpected error code: #{response.code}"
           end
           raise parse_error || ServerErrorException.new(generic_error_message(url), 129)
+        end
+
+      private
+        def logger
+          @logger ||= Logger.new(STDOUT)
         end
     end
   end

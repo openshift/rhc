@@ -34,10 +34,10 @@ class RHC::Commands::Base
         deprecated_option(incorrect, correct)
       end
 
-      context_helper = option_meta[:context_helper]
-
-      @options.__hash__[arg] = self.send(context_helper) if @options.__hash__[arg].nil? and context_helper
-      raise ArgumentError.new("Missing required option '#{arg}'.") if option_meta[:required] and @options.__hash__[arg].nil?
+      if context_helper = option_meta[:context_helper]
+        options.default(arg => lambda{ self.send(context_helper) }) if @options.__hash__[arg].nil?
+      end
+      raise ArgumentError.new("Missing required option '#{arg}'.") if option_meta[:required] && @options.__fetch__(arg).nil?
     end
 
     # process args
@@ -75,15 +75,7 @@ class RHC::Commands::Base
     # formatted object output.  Most interactions 
     # should be through this call pattern.
     def rest_client
-      @rest_client ||= begin
-        login = options.rhlogin || ask("Login to #{openshift_server}: ")
-        password = options.password || ask("Password: ") { |q| q.echo = '*' }
-
-        client_from_options(
-          :user => login,
-          :password => password,
-        )
-      end
+      @rest_client ||= client_from_options(:auth => RHC::Auth::Basic.new(options))
     end
 
     def help(*args)

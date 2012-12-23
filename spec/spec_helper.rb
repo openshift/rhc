@@ -264,3 +264,14 @@ Spec::Runner.configure do |config|
   config.include(CommanderInvocationMatchers)
   config.include(ClassSpecHelpers)
 end
+
+module TestEnv
+  extend ClassSpecHelpers
+  class << self
+    attr_accessor :instance, :subject
+    def instance=(i)
+      self.subject = i.class
+      @instance = i
+    end
+  end
+end

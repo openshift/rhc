@@ -10,14 +10,23 @@ module RHC
         @server_api_versions = []
         debug "Client supports API versions #{preferred_api_versions.join(', ')}"
         @client_api_versions = preferred_api_versions
-        @server_api_versions, links = api_info(:url => client.url, :method => :get)
+        @server_api_versions, links = api_info(
+          :url => client.url,
+          :method => :get,
+          :lazy_auth => true,
+        )
         debug "Server supports API versions #{@server_api_versions.join(', ')}"
 
         if api_version_negotiated
           unless server_api_version_current?
             debug "Client API version #{api_version_negotiated} is not current. Refetching API"
             # need to re-fetch API
-            @server_api_versions, links = api_info(:url => client.url, :method => :get, :headers => {'Accept' => "application/json; version=#{api_version_negotiated}"})
+            @server_api_versions, links = api_info(
+              :url => client.url,
+              :method => :get,
+              :headers => {'Accept' => "application/json; version=#{api_version_negotiated}"},
+              :lazy_auth => true,
+            )
           end
         else
           warn_about_api_versions

@@ -31,6 +31,24 @@ module Commander
   end
 end
 
+#
+# Allow Command::Options to lazily evaluate procs and lambdas
+#
+module Commander
+  class Command
+    class Options
+      def method_missing meth, *args, &block
+        meth.to_s =~ /=$/ ? @table[meth.to_s.chop.to_sym] = args.first : __fetch__(meth)
+      end
+      def __fetch__(meth)
+        value = @table[meth]
+        value = value.call if value.is_a? Proc
+        value
+      end
+    end
+  end
+end
+
 module RHC
   module Commands
     def self.load
@@ -44,13 +62,6 @@ module RHC
     end
     def self.global_option(*args, &block)
       global_options << [args, block]
-    end
-
-    def self.global_config_setup(options)
-      RHC::Config.set_opts_config(options.config) if options.config
-      RHC::Config.password = options.password if options.password
-      RHC::Config.opts_login = options.rhlogin if options.rhlogin
-      RHC::Config
     end
 
     def self.deprecated?
@@ -128,7 +139,6 @@ module RHC
             config.set_opts_config(options.config) if options.config
 
             options.default config.to_options
-            #config = global_config_setup(options)
             deprecated?
 
             cmd = opts[:class].new

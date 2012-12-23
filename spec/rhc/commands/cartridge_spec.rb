@@ -90,7 +90,7 @@ describe RHC::Commands::Cartridge do
         domain = rest_client.add_domain("mock_domain")
         app = domain.add_application("app1", "mock_type")
         instance = RHC::Commands::Cartridge.new
-        instance.stub(:git_config_get) { |key| "" if key == "rhc.app-uuid" }
+        instance.should_receive(:git_config_get).with('rhc.app-uuid').and_return('')
         RHC::Commands::Cartridge.stub(:new) { instance }
       end
       it {

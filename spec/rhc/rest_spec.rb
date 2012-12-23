@@ -38,7 +38,10 @@ module RHC
     describe "#logger" do
       it "establishes a logger" do
         logger = Logger.new(STDOUT)
-        subject.logger.should have_same_attributes_as(logger)
+        subject.send(:logger).should have_same_attributes_as(logger)
+      end
+      it "reuses a logger" do
+        subject.send(:logger).should equal(subject.send(:logger))
       end
     end
 
@@ -342,6 +345,21 @@ module RHC
         it "raises a resource access exception error" do
           expect{ subject.request(:url => mock_href, :method  => 'get', :headers => {:accept => :json}) }.should raise_error(RHC::Rest::ConnectionException, /unable to connect to the server/i)
         end
+      end
+
+      context "with an SSL connection error" do
+        before{ stub_request(:get, mock_href).to_raise(OpenSSL::SSL::SSLError) }
+        it{ expect{ subject.request(:url => mock_href, :method  => 'get', :headers => {:accept => :json}) }.should raise_error(RHC::Rest::SSLConnectionFailed, /a secure connection could not be established/i) }
+      end
+
+      context "with an SSL certificate error" do
+        before{ stub_request(:get, mock_href).to_raise(OpenSSL::SSL::SSLError.new('certificate verify failed')) }
+        it{ expect{ subject.request(:url => mock_href, :method  => 'get', :headers => {:accept => :json}) }.should raise_error(RHC::Rest::CertificateVerificationFailed, /the server's certificate could not be verified/i) }
+      end
+
+      context "with an SSL version exception" do
+        before{ stub_request(:get, mock_href).to_raise(OpenSSL::SSL::SSLError.new('SSL_connect returned=1 errno=0 state=SSLv2/v3 read server hello A')) }
+        it{ expect{ subject.request(:url => mock_href, :method  => 'get', :headers => {:accept => :json}) }.should raise_error(RHC::Rest::SSLVersionRejected, /connection attempt with an older ssl protocol/i) }
       end
 
       context "with a generic exception error" do

@@ -109,6 +109,39 @@ describe RHC::Helpers do
     it("should raise on config"){ expect{ subject.config }.should raise_error }
   end
 
+  context "with a valid client cert file" do
+    let(:arguments){ ['help', '--ssl-client-cert-file=spec/keys/example.pem'] }
+    it{ expect{ run }.to exit_with_code(0) }
+  end
+
+  context "with a missing client cert file" do
+    let(:arguments){ ['help', '--ssl-client-cert-file=not_a_file'] }
+    it{ expect{ run }.to exit_with_code(1) }
+    it{ run_output.should match("The certificate 'not_a_file' cannot be loaded: No such") }
+  end
+
+  context "with an valid SSLVersion" do
+    let(:arguments){ ['help', '--ssl-version=sslv3'] }
+    it{ expect{ run }.to exit_with_code(0) }
+  end
+
+  context "with an invalid SSLVersion" do
+    let(:arguments){ ['help', '--ssl-version=ssl'] }
+    it{ expect{ run }.to exit_with_code(1) }
+    it{ run_output.should match("The provided SSL version 'ssl' is not valid. Supported values: ") }
+  end
+
+  context "with an valid ssl CA file" do
+    let(:arguments){ ['help', '--ssl-ca-file=spec/keys/example.pem'] }
+    it{ expect{ run }.to exit_with_code(0) }
+  end
+
+  context "with an invalid ssl CA file" do
+    let(:arguments){ ['help', '--ssl-ca-file=not_a_file'] }
+    it{ expect{ run }.to exit_with_code(1) }
+    it{ run_output.should match("The certificate 'not_a_file' cannot be loaded: No such file or directory ") }
+  end
+
   context "Formatter" do
     before{ tests.reset }
 

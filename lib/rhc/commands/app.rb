@@ -13,7 +13,7 @@ module RHC::Commands
     summary "Create an application"
     description "Create an application. You can see a list of all valid cartridge types by running 'rhc cartridge list'."
     syntax "<name> <cartridge> [-n namespace]"
-    option ["-n", "--namespace namespace"], "Namespace for the application", :context => :namespace_context, :required => true
+    option ["-n", "--namespace namespace"], "Namespace for the application", :context => :namespace_context
     option ["-g", "--gear-size size"], "Gear size controls how much memory and CPU your cartridges can use."
     option ["-s", "--scaling"], "Enable scaling for the web cartridge."
     option ["-r", "--repo dir"], "Path to the Git repository (defaults to ./$app_name)"
@@ -31,6 +31,12 @@ module RHC::Commands
         :dns => true,
         :git => true
 
+      raise ArgumentError, "You have named both your main application and your Jenkins application '#{name}'. In order to continue you'll need to specify a different name with --enable-jenkins or choose a different application name." if jenkins_app_name == name && enable_jenkins?
+
+      raise RHC::DomainNotFoundException.new("No domains found. Please create a domain with 'rhc domain create <namespace>' before creating applications.") if rest_client.domains.empty?
+      rest_domain = rest_client.find_domain(options.namespace)
+      rest_app = nil
+
       paragraph do
         header "Application Options"
         table({"Namespace:" => options.namespace,
@@ -40,12 +46,6 @@ module RHC::Commands
               }
              ).each { |s| say "  #{s}" }
       end
-
-      raise ArgumentError, "You have named both your main application and your Jenkins application '#{name}'. In order to continue you'll need to specify a different name with --enable-jenkins or choose a different application name." if jenkins_app_name == name && enable_jenkins?
-
-      rest_app, rest_domain = nil
-      raise RHC::DomainNotFoundException.new("No domains found. Please create a domain with 'rhc domain create <namespace>' before creating applications.") if rest_client.domains.empty?
-      rest_domain = rest_client.find_domain(options.namespace)
 
       messages = []
 
@@ -291,7 +291,7 @@ module RHC::Commands
             cartridge_names[0] = use_cart(matching_cartridges.first, cartridge_name)
           elsif matching_cartridges.present?
             paragraph { list_cartridges(matching_cartridges) }
-            raise RHC::MultipleCartridgesException.new("There are multiple web cartridges named '#{cartridge_name}'.  Please provide the short name of your desired cart.")
+            raise RHC::MultipleCartridgesException.new("There are multiple web cartridges named '#{cartridge_name}'. Please provide the short name of your desired cart.")
           end
         end
         cartridge_names.first(1)
