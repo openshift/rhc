@@ -1,13 +1,11 @@
 require 'spec_helper'
-require 'rhc/wizard'
-require 'rhc/config'
+require 'rest_spec_helper'
 require 'rhc/commands/setup'
-require 'webmock/rspec'
 
 # just test the command runner as we already have extensive wizard tests
 describe RHC::Commands::Setup do
 
-  before(:each) { RHC::Config.set_defaults }
+  before(:each) { base_config }
 
   describe 'run' do
     let(:arguments) { ['setup', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
@@ -15,7 +13,7 @@ describe RHC::Commands::Setup do
     before(:each) do
       @wizard = mock('wizard')
       @wizard.stub!(:run).and_return(true)
-      RHC::RerunWizard.stub!(:new) { @wizard }
+      RHC::RerunWizard.stub!(:new){ @wizard }
     end
 
     context 'when no issues' do

@@ -31,7 +31,6 @@ module RHC
       @options = opts
 
       @config_path = config.config_path
-      @config.config_user opts.rhlogin if opts && opts.rhlogin
       @debug = opts.debug if opts
     end
 
@@ -86,7 +85,7 @@ module RHC
 
     def login_stage
       paragraph do
-        self.username = if options.rhlogin
+        self.username = if options.rhlogin && options.rhlogin != config.username
             say "Using #{options.rhlogin} to login to #{openshift_server}"
             options.rhlogin
           else

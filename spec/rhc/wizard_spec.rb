@@ -11,6 +11,75 @@ describe RHC::Wizard do
   def mock_config
     RHC::Config.stub(:home_dir).and_return('/home/mock_user')
   end
+
+  let(:options){ (o = Commander::Command::Options.new).default(default_options); o }
+  let(:config){ RHC::Config.new.tap{ |c| c.stub(:home_dir).and_return('/home/mock_user') } }
+  let(:default_options){ {} }
+  let(:user){ 'test_user' }
+  let(:password){ 'test pass' }
+  let(:rest_client){ stub }
+
+  describe "#login_stage" do
+    subject{ RHC::Wizard.new(config, options) }
+
+    def expect_client_test
+      subject.should_receive(:new_client_for_options).ordered.and_return(rest_client)
+      rest_client.should_receive(:api).ordered
+      rest_client.should_receive(:user).ordered.and_return(true)
+    end
+    def expect_raise_from_api(error)
+      subject.should_receive(:say).with("Using #{user} to login to openshift.redhat.com").ordered
+      subject.should_receive(:new_client_for_options).ordered.and_return(rest_client)
+      rest_client.should_receive(:api).ordered.and_raise(error)
+    end
+
+    it "should prompt for user and password" do
+      subject.should_receive(:ask).with("Login to openshift.redhat.com: ").ordered.and_return(user)
+      subject.should_receive(:ask).with("Password: ").ordered.and_return(password)
+      expect_client_test
+
+      subject.send(:login_stage).should be_true
+    end
+
+    context "with credentials" do
+      let(:default_options){ {:rhlogin => user, :password => password} }
+
+      it "should warn about a cert error for Online" do
+        expect_raise_from_api(RHC::Rest::CertificateVerificationFailed.new('reason', 'message'))
+        subject.should_receive(:warn).with(/server's certificate could not be verified/).ordered
+        subject.should_receive(:openshift_online_server?).ordered.and_return(true)
+        subject.should_receive(:warn).with(/server between you and OpenShift/).ordered
+
+        subject.send(:login_stage).should be_nil
+      end
+
+      it "should warn about a cert error for custom server and continue" do
+        expect_raise_from_api(RHC::Rest::CertificateVerificationFailed.new('reason', 'message'))
+        subject.should_receive(:warn).with(/server's certificate could not be verified/).ordered
+        subject.should_receive(:openshift_online_server?).ordered.and_return(false)
+        subject.should_receive(:warn).with(/bypass this check/).ordered
+        subject.should_receive(:agree).with(/Connect without checking/).ordered.and_return(true)
+        expect_client_test
+
+        subject.send(:login_stage).should be_true
+        options.insecure.should be_true
+      end
+
+      it "should warn about a cert error for custom server and be cancelled" do
+        expect_raise_from_api(RHC::Rest::CertificateVerificationFailed.new('reason', 'message'))
+        subject.should_receive(:warn).with(/server's certificate could not be verified/).ordered
+        subject.should_receive(:openshift_online_server?).ordered.and_return(false)
+        subject.should_receive(:warn).with(/bypass this check/).ordered
+        subject.should_receive(:agree).with(/Connect without checking/).ordered.and_return(false)
+
+        subject.send(:login_stage).should be_nil
+        options.insecure.should be_false
+      end
+    end
+  end
+
+  context "when the wizard is run" do
+
   before(:all) do
     mock_terminal
     FakeFS.activate!
@@ -649,6 +718,8 @@ describe RHC::Wizard do
       # a key name with "1" attached to it.
       output.should match "|" + key_name + "1" + "|"
       File.exists?('1').should be_false
+    end
+
     end
   end
 

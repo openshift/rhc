@@ -22,22 +22,53 @@ describe RHC::Config do
     it("should invoke a method on default") { subject.username.should be subject.default.username }
   end
 
-  context "Config default values with no files" do
-    before(:each) do
-      subject.initialize
+  let(:values){ {} }
+
+  describe "#to_options" do
+    subject do
+      RHC::Config.new.tap do |c|
+        c.stub(:home_dir).and_return('/home/mock_user')
+        c.stub(:load_config_files)
+        c.instance_variable_set(:@opts, values)
+        c.instance_variable_set(:@defaults, nil)
+      end
     end
 
-    it "should not have any configs" do
-      subject.has_global_config?.should be_false
-      subject.has_local_config?.should be_false
-      subject.has_opts_config?.should be_false
+    context "with an non true value for insecure" do
+      let(:values){ {'insecure' => 'untruth'} }
+      its(:to_options){ should == {:insecure => false} }
     end
+
+    context "with an invalid timeout" do
+      let(:values){ {'timeout' => 'a'} }
+      it{ expect{ subject.to_options }.to raise_error(ArgumentError) }
+    end
+
+    context "with standard values" do
+      let(:values) do 
+        {
+          'insecure' => 'true',
+          'default_rhlogin' => 'user',
+          'libra_server' => 'test.com',
+          'password' => 'pass',
+          'ssl_client_cert_file' => 'file1',
+          'ssl_ca_file' => 'file2',
+          'timeout' => '1',
+        }
+      end
+      its(:to_options){ should == {:insecure => true, :timeout => 1, :ssl_ca_file => 'file2', :ssl_client_cert_file => 'file1', :rhlogin => 'user', :password => 'pass', :server => 'test.com'} }
+    end
+  end
+
+  context "Config default values with no files" do
+    before{ subject.initialize }
+
+    its(:has_global_config?){ should be_false }
+    its(:has_local_config?){ should be_false }
+    its(:has_opts_config?){ should be_false }
 
     it "should return openshift.redhat.com for the server" do
       subject['libra_server'].should == "openshift.redhat.com"
-      subject.default_rhlogin.should be_nil
-      subject.config_user("default@redhat.com")
-      subject.default_rhlogin.should == "default@redhat.com"
     end
   end
 

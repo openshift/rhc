@@ -100,7 +100,6 @@ module RHC
     end
 
     def [](key)
-      #raise KeyError("Please use RHC::Config.password to access the password config") if key == "password"
       lazy_init
 
       # evaluate in cascading order
@@ -122,28 +121,6 @@ module RHC
     # BEGIN DEPRECATED - will be removed when old commands are gone
     def username
       self['default_rhlogin']
-    end
-
-    # Public: configures the default user for this session
-    def config_user(username)
-      @defaults.add('default_rhlogin', username)
-    end
-
-    def opts_login=(username)
-      @opts.add('default_rhlogin', username)
-    end
-
-    def opts_login
-      @opts['default_rhlogin']
-    end
-
-    # password is not allowed in config files and can only be passed on comman line
-    def password=(password)
-      @opts.add('password', password)
-    end
-
-    def password
-      self['password']
     end
     # END DEPRECATED - will be removed when old commands are gone
     ###############################################################
@@ -192,10 +169,6 @@ module RHC
 
     def has_opts_config?
       !@opts_config.nil?
-    end
-    
-    def has_opts?
-      !@opts.nil?
     end
 
     def should_run_ssh_wizard?
