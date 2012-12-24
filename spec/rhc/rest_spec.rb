@@ -327,16 +327,20 @@ module RHC
         end
       end
 
+      #FIXME: the type of this exception should be a subclass of CertificateValidationFailed
+      context "with a potentially missing cert store" do
+        before{ stub_request(:get, mock_href).to_raise(RestClient::SSLCertificateNotVerified.new('unable to get local issuer certificate')) }
+        it "raises a resource access exception error" do
+          lambda { subject.request(:url => mock_href, :method => :get) }.should raise_error(RHC::Rest::SSLConnectionFailed, /You may need to specify your system CA certificate file/)
+        end
+      end
+
       context "with an unverified SSL certificate" do
         before do
           stub_request(:get, mock_href).to_raise(RestClient::SSLCertificateNotVerified.new('Unverified SSL Certificate'))
         end
         it "raises a resource access exception error" do
-          request = RestClient::Request.new(:url     => mock_href,
-                                            :method  => 'get',
-                                            :headers => {:accept => :json}
-                                            )
-          lambda { subject.request(request) }.should raise_error(RHC::Rest::ResourceAccessException, 'Failed to access resource: Unverified SSL Certificate')
+          lambda { subject.request(:url => mock_href, :method => :get) }.should raise_error(RHC::Rest::CertificateVerificationFailed, /Unverified SSL Certificate/)
         end
       end
 

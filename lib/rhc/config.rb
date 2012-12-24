@@ -49,13 +49,14 @@ module RHC
     # Option name     [config_key      type           comment_string_for_config]
     #                  if nil, == key  nil == string  won't be written to file if nil
     OPTIONS = {
-      :server =>      ['libra_server', nil, 'The server to connect to'],
-      :rhlogin =>     ['default_rhlogin', nil, 'The OpenShift login name'],
+      :server =>      ['libra_server', nil, 'The OpenShift server to connect to'],
+      :rhlogin =>     ['default_rhlogin', nil, 'Your OpenShift login name'],
       :password =>    nil,
       :timeout =>     [nil, :integer, 'The default timeout for network operations'],
+      :insecure =>    [nil, :boolean, "If true, certificate errors will be ignored.\nWARNING: This may allow others to eavesdrop on your communication with OpenShift."],
+      :ssl_version => [nil, nil, 'The SSL protocol version to use when connecting to this server'],
       :ssl_client_cert_file => [nil, :path_to_file, 'A client certificate file for use with your server'],
       :ssl_ca_file => [nil, :path_to_file, 'A file containing CA one or more certificates'],
-      :insecure =>    [nil, :boolean, "If true, certificate errors will be ignored.\nWARNING: This may allow others to eavesdrop on your communication with OpenShift."]
     }
 
     def self.options_to_config(options)
@@ -132,14 +133,15 @@ module RHC
           opts = Array(opts)
           value = self[opts[0] || name.to_s]
           if value
-            h[name] = case opts[1]
+            value = case opts[1]
                       when :integer
                         Integer(value)
                       when :boolean
                         !!(value =~ /^\s*(y|yes|1|t|true)\s*$/i)
                       else
-                        value
+                        value unless value.blank?
                       end
+            h[name] = value unless value.nil?
           end
           h
         end

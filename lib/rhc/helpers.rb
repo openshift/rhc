@@ -133,7 +133,7 @@ module RHC
         :ssl_client_cert => certificate_file(options.ssl_client_cert),
         :ssl_ca_file => options.ssl_ca_file && File.expand_path(options.ssl_ca_file),
         :verify_ssl => options.insecure ? OpenSSL::SSL::VERIFY_NONE : OpenSSL::SSL::VERIFY_PEER,
-      }
+      }.delete_if{ |k,v| v.nil? }
     end
 
     def certificate_file(file)

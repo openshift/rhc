@@ -3,7 +3,7 @@ require 'rhc/rest/base'
 require 'rhc/helpers'
 require 'uri'
 
-RestClient.proxy = URI.parse(ENV['http_proxy']).to_s if ENV['http_proxy']
+RestClient.proxy = URI.parse(ENV['http_proxy']).to_s if ENV['http_proxy'].present?
 
 module RHC
   module Rest
@@ -81,6 +81,20 @@ module RHC
           debug "Response: #{e.response.code}, #{e.response.inspect}" if debug?
           auth.retry_auth?(e.response) and retry if auth
           process_error_response(e.response, request.url)
+        rescue RestClient::SSLCertificateNotVerified => e
+          raise case e.message
+            when /unable to get local issuer certificate/
+              #FIXME: Would prefer to throw a specific exception which can add the cert, but rest-client is too limited.
+              SSLConnectionFailed.new(
+                e.message,
+                "The server's certificate could not be verified, which means that a secure connection can't be established to the server '#{request.url}'.\n\n"\
+                "You may need to specify your system CA certificate file with --ssl-ca-file=<path_to_file>. If your server is using a self-signed certificate, you may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.")
+            else
+              CertificateVerificationFailed.new(
+                e.message,
+                "The server's certificate could not be verified (#{e.message}), which means that a secure connection can't be established to the server '#{request.url}'.\n\n"\
+                "If your server is using a self-signed certificate, you may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.")
+            end
         rescue OpenSSL::SSL::SSLError => e
           raise case e.message
             when /certificate verify failed/
@@ -110,8 +124,7 @@ module RHC
         rescue => e
           logger.debug e.class if debug?
           logger.debug e.backtrace.join("\n  ") if debug?
-          raise ResourceAccessException.new(
-            "Failed to access resource: #{e.message}")
+          raise ResourceAccessException.new("Failed to access resource: #{e.message}").tap{ |n| n.set_backtrace(e.backtrace) }
         end
       end
 
@@ -248,7 +261,7 @@ module RHC
         def new_request(options)
           options.reverse_merge!(self.options)
           (options[:headers] ||= {}).reverse_merge!(headers)
-          options[:open_timeout] ||= (options[:timeout] || 4)
+          options[:open_timeout] ||= (options[:timeout] || 8)
 
           auth.to_request(options) if auth
 
