@@ -50,7 +50,7 @@ module RHC::Commands
 
       success "Success"
 
-      display_cart(rest_cartridge)
+      paragraph{ display_cart(rest_cartridge) }
 
       results{ rest_cartridge.messages.each { |msg| success msg } }
 
