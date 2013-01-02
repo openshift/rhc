@@ -66,7 +66,7 @@ describe RHC::Helpers do
   end
 
   context 'using the current time' do
-    let(:date){ Time.new(2008,1,2,1,1,0) }
+    let(:date){ Time.local(2008,1,2,1,1,0) }
     let(:today){ Date.new(2008,1,2) }
     before{ Date.stub(:today).and_return(today) }
 
