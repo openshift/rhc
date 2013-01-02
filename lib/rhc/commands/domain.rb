@@ -47,7 +47,7 @@ module RHC::Commands
 
       warn "In order to deploy applications, you must create a domain with 'rhc setup' or 'rhc domain create'." and return 1 unless domain
 
-      applications = domain.applications
+      applications = domain.applications(:include => :cartridges)
 
       if applications.present?
         header "Applications in #{domain.id} domain" do
