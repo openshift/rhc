@@ -33,13 +33,12 @@ module RHC
 
       def cartridges
         debug "Getting all cartridges for application #{name}"
-        @cartridges ||= (
-          unless (carts = attributes['cartridges']).blank?
+        @cartridges ||=
+          unless (carts = attributes['cartridges']).nil?
             carts.map{|x| Cartridge.new(x) }
           else
             rest_method "LIST_CARTRIDGES"
           end
-        )
       end
 
       def gear_groups
