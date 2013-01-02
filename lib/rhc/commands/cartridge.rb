@@ -42,14 +42,17 @@ module RHC::Commands
     def add(cart_type)
       cart = find_cartridge rest_client, cart_type
 
-      say "Adding '#{cart.name}' to application '#{options.app}'"
+      say "Adding '#{cart.name}' to application '#{options.app}' ... "
 
       rest_domain = rest_client.find_domain(options.namespace)
       rest_app = rest_domain.find_application(options.app)
       rest_cartridge = rest_app.add_cartridge(cart.name)
-      say "Success"
+
+      success "Success"
 
       display_cart(rest_cartridge)
+
+      results{ rest_cartridge.messages.each { |msg| success msg } }
 
       0
     end

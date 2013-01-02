@@ -289,7 +289,7 @@ module RHC::Rest::Mock
         @scalable = true
         @embedded = {"haproxy-1.4" => {:info => ""}}
       end
-      self.attributes = {:links => mock_response_links(mock_app_links('mock_domain_0', 'mock_app_0'))}
+      self.attributes = {:links => mock_response_links(mock_app_links('mock_domain_0', 'mock_app_0')), :messages => []}
       cart = add_cartridge(type, false) if type
       if scale
         cart.supported_scales_to = (cart.scales_to = -1)
@@ -298,7 +298,6 @@ module RHC::Rest::Mock
         cart.scales_with = "haproxy-1.4"
       end
       @framework = type
-      @messages = []
     end
 
     def destroy
@@ -308,7 +307,9 @@ module RHC::Rest::Mock
     def add_cartridge(name, embedded=true)
       type = embedded ? "embedded" : "standalone"
       c = MockRestCartridge.new(name, type, self)
+      c.properties << {'name' => 'prop1', 'value' => 'value1', 'description' => 'description1' }
       @cartridges << c
+      c.messages << "Cartridge added with properties"
       c
     end
 

@@ -61,10 +61,7 @@ module RHC
     def display_included_carts(carts)
       carts.each do |c|
         section(:bottom => 1) do
-          say_table \
-            format_cart_header(c),
-            get_properties(c, :scaling, :connection_info),
-            :delete => true
+          display_cart(c)
         end
       end
     end
@@ -86,12 +83,11 @@ module RHC
     #---------------------------
 
     def display_cart(cart, *properties)
-      properties = [:scaling, :connection_info] if properties.empty?
       @table_displayed = false
 
       say_table \
         format_cart_header(cart),
-        get_properties(cart, *properties),
+        get_properties(cart, :scaling, *properties).concat(cart.properties.map{ |p| ["#{table_heading(p['name'])}:", p['value']] }.sort{ |a,b| a[0] <=> b[0] }),
         :delete => true
       display_no_info("cartridge") unless @table_displayed
     end
