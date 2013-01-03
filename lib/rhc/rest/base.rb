@@ -14,11 +14,11 @@ module RHC
       def initialize(json_args=nil, use_debug=false)
         @debug = use_debug
         @attributes = (json_args || {}).stringify_keys!
-        @messages = []
+        @attributes['messages'] ||= []
       end
 
       def add_message(msg)
-        @messages << msg
+        messages << msg
       end
 
       protected

@@ -98,7 +98,15 @@ module RHC
     def parse_response(response)
       result = RHC::Json.decode(response)
       type = result['type']
-      data = result['data']
+      data = result['data'] || {}
+
+      # Copy messages to each object
+      messages = Array(result['messages']).map do |m|
+        m['text'] if m['field'].nil? or m['field'] == 'result'
+      end.compact
+      data.each{ |d| d['messages'] = messages } if data.is_a?(Array)
+      data['messages'] = messages if data.is_a?(Hash)
+
       case type
       when 'domains'
         domains = Array.new
@@ -116,9 +124,6 @@ module RHC
         return apps
       when 'application'
         app = Application.new(data, debug?)
-        result['messages'].each do |message|
-          app.add_message(message['text']) if message['field'].nil? or message['field'] == 'result'
-        end
         return app
       when 'cartridges'
         carts = Array.new
