@@ -26,9 +26,9 @@ module RHC
         rest_method "ADD_APPLICATION", payload, timeout
       end
 
-      def applications
+      def applications(options = {})
         debug "Getting all applications for domain #{id}"
-        rest_method "LIST_APPLICATIONS"
+        rest_method "LIST_APPLICATIONS", options
       end
 
       def update(new_id)
