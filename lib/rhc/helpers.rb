@@ -120,7 +120,7 @@ module RHC
 
     def client_from_options(opts)
       # rest-client doesn't accept ssl_version, see https://github.com/archiloque/rest-client/pull/140
-      OpenSSL::SSL::SSLContext::DEFAULT_PARAMS[:ssl_version] = options.ssl_version.to_s if options.ssl_version
+      #OpenSSL::SSL::SSLContext::DEFAULT_PARAMS[:ssl_version] = options.ssl_version.to_s if options.ssl_version
       RHC::Rest::Client.new({
           :server => openshift_server,
           :debug => options.debug,
@@ -130,9 +130,10 @@ module RHC
 
     def ssl_options
       {
-        :ssl_client_cert => certificate_file(options.ssl_client_cert),
-        :ssl_ca_file => options.ssl_ca_file && File.expand_path(options.ssl_ca_file),
-        :verify_ssl => options.insecure ? OpenSSL::SSL::VERIFY_NONE : OpenSSL::SSL::VERIFY_PEER,
+        :ssl_version => options.ssl_version,
+        :client_cert => certificate_file(options.ssl_client_cert),
+        :ca_file => options.ssl_ca_file && File.expand_path(options.ssl_ca_file),
+        :verify_mode => options.insecure ? OpenSSL::SSL::VERIFY_NONE : nil,
       }.delete_if{ |k,v| v.nil? }
     end
 

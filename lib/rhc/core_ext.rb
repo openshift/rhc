@@ -2,6 +2,7 @@
 require 'rhc/json'
 require 'open-uri'
 require 'highline'
+require 'httpclient'
 
 class Object
   def present?
@@ -31,6 +32,14 @@ class String
   # the length.
   def wrap(wrap_length=80, char="\n")
     scan(/.{#{wrap_length}}|.+/).join(char)
+  end
+end
+
+unless HTTP::Message.method_defined? :ok?
+  class HTTP::Message
+    def ok?
+      HTTP::Status.successful?(status)
+    end
   end
 end
 

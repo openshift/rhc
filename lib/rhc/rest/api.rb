@@ -79,7 +79,7 @@ server at #{URI.parse(client.url).host} supports #{@server_api_versions.join(', 
         # execute +req+ with RestClient, and return [server_api_versions, links]
         def api_info(req)
           client.request(req) do |response|
-            json_response = ::RHC::Json.decode(response)
+            json_response = ::RHC::Json.decode(response.content)
             [ json_response['supported_api_versions'], json_response['data'] ]
           end
         end

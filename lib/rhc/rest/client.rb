@@ -2,8 +2,9 @@ require 'rhc/json'
 require 'rhc/rest/base'
 require 'rhc/helpers'
 require 'uri'
+require 'httpclient'
 
-RestClient.proxy = URI.parse(ENV['http_proxy']).to_s if ENV['http_proxy'].present?
+#RestClient.proxy = URI.parse(ENV['http_proxy']).to_s if ENV['http_proxy'].present?
 
 module RHC
   module Rest
@@ -48,83 +49,100 @@ module RHC
 
       def request(options, &block)
         tried = 0
-        begin
-          request = options.is_a?(RestClient::Request) && options || new_request(options)
-          debug "Request: #{request.inspect}" if debug?
+        (0..(1.0/0.0)).each do |i|
           begin
-            response = request.execute
-          ensure
-            debug "Response: #{response.inspect}" if debug? && response
-          end
+            client, args = new_request(options)
 
-          if block_given?
-            yield response
-          else
-            parse_response(response) unless response.nil? or response.code == 204
+            debug "Request: #{args.inspect} #{client.inspect}" if debug?
+            response = client.request(*args, true)
+            debug "Response: #{response.inspect}" if debug? && response
+
+            case response.status
+            when 502
+              debug "ERROR: Received bad gateway from server, will retry once if this is a GET" if debug?
+              redo if i == 0 && args[0] == :get
+              raise ConnectionException.new(
+                "An error occurred while communicating with the server (#{e.message}). This problem may only be temporary."\
+                "#{client.proxy.present? ? " Check that you have correctly specified your proxy server '#{RestClient.proxy}' as well as your OpenShift server '#{request.url}'." : " Check that you have correctly specified your OpenShift server '#{request.url}'."}")
+            else
+              auth.retry_auth?(response) and redo if auth
+              handle_error!(response, args[1], client) unless response.ok?
+            end
+
+            break (if block_given?
+                yield response
+              else
+                parse_response(response.content) unless response.nil? or response.code == 204
+              end)
+          rescue HTTPClient::TimeoutError => e
+            raise TimeoutException.new(
+              "Connection to server timed out. "\
+              "It is possible the operation finished without being able "\
+              "to report success. Use 'rhc domain show' or 'rhc app show' "\
+              "to see the status of your applications.")
+          rescue EOFError => e
+            raise ConnectionException.new(
+              "Connection to server got interrupted: #{e.message}")
+#          rescue RestClient::ExceptionWithResponse => e
+#            debug "Response: #{e.response.code}, #{e.response.inspect}" if debug?
+#            auth.retry_auth?(e.response) and retry if auth
+#            process_error_response(e.response, request.url)
+=begin
+          rescue RestClient::SSLCertificateNotVerified => e
+            raise case e.message
+              when /unable to get local issuer certificate/
+                #FIXME: Would prefer to throw a specific exception which can add the cert, but rest-client is too limited.
+                SSLConnectionFailed.new(
+                  e.message,
+                  "The server's certificate could not be verified, which means that a secure connection can't be established to the server '#{request.url}'.\n\n"\
+                  "You may need to specify your system CA certificate file with --ssl-ca-file=<path_to_file>. If your server is using a self-signed certificate, you may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.")
+              else
+                CertificateVerificationFailed.new(
+                  e.message,
+                  "The server's certificate could not be verified (#{e.message}), which means that a secure connection can't be established to the server '#{request.url}'.\n\n"\
+                  "If your server is using a self-signed certificate, you may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.")
+              end
+=end
+          rescue OpenSSL::SSL::SSLError => e
+            raise SelfSignedCertificate.new(
+              'self signed certificate',
+              "The server is using a self-signed certificate, which means that a secure connection can't be established '#{args[1]}'.\n\n"\
+              "You may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.") if self_signed?
+            raise case e.message
+              when /self signed certificate/
+                CertificateVerificationFailed.new(
+                  e.message,
+                  "The server is using a self-signed certificate, which means that a secure connection can't be established '#{args[1]}'.\n\n"\
+                  "You may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.") if self_signed?
+              when /certificate verify failed/
+                CertificateVerificationFailed.new(
+                  e.message,
+                  "The server's certificate could not be verified, which means that a secure connection can't be established to the server '#{args[1]}'.\n\n"\
+                  "If your server is using a self-signed certificate, you may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.")
+              when /^SSL_connect returned=1 errno=0 state=SSLv2\/v3 read server hello A/
+                SSLVersionRejected.new(
+                  e.message,
+                  "The server has rejected your connection attempt with an older SSL protocol.  Pass --ssl-version=sslv3 on the command line to connect to this server.")
+              when /^SSL_CTX_set_cipher_list:: no cipher match/
+                SSLVersionRejected.new(
+                  e.message,
+                  "The server has rejected your connection attempt because it does not support the requested SSL protocol version.\n\n"\
+                  "Check with the administrator for a valid SSL version to use and pass --ssl-version=<version> on the command line to connect to this server.")
+              else
+                SSLConnectionFailed.new(
+                  e.message,
+                  "A secure connection could not be established to the server (#{e.message}). You may disable secure connections to your server with the -k (or --insecure) option '#{args[1]}'.\n\n"\
+                  "If your server is using a self-signed certificate, you may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.")
+              end
+          rescue SocketError => e
+            raise ConnectionException.new(
+              "Unable to connect to the server (#{e.message})."\
+              "#{client.proxy.present? ? " Check that you have correctly specified your proxy server '#{client.proxy}' as well as your OpenShift server '#{args[1]}'." : " Check that you have correctly specified your OpenShift server '#{args[0]}'."}")
+          #rescue => e
+            #logger.debug e.class if debug?
+            #logger.debug e.backtrace.join("\n  ") if debug?
+            #raise ResourceAccessException.new("Failed to access resource: #{e.message}").tap{ |n| n.set_backtrace(e.backtrace) }
           end
-        rescue RestClient::RequestTimeout => e
-          raise TimeoutException.new(
-            "Connection to server timed out. "\
-            "It is possible the operation finished without being able "\
-            "to report success. Use 'rhc domain show' or 'rhc app show' "\
-            "to see the status of your applications.")
-        rescue RestClient::ServerBrokeConnection => e
-          raise ConnectionException.new(
-            "Connection to server got interrupted: #{e.message}")
-        rescue RestClient::BadGateway => e
-          debug "ERROR: Received bad gateway from server, will retry once if this is a GET" if debug?
-          retry if (tried += 1) < 2 && request.method.to_s.upcase == "GET"
-          raise ConnectionException.new(
-            "An error occurred while communicating with the server (#{e.message}). This problem may only be temporary."\
-            "#{RestClient.proxy.present? ? " Check that you have correctly specified your proxy server '#{RestClient.proxy}' as well as your OpenShift server '#{request.url}'." : " Check that you have correctly specified your OpenShift server '#{request.url}'."}")
-        rescue RestClient::ExceptionWithResponse => e
-          debug "Response: #{e.response.code}, #{e.response.inspect}" if debug?
-          auth.retry_auth?(e.response) and retry if auth
-          process_error_response(e.response, request.url)
-        rescue RestClient::SSLCertificateNotVerified => e
-          raise case e.message
-            when /unable to get local issuer certificate/
-              #FIXME: Would prefer to throw a specific exception which can add the cert, but rest-client is too limited.
-              SSLConnectionFailed.new(
-                e.message,
-                "The server's certificate could not be verified, which means that a secure connection can't be established to the server '#{request.url}'.\n\n"\
-                "You may need to specify your system CA certificate file with --ssl-ca-file=<path_to_file>. If your server is using a self-signed certificate, you may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.")
-            else
-              CertificateVerificationFailed.new(
-                e.message,
-                "The server's certificate could not be verified (#{e.message}), which means that a secure connection can't be established to the server '#{request.url}'.\n\n"\
-                "If your server is using a self-signed certificate, you may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.")
-            end
-        rescue OpenSSL::SSL::SSLError => e
-          raise case e.message
-            when /certificate verify failed/
-              CertificateVerificationFailed.new(
-                e.message,
-                "The server's certificate could not be verified, which means that a secure connection can't be established to the server '#{request.url}'.\n\n"\
-                "If your server is using a self-signed certificate, you may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.")
-            when /^SSL_connect returned=1 errno=0 state=SSLv2\/v3 read server hello A/
-              SSLVersionRejected.new(
-                e.message,
-                "The server has rejected your connection attempt with an older SSL protocol.  Pass --ssl-version=sslv3 on the command line to connect to this server.")
-            when /^SSL_CTX_set_cipher_list:: no cipher match/
-              SSLVersionRejected.new(
-                e.message,
-                "The server has rejected your connection attempt because it does not support the requested SSL protocol version.\n\n"\
-                "Check with the administrator for a valid SSL version to use and pass --ssl-version=<version> on the command line to connect to this server.")
-            else
-              SSLConnectionFailed.new(
-                e.message,
-                "A secure connection could not be established to the server (#{e.message}). You may disable secure connections to your server with the -k (or --insecure) option '#{request.url}'.\n\n"\
-                "If your server is using a self-signed certificate, you may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.")
-            end
-        rescue SocketError => e
-          raise ConnectionException.new(
-            "Unable to connect to the server (#{e.message})."\
-            "#{RestClient.proxy.present? ? " Check that you have correctly specified your proxy server '#{RestClient.proxy}' as well as your OpenShift server '#{request.url}'." : " Check that you have correctly specified your OpenShift server '#{request.url}'."}")
-        rescue => e
-          logger.debug e.class if debug?
-          logger.debug e.backtrace.join("\n  ") if debug?
-          raise ResourceAccessException.new("Failed to access resource: #{e.message}").tap{ |n| n.set_backtrace(e.backtrace) }
         end
       end
 
@@ -243,8 +261,7 @@ module RHC
         attr_reader :auth
         def headers
           @headers ||= {
-            :accept => :json,
-            "User-Agent" => user_agent,
+            'Accept' => 'application/json',
           }
         end
 
@@ -254,18 +271,60 @@ module RHC
 
         def options
           @options ||= {
-            :verify_ssl => OpenSSL::SSL::VERIFY_PEER
           }
+        end
+
+        def httpclient_for(options)
+          return @httpclient if @last_options == options
+          @httpclient = HTTPClient.new(:agent_name => user_agent).tap do |http|
+            http.cookie_manager = nil
+            http.debug_dev = $stderr if ENV['HTTP_DEBUG']
+
+            options.select{ |sym| http.respond_to?("#{sym}=") }.map{ |sym, value| http.send("#{sym}=", value) }
+            http.set_auth(nil, options[:user], options[:password]) if options[:user]
+
+            ssl = http.ssl_config
+            options.select{ |sym| ssl.respond_to?("#{sym}=") }.map{ |sym, value| ssl.send("#{sym}=", value) }
+            ssl.add_trust_ca(options[:ca_file]) if options[:ca_file]
+            ssl.verify_callback = default_verify_callback
+
+            @last_options = options
+          end
+        end
+
+        def default_verify_callback
+          lambda do |is_ok, ctx|
+            @self_signed = false
+            unless is_ok
+              cert = ctx.current_cert
+              if cert && (cert.subject.cmp(cert.issuer) == 0)
+                @self_signed = true
+                debug "SSL Verification failed -- Using self signed cert" if debug?
+              else
+                debug "SSL Verification failed -- Preverify: #{is_ok}, Error: #{ctx.error_string} (#{ctx.error})" if debug?
+              end
+              return false
+            end
+            true
+          end
+        end
+        def self_signed?
+          @self_signed
         end
 
         def new_request(options)
           options.reverse_merge!(self.options)
+
           (options[:headers] ||= {}).reverse_merge!(headers)
-          options[:open_timeout] ||= (options[:timeout] || 8)
+
+          options[:connect_timeout] ||= (options[:timeout] || 8)
+          options[:receive_timeout] ||= options[:timeout]
+          options[:timeout] = nil
 
           auth.to_request(options) if auth
 
-          RestClient::Request.new options
+          args = [options.delete(:method), options.delete(:url), nil, options.delete(:payload), options.delete(:headers), true]
+          [httpclient_for(options), args]
         end
 
         def parse_response(response)
@@ -322,14 +381,14 @@ module RHC
           end
         end
 
-        def generic_error_message(url)
+        def generic_error_message(url, client)
           "The server did not respond correctly. This may be an issue "\
           "with the server configuration or with your connection to the "\
           "server (such as a Web proxy or firewall)."\
-          "#{RestClient.proxy.present? ? " Please verify that your proxy server is working correctly (#{RestClient.proxy}) and that you can access the OpenShift server #{url}" : "Please verify that you can access the OpenShift server #{url}"}"
+          "#{client.proxy.present? ? " Please verify that your proxy server is working correctly (#{client.proxy}) and that you can access the OpenShift server #{url}" : "Please verify that you can access the OpenShift server #{url}"}"
         end
 
-        def process_error_response(response, url=nil)
+        def handle_error!(response, url, client)
           messages = []
           parse_error = nil
           begin
@@ -337,7 +396,7 @@ module RHC
             messages = Array(result['messages'])
           rescue => e
             logger.debug "Response did not include a message from server: #{e.message}" if debug?
-            parse_error = ServerErrorException.new(generic_error_message(url), 129)
+            parse_error = ServerErrorException.new(generic_error_message(url, client), 129)
           end
           case response.code
           when 401
@@ -355,7 +414,7 @@ module RHC
                 raise ResourceNotFoundException, message['text']
               end
             end
-            raise ResourceNotFoundException, generic_error_message(url)
+            raise ResourceNotFoundException, generic_error_message(url, client)
           when 409
             messages.each do |message|
               if message['severity'] and message['severity'].upcase == "ERROR"
@@ -390,11 +449,11 @@ module RHC
                 raise ServiceUnavailableException, message['text']
               end
             end
-            raise ServiceUnavailableException, generic_error_message(url)
+            raise ServiceUnavailableException, generic_error_message(url, client)
           else
             raise ServerErrorException, "Server returned an unexpected error code: #{response.code}"
           end
-          raise parse_error || ServerErrorException.new(generic_error_message(url), 129)
+          raise parse_error || ServerErrorException.new(generic_error_message(url, client), 129)
         end
 
       private

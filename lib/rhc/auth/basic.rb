@@ -27,7 +27,7 @@ module RHC::Auth
         ask_password
         true
       else
-        @cookie ||= response.cookies['rh_sso']
+        @cookie ||= response.cookies && response.cookies['rh_sso']
         false
       end
     end
