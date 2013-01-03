@@ -180,10 +180,10 @@ module RHC::Commands
         raise RHC::PortForwardFailedException.new("#{e.message + "\n" if options.debug}Error trying to forward ports. You can try to forward manually by running:\n" + ssh_cmd.join(" "))
       end
 
-      return 0
-    rescue RestClient::Exception => e
+      0
+    rescue RHC::Rest::ConnectionException => e
       error "Connection to #{openshift_server} failed: #{e.message}"
-      return 1
+      1
     end
   end
 end

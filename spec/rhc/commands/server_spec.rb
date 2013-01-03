@@ -33,6 +33,7 @@ describe RHC::Commands::Server do
 
   describe 'run' do
     let(:arguments) { ['server'] }
+    before{ rest_client.stub(:auth).and_return(nil) }
 
     context 'when no issues' do
       before { stub_request(:get, 'https://openshift.redhat.com/app/status/status.json').with(&user_agent_header).to_return(:body => {'issues' => []}.to_json) }
@@ -41,7 +42,7 @@ describe RHC::Commands::Server do
     end
 
     context 'when 1 issue' do
-      before do 
+      before do
         stub_request(:get, 'https://openshift.redhat.com/app/status/status.json').with(&user_agent_header).to_return(:body => 
           {'open' => [
             {'issue' => { 

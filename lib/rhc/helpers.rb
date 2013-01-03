@@ -71,11 +71,6 @@ module RHC
       "rhc/#{RHC::VERSION::STRING} (ruby #{RUBY_VERSION}; #{RUBY_PLATFORM})#{" (API #{RHC::Rest::API_VERSION})" rescue ''}"
     end
 
-    def get(uri, opts=nil, *args)
-      opts = {'User-Agent' => user_agent}.merge!(ssl_options).merge!(opts || {})
-      RestClient.get(uri, opts, *args)
-    end
-
     #
     # Global config
     #

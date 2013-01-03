@@ -45,6 +45,26 @@ module RHC
       end
     end
 
+    describe "#default_verify_callback" do
+      def invoked_with(is_ok, ctx)
+        subject.send(:default_verify_callback).call(is_ok, ctx)
+      end
+      it{ invoked_with(true, nil).should be_true }
+
+      it{ expect{ invoked_with(false, nil) }.to raise_error(NoMethodError) }
+
+      context "with a self signed cert" do
+        it{ invoked_with(false, stub(:current_cert => stub(:issuer => '1', :subject => stub(:cmp => 0)))).should be_false }
+        after{ subject.send(:self_signed?).should be_true }
+      end
+
+      context "with an intermediate signed cert" do
+        it{ invoked_with(false, stub(:current_cert => stub(:issuer => '2', :subject => stub(:cmp => 1)), :error => 1, :error_string => 'a')).should be_false }
+        after{ subject.send(:self_signed?).should be_false }
+      end
+
+    end
+
     # parse_response function
     describe "#parse_response" do
       context "with no response type" do
@@ -221,6 +241,10 @@ module RHC
 
     # request function
     describe "#request" do
+      let(:response){ lambda { subject.request(request) } }
+      let(:request){ {:url => mock_href, :method  => method, :headers => {:accept => :json} } }
+      let(:method){ :get }
+
       context "with a successful request" do
         let(:object) {{
             :type => 'domain',
@@ -239,13 +263,7 @@ module RHC
 
         it "sends the response to be deserialized" do
           dom_obj = RHC::Rest::Domain.new(object)
-          request = RestClient::Request.new(:url     => mock_href,
-                                            :method  => 'get',
-                                            :headers => { :accept => :json },
-                                            :payload => {},
-                                            :timeout => 300
-                                            )
-          subject.request(request).should have_same_attributes_as(dom_obj)
+          subject.request(request.merge(:payload => {}, :timeout => 300)).should have_same_attributes_as(dom_obj)
         end
       end
 
@@ -259,11 +277,7 @@ module RHC
           stub_request(:get, mock_href).to_return(return_data)
         end
         it "throws an error" do
-          request = RestClient::Request.new(:url     => mock_href,
-                                            :method  => 'get',
-                                            :headers => {:accept => :json}
-                                            )
-          lambda { subject.request(request) }.should raise_error(RHC::Rest::ResourceAccessException, 'Failed to access resource: unexpected nil')
+          response.should raise_error(RHC::Rest::ConnectionException, 'An unexpected error occured: unexpected nil')
         end
       end
 
@@ -277,107 +291,83 @@ module RHC
           stub_request(:get, mock_href).to_return(return_data)
         end
         it "quietly exits" do
-          request = RestClient::Request.new(:url     => mock_href,
-                                            :method  => 'get',
-                                            :headers => {:accept => :json}
-                                            )
-          subject.request(request).should equal(nil)
+          response.call.should equal(nil)
         end
       end
 
       context "with a 502 (Bad Gateway) error" do
         before{ stub_request(method, mock_href).to_return(:status => 502) }
-        let(:req){ RestClient::Request.new(:url => mock_href, :method => method) }
-        let(:method){ :get }
 
-        it("should make two requests"){ subject.request(req) rescue nil; WebMock.should have_requested(method, mock_href).twice }
-        it{ expect{ subject.request(req) }.should raise_error(RHC::Rest::ConnectionException, /communicating with the server.*temporary/i) }
+        context "on a GET request" do
+          it("repeats the call"){ response.should raise_error(RHC::Rest::ConnectionException, /communicating with the server.*temporary/i) }
+          after{ WebMock.should have_requested(method, mock_href).twice }
+        end
 
         context "on a POST request" do
           let(:method){ :post }
 
-          it("should make one request"){ subject.request(req) rescue nil; WebMock.should have_requested(method, mock_href).once }
-          it{ expect{ subject.request(req) }.should raise_error(RHC::Rest::ConnectionException, /communicating with the server.*temporary/i) }
+          it("does not repeat the call"){ response.should raise_error(RHC::Rest::ConnectionException, /communicating with the server.*temporary/i) }
+          after{ WebMock.should have_requested(method, mock_href).once }
         end
       end
 
       context "with a request timeout" do
-        before do
-          stub_request(:get, mock_href).to_timeout
-        end
-        it "raises a resource access exception error" do
-          request = RestClient::Request.new(:url     => mock_href,
-                                            :method  => 'get',
-                                            :headers => {:accept => :json}
-                                            )
-          lambda { subject.request(request) }.should raise_error(RHC::Rest::TimeoutException, /Connection to server timed out. It is possible/)
-        end
+        before{ stub_request(:get, mock_href).to_timeout }
+        it{ response.should raise_error(RHC::Rest::TimeoutException, /Connection to server timed out. It is possible/) }
       end
 
       context "with a broken server connection" do
-        before do
-          stub_request(:get, mock_href).to_raise(RestClient::ServerBrokeConnection.new('Lost Server Connection'))
-        end
-        it "raises a resource access exception error" do
-          request = RestClient::Request.new(:url     => mock_href,
-                                            :method  => 'get',
-                                            :headers => {:accept => :json}
-                                            )
-          lambda { subject.request(request) }.should raise_error(RHC::Rest::ConnectionException, 'Connection to server got interrupted: Lost Server Connection')
-        end
+        before{ stub_request(:get, mock_href).to_raise(EOFError.new('Lost Server Connection')) }
+        it{ response.should raise_error(RHC::Rest::ConnectionException, 'Connection to server got interrupted: Lost Server Connection') }
       end
 
       #FIXME: the type of this exception should be a subclass of CertificateValidationFailed
       context "with a potentially missing cert store" do
-        before{ stub_request(:get, mock_href).to_raise(RestClient::SSLCertificateNotVerified.new('unable to get local issuer certificate')) }
-        it "raises a resource access exception error" do
-          lambda { subject.request(:url => mock_href, :method => :get) }.should raise_error(RHC::Rest::SSLConnectionFailed, /You may need to specify your system CA certificate file/)
+        before{ stub_request(:get, mock_href).to_raise(OpenSSL::SSL::SSLError.new('unable to get local issuer certificate')) }
+        it{ response.should raise_error(RHC::Rest::SSLConnectionFailed, /You may need to specify your system CA certificate file/) }
+      end
+
+      context "with a self-signed SSL certificate" do
+        before do
+          subject.should_receive(:self_signed?).and_return(true)
+          stub_request(:get, mock_href).to_raise(OpenSSL::SSL::SSLError.new('Unverified SSL Certificate'))
         end
+        it{ response.should raise_error(RHC::Rest::CertificateVerificationFailed, /The server is using a self-signed certificate/) }
       end
 
       context "with an unverified SSL certificate" do
-        before do
-          stub_request(:get, mock_href).to_raise(RestClient::SSLCertificateNotVerified.new('Unverified SSL Certificate'))
-        end
-        it "raises a resource access exception error" do
-          lambda { subject.request(:url => mock_href, :method => :get) }.should raise_error(RHC::Rest::CertificateVerificationFailed, /Unverified SSL Certificate/)
-        end
+        before{ stub_request(:get, mock_href).to_raise(OpenSSL::SSL::SSLError.new('self signed certificate')) }
+        it{ response.should raise_error(RHC::Rest::CertificateVerificationFailed, /The server is using a self-signed certificate/) }
+      end
+
+      context "with an failed SSL certificate verification" do
+        before{ stub_request(:get, mock_href).to_raise(OpenSSL::SSL::SSLError.new('certificate verify failed')) }
+        it{ response.should raise_error(RHC::Rest::CertificateVerificationFailed, /The server's certificate could not be verified.*test\.domain\.com/) }
       end
 
       context "with a socket error" do
         before{ stub_request(:get, mock_href).to_raise(SocketError) }
-        it "raises a resource access exception error" do
-          expect{ subject.request(:url => mock_href, :method  => 'get', :headers => {:accept => :json}) }.should raise_error(RHC::Rest::ConnectionException, /unable to connect to the server/i)
-        end
+        it{ response.should raise_error(RHC::Rest::ConnectionException, /unable to connect to the server/i) }
       end
 
       context "with an SSL connection error" do
         before{ stub_request(:get, mock_href).to_raise(OpenSSL::SSL::SSLError) }
-        it{ expect{ subject.request(:url => mock_href, :method  => 'get', :headers => {:accept => :json}) }.should raise_error(RHC::Rest::SSLConnectionFailed, /a secure connection could not be established/i) }
+        it{ response.should raise_error(RHC::Rest::SSLConnectionFailed, /a secure connection could not be established/i) }
       end
 
       context "with an SSL certificate error" do
         before{ stub_request(:get, mock_href).to_raise(OpenSSL::SSL::SSLError.new('certificate verify failed')) }
-        it{ expect{ subject.request(:url => mock_href, :method  => 'get', :headers => {:accept => :json}) }.should raise_error(RHC::Rest::CertificateVerificationFailed, /the server's certificate could not be verified/i) }
+        it{ response.should raise_error(RHC::Rest::CertificateVerificationFailed, /the server's certificate could not be verified/i) }
       end
 
       context "with an SSL version exception" do
         before{ stub_request(:get, mock_href).to_raise(OpenSSL::SSL::SSLError.new('SSL_connect returned=1 errno=0 state=SSLv2/v3 read server hello A')) }
-        it{ expect{ subject.request(:url => mock_href, :method  => 'get', :headers => {:accept => :json}) }.should raise_error(RHC::Rest::SSLVersionRejected, /connection attempt with an older ssl protocol/i) }
+        it{ response.should raise_error(RHC::Rest::SSLVersionRejected, /connection attempt with an older ssl protocol/i) }
       end
 
       context "with a generic exception error" do
-        before do
-          stub_request(:get, mock_href).to_raise(Exception.new('Generic Error'))
-        end
-
-        it "raises a resource access exception error" do
-          request = RestClient::Request.new(:url     => mock_href,
-                                            :method  => 'get',
-                                            :headers => {:accept => :json}
-                                            )
-          lambda { subject.request(request) }.should raise_error(RHC::Rest::ResourceAccessException, 'Failed to access resource: Generic Error')
-        end
+        before{ stub_request(:get, mock_href).to_raise(Exception.new('Generic Error')) }
+        it{ response.should raise_error(RHC::Rest::ConnectionException, "An unexpected error occured: Generic Error") }
       end
 
       context "with a specific error response" do
@@ -389,40 +379,35 @@ module RHC
           }
           stub_request(:get, mock_href).to_return(return_data)
         end
-
-        it "passes the response off for interpretation" do
-          request = RestClient::Request.new(:url     => mock_href,
-                                            :method  => 'get',
-                                            :headers => {:accept => :json}
-                                            )
-          lambda { subject.request(request) }.should raise_error(RHC::Rest::UnAuthorizedException, 'Not authenticated')
-        end
+        it{ response.should raise_error(RHC::Rest::UnAuthorizedException, 'Not authenticated') }
       end
     end
 
-    # process_error_response function
-    describe "#process_error_response" do
+    # handle_error! function
+    describe "#handle_error!" do
       let(:json){ nil }
       let(:body){ "<html><body>Something failed</body></html>" }
       let(:code){ nil }
+      let(:client){ HTTPClient.new(:proxy => proxy) }
+      let(:url){ "http://fake.url" }
+      let(:proxy){ nil }
       def response
         (response = {}).extend(MockRestResponse)
         response.code = code
         response.read = json ? RHC::Json.encode(json) : body
         response
       end
+      let(:method) { lambda{ subject.send(:handle_error!, response, url, client) } }
 
       context "with a 400 response" do
         let(:code){ 400 }
 
-        it "raises a generic server error" do
-          lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ServerErrorException)
-        end
+        it{ method.should raise_error(RHC::Rest::ServerErrorException) }
 
         context "with a formatted JSON response" do
           let(:json){ {:messages => [{ :severity => 'error', :text => 'mock error message' }] } }
           it "raises a client error" do
-            lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ClientErrorException, 'mock error message')
+            method.should raise_error(RHC::Rest::ClientErrorException, 'mock error message')
           end
         end
       end
@@ -431,7 +416,7 @@ module RHC
         let(:code){ 401 }
         let(:json){ {} }
         it "raises an 'unauthorized exception' error" do
-          lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::UnAuthorizedException, 'Not authenticated')
+          method.should raise_error(RHC::Rest::UnAuthorizedException, 'Not authenticated')
         end
       end
 
@@ -439,13 +424,13 @@ module RHC
         let(:code){ 403 }
 
         it "raises a request denied error" do
-          lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::RequestDeniedException)
+          method.should raise_error(RHC::Rest::RequestDeniedException)
         end
 
         context "with a formatted JSON response" do
           let(:json){ { :messages => [{ :severity => 'error', :text => 'mock error message' }] } }
           it "raises a 'request denied' error" do
-            lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::RequestDeniedException, 'mock error message')
+            method.should raise_error(RHC::Rest::RequestDeniedException, 'mock error message')
           end
         end
       end
@@ -454,13 +439,13 @@ module RHC
         let(:code){ 404 }
 
         it "raises a Not Found error" do
-          lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ResourceNotFoundException)
+          method.should raise_error(RHC::Rest::ResourceNotFoundException)
         end
 
         context "with a formatted JSON response" do
           let(:json){ { :messages => [{ :severity => 'error', :text => 'mock error message' }] } }
           it "raises a 'resource not found' error" do
-            lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ResourceNotFoundException, 'mock error message')
+            method.should raise_error(RHC::Rest::ResourceNotFoundException, 'mock error message')
           end
         end
       end
@@ -469,13 +454,13 @@ module RHC
         let(:code){ 409 }
 
         it "raises a generic server error" do
-          lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ServerErrorException)
+          method.should raise_error(RHC::Rest::ServerErrorException)
         end
 
         context "with a formatted JSON response" do
           let(:json){ { :messages => [{ :severity => 'error', :text => 'mock error message' }] } }
           it "raises a validation error" do
-            lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ValidationException, 'mock error message')
+            method.should raise_error(RHC::Rest::ValidationException, 'mock error message')
           end
         end
       end
@@ -484,20 +469,20 @@ module RHC
         let(:code){ 422 }
 
         it "raises a generic server error" do
-          lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ServerErrorException)
+          method.should raise_error(RHC::Rest::ServerErrorException)
         end
 
         context "with a single JSON message" do
           let(:json){ { :messages => [{ :severity => 'error', :text => 'mock error message' }] } }
           it "raises a validation error" do
-            lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ValidationException, 'mock error message')
+            method.should raise_error(RHC::Rest::ValidationException, 'mock error message')
           end
         end
 
         context "with an empty JSON response" do
           let(:json){ {} }
           it "raises a validation error" do
-            lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ValidationException, 'Not valid')
+            method.should raise_error(RHC::Rest::ValidationException, 'Not valid')
           end
         end
 
@@ -505,7 +490,7 @@ module RHC
           let(:json){ { :messages => [{ :field => 'error', :text => 'mock error message 1' },
                                        { :field => 'error', :text => 'mock error message 2' }] } }
           it "raises a validation error with concatenated messages" do
-            lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ValidationException, 'mock error message 1 mock error message 2')
+            method.should raise_error(RHC::Rest::ValidationException, 'mock error message 1 mock error message 2')
           end
         end
       end
@@ -514,26 +499,27 @@ module RHC
         let(:code){ 500 }
 
         it "raises a generic server error" do
-          lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ServerErrorException, /server did not respond correctly.*verify that you can access the OpenShift server/i)
+          method.should raise_error(RHC::Rest::ServerErrorException, /server did not respond correctly.*verify that you can access the OpenShift server/i)
         end
 
         context "when proxy is set" do
-          before{ RestClient.should_receive(:proxy).twice.and_return('http://foo.com') }
+          let(:proxy) { 'http://foo.com' }
           it "raises a generic server error with the proxy URL" do
-            lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ServerErrorException, /foo\.com/i)
+            method.should raise_error(RHC::Rest::ServerErrorException, /foo\.com/i)
           end
         end
 
         context "when request url is present" do
+          let(:url){ 'foo.bar' }
           it "raises a generic server error with the request URL" do
-            lambda { subject.send(:process_error_response, response, 'foo.bar') }.should raise_error(RHC::Rest::ServerErrorException, /foo\.bar/i)
+            method.should raise_error(RHC::Rest::ServerErrorException, /foo\.bar/i)
           end
         end
 
         context "with a formatted JSON response" do
           let(:json){ { :messages => [{ :severity => 'error', :text => 'mock error message' }] } }
           it "raises a server error" do
-            lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ServerErrorException, 'mock error message')
+            method.should raise_error(RHC::Rest::ServerErrorException, 'mock error message')
           end
         end
       end
@@ -542,13 +528,13 @@ module RHC
         let(:code){ 503 }
 
         it "raises a 'service unavailable' error" do
-          lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ServiceUnavailableException)
+          method.should raise_error(RHC::Rest::ServiceUnavailableException)
         end
 
         context "with a formatted JSON response" do
           let(:json){ { :messages => [{ :severity => 'error', :text => 'mock error message' }] } }
           it "raises a 'service unavailable' error" do
-            lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ServiceUnavailableException, 'mock error message')
+            method.should raise_error(RHC::Rest::ServiceUnavailableException, 'mock error message')
           end
         end
       end
@@ -556,14 +542,12 @@ module RHC
       context "with an unhandled response code" do
         let(:code){ 999 }
 
-        it "raises a generic server error" do
-          lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ServerErrorException)
-        end
+        it{ method.should raise_error(RHC::Rest::ServerErrorException) }
 
         context "with a formatted JSON response" do
           let(:json){ { :messages => [{ :severity => 'error', :text => 'mock error message' }] } }
           it "raises a resource access error" do
-            lambda { subject.send(:process_error_response, response) }.should raise_error(RHC::Rest::ServerErrorException, 'Server returned an unexpected error code: 999')
+            method.should raise_error(RHC::Rest::ServerErrorException, 'Server returned an unexpected error code: 999')
           end
         end
       end

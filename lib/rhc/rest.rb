@@ -76,7 +76,7 @@ module RHC
     #that authorization has been refused for those credentials. 
     class UnAuthorizedException < ClientErrorException; end
 
-    # Unreachable host, SSL Exception
+    # DEPRECATED Unreachable host, SSL Exception
     class ResourceAccessException < Exception; end
 
     #I/O Exceptions Connection timeouts, etc

@@ -181,7 +181,9 @@ module ClassSpecHelpers
   #
   def user_agent_header
     lambda do |request|
-      request.headers['User-Agent'] =~ %r{\Arhc/\d+\.\d+.\d+ \(.*?ruby.*?\)}
+      #User-Agent is not sent to mock by httpclient
+      #request.headers['User-Agent'] =~ %r{\Arhc/\d+\.\d+.\d+ \(.*?ruby.*?\)}
+      true
     end
   end
 

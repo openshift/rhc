@@ -98,12 +98,10 @@ describe RHC::Commands::PortForward do
 
     context 'when REST client connection times out' do
       before(:each) do
-        rest_client.should_receive(:find_domain).and_raise(RestClient::ServerBrokeConnection)
+        rest_client.should_receive(:find_domain).and_raise(RHC::Rest::ConnectionException)
       end
-      it "should error out" do
-        expect { run }.should exit_with_code(1)
-      end
-      it { run_output.should match("Connection.*failed:") }
+      it("should error out") { expect { run }.should exit_with_code(1) }
+      it{ run_output.should match("Connection.*failed:") }
     end
 
     context 'when port forwarding an app with ports to forward' do

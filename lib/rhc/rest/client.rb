@@ -4,8 +4,6 @@ require 'rhc/helpers'
 require 'uri'
 require 'httpclient'
 
-#RestClient.proxy = URI.parse(ENV['http_proxy']).to_s if ENV['http_proxy'].present?
-
 module RHC
   module Rest
     class Client < Base
@@ -51,29 +49,34 @@ module RHC
         tried = 0
         (0..(1.0/0.0)).each do |i|
           begin
-            client, args = new_request(options)
+            client, args = new_request(options.dup)
 
             debug "Request: #{args.inspect} #{client.inspect}" if debug?
             response = client.request(*args, true)
             debug "Response: #{response.inspect}" if debug? && response
 
-            case response.status
-            when 502
-              debug "ERROR: Received bad gateway from server, will retry once if this is a GET" if debug?
-              redo if i == 0 && args[0] == :get
-              raise ConnectionException.new(
-                "An error occurred while communicating with the server (#{e.message}). This problem may only be temporary."\
-                "#{client.proxy.present? ? " Check that you have correctly specified your proxy server '#{RestClient.proxy}' as well as your OpenShift server '#{request.url}'." : " Check that you have correctly specified your OpenShift server '#{request.url}'."}")
-            else
-              auth.retry_auth?(response) and redo if auth
-              handle_error!(response, args[1], client) unless response.ok?
-            end
+            auth.retry_auth?(response) and redo if auth
+            handle_error!(response, args[1], client) unless response.ok?
 
             break (if block_given?
                 yield response
               else
                 parse_response(response.content) unless response.nil? or response.code == 204
               end)
+          rescue HTTPClient::BadResponseError => e
+            if e.res
+              if e.res.status == 502
+                debug "ERROR: Received bad gateway from server, will retry once if this is a GET" if debug?
+                next if i == 0 && args[0] == :get
+                raise ConnectionException.new(
+                  "An error occurred while communicating with the server (#{e.message}). This problem may only be temporary."\
+                  "#{client.proxy.present? ? " Check that you have correctly specified your proxy server '#{client.proxy}' as well as your OpenShift server '#{args[1]}'." : " Check that you have correctly specified your OpenShift server '#{args[1]}'."}")
+              end
+              auth.retry_auth?(e.res) and redo if auth
+              handle_error!(e.res, args[1], client)
+            end
+            raise ConnectionException.new(
+              "An unexpected error occured when connecting to the server: #{e.message}")
           rescue HTTPClient::TimeoutError => e
             raise TimeoutException.new(
               "Connection to server timed out. "\
@@ -83,26 +86,6 @@ module RHC
           rescue EOFError => e
             raise ConnectionException.new(
               "Connection to server got interrupted: #{e.message}")
-#          rescue RestClient::ExceptionWithResponse => e
-#            debug "Response: #{e.response.code}, #{e.response.inspect}" if debug?
-#            auth.retry_auth?(e.response) and retry if auth
-#            process_error_response(e.response, request.url)
-=begin
-          rescue RestClient::SSLCertificateNotVerified => e
-            raise case e.message
-              when /unable to get local issuer certificate/
-                #FIXME: Would prefer to throw a specific exception which can add the cert, but rest-client is too limited.
-                SSLConnectionFailed.new(
-                  e.message,
-                  "The server's certificate could not be verified, which means that a secure connection can't be established to the server '#{request.url}'.\n\n"\
-                  "You may need to specify your system CA certificate file with --ssl-ca-file=<path_to_file>. If your server is using a self-signed certificate, you may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.")
-              else
-                CertificateVerificationFailed.new(
-                  e.message,
-                  "The server's certificate could not be verified (#{e.message}), which means that a secure connection can't be established to the server '#{request.url}'.\n\n"\
-                  "If your server is using a self-signed certificate, you may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.")
-              end
-=end
           rescue OpenSSL::SSL::SSLError => e
             raise SelfSignedCertificate.new(
               'self signed certificate',
@@ -113,12 +96,17 @@ module RHC
                 CertificateVerificationFailed.new(
                   e.message,
                   "The server is using a self-signed certificate, which means that a secure connection can't be established '#{args[1]}'.\n\n"\
-                  "You may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.") if self_signed?
+                  "You may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.")
               when /certificate verify failed/
                 CertificateVerificationFailed.new(
                   e.message,
                   "The server's certificate could not be verified, which means that a secure connection can't be established to the server '#{args[1]}'.\n\n"\
                   "If your server is using a self-signed certificate, you may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.")
+              when /unable to get local issuer certificate/
+                SSLConnectionFailed.new(
+                  e.message,
+                  "The server's certificate could not be verified, which means that a secure connection can't be established to the server '#{args[1]}'.\n\n"\
+                  "You may need to specify your system CA certificate file with --ssl-ca-file=<path_to_file>. If your server is using a self-signed certificate, you may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.")
               when /^SSL_connect returned=1 errno=0 state=SSLv2\/v3 read server hello A/
                 SSLVersionRejected.new(
                   e.message,
@@ -138,10 +126,12 @@ module RHC
             raise ConnectionException.new(
               "Unable to connect to the server (#{e.message})."\
               "#{client.proxy.present? ? " Check that you have correctly specified your proxy server '#{client.proxy}' as well as your OpenShift server '#{args[1]}'." : " Check that you have correctly specified your OpenShift server '#{args[0]}'."}")
-          #rescue => e
-            #logger.debug e.class if debug?
-            #logger.debug e.backtrace.join("\n  ") if debug?
-            #raise ResourceAccessException.new("Failed to access resource: #{e.message}").tap{ |n| n.set_backtrace(e.backtrace) }
+          rescue => e
+            if debug?
+              logger.debug "#{e.message} (#{e.class})"
+              logger.debug e.backtrace.join("\n  ")
+            end
+            raise ConnectionException.new("An unexpected error occured: #{e.message}").tap{ |n| n.set_backtrace(e.backtrace) }
           end
         end
       end
@@ -315,7 +305,10 @@ module RHC
         def new_request(options)
           options.reverse_merge!(self.options)
 
-          (options[:headers] ||= {}).reverse_merge!(headers)
+          h = (options[:headers] ||= {}).reverse_merge!(headers)
+          if value = h.delete(:accept)
+            h['Accept'] = value.is_a?(Symbol) ? "application/#{value}" : value
+          end
 
           options[:connect_timeout] ||= (options[:timeout] || 8)
           options[:receive_timeout] ||= options[:timeout]

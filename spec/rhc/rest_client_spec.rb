@@ -47,9 +47,9 @@ module RHC
                         :status => 200
                       })
           stub_api_request(:get, 'api_error').
-            to_raise(RestClient::ExceptionWithResponse.new('API Error'))
+            to_raise(HTTPClient::BadResponseError.new('API Error'))
           stub_api_request(:get, 'other_error').
-            to_raise(Exception.new('Other Error'))
+            to_raise(StandardError.new('Other Error'))
         end
 
         it "returns a client object from the required arguments" do
@@ -65,7 +65,7 @@ module RHC
         context "against an endpoint that has a generic error" do
           let(:endpoint){ mock_href('other_error') }
           it "raises a generic error for any other error condition" do
-            expect{ client.api }.should raise_error("Failed to access resource: Other Error")
+            expect{ client.api }.should raise_error(RHC::Rest::ConnectionException, "An unexpected error occured: Other Error")
           end
         end
       end
@@ -78,9 +78,9 @@ module RHC
                           :status => 200
                         })
             stub_api_request(:get, 'api_error').
-              to_raise(RestClient::ExceptionWithResponse.new('API Error'))
+              to_raise(HTTPClient::BadResponseError.new('API Error'))
             stub_api_request(:get, 'other_error').
-              to_raise(Exception.new('Other Error'))
+              to_raise(StandardError.new('Other Error'))
           end
 
           context "when client is instantiated with [1.0, 1.1] as the preferred API versions" do
