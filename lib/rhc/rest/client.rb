@@ -324,51 +324,35 @@ module RHC
           result = RHC::Json.decode(response)
           type = result['type']
           data = result['data']
+
+          # Copy messages to each object
+          messages = Array(result['messages']).map do |m|
+            m['text'] if m['field'].nil? or m['field'] == 'result'
+          end.compact
+          data.each{ |d| d['messages'] = messages } if data.is_a?(Array)
+          data['messages'] = messages if data.is_a?(Hash)
+
           case type
           when 'domains'
-            domains = Array.new
-            data.each do |domain_json|
-              domains.push(Domain.new(domain_json, self))
-            end
-            domains
+            data.map{ |json| Domain.new(json, self) }
           when 'domain'
             Domain.new(data, self)
           when 'applications'
-            apps = Array.new
-            data.each do |app_json|
-              apps.push(Application.new(app_json, self))
-            end
-            apps
+            data.map{ |json| Application.new(json, self) }
           when 'application'
-            app = Application.new(data, self)
-            result['messages'].each do |message|
-              app.add_message(message['text']) if message['field'].nil? or message['field'] == 'result'
-            end
-            app
+            Application.new(data, self)
           when 'cartridges'
-            carts = Array.new
-            data.each do |cart_json|
-              carts.push(Cartridge.new(cart_json, self))
-            end
-            carts
+            data.map{ |json| Cartridge.new(json, self) }
           when 'cartridge'
             Cartridge.new(data, self)
           when 'user'
             User.new(data, self)
           when 'keys'
-            keys = Array.new
-            data.each do |key_json|
-              keys.push(Key.new(key_json, self))
-            end
-            keys
+            data.map{ |json| Key.new(json, self) }
           when 'key'
             Key.new(data, self)
           when 'gear_groups'
-            gears = Array.new
-            data.each do |gear_json|
-              gears.push(GearGroup.new(gear_json, self))
-            end
-            gears
+            data.map{ |json| GearGroup.new(json, self) }
           else
             data
           end

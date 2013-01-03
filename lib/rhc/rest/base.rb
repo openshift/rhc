@@ -10,12 +10,12 @@ module RHC
 
       def initialize(attrs=nil, client=nil)
         @attributes = (attrs || {}).stringify_keys!
+        @attributes['messages'] ||= []
         @client = client
-        @messages = []
       end
 
       def add_message(msg)
-        @messages << msg
+        messages << msg
       end
 
       def rest_method(link_name, payload={}, options={})
