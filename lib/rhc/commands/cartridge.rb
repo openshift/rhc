@@ -142,12 +142,7 @@ module RHC::Commands
       rest_domain = rest_client.find_domain(options.namespace)
       rest_app = rest_domain.find_application(options.app)
       rest_cartridge = find_cartridge(rest_app, cartridge)
-      msgs = rest_cartridge.status
-      results {
-        msgs.each do |msg|
-          say msg['message']
-        end
-      }
+      results { rest_cartridge.status.each{ |msg| say msg['message'] } }
       0
     end
 
@@ -186,8 +181,8 @@ module RHC::Commands
       })
 
       results do
-        say "Success: Scaling values updated"
-        display_cart(cart)
+        paragraph{ display_cart(cart) }
+        success "Success: Scaling values updated"
       end
 
       0

@@ -22,7 +22,7 @@ module RHCHelper
     end
 
     def run(cmd, arg=nil, input=[])
-      logger.info("Running: #{cmd}")
+      logger.info("Running: #{cmd} #{arg}")
 
       exit_code = -1
       output = nil

@@ -311,6 +311,23 @@ module RHC
         end
       end
 
+      context "with a GET request" do
+        it "serializes payload as query parameters" do
+          stub_request(:get, mock_href).with(:query => {:test => 1, :bar => 2}).to_return(:status => 204)
+          subject.request(request.merge(:payload => {:test => '1', :bar => 2})).should be_nil
+        end
+      end
+      context "with a POST request" do
+        let(:method){ :post }
+        it "serializes payload as urlencoded body parameters" do
+          stub_request(method, mock_href).
+            with(:headers => {:accept => 'application/json', :content_type => 'application/x-www-form-urlencoded'}, 
+                 :body => {:test => '1', :bar => '2'}).
+            to_return(:status => 204)
+          subject.request(request.merge(:payload => {:test => '1', :bar => 2})).should be_nil
+        end
+      end
+
       context "with a request timeout" do
         before{ stub_request(:get, mock_href).to_timeout }
         it{ response.should raise_error(RHC::Rest::TimeoutException, /Connection to server timed out. It is possible/) }

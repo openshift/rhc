@@ -1,5 +1,3 @@
-require 'rhc/rest/attributes'
-
 module RHC
   module Rest
     class Base

@@ -1,5 +1,4 @@
 require 'uri'
-require 'rhc/rest/base'
 
 module RHC
   module Rest

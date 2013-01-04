@@ -1,7 +1,7 @@
 require 'rhc/json'
-require 'rhc/rest/base'
 require 'rhc/helpers'
 require 'uri'
+require 'logger'
 require 'httpclient'
 
 module RHC
@@ -50,9 +50,9 @@ module RHC
           begin
             client, args = new_request(options.dup)
 
-            debug "Request: #{args.inspect}\n#{client.inspect}\n" if debug?
-            response = client.request(*args, true)
-            debug "Response: #{response.inspect}\n" if debug? && response
+            debug "Request: #{args.inspect}\n#{client.pretty_inspect}\n" if debug?
+            response = client.request(*(args << true))
+            debug "Response: #{response.pretty_inspect}\n" if debug? && response
 
             auth.retry_auth?(response) and redo if auth
             handle_error!(response, args[1], client) unless response.ok?
@@ -64,6 +64,7 @@ module RHC
               end)
           rescue HTTPClient::BadResponseError => e
             if e.res
+              debug "Response: #{e.res.pretty_inspect}\n" if debug?
               if e.res.status == 502
                 debug "ERROR: Received bad gateway from server, will retry once if this is a GET" if debug?
                 next if i == 0 && args[0] == :get
@@ -269,11 +270,11 @@ module RHC
             http.cookie_manager = nil
             http.debug_dev = $stderr if ENV['HTTP_DEBUG']
 
-            options.select{ |sym| http.respond_to?("#{sym}=") }.map{ |sym, value| http.send("#{sym}=", value) }
+            options.select{ |sym, value| http.respond_to?("#{sym}=") }.map{ |sym, value| http.send("#{sym}=", value) }
             http.set_auth(nil, options[:user], options[:password]) if options[:user]
 
             ssl = http.ssl_config
-            options.select{ |sym| ssl.respond_to?("#{sym}=") }.map{ |sym, value| ssl.send("#{sym}=", value) }
+            options.select{ |sym, value| ssl.respond_to?("#{sym}=") }.map{ |sym, value| ssl.send("#{sym}=", value) }
             ssl.add_trust_ca(options[:ca_file]) if options[:ca_file]
             ssl.verify_callback = default_verify_callback
 
@@ -304,9 +305,10 @@ module RHC
         def new_request(options)
           options.reverse_merge!(self.options)
 
-          h = (options[:headers] ||= {}).reverse_merge!(headers)
-          if value = h.delete(:accept)
-            h['Accept'] = value.is_a?(Symbol) ? "application/#{value}" : value
+          headers = (self.headers.to_a + (options.delete(:headers) || []).to_a).inject({}) do |h,(k,v)|
+            v = "application/#{v}" if k == :accept && v.is_a?(Symbol)
+            h[k.to_s.downcase.gsub(/_/, '-')] = v
+            h
           end
 
           options[:connect_timeout] ||= (options[:timeout] || 8)
@@ -315,7 +317,17 @@ module RHC
 
           auth.to_request(options) if auth
 
-          args = [options.delete(:method), options.delete(:url), nil, options.delete(:payload), options.delete(:headers), true]
+          query = options.delete(:query) || {}
+          payload = options.delete(:payload)
+          if options[:method].to_s.upcase == 'GET'
+            query = payload
+            payload = nil
+          else
+            headers['content-type'] ||= 'application/x-www-form-urlencoded'
+          end
+          query = nil if query.blank?
+
+          args = [options.delete(:method), options.delete(:url), query, payload, headers, true]
           [httpclient_for(options), args]
         end
 

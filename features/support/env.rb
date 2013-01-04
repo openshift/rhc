@@ -4,11 +4,12 @@ require 'rhc/coverage_helper'
 SimpleCov.at_exit{ SimpleCov.result.format! } if defined? SimpleCov
 
 require 'rhc_helper'
-require 'rhc/rest'
+require 'rhc'
 require 'rhc/config'
 require 'rhc/commands'
 require 'rhc/helpers'
 require 'rhc/commands'
+require 'pry' if ENV['PRY']
 
 def set_path
   ENV["PATH"] = "#{ENV['RHC_LOCAL_PATH']}:#{ENV['PATH']}" if ENV['RHC_LOCAL_PATH']
@@ -98,7 +99,7 @@ def clean_applications(leave_domain = false)
 
   users.each do |user|
     _log "\tUser: #{user}"
-    client = RHC::Rest::Client.new($end_point, user, $password)
+    client = RHC::Rest::Client.new(:url => $end_point, :user => user, :password => $password, :verify_mode => OpenSSL::SSL::VERIFY_NONE)
     client.domains.each do |domain|
       _log "\t\tDomain: #{domain.id}"
       domain.applications.each do |app|
@@ -126,7 +127,7 @@ unless ENV['NO_CLEAN']
 
   # Start with a clean config
   _log "  Replacing express.conf with the specified libra_server"
-  File.open(RHC::Config::local_config_path, 'w') {|f| f.write("libra_server=#{URI.parse($end_point).host}") }
+  File.open(RHC::Config::local_config_path, 'w') {|f| f.write("libra_server=#{URI.parse($end_point).host}\ninsecure=true") }
   RHC::Config.initialize
 
   # Clean up temp dir

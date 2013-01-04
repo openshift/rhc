@@ -278,6 +278,29 @@ module RHC
           end
         end
 
+        describe RHC::Rest::Cartridge do
+          subject do 
+            described_class.new({
+              :name => 'foo',
+              :links => mock_response_links([
+                ['GET', 'broker/rest/cartridge', 'get']
+              ])}, client)
+          end
+          context "when several messages are present" do
+            before do 
+              stub_api_request(:get, 'broker/rest/cartridge', true).
+                with(:query => {:include => :status_messages}).
+                to_return(:body => {
+                  :type => 'cartridge',
+                  :data => {
+                    :status_messages => [{:message => 'Test'}]
+                  }
+                }.to_json)
+            end
+            its(:status){ should == [{'message' => 'Test'}] }
+          end
+        end
+
         context "#cartridges" do
           before(:each) do
             stub_api_request(:any, client_links['LIST_CARTRIDGES']['relative']).

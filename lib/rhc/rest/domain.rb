@@ -1,5 +1,3 @@
-require 'rhc/rest/base'
-
 module RHC
   module Rest
     class Domain < Base

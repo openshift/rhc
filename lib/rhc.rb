@@ -3,6 +3,7 @@
 
 # Only require external gem dependencies here
 require 'logger'
+require 'pp'
 
 require 'pry' if ENV['PRY']
 

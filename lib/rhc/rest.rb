@@ -1,7 +1,8 @@
-require 'logger'
-
 module RHC
   module Rest
+
+    autoload :Base,        'rhc/rest/base'
+    autoload :Attributes,  'rhc/rest/attributes'
 
     autoload :Api,         'rhc/rest/api'
     autoload :Application, 'rhc/rest/application'

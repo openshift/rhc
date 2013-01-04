@@ -5,6 +5,10 @@ require 'rbconfig'
 
 require 'pry' if ENV['PRY']
 
+# Environment reset
+ENV['http_proxy'] = nil
+ENV['HTTP_PROXY'] = nil
+
 # chmod isn't implemented in the released fakefs gem
 # but is in git.  Once the git version is released we
 # should remove this and actively check permissions
