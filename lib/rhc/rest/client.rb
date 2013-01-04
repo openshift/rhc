@@ -54,6 +54,7 @@ module RHC
             response = client.request(*(args << true))
             debug "Response: #{response.pretty_inspect}\n" if debug? && response
 
+            next if retry_proxy(response, i, args, client)
             auth.retry_auth?(response) and redo if auth
             handle_error!(response, args[1], client) unless response.ok?
 
@@ -65,13 +66,8 @@ module RHC
           rescue HTTPClient::BadResponseError => e
             if e.res
               debug "Response: #{e.res.pretty_inspect}\n" if debug?
-              if e.res.status == 502
-                debug "ERROR: Received bad gateway from server, will retry once if this is a GET" if debug?
-                next if i == 0 && args[0] == :get
-                raise ConnectionException.new(
-                  "An error occurred while communicating with the server (#{e.message}). This problem may only be temporary."\
-                  "#{client.proxy.present? ? " Check that you have correctly specified your proxy server '#{client.proxy}' as well as your OpenShift server '#{args[1]}'." : " Check that you have correctly specified your OpenShift server '#{args[1]}'."}")
-              end
+
+              next if retry_proxy(e.res, i, args, client)
               auth.retry_auth?(e.res) and redo if auth
               handle_error!(e.res, args[1], client)
             end
@@ -126,6 +122,8 @@ module RHC
             raise ConnectionException.new(
               "Unable to connect to the server (#{e.message})."\
               "#{client.proxy.present? ? " Check that you have correctly specified your proxy server '#{client.proxy}' as well as your OpenShift server '#{args[1]}'." : " Check that you have correctly specified your OpenShift server '#{args[0]}'."}")
+          rescue RHC::Rest::Exception
+            raise
           rescue => e
             if debug?
               logger.debug "#{e.message} (#{e.class})"
@@ -329,6 +327,16 @@ module RHC
 
           args = [options.delete(:method), options.delete(:url), query, payload, headers, true]
           [httpclient_for(options), args]
+        end
+
+        def retry_proxy(response, i, args, client)
+          if response.status == 502
+            debug "ERROR: Received bad gateway from server, will retry once if this is a GET" if debug?
+            return true if i == 0 && args[0] == :get
+            raise ConnectionException.new(
+              "An error occurred while communicating with the server. This problem may only be temporary."\
+              "#{client.proxy.present? ? " Check that you have correctly specified your proxy server '#{client.proxy}' as well as your OpenShift server '#{args[1]}'." : " Check that you have correctly specified your OpenShift server '#{args[1]}'."}")
+          end
         end
 
         def parse_response(response)

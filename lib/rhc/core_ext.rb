@@ -36,11 +36,13 @@ class String
 end
 
 unless HTTP::Message.method_defined? :ok?
+  #:nocov:
   class HTTP::Message
     def ok?
       HTTP::Status.successful?(status)
     end
   end
+  #:nocov:
 end
 
 #

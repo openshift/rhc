@@ -387,7 +387,7 @@ module RHC
         it{ response.should raise_error(RHC::Rest::ConnectionException, "An unexpected error occured: Generic Error") }
       end
 
-      context "with a specific error response" do
+      context "with a an unauthorized request" do
         before do
           return_data = {
             :body    => nil,
@@ -396,7 +396,7 @@ module RHC
           }
           stub_request(:get, mock_href).to_return(return_data)
         end
-        it{ response.should raise_error(RHC::Rest::UnAuthorizedException, 'Not authenticated') }
+        it("raises not authenticated"){ response.should raise_error(RHC::Rest::UnAuthorizedException, 'Not authenticated') }
       end
     end
 
