@@ -50,9 +50,9 @@ module RHC
           begin
             client, args = new_request(options.dup)
 
-            debug "Request: #{args.inspect}\n#{client.pretty_inspect}\n" if debug?
+            debug "Request: #{args.inspect}\n-------------" if debug?
             response = client.request(*(args << true))
-            debug "Response: #{response.pretty_inspect}\n" if debug? && response
+            debug "Response: #{response.status} #{response.headers.inspect}\n#{response.content}\n-------------" if debug? && response
 
             next if retry_proxy(response, i, args, client)
             auth.retry_auth?(response) and redo if auth
@@ -65,7 +65,7 @@ module RHC
               end)
           rescue HTTPClient::BadResponseError => e
             if e.res
-              debug "Response: #{e.res.pretty_inspect}\n" if debug?
+              debug "Response: #{e.res.status} #{e.res.headers.inspect}\n#{e.res.content}\n-------------" if debug?
 
               next if retry_proxy(e.res, i, args, client)
               auth.retry_auth?(e.res) and redo if auth

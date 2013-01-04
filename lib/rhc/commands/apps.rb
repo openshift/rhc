@@ -9,7 +9,7 @@ module RHC::Commands
 
       info "In order to deploy applications, you must create a domain with 'rhc setup' or 'rhc domain create'." and return 1 if domains.empty?
 
-      applications = domains.map(&:applications).flatten.sort
+      applications = domains.map{ |d| d.applications(:include => :cartridges) }.flatten.sort
 
       applications.each{ |a| display_app(a, a.cartridges) }.blank? and
         info "No applications. Use 'rhc app create'." and
