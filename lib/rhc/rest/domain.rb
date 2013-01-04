@@ -53,7 +53,7 @@ module RHC
 
         debug "Finding application :name => #{name}, :framework => #{framework}"
         applications.each do |app|
-          return app if (name.nil? or app.name == name) and (framework.nil? or app.framework == framework)
+          return app if (name.nil? or app.name.downcase == name.downcase) and (framework.nil? or app.framework == framework)
         end
 
         raise RHC::ApplicationNotFoundException.new("Application #{name} does not exist")

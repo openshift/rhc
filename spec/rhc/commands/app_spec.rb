@@ -307,7 +307,7 @@ describe RHC::Commands::App do
   describe 'app show' do
     let(:arguments) { ['app', 'show', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
-    context 'when run' do
+    context 'when run with the same case as created' do
       before(:each) do
         @rc = MockRestClient.new
         @domain = @rc.add_domain("mockdomain")
@@ -326,6 +326,19 @@ describe RHC::Commands::App do
       end
       it { run_output.should match("app1 @ https://app1-mockdomain.fake.foo/") }
       it { run_output.should match(/Scaling:.*x2/) }
+    end
+  end
+
+  describe 'app show' do
+    let(:arguments) { ['app', 'show', 'APP1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+
+    context 'when run with the different case from created' do
+      before(:each) do
+        @rc = MockRestClient.new
+        @domain = @rc.add_domain("mockdomain")
+        @domain.add_application("app1", "mock_type")
+      end
+      it { run_output.should match("app1 @ https://app1-mockdomain.fake.foo/") }
     end
   end
 
