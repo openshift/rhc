@@ -59,9 +59,10 @@ describe RHC::Commands::Cartridge do
         domain = rest_client.add_domain("mock_domain")
         app = domain.add_application("app1", "mock_type")
       end
-      it {
-        succeed_with_message
-      }
+      it { succeed_with_message /Adding 'mock_cart-1'/ }
+      it { succeed_with_message /Connection URL:\s+http\:\/\/fake\.url/ }
+      it { succeed_with_message /Prop1:\s+value1/ }
+      it { succeed_with_message /Cartridge added with properties/ }
     end
   end
 
@@ -258,6 +259,7 @@ describe RHC::Commands::Cartridge do
 
     context 'when run' do
       it { run_output.should match('Connection URL: http://fake.url') }
+      it { run_output.should match(/Prop1:\s+value1/) }
     end
   end
 

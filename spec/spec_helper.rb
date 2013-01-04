@@ -68,7 +68,7 @@ module ClassSpecHelpers
   #
   # 
   #
-  def expects_running *args
+  def expects_running(*args, &block)
     mock_terminal
     r = new_command_runner *args do
       instance #ensure instance is created before subject :new is mocked
@@ -76,6 +76,18 @@ module ClassSpecHelpers
       RHC::Commands.to_commander
     end
     lambda { r.run! }
+  end
+  def command_for(*args)
+    mock_terminal
+    r = new_command_runner *args do
+      instance #ensure instance is created before subject :new is mocked
+      subject.should_receive(:new).any_number_of_times.and_return(instance)
+      RHC::Commands.to_commander
+    end
+    command = nil
+    RHC::Commands.stub(:execute){ |cmd, method, args| command = cmd; 0 }
+    r.run!
+    command
   end
 
   class MockHighLineTerminal < HighLine
@@ -123,6 +135,16 @@ module ClassSpecHelpers
     @output = StringIO.new
     $stderr = (@error = StringIO.new)
     $terminal = MockHighLineTerminal.new @input, @output
+  end
+  def input_line(s)
+    $terminal.write_line s
+  end
+  def last_output(&block)
+    if block_given?
+      yield $terminal.read
+    else
+      $terminal.read
+    end
   end
 
   def capture(&block)

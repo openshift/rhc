@@ -1,8 +1,16 @@
 require 'rhc/git_helpers'
 
 module RHC
+  #
+  # Methods in this module should not attempt to read from the options hash
+  # in a recursive manner (server_context can't read options.server).
+  #
   module ContextHelpers
     include RHC::GitHelpers
+
+    def server_context
+      ENV['LIBRA_SERVER'] || (!options.clean && config['libra_server']) || "openshift.redhat.com"
+    end
 
     def app_context
       debug "Getting app context"

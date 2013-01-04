@@ -59,7 +59,7 @@ module RHC
       include RHC::SSHHelpers
       include RHC::GitHelpers
       attr_reader :config, :options
-      attr_accessor :username, :password
+      attr_accessor :auth
 
       def openshift_server
         options.server || config['libra_server'] || "openshift.redhat.com"
@@ -67,9 +67,19 @@ module RHC
 
       def new_client_for_options
         client_from_options({
-          :user => username,
-          :password => password,
+          :auth => auth,
         })
+      end
+
+      def auth
+        @auth ||= RHC::Auth::Basic.new(options)
+      end
+
+      def username
+        auth.send(:username)
+      end
+      def password
+        auth.send(:password)
       end
 
     private
@@ -85,6 +95,8 @@ module RHC
     end
 
     def login_stage
+      say "Using #{options.rhlogin} to login to #{openshift_server}" if options.rhlogin
+=begin
       paragraph do
         self.username = if options.rhlogin && options.rhlogin != config.username
             say "Using #{options.rhlogin} to login to #{openshift_server}"
@@ -96,6 +108,7 @@ module RHC
           end
         self.password = options.password || ask("Password: ") { |q| q.echo = '*' } if @password.nil?
       end
+=end
 
       self.rest_client = new_client_for_options
 
@@ -104,7 +117,11 @@ module RHC
       rescue RHC::Rest::CertificateVerificationFailed => e
         debug "Certificate validation failed: #{e.reason}"
         unless options.insecure
-          warn "The server's certificate could not be verified, which means that a secure connection can't be established to '#{openshift_server}'."
+          if RHC::Rest::SelfSignedCertificate === e
+            warn "The server's certificate is self-signed, which means that a secure connection can't be established to '#{openshift_server}'."
+          else
+            warn "The server's certificate could not be verified, which means that a secure connection can't be established to '#{openshift_server}'."
+          end
           if openshift_online_server?
             paragraph{ warn "This may mean that a server between you and OpenShift is capable of accessing information sent from this client.  If you wish to continue without checking the certificate, please pass the -k (or --insecure) option to this command." }
             return
@@ -143,14 +160,11 @@ module RHC
     end
 
     def config_ssh_key_stage
-      if RHC::Config.should_run_ssh_wizard?
-        paragraph do
-          say "No SSH keys were found. We will generate a pair of keys for you."
-        end
+      if config.should_run_ssh_wizard?
+        paragraph{ say "No SSH keys were found. We will generate a pair of keys for you." }
+
         ssh_pub_key_file_path = generate_ssh_key_ruby
-        paragraph do
-          say "    Created: #{ssh_pub_key_file_path}\n\n"
-        end
+        paragraph{ say "    Created: #{ssh_pub_key_file_path}" }
       end
       true
     end
@@ -164,7 +178,6 @@ module RHC
 
     def existing_keys_info
       return unless @ssh_keys
-      # TODO: This ERB format is shared with RHC::Commands::Sshkey; should be refactored
       indent{ @ssh_keys.each{ |key| paragraph{ display_key(key) } } }
     end
 
@@ -237,7 +250,7 @@ module RHC
 
       type, content, comment = ssh_key_triple_for_default_key
       indent do
-        say table([['Type', type], ['Fingerprint', fingerprint_for_default_key]])
+        say table([['Type:', type], ['Fingerprint:', fingerprint_for_default_key]])
       end
 
       paragraph do
@@ -266,7 +279,7 @@ module RHC
         upload_ssh_key
       else
         paragraph do
-          info "You can upload your ssh key at a later time using the 'rhc sshkey' command"
+          info "You can upload your SSH key at a later time using the 'rhc sshkey' command"
         end
       end
 

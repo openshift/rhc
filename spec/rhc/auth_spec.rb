@@ -93,7 +93,7 @@ describe RHC::Auth::Basic do
       it { subject.to_request(request).should == auth_hash }
 
       context "it should remember cookies" do
-        let(:response){ mock(:cookies => {'rh_sso' => '1'}, :code => 200) }
+        let(:response){ mock(:cookies => [mock(:name => 'rh_sso', :value => '1')], :status => 200) }
         it{ subject.retry_auth?(response); subject.to_request(request)[:cookies].should == {:rh_sso => '1'} }
       end
 
@@ -151,18 +151,18 @@ describe RHC::Auth::Basic do
 
   describe "#retry_auth?" do
     context "when the response succeeds" do
-      let(:response){ mock(:cookies => {}, :code => 200) }
+      let(:response){ mock(:cookies => {}, :status => 200) }
 
       it{ subject.retry_auth?(response).should be_false }
       after{ subject.cookie.should be_nil }
     end
     context "when the response succeeds with a cookie" do
-      let(:response){ mock(:cookies => {'rh_sso' => '1'}, :code => 200) }
+      let(:response){ mock(:cookies => [mock(:name => 'rh_sso', :value => '1')], :status => 200) }
       it{ subject.retry_auth?(response).should be_false }
       after{ subject.cookie.should == '1' }
     end
     context "when the response requires authentication" do
-      let(:response){ mock(:code => 401) }
+      let(:response){ mock(:status => 401) }
       after{ subject.cookie.should be_nil }
 
       context "with no user and no password" do

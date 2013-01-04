@@ -15,19 +15,22 @@ module RHC::Auth
     def to_request(request)
       (request[:cookies] ||= {})[:rh_sso] = cookie if cookie
       request[:user] ||= username || (request[:lazy_auth] != true && ask_username)
-      request[:password] ||= password || (username? && request[:lazy_auth] != true && ask_password)
+      request[:password] ||= password || (username? && request[:lazy_auth] != true && ask_password) || nil
       request
     end
 
     def retry_auth?(response)
-      if response.code == 401
+      if response.status == 401
         @cookie = nil
-        ask_username unless username?
-        error "Username or password is not correct" if password
+        if username?
+          error "Username or password is not correct" if password
+        else
+          ask_username
+        end
         ask_password
         true
       else
-        @cookie ||= response.cookies && response.cookies['rh_sso']
+        @cookie ||= Array(response.cookies).inject(nil){ |v, c| c.name == 'rh_sso' ? c.value : v }
         false
       end
     end

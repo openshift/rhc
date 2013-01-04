@@ -9,7 +9,7 @@ module RHC
       define_attr :domain_id, :name, :creation_time, :uuid, :aliases,
                   :git_url, :app_url, :gear_profile, :framework,
                   :scalable, :health_check_path, :embedded, :gear_count,
-                  :ssh_url, :building_app
+                  :ssh_url, :building_app, :cartridges
       alias_method :domain_name, :domain_id
 
       # Query helper to say consistent with cartridge
@@ -27,13 +27,18 @@ module RHC
       def add_cartridge(name, options={})
         debug "Adding cartridge #{name}"
         @cartridges = nil
-        options[:timeout] ||= 0
+        attributes['cartridges'] = nil
         rest_method "ADD_CARTRIDGE", {:name => name}, options
       end
 
       def cartridges
         debug "Getting all cartridges for application #{name}"
-        @cartridges ||= rest_method "LIST_CARTRIDGES"
+        @cartridges ||=
+          unless (carts = attributes['cartridges']).nil?
+            carts.map{|x| Cartridge.new(x, client) }
+          else
+            rest_method "LIST_CARTRIDGES"
+          end
       end
 
       def gear_groups

@@ -66,13 +66,16 @@ describe RHC::Helpers do
   end
 
   context 'using the current time' do
-    let(:now){ Time.now }
+    let(:date){ Time.local(2008,1,2,1,1,0) }
+    let(:today){ Date.new(2008,1,2) }
+    before{ Date.stub(:today).and_return(today) }
+
     let(:rfc3339){ '%Y-%m-%dT%H:%M:%S%z' }
     it("should output the time for a date that is today") do
-      subject.date(now.strftime(rfc3339)).should =~ /^[0-9]/
+      subject.date(date.strftime(rfc3339)).should =~ /^[0-9]/
     end
-    it("should exlude the year for a date that is this year") do
-      subject.date(now.strftime(rfc3339)).should_not match(now.year.to_s)
+    it("should exclude the year for a date that is this year") do
+      subject.date(date.strftime(rfc3339)).should_not match(date.year.to_s)
     end
     it("should output the year for a date that is not this year") do
       older = Date.today - 1*365
@@ -80,6 +83,16 @@ describe RHC::Helpers do
     end
     it("should handle invalid input") do
       subject.date('Unknown date').should == 'Unknown date'
+    end
+
+    context 'when the year is different' do
+      let(:today){ Date.new(2007,1,2) }
+      it{ subject.date(date.strftime(rfc3339)).should match(date.year.to_s) }
+    end
+
+    context 'when the year of the day is different' do
+      let(:today){ Date.new(2008,1,1) }
+      it{ subject.date(date.strftime(rfc3339)).should_not match(date.year.to_s) }
     end
   end
 

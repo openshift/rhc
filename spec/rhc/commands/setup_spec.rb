@@ -4,10 +4,14 @@ require 'rhc/commands/setup'
 
 # just test the command runner as we already have extensive wizard tests
 describe RHC::Commands::Setup do
+  subject{ RHC::Commands::Setup }
+  let(:instance){ subject.new }
+  let!(:config){ base_config }
+  before{ described_class.send(:public, *described_class.protected_instance_methods) }
 
-  before(:each) { base_config }
+  describe '#run' do
+    it{ expects_running('setup').should call(:run).on(instance).with(no_args) }
 
-  describe 'run' do
     let(:arguments) { ['setup', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     before(:each) do
@@ -28,6 +32,24 @@ describe RHC::Commands::Setup do
         expect { run }.should exit_with_code(1)
       end
     end
+  end
+
+  it{ expects_running('setup').should call(:run).on(instance).with(no_args) }
+  it{ command_for('setup', '--clean').options.clean.should be_true }
+
+  it{ command_for('setup').options.server.should == 'openshift.redhat.com' }
+  it{ command_for('setup', '--server', 'foo.com').options.server.should == 'foo.com' }
+=begin  context 'when libra_server is set' do
+    before{ ENV.should_receive(:[]).any_number_of_times.with('LIBRA_SERVER').and_return('bar.com') }
+    it{ command_for('setup').config['libra_server'].should == 'bar.com' }
+    it{ command_for('setup').options.server.should == 'bar.com' }
+    it{ command_for('setup', '--server', 'foo.com').options.server.should == 'foo.com' }
+=end  end
+
+  context 'when config sets a server' do
+    let!(:config){ base_config{ |config, defaults| defaults.add 'libra_server', 'test.com' } }
+
+    it{ command_for('setup', '--clean').options.server.should == 'openshift.redhat.com' }
   end
 
   context 'when -d is passed' do

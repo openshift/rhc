@@ -313,11 +313,12 @@ module RHC
                 mock_response_links(mock_cart_links("mock_cart_#{idx}"))
             end
           end
-          it "returns an empty list when no cartridges exist" do
+          it "caches cartridges on the client" do
             # Disregard the first response; this is for the previous expectiation.
-            carts = client.cartridges
-            carts = client.cartridges
-            carts.length.should equal(0)
+            old = client.cartridges.length
+            client.cartridges.length.should equal(old)
+            client.instance_variable_set(:@cartridges, nil)
+            client.cartridges.length.should equal(0)
           end
         end
 

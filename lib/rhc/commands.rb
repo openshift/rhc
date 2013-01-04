@@ -155,7 +155,7 @@ module RHC
             config = RHC::Config.new
             config.set_opts_config(options.config) if options.config
 
-            options.default config.to_options
+            options.default(config.to_options) unless options.clean
             deprecated?
 
             cmd = opts[:class].new
@@ -164,7 +164,7 @@ module RHC
 
             args = fill_arguments(cmd, options, args_metadata, options_metadata, args)
             needs_configuration!(cmd, options, config)
-            cmd.send(opts[:method], *args)
+            execute(cmd, opts[:method], args)
           end
         end
       end
@@ -172,6 +172,10 @@ module RHC
     end
 
     protected
+      def self.execute(cmd, method, args)
+        cmd.send(method, *args)
+      end
+
       def self.fill_arguments(cmd, options, args_metadata, options_metadata, args)
         # process options
         options_metadata.each do |option_meta|

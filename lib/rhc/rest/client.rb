@@ -46,14 +46,13 @@ module RHC
       end
 
       def request(options, &block)
-        tried = 0
         (0..(1.0/0.0)).each do |i|
           begin
             client, args = new_request(options.dup)
 
-            debug "Request: #{args.inspect} #{client.inspect}" if debug?
+            debug "Request: #{args.inspect}\n#{client.inspect}\n" if debug?
             response = client.request(*args, true)
-            debug "Response: #{response.inspect}" if debug? && response
+            debug "Response: #{response.inspect}\n" if debug? && response
 
             auth.retry_auth?(response) and redo if auth
             handle_error!(response, args[1], client) unless response.ok?
@@ -165,12 +164,12 @@ module RHC
 
       def cartridges
         debug "Getting all cartridges"
-        api.rest_method("LIST_CARTRIDGES", nil, :lazy_auth => true)
+        @cartridges ||= api.rest_method("LIST_CARTRIDGES", nil, :lazy_auth => true)
       end
 
       def user
         debug "Getting user info"
-        api.rest_method "GET_USER"
+        @user ||= api.rest_method "GET_USER"
       end
 
       def sshkeys
@@ -369,13 +368,13 @@ module RHC
           messages = []
           parse_error = nil
           begin
-            result = RHC::Json.decode(response)
+            result = RHC::Json.decode(response.content)
             messages = Array(result['messages'])
           rescue => e
             logger.debug "Response did not include a message from server: #{e.message}" if debug?
             parse_error = ServerErrorException.new(generic_error_message(url, client), 129)
           end
-          case response.code
+          case response.status
           when 401
             raise UnAuthorizedException, "Not authenticated"
           when 403
@@ -428,7 +427,7 @@ module RHC
             end
             raise ServiceUnavailableException, generic_error_message(url, client)
           else
-            raise ServerErrorException, "Server returned an unexpected error code: #{response.code}"
+            raise ServerErrorException, "Server returned an unexpected error code: #{response.status}"
           end
           raise parse_error || ServerErrorException.new(generic_error_message(url, client), 129)
         end

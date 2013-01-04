@@ -96,6 +96,7 @@ module RHC
     end
     global_option '--noprompt', "Suppress the interactive setup wizard from running before a command", :hide => true
     global_option '--config FILE', "Path of a different config file", :hide => true
+    global_option '--clean', "Ignore any saved configuration options", :hide => true
     global_option '--mock', "Run in mock mode", :hide => true do
       #:nocov:
       require 'rhc/rest/mock'
@@ -104,7 +105,7 @@ module RHC
     end
 
     def openshift_server
-      (options.server rescue nil) || ENV['LIBRA_SERVER'] || "openshift.redhat.com"
+      to_host((options.server rescue nil) || ENV['LIBRA_SERVER'] || "openshift.redhat.com")
     end
     def openshift_online_server?
       openshift_server =~ /openshift.redhat.com$/i
@@ -113,11 +114,21 @@ module RHC
       "https://#{openshift_server}"
     end
 
+    def to_host(s)
+      s =~ %r(^http(?:s)?://) ? URI(s).host : s
+    end
+    def to_uri(s)
+      URI(s =~ %r(^http(?:s)?://) ? s : "https://#{s}")
+    end
+    def openshift_rest_endpoint
+      uri = to_uri((options.server rescue nil) || ENV['LIBRA_SERVER'] || "openshift.redhat.com")
+      uri.path = '/broker/rest/api' if uri.path.blank? || uri.path == '/'
+      uri
+    end
+
     def client_from_options(opts)
-      # rest-client doesn't accept ssl_version, see https://github.com/archiloque/rest-client/pull/140
-      #OpenSSL::SSL::SSLContext::DEFAULT_PARAMS[:ssl_version] = options.ssl_version.to_s if options.ssl_version
       RHC::Rest::Client.new({
-          :server => openshift_server,
+          :url => openshift_rest_endpoint.to_s,
           :debug => options.debug,
           :timeout => options.timeout,
         }.merge!(ssl_options).merge!(opts))

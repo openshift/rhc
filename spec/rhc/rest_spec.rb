@@ -392,10 +392,7 @@ module RHC
       let(:url){ "http://fake.url" }
       let(:proxy){ nil }
       def response
-        (response = {}).extend(MockRestResponse)
-        response.code = code
-        response.read = json ? RHC::Json.encode(json) : body
-        response
+        mock(:status => code, :content => json ? RHC::Json.encode(json) : body)
       end
       let(:method) { lambda{ subject.send(:handle_error!, response, url, client) } }
 

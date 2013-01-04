@@ -34,10 +34,14 @@ module RHC::Rest::Mock
 
     # Creates consistent hrefs for testing
     def mock_href(relative="", with_auth=false)
-      uri_string = mock_uri
-      if (with_auth == true)
-        uri_string = mock_user + ":" + mock_pass + "@" + mock_uri
-      end
+      uri_string =
+        if with_auth == true
+          "#{mock_user}:#{mock_pass}@#{mock_uri}"
+        elsif with_auth
+          "#{with_auth[:user]}:#{with_auth[:password]}@#{mock_uri}"
+        else
+          mock_uri
+        end
       "https://#{uri_string}/#{relative}"
     end
 
@@ -80,6 +84,13 @@ module RHC::Rest::Mock
        ['ADD_DOMAIN',      'domains/add', 'post'],
        ['LIST_DOMAINS',    'domains/',    'get' ],
        ['LIST_CARTRIDGES', 'cartridges/', 'get' ]]
+    end
+    def mock_real_client_links
+      [['GET_USER',        "broker/rest/user",       'GET'],
+       ['LIST_DOMAINS',    "broker/rest/domains",    'GET'],
+       ['ADD_DOMAIN',      "broker/rest/domains",    'POST'],
+       ['LIST_CARTRIDGES', "broker/rest/cartridges", 'GET'],
+      ]
     end
 
     def mock_domain_links(domain_id='test_domain')
@@ -263,7 +274,7 @@ module RHC::Rest::Mock
       a
     end
 
-    def applications
+    def applications(*args)
       @applications
     end
   end
@@ -300,7 +311,7 @@ module RHC::Rest::Mock
         @scalable = true
         @embedded = {"haproxy-1.4" => {:info => ""}}
       end
-      self.attributes = {:links => mock_response_links(mock_app_links('mock_domain_0', 'mock_app_0'))}
+      self.attributes = {:links => mock_response_links(mock_app_links('mock_domain_0', 'mock_app_0')), :messages => []}
       cart = add_cartridge(type, false) if type
       if scale
         cart.supported_scales_to = (cart.scales_to = -1)
@@ -309,7 +320,6 @@ module RHC::Rest::Mock
         cart.scales_with = "haproxy-1.4"
       end
       @framework = type
-      @messages = []
     end
 
     def destroy
@@ -319,7 +329,9 @@ module RHC::Rest::Mock
     def add_cartridge(name, embedded=true)
       type = embedded ? "embedded" : "standalone"
       c = MockRestCartridge.new(client, name, type, self)
+      c.properties << {'name' => 'prop1', 'value' => 'value1', 'description' => 'description1' }
       @cartridges << c
+      c.messages << "Cartridge added with properties"
       c
     end
 
