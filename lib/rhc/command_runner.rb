@@ -99,6 +99,13 @@ module RHC
     end
 
     def create_default_commands
+      command 'help options' do |c|
+        c.syntax = 'rhc help options'
+        c.description = "Display all global options and information about configuration"
+        c.when_called do |args, options|
+          say help_formatter.render_options self
+        end
+      end
       command :help do |c|
         c.syntax = 'rhc help <command>'
         c.description = 'Display global or <command> help documentation.'

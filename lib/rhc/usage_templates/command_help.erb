@@ -14,6 +14,9 @@ Global Options
 <% for option in @global_options -%><% next if option[:hide] || @command.options.any?{ |o| (o[:switches] & option[:switches]).present? } -%>
   <%= "%-25s %s\n" % [option[:switches].join(', '), option[:description]] -%>
 <% end -%>
+
+See 'rhc help options' for a full list of command-line options.
+
 <% else -%>
 
 List of Actions

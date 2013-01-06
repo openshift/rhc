@@ -25,7 +25,7 @@ Management commands:
 	<%- unless alias? name or name.include?(' ') or command.summary.nil? -%>  <%="%-18s %s\n" % [command.name, command.summary || command.description] %><%- end -%>
 <%- end -%>
 
-See '<%= Array(program :name).first %> help <command>' for more information on a specific command.
+See '<%= Array(program :name).first %> help <command>' for more information on a specific command.  See 'rhc help options' for a list of global command-line options and information about the config file.
 
 <% if program :help -%>
   <% for title, body in program(:help) %>

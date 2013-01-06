@@ -8,6 +8,7 @@ describe RHC::CLI do
     it('should describe getting started') { run_output.should =~ /Getting started:/ }
     it('should describe basic command') { run_output.should =~ /Working with apps:/ }
     it('should mention the help command') { run_output.should =~ /See 'rhc help <command>'/ }
+    it('should mention the help options command') { run_output.should =~ /rhc help options/ }
   end
 
   shared_examples_for 'a help page' do
@@ -15,6 +16,14 @@ describe RHC::CLI do
     it('should contain the program description') { run_output.should =~ /Command line interface for OpenShift/ }
     it('should contain the global options') { run_output.should =~ /Global Options/ }
     it('should provide a --config switch') { run_output.should =~ /\-\-config FILE/ }
+  end
+
+  shared_examples_for 'a command-line options help page' do
+    let(:arguments) { @arguments or raise "no arguments" }
+    it('should contain an introduction') { run_output.should =~ /The following options can be passed to any/ }
+    it('should reference the configuration') { run_output.should match(".openshift/express.conf") }
+    it('should describe the --config switch') { run_output.should =~ /\-\-config FILE/ }
+    it('should describe the --ssl-version switch') { run_output.should =~ /\-\-ssl\-version VERSION/ }
   end
 
   shared_examples_for 'an invalid command' do
@@ -81,6 +90,11 @@ describe RHC::CLI do
     context 'with help' do
       before(:each){ @arguments = ['help'] }
       it_should_behave_like 'a global help page'
+    end
+
+    context 'with help options' do
+      before(:each){ @arguments = ['help', 'options'] }
+      it_should_behave_like 'a command-line options help page'
     end
   end
 
