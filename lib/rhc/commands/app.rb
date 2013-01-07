@@ -54,7 +54,7 @@ module RHC::Commands
 
 
         # create the main app
-        rest_app = create_app(name, cartridge, rest_domain,
+        rest_app = create_app(name.downcase, cartridge, rest_domain,
                               options.gear_size, options.scaling)
 
         messages.concat(rest_app.messages)
