@@ -95,7 +95,7 @@ module RHC
       end
 
       def remove_alias(app_alias)
-        debug "Running add_alias for #{name}"
+        debug "Running remove_alias for #{name}"
         rest_method "REMOVE_ALIAS", :event => "remove-alias", :alias => app_alias
       end
 
