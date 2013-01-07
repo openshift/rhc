@@ -280,7 +280,23 @@ describe RHC::Commands::Cartridge do
       app.add_cartridge('mock_cart-1')
     end
 
-    context 'when run' do
+    context 'when run with exactly the same case as how cartridge was created' do
+      it { run_output.should match('Connection URL: http://fake.url') }
+      it { run_output.should match(/Prop1:\s+value1/) }
+    end
+  end
+
+  describe 'cartridge show' do
+    let(:arguments) { ['cartridge', 'show', 'Mock_Cart-1', '-a', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+
+    before(:each) do
+      @rc = MockRestClient.new
+      domain = @rc.add_domain("mock_domain")
+      app = domain.add_application("app1", "mock_type")
+      app.add_cartridge('mock_cart-1')
+    end
+
+    context 'when run with different case from how cartrige was created' do
       it { run_output.should match('Connection URL: http://fake.url') }
       it { run_output.should match(/Prop1:\s+value1/) }
     end
