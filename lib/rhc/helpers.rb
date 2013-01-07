@@ -83,7 +83,9 @@ module RHC
     global_option '-k', '--insecure', "Allow insecure SSL connections.  Potential security risk.", :hide => true
 
     OptionParser.accept(SSLVersion = Class.new){ |s| OpenSSL::SSL::SSLContext::METHODS.find{ |m| m.to_s.downcase == s.downcase } or raise OptionParser::InvalidOption.new(nil, "The provided SSL version '#{s}' is not valid. Supported values: #{OpenSSL::SSL::SSLContext::METHODS.map(&:to_s).map(&:downcase).join(', ')}") }
-    global_option '--ssl-version VERSION', SSLVersion, "The version of SSL to use", :hide => true 
+    global_option '--ssl-version VERSION', SSLVersion, "The version of SSL to use", :hide => true do |value|
+      raise RHC::Exception, "You are using an older version of the httpclient gem which prevents the use of --ssl-version.  Please run 'gem update httpclient' to install a newer version (2.2.6 or newer)." unless HTTPClient::SSLConfig.method_defined? :ssl_version
+    end
     global_option '--ssl-ca-file FILE', "An SSL certificate CA file (may contain multiple certs)", :hide => true do |value|
       debug certificate_file(value)
     end

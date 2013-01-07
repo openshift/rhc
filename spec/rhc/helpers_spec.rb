@@ -133,9 +133,19 @@ describe RHC::Helpers do
     it{ run_output.should match("The certificate 'not_a_file' cannot be loaded: No such") }
   end
 
-  context "with an valid SSLVersion" do
+  context 'with a valid --ssl-version' do
     let(:arguments){ ['help', '--ssl-version=sslv3'] }
-    it{ expect{ run }.to exit_with_code(0) }
+
+    context 'on an older version of HTTPClient' do
+      before{ HTTPClient::SSLConfig.should_receive(:method_defined?).any_number_of_times.with(:ssl_version).and_return(false) }
+      it('should print an error') { run_output.should =~ /You are using an older version of the httpclient.*--ssl-version/ }
+      it('should error out') { expect{ run }.to exit_with_code(1) }
+    end
+    context 'a newer version of HTTPClient' do
+      before{ HTTPClient::SSLConfig.should_receive(:method_defined?).any_number_of_times.with(:ssl_version).and_return(true) }
+      it('should not print an error') { run_output.should_not =~ /You are using an older version of the httpclient.*--ssl-version/ }
+      it('should error out') { expect{ run }.to exit_with_code(0) }
+    end
   end
 
   context "with an invalid SSLVersion" do
