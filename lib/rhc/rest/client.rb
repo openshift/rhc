@@ -9,7 +9,8 @@ module RHC
     class Client < Base
       include RHC::Helpers
       
-      attr_reader :server_api_versions, :client_api_versions
+      attr_reader :server_api_versions, :client_api_versions,
+        :end_point, :username, :password
       # Keep the list of supported API versions here
       # The list may not necessarily be sorted; we will select the last
       # matching one supported by the server.
