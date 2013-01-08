@@ -169,6 +169,12 @@ module RHC
       # Format some special values
       def format_value(prop,value)
         case prop
+        when :plan_id
+          case value
+          when 'freeshift' then 'FreeShift'
+          when 'megashift' then 'MegaShift'
+          else value && value.capitalize || nil
+          end
         when :creation_time
           date(value)
         when :scales_from,:scales_to
@@ -181,9 +187,12 @@ module RHC
           ((value.nil? or value == 0) ? "None" : "#{value}GB")
 =end
         when :aliases
-          value.join ' '
+          value.join ', '
         else
-          value
+          case value
+          when Array then value.join(', ')
+          else            value
+          end
         end
       end
   end

@@ -224,12 +224,19 @@ module ClassSpecHelpers
   end
 
   def user_config
+    user = respond_to?(:username) ? self.username : 'test_user'
+    password = respond_to?(:password) ? self.password : 'test pass'
+    server = respond_to?(:server) ? self.server : nil
+
     base_config do |config, defaults|
-      defaults.add 'default_rhlogin', 'test_user'
-      defaults.add 'password', 'test pass'
+      defaults.add 'default_rhlogin', user
+      defaults.add 'password', password
+      defaults.add 'libra_server', server if server
     end.tap do |c|
-      c.to_options[:rhlogin].should == 'test_user'
-      c.to_options[:password].should == 'test pass'
+      opts = c.to_options
+      opts[:rhlogin].should == user
+      opts[:password].should == password
+      opts[:server].should == server if server
     end
   end
 end

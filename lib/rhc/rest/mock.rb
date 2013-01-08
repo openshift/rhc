@@ -19,9 +19,173 @@ module RHC::Rest::Mock
       "test_user"
     end
 
+    def mock_user_auth
+      respond_to?(:user_auth) ? self.user_auth : {:user => username, :password => password}
+    end
+
     def stub_api_request(method, uri, with_auth=true)
       stub_request(method, mock_href(uri, with_auth)).
         with(&user_agent_header)
+    end
+
+    def stub_api(auth=false)
+      stub_api_request(:get, 'broker/rest/api', auth).
+        to_return({
+          :body => {
+            :data => mock_response_links(mock_real_client_links),
+            :supported_api_versions => [1.0, 1.1, 1.2, 1.3],
+          }.to_json 
+        })
+    end
+    def stub_user(auth=mock_user_auth)
+      stub_api_request(:get, 'broker/rest/user', auth).to_return(simple_user(username))
+    end
+    def stub_create_default_key
+      stub_api_request(:post, 'broker/rest/user/keys', mock_user_auth).
+        with(:body => hash_including({:name => 'default', :type => 'ssh-rsa'})).
+        to_return({:status => 201, :body => {}.to_json})
+    end
+    def stub_update_key(name)
+      stub_api_request(:put, "broker/rest/user/keys/#{name}", mock_user_auth).
+        with(:body => hash_including({:type => 'ssh-rsa'})).
+        to_return({:status => 200, :body => {}.to_json})
+    end
+    def stub_create_domain(name)
+      stub_api_request(:post, 'broker/rest/domains', mock_user_auth).
+        with(:body => hash_including({:id => name})).
+        to_return(new_domain(name))
+    end
+    def stub_no_keys
+      stub_api_request(:get, 'broker/rest/user/keys', mock_user_auth).to_return(no_keys)
+    end
+    def stub_mock_ssh_keys(name='test')
+      stub_api_request(:get, 'broker/rest/user/keys', mock_user_auth).
+        to_return({
+          :body => {
+            :type => 'keys',
+            :data => [
+              {
+                :name => name,
+                :type => pub_key.split[0],
+                :content => pub_key.split[1],
+  #              :links => mock_response_links([
+  #                ['UPDATE', "broker/rest/user/keys/#{name}", 'put']
+  #              ]),
+              }
+            ],
+          }.to_json
+        })
+    end
+    def stub_one_key(name)
+      stub_api_request(:get, 'broker/rest/user/keys', mock_user_auth).
+        to_return({
+          :body => {
+            :type => 'keys',
+            :data => [
+              {
+                :name => name,
+                :type => 'ssh-rsa',
+                :content => rsa_key_content_public,
+                :links => mock_response_links([
+                  ['UPDATE', "broker/rest/user/keys/#{name}", 'put']
+                ]),
+              }
+            ],
+          }.to_json
+        })
+    end
+    def stub_no_domains
+      stub_api_request(:get, 'broker/rest/domains', mock_user_auth).to_return(no_domains)
+    end
+    def stub_one_domain(name)
+      stub_api_request(:get, 'broker/rest/domains', mock_user_auth).
+        to_return({
+          :body => {
+            :type => 'domains',
+            :data => [{:id => name, :links => mock_response_links([
+              ['LIST_APPLICATIONS', "broker/rest/domains/#{name}/applications", 'get']
+            ])}],
+          }.to_json
+        })
+    end
+    def stub_one_application(domain_name, name)
+      stub_api_request(:get, "broker/rest/domains/#{domain_name}/applications", mock_user_auth).
+        to_return({
+          :body => {
+            :type => 'applications',
+            :data => [{
+              :domain_id => domain_name,
+              :id => 1,
+              :name => name,
+              :app_url => "http://#{name}-#{domain_name}.rhcloud.com",
+              :links => mock_response_links([
+              ]),
+            }],
+          }.to_json
+        })
+    end
+    def stub_simple_carts
+      stub_api_request(:get, 'broker/rest/cartridges', mock_user_auth).to_return(simple_carts)
+    end
+
+    def no_keys
+      empty_response_list('keys')
+    end
+    def no_domains
+      empty_response_list('domains')
+    end
+
+    def empty_response_list(type)
+      {
+        :body => {
+          :type => type,
+          :data => [],
+        }.to_json
+      }
+    end
+
+    def new_domain(name)
+      {
+        :status => 201,
+        :body => {
+          :type => 'domain',
+          :data => {
+            :id => name,
+            :links => mock_response_links([
+            ])
+          },
+        }.to_json
+      }
+    end
+    def simple_carts
+      {
+        :body => {
+          :type => 'cartridges',
+          :data => [
+            {:name => 'mock_standalone_cart-1', :type => 'standalone'},
+            {:name => 'mock_standalone_cart-2', :type => 'standalone'},
+            {:name => 'mock_embedded_cart-1', :type => 'embedded'},
+          ],
+        }.to_json
+      }
+    end
+    def simple_user(login)
+      {
+        :body => {
+          :type => 'user',
+          :data => {
+            :login => login,
+            :plan_id =>        respond_to?(:user_plan_id) ? self.user_plan_id : nil,
+            :consumed_gears => respond_to?(:user_consumed_gears) ? self.user_consumed_gears : 0,
+            :max_gears =>      respond_to?(:user_max_gears) ? self.user_max_gears : 3,
+            :capabilities =>   respond_to?(:user_capabilities) ? self.user_capabilities : {:gear_sizes => ['small', 'medium']},
+            :links => mock_response_links([
+              ['ADD_KEY', "broker/rest/user/keys",   'POST'],
+              ['LIST_KEYS', "broker/rest/user/keys", 'GET'],
+            ])
+          },
+        }.to_json
+      }
     end
 
     def mock_pass
@@ -34,13 +198,16 @@ module RHC::Rest::Mock
 
     # Creates consistent hrefs for testing
     def mock_href(relative="", with_auth=false)
+      server = respond_to?(:server) ? self.server : mock_uri
       uri_string =
         if with_auth == true
-          "#{mock_user}:#{mock_pass}@#{mock_uri}"
+          username = respond_to?(:username) ? self.username : mock_user
+          password = respond_to?(:password) ? self.password : mock_pass
+          "#{username}:#{password}@#{mock_uri}"
         elsif with_auth
-          "#{with_auth[:user]}:#{with_auth[:password]}@#{mock_uri}"
+          "#{with_auth[:user]}:#{with_auth[:password]}@#{server}"
         else
-          mock_uri
+          server
         end
       "https://#{uri_string}/#{relative}"
     end

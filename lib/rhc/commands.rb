@@ -68,6 +68,8 @@ end
 
 module RHC
   module Commands
+    autoload :Base, 'rhc/commands/base'
+
     def self.load
       Dir[File.join(File.dirname(__FILE__), "commands", "*.rb")].each do |file|
         require file

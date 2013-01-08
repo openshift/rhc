@@ -7,9 +7,10 @@ module RHC::Auth
         @username, @password = args
       else
         @options = args[0] || Commander::Command::Options.new
-        @username = options.rhlogin
-        @password = options.password
+        @username = options[:rhlogin]
+        @password = options[:password]
       end
+      @skip_interactive = !@password.nil?
     end
 
     def to_request(request)
@@ -22,13 +23,12 @@ module RHC::Auth
     def retry_auth?(response)
       if response.status == 401
         @cookie = nil
-        if username?
-          error "Username or password is not correct" if password
-        else
-          ask_username
+        error "Username or password is not correct" if username? && password
+        unless @skip_interactive
+          ask_username unless username?
+          ask_password
+          true
         end
-        ask_password
-        true
       else
         @cookie ||= Array(response.cookies).inject(nil){ |v, c| c.name == 'rh_sso' ? c.value : v }
         false

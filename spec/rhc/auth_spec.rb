@@ -104,6 +104,12 @@ describe RHC::Auth::Basic do
       end
     end
 
+    context "when initialized with a hash" do
+      subject{ described_class.new({:rhlogin => user, :password => password}) }
+      its(:username){ should == user }
+      its(:password){ should == password }
+    end
+
     context "when password is not provided" do
       subject{ described_class.new(user, nil) }
 
@@ -167,7 +173,7 @@ describe RHC::Auth::Basic do
 
       context "with no user and no password" do
         subject{ described_class.new(nil, nil) }
-        it do
+        it("should ask for user and password") do
           subject.should_receive(:ask_username).and_return(user)
           subject.should_receive(:ask_password).and_return(password)
           subject.retry_auth?(response).should be_true
@@ -176,25 +182,30 @@ describe RHC::Auth::Basic do
 
       context "with user and no password" do
         subject{ described_class.new(user, nil) }
-        it do
+        it("should ask for password only") do
           subject.should_receive(:ask_password).and_return(password)
+          subject.retry_auth?(response).should be_true
+        end
+        it("should ask for password twice") do
+          subject.should_receive(:ask_password).twice.and_return(password)
+          subject.retry_auth?(response).should be_true
           subject.retry_auth?(response).should be_true
         end
       end
 
       context "with user and password" do
         subject{ described_class.new(user, password) }
-        it do
-          subject.should_receive(:ask_password).and_return(password)
+        it("should not prompt for reauthentication") do
+          subject.should_not_receive(:ask_password)
           subject.should_receive(:error).with("Username or password is not correct")
-          subject.retry_auth?(response).should be_true
+          subject.retry_auth?(response).should be_false
         end
 
         it "should forget a saved cookie" do
           subject.instance_variable_set(:@cookie, '1')
-          subject.should_receive(:ask_password).and_return(password)
+          subject.should_not_receive(:ask_password)
           subject.should_receive(:error).with("Username or password is not correct")
-          subject.retry_auth?(response).should be_true
+          subject.retry_auth?(response).should be_false
         end
       end
     end

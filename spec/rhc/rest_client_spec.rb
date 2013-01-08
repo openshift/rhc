@@ -23,8 +23,8 @@ module RHC
     describe Client do
 
       let(:endpoint){ mock_href }
-      let(:username){ mock_user }
-      let(:password){ mock_pass }
+      let(:username){ nil }# mock_user }
+      let(:password){ nil }# mock_pass }
       let(:use_debug){ false }
       #let(:spec_versions){ nil }
       let(:client) do 
