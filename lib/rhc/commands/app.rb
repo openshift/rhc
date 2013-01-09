@@ -26,7 +26,7 @@ module RHC::Commands
       will be checked out locally into a folder with the same name as 
       your application.  Note that different types of applications may
       require different structures - check the README provided with the
-      cartridge if you have questions
+      cartridge if you have questions.
 
       OpenShift runs the components of your application on small virtual 
       servers called "gears".  Each account or plan is limited to a number
