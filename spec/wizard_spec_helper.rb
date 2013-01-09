@@ -158,6 +158,8 @@ module WizardStepsHelper
       args.each do |(name, domain_name)|
         s.should match("#{name} http://#{name}-#{domain_name}.rhcloud.com")
       end
+      s.should match("You are using ")
+      s.should match("The following gear sizes are available to you")
     end
   end
 

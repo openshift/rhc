@@ -59,7 +59,7 @@ module RHC
       include RHC::SSHHelpers
       include RHC::GitHelpers
       attr_reader :config, :options
-      attr_accessor :auth
+      attr_accessor :auth, :user
 
       def openshift_server
         options.server || config['libra_server'] || "openshift.redhat.com"
@@ -96,19 +96,6 @@ module RHC
 
     def login_stage
       say "Using #{options.rhlogin} to login to #{openshift_server}" if options.rhlogin
-=begin
-      paragraph do
-        self.username = if options.rhlogin && options.rhlogin != config.username
-            say "Using #{options.rhlogin} to login to #{openshift_server}"
-            options.rhlogin
-          else
-            ask("Login to #{openshift_server}: ") do |q|
-              q.default = config.username
-            end
-          end
-        self.password = options.password || ask("Password: ") { |q| q.echo = '*' } if @password.nil?
-      end
-=end
 
       self.rest_client = new_client_for_options
 
@@ -135,7 +122,8 @@ module RHC
         end
       end
 
-      rest_client.user
+      self.user = rest_client.user
+      true
     end
 
     def create_config_stage
@@ -355,6 +343,12 @@ module RHC
             say table(application_types.sort {|a,b| a.display_name <=> b.display_name }.map do |cart|
               [' ', cart.display_name, "rhc app create <app name> #{cart.name}"]
             end).join("\n")
+          end
+        end
+        paragraph do
+          indent do
+            say "You are using #{color(self.user.consumed_gears.to_s, :green)} of #{color(self.user.max_gears.to_s, :green)} total gears" if user.max_gears.is_a? Fixnum
+            say "The following gear sizes are available to you: #{self.user.capabilities.gear_sizes.join(', ')}" if user.capabilities.gear_sizes.present?
           end
         end
       end
