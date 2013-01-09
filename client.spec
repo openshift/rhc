@@ -11,8 +11,7 @@ URL:           http://openshift.redhat.com
 Source0:       rhc-%{version}.tar.gz
 
 BuildRoot:     %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
-BuildRequires: rubygem-rake
-BuildRequires: rubygem-rspec
+BuildRequires: ruby >= 1.8.5
 Requires:      ruby >= 1.8.5
 Requires:      rubygem-parseconfig
 Requires:      rubygem-rest-client
@@ -66,18 +65,13 @@ fi
 
 LC_ALL=en_US.UTF-8
 
-# We don't need this to build the RPM.  This will save us from having to deal
-# with the BuildRequires chain.
-rm tasks/cucumber.rake
-rm tasks/test.rake
-
 # Package the gem
-rake --trace -- package
+gem build rhc.gemspec
 
 mkdir -p .%{gemdir}
 # Ignore dependencies here because these will be handled by rpm 
 gem install --install-dir $RPM_BUILD_ROOT/%{gemdir} --bindir $RPM_BUILD_ROOT/%{_bindir} --local -V --force --rdoc --ignore-dependencies \
-     pkg/rhc-%{version}.gem
+     rhc-%{version}.gem
 
 # Copy the bash autocompletion script
 mkdir -p "$RPM_BUILD_ROOT/etc/bash_completion.d/"
