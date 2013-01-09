@@ -96,7 +96,9 @@ module RHC
     global_option('--timeout SECONDS', Integer, 'The timeout for operations') do |value|
       abort(color("Timeout must be a positive integer",:red)) unless value > 0
     end
-    global_option '--noprompt', "Suppress the interactive setup wizard from running before a command", :hide => true
+    global_option '--noprompt', "Suppress all interactive operations command", :hide => true do
+      $terminal.page_at = nil
+    end
     global_option '--config FILE', "Path of a different config file", :hide => true
     global_option '--clean', "Ignore any saved configuration options", :hide => true
     global_option '--mock', "Run in mock mode", :hide => true do
@@ -221,6 +223,12 @@ module RHC
         separate_blocks
         super(*args, &block)
       end
+    end
+
+    def confirm_action(question)
+      return if options.confirm
+      return if !options.noprompt && paragraph{ agree("#{question} (yes|no): ") }
+      raise RHC::ConfirmationError
     end
 
     def success(msg, *args)

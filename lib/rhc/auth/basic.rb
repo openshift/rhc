@@ -9,13 +9,14 @@ module RHC::Auth
         @options = args[0] || Commander::Command::Options.new
         @username = options[:rhlogin]
         @password = options[:password]
+        @no_interactive = options[:noprompt]
       end
       @skip_interactive = !@password.nil?
     end
 
     def to_request(request)
       (request[:cookies] ||= {})[:rh_sso] = cookie if cookie
-      request[:user] ||= username || (request[:lazy_auth] != true && ask_username)
+      request[:user] ||= username || (request[:lazy_auth] != true && ask_username) || nil
       request[:password] ||= password || (username? && request[:lazy_auth] != true && ask_password) || nil
       request
     end
@@ -24,7 +25,7 @@ module RHC::Auth
       if response.status == 401
         @cookie = nil
         error "Username or password is not correct" if username? && password
-        unless @skip_interactive
+        unless @skip_interactive or @no_interactive
           ask_username unless username?
           ask_password
           true
@@ -40,10 +41,10 @@ module RHC::Auth
       attr_reader :options, :username, :password
 
       def ask_username
-        @username = ask("Login to #{openshift_server}: ")
+        @username = ask("Login to #{openshift_server}: ") unless @no_interactive
       end
       def ask_password
-        @password = ask("Password: ") { |q| q.echo = '*' }
+        @password = ask("Password: ") { |q| q.echo = '*' } unless @no_interactive
       end
 
       def username?

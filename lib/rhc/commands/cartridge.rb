@@ -41,7 +41,7 @@ module RHC::Commands
     def add(cart_type)
       cart = find_cartridge rest_client, cart_type
 
-      say "Adding '#{cart.name}' to application '#{options.app}' ... "
+      say "Adding #{cart.name} to application '#{options.app}' ... "
 
       rest_domain = rest_client.find_domain(options.namespace)
       rest_app = rest_domain.find_application(options.app)
@@ -76,20 +76,20 @@ module RHC::Commands
     argument :cartridge, "The name of the cartridge you are removing", ["-c", "--cartridge cartridge"]
     option ["-n", "--namespace namespace"], "Namespace of the application you are removing the cartridge from", :context => :namespace_context, :required => true
     option ["-a", "--app app"], "Application you are removing the cartridge from", :context => :app_context, :required => true
-    option ["--confirm"], "Safety switch - if this switch is not passed a warning is printed out and the cartridge will not be removed"
+    option ["--confirm"], "Pass to confirm removing the cartridge"
     alias_action :"app cartridge remove", :root_command => true, :deprecated => true
     def remove(cartridge)
-      unless options.confirm
-        results { say "Removing a cartridge is a destructive operation that may result in loss of data associated with the cartridge.  You must pass the --confirm switch to this command in order to to remove the cartridge." }
-        return 1
-      end
 
       rest_domain = rest_client.find_domain(options.namespace)
       rest_app = rest_domain.find_application(options.app)
       rest_cartridge = rest_app.find_cartridge cartridge, :type => "embedded"
-      rest_cartridge.destroy
 
-      results { say "Success: Cartridge '#{rest_cartridge.name}' removed from application '#{rest_app.name}'." }
+      confirm_action "Removing a cartridge is a destructive operation that may result in loss of data associated with the cartridge.\n\nAre you sure you wish to remove #{rest_cartridge.name} from '#{rest_app.name}'?"
+
+      say "Removing #{rest_cartridge.name} from '#{rest_app.name}' ... "
+      rest_cartridge.destroy
+      success "removed"
+
       0
     end
 

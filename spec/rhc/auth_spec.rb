@@ -39,7 +39,26 @@ describe RHC::Auth::Basic do
         subject.send(:ask_username).should == user
       end
     end
+
+    context "with --noprompt" do
+      let(:default_options){ {:noprompt => true} }
+
+      its(:ask_username){ should be_false }
+      its(:ask_password){ should be_false }
+      its(:username?){ should be_false }
+      it("should not retry") do 
+        subject.should_not_receive(:ask_username)
+        subject.retry_auth?(mock(:status => 401)).should be_false
+      end
+    end
   end
+
+  context "when initialized with a hash" do
+    subject{ described_class.new({:rhlogin => user, :password => password}) }
+    its(:username){ should == user }
+    its(:password){ should == password }
+  end
+
 
   describe "#ask_username" do
     before{ subject.should_receive(:openshift_server).and_return('test.com') }
@@ -102,12 +121,6 @@ describe RHC::Auth::Basic do
 
         it { subject.to_request(request).should == auth_hash.merge(request) }
       end
-    end
-
-    context "when initialized with a hash" do
-      subject{ described_class.new({:rhlogin => user, :password => password}) }
-      its(:username){ should == user }
-      its(:password){ should == password }
     end
 
     context "when password is not provided" do

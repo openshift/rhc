@@ -59,7 +59,7 @@ describe RHC::Commands::Cartridge do
         domain = rest_client.add_domain("mock_domain")
         app = domain.add_application("app1", "mock_type")
       end
-      it { succeed_with_message /Adding 'mock_cart-1'/ }
+      it { succeed_with_message /Adding mock_cart-1 to application 'app1' \.\.\. / }
       it { succeed_with_message /Connection URL:\s+http\:\/\/fake\.url/ }
       it { succeed_with_message /Prop1:\s+value1/ }
       it { succeed_with_message /Cartridge added with properties/ }
@@ -143,17 +143,15 @@ describe RHC::Commands::Cartridge do
   end
 
   describe 'cartridge remove without confirming' do
-    let(:arguments) { ['cartridge', 'remove', 'mock_cart-1', '-a', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+    before(:each) do
+      domain = rest_client.add_domain("mock_domain")
+      app = domain.add_application("app1", "mock_type")
+      app.add_cartridge('mock_cart-1')
+    end
 
-    context 'when run' do
-      before(:each) do
-        domain = rest_client.add_domain("mock_domain")
-        app = domain.add_application("app1", "mock_type")
-        app.add_cartridge('mock_cart-1')
-      end
-      it {
-        fail_with_message "Removing a cartridge is a destructive operation"
-      }
+    context 'when run with --noprompt' do
+      let(:arguments) { ['cartridge', 'remove', 'mock_cart-1', '-a', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+      it{ fail_with_message "This action requires the --confirm option" }
     end
   end
 

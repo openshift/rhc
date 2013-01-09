@@ -267,26 +267,43 @@ describe RHC::Commands::App do
   end
 
   describe 'app delete' do
-    let(:arguments) { ['app', 'delete', '--trace', '-a', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+    let(:arguments) { ['app', 'delete', '--trace', '-a', 'app1', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     context 'when run' do
-      before(:each) do
-        @domain = rest_client.add_domain("mockdomain")
-      end
-      it "should not remove app when no is sent as input" do
-        @app = @domain.add_application("app1", "mock_type")
-        expect { run(["no"]) }.should exit_with_code(1)
-        @domain.applications.length.should == 1
-        @domain.applications[0] == @app
-      end
+      before{ @domain = rest_client.add_domain("mockdomain") }
 
-      it "should remove app when yes is sent as input" do
-        @app = @domain.add_application("app1", "mock_type")
-        expect { run(["yes"]) }.should exit_with_code(0)
-        @domain.applications.length.should == 0
-      end
       it "should raise cartridge not found exception when no apps exist" do
         expect { run }.should raise_error RHC::ApplicationNotFoundException
+      end
+
+      context "with an app" do
+        before{ @app = @domain.add_application("app1", "mock_type") }
+
+        it "should not remove app when no is sent as input" do
+          expect { run(["no"]) }.should raise_error(RHC::ConfirmationError)
+          @domain.applications.length.should == 1
+          @domain.applications[0] == @app
+        end
+
+        it "should remove app when yes is sent as input" do
+          expect { run(["yes"]) }.should exit_with_code(0)
+          @domain.applications.length.should == 0
+        end
+
+        context "with --noprompt but without --confirm" do
+          let(:arguments) { ['app', 'delete', 'app1', '--noprompt', '--trace'] }
+          it "should not remove the app" do
+            expect { run(["no"]) }.should raise_error(RHC::ConfirmationError)
+            @domain.applications.length.should == 1
+          end
+        end
+        context "with --noprompt and --confirm" do
+          let(:arguments) { ['app', 'delete', 'app1', '--noprompt', '--confirm'] }
+          it "should remove the app" do
+            expect { run }.should exit_with_code(0)
+            @domain.applications.length.should == 0
+          end
+        end
       end
     end
   end

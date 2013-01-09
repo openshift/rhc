@@ -11,7 +11,32 @@ module RHC::Commands
     default_action :help
 
     summary "Create an application"
-    description "Create an application. You can see a list of all valid cartridge types by running 'rhc cartridge list'."
+    description <<-DESC
+      Create an application. Every OpenShift application must have one 
+      web cartridge which serves web requests, and can have a number of
+      other cartridges which provide capabilities like databases, 
+      scheduled jobs, or continuous integration.
+
+      You can see a list of all valid cartridge types by running 
+      'rhc cartridge list'.
+
+      When your application is created, a domain name that is a combination
+      of the name of your app and the namespace of your domain will be 
+      registered in DNS.  A copy of the code for your application
+      will be checked out locally into a folder with the same name as 
+      your application.  Note that different types of applications may
+      require different structures - check the README provided with the
+      cartridge if you have questions
+
+      OpenShift runs the components of your application on small virtual 
+      servers called "gears".  Each account or plan is limited to a number
+      of gears which you can use across multiple applications.  Some 
+      accounts or plans provide access to gears with more memory or more
+      CPU.  Run 'rhc account' to see the number and sizes of gears available
+      to you.  When creating an application the --gear-size parameter
+      may be specified to change the gears used.
+
+      DESC
     syntax "<name> <cartridge> [-n namespace]"
     option ["-n", "--namespace namespace"], "Namespace for the application", :context => :namespace_context
     option ["-g", "--gear-size size"], "Gear size controls how much memory and CPU your cartridges can use."
@@ -39,11 +64,11 @@ module RHC::Commands
 
       paragraph do
         header "Application Options"
-        table({"Namespace:" => options.namespace,
-               "Cartridge:" => cartridge,
-               "Gear Size:" => options.gear_size || "default",
-               "Scaling:" => options.scaling ? "yes" : "no",
-              }
+        table([["Namespace:", options.namespace],
+               ["Cartridge:", cartridge],
+               ["Gear Size:", options.gear_size || "default"],
+               ["Scaling:", options.scaling ? "yes" : "no"],
+              ]
              ).each { |s| say "  #{s}" }
       end
 
@@ -146,18 +171,15 @@ module RHC::Commands
     syntax "<app> [--namespace namespace]"
     option ["-n", "--namespace namespace"], "Namespace your application belongs to", :context => :namespace_context, :required => true
     option ["-b", "--bypass"], "DEPRECATED Please use '--confirm'", :deprecated => {:key => :confirm, :value => true}
-    option ["--confirm"], "Deletes the application without prompting the user"
+    option ["--confirm"], "Pass to confirm deleting the application"
     argument :app, "The application you wish to delete", ["-a", "--app name"]
     alias_action :destroy, :deprecated => true
     def delete(app)
+
       rest_domain = rest_client.find_domain(options.namespace)
       rest_app = rest_domain.find_application(app)
 
-      unless options.confirm
-        paragraph do
-          return 1 unless agree("Are you sure you wish to delete the '#{rest_app.name}' application? (yes|no): ")
-        end
-      end
+      confirm_action "#{color("This is a non-reversible action! Your application code and data will be permanently deleted if you continue!", :yellow)}\n\nAre you sure you want to delete the application '#{app}'?"
 
       say "Deleting application '#{rest_app.name}' ... "
       rest_app.destroy
