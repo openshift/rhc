@@ -201,8 +201,8 @@ module RHC
         template  = ERB.new(statement, nil, "%")
         statement = template.result(binding)
 
-        statement = wrap(statement) unless @wrap_at.nil?
-        statement = page_print(statement) unless @page_at.nil?
+        statement = $terminal.wrap(statement) unless $terminal.instance_variable_get(:@wrap_at).nil?
+        statement = $terminal.send(:page_print, statement) unless $terminal.instance_variable_get(:@page_at).nil?
 
         output.print(' ' * @@indent * INDENT) unless @@last_line_open
 
