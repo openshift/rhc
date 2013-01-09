@@ -12,7 +12,7 @@ Getting started:
 <% end %>
 <% end unless basic.empty?
 
-debugging = remaining.slice!('app restart', 'app status', 'tail', 'port-forward', 'threaddump', 'snapshot', 'git-clone')
+debugging = remaining.slice!('app restart', 'app show', 'tail', 'port-forward', 'threaddump', 'snapshot', 'git-clone')
 begin -%>
 Working with apps:
 <% for name, command in debugging -%>

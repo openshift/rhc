@@ -50,7 +50,7 @@ module RHC
           begin
             client, args = new_request(options.dup)
 
-            debug "Request: #{args.inspect}\n-------------" if debug?
+            debug "Request: #{client.object_id} #{args.inspect}\n-------------" if debug?
             response = client.request(*(args << true))
             debug "Response: #{response.status} #{response.headers.inspect}\n#{response.content}\n-------------" if debug? && response
 
