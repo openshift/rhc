@@ -15,7 +15,7 @@ module RHC::Commands
 
       if openshift_online_server?
         #status = decode_json(get("#{openshift_url}/app/status/status.json").body)
-        status = rest_client.request(:method => :get, :url => "#{openshift_url}/app/status/status.json"){ |res| decode_json(res.content) }
+        status = rest_client.request(:method => :get, :url => "#{openshift_url}/app/status/status.json", :lazy_auth => true){ |res| decode_json(res.content) }
         open = status['open']
 
         (success 'All systems running fine' and return 0) if open.blank?
