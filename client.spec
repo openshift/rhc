@@ -12,6 +12,7 @@ Source0:       rhc-%{version}.tar.gz
 
 BuildRoot:     %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 BuildRequires: ruby >= 1.8.5
+BuildRequires: rubygems
 Requires:      ruby >= 1.8.5
 Requires:      rubygem-parseconfig
 Requires:      rubygem-rest-client
