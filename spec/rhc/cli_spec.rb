@@ -47,13 +47,6 @@ describe RHC::CLI do
       end
       it_should_behave_like 'version output'
     end
-    
-    context 'given as "-v"' do
-      before :each do
-        @arguments = ['-v']
-      end
-      it_should_behave_like 'version output'
-    end
   end
 
   describe '#start' do

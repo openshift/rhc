@@ -23,7 +23,7 @@ module RHC
     end
 
     def options_parse_version
-      if @args.include? "--version" or @args.include? "-v"
+      if @args.include? "--version"
         say version
         exit 0
       end

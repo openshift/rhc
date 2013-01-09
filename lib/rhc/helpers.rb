@@ -336,10 +336,14 @@ module RHC
     #end
 
     def header(s,opts = {}, &block)
-      say [s, "="*s.length]
+      say underline(s)
       if block_given?
         indent &block
       end
+    end
+
+    def underline(s)
+      [s, "-"*s.length]
     end
 
     INDENT = 2

@@ -9,25 +9,28 @@ module RHC::Commands
     default_action :list
 
     summary "List available cartridges"
+    option ["-v", "--verbose"], "Display more details about each cartridge"
     alias_action :"app cartridge list", :root_command => true, :deprecated => true
     def list
-      list = rest_client.cartridges.
-        map{ |c| [c.name, c.display_name || '', c.type == 'standalone' ? 'Y' : ''] }.
-        sort do |a,b|
-          if a[2] == 'Y' && b[2] == ''
-            -1
-          elsif a[2] == '' && b[2] == 'Y'
-            1
-          else
-            a[1].downcase <=> b[1].downcase
-          end
-        end
-      list.unshift ['==========', '=========', '=============']
-      list.unshift ['Short Name', 'Full name', 'New apps only']
+      carts = rest_client.cartridges.sort_by{ |c| "#{c.type == 'standalone' && 1}_#{c.tags.include?('experimental') ? 1 : 0}_#{(c.display_name || c.name).downcase}" }
 
-      paragraph{ say "Use the short name of a cartridge when interacting with your applications." }
+      list = if options.verbose
+        carts.map do |c| 
+          name = c.display_name != c.name && "#{color(c.display_name, :cyan)} [#{c.name}]" || c.name
+          tags = c.tags - RHC::Rest::Cartridge::HIDDEN_TAGS
+          [
+            underline("#{name} (#{c.only_in_new? ? 'web' : 'addon'})"),
+            c.description,
+            tags.present? ? "\nTagged with: #{tags.sort.join(', ')}" : nil,
+          ].compact << "\n"
+        end.flatten
+      else
+        table(carts.map{ |c| [c.name, c.display_name, c.only_in_new? ? 'web' : 'addon'] })
+      end
 
-      say table(list).join("\n")
+
+      say list.join("\n")
+      paragraph{ say "Note: Web cartridges can only be added to new applications." }
 
       0
     end

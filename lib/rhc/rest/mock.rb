@@ -162,9 +162,9 @@ module RHC::Rest::Mock
         :body => {
           :type => 'cartridges',
           :data => [
-            {:name => 'mock_standalone_cart-1', :type => 'standalone'},
-            {:name => 'mock_standalone_cart-2', :type => 'standalone'},
-            {:name => 'mock_embedded_cart-1', :type => 'embedded'},
+            {:name => 'mock_standalone_cart-1', :type => 'standalone', :tags => ['cartridge'], :display_name => 'Mock1 Cart'},
+            {:name => 'mock_standalone_cart-2', :type => 'standalone', :description => 'Mock2 description'},
+            {:name => 'mock_embedded_cart-1', :type => 'embedded', :tags => ['scheduled'], :display_name => 'Mock1 Embedded Cart'},
           ],
         }.to_json
       }
