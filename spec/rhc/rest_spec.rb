@@ -330,8 +330,8 @@ module RHC
         let(:method){ :post }
         it "serializes payload as urlencoded body parameters" do
           stub_request(method, mock_href).
-            with(:headers => {:accept => 'application/json', :content_type => 'application/x-www-form-urlencoded'}, 
-                 :body => {:test => '1', :bar => '2'}).
+            with(:headers => {:accept => 'application/json', :content_type => 'application/json'}, 
+                 :body => {:test => '1', :bar => 2}.to_json).
             to_return(:status => 204)
           subject.request(request.merge(:payload => {:test => '1', :bar => 2})).should be_nil
         end

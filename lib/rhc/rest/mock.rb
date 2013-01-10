@@ -431,7 +431,7 @@ module RHC::Rest::Mock
       if type.is_a?(Hash)
         scale = type[:scale]
         gear_profile = type[:gear_profile]
-        type = type[:cartridge]
+        type = Array(type[:cartridges] || type[:cartridge])
       end
       a = MockRestApplication.new(client, name, type, self, scale, gear_profile)
       builder = @applications.find{ |app| app.cartridges.map(&:name).any?{ |s| s =~ /^jenkins-[\d\.]+$/ } }
@@ -479,14 +479,16 @@ module RHC::Rest::Mock
         @embedded = {"haproxy-1.4" => {:info => ""}}
       end
       self.attributes = {:links => mock_response_links(mock_app_links('mock_domain_0', 'mock_app_0')), :messages => []}
-      cart = add_cartridge(type, false) if type
+      types = Array(type)
+      cart = add_cartridge(types.first, false) if types.first
       if scale
         cart.supported_scales_to = (cart.scales_to = -1)
         cart.supported_scales_from = (cart.scales_from = 2)
         cart.current_scale = 2
         cart.scales_with = "haproxy-1.4"
       end
-      @framework = type
+      types.drop(1).each{ |c| add_cartridge(c, false) }
+      @framework = types.first
     end
 
     def destroy

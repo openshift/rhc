@@ -321,7 +321,10 @@ module RHC
             query = payload
             payload = nil
           else
-            headers['content-type'] ||= 'application/x-www-form-urlencoded'
+            headers['content-type'] ||= begin
+                payload = payload.to_json unless payload.nil? || payload.is_a?(String)
+                'application/json'
+              end
           end
           query = nil if query.blank?
 

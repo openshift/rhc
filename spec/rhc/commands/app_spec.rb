@@ -9,7 +9,8 @@ describe RHC::Commands::App do
     FakeFS.activate!
     FakeFS::FileSystem.clear
     user_config
-    RHC::Helpers::MAX_RETRIES = 3
+    RHC::Helpers::remove_const(:MAX_RETRIES) rescue nil
+    RHC::Helpers::const_set(:MAX_RETRIES, 3)
     @instance = RHC::Commands::App.new
     RHC::Commands::App.stub(:new) do
       @instance.stub(:git_config_get) { "" }
@@ -61,16 +62,16 @@ describe RHC::Commands::App do
     context 'when no cartridges are returned' do
       before(:each) do
         domain = rest_client.domains.first
-        rest_client.stub(:cartridges) { [] }
-        domain.stub(:add_application).and_raise(RHC::Rest::ValidationException.new('Each application needs a web cartridge', '', '109'))
+        #rest_client.stub(:cartridges) { [] }
+#        domain.stub(:add_application).and_raise(RHC::Rest::ValidationException.new('Each application needs a web cartridge', '', '109'))
       end
       context 'without trace' do
         let(:arguments) { ['app', 'create', 'app1', 'nomatch_cart', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
-        it { run_output.should match(/Valid cartridge types:.*Each application needs a web cartridge/m) }
+        it("should display the list of cartridges") { run_output.should match(/Short Name.*mock_standalone_cart-2/m) }
       end
       context 'with trace' do
         let(:arguments) { ['app', 'create', 'app1', 'nomatch_cart', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password', '--trace'] }
-        it { expect { run }.should raise_error(RHC::Rest::ValidationException) }
+        it { expect { run }.should raise_error(RHC::CartridgeNotFoundException, "There are no cartridges that match 'nomatch_cart'.") }
       end
     end
   end
@@ -94,6 +95,7 @@ describe RHC::Commands::App do
         @domain = rest_client.add_domain("mockdomain")
       end
       it "should create a jenkins app and a regular app with an embedded jenkins client" do
+        #puts run_output
         expect { run }.should exit_with_code(0)
         jenkins_app = @domain.find_application("jenkins")
         jenkins_app.cartridges[0].name.should == "jenkins-1.4"
@@ -394,6 +396,15 @@ describe RHC::Commands::App do
     context 'app tidy' do
       let(:arguments) { ['app', 'tidy', 'app1','--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
       it { run_output.should match('cleaned') }
+    end
+  end
+
+  describe "#create_app" do
+    it("should list cartridges when a server error happens") do
+      subject.should_receive(:list_cartridges)
+      domain = stub
+      domain.stub(:add_application).and_raise(RHC::Rest::ValidationException.new('Foo', :cartridges, 109))
+      expect{ subject.send(:create_app, 'name', 'jenkins-1.4', domain) }.to raise_error(RHC::Rest::ValidationException)
     end
   end
 end

@@ -50,7 +50,7 @@ module RHC::Commands
     argument :cartridges, "The web framework this application should use", ["-t", "--type cartridge"], :arg_type => :list
     #argument :additional_cartridges, "A list of other cartridges such as databases you wish to add. Cartridges can also be added later using 'rhc cartridge add'", [], :arg_type => :list
     def create(name, cartridges)
-      cartridge = check_cartridges(cartridges).first
+      cartridges = check_cartridges(cartridges)
 
       options.default \
         :dns => true,
@@ -65,7 +65,7 @@ module RHC::Commands
       paragraph do
         header "Application Options"
         table([["Namespace:", options.namespace],
-               ["Cartridge:", cartridge],
+               ["Cartridges:", cartridges.map(&:name).join(', ')],
                ["Gear Size:", options.gear_size || "default"],
                ["Scaling:", options.scaling ? "yes" : "no"],
               ]
@@ -79,7 +79,7 @@ module RHC::Commands
 
 
         # create the main app
-        rest_app = create_app(name, cartridge, rest_domain,
+        rest_app = create_app(name, cartridges.map(&:name), rest_domain,
                               options.gear_size, options.scaling)
 
         messages.concat(rest_app.messages)
@@ -296,32 +296,41 @@ module RHC::Commands
       end
 
       def standalone_cartridges
-        @standalone_cartridges ||= rest_client.cartridges.select{ |c| c.type == 'standalone' }
+        @standalone_cartridges ||= all_cartridges.select{ |c| c.type == 'standalone' }
+      end
+      def all_cartridges
+        @all_cartridges = rest_client.cartridges
       end
 
       def check_cartridges(cartridge_names)
         cartridge_names = Array(cartridge_names).map{ |s| s.strip if s && s.length > 0 }.compact
 
-        unless cartridge_name = cartridge_names.first
-          section(:bottom => 1){ list_cartridges }
-          raise ArgumentError.new "Every application needs a web cartridge to handle incoming web requests. Please provide the short name of one of the carts listed above."
-        end
-
-        unless standalone_cartridges.find{ |c| c.name == cartridge_name }
-          matching_cartridges = standalone_cartridges.select{ |c| c.name.include?(cartridge_name) }
-          if matching_cartridges.length == 1
-            cartridge_names[0] = use_cart(matching_cartridges.first, cartridge_name)
-          elsif matching_cartridges.present?
-            paragraph { list_cartridges(matching_cartridges) }
-            raise RHC::MultipleCartridgesException.new("There are multiple web cartridges named '#{cartridge_name}'. Please provide the short name of your desired cart.")
+        cartridge_names.map do |name|
+          all_cartridges.find{ |c| c.name == name } ||
+            begin
+              matching_cartridges = all_cartridges.select{ |c| c.name.include?(name) }
+              unless matching_cartridges.length == 1
+                if matching_cartridges.present?
+                  paragraph { list_cartridges(matching_cartridges) }
+                  raise RHC::MultipleCartridgesException, "There are multiple web cartridges named '#{name}'. Please provide the short name of your desired cart." if matching_cartridges.present?
+                else
+                  paragraph { list_cartridges(all_cartridges) }
+                  raise RHC::CartridgeNotFoundException, "There are no cartridges that match '#{name}'."
+                end
+              end
+              use_cart(matching_cartridges.first, name)
+            end
+        end.tap do |carts|
+          if carts.none?(&:only_in_new?)
+            section(:bottom => 1){ list_cartridges }
+            raise RHC::CartridgeNotFoundException, "Every application needs a web cartridge to handle incoming web requests. Please provide the short name of one of the carts listed above."         
           end
         end
-        cartridge_names.first(1)
       end
 
       def use_cart(cart, for_cartridge_name)
         info "Using #{cart.name}#{cart.display_name ? " (#{cart.display_name})" : ''} for '#{for_cartridge_name}'"
-        cart.name
+        cart
       end
 
       def list_cartridges(cartridges=standalone_cartridges)
@@ -338,12 +347,11 @@ module RHC::Commands
         result
       end
 
-      def create_app(name, cartridge, rest_domain, gear_size=nil, scale=nil)
-        app_options = {:cartridge => cartridge}
+      def create_app(name, cartridges, rest_domain, gear_size=nil, scale=nil)
+        app_options = {:cartridges => Array(cartridges)}
         app_options[:gear_profile] = gear_size if gear_size
         app_options[:scale] = scale if scale
         app_options[:debug] = true if @debug
-
         debug "Creating application '#{name}' with these options - #{app_options.inspect}"
         rest_app = rest_domain.add_application(name, app_options)
         debug "'#{rest_app.name}' created"
