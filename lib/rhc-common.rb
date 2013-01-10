@@ -370,6 +370,7 @@ end
     http.read_timeout = @read_timeout
     if url.scheme == "https"
       http.use_ssl = true
+      http.ssl_version = :TLSv1
       http.verify_mode = OpenSSL::SSL::VERIFY_NONE
     end
     begin
