@@ -74,7 +74,6 @@ module RHC
     #
     # Global config
     #
-
     global_option '-l', '--rhlogin LOGIN', "OpenShift login"
     global_option '-p', '--password PASSWORD', "OpenShift password"
     global_option '-d', '--debug', "Turn on debugging", :hide => true

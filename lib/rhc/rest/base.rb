@@ -25,7 +25,7 @@ module RHC
         client.request(options.merge({
           :url => url,
           :method => method,
-          :payload => payload
+          :payload => payload,
         }))
       end
 
