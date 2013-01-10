@@ -100,6 +100,7 @@ describe RHC::CLI do
     end
     it('should update $terminal.page_at') do 
       $stdin.should_receive(:tty?).twice.and_return(true)
+      $stdout.should_receive(:tty?).twice.and_return(true)
       expect { RHC::CLI.set_terminal }.to change($terminal, :page_at)
     end
   end
