@@ -358,7 +358,7 @@ module RHC
 
     def setup_test_stage
       tests_passed = false
-      info "Checking your system (one dot for each test)"
+      info "Analyzing system (one dot for each test)"
       tests = [
         :test_ssh_quick,
         :test_broker_connectivity,
