@@ -68,7 +68,7 @@ module RHC
 
     def format_cart_header(cart)
       [
-        cart.name, 
+        cart.name,
         cart.name != cart.display_name ? "(#{cart.display_name})" : nil,
       ].compact.join(' ')
     end
@@ -87,7 +87,7 @@ module RHC
 
       say_table \
         format_cart_header(cart),
-        get_properties(cart, :scaling, *properties).concat(cart.properties.map{ |p| ["#{table_heading(p['name'])}:", p['value']] }.sort{ |a,b| a[0] <=> b[0] }),
+        get_properties(cart, :scaling, *properties).concat(cart.properties.map{ |p| ["#{table_heading(p['name'])}:", p['value']] }.sort{ |b,a| a[0] <=> b[0] }),
         :delete => true
       display_no_info("cartridge") unless @table_displayed
     end
