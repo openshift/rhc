@@ -89,7 +89,7 @@ describe RHC::Wizard do
     it "should run a check" do
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match(/Checking your system/)
+      output.should match(/Analyzing system/)
     end
 
     it "should ask for a namespace" do
@@ -179,7 +179,7 @@ describe RHC::Wizard do
     it "should run a check" do
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match(/Checking your system/)
+      output.should match(/Analyzing system/)
     end
 
     it "should ask for a namespace" do
@@ -270,7 +270,7 @@ describe RHC::Wizard do
     it "should run a check" do
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match(/Checking your system/)
+      output.should match(/Analyzing system/)
     end
 
     it "should ask for a namespace" do
@@ -345,7 +345,7 @@ describe RHC::Wizard do
     it "should run a check" do
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match(/Checking your system/)
+      output.should match(/Analyzing system/)
     end
 
     it "should ask for a namespace" do
@@ -431,7 +431,7 @@ describe RHC::Wizard do
     it "should run a check" do
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match(/Checking your system/)
+      output.should match(/Analyzing system/)
     end
 
     it "should show namespace" do
@@ -504,7 +504,7 @@ describe RHC::Wizard do
     it "should run a check" do
       @wizard.run_next_stage
       output = $terminal.read
-      output.should match(/Checking your system/)
+      output.should match(/Analyzing system/)
     end
     
     it "should ask for namespace and decline entering one" do
