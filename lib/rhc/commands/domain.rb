@@ -65,9 +65,11 @@ module RHC::Commands
 
     summary "DEPRECATED use 'setup' instead"
     deprecated 'rhc setup'
+    # :nocov:
     def status
       1 # return error status
     end
+    # :nocov:
 
     summary "Deletes your domain."
     syntax "<namespace>"
