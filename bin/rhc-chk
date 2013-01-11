@@ -60,6 +60,8 @@ USAGE
 exit exit_code
 end
 
+warn "#{$0} has been deprecated. Please run 'rhc setup' instead."
+
 begin
   opts = GetoptLong.new(
     ["--debug", "-d", GetoptLong::NO_ARGUMENT],

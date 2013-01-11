@@ -85,6 +85,12 @@ describe RHC::Wizard do
       output = $terminal.read
       output.should match(/Checking for git .*found/)
     end
+    
+    it "should run a check" do
+      @wizard.run_next_stage
+      output = $terminal.read
+      output.should match(/Analyzing system/)
+    end
 
     it "should ask for a namespace" do
       $terminal.write_line("thisnamespaceistoobigandhastoomanycharacterstobevalid")
@@ -168,6 +174,12 @@ describe RHC::Wizard do
       output = $terminal.read
       output.should match(/Checking for git .*needs to be installed/)
       output.should match("Automated installation of client tools is not supported for your platform")
+    end
+
+    it "should run a check" do
+      @wizard.run_next_stage
+      output = $terminal.read
+      output.should match(/Analyzing system/)
     end
 
     it "should ask for a namespace" do
@@ -255,6 +267,12 @@ describe RHC::Wizard do
       output.should match(/Checking for git .*found/)
     end
 
+    it "should run a check" do
+      @wizard.run_next_stage
+      output = $terminal.read
+      output.should match(/Analyzing system/)
+    end
+
     it "should ask for a namespace" do
       $terminal.write_line("testnamespace")
       @wizard.run_next_stage
@@ -322,6 +340,12 @@ describe RHC::Wizard do
       @wizard.run_next_stage
       output = $terminal.read
       output.should match(/Checking for git .*found/)
+    end
+
+    it "should run a check" do
+      @wizard.run_next_stage
+      output = $terminal.read
+      output.should match(/Analyzing system/)
     end
 
     it "should ask for a namespace" do
@@ -404,6 +428,12 @@ describe RHC::Wizard do
       output.should match(/Checking for git .*found/)
     end
 
+    it "should run a check" do
+      @wizard.run_next_stage
+      output = $terminal.read
+      output.should match(/Analyzing system/)
+    end
+
     it "should show namespace" do
       @wizard.run_next_stage
       output = $terminal.read
@@ -471,6 +501,12 @@ describe RHC::Wizard do
       output.should match("Git for Windows")
     end
 
+    it "should run a check" do
+      @wizard.run_next_stage
+      output = $terminal.read
+      output.should match(/Analyzing system/)
+    end
+    
     it "should ask for namespace and decline entering one" do
       $terminal.write_line("")
       @wizard.run_next_stage

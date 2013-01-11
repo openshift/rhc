@@ -20,6 +20,7 @@ module RHC
               :config_ssh_key_stage,
               :upload_ssh_key_stage,
               :install_client_tools_stage,
+              :setup_test_stage,
               :config_namespace_stage,
               :show_app_info_stage,
               :finalize_stage]
@@ -326,6 +327,113 @@ EOF
       true
     end
 
+    def setup_test_stage
+      tests_passed = false
+      info "Analyzing system (one dot for each test)"
+      tests = [
+        :test_ssh_quick,
+        :test_broker_connectivity,
+        :test_server_has_ssh_keys,
+        :test_private_key_mode,
+        :test_remote_ssh_keys,
+        :test_ssh_connectivity
+      ]
+      tests_passed = tests.all? do |test|
+        send(test)
+      end
+    end
+    
+    ###
+    # tests for setup_test_stage; no code coverage is tested here
+    
+    # :nocov:
+    def ssh_agent_identities
+      Net::SSH::Authentication::Agent.connect.identities rescue []
+    end
+    
+    def ssh_agent_keys
+      @agent_keys ||= ssh_agent_identities.map { |id| id.comment }
+    end
+    
+    def test_ssh_quick
+      hosts = []
+      server_keys = []
+      
+      rest_client.domains.map do |domain|
+        domain.applications.each do |app|
+          if Net::SSH.configuration_for(app.host)[:keys]
+            Net::SSH.configuration_for(app.host)[:keys].map{ |f| server_keys << File.expand_path(f) }
+          end
+        end
+      end
+
+      server_keys ||= server_keys.flatten!.compact!
+      report_result (server_keys - ssh_agent_keys).empty?, "SSH keys missing on the server"
+    end
+    
+    def test_broker_connectivity
+      # for simple connectivity to the broker, we ensure that the server
+      # replied with a list of API versions
+      report_result(rest_client.server_api_versions, "#{rest_client.end_point} did not respond with valid data") and
+      
+      # if the REST client is properly initialized and has #user defined,
+      # the authentication was successful
+      report_result(rest_client.user, "Authentication as #{rest_client.username} failed")
+    end
+    
+    def test_server_has_ssh_keys
+      # at least one key is stored on the server
+      report_result !rest_client.sshkeys.empty?, "No SSH key is uploaded to the server for #{rest_client.username}"
+    end
+
+    def test_private_key_mode
+      pub_key_file = RHC::Config.ssh_pub_key_file_path
+      private_key_file = RHC::Config.ssh_priv_key_file_path
+      # we test these only in the context of FakeFS; to avoid displaying 
+      # NoMethodError on the console, we basically skip it (and bypass coverage)
+      if File.exist?(private_key_file) and defined?(FakeFS) and !File.stat(private_key_file).is_a?(FakeFS::File::Stat)
+        report_result (File.exist?(private_key_file) and File.stat(private_key_file).mode.to_s(8) =~ /[4-7]00$/),
+          "#{private_key_file} should not be accessible by no one but the user"
+      else
+        true # wizard should go on
+      end
+    end
+    
+    def test_remote_ssh_keys
+      # test if the server has the remote key
+      server_has_key = rest_client.sshkeys.any? do |k|
+        k.fingerprint == fingerprint_for_default_key or
+        if ssh_agent_identities
+          ssh_agent_identities.map{|agent_key| k.fingerprint == agent_key.fingerprint }
+        end
+      end
+      report_result server_has_key, "Remote server does not have the corresponding SSH key"
+    end
+    
+    def test_ssh_connectivity
+      # test connectivity for each app server
+      rest_client.domains.each do |dom|
+        dom.applications do |app|
+          tries = 0
+          begin
+            ssh = Net::SSH.start(app.host, app.uuid, :timeout => 10)
+          rescue Timeout::Error
+            if tries < 3
+              tries += 1
+              retry
+            end
+          ensure
+            report_result(ssh, "Cannot connect to #{app.host}", false)
+            ssh.close if ssh
+          end
+        end
+      end
+      true # continue
+    end
+    # :nocov:
+
+    ###
+    
     def finalize_stage
       paragraph do
         say "The OpenShift client tools have been configured on your computer.  " \
