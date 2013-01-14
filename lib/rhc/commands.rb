@@ -155,7 +155,7 @@ module RHC
 
           c.when_called do |args, options|
             config = RHC::Config.new
-            config.set_opts_config(options.config) if options.config
+            config.use_config(options.config) if options.config
 
             options.default(config.to_options) unless options.clean
             deprecated?

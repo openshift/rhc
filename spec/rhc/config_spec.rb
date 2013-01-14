@@ -24,6 +24,15 @@ describe RHC::Config do
 
   let(:values){ {} }
 
+  describe "#use_config" do
+    subject{ RHC::Config.new.tap{ |c| c.stub(:load_config_files) } }
+
+    context "when an exception is raised" do
+      before{ subject.should_receive(:set_opts_config).with(File.expand_path('foo')).and_raise(Errno::EISDIR.new('foo')) }
+      it("should wrap the error"){ expect{ subject.use_config('foo') }.to raise_error(ArgumentError, /Unable to read configuration file.*foo/) }
+    end
+  end
+
   describe "#to_options" do
     subject do
       RHC::Config.new.tap do |c|

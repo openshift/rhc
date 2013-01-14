@@ -196,6 +196,13 @@ module RHC
       raise Errno::EACCES.new "Could not open config file: #{e.message}"
     end
 
+    def use_config(path)
+      path = File.expand_path(path)
+      set_opts_config(path)
+    rescue => e
+      raise ArgumentError, "Unable to read configuration file: #{e.message}", $!.backtrace
+    end
+
     # DEPRECATED - will be removed when old commands are gone
     def check_cpath(opts)
       unless opts["config"].nil?
