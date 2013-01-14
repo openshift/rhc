@@ -403,16 +403,16 @@ module RHC
     def test_broker_connectivity
       # for simple connectivity to the broker, we ensure that the server
       # replied with a list of API versions
-      report_result(rest_client.server_api_versions, "#{rest_client.end_point} did not respond with valid data") and
+      report_result(rest_client.api_version_negotiated, "#{rest_client.url} did not respond with valid data") and
       
       # if the REST client is properly initialized and has #user defined,
       # the authentication was successful
-      report_result(rest_client.user, "Authentication as #{rest_client.username} failed")
+      report_result(rest_client.user, "Authentication as #{rest_client.user.login} failed")
     end
     
     def test_server_has_ssh_keys
       # at least one key is stored on the server
-      report_result !rest_client.sshkeys.empty?, "No SSH key is uploaded to the server for #{rest_client.username}"
+      report_result !rest_client.sshkeys.empty?, "No SSH key is uploaded to the server for #{rest_client.user.login}"
     end
 
     def test_private_key_mode
