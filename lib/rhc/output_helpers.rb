@@ -41,7 +41,7 @@ module RHC
             display_app_properties(
               app,
               :creation_time,
-              :gear_profile,
+              :gear_info,
               :git_url,
               :ssh_string,
               :aliases)
@@ -77,6 +77,19 @@ module RHC
       "x%d (minimum: %s, maximum: %s) on %s gears" %
         [:current_scale, :scales_from, :scales_to, :gear_profile].map{ |key| format_value(key, scaling[key]) } if scaling
     end
+    def format_cart_gears(cart)
+      if cart.scalable?
+        format_scaling_info(cart.scaling)
+      elsif cart.shares_gears?
+        "Located with #{cart.collocated_with.join(", ")}"
+      else
+        "%d %s" % [format_value(:current_scale, cart.current_scale), format_value(:gear_profile, cart.gear_profile)]
+      end
+    end
+    def format_gear_info(info)
+      "%d (defaults to %s)" %
+        [:gear_count, :gear_profile].map{ |key| format_value(key, info[key]) } if info
+    end
 
     #---------------------------
     # Cartridge information
@@ -87,7 +100,9 @@ module RHC
 
       say_table \
         format_cart_header(cart),
-        get_properties(cart, :scaling, *properties).concat(cart.properties.map{ |p| ["#{table_heading(p['name'])}:", p['value']] }.sort{ |a,b| a[0] <=> b[0] }),
+        get_properties(cart, *properties).
+          concat([[cart.scalable? ? :scaling : :gears, format_cart_gears(cart)]]).
+          concat(cart.properties.map{ |p| ["#{table_heading(p['name'])}:", p['value']] }.sort{ |a,b| a[0] <=> b[0] }),
         :delete => true
       display_no_info("cartridge") unless @table_displayed
     end
@@ -179,8 +194,8 @@ module RHC
           date(value)
         when :scales_from,:scales_to
           (value == -1 ? "available" : value)
-        when :scaling
-          format_scaling_info(value)
+        when :gear_info
+          format_gear_info(value)
 =begin
 #  Commenting this out for US2438
         when :base_gear_storage,:additional_gear_storage

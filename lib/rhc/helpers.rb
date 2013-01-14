@@ -303,6 +303,7 @@ module RHC
         :gear_sizes     => "Allowed Gear Sizes",
         :consumed_gears => "Gears Used",
         :max_gears      => "Gears Allowed",
+        :gear_info      => "Gears",
         :plan_id        => "Plan",
         :url            => "URL",
         :ssh_string     => "SSH",

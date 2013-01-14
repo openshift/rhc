@@ -40,6 +40,10 @@ module RHC
           end
       end
 
+      def gear_info
+        { :gear_count => gear_count, :gear_profile => gear_profile } unless gear_count.nil?
+      end
+
       def gear_groups
         debug "Getting all gear groups for application #{name}"
         rest_method "GET_GEAR_GROUPS"

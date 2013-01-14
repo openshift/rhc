@@ -471,14 +471,13 @@ module RHC::Rest::Mock
       @git_url = "git:fake.foo/git/#{@name}.git"
       @app_url = "https://#{@name}-#{@domain.id}.fake.foo/"
       @ssh_url = "ssh://#{@uuid}@127.0.0.1"
-      @embedded = {}
       @aliases = []
       @gear_profile = gear_profile
       if scale
         @scalable = true
-        @embedded = {"haproxy-1.4" => {:info => ""}}
       end
       self.attributes = {:links => mock_response_links(mock_app_links('mock_domain_0', 'mock_app_0')), :messages => []}
+      self.gear_count = 5
       types = Array(type)
       cart = add_cartridge(types.first, false) if types.first
       if scale
@@ -486,6 +485,8 @@ module RHC::Rest::Mock
         cart.supported_scales_from = (cart.scales_from = 2)
         cart.current_scale = 2
         cart.scales_with = "haproxy-1.4"
+        prox = add_cartridge('haproxy-1.4')
+        prox.collocated_with = [types.first]
       end
       types.drop(1).each{ |c| add_cartridge(c, false) }
       @framework = types.first

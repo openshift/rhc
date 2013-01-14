@@ -319,6 +319,7 @@ describe RHC::Commands::App do
         @domain.add_application("app1", "mock_type")
       end
       it { run_output.should match("app1 @ https://app1-mockdomain.fake.foo/") }
+      it { run_output.should match(/Gears:\s+1 small/) }
     end
 
     context 'when run with scaled app' do
@@ -327,9 +328,12 @@ describe RHC::Commands::App do
         app = @domain.add_application("app1", "mock_type", true)
         cart1 = app.add_cartridge('mock_cart-1')
         cart2 = app.add_cartridge('mock_cart-2')
+        cart2.gear_profile = 'medium'
       end
       it { run_output.should match("app1 @ https://app1-mockdomain.fake.foo/") }
       it { run_output.should match(/Scaling:.*x2/) }
+      it { run_output.should match(/Gears:\s+Located with mock_type/) }
+      it { run_output.should match(/Gears:\s+1 medium/) }
     end
   end
 
