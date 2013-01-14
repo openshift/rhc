@@ -434,7 +434,7 @@ module RHC
     
     def test_remote_ssh_keys
       # test if the server has the remote key
-      server_has_key = rest_client.sshkeys.any? do |k|
+      server_has_key = ssh_keys.any? do |k|
         k.fingerprint == fingerprint_for_default_key or
         if ssh_agent_identities
           ssh_agent_identities.map{|agent_key| k.fingerprint == agent_key.fingerprint }
