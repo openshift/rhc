@@ -84,6 +84,11 @@ module RHC
       end
 
     private
+    
+    # cache SSH keys from the REST client
+    def ssh_keys
+      @ssh_keys ||= rest_client.sshkeys
+    end
 
     def greeting_stage
       info "OpenShift Client Tools (RHC) Setup Wizard"
@@ -161,19 +166,18 @@ module RHC
     # return true if the account has the public key defined by
     # RHC::Config::ssh_pub_key_file_path
     def ssh_key_uploaded?
-      @ssh_keys ||= rest_client.sshkeys
-      @ssh_keys.any? { |k| k.fingerprint == fingerprint_for_default_key }
+      ssh_keys.any? { |k| k.fingerprint == fingerprint_for_default_key }
     end
 
     def existing_keys_info
-      return unless @ssh_keys
-      indent{ @ssh_keys.each{ |key| paragraph{ display_key(key) } } }
+      return unless ssh_keys
+      indent{ ssh_keys.each{ |key| paragraph{ display_key(key) } } }
     end
 
     def get_preferred_key_name
       key_name = 'default'
 
-      if @ssh_keys.empty?
+      if ssh_keys.empty?
         paragraph do
           info "Since you do not have any keys associated with your OpenShift account, "\
               "your new key will be uploaded as the 'default' key."
@@ -200,7 +204,7 @@ module RHC
         userkey = username ? username.gsub(/@.*/, '') : ''
         pubkey_base_name = "#{userkey}#{hostname}".gsub(/[^A-Za-z0-9]/,'').slice(0,16)
         default_name = find_unique_key_name(
-          :keys => @ssh_keys,
+          :keys => ssh_keys,
           :base => pubkey_base_name,
           :max_length => DEFAULT_MAX_LENGTH
         )
@@ -220,12 +224,12 @@ module RHC
     # given the base name and the maximum length,
     # find a name that does not clash with what is in opts[:keys]
     def find_unique_key_name(opts)
-      keys = opts[:keys] || @ssh_keys
+      keys = opts[:keys] || ssh_keys
       base = opts[:base] || 'default'
       max  = opts[:max_length] || DEFAULT_MAX_LENGTH
       key_name_suffix = 1
       candidate = base
-      while @ssh_keys.detect { |k| k.name == candidate }
+      while ssh_keys.detect { |k| k.name == candidate }
         candidate = base.slice(0, max - key_name_suffix.to_s.length) +
           key_name_suffix.to_s
         key_name_suffix += 1
@@ -243,7 +247,7 @@ module RHC
       end
 
       paragraph do
-        if !@ssh_keys.empty? && @ssh_keys.any? { |k| k.name == key_name }
+        if !ssh_keys.empty? && ssh_keys.any? { |k| k.name == key_name }
           say "Key with the name #{key_name} already exists. Updating ... "
           key = rest_client.find_key(key_name)
           key.update(type, content)
@@ -412,7 +416,7 @@ module RHC
     
     def test_server_has_ssh_keys
       # at least one key is stored on the server
-      report_result !rest_client.sshkeys.empty?, "No SSH key is uploaded to the server for #{rest_client.user.login}"
+      report_result !ssh_keys.empty?, "No SSH key is uploaded to the server for #{rest_client.user.login}"
     end
 
     def test_private_key_mode
