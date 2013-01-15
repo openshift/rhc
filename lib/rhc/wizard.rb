@@ -334,14 +334,12 @@ module RHC
       section do
         say "Checking for applications ... "
 
-        apps = rest_client.domains.map(&:applications).flatten
-
-        if !apps.nil? and !apps.empty?
-          success "found #{apps.length}"
+        if !applications.nil? and !applications.empty?
+          success "found #{applications.length}"
 
           paragraph do
             indent do
-              say table(apps.map do |app|
+              say table(applications.map do |app|
                 [app.name, app.app_url]
               end)
             end
