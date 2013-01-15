@@ -451,7 +451,7 @@ module RHC
     
     def test_ssh_connectivity
       # test connectivity for each app server
-      applications do |app|
+      applications.each do |app|
         tries = 0
         begin
           ssh = Net::SSH.start(app.host, app.uuid, :timeout => 10)
