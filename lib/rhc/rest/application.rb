@@ -98,7 +98,7 @@ module RHC
       end
 
       def remove_alias(app_alias)
-        debug "Running add_alias for #{name}"
+        debug "Running remove_alias for #{name}"
         rest_method "REMOVE_ALIAS", :event => "remove-alias", :alias => app_alias
       end
 
@@ -133,9 +133,9 @@ module RHC
         filtered = Array.new
         cartridges.each do |cart|
           if regex
-            filtered.push(cart) if cart.name.match(regex) and (type.nil? or cart.type == type)
+            filtered.push(cart) if cart.name.match(/(?i:#{regex})/) and (type.nil? or cart.type == type)
           else
-            filtered.push(cart) if cart.name == name and (type.nil? or cart.type == type)
+            filtered.push(cart) if cart.name.downcase == name.downcase and (type.nil? or cart.type == type)
           end
         end
         filtered
@@ -151,7 +151,7 @@ module RHC
       end
 
       def <=>(other)
-        c = name <=> other.name
+        c = name.downcase <=> other.name.downcase
         return c unless c == 0
         domain_id <=> other.domain_id
       end

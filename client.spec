@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.3.2
+Version: 1.3.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -113,6 +113,42 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Jan 10 2013 Adam Miller <admiller@redhat.com> 1.3.3-1
+- Update build.sh (ccoleman@redhat.com)
+- Add rubygems as a build requires for gem (ccoleman@redhat.com)
+- Remove rake references (ccoleman@redhat.com)
+- Removing the cucumber dependency from the RPM builds (bleanhar@redhat.com)
+- Merge pull request #269 from Coolhand/dev/niharvey/bug/880511
+  (dmcphers+openshiftbot@redhat.com)
+- fixed line 98 in lib/rhc/rest/application.rb to replace add_alias with
+  remove_alias in debug output (niharvey@redhat.com)
+- We should select applications and cartridges case-incensitively.
+  (asari.ruby@gmail.com)
+- Merge pull request #266 from
+  smarterclayton/bug_889090_print_password_on_cart_addition
+  (dmcphers+openshiftbot@redhat.com)
+- Time.new is new for 1.9.3, use Time.local (ccoleman@redhat.com)
+- Date calculation for test case has a fencepost coverage error
+  (ccoleman@redhat.com)
+- Styling changes per clayton's comments (fotios@redhat.com)
+- Nest cartridges into applications (fotios@redhat.com)
+- Time.new is new for 1.9.3, use Time.local (ccoleman@redhat.com)
+- Add some spacing around the cartridge output (ccoleman@redhat.com)
+- Bug 889090 - Password and other cart options should be displayed to the user
+  on cart creation and on cart show. (ccoleman@redhat.com)
+- Date calculation for test case has a fencepost coverage error
+  (ccoleman@redhat.com)
+- Don't give away the password length. (asari.ruby@gmail.com)
+- Merge pull request #261 from BanzaiMan/dev/hasari/bz888100
+  (openshift+bot@redhat.com)
+- TarGz not autoloaded (ccoleman@redhat.com)
+- Conceal password entirely. (asari.ruby@gmail.com)
+- Iterate over Array as well. (asari.ruby@gmail.com)
+- Fixes BZ888100. (asari.ruby@gmail.com)
+- Remove debug statements from cucumber tests (ccoleman@redhat.com)
+- Remove rhc-common, fix extended failure introduced by us3117
+  (ccoleman@redhat.com)
+
 * Tue Dec 18 2012 Adam Miller <admiller@redhat.com> 1.3.2-1
 - Merge pull request #259 from smarterclayton/us3117_refactor_help_and_cleanup
   (openshift+bot@redhat.com)
