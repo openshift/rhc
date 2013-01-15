@@ -89,6 +89,11 @@ module RHC
     def ssh_keys
       @ssh_keys ||= rest_client.sshkeys
     end
+    
+    # clear SSH key cache
+    def clear_ssh_keys_cache
+      @ssh_keys = nil
+    end
 
     def greeting_stage
       info "OpenShift Client Tools (RHC) Setup Wizard"
@@ -248,10 +253,12 @@ module RHC
 
       paragraph do
         if !ssh_keys.empty? && ssh_keys.any? { |k| k.name == key_name }
+          clear_ssh_keys_cache
           say "Key with the name #{key_name} already exists. Updating ... "
           key = rest_client.find_key(key_name)
           key.update(type, content)
         else
+          clear_ssh_keys_cache
           say "Uploading key '#{key_name}' from #{RHC::Config::ssh_pub_key_file_path} ... "
           rest_client.add_key key_name, content, type
         end
