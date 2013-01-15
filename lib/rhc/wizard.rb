@@ -379,6 +379,11 @@ module RHC
       end
     end
     
+    # cached list of applications needed for test stage
+    def applications
+      @applications ||= rest_client.domains.map(&:applications).flatten
+    end
+    
     ###
     # tests for setup_test_stage; no code coverage is tested here
     
@@ -395,11 +400,9 @@ module RHC
       hosts = []
       server_keys = []
       
-      rest_client.domains.map do |domain|
-        domain.applications.each do |app|
-          if Net::SSH.configuration_for(app.host)[:keys]
-            Net::SSH.configuration_for(app.host)[:keys].map{ |f| server_keys << File.expand_path(f) }
-          end
+      applications.each do |app|
+        if Net::SSH.configuration_for(app.host)[:keys]
+          Net::SSH.configuration_for(app.host)[:keys].map{ |f| server_keys << File.expand_path(f) }
         end
       end
 
@@ -448,20 +451,18 @@ module RHC
     
     def test_ssh_connectivity
       # test connectivity for each app server
-      rest_client.domains.each do |dom|
-        dom.applications do |app|
-          tries = 0
-          begin
-            ssh = Net::SSH.start(app.host, app.uuid, :timeout => 10)
-          rescue Timeout::Error
-            if tries < 3
-              tries += 1
-              retry
-            end
-          ensure
-            report_result(ssh, "Cannot connect to #{app.host}", false)
-            ssh.close if ssh
+      applications do |app|
+        tries = 0
+        begin
+          ssh = Net::SSH.start(app.host, app.uuid, :timeout => 10)
+        rescue Timeout::Error
+          if tries < 3
+            tries += 1
+            retry
           end
+        ensure
+          report_result(ssh, "Cannot connect to #{app.host}", false)
+          ssh.close if ssh
         end
       end
       true # continue
