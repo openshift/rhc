@@ -1,3 +1,4 @@
+---
 language: ruby
 rvm:
   - 1.8.7
@@ -11,3 +12,13 @@ notifications:
       - dev@openshift.redhat.com
   irc:
     - "irc.freenode.org#openshift-dev"
+env:
+  global:
+  - "ARTIFACTS_AWS_REGION=us-east-1"
+  - "ARTIFACTS_S3_BUCKET=libra_travis_artifacts"
+  - secure: "QPgAHdc1XDoawGrxep/2gsdQ4V1cV1q3pYuqMDsyvctwwvVw7t9K+AM1bf8p\nVvHnDnOdHu/E+kT6AtF0GsWHRGDv3DiQV+k/jTMd9i/Rozxm5fIW6n3SJ23y\ndNoWO97r025QiVKVZqLbWk8fGgwTulcBcnth4huI+Ylh3RMOJvw="
+  - secure: "RZNstMA3FTbq2pLKWPCm/Tm7h7mDolFTQkM/OUGa7WyTz/QxVPexm/jJjSLp\ntEwDDOLh+x4aDTu0xFEAKvgKtRUuDIKIR25FdRUQn4PMHnGn6Bc0TFgXqtpZ\n+Vd4RRnxTIYtpRBGnAKEaDXaAQsKqWVJT4or1IkmFf/HVPdb+lc="
+before_script:
+  - "gem install travis-artifacts"
+after_failure:
+  - "travis-artifacts upload --path coverage/spec --private"
