@@ -367,17 +367,13 @@ module RHC
       true
     end
 
+    # Perform basic tests to ensure that setup is sane
+    # search for private methods starting with "test_" and execute them
+    # do not assume test execution order
     def setup_test_stage
       tests_passed = false
       info "Analyzing system (one dot for each test)"
-      tests = [
-        :test_ssh_quick,
-        :test_broker_connectivity,
-        :test_server_has_ssh_keys,
-        :test_private_key_mode,
-        :test_remote_ssh_keys,
-        :test_ssh_connectivity
-      ]
+      tests = private_methods.select {|m| m.to_s.start_with? 'test_'}
       tests_passed = tests.all? do |test|
         send(test)
       end
