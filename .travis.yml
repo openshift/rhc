@@ -1,4 +1,3 @@
----
 language: ruby
 rvm:
   - 1.8.7
@@ -14,11 +13,11 @@ notifications:
     - "irc.freenode.org#openshift-dev"
 env:
   global:
-  - "ARTIFACTS_AWS_REGION=us-east-1"
-  - "ARTIFACTS_S3_BUCKET=libra_travis_artifacts"
-  - secure: "QPgAHdc1XDoawGrxep/2gsdQ4V1cV1q3pYuqMDsyvctwwvVw7t9K+AM1bf8p\nVvHnDnOdHu/E+kT6AtF0GsWHRGDv3DiQV+k/jTMd9i/Rozxm5fIW6n3SJ23y\ndNoWO97r025QiVKVZqLbWk8fGgwTulcBcnth4huI+Ylh3RMOJvw="
-  - secure: "RZNstMA3FTbq2pLKWPCm/Tm7h7mDolFTQkM/OUGa7WyTz/QxVPexm/jJjSLp\ntEwDDOLh+x4aDTu0xFEAKvgKtRUuDIKIR25FdRUQn4PMHnGn6Bc0TFgXqtpZ\n+Vd4RRnxTIYtpRBGnAKEaDXaAQsKqWVJT4or1IkmFf/HVPdb+lc="
+    - "ARTIFACTS_AWS_REGION=us-east-1"
+    - "ARTIFACTS_S3_BUCKET=libra_travis_artifacts"
+    - secure: "X/3WPJkR5dQOyZbklqovK3EB8gye5k7yeczfqoRIjfsf7Y3GQbyNR10kAIX9\nwx4TFxV3617GSxqPrFI2esU0N2uqwbGsGdnd7sHcz27df861CsIdtgwtX3mM\nw/ZoEVwe5DRjCUPXroMwfmh20q8kVXUnlW2wR8vbzRC/fQji+u0="
+    - secure: "lKAXyrHz4cbzKbDrOsAWrv/r8S9ZFPw4f2Zev1PRBMqO0FPdntcsoIESE9hQ\nKnrwIIyRfYaSHgN8jKquUPvSotGfiubrTXww9fOLUlJDvkbumxYqVxge92ut\nXP4XOyGw5Lcpc582kTdfg/uYElkqH1VC7FesFcWewEgL8Rhhz+8="
 before_script:
   - "gem install travis-artifacts"
-after_failure:
+after_failure: 
   - "travis-artifacts upload --path coverage/spec --private"
