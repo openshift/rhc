@@ -143,6 +143,10 @@ describe RHC::Commands::Base do
         it { expects_running('statis', 'execute', 'duparg', '--testarg', 'duparg2').should exit_with_code(1) }
       end
 
+      context 'and when the provided option is ambiguous' do
+        it { expects_running('static', 'execute', '-t', '--trace').should raise_error(OptionParser::AmbiguousOption) }
+      end
+
       context 'and when execute is called with too many arguments' do
         it { expects_running('static', 'execute', 'arg1', 'arg2').should exit_with_code(1) }
       end

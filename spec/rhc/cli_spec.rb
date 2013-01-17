@@ -57,6 +57,11 @@ describe RHC::CLI do
       it_should_behave_like 'a global help page'
     end
 
+    context 'with an ambiguous option' do
+      let(:arguments){ ['help', '-s'] }
+      it('should describe an ambiguous error'){ run_output.should match("The option -s is ambiguous. You will need to specify the entire option.") }
+    end
+
     context 'with an invalid command' do
       before(:each) { @arguments = ['invalidcommand'] }
       it_should_behave_like 'an invalid command'

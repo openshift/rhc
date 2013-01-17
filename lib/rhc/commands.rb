@@ -48,11 +48,9 @@ module Commander
         n.reason = "The configuration file #{@config.path} contains an invalid setting"
         n.set_backtrace(e.backtrace)
         raise n
-#        raise e.class, "Your configuration file is not correct. #{e.message}", e.backtrace
       rescue OptionParser::ParseError => e
         e.reason = "The configuration file #{@config.path} contains an invalid setting"
         raise
-#        raise e.class, "Your configuration file is not correct. #{e.message}", e.backtrace
       end
       remaining
     end
