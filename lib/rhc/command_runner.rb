@@ -68,8 +68,11 @@ module RHC
           end
           1
         rescue \
+          OptionParser::InvalidOption => e
+          RHC::Helpers.error e.message
+          1
+        rescue \
           ArgumentError,
-          OptionParser::InvalidOption,
           OptionParser::InvalidArgument,
           OptionParser::MissingArgument => e
 

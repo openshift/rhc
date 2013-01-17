@@ -5,9 +5,7 @@ require 'rhc/commands/port_forward'
 describe RHC::Commands::PortForward do
 
   let!(:rest_client){ MockRestClient.new }
-  before(:each) do
-    RHC::Config.set_defaults
-  end
+  before{ user_config }
 
   describe 'run' do
     let(:arguments) { ['port-forward', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p', 'password', '--app', 'mockapp'] }

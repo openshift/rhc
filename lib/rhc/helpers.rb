@@ -93,7 +93,7 @@ module RHC
     end
 
     global_option('--timeout SECONDS', Integer, 'The timeout for operations') do |value|
-      abort(color("Timeout must be a positive integer",:red)) unless value > 0
+      raise RHC::Exception, "Timeout must be a positive integer" unless value > 0
     end
     global_option '--noprompt', "Suppress all interactive operations command", :hide => true do
       $terminal.page_at = nil

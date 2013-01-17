@@ -45,12 +45,12 @@ describe RHC::Config do
 
     context "with an non true value for insecure" do
       let(:values){ {'insecure' => 'untruth'} }
-      its(:to_options){ should == {:insecure => false} }
+      its(:to_options){ should == {:insecure => 'untruth'} }
     end
 
     context "with an invalid timeout" do
       let(:values){ {'timeout' => 'a'} }
-      it{ expect{ subject.to_options }.to raise_error(ArgumentError) }
+      its(:to_options){ should == {:timeout => 'a'} }
     end
 
     context "with standard values" do
@@ -65,7 +65,7 @@ describe RHC::Config do
           'timeout' => '1',
         }
       end
-      its(:to_options){ should == {:insecure => true, :timeout => 1, :ssl_ca_file => 'file2', :ssl_client_cert_file => 'file1', :rhlogin => 'user', :password => 'pass', :server => 'test.com'} }
+      its(:to_options){ should == {:insecure => 'true', :timeout => '1', :ssl_ca_file => 'file2', :ssl_client_cert_file => 'file1', :rhlogin => 'user', :password => 'pass', :server => 'test.com'} }
     end
   end
 

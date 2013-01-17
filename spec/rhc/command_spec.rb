@@ -3,6 +3,9 @@ require 'rhc/commands/base'
 require 'rhc/exceptions'
 
 describe RHC::Commands::Base do
+
+  before{ base_config }
+
   describe '#object_name' do
     subject { described_class }
     its(:object_name) { should == 'base' }
@@ -45,7 +48,6 @@ describe RHC::Commands::Base do
       it("should have an object name") { subject.object_name.should == 'test' }
       it("should run with wizard") do
         FakeFS do
-          RHC::Config.set_defaults
           wizard_run = false
           RHC::Wizard.stub!(:new) do |config|
             RHC::Wizard.unstub!(:new)

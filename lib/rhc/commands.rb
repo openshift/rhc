@@ -11,14 +11,12 @@ module Commander
     end
 
     def parse_options_and_call_procs *args
-      return args if args.empty?
-      opts = OptionParser.new
       runner = Commander::Runner.instance
+      opts = OptionParser.new
+
       # add global options
       runner.options.each do |option|
-        opts.on *option[:args],
-                &runner.global_option_proc(option[:switches], &option[:proc])
-
+        opts.on(*option[:args], &runner.global_option_proc(option[:switches], &option[:proc]))
       end
 
       # add command options
@@ -27,7 +25,36 @@ module Commander
         opts
       end
 
-      opts.parse! args
+      remaining = opts.parse! args
+
+      _, config_path = proxy_options.find{ |arg| arg[0] == :config }
+      clean, _ = proxy_options.find{ |arg| arg[0] == :clean }
+
+      begin
+        @config = RHC::Config.new
+        @config.use_config(config_path) if config_path
+
+        unless clean
+          @config.to_options.each_pair do |key, value|
+            next if proxy_options.detect{ |arr| arr[0] == key }
+            if sw = opts.send(:search, :long, key.to_s.gsub(/_/, '-'))
+              _, cb, val = sw.send(:conv_arg, nil, value) {|*exc| raise(*exc) }
+              cb.call(val) if cb
+            end
+          end
+        end
+      rescue ArgumentError => e
+        n = OptionParser::InvalidOption.new(e.message)
+        n.reason = "The configuration file #{@config.path} contains an invalid setting"
+        n.set_backtrace(e.backtrace)
+        raise n
+#        raise e.class, "Your configuration file is not correct. #{e.message}", e.backtrace
+      rescue OptionParser::ParseError => e
+        e.reason = "The configuration file #{@config.path} contains an invalid setting"
+        raise
+#        raise e.class, "Your configuration file is not correct. #{e.message}", e.backtrace
+      end
+      remaining
     end
   end
 end
@@ -154,11 +181,9 @@ module RHC
           end
 
           c.when_called do |args, options|
-            config = RHC::Config.new
-            config.use_config(options.config) if options.config
-
-            options.default(config.to_options) unless options.clean
             deprecated?
+
+            config = c.instance_variable_get(:@config)
 
             cmd = opts[:class].new
             cmd.options = options

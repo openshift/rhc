@@ -46,10 +46,10 @@ describe RHC::Commands::Setup do
     it{ command_for('setup', '--server', 'foo.com').options.server.should == 'foo.com' }
 =end  end
 
-  context 'when config sets a server' do
+  context 'when --clean is used' do
     let!(:config){ base_config{ |config, defaults| defaults.add 'libra_server', 'test.com' } }
 
-    it{ command_for('setup', '--clean').options.server.should == 'openshift.redhat.com' }
+    it("should ignore a config value"){ command_for('setup', '--clean').options.server.should == 'openshift.redhat.com' }
   end
 
   context 'when -d is passed' do

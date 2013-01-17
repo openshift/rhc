@@ -133,14 +133,7 @@ module RHC
           opts = Array(opts)
           value = self[opts[0] || name.to_s]
           if value
-            value = case opts[1]
-                      when :integer
-                        Integer(value)
-                      when :boolean
-                        !!(value =~ /^\s*(y|yes|1|t|true)\s*$/i)
-                      else
-                        value unless value.blank?
-                      end
+            value = value unless value.blank?
             h[name] = value unless value.nil?
           end
           h
