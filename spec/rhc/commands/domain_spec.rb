@@ -3,21 +3,19 @@ require 'rest_spec_helper'
 require 'rhc/commands/domain'
 
 describe RHC::Commands::Domain do
-  before(:each) do
-    RHC::Config.set_defaults
-  end
+  let!(:rest_client){ MockRestClient.new }
+  before{ user_config }
 
   describe 'default action' do
     context 'when run with no domains' do
       let(:arguments) { ['domain', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
-      before(:each) do
-        @rc = MockRestClient.new
-      end
+
       it { expect { run }.should exit_with_code(1) }
       it { run_output.should match(/In order to deploy applications.*rhc domain create/) }
     end
     context 'when help is shown' do
       let(:arguments) { ['domain', '--noprompt', '--help'] }
+
       it { expect { run }.should exit_with_code(0) }
       it { run_output.should match(/The default action for this resource is 'show'/) }
     end
@@ -27,18 +25,13 @@ describe RHC::Commands::Domain do
     let(:arguments) { ['domain', 'show', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     context 'when run with no domains' do
-      before(:each) do
-        @rc = MockRestClient.new
-      end
       it { expect { run }.should exit_with_code(1) }
       it { run_output.should match(/In order to deploy applications.*rhc domain create/) }
     end
 
     context 'when run with one domain no apps' do
-      before(:each) do
-        @rc = MockRestClient.new
-        @rc.add_domain("onedomain")
-      end
+      before{ rest_client.add_domain("onedomain") }
+
       it { expect { run }.should exit_with_code(0) }
       it "should match output" do
         output = run_output
@@ -48,9 +41,8 @@ describe RHC::Commands::Domain do
 
     context 'when run with multiple domain no apps' do
       before(:each) do
-        @rc = MockRestClient.new
-        @rc.add_domain("firstdomain")
-        @rc.add_domain("seconddomain")
+        rest_client.add_domain("firstdomain")
+        rest_client.add_domain("seconddomain")
       end
       it { expect { run }.should exit_with_code(0) }
       it "should match output" do
@@ -62,8 +54,7 @@ describe RHC::Commands::Domain do
 
     context 'when run with one domain multiple apps' do
       before(:each) do
-        @rc = MockRestClient.new
-        d = @rc.add_domain("appdomain")
+        d = rest_client.add_domain("appdomain")
         a = d.add_application("app_no_carts", "testframework-1.0")
         a = d.add_application("app_multi_carts", "testframework-1.0")
         a.add_cartridge("testcart-1")
@@ -84,8 +75,7 @@ describe RHC::Commands::Domain do
 
     context 'when run with an app without cartridges' do
       before(:each) do
-        @rc = MockRestClient.new
-        d = @rc.add_domain("appdomain")
+        d = rest_client.add_domain("appdomain")
         a = d.add_application("app_no_carts")
       end
       it { expect { run }.should exit_with_code(0) }
@@ -101,13 +91,10 @@ describe RHC::Commands::Domain do
     let(:arguments) { ['domain', 'create', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password', 'testnamespace'] }
 
     context 'when no issues with ' do
-      before(:each) do
-        @rc = MockRestClient.new
-      end
 
       it "should create a domain" do
         expect { run }.should exit_with_code(0)
-        @rc.domains[0].id.should == 'testnamespace'
+        rest_client.domains[0].id.should == 'testnamespace'
       end
       it { run_output.should match(/'testnamespace'.*?RESULT:.*?Success/m) }
     end
@@ -117,26 +104,19 @@ describe RHC::Commands::Domain do
     let(:arguments) { ['domain', 'update', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password', 'olddomain', 'alterednamespace'] }
 
     context 'when no issues with ' do
-      before(:each) do
-        @rc = MockRestClient.new
-        @rc.add_domain("olddomain")
-      end
+      before{ rest_client.add_domain("olddomain") }
 
       it "should update a domain" do
         expect { run }.should exit_with_code(0)
-        @rc.domains[0].id.should == 'alterednamespace'
+        rest_client.domains[0].id.should == 'alterednamespace'
       end
       it { run_output.should match(/Changing namespace 'olddomain' to 'alterednamespace'.*?RESULT:.*?Success/m) }
     end
 
     context 'when there is no domain' do
-      before(:each) do
-        @rc = MockRestClient.new
-      end
-
       it "should not create a domain" do
         expect { run }.should exit_with_code(127)
-        @rc.domains.empty?.should be_true
+        rest_client.domains.empty?.should be_true
       end
       it { run_output.should match("does not exist") }
     end
@@ -146,14 +126,11 @@ describe RHC::Commands::Domain do
     let(:arguments) { ['domain', 'alter', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password', 'olddomain', 'alterednamespace'] }
 
     context 'when no issues with ' do
-      before(:each) do
-        @rc = MockRestClient.new
-        @rc.add_domain("olddomain")
-      end
+      before{ rest_client.add_domain("olddomain") }
 
       it "should update a domain" do
         expect { run }.should exit_with_code(0)
-        @rc.domains[0].id.should == 'alterednamespace'
+        rest_client.domains[0].id.should == 'alterednamespace'
       end
       it { run_output.should match(/Changing namespace 'olddomain' to 'alterednamespace'.*?RESULT:.*?Success/m) }
     end
@@ -163,39 +140,32 @@ describe RHC::Commands::Domain do
     let(:arguments) { ['domain', 'delete', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password', 'deleteme'] }
 
     context 'when no issues with ' do
-      before(:each) do
-        @rc = MockRestClient.new
-        @rc.add_domain("deleteme")
-      end
+      before{ rest_client.add_domain("deleteme") }
 
       it "should delete a domain" do
         expect { run }.should exit_with_code(0)
-        @rc.domains.empty?.should be_true
+        rest_client.domains.empty?.should be_true
       end
     end
 
     context 'when there is a different domain' do
-      before(:each) do
-        @rc = MockRestClient.new
-        @rc.add_domain("dontdelete")
-      end
+      before{ rest_client.add_domain("dontdelete") }
 
       it "should error out" do
         expect { run }.should exit_with_code(127)
-        @rc.domains[0].id.should == 'dontdelete'
+        rest_client.domains[0].id.should == 'dontdelete'
       end
       it { run_output.should match("Domain deleteme does not exist") }
     end
 
     context 'when there are applications on the domain' do
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("deleteme")
+        domain = rest_client.add_domain("deleteme")
         domain.add_application 'testapp1', 'mock-1.0'
       end
       it "should error out" do
         expect { run }.should exit_with_code(128)
-        @rc.domains[0].id.should == 'deleteme'
+        rest_client.domains[0].id.should == 'deleteme'
       end
       it { run_output.should match("Domain contains applications.*?Delete applications first.") }
     end
@@ -205,14 +175,11 @@ describe RHC::Commands::Domain do
     let(:arguments) { ['domain', 'destroy', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password', 'deleteme'] }
 
     context 'when no issues with ' do
-      before(:each) do
-        @rc = MockRestClient.new
-        @rc.add_domain("deleteme")
-      end
+      before{ rest_client.add_domain("deleteme") }
 
       it "should delete a domain" do
         expect { run }.should exit_with_code(0)
-        @rc.domains.empty?.should be_true
+        rest_client.domains.empty?.should be_true
       end
     end
   end
@@ -232,7 +199,7 @@ describe RHC::Commands::Domain do
       it "runs" do 
         expect { run }.should exit_with_code(0)
         # check lengths here because different versions of ruby output the switches in different order
-        @cmd.length.should == "rhc-chk --noprompt true --config test.conf --rhlogin test@test.foo --password password 2>&1".length
+        @cmd.split.sort.should == "rhc-chk --server openshift.redhat.com --noprompt true --config test.conf --rhlogin test@test.foo --password password 2>&1".split.sort
       end
     end
 

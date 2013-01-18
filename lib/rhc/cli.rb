@@ -21,10 +21,11 @@ module RHC
 
     def self.set_terminal
       $terminal.wrap_at = HighLine::SystemExtensions.terminal_size.first rescue 80 if $stdin.tty?
+      $terminal.page_at = :auto if $stdin.tty? and $stdout.tty?
       # FIXME: ANSI terminals are not default on windows but we may just be
       #        hitting a bug in highline if windows does support another method.
       #        This is a safe fix for now but needs more research.
-      HighLine::use_color = false if RHC::Helpers.windows?
+      HighLine::use_color = false if RHC::Helpers.windows? or not $stdout.tty?
     end
 
     def self.start(args)

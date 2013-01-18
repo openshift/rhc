@@ -4,10 +4,10 @@ require 'rhc/commands/tail'
 require 'rhc/config'
 
 describe RHC::Commands::Tail do
+  let!(:rest_client) { MockRestClient.new }
   before(:each) do
     user_config
-    @rc = MockRestClient.new
-    domain = @rc.add_domain("mock-domain-0")
+    domain = rest_client.add_domain("mock-domain-0")
     @app = domain.add_application("mock-app-0", "ruby-1.8.7")
     @app.stub(:ssh_url).and_return("ssh://user@test.domain.com")
   end
@@ -44,7 +44,7 @@ describe RHC::Commands::Tail do
     end
 
     context 'succeeds and exits on Interrupt' do
-      before (:each) { @rc.stub(:find_domain) { raise Interrupt } }
+      before (:each) { rest_client.stub(:find_domain) { raise Interrupt } }
       it { expect { run }.should raise_error(Interrupt) }
     end
   end

@@ -7,6 +7,12 @@ module RHC
     end
   end
 
+  class ConfirmationError < Exception
+    def initialize(message="This action requires the --confirm option (or entering 'yes' at a prompt) to run.", code=1)
+      super(message, code)
+    end
+  end
+
   class DomainNotFoundException < Exception
     def initialize(message="Domain not found")
       super message, 127

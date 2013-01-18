@@ -10,58 +10,10 @@ require 'rhc/context_helper'
 class RHC::Commands::Base
 
   attr_writer :options, :config
-  attr_reader :messages
 
   def initialize(options=Commander::Command::Options.new,
-                 config=nil)
+                 config=RHC::Config.new)
     @options, @config = options, config
-    @messages = []
-  end
-
-  def validate_args_and_options(args_metadata, options_metadata, args)
-    # process options
-    options_metadata.each do |option_meta|
-      arg = option_meta[:arg]
-
-      # Check to see if we've provided a value for an option tagged as deprecated
-      if (!(val = @options.__hash__[arg]).nil? && dep_info = option_meta[:deprecated])
-        # Get the arg for the correct option and what the value should be
-        (correct_arg, default) = dep_info.values_at(:key, :value)
-        # Set the default value for the correct option to the passed value
-        ## Note: If this isn't triggered, then the original default will be honored
-        ## If the user specifies any value for the correct option, it will be used
-        options.default correct_arg => default
-        # Alert the users if they're using a deprecated option
-        (correct, incorrect) = [options_metadata.find{|x| x[:arg] == correct_arg },option_meta].flatten.map{|x| x[:switches].join(", ") }
-        deprecated_option(incorrect, correct)
-      end
-
-      context_helper = option_meta[:context_helper]
-
-      @options.__hash__[arg] = self.send(context_helper) if @options.__hash__[arg].nil? and context_helper
-      raise ArgumentError.new("Missing required option '#{arg}'.") if option_meta[:required] and @options.__hash__[arg].nil?
-    end
-
-    # process args
-    arg_slots = [].fill(nil, 0, args_metadata.length)
-    fill_args = args.reverse
-    args_metadata.each_with_index do |arg_meta, i|
-      # check options
-      value = @options.__hash__[arg_meta[:option_symbol]] unless arg_meta[:option_symbol].nil?
-      if value
-        arg_slots[i] = value
-      elsif arg_meta[:arg_type] == :list
-        arg_slots[i] = fill_args.reverse
-        fill_args = []
-      else
-        raise ArgumentError.new("Missing required argument '#{arg_meta[:name]}'.") if fill_args.empty?
-        arg_slots[i] = fill_args.pop
-      end
-    end
-
-    raise ArgumentError.new("Too many arguments passed in: #{fill_args.reverse.join(" ")}") unless fill_args.empty?
-
-    arg_slots
   end
 
   protected
@@ -70,23 +22,6 @@ class RHC::Commands::Base
 
     attr_reader :options, :config
 
-    #
-    # The implicit config object provides no defaults.
-    #
-    def config
-      @config ||= begin
-        RHC::Config.new
-      end
-    end
-
-    def application
-      #@application ||= ... identify current application or throw,
-      #                     indicating one is needed.  Should check
-      #                     options (commands which have it as an ARG
-      #                     should set it onto options), then check
-      #                     current git repo for remote, fail.
-    end
-
     # Return a client object capable of making calls
     # to the OpenShift API that transforms intent
     # and options, to remote calls, and then handle
@@ -94,16 +29,7 @@ class RHC::Commands::Base
     # formatted object output.  Most interactions 
     # should be through this call pattern.
     def rest_client
-      @rest_client ||= begin
-        username = config.username
-        unless username
-          username = ask "Login to #{openshift_server}: "
-          config.config_user(username)
-        end
-        config.password = config.password || ask("Password: ") { |q| q.echo = '*' }
-
-        RHC::Rest::Client.new(openshift_rest_node, username, config.password, @options.debug)
-      end
+      @rest_client ||= client_from_options(:auth => RHC::Auth::Basic.new(options))
     end
 
     def help(*args)
@@ -149,7 +75,13 @@ class RHC::Commands::Base
     end
 
     def self.description(*args)
-      options[:description] = args.join(' ')
+      o = args.join(' ')
+      indent = o.scan(/^[ \t]*(?=\S)/).min.size || 0
+      options[:description] =
+        o.gsub(/^[ \t]{#{indent}}/, '').
+          gsub(/(\b)\s*\n(?!\s*\n)(\S)/m, '\1 \2').
+          gsub(/\n+\Z/, '').
+          gsub(/\n{3,}/, "\n\n")
     end
     def self.summary(value)
       options[:summary] = value
@@ -196,6 +128,7 @@ class RHC::Commands::Base
       args_metadata << {:name => name,
                         :description => description,
                         :switches => switches,
+                        :context_helper => options[:context],
                         :option_symbol => option_symbol,
                         :arg_type => arg_type}
     end

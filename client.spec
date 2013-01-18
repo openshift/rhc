@@ -15,7 +15,7 @@ BuildRequires: ruby >= 1.8.5
 BuildRequires: rubygems
 Requires:      ruby >= 1.8.5
 Requires:      rubygem-parseconfig
-Requires:      rubygem-rest-client
+Requires:      rubygem-httpclient
 Requires:      rubygem-test-unit
 Requires:      rubygem-net-ssh
 Requires:      rubygem-archive-tar-minitar

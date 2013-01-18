@@ -8,6 +8,7 @@ module RHCHelper
   class Domain
     extend Runnable
     extend Commandify
+    extend API
     include Dnsruby
 
     class << self
@@ -27,7 +28,7 @@ module RHCHelper
 
     def self.create_if_needed(prefix="test")
       unless $namespace
-        client = RHC::Rest::Client.new($end_point, $username, $password)
+        client = new_client
         domain = client.domains.first
         if domain
           $namespace = domain.id

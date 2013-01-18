@@ -1,21 +1,23 @@
 require 'spec_helper'
-require 'rhc/wizard'
-require 'rhc/config'
+require 'rest_spec_helper'
 require 'rhc/commands/setup'
-require 'webmock/rspec'
 
 # just test the command runner as we already have extensive wizard tests
 describe RHC::Commands::Setup do
+  subject{ RHC::Commands::Setup }
+  let(:instance){ subject.new }
+  let!(:config){ base_config }
+  before{ described_class.send(:public, *described_class.protected_instance_methods) }
 
-  before(:each) { RHC::Config.set_defaults }
+  describe '#run' do
+    it{ expects_running('setup').should call(:run).on(instance).with(no_args) }
 
-  describe 'run' do
     let(:arguments) { ['setup', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     before(:each) do
       @wizard = mock('wizard')
       @wizard.stub!(:run).and_return(true)
-      RHC::RerunWizard.stub!(:new) { @wizard }
+      RHC::RerunWizard.stub!(:new){ @wizard }
     end
 
     context 'when no issues' do
@@ -32,12 +34,29 @@ describe RHC::Commands::Setup do
     end
   end
 
+  it{ expects_running('setup').should call(:run).on(instance).with(no_args) }
+  it{ command_for('setup', '--clean').options.clean.should be_true }
+
+  it{ command_for('setup').options.server.should == 'openshift.redhat.com' }
+  it{ command_for('setup', '--server', 'foo.com').options.server.should == 'foo.com' }
+=begin  context 'when libra_server is set' do
+    before{ ENV.should_receive(:[]).any_number_of_times.with('LIBRA_SERVER').and_return('bar.com') }
+    it{ command_for('setup').config['libra_server'].should == 'bar.com' }
+    it{ command_for('setup').options.server.should == 'bar.com' }
+    it{ command_for('setup', '--server', 'foo.com').options.server.should == 'foo.com' }
+=end  end
+
+  context 'when --clean is used' do
+    let!(:config){ base_config{ |config, defaults| defaults.add 'libra_server', 'test.com' } }
+
+    it("should ignore a config value"){ command_for('setup', '--clean').options.server.should == 'openshift.redhat.com' }
+  end
+
   context 'when -d is passed' do
     let(:arguments) { ['setup', '-d', '-l', 'test@test.foo'] }
     # 'y' for the password prompt
     let(:input) { ['', 'y', '', ''] }
-
-    before(:each){ @rc = MockRestClient.new }
+    let!(:rest_client){ MockRestClient.new }
 
     it("succeeds"){ FakeFS{ expect { run input }.should exit_with_code 0 } }
     it("the output includes debug output") do
@@ -49,8 +68,7 @@ describe RHC::Commands::Setup do
     let(:arguments) { ['setup', '-l', 'test@test.foo'] }
     # 'y' for the password prompt
     let(:input) { ['', 'y', '', ''] }
-
-    before(:each){ @rc = MockRestClient.new }
+    let!(:rest_client){ MockRestClient.new }
 
     it("succeeds"){ FakeFS{ expect { run input }.should exit_with_code 0 } }
     it("sets the user name to the value given by the command line") do
@@ -66,7 +84,7 @@ describe RHC::Commands::Setup do
         @wizard.stub!(:run).and_return(true)
         expect { run }.should exit_with_code(0)
       end
-      it('should output usage') { run_output.should match("Connects to OpenShift and sets up") }
+      it('should output usage') { run_output.should match("Connects to an OpenShift server to get you started. Will") }
     end
   end
 end

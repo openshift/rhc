@@ -11,9 +11,34 @@ module RHC::Commands
     default_action :help
 
     summary "Create an application"
-    description "Create an application. You can see a list of all valid cartridge types by running 'rhc cartridge list'."
+    description <<-DESC
+      Create an application. Every OpenShift application must have one 
+      web cartridge which serves web requests, and can have a number of
+      other cartridges which provide capabilities like databases, 
+      scheduled jobs, or continuous integration.
+
+      You can see a list of all valid cartridge types by running 
+      'rhc cartridge list'.
+
+      When your application is created, a domain name that is a combination
+      of the name of your app and the namespace of your domain will be 
+      registered in DNS.  A copy of the code for your application
+      will be checked out locally into a folder with the same name as 
+      your application.  Note that different types of applications may
+      require different structures - check the README provided with the
+      cartridge if you have questions.
+
+      OpenShift runs the components of your application on small virtual 
+      servers called "gears".  Each account or plan is limited to a number
+      of gears which you can use across multiple applications.  Some 
+      accounts or plans provide access to gears with more memory or more
+      CPU.  Run 'rhc account' to see the number and sizes of gears available
+      to you.  When creating an application the --gear-size parameter
+      may be specified to change the gears used.
+
+      DESC
     syntax "<name> <cartridge> [-n namespace]"
-    option ["-n", "--namespace namespace"], "Namespace for the application", :context => :namespace_context, :required => true
+    option ["-n", "--namespace namespace"], "Namespace for the application", :context => :namespace_context
     option ["-g", "--gear-size size"], "Gear size controls how much memory and CPU your cartridges can use."
     option ["-s", "--scaling"], "Enable scaling for the web cartridge."
     option ["-r", "--repo dir"], "Path to the Git repository (defaults to ./$app_name)"
@@ -25,27 +50,27 @@ module RHC::Commands
     argument :cartridges, "The web framework this application should use", ["-t", "--type cartridge"], :arg_type => :list
     #argument :additional_cartridges, "A list of other cartridges such as databases you wish to add. Cartridges can also be added later using 'rhc cartridge add'", [], :arg_type => :list
     def create(name, cartridges)
-      cartridge = check_cartridges(cartridges).first
+      cartridges = check_cartridges(cartridges)
 
       options.default \
         :dns => true,
         :git => true
 
-      paragraph do
-        header "Application Options"
-        table({"Namespace:" => options.namespace,
-               "Cartridge:" => cartridge,
-               "Gear Size:" => options.gear_size || "default",
-               "Scaling:" => options.scaling ? "yes" : "no",
-              }
-             ).each { |s| say "  #{s}" }
-      end
-
       raise ArgumentError, "You have named both your main application and your Jenkins application '#{name}'. In order to continue you'll need to specify a different name with --enable-jenkins or choose a different application name." if jenkins_app_name == name && enable_jenkins?
 
-      rest_app, rest_domain = nil
       raise RHC::DomainNotFoundException.new("No domains found. Please create a domain with 'rhc domain create <namespace>' before creating applications.") if rest_client.domains.empty?
       rest_domain = rest_client.find_domain(options.namespace)
+      rest_app = nil
+
+      paragraph do
+        header "Application Options"
+        table([["Namespace:", options.namespace],
+               ["Cartridges:", cartridges.map(&:name).join(', ')],
+               ["Gear Size:", options.gear_size || "default"],
+               ["Scaling:", options.scaling ? "yes" : "no"],
+              ]
+             ).each { |s| say "  #{s}" }
+      end
 
       messages = []
 
@@ -54,7 +79,7 @@ module RHC::Commands
 
 
         # create the main app
-        rest_app = create_app(name, cartridge, rest_domain,
+        rest_app = create_app(name, cartridges.map(&:name), rest_domain,
                               options.gear_size, options.scaling)
 
         messages.concat(rest_app.messages)
@@ -146,18 +171,15 @@ module RHC::Commands
     syntax "<app> [--namespace namespace]"
     option ["-n", "--namespace namespace"], "Namespace your application belongs to", :context => :namespace_context, :required => true
     option ["-b", "--bypass"], "DEPRECATED Please use '--confirm'", :deprecated => {:key => :confirm, :value => true}
-    option ["--confirm"], "Deletes the application without prompting the user"
+    option ["--confirm"], "Pass to confirm deleting the application"
     argument :app, "The application you wish to delete", ["-a", "--app name"]
     alias_action :destroy, :deprecated => true
     def delete(app)
+
       rest_domain = rest_client.find_domain(options.namespace)
       rest_app = rest_domain.find_application(app)
 
-      unless options.confirm
-        paragraph do
-          return 1 unless agree("Are you sure you wish to delete the '#{rest_app.name}' application? (yes|no): ")
-        end
-      end
+      confirm_action "#{color("This is a non-reversible action! Your application code and data will be permanently deleted if you continue!", :yellow)}\n\nAre you sure you want to delete the application '#{app}'?"
 
       say "Deleting application '#{rest_app.name}' ... "
       rest_app.destroy
@@ -233,7 +255,7 @@ module RHC::Commands
     end
 
     summary "Show information about an application"
-    syntax "<app> [--namespace namespace] [--app app]"
+    syntax "<app> [--namespace namespace]"
     argument :app, "The name of the application you are getting information on", ["-a", "--app app"], :context => :app_context
     option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
     option ["--state"], "Get the current state of the application's gears"
@@ -270,36 +292,45 @@ module RHC::Commands
       include RHC::CartridgeHelpers
 
       def check_sshkeys!
-        RHC::SSHWizard.new(rest_client).run
+        RHC::SSHWizard.new(rest_client, config, options).run
       end
 
       def standalone_cartridges
-        @standalone_cartridges ||= rest_client.cartridges.select{ |c| c.type == 'standalone' }
+        @standalone_cartridges ||= all_cartridges.select{ |c| c.type == 'standalone' }
+      end
+      def all_cartridges
+        @all_cartridges = rest_client.cartridges
       end
 
       def check_cartridges(cartridge_names)
         cartridge_names = Array(cartridge_names).map{ |s| s.strip if s && s.length > 0 }.compact
 
-        unless cartridge_name = cartridge_names.first
-          section(:bottom => 1){ list_cartridges }
-          raise ArgumentError.new "Every application needs a web cartridge to handle incoming web requests. Please provide the short name of one of the carts listed above."
-        end
-
-        unless standalone_cartridges.find{ |c| c.name == cartridge_name }
-          matching_cartridges = standalone_cartridges.select{ |c| c.name.include?(cartridge_name) }
-          if matching_cartridges.length == 1
-            cartridge_names[0] = use_cart(matching_cartridges.first, cartridge_name)
-          elsif matching_cartridges.present?
-            paragraph { list_cartridges(matching_cartridges) }
-            raise RHC::MultipleCartridgesException.new("There are multiple web cartridges named '#{cartridge_name}'.  Please provide the short name of your desired cart.")
+        cartridge_names.map do |name|
+          all_cartridges.find{ |c| c.name == name } ||
+            begin
+              matching_cartridges = all_cartridges.select{ |c| c.name.include?(name) }
+              unless matching_cartridges.length == 1
+                if matching_cartridges.present?
+                  paragraph { list_cartridges(matching_cartridges) }
+                  raise RHC::MultipleCartridgesException, "There are multiple web cartridges named '#{name}'. Please provide the short name of your desired cart." if matching_cartridges.present?
+                else
+                  paragraph { list_cartridges(all_cartridges) }
+                  raise RHC::CartridgeNotFoundException, "There are no cartridges that match '#{name}'."
+                end
+              end
+              use_cart(matching_cartridges.first, name)
+            end
+        end.tap do |carts|
+          if carts.none?(&:only_in_new?)
+            section(:bottom => 1){ list_cartridges }
+            raise RHC::CartridgeNotFoundException, "Every application needs a web cartridge to handle incoming web requests. Please provide the short name of one of the carts listed above."         
           end
         end
-        cartridge_names.first(1)
       end
 
       def use_cart(cart, for_cartridge_name)
         info "Using #{cart.name}#{cart.display_name ? " (#{cart.display_name})" : ''} for '#{for_cartridge_name}'"
-        cart.name
+        cart
       end
 
       def list_cartridges(cartridges=standalone_cartridges)
@@ -316,12 +347,11 @@ module RHC::Commands
         result
       end
 
-      def create_app(name, cartridge, rest_domain, gear_size=nil, scale=nil)
-        app_options = {:cartridge => cartridge}
+      def create_app(name, cartridges, rest_domain, gear_size=nil, scale=nil)
+        app_options = {:cartridges => Array(cartridges)}
         app_options[:gear_profile] = gear_size if gear_size
         app_options[:scale] = scale if scale
         app_options[:debug] = true if @debug
-
         debug "Creating application '#{name}' with these options - #{app_options.inspect}"
         rest_app = rest_domain.add_application(name, app_options)
         debug "'#{rest_app.name}' created"
@@ -340,7 +370,7 @@ module RHC::Commands
       end
 
       def add_jenkins_cartridge(rest_app)
-        rest_app.add_cartridge("jenkins-client-1.4", 300)
+        rest_app.add_cartridge("jenkins-client-1.4")
       end
 
       def add_jenkins_client_to(rest_app, messages)

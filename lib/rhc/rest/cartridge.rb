@@ -1,13 +1,26 @@
-require 'rhc/rest/base'
-require 'pp'
-
 module RHC
   module Rest
     class Cartridge < Base
-      define_attr :type, :name, :display_name, :properties, :gear_profile, :status_messages, :scales_to, :scales_from, :scales_with, :current_scale, :supported_scales_to, :supported_scales_from, :tags
+      HIDDEN_TAGS = [:framework, :web_framework, :cartridge].map(&:to_s)
+
+      define_attr :type, :name, :display_name, :properties, :gear_profile, :status_messages, :scales_to, :scales_from, :scales_with, :current_scale, :supported_scales_to, :supported_scales_from, :tags, :description, :collocated_with
 
       def scalable?
         supported_scales_to != supported_scales_from
+      end
+
+      def only_in_new?
+        type == 'standalone'
+      end
+      def shares_gears?
+        Array(collocated_with).present?
+      end
+      def collocated_with
+        Array(attribute(:collocated_with))
+      end
+
+      def tags
+        Array(attribute('tags'))
       end
 
       def additional_gear_storage
@@ -23,7 +36,7 @@ module RHC
           :current_scale => current_scale,
           :scales_from => scales_from,
           :scales_to => scales_to,
-          :gear_profile => gear_profile
+          :gear_profile => gear_profile,
         } if scalable?
       end
 
@@ -81,6 +94,8 @@ module RHC
       end
 
       def <=>(other)
+        return -1 if other.type == 'standalone' && type != 'standalone'
+        return 1  if type == 'standalone' && other.type != 'standalone'
         name <=> other.name
       end
     end

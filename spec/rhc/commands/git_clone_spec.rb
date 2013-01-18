@@ -18,9 +18,9 @@ describe RHC::Commands::GitClone do
       @instance
     end
   end
+  let!(:rest_client){ MockRestClient.new }
   before(:each) do
-    @rc = MockRestClient.new
-    @domain = @rc.add_domain("mockdomain")
+    @domain = rest_client.add_domain("mockdomain")
     @app = @domain.add_application("app1", "mock_unique_standalone_cart")
   end
 

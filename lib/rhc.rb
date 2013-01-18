@@ -2,8 +2,8 @@
 # FIXME Remove rubygems from requirements, ensure library is correct
 
 # Only require external gem dependencies here
-require 'rest_client'
 require 'logger'
+require 'pp'
 
 require 'pry' if ENV['PRY']
 

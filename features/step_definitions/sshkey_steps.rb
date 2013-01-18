@@ -39,7 +39,7 @@ Then /^the output (does not include|includes) (.*)$/ do |includes,str|
           when "deprecation warning"
             /deprecated/
           when "the key information"
-            /type: .*?\n\s*=+\n\s*Fingerprint: /m
+            /type: .*?\n\s*-+\n\s*Fingerprint: /m
           end
   includes = case includes
              when "does not"

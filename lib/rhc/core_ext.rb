@@ -2,6 +2,7 @@
 require 'rhc/json'
 require 'open-uri'
 require 'highline'
+require 'httpclient'
 
 class Object
   def present?
@@ -32,6 +33,16 @@ class String
   def wrap(wrap_length=80, char="\n")
     scan(/.{#{wrap_length}}|.+/).join(char)
   end
+end
+
+unless HTTP::Message.method_defined? :ok?
+  #:nocov:
+  class HTTP::Message
+    def ok?
+      HTTP::Status.successful?(status)
+    end
+  end
+  #:nocov:
 end
 
 #
@@ -68,6 +79,10 @@ class Hash
       s << [k, delete(k)] if has_key?(k)
     end
     s
+  end
+  def reverse_merge!(other_hash)
+    # right wins if there is no left
+    merge!( other_hash ){|key,left,right| left }
   end
 end
 

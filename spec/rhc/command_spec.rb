@@ -3,6 +3,9 @@ require 'rhc/commands/base'
 require 'rhc/exceptions'
 
 describe RHC::Commands::Base do
+
+  before{ base_config }
+
   describe '#object_name' do
     subject { described_class }
     its(:object_name) { should == 'base' }
@@ -45,7 +48,6 @@ describe RHC::Commands::Base do
       it("should have an object name") { subject.object_name.should == 'test' }
       it("should run with wizard") do
         FakeFS do
-          RHC::Config.set_defaults
           wizard_run = false
           RHC::Wizard.stub!(:new) do |config|
             RHC::Wizard.unstub!(:new)
@@ -141,6 +143,10 @@ describe RHC::Commands::Base do
         it { expects_running('statis', 'execute', 'duparg', '--testarg', 'duparg2').should exit_with_code(1) }
       end
 
+      context 'and when the provided option is ambiguous' do
+        it { expects_running('static', 'execute', '-t', '--trace').should raise_error(OptionParser::AmbiguousOption) }
+      end
+
       context 'and when execute is called with too many arguments' do
         it { expects_running('static', 'execute', 'arg1', 'arg2').should exit_with_code(1) }
       end
@@ -182,20 +188,25 @@ describe RHC::Commands::Base do
   end
 
   describe "rest_client" do
-    before do
-      mock_terminal
-      RHC::Rest::Client.stub!(:new) { |openshift_rest_node, username, password, debug| @username = username; @password = password; true}
-    end
+    let(:auth){ mock }
+    before{ RHC::Auth::Basic.should_receive(:new).once.with(subject.send(:options)).and_return(auth) }
 
-    it "should ask for username" do
-      FakeFS do
-        $terminal.write_line("testuser@foo.bar")
-        $terminal.write_line("password")
-        subject.send(:rest_client).should be_true
-        @username.should == "testuser@foo.bar"
-        subject.send(:config)["default_rhlogin"].should == @username
-        @password.should == "password"
-      end
+    it do
+      subject.should_receive(:client_from_options).with(:auth => auth)
+      subject.send(:rest_client)
     end
+    it { subject.send(:rest_client).should be_a(RHC::Rest::Client) }
+    it { subject.send(:rest_client).should equal subject.send(:rest_client) }
   end
+end
+
+describe Commander::Command::Options do
+  it{ subject.foo = 'bar'; subject.foo.should == 'bar' }
+  it{ subject.foo = lambda{ 'bar' }; subject.foo.should == 'bar' }
+  it{ subject.foo = lambda{ 'bar' }; subject[:foo].should == 'bar' }
+  it{ subject.foo = lambda{ 'bar' }; subject['foo'].should == 'bar' }
+  it{ subject.foo = lambda{ 'bar' }; subject.__hash__[:foo].should be_a Proc }
+  it{ subject[:foo] = lambda{ 'bar' }; subject.foo.should == 'bar' }
+  it{ subject['foo'] = lambda{ 'bar' }; subject.foo.should == 'bar' }
+  it{ Commander::Command::Options.new(:foo => 1).foo.should == 1 }
 end

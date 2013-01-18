@@ -8,9 +8,6 @@ require 'socket'
 module RHC
   class Wizard
     include HighLine::SystemExtensions
-    include RHC::Helpers
-    include RHC::SSHHelpers
-    include RHC::GitHelpers
 
     DEFAULT_MAX_LENGTH = 16
 
@@ -29,11 +26,13 @@ module RHC
 
     attr_reader :rest_client
 
-    def initialize(config, opts=nil)
+    #
+    # Running the setup wizard may change the contents of opts and config if
+    # the create_config_stage completes successfully.
+    #
+    def initialize(config=RHC::Config.new, opts=Commander::Command::Options.new)
       @config = config
-      @config_path = config.config_path
-      @libra_server = (opts && opts.server) || config['libra_server'] || "openshift.redhat.com"
-      @config.config_user opts.rhlogin if opts && opts.rhlogin
+      @options = opts
       @debug = opts.debug if opts
     end
 
@@ -47,14 +46,41 @@ module RHC
     # Returns nil on failure or true on success
     def run
       stages.each do |stage|
-        # FIXME: cleanup if we fail
         debug "Running #{stage}"
-        if (self.send stage).nil?
+        if self.send(stage).nil?
           return nil
         end
       end
       true
     end
+
+    protected
+      include RHC::Helpers
+      include RHC::SSHHelpers
+      include RHC::GitHelpers
+      attr_reader :config, :options
+      attr_accessor :auth, :user
+
+      def openshift_server
+        options.server || config['libra_server'] || "openshift.redhat.com"
+      end
+
+      def new_client_for_options
+        client_from_options({
+          :auth => auth,
+        })
+      end
+
+      def auth
+        @auth ||= RHC::Auth::Basic.new(options)
+      end
+
+      def username
+        auth.send(:username)
+      end
+      def password
+        auth.send(:password)
+      end
 
     private
 
@@ -69,66 +95,64 @@ module RHC
     end
 
     def login_stage
-      # get_password adds an extra untracked newline so set :bottom to -1
-      paragraph do
-        if @config.has_opts? && @config.opts_login
-          @username = @config.opts_login
-          say "Using #{@username}"
-        else
-          @username = ask("Login to #{@libra_server}: ") do |q|
-            q.default = RHC::Config.default_rhlogin
+      say "Using #{options.rhlogin} to login to #{openshift_server}" if options.rhlogin
+
+      self.rest_client = new_client_for_options
+
+      begin
+        rest_client.api
+      rescue RHC::Rest::CertificateVerificationFailed => e
+        debug "Certificate validation failed: #{e.reason}"
+        unless options.insecure
+          if RHC::Rest::SelfSignedCertificate === e
+            warn "The server's certificate is self-signed, which means that a secure connection can't be established to '#{openshift_server}'."
+          else
+            warn "The server's certificate could not be verified, which means that a secure connection can't be established to '#{openshift_server}'."
+          end
+          if openshift_online_server?
+            paragraph{ warn "This may mean that a server between you and OpenShift is capable of accessing information sent from this client.  If you wish to continue without checking the certificate, please pass the -k (or --insecure) option to this command." }
+            return
+          else
+            paragraph{ warn "You may bypass this check, but any data you send to the server could be intercepted by others." }
+            return unless agree "Connect without checking the certificate? (yes|no): "
+            options.insecure = true
+            self.rest_client = new_client_for_options
+            retry
           end
         end
-
-        @password = @opts.password if @opts
-        @password = ask("Password: ") { |q| q.echo = '*' } if @password.nil?
       end
 
-      # instantiate a REST client that stages can use
-      end_point = "https://#{@libra_server}/broker/rest/api"
-      self.rest_client = RHC::Rest::Client.new(end_point, @username, @password, @debug)
-
-      # confirm that the REST client can connect
-      return false unless rest_client.user
-
+      self.user = rest_client.user
       true
     end
 
     def create_config_stage
-      if !File.exists? @config_path
-        FileUtils.mkdir_p File.dirname(@config_path)
-        File.open(@config_path, 'w') do |file|
-          file.puts <<EOF
-# Default user login
-default_rhlogin='#{@username}'
-
-# Server API
-libra_server = '#{@libra_server}'
-EOF
-
-        end
-
-        paragraph do
-          say "Creating #{@config_path} to store your configuration"
-        end
-
-        true
+      if File.exists? config.path
+        backup = "#{@config.path}.bak"
+        paragraph{ say "Saving previous configuration to #{backup}" }
+        FileUtils.cp(config.path, backup)
+        FileUtils.rm(config.path)
       end
 
-      # Read in @config_path now that it exists (was skipped before because it did
-      # not exist
-      RHC::Config.set_local_config(@config_path)
+      paragraph{ say "Creating #{config.path} to store your configuration" }
+
+      changed = Commander::Command::Options.new(options)
+      changed.rhlogin = username
+      changed.password = password
+
+      FileUtils.mkdir_p File.dirname(config.path)
+      config.save!(changed)
+      options.__replace__(changed)
+
+      true
     end
 
     def config_ssh_key_stage
-      if RHC::Config.should_run_ssh_wizard?
-        paragraph do
-          say "No SSH keys were found. We will generate a pair of keys for you."
-        end
+      if config.should_run_ssh_wizard?
+        paragraph{ say "No SSH keys were found. We will generate a pair of keys for you." }
+
         ssh_pub_key_file_path = generate_ssh_key_ruby
-        paragraph do
-          say "    Created: #{ssh_pub_key_file_path}\n\n"
-        end
+        paragraph{ say "    Created: #{ssh_pub_key_file_path}" }
       end
       true
     end
@@ -142,7 +166,6 @@ EOF
 
     def existing_keys_info
       return unless @ssh_keys
-      # TODO: This ERB format is shared with RHC::Commands::Sshkey; should be refactored
       indent{ @ssh_keys.each{ |key| paragraph{ display_key(key) } } }
     end
 
@@ -173,8 +196,8 @@ EOF
         end
 
         hostname = Socket.gethostname.gsub(/\..*\z/,'')
-        username = @username ? @username.gsub(/@.*/, '') : ''
-        pubkey_base_name = "#{username}#{hostname}".gsub(/[^A-Za-z0-9]/,'').slice(0,16)
+        userkey = username ? username.gsub(/@.*/, '') : ''
+        pubkey_base_name = "#{userkey}#{hostname}".gsub(/[^A-Za-z0-9]/,'').slice(0,16)
         default_name = find_unique_key_name(
           :keys => @ssh_keys,
           :base => pubkey_base_name,
@@ -215,7 +238,7 @@ EOF
 
       type, content, comment = ssh_key_triple_for_default_key
       indent do
-        say table([['Type', type], ['Fingerprint', fingerprint_for_default_key]])
+        say table([['Type:', type], ['Fingerprint:', fingerprint_for_default_key]])
       end
 
       paragraph do
@@ -244,7 +267,7 @@ EOF
         upload_ssh_key
       else
         paragraph do
-          info "You can upload your ssh key at a later time using the 'rhc sshkey' command"
+          info "You can upload your SSH key at a later time using the 'rhc sshkey' command"
         end
       end
 
@@ -322,6 +345,12 @@ EOF
             end).join("\n")
           end
         end
+        paragraph do
+          indent do
+            say "You are using #{color(self.user.consumed_gears.to_s, :green)} of #{color(self.user.max_gears.to_s, :green)} total gears" if user.max_gears.is_a? Fixnum
+            say "The following gear sizes are available to you: #{self.user.capabilities.gear_sizes.join(', ')}" if user.capabilities.gear_sizes.present?
+          end
+        end
       end
       true
     end
@@ -395,7 +424,7 @@ EOF
 
 In order to fully interact with OpenShift you will need to install and configure a git client if you have not already done so.
 
-Documentation for installing other tools you will need for OpenShift can be found at https://#{@libra_server}/app/getting_started#install_client_tools
+Documentation for installing other tools you will need for OpenShift can be found at https://openshift.redhat.com/community/developers/install-the-client-tools
 
 We recommend these free applications:
 
@@ -414,26 +443,10 @@ EOF
   end
 
   class RerunWizard < Wizard
-    def initialize(config, login=nil)
-      super(config, login)
-    end
-
-    def create_config_stage
-      if File.exists? @config_path
-        backup = "#{@config_path}.bak"
-        paragraph do
-          say "Saving previous configuration to #{backup}"
-        end
-        FileUtils.cp(@config_path, backup)
-        FileUtils.rm(@config_path)
-      end
-      super
-      true
-    end
 
     def finalize_stage
-      section(:top => 1, :bottom => 0) do
-        say "Your client tools are now configured."
+      section :top => 1 do
+        success "Your client tools are now configured."
       end
       true
     end
@@ -446,9 +459,9 @@ EOF
       STAGES
     end
 
-    def initialize(rest_client)
+    def initialize(rest_client, config, options)
       self.rest_client = rest_client
-      super RHC::Config
+      super config, options
     end
   end
 end

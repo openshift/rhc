@@ -22,133 +22,142 @@ describe RHC::Commands::Cartridge do
     exit_with_code_and_message(code)
   end
 
-
-  before(:each) do
-    RHC::Config.set_defaults
-  end
+  before{ user_config }
 
   describe 'run' do
-    let(:arguments) { ['cartridge', '--trace', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
-
-    context 'when run' do
-      before(:each) do
-        @rc = MockRestClient.new
-      end
+    let!(:rest_client){ MockRestClient.new }
+    context "with all arguments" do
+      let(:arguments) { ['cartridge', '--trace', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+      it { succeed_with_message /mock_cart-1.*mock_cart-2.*unique_mock_cart-1/m }
+    end
+    context "without password" do
+      let(:arguments) { ['cartridge', '--trace', '--noprompt', '--config', 'test.conf'] }
       it { succeed_with_message /mock_cart-1.*mock_cart-2.*unique_mock_cart-1/m }
     end
   end
 
-  describe 'run without password' do
-    let(:arguments) { ['cartridge', '--trace', '--noprompt', '--config', 'test.conf'] }
+  describe 'cartridge list' do
+    let(:arguments){ ['cartridge', 'list'] }
+    let(:username){ nil }
+    let(:password){ nil }
+    let(:server){ mock_uri }
+    let(:user_auth){ false }
 
-    context 'when run' do
-      before(:each) do
-        @rc = MockRestClient.new
+    context 'with valid carts' do
+      before{ stub_api; stub_simple_carts }
+
+      it{ run_output.should match /mock_standalone_cart\-1\s+Mock1 Cart\s+web/ }
+      it{ run_output.should match /mock_standalone_cart\-2\s+web/ }
+      it{ run_output.should match /mock_embedded_cart\-1\s+Mock1 Embedded Cart\s+addon/ }
+      it{ expect{ run }.should exit_with_code(0) }
+
+      context 'with verbose list' do
+        let(:arguments){ ['cartridge', 'list', '--verbose'] }
+        it{ run_output.should match /Mock1 Cart.*\[mock_standalone_cart\-1\] \(web\)/ }
+        it{ run_output.should match /mock_standalone_cart\-2 \(web\)/ }
+        it{ run_output.should match "Mock2 description\n\n" }
+        it{ run_output.should match "Tagged with: scheduled" }
+        it{ run_output.should_not match("Tagged with: cartridge") }
       end
-      it { succeed_with_message /mock_cart-1.*mock_cart-2.*unique_mock_cart-1/m }
     end
   end
 
   describe 'alias app cartridge' do
+    let!(:rest_client){ MockRestClient.new }
     let(:arguments) { ['app', 'cartridge', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     context 'when run' do
-      before(:each) do
-        @rc = MockRestClient.new
-      end
       it { succeed_with_message /mock_cart-1.*mock_cart-2.*unique_mock_cart-1/m }
     end
   end
 
   describe 'cartridge add' do
+    let!(:rest_client){ MockRestClient.new }
     let(:arguments) { ['cartridge', 'add', 'mock_cart-1', '--app', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     context 'when run' do
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mock_domain")
+        domain = rest_client.add_domain("mock_domain")
         app = domain.add_application("app1", "mock_type")
       end
-      it { succeed_with_message /Adding 'mock_cart-1'/ }
+      it { succeed_with_message /Adding mock_cart-1 to application 'app1' \.\.\. / }
       it { succeed_with_message /Connection URL:\s+http\:\/\/fake\.url/ }
       it { succeed_with_message /Prop1:\s+value1/ }
       it { succeed_with_message /Cartridge added with properties/ }
     end
   end
 
-  describe 'cartridge add with app context' do
-    let(:arguments) { ['cartridge', 'add', 'mock_cart-1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+  describe 'cartridge add' do
+    let!(:rest_client){ MockRestClient.new }
+    let(:instance) do
+      domain = rest_client.add_domain("mock_domain")
+      @app = domain.add_application("app1", "mock_type")
+      instance = RHC::Commands::Cartridge.new
+      RHC::Commands::Cartridge.stub(:new) { instance }
+      instance
+    end
 
-    context 'when run' do
+    context 'with app context' do
+      let(:arguments) { ['cartridge', 'add', 'mock_cart-1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mock_domain")
+        instance.stub(:git_config_get) { |key| @app.uuid if key == "rhc.app-uuid" }
+      end
+      it{ succeed_with_message }
+    end
+
+    context 'with named app context' do
+      let(:arguments) { ['cartridge', 'add', 'mock_cart-1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+      before(:each) do
+        instance.stub(:git_config_get) { |key| @app.name if key == "rhc.app-name" }
+      end
+      it{ succeed_with_message }
+    end
+
+    context 'without app context' do
+      let(:arguments) { ['cartridge', 'add', 'mock_cart-1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+      before(:each) do
+        instance.should_receive(:git_config_get).with('rhc.app-name').and_return(nil)
+        instance.should_receive(:git_config_get).with('rhc.app-uuid').and_return('')
+      end
+      it{ fail_with_code }
+    end
+    context 'without missing app context' do
+      let(:arguments) { ['cartridge', 'add', 'mock_cart-1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+      before(:each) do
+        instance.should_receive(:git_config_get).with('rhc.app-name').and_return(nil)
+        instance.should_receive(:git_config_get).with('rhc.app-uuid').and_return('foo')
+      end
+      it{ fail_with_code }
+    end
+  end
+
+  describe 'cartridge add' do
+    let!(:rest_client){ MockRestClient.new }
+
+    context 'when invoked through an alias' do
+      let(:arguments) { ['app', 'cartridge', 'add', 'unique_mock_cart', '--app', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+      before(:each) do
+        domain = rest_client.add_domain("mock_domain")
         app = domain.add_application("app1", "mock_type")
-        instance = RHC::Commands::Cartridge.new
-        instance.stub(:git_config_get) { |key| app.uuid if key == "rhc.app-uuid" }
-        RHC::Commands::Cartridge.stub(:new) { instance }
       end
       it {
         succeed_with_message
       }
     end
-  end
 
-  describe 'cartridge add with no app context' do
-    let(:arguments) { ['cartridge', 'add', 'mock_cart-1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
-
-    context 'when run' do
+    context 'when cartridge does not exist' do
+      let(:arguments) { ['cartridge', 'add', 'nomatch_cart', '--app', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mock_domain")
-        app = domain.add_application("app1", "mock_type")
-        instance = RHC::Commands::Cartridge.new
-        instance.stub(:git_config_get) { |key| "" if key == "rhc.app-uuid" }
-        RHC::Commands::Cartridge.stub(:new) { instance }
-      end
-      it {
-        fail_with_code
-      }
-    end
-  end
-
-  describe 'alias app cartridge add' do
-    let(:arguments) { ['app', 'cartridge', 'add', 'unique_mock_cart', '--app', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
-
-    context 'when run' do
-      before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mock_domain")
+        domain = rest_client.add_domain("mock_domain")
         app = domain.add_application("app1", "mock_type")
       end
-      it {
-        succeed_with_message
-      }
+      it{ fail_with_code 154 }
     end
-  end
 
-  describe 'cartridge add no cart found error' do
-    let(:arguments) { ['cartridge', 'add', 'nomatch_cart', '--app', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
-
-    context 'when run' do
+    context 'when multiple carts match' do
+      let(:arguments) { ['cartridge', 'add', 'mock_cart', '-a', 'app1','--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mock_domain")
-        app = domain.add_application("app1", "mock_type")
-      end
-      it {
-        fail_with_code 154
-      }
-    end
-  end
-
-  describe 'cartridge add too many carts found error' do
-    let(:arguments) { ['cartridge', 'add', 'mock_cart', '-a', 'app1','--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
-
-    context 'when run' do
-      before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mock_domain")
+        domain = rest_client.add_domain("mock_domain")
         app = domain.add_application("app1", "mock_type")
       end
       it {
@@ -157,29 +166,24 @@ describe RHC::Commands::Cartridge do
     end
   end
 
-  describe 'cartridge remove without confirming' do
-    let(:arguments) { ['cartridge', 'remove', 'mock_cart-1', '-a', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+  describe 'cartridge remove' do
+    let!(:rest_client){ MockRestClient.new }
 
-    context 'when run' do
+    context 'when run with --noprompt and without --confirm' do
+      let(:arguments) { ['cartridge', 'remove', 'mock_cart-1', '-a', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mock_domain")
+        domain = rest_client.add_domain("mock_domain")
         app = domain.add_application("app1", "mock_type")
         app.add_cartridge('mock_cart-1')
       end
-      it {
-        fail_with_message "Removing a cartridge is a destructive operation"
-      }
+
+      it{ fail_with_message "This action requires the --confirm option" }
     end
-  end
 
-  describe 'cartridge remove' do
-    let(:arguments) { ['cartridge', 'remove', 'mock_cart-1', '--confirm', '--trace', '-a', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
-
-    context 'when run' do
+    context 'when run with confirmation' do
+      let(:arguments) { ['cartridge', 'remove', 'mock_cart-1', '--confirm', '--trace', '-a', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mock_domain")
+        domain = rest_client.add_domain("mock_domain")
         @app = domain.add_application("app1", "mock_type")
       end
       it "should remove cartridge" do
@@ -195,11 +199,11 @@ describe RHC::Commands::Cartridge do
   end
 
   describe 'cartridge status' do
+    let!(:rest_client){ MockRestClient.new }
     let(:arguments) { ['cartridge', 'status', 'mock_cart-1', '-a', 'app1','--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     before(:each) do
-      @rc = MockRestClient.new
-      @domain = @rc.add_domain("mock_domain")
+      @domain = rest_client.add_domain("mock_domain")
       @app = @domain.add_application("app1", "mock_type")
       @app.add_cartridge('mock_cart-1')
     end
@@ -215,12 +219,12 @@ describe RHC::Commands::Cartridge do
   end
 
   describe 'cartridge start' do
+    let!(:rest_client){ MockRestClient.new }
     let(:arguments) { ['cartridge', 'start', 'mock_cart-1', '-a', 'app1','--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     context 'when run' do
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mock_domain")
+        domain = rest_client.add_domain("mock_domain")
         app = domain.add_application("app1", "mock_type")
         app.add_cartridge('mock_cart-1')
       end
@@ -229,12 +233,12 @@ describe RHC::Commands::Cartridge do
   end
 
   describe 'cartridge stop' do
+    let!(:rest_client){ MockRestClient.new }
     let(:arguments) { ['cartridge', 'stop', 'mock_cart-1', '-a', 'app1','--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     context 'when run' do
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mock_domain")
+        domain = rest_client.add_domain("mock_domain")
         app = domain.add_application("app1", "mock_type")
         app.add_cartridge('mock_cart-1')
       end
@@ -243,12 +247,12 @@ describe RHC::Commands::Cartridge do
   end
 
   describe 'cartridge restart' do
+    let!(:rest_client){ MockRestClient.new }
     let(:arguments) { ['cartridge', 'restart', 'mock_cart-1', '-a', 'app1','--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     context 'when run' do
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mock_domain")
+        domain = rest_client.add_domain("mock_domain")
         app = domain.add_application("app1", "mock_type")
         app.add_cartridge('mock_cart-1')
       end
@@ -257,12 +261,12 @@ describe RHC::Commands::Cartridge do
   end
 
   describe 'cartridge reload' do
+    let!(:rest_client){ MockRestClient.new }
     let(:arguments) { ['cartridge', 'reload', 'mock_cart-1', '-a', 'app1','--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     context 'when run' do
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mock_domain")
+        domain = rest_client.add_domain("mock_domain")
         app = domain.add_application("app1", "mock_type")
         app.add_cartridge('mock_cart-1')
       end
@@ -271,11 +275,11 @@ describe RHC::Commands::Cartridge do
   end
 
   describe 'cartridge show' do
+    let!(:rest_client){ MockRestClient.new }
     let(:arguments) { ['cartridge', 'show', 'mock_cart-1', '-a', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     before(:each) do
-      @rc = MockRestClient.new
-      domain = @rc.add_domain("mock_domain")
+      domain = rest_client.add_domain("mock_domain")
       app = domain.add_application("app1", "mock_type")
       app.add_cartridge('mock_cart-1')
     end
@@ -303,12 +307,12 @@ describe RHC::Commands::Cartridge do
   end
 
   describe 'cartridge show scaled' do
+    let!(:rest_client){ MockRestClient.new }
     let(:arguments) { ['cartridge', 'show', 'mock_type', '-a', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     context 'when run' do
       before(:each) do
-        @rc = MockRestClient.new
-        domain = @rc.add_domain("mock_domain")
+        domain = rest_client.add_domain("mock_domain")
         app = domain.add_application("app1", "mock_type", true)
       end
       it { run_output.should match(/Scaling: .*x2 \(minimum/) }
@@ -318,12 +322,12 @@ describe RHC::Commands::Cartridge do
   end
 
   describe 'cartridge scale' do
+    let!(:rest_client){ MockRestClient.new }
     let(:arguments) { ['cartridge', 'scale', @cart_type || 'mock_type', '-a', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] | (@extra_args || []) }
 
     let(:current_scale) { 1 }
     before(:each) do
-      @rc = MockRestClient.new
-      domain = @rc.add_domain("mock_domain")
+      domain = rest_client.add_domain("mock_domain")
       app = domain.add_application("app1", "mock_type", scalable)
       app.cartridges.first.stub(:current_scale).and_return(current_scale)
     end
@@ -374,10 +378,9 @@ describe RHC::Commands::Cartridge do
     let(:cart_type) { ['mock_cart-1'] }
 
     before(:each) do
-      @rc = MockRestClient.new
-      domain = @rc.add_domain("mock_domain")
+      domain = rest_client.add_domain("mock_domain")
       app = domain.add_application("app1", "mock_type", false)
-      app.add_cartridge('mock_cart-1', true, 5)
+      app.add_cartridge('mock_cart-1', true)
     end
 
     context 'when run with no arguments' do

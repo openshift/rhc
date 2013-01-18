@@ -3,6 +3,8 @@ require 'rhc/commands/base'
 require 'rhc/exceptions'
 
 describe RHC::Commands::Base do
+  before{ base_config }
+
   context 'when statically defined with context' do
     subject do
       Kernel.module_eval do

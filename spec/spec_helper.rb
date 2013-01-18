@@ -5,6 +5,10 @@ require 'rbconfig'
 
 require 'pry' if ENV['PRY']
 
+# Environment reset
+ENV['http_proxy'] = nil
+ENV['HTTP_PROXY'] = nil
+
 # chmod isn't implemented in the released fakefs gem
 # but is in git.  Once the git version is released we
 # should remove this and actively check permissions
@@ -68,7 +72,7 @@ module ClassSpecHelpers
   #
   # 
   #
-  def expects_running *args
+  def expects_running(*args, &block)
     mock_terminal
     r = new_command_runner *args do
       instance #ensure instance is created before subject :new is mocked
@@ -76,6 +80,18 @@ module ClassSpecHelpers
       RHC::Commands.to_commander
     end
     lambda { r.run! }
+  end
+  def command_for(*args)
+    mock_terminal
+    r = new_command_runner *args do
+      instance #ensure instance is created before subject :new is mocked
+      subject.should_receive(:new).any_number_of_times.and_return(instance)
+      RHC::Commands.to_commander
+    end
+    command = nil
+    RHC::Commands.stub(:execute){ |cmd, method, args| command = cmd; 0 }
+    r.run!
+    command
   end
 
   class MockHighLineTerminal < HighLine
@@ -113,6 +129,9 @@ module ClassSpecHelpers
       @input.seek(reset_pos)
       result
     end
+    def close_write
+      @input.close_write
+    end
   end
 
   def mock_terminal
@@ -120,6 +139,16 @@ module ClassSpecHelpers
     @output = StringIO.new
     $stderr = (@error = StringIO.new)
     $terminal = MockHighLineTerminal.new @input, @output
+  end
+  def input_line(s)
+    $terminal.write_line s
+  end
+  def last_output(&block)
+    if block_given?
+      yield $terminal.read
+    else
+      $terminal.read
+    end
   end
 
   def capture(&block)
@@ -160,6 +189,7 @@ module ClassSpecHelpers
     #Commander::Runner.instance_variable_set :"@singleton", nil
     mock_terminal
     input.each { |i| $terminal.write_line(i) }
+    $terminal.close_write
     #"#{@output.string}\n#{$stderr.string}"
     RHC::CLI.start(arguments)
   end
@@ -177,7 +207,9 @@ module ClassSpecHelpers
   #
   def user_agent_header
     lambda do |request|
-      request.headers['User-Agent'] =~ %r{\Arhc/\d+\.\d+.\d+ \(.*?ruby.*?\)}
+      #User-Agent is not sent to mock by httpclient
+      #request.headers['User-Agent'] =~ %r{\Arhc/\d+\.\d+.\d+ \(.*?ruby.*?\)}
+      true
     end
   end
 
@@ -187,12 +219,24 @@ module ClassSpecHelpers
     defaults = config.instance_variable_get(:@defaults)
     yield config, defaults if block_given?
     RHC::Config.stub(:default).and_return(config)
+    RHC::Config.stub(:new).and_return(config)
+    config
   end
 
   def user_config
+    user = respond_to?(:username) ? self.username : 'test_user'
+    password = respond_to?(:password) ? self.password : 'test pass'
+    server = respond_to?(:server) ? self.server : nil
+
     base_config do |config, defaults|
-      defaults.add 'default_rhlogin', 'test_user'
-      defaults.add 'password', 'test pass'
+      defaults.add 'default_rhlogin', user
+      defaults.add 'password', password
+      defaults.add 'libra_server', server if server
+    end.tap do |c|
+      opts = c.to_options
+      opts[:rhlogin].should == user
+      opts[:password].should == password
+      opts[:server].should == server if server
     end
   end
 end
@@ -254,4 +298,15 @@ Spec::Runner.configure do |config|
   config.include(ExitCodeMatchers)
   config.include(CommanderInvocationMatchers)
   config.include(ClassSpecHelpers)
+end
+
+module TestEnv
+  extend ClassSpecHelpers
+  class << self
+    attr_accessor :instance, :subject
+    def instance=(i)
+      self.subject = i.class
+      @instance = i
+    end
+  end
 end
