@@ -21,7 +21,7 @@ describe RHC::Helpers do
       include RHC::SSHHelpers
 
       def config
-        @config ||= RHC::Config
+        @config ||= RHC::Config.new
       end
       def options
         @options ||= OpenStruct.new([:server])
@@ -120,6 +120,78 @@ describe RHC::Helpers do
     end
 
     it("should raise on config"){ expect{ subject.config }.should raise_error }
+  end
+
+  context "with a bad timeout value" do
+    context "on the command line" do
+      let(:arguments){ ['help', '--timeout=string'] }
+      it{ expect{ run }.to exit_with_code(1) }
+      it{ run_output.should match("invalid argument: --timeout=string") }
+    end
+    context "via the config" do
+      before{ base_config{ |c, d| d.add 'timeout', 'string' } }
+      let(:arguments){ ['help'] }
+      it{ expect{ run }.to exit_with_code(1) }
+      it{ run_output.should match(/The configuration file.*invalid setting: invalid value for Integer/) }
+    end
+  end
+  context "with a valid client cert file" do
+    let(:arguments){ ['help', '--ssl-client-cert-file=spec/keys/example.pem'] }
+    it{ expect{ run }.to exit_with_code(0) }
+  end
+
+  context "with a missing client cert file" do
+    context "on the command line" do
+      let(:arguments){ ['help', '--ssl-client-cert-file=not_a_file'] }
+      it{ expect{ run }.to exit_with_code(1) }
+      it{ run_output.should match("The certificate 'not_a_file' cannot be loaded: No such") }
+    end
+    context "via the config" do
+      before{ base_config{ |c, d| d.add 'ssl_client_cert_file', 'not_a_file' } }
+      let(:arguments){ ['help'] }
+      it{ expect{ run }.to exit_with_code(1) }
+      it{ run_output.should match("The certificate 'not_a_file' cannot be loaded: No such") }
+    end
+  end
+
+  context 'with a valid --ssl-version' do
+    let(:arguments){ ['help', '--ssl-version=sslv3'] }
+
+    context 'on an older version of HTTPClient' do
+      before{ HTTPClient::SSLConfig.should_receive(:method_defined?).any_number_of_times.with(:ssl_version).and_return(false) }
+      it('should print an error') { run_output.should =~ /You are using an older version of the httpclient.*--ssl-version/ }
+      it('should error out') { expect{ run }.to exit_with_code(1) }
+    end
+    context 'a newer version of HTTPClient' do
+      before{ HTTPClient::SSLConfig.should_receive(:method_defined?).any_number_of_times.with(:ssl_version).and_return(true) }
+      it('should not print an error') { run_output.should_not =~ /You are using an older version of the httpclient.*--ssl-version/ }
+      it('should error out') { expect{ run }.to exit_with_code(0) }
+    end
+  end
+
+  context "with an invalid SSLVersion" do
+    context "on the command line" do
+      let(:arguments){ ['help', '--ssl-version=ssl'] }
+      it{ expect{ run }.to exit_with_code(1) }
+      it{ run_output.should match("The provided SSL version 'ssl' is not valid. Supported values: ") }
+    end
+    context "via the config" do
+      before{ base_config{ |c, d| d.add 'ssl_version', 'ssl' } }
+      let(:arguments){ ['help'] }
+      it{ expect{ run }.to exit_with_code(1) }
+      it{ run_output.should match("The provided SSL version 'ssl' is not valid. Supported values: ") }
+    end
+  end
+
+  context "with an valid ssl CA file" do
+    let(:arguments){ ['help', '--ssl-ca-file=spec/keys/example.pem'] }
+    it{ expect{ run }.to exit_with_code(0) }
+  end
+
+  context "with an invalid ssl CA file" do
+    let(:arguments){ ['help', '--ssl-ca-file=not_a_file'] }
+    it{ expect{ run }.to exit_with_code(1) }
+    it{ run_output.should match("The certificate 'not_a_file' cannot be loaded: No such file or directory ") }
   end
 
   context "Formatter" do

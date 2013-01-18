@@ -13,6 +13,7 @@ module RHCHelper
   PASSWORD_REGEX = / -p [^\s]* / unless const_defined?(:PASSWORD_REGEX)
 end
 
+require 'rhc_helper/api'
 require 'rhc_helper/loggable'
 require 'rhc_helper/commandify'
 require 'rhc_helper/httpify'

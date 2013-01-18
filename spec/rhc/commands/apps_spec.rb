@@ -26,7 +26,7 @@ describe RHC::Commands::Apps do
         before{ domain.add_application('scaled', 'php', true) }
 
         it { expect { run }.should exit_with_code(0) }
-        it { run_output.should match(/scaled.*==.*php.*Scaling:.*x2 \(minimum/m) }
+        it { run_output.should match(/scaled.*\-\-.*php.*Scaling:.*x2 \(minimum/m) }
       end
     end
 

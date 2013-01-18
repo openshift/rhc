@@ -8,6 +8,8 @@ module RHCHelper
   class App 
     extend Persistable
     extend Runnable
+    extend API
+    include API
     include Loggable
     include Commandify
     include Runnable
@@ -43,7 +45,7 @@ module RHCHelper
         # Namespace is already created, so don't pass anything in
         logger.info("Namespace (#{$namespace}) should be found by the wizard")
         run("rhc setup", nil, args) do |exitstatus, out, err, arg|
-          raise "Unmatched namespace #{$namespace}" unless out.include?($namespace)
+          raise "Unmatched namespace #{$namespace}\n\n#{out}" unless out.include?($namespace)
         end
       else
         # Pass in a blank value for namespace to create in the next step
@@ -56,7 +58,7 @@ module RHCHelper
 
     def self.create_unique(type, scalable, gear_profile=nil, prefix="test")
       # Get a REST client to verify the application name
-      client = RHC::Rest::Client.new($end_point, $username, $password)
+      client = new_client
 
       # Cleanup all test applications
       test_names = []
@@ -99,15 +101,12 @@ module RHCHelper
       persist
     end
 
+    # Get a REST client to verify the application is on the server
     def is_created?
-      # Get a REST client to verify the application is on the server
-      client = RHC::Rest::Client.new($end_point, $username, $password)
-      begin
-        client.domains[0].find_application(name)
-      rescue
-        return false
-      end
+      new_client.domains[0].find_application(name)
       true
+    rescue RHC::ApplicationNotFoundException
+      false
     end
 
     def cartridge(name)

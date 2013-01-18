@@ -1,5 +1,4 @@
 require 'uri'
-require 'rhc/rest/base'
 
 module RHC
   module Rest
@@ -24,21 +23,25 @@ module RHC
         carts.delete_if{|x| scales_with.include?(x.name)}
       end
 
-      def add_cartridge(name, timeout=nil)
+      def add_cartridge(name, options={})
         debug "Adding cartridge #{name}"
         @cartridges = nil
         attributes['cartridges'] = nil
-        rest_method "ADD_CARTRIDGE", {:name => name}, timeout
+        rest_method "ADD_CARTRIDGE", {:name => name}, options
       end
 
       def cartridges
         debug "Getting all cartridges for application #{name}"
         @cartridges ||=
           unless (carts = attributes['cartridges']).nil?
-            carts.map{|x| Cartridge.new(x) }
+            carts.map{|x| Cartridge.new(x, client) }
           else
             rest_method "LIST_CARTRIDGES"
           end
+      end
+
+      def gear_info
+        { :gear_count => gear_count, :gear_profile => gear_profile } unless gear_count.nil?
       end
 
       def gear_groups

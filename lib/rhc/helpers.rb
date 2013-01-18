@@ -71,30 +71,35 @@ module RHC
       "rhc/#{RHC::VERSION::STRING} (ruby #{RUBY_VERSION}; #{RUBY_PLATFORM})#{" (API #{RHC::Rest::API_VERSION})" rescue ''}"
     end
 
-    def get(uri, opts=nil, *args)
-      opts = {'User-Agent' => user_agent}.merge(opts || {})
-      RestClient.get(uri, opts, *args)
-    end
-
     #
     # Global config
     #
-
     global_option '-l', '--rhlogin LOGIN', "OpenShift login"
     global_option '-p', '--password PASSWORD', "OpenShift password"
     global_option '-d', '--debug', "Turn on debugging", :hide => true
+
     global_option '--server NAME', String, 'An OpenShift server hostname (default: openshift.redhat.com)'
+    global_option '-k', '--insecure', "Allow insecure SSL connections.  Potential security risk.", :hide => true
+
+    OptionParser.accept(SSLVersion = Class.new){ |s| OpenSSL::SSL::SSLContext::METHODS.find{ |m| m.to_s.downcase == s.downcase } or raise OptionParser::InvalidOption.new(nil, "The provided SSL version '#{s}' is not valid. Supported values: #{OpenSSL::SSL::SSLContext::METHODS.map(&:to_s).map(&:downcase).join(', ')}") }
+    global_option '--ssl-version VERSION', SSLVersion, "The version of SSL to use", :hide => true do |value|
+      raise RHC::Exception, "You are using an older version of the httpclient gem which prevents the use of --ssl-version.  Please run 'gem update httpclient' to install a newer version (2.2.6 or newer)." unless HTTPClient::SSLConfig.method_defined? :ssl_version
+    end
+    global_option '--ssl-ca-file FILE', "An SSL certificate CA file (may contain multiple certs)", :hide => true do |value|
+      debug certificate_file(value)
+    end
+    global_option '--ssl-client-cert-file FILE', "An SSL x509 client certificate file", :hide => true do |value|
+      debug certificate_file(value)
+    end
 
     global_option('--timeout SECONDS', Integer, 'The timeout for operations') do |value|
-      abort(color("Timeout must be a positive integer",:red)) unless value > 0
-      # FIXME: Refactor so we don't have to use a global var here
-      $rest_timeout = value
+      raise RHC::Exception, "Timeout must be a positive integer" unless value > 0
     end
-    global_option '--noprompt', "Suppress the interactive setup wizard from running before a command", :hide => true
+    global_option '--noprompt', "Suppress all interactive operations command", :hide => true do
+      $terminal.page_at = nil
+    end
     global_option '--config FILE', "Path of a different config file", :hide => true
-    def config
-      raise "Operations requiring configuration must define a config accessor"
-    end
+    global_option '--clean', "Ignore any saved configuration options", :hide => true
     global_option '--mock', "Run in mock mode", :hide => true do
       #:nocov:
       require 'rhc/rest/mock'
@@ -103,13 +108,49 @@ module RHC
     end
 
     def openshift_server
-      options.server || config.get_value('libra_server') || "openshift.redhat.com"
+      to_host((options.server rescue nil) || ENV['LIBRA_SERVER'] || "openshift.redhat.com")
+    end
+    def openshift_online_server?
+      openshift_server =~ /openshift.redhat.com$/i
     end
     def openshift_url
       "https://#{openshift_server}"
     end
-    def openshift_rest_node
-      "#{openshift_url}/broker/rest/api"
+
+    def to_host(s)
+      s =~ %r(^http(?:s)?://) ? URI(s).host : s
+    end
+    def to_uri(s)
+      URI(s =~ %r(^http(?:s)?://) ? s : "https://#{s}")
+    end
+    def openshift_rest_endpoint
+      uri = to_uri((options.server rescue nil) || ENV['LIBRA_SERVER'] || "openshift.redhat.com")
+      uri.path = '/broker/rest/api' if uri.path.blank? || uri.path == '/'
+      uri
+    end
+
+    def client_from_options(opts)
+      RHC::Rest::Client.new({
+          :url => openshift_rest_endpoint.to_s,
+          :debug => options.debug,
+          :timeout => options.timeout,
+        }.merge!(ssl_options).merge!(opts))
+    end
+
+    def ssl_options
+      {
+        :ssl_version => options.ssl_version,
+        :client_cert => certificate_file(options.ssl_client_cert),
+        :ca_file => options.ssl_ca_file && File.expand_path(options.ssl_ca_file),
+        :verify_mode => options.insecure ? OpenSSL::SSL::VERIFY_NONE : nil,
+      }.delete_if{ |k,v| v.nil? }
+    end
+
+    def certificate_file(file)
+      file && OpenSSL::X509::Certificate.new(IO.read(File.expand_path(file)))
+    rescue => e
+      debug e
+      raise OptionParser::InvalidOption.new(nil, "The certificate '#{file}' cannot be loaded: #{e.message} (#{e.class})")
     end
 
     #
@@ -118,6 +159,9 @@ module RHC
 
     def debug(msg)
       $stderr.puts "DEBUG: #{msg}" if debug?
+    end
+    def debug?
+      false
     end
 
     def deprecated_command(correct,short = false)
@@ -156,8 +200,8 @@ module RHC
         template  = ERB.new(statement, nil, "%")
         statement = template.result(binding)
 
-        statement = wrap(statement) unless @wrap_at.nil?
-        statement = page_print(statement) unless @page_at.nil?
+        statement = $terminal.wrap(statement) unless $terminal.instance_variable_get(:@wrap_at).nil?
+        statement = $terminal.send(:page_print, statement) unless $terminal.instance_variable_get(:@page_at).nil?
 
         output.print(' ' * @@indent * INDENT) unless @@last_line_open
 
@@ -178,6 +222,12 @@ module RHC
         separate_blocks
         super(*args, &block)
       end
+    end
+
+    def confirm_action(question)
+      return if options.confirm
+      return if !options.noprompt && paragraph{ agree("#{question} (yes|no): ") }
+      raise RHC::ConfirmationError
     end
 
     def success(msg, *args)
@@ -250,6 +300,11 @@ module RHC
         :current_scale  => "Current",
         :scales_from    => "Minimum",
         :scales_to      => "Maximum",
+        :gear_sizes     => "Allowed Gear Sizes",
+        :consumed_gears => "Gears Used",
+        :max_gears      => "Gears Allowed",
+        :gear_info      => "Gears",
+        :plan_id        => "Plan",
         :url            => "URL",
         :ssh_string     => "SSH",
         :connection_info => "Connection URL",
@@ -281,10 +336,14 @@ module RHC
     #end
 
     def header(s,opts = {}, &block)
-      say [s, "="*s.length]
+      say underline(s)
       if block_given?
         indent &block
       end
+    end
+
+    def underline(s)
+      [s, "-"*s.length]
     end
 
     INDENT = 2

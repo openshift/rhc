@@ -8,6 +8,9 @@ module RHC
     def render_command_syntax command
       template(:command_syntax_help).result command.get_binding
     end
+    def render_options runner
+      template(:options_help).result runner.get_binding
+    end
   end
 
   class CommandHelpBindings

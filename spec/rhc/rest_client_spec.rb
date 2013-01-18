@@ -21,6 +21,18 @@ end
 module RHC
   module Rest
     describe Client do
+
+      let(:endpoint){ mock_href }
+      let(:username){ nil }# mock_user }
+      let(:password){ nil }# mock_pass }
+      let(:use_debug){ false }
+      #let(:spec_versions){ nil }
+      let(:client) do 
+        respond_to?(:spec_versions) ? 
+          RHC::Rest::Client.new(endpoint, username, password, use_debug, spec_versions) :
+          RHC::Rest::Client.new(endpoint, username, password, use_debug)
+      end
+
       let(:client_links)   { mock_response_links(mock_client_links) }
       let(:domain_0_links) { mock_response_links(mock_domain_links('mock_domain_0')) }
       let(:domain_1_links) { mock_response_links(mock_domain_links('mock_domain_1')) }
@@ -35,32 +47,29 @@ module RHC
                         :status => 200
                       })
           stub_api_request(:get, 'api_error').
-            to_raise(RestClient::ExceptionWithResponse.new('API Error'))
+            to_raise(HTTPClient::BadResponseError.new('API Error'))
           stub_api_request(:get, 'other_error').
-            to_raise(Exception.new('Other Error'))
+            to_raise(StandardError.new('Other Error'))
         end
 
         it "returns a client object from the required arguments" do
           credentials = Base64.strict_encode64(mock_user + ":" + mock_pass)
-          client      = RHC::Rest::Client.new(mock_href, mock_user, mock_pass)
-          @@headers['Authorization'].should == "Basic #{credentials}"
-          client.send(:links).should == client_links
+          client.api.send(:links).should == client_links
         end
-        it "does not add newlines to username and password > 60 characters" do
-          username = "a" * 45
-          password = "p" * 45
-          client   = RHC::Rest::Client.new(mock_href, mock_user, mock_pass)
-          @@headers['Authorization'].should_not match("\n")
+        context "against an endpoint that won't connect" do
+          let(:endpoint){ mock_href('api_error') }
+          it "raises an error message" do
+            expect{ client.api }.should raise_error
+          end
         end
-        it "raises an error message if the API cannot be connected" do
-          expect { MockClient.new(mock_href('api_error'), mock_user, mock_pass) }.should raise_error
-        end
-        it "raises a generic error for any other error condition" do
-          lambda{ RHC::Rest::Client.new(mock_href('other_error'), mock_user, mock_pass) }.
-            should raise_error("Failed to access resource: Other Error")
+        context "against an endpoint that has a generic error" do
+          let(:endpoint){ mock_href('other_error') }
+          it "raises a generic error for any other error condition" do
+            expect{ client.api }.should raise_error(RHC::Rest::ConnectionException, "An unexpected error occured: Other Error")
+          end
         end
       end
-      
+
       describe "#new" do
         context "when server supports API versions [1.0, 1.1]" do
           before :each do
@@ -69,44 +78,36 @@ module RHC
                           :status => 200
                         })
             stub_api_request(:get, 'api_error').
-              to_raise(RestClient::ExceptionWithResponse.new('API Error'))
+              to_raise(HTTPClient::BadResponseError.new('API Error'))
             stub_api_request(:get, 'other_error').
-              to_raise(Exception.new('Other Error'))
+              to_raise(StandardError.new('Other Error'))
           end
-          
+
           context "when client is instantiated with [1.0, 1.1] as the preferred API versions" do
-            before :each do
-              @client = RHC::Rest::Client.new(mock_href, mock_user, mock_pass, false, [1.0, 1.1])
-            end
+            let(:spec_versions){ [1.0, 1.1] }
             it "settles on 1.1 as the API version" do
-              @client.api_version_negotiated.should == 1.1
+              client.api.api_version_negotiated.should == 1.1
             end
           end
-          
+
           context "when client is instantiated with [1.1, 1.0] as the preferred API versions" do
-            before :each do
-              @client = RHC::Rest::Client.new(mock_href, mock_user, mock_pass, false, [1.1, 1.0])
-            end
+            let(:spec_versions){ [1.1, 1.0] }
             it "settles on 1.0 as the API version" do
-              @client.api_version_negotiated.should == 1.0
+              client.api.api_version_negotiated.should == 1.0
             end
           end
-          
+
           context "when client is instantiated with [1.2, 1.3] as the preferred API versions" do
-            before :each do
-              @client = RHC::Rest::Client.new(mock_href, mock_user, mock_pass, false, [1.2, 1.3])
-            end
+            let(:spec_versions){ [1.2, 1.3] }
             it "fails to negotiate an agreeable API version" do
-              @client.api_version_negotiated.should be_nil
+              client.api.api_version_negotiated.should be_nil
             end
           end
-          
+
           context "when client is instantiated with [1.1, 1.0, 1.3] as the preferred API versions" do
-            before :each do
-              @client = RHC::Rest::Client.new(mock_href, mock_user, mock_pass, false, [1.1, 1.0, 1.3])
-            end
+            let(:spec_versions){ [1.1, 1.0, 1.3] }
             it "settles on 1.0 as the API version" do
-              @client.api_version_negotiated.should == 1.0
+              client.api.api_version_negotiated.should == 1.0
             end
           end
         end
@@ -121,7 +122,6 @@ module RHC
                         }.to_json,
                         :status => 200
                       })
-          @client = RHC::Rest::Client.new(mock_href, mock_user, mock_pass)
         end
 
         context "#add_domain" do
@@ -139,7 +139,7 @@ module RHC
                         })
           end
           it "returns a domain object" do
-            domain = @client.add_domain('mock_domain')
+            domain = client.add_domain('mock_domain')
             domain.class.should == RHC::Rest::Domain
             domain.id.should == 'mock_domain'
             domain.send(:links).should ==
@@ -170,10 +170,10 @@ module RHC
                         })
           end
           it "returns a list of existing domains" do
-            domains = @client.domains
+            domains = client.domains
             domains.length.should equal(2)
             (0..1).each do |idx|
-              domains[idx].class.should                          == RHC::Rest::Domain
+              domains[idx].class.should == RHC::Rest::Domain
               domains[idx].id.should    == "mock_domain_#{idx}"
               domains[idx].send(:links).should ==
                 mock_response_links(mock_domain_links("mock_domain_#{idx}"))
@@ -181,9 +181,9 @@ module RHC
           end
           it "returns an empty list when no domains exist" do
             # Disregard the first response; this is for the previous expectiation.
-            domains = @client.domains
-            @client.instance_variable_set(:@domains, nil)
-            domains = @client.domains
+            domains = client.domains
+            client.instance_variable_set(:@domains, nil)
+            domains = client.domains
             domains.length.should equal(0)
           end
         end
@@ -206,13 +206,13 @@ module RHC
           end
           it "returns a domain object for matching domain IDs" do
             match = nil
-            expect { match = @client.find_domain('mock_domain_0') }.should_not raise_error
+            expect { match = client.find_domain('mock_domain_0') }.should_not raise_error
 
             match.id.should == 'mock_domain_0'
             match.class.should == RHC::Rest::Domain
           end
           it "raise an error when no matching domain IDs can be found" do
-            expect { @client.find_domain('mock_domain_2') }.should raise_error(RHC::DomainNotFoundException)
+            expect { client.find_domain('mock_domain_2') }.should raise_error(RHC::DomainNotFoundException)
           end
         end
 
@@ -263,10 +263,10 @@ module RHC
                         })
           end
           it "returns application objects for matching application IDs" do
-            domain = @client.domains[0]
+            domain = client.domains[0]
             domain.applications.each do |app|
               match = domain.find_application(app.name)
-              match.class.should                              == RHC::Rest::Application
+              match.class.should     == RHC::Rest::Application
               match.name.should      == 'mock_app'
               match.domain_id.should == "#{domain.id}"
               match.send(:links).should     ==
@@ -274,7 +274,30 @@ module RHC
             end
           end
           it "Raises an excpetion when no matching applications can be found" do
-            expect { @client.domains[0].find_application('no_match') }.should raise_error(RHC::ApplicationNotFoundException)
+            expect { client.domains[0].find_application('no_match') }.should raise_error(RHC::ApplicationNotFoundException)
+          end
+        end
+
+        describe RHC::Rest::Cartridge do
+          subject do 
+            described_class.new({
+              :name => 'foo',
+              :links => mock_response_links([
+                ['GET', 'broker/rest/cartridge', 'get']
+              ])}, client)
+          end
+          context "when several messages are present" do
+            before do 
+              stub_api_request(:get, 'broker/rest/cartridge', true).
+                with(:query => {:include => :status_messages}).
+                to_return(:body => {
+                  :type => 'cartridge',
+                  :data => {
+                    :status_messages => [{:message => 'Test'}]
+                  }
+                }.to_json)
+            end
+            its(:status){ should == [{'message' => 'Test'}] }
           end
         end
 
@@ -303,21 +326,22 @@ module RHC
                         })
           end
           it "returns a list of existing cartridges" do 
-            carts = @client.cartridges
+            carts = client.cartridges
             carts.length.should equal(2)
             (0..1).each do |idx|
-              carts[idx].class.should                          == RHC::Rest::Cartridge
+              carts[idx].class.should == RHC::Rest::Cartridge
               carts[idx].name.should  == "mock_cart_#{idx}"
               carts[idx].type.should  == "mock_cart_#{idx}_type"
               carts[idx].send(:links).should ==
                 mock_response_links(mock_cart_links("mock_cart_#{idx}"))
             end
           end
-          it "returns an empty list when no cartridges exist" do
+          it "caches cartridges on the client" do
             # Disregard the first response; this is for the previous expectiation.
-            carts = @client.cartridges
-            carts = @client.cartridges
-            carts.length.should equal(0)
+            old = client.cartridges.length
+            client.cartridges.length.should equal(old)
+            client.instance_variable_set(:@cartridges, nil)
+            client.cartridges.length.should equal(0)
           end
         end
 
@@ -345,20 +369,20 @@ module RHC
                         })
           end
           it "returns a list of cartridge objects for matching cartridges" do
-            matches = @client.find_cartridges('mock_cart_0')
+            matches = client.find_cartridges('mock_cart_0')
             matches.length.should equal(1)
-            matches[0].class.should                          == RHC::Rest::Cartridge
+            matches[0].class.should == RHC::Rest::Cartridge
             matches[0].name.should  == 'mock_cart_0'
             matches[0].type.should  == 'mock_cart_0_type'
             matches[0].send(:links).should ==
               mock_response_links(mock_cart_links('mock_cart_0'))
           end
           it "returns an empty list when no matching cartridges can be found" do
-            matches = @client.find_cartridges('no_match')
+            matches = client.find_cartridges('no_match')
             matches.length.should equal(0)
           end
           it "returns multiple cartridge matches" do
-            matches = @client.find_cartridges :regex => "mock_cart_[0-9]"
+            matches = client.find_cartridges :regex => "mock_cart_[0-9]"
             matches.length.should equal(2)
           end
         end
@@ -377,8 +401,8 @@ module RHC
                         })
           end
           it "returns the user object associated with this client connection" do
-            user = @client.user
-            user.class.should                           == RHC::Rest::User
+            user = client.user
+            user.class.should  == RHC::Rest::User
             user.login.should  == mock_user
             user.send(:links).should  == mock_response_links(mock_user_links)
           end
@@ -416,9 +440,9 @@ module RHC
           end
           it "returns a list of key objects for matching keys" do
             key = nil
-            expect { key = @client.find_key('mock_key_0') }.should_not raise_error
+            expect { key = client.find_key('mock_key_0') }.should_not raise_error
 
-            key.class.should                            == RHC::Rest::Key
+            key.class.should   == RHC::Rest::Key
             key.name.should    == 'mock_key_0'
             key.type.should    == 'mock_key_0_type'
             key.content.should == '123456789:0'
@@ -426,7 +450,7 @@ module RHC
               mock_response_links(mock_key_links('mock_key_0'))
           end
           it "raise an error when no matching keys can be found" do
-            expect { @client.find_key('no_match') }.should raise_error(RHC::KeyNotFoundException)
+            expect { client.find_key('no_match') }.should raise_error(RHC::KeyNotFoundException)
           end
         end
 
@@ -438,11 +462,10 @@ module RHC
                         })
           end
           context "debug mode is on" do
+            let(:use_debug){ true }
             it "writes a message to the logger" do
               capture do
-                @client = MockClient.new(mock_href, mock_user, mock_pass, true)
-                @client.send logout_method.to_sym
-
+                client.send logout_method.to_sym
                 stderr.should match(/Logout\/Close client$/)
               end
             end
@@ -450,8 +473,7 @@ module RHC
           context "debug mode is off" do
             it "does nothing" do
               capture do
-                @client = MockClient.new(mock_href, mock_user, mock_pass, false)
-                @client.send logout_method.to_sym
+                client.send logout_method.to_sym
                 stderr.should be_empty
               end
             end
@@ -492,20 +514,18 @@ module RHC
               to_return({ :body   => {}.to_json,
                           :status => 200
                         })
+          end
 
-            @client = MockClient.new(mock_href, mock_user, mock_pass)
-          end
-          
           it "should delete keys" do
-            expect { @client.delete_key('mock_key_0') }.should be_true
+            expect { client.delete_key('mock_key_0') }.should be_true
           end
-          
+
           it 'raises an error if nonexistent key is requested' do
-            expect { @client.find_key('no_match') }.
+            expect { client.find_key('no_match') }.
               should raise_error(RHC::KeyNotFoundException)
           end
         end
-        
+
         context "#logout" do
           let(:logout_method) { :logout }
           it_should_behave_like "a logout method"
@@ -516,7 +536,7 @@ module RHC
           it_should_behave_like "a logout method"
         end
       end
-        
+
       context "when server supports API versions 1.0 and 1.1" do
         before :each do
           stub_api_request(:get, '').
@@ -527,36 +547,33 @@ module RHC
                         :status => 200
                       })
         end
-        
+
         context "when client supports API version 1.1" do
-          before :each do
-            @client = RHC::Rest::Client.new(mock_href, mock_user, mock_pass, false, [1.1])
-          end
-            
+          let(:spec_versions){ [1.1] }
+
           describe "#api_version_negotiated" do
             it "returns 1.1" do
-              @client.api_version_negotiated.to_s.should == '1.1'
+              client.api.api_version_negotiated.to_s.should == '1.1'
             end
           end
         end
-          
+
         context "when client supports only API version 1.2" do
-          before :each do
-            @client = RHC::Rest::Client.new(mock_href, mock_user, mock_pass, false, [1.2])
-          end
-            
+          let(:spec_versions){ [1.2] }
+
           describe "#api_version_negotiated" do
             it 'returns nil' do
-              @client.api_version_negotiated.should be_nil
+              client.api.api_version_negotiated.should be_nil
             end
           end
         end
-        
+
         context "when client supports only API version 0.9" do
           describe "#new" do
+            let(:spec_versions){ [0.9] }
             it "warns user that it is outdated" do
               capture do
-                @client = RHC::Rest::Client.new(mock_href, mock_user, mock_pass, false, [0.9])
+                client.api
                 @output.rewind
                 @output.read.should =~ /client version may be outdated/
               end
@@ -564,7 +581,6 @@ module RHC
           end
         end
       end
-      
     end
   end
 end

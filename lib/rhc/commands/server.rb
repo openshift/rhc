@@ -1,16 +1,21 @@
-require 'rhc/commands/base'
-
 module RHC::Commands
   class Server < Base
     suppress_wizard
 
     summary "Display information about the status of the OpenShift service."
-    description "Retrieves any open issues or notices about the operation of the OpenShift service and displays them in the order they were opened."
+    description <<-DESC
+      Retrieves any open issues or notices about the operation of the
+      OpenShift service and displays them in the order they were opened.
+
+      When connected to an OpenShift Enterprise server, will only display
+      the version of the API that it is connecting to.
+      DESC
     def run
       say "Connected to #{openshift_server}"
 
-      if openshift_server == 'openshift.redhat.com'
-        status = decode_json(get("#{openshift_url}/app/status/status.json").body)
+      if openshift_online_server?
+        #status = decode_json(get("#{openshift_url}/app/status/status.json").body)
+        status = rest_client.request(:method => :get, :url => "#{openshift_url}/app/status/status.json", :lazy_auth => true){ |res| decode_json(res.content) }
         open = status['open']
 
         (success 'All systems running fine' and return 0) if open.blank?

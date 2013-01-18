@@ -23,7 +23,7 @@ module RHC
     end
 
     def options_parse_version
-      if @args.include? "--version" or @args.include? "-v"
+      if @args.include? "--version"
         say version
         exit 0
       end
@@ -68,14 +68,23 @@ module RHC
           end
           1
         rescue \
+          OptionParser::InvalidOption => e
+          RHC::Helpers.error e.message
+          1
+        rescue \
           ArgumentError,
-          OptionParser::InvalidOption,
-          OptionParser::InvalidArgument,
-          OptionParser::MissingArgument => e
+          OptionParser::ParseError => e
 
           help_bindings = CommandHelpBindings.new(active_command, commands, self)
           usage = RHC::HelpFormatter.new(self).render_command_syntax(help_bindings)
-          RHC::Helpers.error e.message
+          message = case e
+          when OptionParser::AmbiguousOption
+            "The option #{e.args.join(' ')} is ambiguous. You will need to specify the entire option."
+          else
+            e.message
+          end
+
+          RHC::Helpers.error message
           say "#{usage}"
           1
         rescue RHC::Exception, RHC::Rest::Exception => e
@@ -99,8 +108,15 @@ module RHC
     end
 
     def create_default_commands
+      command 'help options' do |c|
+#        c.syntax = ''
+        c.description = "Display all global options and information about configuration"
+        c.when_called do |args, options|
+          say help_formatter.render_options self
+        end
+      end
       command :help do |c|
-        c.syntax = 'rhc help <command>'
+        c.syntax = '<command>'
         c.description = 'Display global or <command> help documentation.'
         c.when_called do |args, options|
           cmd = (1..args.length).reverse_each.map{ |n| args[0,n].join(' ') }.find{ |cmd| command_exists?(cmd) }
