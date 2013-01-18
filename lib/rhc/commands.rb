@@ -224,13 +224,20 @@ module RHC
           end
           raise ArgumentError.new("Missing required option '#{arg}'.") if option_meta[:required] && options[arg].nil?
         end
-
         # process args
         arg_slots = [].fill(nil, 0, args_metadata.length)
         fill_args = args.reverse
         args_metadata.each_with_index do |arg_meta, i|
           # check options
-          value = options.__hash__[arg_meta[:option_symbol]] unless arg_meta[:option_symbol].nil?
+          option = arg_meta[:option_symbol]
+          context_helper = arg_meta[:context_helper]
+
+          value = options.__hash__[option] if option
+          if value.nil? and context_helper
+            value = cmd.send(context_helper)
+            options.__hash__[option] = value if option
+          end
+
           if value
             arg_slots[i] = value
           elsif arg_meta[:arg_type] == :list

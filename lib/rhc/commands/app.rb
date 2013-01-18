@@ -255,7 +255,7 @@ module RHC::Commands
     end
 
     summary "Show information about an application"
-    syntax "<app> [--namespace namespace] [--app app]"
+    syntax "<app> [--namespace namespace]"
     argument :app, "The name of the application you are getting information on", ["-a", "--app app"], :context => :app_context
     option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
     option ["--state"], "Get the current state of the application's gears"

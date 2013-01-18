@@ -128,6 +128,7 @@ class RHC::Commands::Base
       args_metadata << {:name => name,
                         :description => description,
                         :switches => switches,
+                        :context_helper => options[:context],
                         :option_symbol => option_symbol,
                         :arg_type => arg_type}
     end

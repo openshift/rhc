@@ -15,17 +15,22 @@ module RHC
     def app_context
       debug "Getting app context"
 
+      name = git_config_get "rhc.app-name"
+      return name if name.present?
+
       uuid = git_config_get "rhc.app-uuid"
 
-      # proof of concept - we shouldn't be traversing
-      # the broker should expose apis for getting the application via a uuid
-      rest_client.domains.each do |rest_domain|
-        rest_domain.applications.each do |rest_app|
-          return rest_app.name if rest_app.uuid == uuid
+      if uuid.present?
+        # proof of concept - we shouldn't be traversing
+        # the broker should expose apis for getting the application via a uuid
+        rest_client.domains.each do |rest_domain|
+          rest_domain.applications.each do |rest_app|
+            return rest_app.name if rest_app.uuid == uuid
+          end
         end
-      end
 
-      debug "Couldn't find app with UUID == #{uuid}"
+        debug "Couldn't find app with UUID == #{uuid}"
+      end
       nil
     end
 

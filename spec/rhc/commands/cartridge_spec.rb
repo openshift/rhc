@@ -89,15 +89,26 @@ describe RHC::Commands::Cartridge do
 
   describe 'cartridge add' do
     let!(:rest_client){ MockRestClient.new }
+    let(:instance) do
+      domain = rest_client.add_domain("mock_domain")
+      @app = domain.add_application("app1", "mock_type")
+      instance = RHC::Commands::Cartridge.new
+      RHC::Commands::Cartridge.stub(:new) { instance }
+      instance
+    end
 
     context 'with app context' do
       let(:arguments) { ['cartridge', 'add', 'mock_cart-1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
       before(:each) do
-        domain = rest_client.add_domain("mock_domain")
-        app = domain.add_application("app1", "mock_type")
-        instance = RHC::Commands::Cartridge.new
-        instance.stub(:git_config_get) { |key| app.uuid if key == "rhc.app-uuid" }
-        RHC::Commands::Cartridge.stub(:new) { instance }
+        instance.stub(:git_config_get) { |key| @app.uuid if key == "rhc.app-uuid" }
+      end
+      it{ succeed_with_message }
+    end
+
+    context 'with named app context' do
+      let(:arguments) { ['cartridge', 'add', 'mock_cart-1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+      before(:each) do
+        instance.stub(:git_config_get) { |key| @app.name if key == "rhc.app-name" }
       end
       it{ succeed_with_message }
     end
@@ -105,11 +116,16 @@ describe RHC::Commands::Cartridge do
     context 'without app context' do
       let(:arguments) { ['cartridge', 'add', 'mock_cart-1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
       before(:each) do
-        domain = rest_client.add_domain("mock_domain")
-        app = domain.add_application("app1", "mock_type")
-        instance = RHC::Commands::Cartridge.new
+        instance.should_receive(:git_config_get).with('rhc.app-name').and_return(nil)
         instance.should_receive(:git_config_get).with('rhc.app-uuid').and_return('')
-        RHC::Commands::Cartridge.stub(:new) { instance }
+      end
+      it{ fail_with_code }
+    end
+    context 'without missing app context' do
+      let(:arguments) { ['cartridge', 'add', 'mock_cart-1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+      before(:each) do
+        instance.should_receive(:git_config_get).with('rhc.app-name').and_return(nil)
+        instance.should_receive(:git_config_get).with('rhc.app-uuid').and_return('foo')
       end
       it{ fail_with_code }
     end

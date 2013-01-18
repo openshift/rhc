@@ -315,10 +315,11 @@ describe RHC::Commands::App do
 
     context 'when run with the same case as created' do
       before(:each) do
+        FakeFS.deactivate!
         @domain = rest_client.add_domain("mockdomain")
         @domain.add_application("app1", "mock_type")
       end
-      it { run_output.should match("app1 @ https://app1-mockdomain.fake.foo/") }
+      it("should output an app") { run_output.should match("app1 @ https://app1-mockdomain.fake.foo/") }
       it { run_output.should match(/Gears:\s+1 small/) }
     end
 
