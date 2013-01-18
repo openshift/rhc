@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.3.3
+Version: 1.3.4
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -113,6 +113,11 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Jan 18 2013 Dan McPherson <dmcphers@redhat.com> 1.3.4-1
+- Encrypt again with '-r' flag, for use with openshift/rhc
+  (asari.ruby@gmail.com)
+- Set up Travis uploads if spec fails (asari.ruby@gmail.com)
+
 * Thu Jan 10 2013 Adam Miller <admiller@redhat.com> 1.3.3-1
 - Update build.sh (ccoleman@redhat.com)
 - Add rubygems as a build requires for gem (ccoleman@redhat.com)
