@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.3.4
+Version: 1.3.5
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -113,6 +113,85 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Jan 21 2013 Adam Miller <admiller@redhat.com> 1.3.5-1
+- Add support for the --from-code=<URL> parameter on application create. Show a
+  default message if the broker returns a message with no text.
+  (ccoleman@redhat.com)
+- Merge pull request #274 from smarterclayton/use_nahi_httpclient_instead
+  (dmcphers+openshiftbot@redhat.com)
+- Allow app name to exist in git config, and evaluate some context helpers for
+  argument positions (ccoleman@redhat.com)
+- Fix remaining integration test failure (ccoleman@redhat.com)
+- Bug 895000 - Ambiguous parse options should be properly displayed to users
+  (ccoleman@redhat.com)
+- Bug 894291 - Configuration values should be processed the same way as options
+  (ccoleman@redhat.com)
+- Merge branch 'master' of github.com:openshift/rhc into
+  use_nahi_httpclient_instead (ccoleman@redhat.com)
+- Bug 895000 - Handle configuration file path errors gracefully
+  (ccoleman@redhat.com)
+- Add information about the gears being used in the app in the CLI
+  (ccoleman@redhat.com)
+- Remove request/response debugging (use env HTTP_DEBUG=1 for that), merge
+  client.spec build changes (ccoleman@redhat.com)
+- Support multiple cartridges on app creation (ccoleman@redhat.com)
+- tty? should be mocked true (ccoleman@redhat.com)
+- Disable color if stdout is not a tty, disable paging if either stdin or
+  stdout is not a tty (ccoleman@redhat.com)
+- Print the client output id, replace app show --state with app show
+  (ccoleman@redhat.com)
+- Update mode of sshkey (ccoleman@redhat.com)
+- rhc server should be lazy auth (ccoleman@redhat.com)
+- Add more detail to cartridge listing, add a verbose mode, --version no longer
+  responds to -v (ccoleman@redhat.com)
+- Minor whitespace tweak (ccoleman@redhat.com)
+- Standarize better confirmation behavior, make --noprompt fail most operations
+  that require confirmation (ccoleman@redhat.com)
+- Display gear count and gear sizes available during rhc setup
+  (ccoleman@redhat.com)
+- Add 'rhc account' If user specifies password on CLI, don't prompt again just
+  display error (no interactive input) (ccoleman@redhat.com)
+- Tolerate HTTPClient 2.2.1 not supporting --ssl-version by warning the user
+  they cannot use that option unless they upgrade (ccoleman@redhat.com)
+- Add a 'help options' command to show all global options, and improve the
+  setup documentation. (ccoleman@redhat.com)
+- Fetch cartridges with apps list (ccoleman@redhat.com)
+- Httpclient 2.2 raises 502/401, Httpclient 2.3 does not. (ccoleman@redhat.com)
+- Begin fixing spec tests, fix various real world problems as we go
+  (ccoleman@redhat.com)
+- Return all spec tests to passing, dramatically simplify wizard spec tests.
+  (ccoleman@redhat.com)
+- Premerge with master (ccoleman@redhat.com)
+- Get tests back to passing, remove all old code (ccoleman@redhat.com)
+- An initial httpclient implementation (ccoleman@redhat.com)
+- Merge branch 'master' of github.com:openshift/rhc into
+  refactor_rhc_rest_client (ccoleman@redhat.com)
+- Ruby 1.8 does not appear to set a default cert store, and rest-client doesn't
+  allow setting a cert_store directly.  Work around it until we investigate
+  nahi/httpclient more. (ccoleman@redhat.com)
+- Move arguments validation and fill to RHC::Commands (ccoleman@redhat.com)
+- Serialization of config options should go through RHC::Config#save!, simplify
+  wizard spec tests to depend slightly less on state, add comments around spec
+  intentions, make Commander::Command::Options have a bit cleaner behavior.
+  (ccoleman@redhat.com)
+- Restore spec tests to 100%% coverage, remove some unused methods
+  (ccoleman@redhat.com)
+- Handle lambda context parameters (for lazy evaluation), reach 100%% spec
+  coverage again (ccoleman@redhat.com)
+- Provide a specific message for invalid protocols (ccoleman@redhat.com)
+- Support client certs and ca_file being passed on command line
+  (ccoleman@redhat.com)
+- Remove some unused crap from base.rb (ccoleman@redhat.com)
+- Allow --ssl-version to be passed on the command line, which will allow Mac
+  users to bypass cert issues on some servers (ccoleman@redhat.com)
+- More cleanup of client creation, remove need for globals, start simplifying
+  wizard client creation, prepare for delayed auth (ccoleman@redhat.com)
+- Clean up timeouts and DRY up specs (ccoleman@redhat.com)
+- TarGz not autoloaded (ccoleman@redhat.com)
+- Spec tests pass (ccoleman@redhat.com)
+- Make auth abstractable, separate client and api, and use less poor behavior
+  (ccoleman@redhat.com)
+
 * Fri Jan 18 2013 Dan McPherson <dmcphers@redhat.com> 1.3.4-1
 - Encrypt again with '-r' flag, for use with openshift/rhc
   (asari.ruby@gmail.com)
