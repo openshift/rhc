@@ -415,6 +415,14 @@ describe Object do
     specify('empty string') { ''.present?.should be_false }
   end
 
+  context 'presence' do
+    specify('nil') { nil.presence.should be_nil }
+    specify('empty array') { [].presence.should be_nil }
+    specify('array') { [1].presence.should == [1] }
+    specify('string') { 'a'.presence.should == 'a' }
+    specify('empty string') { ''.presence.should be_nil }
+  end
+
   context 'blank?' do
     specify('nil') { nil.blank?.should be_true }
     specify('empty array') { [].blank?.should be_true }

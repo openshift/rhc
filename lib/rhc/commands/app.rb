@@ -42,6 +42,7 @@ module RHC::Commands
     option ["-g", "--gear-size size"], "Gear size controls how much memory and CPU your cartridges can use."
     option ["-s", "--scaling"], "Enable scaling for the web cartridge."
     option ["-r", "--repo dir"], "Path to the Git repository (defaults to ./$app_name)"
+    option ["--from-code URL"], "URL to a Git repository that will become the initial contents of the application"
     option ["--[no-]git"], "Skip creating the local Git repository."
     option ["--nogit"], "DEPRECATED: Skip creating the local Git repository.", :deprecated => {:key => :git, :value => false}
     option ["--[no-]dns"], "Skip waiting for the application DNS name to resolve. Must be used in combination with --no-git"
@@ -66,9 +67,10 @@ module RHC::Commands
         header "Application Options"
         table([["Namespace:", options.namespace],
                ["Cartridges:", cartridges.map(&:name).join(', ')],
+              (["Source Code:", options.from_code] if options.from_code),
                ["Gear Size:", options.gear_size || "default"],
                ["Scaling:", options.scaling ? "yes" : "no"],
-              ]
+              ].compact
              ).each { |s| say "  #{s}" }
       end
 
@@ -80,7 +82,7 @@ module RHC::Commands
 
         # create the main app
         rest_app = create_app(name, cartridges.map(&:name), rest_domain,
-                              options.gear_size, options.scaling)
+                              options.gear_size, options.scaling, options.from_code)
 
         messages.concat(rest_app.messages)
 
@@ -347,10 +349,11 @@ module RHC::Commands
         result
       end
 
-      def create_app(name, cartridges, rest_domain, gear_size=nil, scale=nil)
+      def create_app(name, cartridges, rest_domain, gear_size=nil, scale=nil, from_code=nil)
         app_options = {:cartridges => Array(cartridges)}
         app_options[:gear_profile] = gear_size if gear_size
         app_options[:scale] = scale if scale
+        app_options[:initial_git_url] = from_code if from_code
         app_options[:debug] = true if @debug
         debug "Creating application '#{name}' with these options - #{app_options.inspect}"
         rest_app = rest_domain.add_application(name, app_options)

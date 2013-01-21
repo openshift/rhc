@@ -486,6 +486,38 @@ module RHC
             method.should raise_error(RHC::Rest::ValidationException, 'mock error message')
           end
         end
+        context "with multiple JSON messages" do
+          let(:json){ { :messages => [{ :field => 'error', :text => 'mock error message 1' },
+                                       { :field => 'error', :text => 'mock error message 2' }] } }
+          it "raises a validation error with concatenated messages" do
+            method.should raise_error(RHC::Rest::ValidationException, "The operation did not complete successfully, but the server returned additional information:\n* mock error message 1\n* mock error message 2")
+          end
+        end
+        context "with multiple errors" do
+          let(:json){ { :messages => [
+                          { :severity => 'error', :field => 'error', :text => 'mock 1' },
+                          { :severity => 'error', :text => 'mock 2' },
+                        ] } }
+          it "raises a validation error with concatenated messages" do
+            method.should raise_error(RHC::Rest::ValidationException, "The server reported multiple errors:\n* mock 1\n* mock 2")
+          end
+        end
+        context "with multiple messages and one error" do
+          let(:json){ { :messages => [
+                          { :field => 'error', :text => 'mock 1' },
+                          { :text => 'mock 2' },
+                          { :severity => 'error', :text => 'mock 3' },
+                        ] } }
+          it "raises a validation error with concatenated messages" do
+            method.should raise_error(RHC::Rest::ValidationException, "mock 3")
+          end
+        end
+        context "with an empty JSON response" do
+          let(:json){ {} }
+          it "raises a validation error" do
+            method.should raise_error(RHC::Rest::ServerErrorException)
+          end
+        end
       end
 
       context "with a 422 response" do
@@ -505,7 +537,7 @@ module RHC
         context "with an empty JSON response" do
           let(:json){ {} }
           it "raises a validation error" do
-            method.should raise_error(RHC::Rest::ValidationException, 'Not valid')
+            method.should raise_error(RHC::Rest::ServerErrorException)
           end
         end
 
@@ -513,7 +545,26 @@ module RHC
           let(:json){ { :messages => [{ :field => 'error', :text => 'mock error message 1' },
                                        { :field => 'error', :text => 'mock error message 2' }] } }
           it "raises a validation error with concatenated messages" do
-            method.should raise_error(RHC::Rest::ValidationException, 'mock error message 1 mock error message 2')
+            method.should raise_error(RHC::Rest::ValidationException, "The operation did not complete successfully, but the server returned additional information:\n* mock error message 1\n* mock error message 2")
+          end
+        end
+        context "with multiple errors" do
+          let(:json){ { :messages => [
+                          { :severity => 'error', :field => 'error', :text => 'mock 1' },
+                          { :severity => 'error', :text => 'mock 2' },
+                        ] } }
+          it "raises a validation error with concatenated messages" do
+            method.should raise_error(RHC::Rest::ValidationException, "The server reported multiple errors:\n* mock 1\n* mock 2")
+          end
+        end
+        context "with multiple messages and one error" do
+          let(:json){ { :messages => [
+                          { :field => 'error', :text => 'mock 1' },
+                          { :text => 'mock 2' },
+                          { :severity => 'error', :text => 'mock 3' },
+                        ] } }
+          it "raises a validation error with concatenated messages" do
+            method.should raise_error(RHC::Rest::ValidationException, "mock 3")
           end
         end
       end
@@ -570,7 +621,7 @@ module RHC
         context "with a formatted JSON response" do
           let(:json){ { :messages => [{ :severity => 'error', :text => 'mock error message' }] } }
           it "raises a resource access error" do
-            method.should raise_error(RHC::Rest::ServerErrorException, 'Server returned an unexpected error code: 999')
+            method.should raise_error(RHC::Rest::ServerErrorException, 'mock error message')
           end
         end
       end
