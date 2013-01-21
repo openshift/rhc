@@ -17,6 +17,7 @@ module RHC
               :config_ssh_key_stage,
               :upload_ssh_key_stage,
               :install_client_tools_stage,
+              :setup_test_stage,
               :config_namespace_stage,
               :show_app_info_stage,
               :finalize_stage]
@@ -83,6 +84,16 @@ module RHC
       end
 
     private
+    
+    # cache SSH keys from the REST client
+    def ssh_keys
+      @ssh_keys ||= rest_client.sshkeys
+    end
+    
+    # clear SSH key cache
+    def clear_ssh_keys_cache
+      @ssh_keys = nil
+    end
 
     def greeting_stage
       info "OpenShift Client Tools (RHC) Setup Wizard"
@@ -160,19 +171,18 @@ module RHC
     # return true if the account has the public key defined by
     # RHC::Config::ssh_pub_key_file_path
     def ssh_key_uploaded?
-      @ssh_keys ||= rest_client.sshkeys
-      @ssh_keys.any? { |k| k.fingerprint == fingerprint_for_default_key }
+      ssh_keys.any? { |k| k.fingerprint == fingerprint_for_default_key }
     end
 
     def existing_keys_info
-      return unless @ssh_keys
-      indent{ @ssh_keys.each{ |key| paragraph{ display_key(key) } } }
+      return unless ssh_keys
+      indent{ ssh_keys.each{ |key| paragraph{ display_key(key) } } }
     end
 
     def get_preferred_key_name
       key_name = 'default'
 
-      if @ssh_keys.empty?
+      if ssh_keys.empty?
         paragraph do
           info "Since you do not have any keys associated with your OpenShift account, "\
               "your new key will be uploaded as the 'default' key."
@@ -199,7 +209,7 @@ module RHC
         userkey = username ? username.gsub(/@.*/, '') : ''
         pubkey_base_name = "#{userkey}#{hostname}".gsub(/[^A-Za-z0-9]/,'').slice(0,16)
         default_name = find_unique_key_name(
-          :keys => @ssh_keys,
+          :keys => ssh_keys,
           :base => pubkey_base_name,
           :max_length => DEFAULT_MAX_LENGTH
         )
@@ -219,12 +229,12 @@ module RHC
     # given the base name and the maximum length,
     # find a name that does not clash with what is in opts[:keys]
     def find_unique_key_name(opts)
-      keys = opts[:keys] || @ssh_keys
+      keys = opts[:keys] || ssh_keys
       base = opts[:base] || 'default'
       max  = opts[:max_length] || DEFAULT_MAX_LENGTH
       key_name_suffix = 1
       candidate = base
-      while @ssh_keys.detect { |k| k.name == candidate }
+      while ssh_keys.detect { |k| k.name == candidate }
         candidate = base.slice(0, max - key_name_suffix.to_s.length) +
           key_name_suffix.to_s
         key_name_suffix += 1
@@ -242,11 +252,13 @@ module RHC
       end
 
       paragraph do
-        if !@ssh_keys.empty? && @ssh_keys.any? { |k| k.name == key_name }
+        if !ssh_keys.empty? && ssh_keys.any? { |k| k.name == key_name }
+          clear_ssh_keys_cache
           say "Key with the name #{key_name} already exists. Updating ... "
           key = rest_client.find_key(key_name)
           key.update(type, content)
         else
+          clear_ssh_keys_cache
           say "Uploading key '#{key_name}' from #{RHC::Config::ssh_pub_key_file_path} ... "
           rest_client.add_key key_name, content, type
         end
@@ -322,14 +334,12 @@ module RHC
       section do
         say "Checking for applications ... "
 
-        apps = rest_client.domains.map(&:applications).flatten
-
-        if !apps.nil? and !apps.empty?
-          success "found #{apps.length}"
+        if !applications.nil? and !applications.empty?
+          success "found #{applications.length}"
 
           paragraph do
             indent do
-              say table(apps.map do |app|
+              say table(applications.map do |app|
                 [app.name, app.app_url]
               end)
             end
@@ -355,6 +365,115 @@ module RHC
       true
     end
 
+    # Perform basic tests to ensure that setup is sane
+    # search for private methods starting with "test_" and execute them
+    # in alphabetical order
+    # NOTE: The order itself is not important--the tests should be independent.
+    # However, the hash order is unpredictable in Ruby 1.8, and is preserved in
+    # 1.9. There are two similar tests that can fail under the same conditions,
+    # and this makes the spec results inconsistent between 1.8 and 1.9.
+    # Thus, we force an order with #sort to ensure spec passage on both.
+    def setup_test_stage
+      tests_passed = false
+      info "Analyzing system (one dot for each test)"
+      tests = private_methods.select {|m| m.to_s.start_with? 'test_'}
+      tests_passed = tests.sort.all? do |test|
+        send(test)
+      end
+    end
+    
+    # cached list of applications needed for test stage
+    def applications
+      @applications ||= rest_client.domains.map(&:applications).flatten
+    end
+    
+    ###
+    # tests for setup_test_stage; no code coverage is tested here
+    
+    # :nocov:
+    def ssh_agent_identities
+      Net::SSH::Authentication::Agent.connect.identities rescue []
+    end
+    
+    def ssh_agent_keys
+      @agent_keys ||= ssh_agent_identities.map { |id| id.comment }
+    end
+    
+    def test_ssh_quick
+      hosts = []
+      server_keys = []
+      
+      applications.each do |app|
+        if Net::SSH.configuration_for(app.host)[:keys]
+          Net::SSH.configuration_for(app.host)[:keys].map{ |f| server_keys << File.expand_path(f) }
+        end
+      end
+
+      server_keys ||= server_keys.flatten!.compact!
+      report_result (server_keys - ssh_agent_keys).empty?, "SSH keys missing on the server"
+    end
+    
+    def test_broker_connectivity
+      # for simple connectivity to the broker, we ensure that the server
+      # replied with a list of API versions
+      report_result(rest_client.api_version_negotiated, "#{rest_client.url} did not respond with valid data") and
+      
+      # if the REST client is properly initialized and has #user defined,
+      # the authentication was successful
+      report_result(rest_client.user, "Authentication as #{rest_client.user.login} failed")
+    end
+    
+    def test_server_has_ssh_keys
+      # at least one key is stored on the server
+      report_result !ssh_keys.empty?, "No SSH key is uploaded to the server for #{rest_client.user.login}"
+    end
+
+    def test_private_key_mode
+      pub_key_file = RHC::Config.ssh_pub_key_file_path
+      private_key_file = RHC::Config.ssh_priv_key_file_path
+      # we test these only in the context of FakeFS; to avoid displaying 
+      # NoMethodError on the console, we basically skip it (and bypass coverage)
+      if File.exist?(private_key_file) and defined?(FakeFS) and !File.stat(private_key_file).is_a?(FakeFS::File::Stat)
+        report_result (File.exist?(private_key_file) and File.stat(private_key_file).mode.to_s(8) =~ /[4-7]00$/),
+          "#{private_key_file} should not be accessible by no one but the user"
+      else
+        true # wizard should go on
+      end
+    end
+    
+    def test_remote_ssh_keys
+      # test if the server has the remote key
+      server_has_key = ssh_keys.any? do |k|
+        k.fingerprint == fingerprint_for_default_key or
+        if ssh_agent_identities
+          ssh_agent_identities.map{|agent_key| k.fingerprint == agent_key.fingerprint }
+        end
+      end
+      report_result server_has_key, "Remote server does not have the corresponding SSH key"
+    end
+    
+    def test_ssh_connectivity
+      # test connectivity for each app server
+      applications.each do |app|
+        tries = 0
+        begin
+          ssh = Net::SSH.start(app.host, app.uuid, :timeout => 10)
+        rescue Timeout::Error
+          if tries < 3
+            tries += 1
+            retry
+          end
+        ensure
+          report_result(ssh, "Cannot connect to #{app.host}", false)
+          ssh.close if ssh
+        end
+      end
+      true # continue
+    end
+    # :nocov:
+
+    ###
+    
     def finalize_stage
       paragraph do
         say "The OpenShift client tools have been configured on your computer.  " \

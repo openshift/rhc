@@ -109,6 +109,22 @@ module WizardStepsHelper
       s.should match("Automated installation of client tools is not supported for your platform")
     end
   end
+  
+  def should_find_ssh_keys
+    next_stage.should_not be_nil
+    
+    last_output do |s|
+      s.should_not match(/Remote server does not have the corresponding SSH key/)
+    end
+  end
+  
+  def should_not_find_ssh_keys
+    next_stage.should_not be_nil
+    
+    last_output do |s|
+      s.should match(/Remote server does not have the corresponding SSH key/)
+    end
+  end
 
   def should_create_a_namespace
     input_line "thisnamespaceistoobigandhastoomanycharacterstobevalid"

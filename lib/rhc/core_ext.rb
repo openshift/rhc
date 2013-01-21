@@ -12,6 +12,10 @@ class Object
     respond_to?(:empty?) ? empty? : !self
   end
 
+  def presence
+    present? ? self : nil
+  end
+
   # Avoid a conflict if to_json is already defined
   unless Object.new.respond_to? :to_json
     def to_json(options=nil)

@@ -43,6 +43,7 @@ module RHC
               :creation_time,
               :gear_info,
               :git_url,
+              :initial_git_url,
               :ssh_string,
               :aliases)
           end

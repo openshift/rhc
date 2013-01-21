@@ -380,6 +380,9 @@ module RHC
           end
         end
 
+        def raise_generic_error(url, client)
+          raise ServerErrorException.new(generic_error_message(url, client), 129)
+        end
         def generic_error_message(url, client)
           "The server did not respond correctly. This may be an issue "\
           "with the server configuration or with your connection to the "\
@@ -393,71 +396,65 @@ module RHC
           begin
             result = RHC::Json.decode(response.content)
             messages = Array(result['messages'])
+            messages.delete_if do |m|
+              m.delete_if{ |k,v| k.nil? || v.blank? } if m.is_a? Hash
+              m.blank?
+            end
           rescue => e
             logger.debug "Response did not include a message from server: #{e.message}" if debug?
-            parse_error = ServerErrorException.new(generic_error_message(url, client), 129)
           end
           case response.status
+          when 400
+            raise_generic_error(url, client) if messages.empty?
+            message, keys = messages_to_fields(messages)
+            raise ValidationException.new(message || "The operation could not be completed.", keys)
           when 401
             raise UnAuthorizedException, "Not authenticated"
           when 403
-            messages.each do |message|
-              if message['severity'].upcase == "ERROR"
-                raise RequestDeniedException, message['text']
-              end
-            end
-            raise RequestDeniedException.new("Forbidden")
+            raise RequestDeniedException, messages_to_error(messages) || "You are not authorized to perform this operation."
           when 404
-            messages.each do |message|
-              if message['severity'].upcase == "ERROR"
-                raise ResourceNotFoundException, message['text']
-              end
-            end
-            raise ResourceNotFoundException, generic_error_message(url, client)
+            raise ResourceNotFoundException, messages_to_error(messages) || generic_error_message(url, client)
           when 409
-            messages.each do |message|
-              if message['severity'] and message['severity'].upcase == "ERROR"
-                raise ValidationException.new(message['text'], message['field'], message['exit_code'])
-              end
-            end
+            raise_generic_error(url, client) if messages.empty?
+            message, keys = messages_to_fields(messages)
+            raise ValidationException.new(message || "The operation could not be completed.", keys)
           when 422
-            e = nil
-            messages.each do |message|
-              if e and e.field == message["field"]
-                e.message << " #{message["text"]}"
-              else
-                e = ValidationException.new(message["text"], message["field"], message["exit_code"])
-              end
-            end
-            raise e || parse_error || ValidationException.new('Not valid')
+            raise_generic_error(url, client) if messages.empty?
+            message, keys = messages_to_fields(messages)
+            raise ValidationException.new(message || "The operation was not valid.", keys)
           when 400
-            messages.each do |message|
-              if message['severity'].upcase == "ERROR"
-                raise ClientErrorException, message['text']
-              end
-            end
+            raise ClientErrorException, messages_to_error(messages) || "The server did not accept the requested operation."
           when 500
-            messages.each do |message|
-              if message['severity'].upcase == "ERROR"
-                raise ServerErrorException.new(message['text'], message["exit_code"] ? message["exit_code"].to_i : nil)
-              end
-            end
+            raise ServerErrorException, messages_to_error(messages) || generic_error_message(url, client)
           when 503
-            messages.each do |message|
-              if message['severity'].upcase == "ERROR"
-                raise ServiceUnavailableException, message['text']
-              end
-            end
-            raise ServiceUnavailableException, generic_error_message(url, client)
+            raise ServiceUnavailableException, messages_to_error(messages) || generic_error_message(url, client)
           else
-            raise ServerErrorException, "Server returned an unexpected error code: #{response.status}"
+            raise ServerErrorException, messages_to_error(messages) || "Server returned an unexpected error code: #{response.status}"
           end
-          raise parse_error || ServerErrorException.new(generic_error_message(url, client), 129)
+          raise_generic_error
         end
 
       private
         def logger
           @logger ||= Logger.new(STDOUT)
+        end
+
+        def messages_to_error(messages)
+          errors, remaining = messages.partition{ |m| (m['severity'] || "").upcase == 'ERROR' }
+          if errors.present?
+            if errors.length == 1
+              errors.first['text']
+            else
+              "The server reported multiple errors:\n* #{errors.map{ |m| m['text'] || "An unknown server error occurred.#{ " (exit code: #{m['exit_code']}" if m['exit_code']}}" }.join("\n* ")}"
+            end
+          elsif remaining.present?
+            "The operation did not complete successfully, but the server returned additional information:\n* #{remaining.map{ |m| m['text'] || 'No message'}.join("\n* ")}"
+          end
+        end
+
+        def messages_to_fields(messages)
+          keys = messages.group_by{ |m| m['field'] }.keys.compact.sort.map(&:to_sym) rescue []
+          [messages_to_error(messages), keys]
         end
     end
   end
