@@ -57,6 +57,24 @@ describe RHC::Commands::App do
       let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart-1', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
       it { expect { run }.should exit_with_code(0) }
       it { run_output.should match("Success") }
+      it { run_output.should match("Cartridges: mock_standalone_cart-1\n") }
+    end
+
+    context 'when run with multiple carts' do
+      let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart-1', 'mock_cart-1', '--noprompt', '-p',  'password'] }
+      it { expect { run }.should exit_with_code(0) }
+      it { run_output.should match("Success") }
+      it { run_output.should match("Cartridges: mock_standalone_cart-1, mock_cart-1\n") }
+      after{ rest_client.domains.first.applications.first.cartridges.find{ |c| c.name == 'mock_cart-1' }.should be_true }
+    end
+
+    context 'when run with a git url' do
+      let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart-1', '--from', 'git://url', '--noprompt', '-p',  'password'] }
+      it { expect { run }.should exit_with_code(0) }
+      it { run_output.should match("Success") }
+      it { run_output.should match("Source Code: git://url\n") }
+      it { run_output.should match("Initial Git URL: git://url\n") }
+      after{ rest_client.domains.first.applications.first.initial_git_url.should == 'git://url' }
     end
 
     context 'when no cartridges are returned' do
