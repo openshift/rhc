@@ -114,7 +114,7 @@ module WizardStepsHelper
     next_stage.should_not be_nil
     
     last_output do |s|
-      s.should_not match(/No SSH key is uploaded to the server/)
+      s.should_not match(/Remote server does not have the corresponding SSH key/)
     end
   end
   
@@ -122,7 +122,7 @@ module WizardStepsHelper
     next_stage.should_not be_nil
     
     last_output do |s|
-      s.should match(/No SSH key is uploaded to the server/)
+      s.should match(/Remote server does not have the corresponding SSH key/)
     end
   end
 

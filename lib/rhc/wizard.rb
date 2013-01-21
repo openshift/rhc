@@ -367,12 +367,17 @@ module RHC
 
     # Perform basic tests to ensure that setup is sane
     # search for private methods starting with "test_" and execute them
-    # do not assume test execution order
+    # in alphabetical order
+    # NOTE: The order itself is not important--the tests should be independent.
+    # However, the hash order is unpredictable in Ruby 1.8, and is preserved in
+    # 1.9. There are two similar tests that can fail under the same conditions,
+    # and this makes the spec results inconsistent between 1.8 and 1.9.
+    # Thus, we force an order with #sort to ensure spec passage on both.
     def setup_test_stage
       tests_passed = false
       info "Analyzing system (one dot for each test)"
       tests = private_methods.select {|m| m.to_s.start_with? 'test_'}
-      tests_passed = tests.all? do |test|
+      tests_passed = tests.sort.all? do |test|
         send(test)
       end
     end
