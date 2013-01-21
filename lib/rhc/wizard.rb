@@ -138,22 +138,25 @@ module RHC
     end
 
     def create_config_stage
-      if File.exists? config.path
-        backup = "#{@config.path}.bak"
-        paragraph{ say "Saving previous configuration to #{backup}" }
-        FileUtils.cp(config.path, backup)
-        FileUtils.rm(config.path)
+      paragraph do
+        if File.exists? config.path
+          backup = "#{@config.path}.bak"
+          FileUtils.cp(config.path, backup)
+          FileUtils.rm(config.path)
+        end
+
+        say "Saving configuration to #{config.path} ... "
+
+        changed = Commander::Command::Options.new(options)
+        changed.rhlogin = username
+        changed.password = password
+
+        FileUtils.mkdir_p File.dirname(config.path)
+        config.save!(changed)
+        options.__replace__(changed)
+
+        success "done"
       end
-
-      paragraph{ say "Creating #{config.path} to store your configuration" }
-
-      changed = Commander::Command::Options.new(options)
-      changed.rhlogin = username
-      changed.password = password
-
-      FileUtils.mkdir_p File.dirname(config.path)
-      config.save!(changed)
-      options.__replace__(changed)
 
       true
     end
@@ -375,34 +378,36 @@ module RHC
     # Thus, we force an order with #sort to ensure spec passage on both.
     def setup_test_stage
       tests_passed = false
-      info "Analyzing system (one dot for each test)"
+      say "Checking common problems "
       tests = private_methods.select {|m| m.to_s.start_with? 'test_'}
-      tests_passed = tests.sort.all? do |test|
+      tests.sort.all? do |test|
         send(test)
+      end.tap do |pass|
+        success(' done') if pass
       end
     end
-    
+
     # cached list of applications needed for test stage
     def applications
       @applications ||= rest_client.domains.map(&:applications).flatten
     end
-    
+
     ###
     # tests for setup_test_stage; no code coverage is tested here
-    
+
     # :nocov:
     def ssh_agent_identities
       Net::SSH::Authentication::Agent.connect.identities rescue []
     end
-    
+
     def ssh_agent_keys
       @agent_keys ||= ssh_agent_identities.map { |id| id.comment }
     end
-    
+
     def test_ssh_quick
       hosts = []
       server_keys = []
-      
+
       applications.each do |app|
         if Net::SSH.configuration_for(app.host)[:keys]
           Net::SSH.configuration_for(app.host)[:keys].map{ |f| server_keys << File.expand_path(f) }
@@ -412,17 +417,17 @@ module RHC
       server_keys ||= server_keys.flatten!.compact!
       report_result (server_keys - ssh_agent_keys).empty?, "SSH keys missing on the server"
     end
-    
+
     def test_broker_connectivity
       # for simple connectivity to the broker, we ensure that the server
       # replied with a list of API versions
       report_result(rest_client.api_version_negotiated, "#{rest_client.url} did not respond with valid data") and
-      
+
       # if the REST client is properly initialized and has #user defined,
       # the authentication was successful
       report_result(rest_client.user, "Authentication as #{rest_client.user.login} failed")
     end
-    
+
     def test_server_has_ssh_keys
       # at least one key is stored on the server
       report_result !ssh_keys.empty?, "No SSH key is uploaded to the server for #{rest_client.user.login}"
@@ -440,7 +445,7 @@ module RHC
         true # wizard should go on
       end
     end
-    
+
     def test_remote_ssh_keys
       # test if the server has the remote key
       server_has_key = ssh_keys.any? do |k|
@@ -451,7 +456,7 @@ module RHC
       end
       report_result server_has_key, "Remote server does not have the corresponding SSH key"
     end
-    
+
     def test_ssh_connectivity
       # test connectivity for each app server
       applications.each do |app|
@@ -473,7 +478,6 @@ module RHC
     # :nocov:
 
     ###
-    
     def finalize_stage
       paragraph do
         say "The OpenShift client tools have been configured on your computer.  " \

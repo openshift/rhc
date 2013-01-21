@@ -31,7 +31,7 @@ module WizardStepsHelper
 
     next_stage.should_not be_nil
 
-    last_output.should match("Creating #{current_config_path} to store your configuration")
+    last_output.should match("Saving configuration to #{current_config_path}")
 
     File.readable?(current_config_path).should be true
     RHC::Vendor::ParseConfig.new(current_config_path).tap do |cp|

@@ -253,12 +253,11 @@ module RHC
     def pluralize(count, s)
       count == 1 ? "#{count} #{s}" : "#{count} #{s}s"
     end
-    
+
     ## report a result (true/false) and return result
     ## if the result is false, msg is displayed
     def report_result(result, msg, fatal = true)
-      result ? success('.') : error(msg)
-      
+      result ? $terminal.instance_variable_get(:@output).print('.') : error(msg)
       # ignore the result if non-fatal
       fatal ? result : true
     end
