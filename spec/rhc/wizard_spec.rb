@@ -154,6 +154,7 @@ describe RHC::Wizard do
         should_create_an_ssh_keypair
         should_skip_uploading_key
         should_find_git
+        should_not_find_ssh_keys
         should_skip_creating_namespace
         should_list_types_of_apps_to_create
         should_be_done
@@ -191,6 +192,7 @@ describe RHC::Wizard do
           should_create_an_ssh_keypair
           should_upload_default_key
           should_find_git
+          should_not_find_ssh_keys
           should_create_a_namespace
           should_list_types_of_apps_to_create
           should_be_done
@@ -277,6 +279,7 @@ describe RHC::Wizard do
         should_create_an_ssh_keypair
         should_upload_default_key
         should_not_find_git
+        should_not_find_ssh_keys
         should_find_a_namespace('testnamespace')
         should_find_apps(['test1', 'testnamespace'])
         should_be_done
