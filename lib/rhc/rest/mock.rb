@@ -427,13 +427,14 @@ module RHC::Rest::Mock
       @applications = nil
     end
 
-    def add_application(name, type=nil, scale=nil, gear_profile='default')
+    def add_application(name, type=nil, scale=nil, gear_profile='default', git_url=nil)
       if type.is_a?(Hash)
         scale = type[:scale]
         gear_profile = type[:gear_profile]
+        git_url = type[:initial_git_url]
         type = Array(type[:cartridges] || type[:cartridge])
       end
-      a = MockRestApplication.new(client, name, type, self, scale, gear_profile)
+      a = MockRestApplication.new(client, name, type, self, scale, gear_profile, git_url)
       builder = @applications.find{ |app| app.cartridges.map(&:name).any?{ |s| s =~ /^jenkins-[\d\.]+$/ } }
       a.building_app = builder.name if builder
       @applications << a
@@ -461,13 +462,14 @@ module RHC::Rest::Mock
       "fakeuuidfortests#{@name}"
     end
 
-    def initialize(client, name, type, domain, scale=nil, gear_profile='default')
+    def initialize(client, name, type, domain, scale=nil, gear_profile='default', initial_git_url=nil)
       super({}, client)
       @name = name
       @domain = domain
       @cartridges = []
       @creation_time = Date.new(2000, 1, 1).strftime('%Y-%m-%dT%H:%M:%S%z')
       @uuid = fakeuuid
+      @initial_git_url = initial_git_url
       @git_url = "git:fake.foo/git/#{@name}.git"
       @app_url = "https://#{@name}-#{@domain.id}.fake.foo/"
       @ssh_url = "ssh://#{@uuid}@127.0.0.1"
