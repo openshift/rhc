@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.3.5
+Version: 1.3.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -113,6 +113,31 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Jan 22 2013 Adam Miller <admiller@redhat.com> 1.3.6-1
+- Merge pull request #277 from smarterclayton/us2410_move_rhc_chk
+  (dmcphers+openshiftbot@redhat.com)
+- Review: minor tweaks to output to clean up overall look (ccoleman@redhat.com)
+- Force alphabetical order on tests to make specs pass on both 1.8 and 1.9.
+  (asari.ruby@gmail.com)
+- Make use of cache here (asari.ruby@gmail.com)
+- Actually loop through the applications (asari.ruby@gmail.com)
+- Cache applications to avoid making unnecessary API calls
+  (asari.ruby@gmail.com)
+- Discover tests, rather than hard coding them. (asari.ruby@gmail.com)
+- Clear SSH key cache when new key is uploaded (asari.ruby@gmail.com)
+- Missed this occurrence in the last commit (asari.ruby@gmail.com)
+- Provide a single method to provide the cached SSH keys from the REST client
+  (asari.ruby@gmail.com)
+- Specs pass now (asari.ruby@gmail.com)
+- Use the new REST client calls. (asari.ruby@gmail.com)
+- No point in testing deprecated command. (asari.ruby@gmail.com)
+- No point in covering a deprecated command with no spec.
+  (asari.ruby@gmail.com)
+- Deprecate 'rhc domain status' (asari.ruby@gmail.com)
+- Match 'rhc-chk' output (asari.ruby@gmail.com)
+- Add deprecation warning. (asari.ruby@gmail.com)
+- US2410 roll 'rhc-chk checks into "rhc setup"' (asari.ruby@gmail.com)
+
 * Mon Jan 21 2013 Adam Miller <admiller@redhat.com> 1.3.5-1
 - Add support for the --from-code=<URL> parameter on application create. Show a
   default message if the broker returns a message with no text.
