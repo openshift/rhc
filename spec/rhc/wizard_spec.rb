@@ -248,6 +248,21 @@ describe RHC::Wizard do
           should_find_matching_server_key
         end
       end
+
+      # Same as above, but includes a test_ method that raises RuntimeError
+      context "when a test method raises RuntimeError" do
+        before{ setup_mock_ssh(true) }
+        before{ stub_mock_ssh_keys }
+        before{ define_exceptional_test_on_wizard }
+
+        it "runs to completion" do
+          should_greet_user
+          should_challenge_for(username, password)
+          should_write_config
+          should_not_create_an_ssh_keypair
+          should_find_matching_server_key
+        end
+      end
     end
 
     context "with login and existing domain and app" do
