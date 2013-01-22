@@ -377,14 +377,23 @@ module RHC
     # and this makes the spec results inconsistent between 1.8 and 1.9.
     # Thus, we force an order with #sort to ensure spec passage on both.
     def setup_test_stage
-      tests_passed = false
       say "Checking common problems "
       tests = private_methods.select {|m| m.to_s.start_with? 'test_'}
-      tests.sort.all? do |test|
-        send(test)
+      tests.sort.each do |test|
+        begin
+          send(test)
+        rescue => e
+          paragraph do
+            warn "Encountered #{e.class} in #{test.to_s}: #{e.message}"
+            warn e.backtrace if debug?
+            warn "Continuing..."
+          end
+        end
       end.tap do |pass|
         success(' done') if pass
       end
+      
+      true
     end
 
     # cached list of applications needed for test stage
