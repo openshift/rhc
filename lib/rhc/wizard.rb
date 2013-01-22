@@ -383,11 +383,11 @@ module RHC
         begin
           send(test)
         rescue => e
-          # :nocov:
-          warn "Encountered #{e.class} in #{test.to_s}: #{e.message}"
-          warn e.backtrace if debug?
-          warn "Continuing..."
-          # :nocov:
+          paragraph do
+            warn "Encountered #{e.class} in #{test.to_s}: #{e.message}"
+            warn e.backtrace if debug?
+            warn "Continuing..."
+          end
         end
       end.tap do |pass|
         success(' done') if pass

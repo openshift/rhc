@@ -127,6 +127,15 @@ module RHC::Rest::Mock
     def stub_simple_carts
       stub_api_request(:get, 'broker/rest/cartridges', mock_user_auth).to_return(simple_carts)
     end
+    
+    def define_exceptional_test_on_wizard
+      RHC::Wizard.module_eval <<-EOM
+      private
+      def test_and_raise
+        raise
+      end
+      EOM
+    end
 
     def no_keys
       empty_response_list('keys')
