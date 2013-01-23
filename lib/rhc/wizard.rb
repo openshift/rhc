@@ -380,19 +380,11 @@ module RHC
       say "Checking common problems "
       tests = private_methods.select {|m| m.to_s.start_with? 'test_'}
       tests.sort.each do |test|
-        begin
-          send(test)
-        rescue => e
-          paragraph do
-            warn "Encountered #{e.class} in #{test.to_s}: #{e.message}"
-            warn e.backtrace if debug?
-            warn "Continuing..."
-          end
-        end
+        send(test)
       end.tap do |pass|
         success(' done') if pass
       end
-      
+
       true
     end
 
@@ -422,12 +414,14 @@ module RHC
       applications.take(1).each do |app|
         begin
           ssh = Net::SSH.start(app.host, app.uuid, :timeout => 60)
+          return true
+        rescue => e
+          report_result(ssh, "An SSH connection could not be established to #{app.host}. Your SSH configuration may not be correct, or the application may not be responding. #{e.message}", false)
+          return false
         ensure
-          report_result(ssh, "An SSH connection could not be established to #{app.host}. Your SSH configuration may not be correct, or the application may not be responding.", false)
           ssh.close if ssh
         end
       end
-      true # continue
     end
 
     ###

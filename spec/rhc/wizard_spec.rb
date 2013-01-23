@@ -27,6 +27,41 @@ describe RHC::Wizard do
     it{ subject.send(:finalize_stage).should be_true }
   end
 
+  describe "#test_ssh_connectivity" do
+    subject{ RHC::Wizard.new(config, options) }
+    let(:app) do
+      app = Object.new
+      app.should_receive(:host).at_least(1).and_return('foo.com')
+      app.should_receive(:uuid).at_least(1).and_return('uuid')
+      app
+    end
+    let(:ssh) do
+      ssh = Object.new
+      ssh.should_receive(:close)
+      ssh
+    end
+
+    it "should not attempt an SSH connection" do
+      subject.should_receive(:applications).and_return([])
+      subject.send(:test_ssh_connectivity).should be_true
+    end
+    it "should attempt an SSH connection to the first app" do
+      subject.should_receive(:applications).and_return([app])
+      Net::SSH.should_receive(:start).with(app.host, app.uuid, {:timeout => 60}).and_return(ssh)
+      subject.send(:test_ssh_connectivity).should be_true
+    end
+    it "should handle a failed connection" do
+      subject.should_receive(:applications).and_return([app])
+      Net::SSH.should_receive(:start).and_raise(StandardError.new('an_error'))
+      subject.should_receive(:report_result) do |ssh, msg|
+        ssh.should be_nil
+        msg.should match('An SSH connection could not be established')
+        msg.should match('an_error')
+      end
+      subject.send(:test_ssh_connectivity).should be_false
+    end
+  end
+
   describe "#login_stage" do
     let(:user){ 'test_user' }
     let(:password){ 'test pass' }
@@ -241,21 +276,6 @@ describe RHC::Wizard do
         before{ stub_mock_ssh_keys }
 
         it "should prompt for the new key" do
-          should_greet_user
-          should_challenge_for(username, password)
-          should_write_config
-          should_not_create_an_ssh_keypair
-          should_find_matching_server_key
-        end
-      end
-
-      # Same as above, but includes a test_ method that raises RuntimeError
-      context "when a test method raises RuntimeError" do
-        before{ setup_mock_ssh(true) }
-        before{ stub_mock_ssh_keys }
-        before{ define_exceptional_test_on_wizard }
-
-        it "runs to completion" do
           should_greet_user
           should_challenge_for(username, password)
           should_write_config
