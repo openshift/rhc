@@ -412,9 +412,6 @@ module RHC
     # test connectivity an app
     def test_ssh_connectivity
       unless ssh_key_uploaded?
-        paragraph do
-          warn "\nNo SSH key has been uploaded. Skipping SSH connectivity test"
-        end
         return true
       end
       
