@@ -17,7 +17,7 @@ Feature: Existing Domain Operations
 
   Scenario: Domain Create Fails
     When rhc domain create is called
-    Then the domain command should fail with an exitcode of 103
+    Then the domain command should fail with an exitcode of 128
 
   Scenario: Domain Delete
     When domain is deleted
