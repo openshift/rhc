@@ -109,10 +109,12 @@ module RHC
     end
 
     def display_key(key, *properties)
-      properties = [:fingerprint] if properties.empty?
+      properties = [:fingerprint, :visible_to_ssh?] if properties.empty?
       say_table(
         properties.include?(:name) ? nil : format_key_header(key),
-        get_properties(key, *properties)
+        get_properties(key, *properties),
+        :delete => true,
+        :color => (:green if properties.include?(:visible_to_ssh?) && key.visible_to_ssh?),
       )
     end
 
@@ -160,10 +162,11 @@ module RHC
         end
 
         table = self.table(values)
+        table = table.map{ |s| color(s, opts[:color]) } if opts[:color]
 
         # Make sure we nest properly
         if heading
-          header heading do
+          header(heading, opts) do
             say table
           end
         else
@@ -191,6 +194,8 @@ module RHC
           when 'megashift' then 'MegaShift'
           else value && value.capitalize || nil
           end
+        when :visible_to_ssh?
+          value || nil
         when :creation_time
           date(value)
         when :scales_from,:scales_to
