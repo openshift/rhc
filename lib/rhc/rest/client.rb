@@ -309,8 +309,9 @@ module RHC
             h
           end
 
-          options[:connect_timeout] ||= (options[:timeout] || 8)
-          options[:receive_timeout] ||= options[:timeout]
+          options[:connect_timeout] ||= options[:timeout] || 120
+          options[:receive_timeout] ||= options[:timeout] || 0
+          options[:send_timeout] ||= options[:timeout] || 0
           options[:timeout] = nil
 
           auth.to_request(options) if auth
