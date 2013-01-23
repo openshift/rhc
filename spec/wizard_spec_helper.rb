@@ -109,18 +109,40 @@ module WizardStepsHelper
       s.should match("Automated installation of client tools is not supported for your platform")
     end
   end
-  
+
+  def should_not_find_problems
+    FakeFS::File.expect_mode(RHC::Config.ssh_priv_key_file_path, '600')
+
+    next_stage.should_not be_nil
+    last_output do |s|
+      s.should match(/Checking common problems \.+.+?done/)
+    end
+  end
+
+  def should_check_remote_server
+    FakeFS::File.expect_mode(RHC::Config.ssh_priv_key_file_path, '600')
+
+    ssh = Object.new
+    ssh.should_receive(:close)
+    Net::SSH.should_receive(:start).once.and_return(ssh)
+
+    next_stage.should_not be_nil
+    last_output do |s|
+      s.should match(/Checking common problems \.+.+?done/)
+    end
+  end
+
   def should_find_ssh_keys
     next_stage.should_not be_nil
-    
+
     last_output do |s|
       s.should_not match(/Remote server does not have the corresponding SSH key/)
     end
   end
-  
+
   def should_not_find_ssh_keys
     next_stage.should_not be_nil
-    
+
     last_output do |s|
       s.should match(/Remote server does not have the corresponding SSH key/)
     end

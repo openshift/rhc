@@ -9,12 +9,38 @@ require 'pry' if ENV['PRY']
 ENV['http_proxy'] = nil
 ENV['HTTP_PROXY'] = nil
 
+class FakeFS::Mode
+  def initialize(mode_s)
+    @s = mode_s
+  end
+  def to_s(*args)
+    @s
+  end
+end
+class FakeFS::Stat
+  attr_reader :mode
+  def initialize(mode_s)
+    @mode = FakeFS::Mode.new(mode_s)
+  end
+end
+
 # chmod isn't implemented in the released fakefs gem
 # but is in git.  Once the git version is released we
 # should remove this and actively check permissions
 class FakeFS::File
   def self.chmod(*args)
     # noop
+  end
+
+  def self.stat(path)
+    FakeFS::Stat.new(mode(path))
+  end
+
+  def self.mode(path)
+    @modes && @modes[path] || '664'
+  end
+  def self.expect_mode(path, mode)
+    (@modes ||= {})[path] = mode
   end
 
   # FakeFS incorrectly assigns this to '/'

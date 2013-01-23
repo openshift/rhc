@@ -316,7 +316,8 @@ module RHC
         :url            => "URL",
         :ssh_string     => "SSH",
         :connection_info => "Connection URL",
-        :gear_profile   => "Gear Size"
+        :gear_profile   => "Gear Size",
+        :visible_to_ssh? => 'Available',
       })
 
       headings[value]
@@ -343,8 +344,10 @@ module RHC
     #  tees.each(&:close_write).map(&:string)
     #end
 
-    def header(s,opts = {}, &block)
-      say underline(s)
+    def header(str,opts = {}, &block)
+      str = underline(str)
+      str = str.map{ |s| color(s, opts[:color]) } if opts[:color]
+      say str
       if block_given?
         indent &block
       end
