@@ -111,7 +111,7 @@ describe RHC::Commands::Base do
             alias_action :exe, :deprecated => true
             def execute(testarg); 1; end
 
-            argument :args, "Test arg list", [], :arg_type => :list
+            argument :args, "Test arg list", ['--tests'], :arg_type => :list
             summary "Test command execute-list"
             def execute_list(args); 1; end
 
@@ -158,6 +158,8 @@ describe RHC::Commands::Base do
       context 'and when execute_list is called' do
         it { expects_running('static', 'execute-list', '--trace').should call(:execute_list).on(instance).with([]) }
         it { expects_running('static', 'execute-list', '1', '2', '3').should call(:execute_list).on(instance).with(['1', '2', '3']) }
+        it { expects_running('static', 'execute-list', '1', '2', '3').should call(:execute_list).on(instance).with(['1', '2', '3']) }
+        it('should make the option available') { command_for('static', 'execute-list', '1', '2', '3').send(:options).tests.should == ['1','2','3'] }
       end
 
       context 'and when an error is raised in a call' do
