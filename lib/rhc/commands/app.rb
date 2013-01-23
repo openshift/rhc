@@ -174,7 +174,7 @@ module RHC::Commands
     option ["-n", "--namespace namespace"], "Namespace your application belongs to", :context => :namespace_context, :required => true
     option ["-b", "--bypass"], "DEPRECATED Please use '--confirm'", :deprecated => {:key => :confirm, :value => true}
     option ["--confirm"], "Pass to confirm deleting the application"
-    argument :app, "The application you wish to delete", ["-a", "--app name"]
+    argument :app, "The application you wish to delete", ["-a", "--app name"], :context => :app_context
     alias_action :destroy, :deprecated => true
     def delete(app)
 

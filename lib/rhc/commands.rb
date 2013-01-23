@@ -233,20 +233,18 @@ module RHC
           context_helper = arg_meta[:context_helper]
 
           value = options.__hash__[option] if option
-          if value.nil? and context_helper
-            value = cmd.send(context_helper)
-            options.__hash__[option] = value if option
-          end
+          value = fill_args.pop if value.nil?
+          value = cmd.send(context_helper) if value.nil? and context_helper
 
-          if value
-            arg_slots[i] = value
-          elsif arg_meta[:arg_type] == :list
-            arg_slots[i] = fill_args.reverse
+          if arg_meta[:arg_type] == :list
+            fill_args.push(value) unless value.nil?
+            value = fill_args.reverse
             fill_args = []
-          else
+          elsif value.nil?
             raise ArgumentError.new("Missing required argument '#{arg_meta[:name]}'.") if fill_args.empty?
-            arg_slots[i] = fill_args.pop
           end
+          arg_slots[i] = value
+          options.__hash__[option] = value if option
         end
 
         raise ArgumentError.new("Too many arguments passed in: #{fill_args.reverse.join(" ")}") unless fill_args.empty?
