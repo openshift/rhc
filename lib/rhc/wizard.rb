@@ -416,7 +416,7 @@ module RHC
           ssh = Net::SSH.start(app.host, app.uuid, :timeout => 60)
           return true
         rescue => e
-          report_result(ssh, "An SSH connection could not be established to #{app.host}. Your SSH configuration may not be correct, or the application may not be responding. #{e.message}", false)
+          report_result(ssh, "An SSH connection could not be established to #{app.host}. Your SSH configuration may not be correct, or the application may not be responding. #{e.message} (#{e.class})", false)
           return false
         ensure
           ssh.close if ssh
