@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.3.6
+Version: 1.3.7
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -113,6 +113,38 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Jan 23 2013 Adam Miller <admiller@redhat.com> 1.3.7-1
+- Merge pull request #283 from smarterclayton/bug_903164_take_args_correctly
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 903164 - Arguments with an app_context not being pulled off the stack
+  (ccoleman@redhat.com)
+- Bug 903071: 'rhc setup' can show unexpected error message
+  (asari.ruby@gmail.com)
+- Merge pull request #281 from
+  smarterclayton/exit_codes_in_rhc_integration_changed
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #280 from
+  smarterclayton/bug_903057_display_platform_paths_in_setup
+  (dmcphers+openshiftbot@redhat.com)
+- Exit code for RHC on certain errors is now 128 - update RHC integration tests
+  (ccoleman@redhat.com)
+- Bug 903071 - Exceptions in ssh connectivity should be caught by the server
+  (ccoleman@redhat.com)
+- Remove tests that are already being run implicitly, add better test coverage
+  (ccoleman@redhat.com)
+- Indicate which sshkeys in the list are local by color and attribute
+  (ccoleman@redhat.com)
+- Set a 2 minute connect timeout, and no receive/send timeouts.  Validated that
+  it tolerates long delays better. (ccoleman@redhat.com)
+- Ensure that FakeFS has ALT_SEPARATOR set to empty (ccoleman@redhat.com)
+- Bug 895411 - Fixed improper arguments for help options (ccoleman@redhat.com)
+- Bug 903057 - Show windows specific paths in the wizard (ccoleman@redhat.com)
+- Merge pull request #278 from BanzaiMan/dev/hasari/us2410_followup
+  (dmcphers+openshiftbot@redhat.com)
+- Include coverage for the case where a test_* method raises an exception
+  (asari.ruby@gmail.com)
+- Tests are not fatal. (asari.ruby@gmail.com)
+
 * Tue Jan 22 2013 Adam Miller <admiller@redhat.com> 1.3.6-1
 - Merge pull request #277 from smarterclayton/us2410_move_rhc_chk
   (dmcphers+openshiftbot@redhat.com)
