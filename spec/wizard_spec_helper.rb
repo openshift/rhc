@@ -125,6 +125,7 @@ module WizardStepsHelper
     ssh = Object.new
     ssh.should_receive(:close)
     Net::SSH.should_receive(:start).once.and_return(ssh)
+    subject.should_receive(:ssh_key_uploaded?).and_return(true)
 
     next_stage.should_not be_nil
     last_output do |s|

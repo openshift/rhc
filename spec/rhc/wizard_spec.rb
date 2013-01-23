@@ -316,7 +316,6 @@ describe RHC::Wizard do
         should_write_config
         should_create_an_ssh_keypair
         should_upload_default_key
-        subject.should_receive(:ssh_key_uploaded?).and_return(true)
         should_not_find_git
         should_check_remote_server
         should_find_a_namespace('testnamespace')
