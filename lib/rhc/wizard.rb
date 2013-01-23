@@ -411,6 +411,10 @@ module RHC
 
     # test connectivity an app
     def test_ssh_connectivity
+      unless ssh_key_uploaded?
+        return true
+      end
+      
       applications.take(1).each do |app|
         begin
           ssh = Net::SSH.start(app.host, app.uuid, :timeout => 60)
