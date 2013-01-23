@@ -20,6 +20,7 @@ class FakeFS::File
   # FakeFS incorrectly assigns this to '/'
   remove_const(:PATH_SEPARATOR) rescue nil
   const_set(:PATH_SEPARATOR, ":")
+  const_set(:ALT_SEPARATOR, '') rescue nil
 
   def self.executable?(path)
     # if the file exists we will assume it is executable
