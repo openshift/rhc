@@ -402,89 +402,33 @@ module RHC
     end
 
     ###
-    # tests for setup_test_stage; no code coverage is tested here
-
-    # :nocov:
-    def ssh_agent_identities
-      Net::SSH::Authentication::Agent.connect.identities rescue []
-    end
-
-    def ssh_agent_keys
-      @agent_keys ||= ssh_agent_identities.map { |id| id.comment }
-    end
-
-    def test_ssh_quick
-      hosts = []
-      server_keys = []
-
-      applications.each do |app|
-        if Net::SSH.configuration_for(app.host)[:keys]
-          Net::SSH.configuration_for(app.host)[:keys].map{ |f| server_keys << File.expand_path(f) }
-        end
-      end
-
-      server_keys ||= server_keys.flatten!.compact!
-      report_result (server_keys - ssh_agent_keys).empty?, "SSH keys missing on the server"
-    end
-
-    def test_broker_connectivity
-      # for simple connectivity to the broker, we ensure that the server
-      # replied with a list of API versions
-      report_result(rest_client.api_version_negotiated, "#{rest_client.url} did not respond with valid data") and
-
-      # if the REST client is properly initialized and has #user defined,
-      # the authentication was successful
-      report_result(rest_client.user, "Authentication as #{rest_client.user.login} failed")
-    end
-
-    def test_server_has_ssh_keys
-      # at least one key is stored on the server
-      report_result !ssh_keys.empty?, "No SSH key is uploaded to the server for #{rest_client.user.login}"
-    end
+    # tests for specific user errors
 
     def test_private_key_mode
       pub_key_file = RHC::Config.ssh_pub_key_file_path
       private_key_file = RHC::Config.ssh_priv_key_file_path
-      # we test these only in the context of FakeFS; to avoid displaying 
-      # NoMethodError on the console, we basically skip it (and bypass coverage)
-      if File.exist?(private_key_file) and defined?(FakeFS) and !File.stat(private_key_file).is_a?(FakeFS::File::Stat)
+      if File.exist?(private_key_file)
         report_result (File.exist?(private_key_file) and File.stat(private_key_file).mode.to_s(8) =~ /[4-7]00$/),
-          "#{private_key_file} should not be accessible by no one but the user"
+          "#{private_key_file} should not be accessible by anyone but the current user"
       else
-        true # wizard should go on
+        #:nocov:
+        true
+        #:nocov:
       end
     end
 
-    def test_remote_ssh_keys
-      # test if the server has the remote key
-      server_has_key = ssh_keys.any? do |k|
-        k.fingerprint == fingerprint_for_default_key or
-        if ssh_agent_identities
-          ssh_agent_identities.map{|agent_key| k.fingerprint == agent_key.fingerprint }
-        end
-      end
-      report_result server_has_key, "Remote server does not have the corresponding SSH key"
-    end
-
+    # test connectivity an app
     def test_ssh_connectivity
-      # test connectivity for each app server
-      applications.each do |app|
-        tries = 0
+      applications.take(1).each do |app|
         begin
-          ssh = Net::SSH.start(app.host, app.uuid, :timeout => 10)
-        rescue Timeout::Error
-          if tries < 3
-            tries += 1
-            retry
-          end
+          ssh = Net::SSH.start(app.host, app.uuid, :timeout => 60)
         ensure
-          report_result(ssh, "Cannot connect to #{app.host}", false)
+          report_result(ssh, "An SSH connection could not be established to #{app.host}. Your SSH configuration may not be correct, or the application may not be responding.", false)
           ssh.close if ssh
         end
       end
       true # continue
     end
-    # :nocov:
 
     ###
     def finalize_stage

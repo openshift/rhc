@@ -113,8 +113,10 @@ module RHC
       say_table(
         properties.include?(:name) ? nil : format_key_header(key),
         get_properties(key, *properties),
-        :delete => true,
-        :color => (:green if properties.include?(:visible_to_ssh?) && key.visible_to_ssh?),
+        {
+          :delete => true,
+          :color => (:green if properties.include?(:visible_to_ssh?) && key.visible_to_ssh?),
+        }
       )
     end
 
