@@ -57,6 +57,19 @@ module ClassSpecHelpers
       "#{description}".split(" ").map{|word| word.capitalize}.join.gsub(/[^\w]/, '')
     end
   end
+
+  def with_constants(constants, base=Object, &block)
+    constants.each do |constant, val|
+      base.const_set(constant, val)
+    end
+
+    block.call
+  ensure
+    constants.each do |constant, val|
+      base.send(:remove_const, constant)
+    end
+  end
+
   def new_command_runner *args, &block
     Commander::Runner.instance_variable_set :"@singleton", RHC::CommandRunner.new(args)
     program :name, 'test'

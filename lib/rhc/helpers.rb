@@ -437,6 +437,11 @@ module RHC
     def unix? ; !jruby? && !windows? end
     def mac? ; RbConfig::CONFIG['host_os'] =~ /^darwin/ end
 
+    def system_path(path)
+      return path.gsub(File::SEPARATOR, File::ALT_SEPARATOR) if File::ALT_SEPARATOR.present?
+      path
+    end
+
     #
     # Check if host exists
     #
