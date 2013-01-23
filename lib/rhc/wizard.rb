@@ -87,7 +87,7 @@ module RHC
     
     # cache SSH keys from the REST client
     def ssh_keys
-      @ssh_keys ||= rest_client.sshkeys
+      @ssh_keys ||= rest_client.sshkeys rescue []
     end
     
     # clear SSH key cache

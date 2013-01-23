@@ -42,15 +42,18 @@ describe RHC::Wizard do
     end
 
     it "should not attempt an SSH connection" do
+      subject.should_receive(:ssh_key_uploaded?).and_return(true)
       subject.should_receive(:applications).and_return([])
       subject.send(:test_ssh_connectivity).should be_true
     end
     it "should attempt an SSH connection to the first app" do
+      subject.should_receive(:ssh_key_uploaded?).and_return(true)
       subject.should_receive(:applications).and_return([app])
       Net::SSH.should_receive(:start).with(app.host, app.uuid, {:timeout => 60}).and_return(ssh)
       subject.send(:test_ssh_connectivity).should be_true
     end
     it "should handle a failed connection" do
+      subject.should_receive(:ssh_key_uploaded?).and_return(true)
       subject.should_receive(:applications).and_return([app])
       Net::SSH.should_receive(:start).and_raise(StandardError.new('an_error'))
       subject.should_receive(:report_result) do |ssh, msg|
@@ -313,6 +316,7 @@ describe RHC::Wizard do
         should_write_config
         should_create_an_ssh_keypair
         should_upload_default_key
+        subject.should_receive(:ssh_key_uploaded?).and_return(true)
         should_not_find_git
         should_check_remote_server
         should_find_a_namespace('testnamespace')
