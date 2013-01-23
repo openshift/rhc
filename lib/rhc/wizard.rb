@@ -145,7 +145,7 @@ module RHC
           FileUtils.rm(config.path)
         end
 
-        say "Saving configuration to #{config.path} ... "
+        say "Saving configuration to #{system_path(config.path)} ... "
 
         changed = Commander::Command::Options.new(options)
         changed.rhlogin = username
@@ -201,7 +201,7 @@ module RHC
         key_fingerprint = fingerprint_for_default_key
         unless key_fingerprint
           paragraph do
-            say "Your ssh public key at #{RHC::Config.ssh_pub_key_file_path} is invalid or unreadable. "\
+            say "Your ssh public key at #{system_path(RHC::Config.ssh_pub_key_file_path)} is invalid or unreadable. "\
                 "Setup can not continue until you manually remove or fix your "\
                 "public and private keys id_rsa keys."
           end
@@ -262,7 +262,7 @@ module RHC
           key.update(type, content)
         else
           clear_ssh_keys_cache
-          say "Uploading key '#{key_name}' from #{RHC::Config::ssh_pub_key_file_path} ... "
+          say "Uploading key '#{key_name}' from #{system_path(RHC::Config::ssh_pub_key_file_path)} ... "
           rest_client.add_key key_name, content, type
         end
         success "done"

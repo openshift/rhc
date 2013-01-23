@@ -33,6 +33,11 @@ describe RHC::Helpers do
   its(:openshift_server) { should == 'openshift.redhat.com' }
   its(:openshift_url) { should == 'https://openshift.redhat.com' }
 
+  it("should display slashes"){ subject.system_path('foo/bar').should == 'foo/bar' }
+  context "on windows" do
+    it("should display backslashes"){ with_constants({:ALT_SEPARATOR => '\\'}, File) { subject.system_path('foo/bar').should == 'foo\\bar' } }
+    it("should handle drives"){ with_constants({:ALT_SEPARATOR => '\\'}, File) { subject.system_path('C:/foo/bar').should == 'C:\\foo\\bar' } }
+  end
 
   it("should pluralize many") { subject.pluralize(3, 'fish').should == '3 fishs' }
   it("should not pluralize one") { subject.pluralize(1, 'fish').should == '1 fish' }
