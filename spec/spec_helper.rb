@@ -46,6 +46,7 @@ class FakeFS::File
   # FakeFS incorrectly assigns this to '/'
   remove_const(:PATH_SEPARATOR) rescue nil
   const_set(:PATH_SEPARATOR, ":")
+  const_set(:ALT_SEPARATOR, '') rescue nil
 
   def self.executable?(path)
     # if the file exists we will assume it is executable
@@ -83,6 +84,19 @@ module ClassSpecHelpers
       "#{description}".split(" ").map{|word| word.capitalize}.join.gsub(/[^\w]/, '')
     end
   end
+
+  def with_constants(constants, base=Object, &block)
+    constants.each do |constant, val|
+      base.const_set(constant, val)
+    end
+
+    block.call
+  ensure
+    constants.each do |constant, val|
+      base.send(:remove_const, constant)
+    end
+  end
+
   def new_command_runner *args, &block
     Commander::Runner.instance_variable_set :"@singleton", RHC::CommandRunner.new(args)
     program :name, 'test'

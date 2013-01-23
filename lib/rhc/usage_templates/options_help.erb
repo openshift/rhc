@@ -4,11 +4,11 @@ The following options can be passed to any command:
   <%= "%-25s %s\n" % [option[:switches].join(', '), option[:description]] -%>
 <% end -%>
 
-The following configuration options are stored in the .openshift/express.conf file in your home directory.  Passing any of these options to 'rhc setup' will save that value to the file:
+The following configuration options are stored in the <%= RHC::Helpers.system_path('.openshift/express.conf') %> file in your home directory.  Passing any of these options to 'rhc setup' will save that value to the file:
 
   <%= "%-25s %s\n" % ["Option", "In Config"] -%>
 
 <% for key, value in RHC::Config::OPTIONS -%>
 <% next if value.nil? -%>
-  <%= "%-25s %s\n" % ["--#{key}", value[0] || key] -%>
+  <%= "%-25s %s\n" % ["--#{key.to_s.gsub('_','-')}", value[0] || key] -%>
 <% end -%>
