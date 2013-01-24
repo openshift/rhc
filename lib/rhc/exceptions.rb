@@ -123,8 +123,6 @@ module RHC
     end
   end
 
-=begin
-#  Commenting this out for US2438
   class AdditionalStorageArgumentsException < Exception
     def initialize(message="Only one storage action can be performed at a time.")
       super message, 1
@@ -142,5 +140,4 @@ module RHC
       super message, 1
     end
   end
-=end
 end

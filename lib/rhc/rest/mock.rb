@@ -34,7 +34,7 @@ module RHC::Rest::Mock
           :body => {
             :data => mock_response_links(mock_real_client_links),
             :supported_api_versions => [1.0, 1.1, 1.2, 1.3],
-          }.to_json 
+          }.to_json
         })
     end
     def stub_user(auth=mock_user_auth)
@@ -127,7 +127,7 @@ module RHC::Rest::Mock
     def stub_simple_carts
       stub_api_request(:get, 'broker/rest/cartridges', mock_user_auth).to_return(simple_carts)
     end
-    
+
     def define_exceptional_test_on_wizard
       RHC::Wizard.module_eval <<-EOM
       private
@@ -559,6 +559,7 @@ module RHC::Rest::Mock
       @scales_to = 1
       @current_scale = 1
       @gear_profile = 'small'
+      @additional_gear_storage = 5
     end
 
     def destroy
@@ -592,6 +593,11 @@ module RHC::Rest::Mock
       values.delete_if{|k,v| v.nil? }
       @scales_from = values[:scales_from] if values[:scales_from]
       @scales_to = values[:scales_to] if values[:scales_to]
+      self
+    end
+
+    def set_storage(values)
+      @additional_gear_storage = values[:additional_gear_storage] if values[:additional_gear_storage]
       self
     end
   end
