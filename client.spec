@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.3.7
+Version: 1.3.8
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -113,6 +113,16 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Jan 23 2013 Adam Miller <admiller@redhat.com> 1.3.8-1
+- Merge pull request #284 from BanzaiMan/bz903071
+  (dmcphers+openshiftbot@redhat.com)
+- Put code where they belong. (asari.ruby@gmail.com)
+- Fix up specs. (asari.ruby@gmail.com)
+- Don't say anything, since user expressly told us not to upload the key.
+  (asari.ruby@gmail.com)
+- Bug 903071: bypass test_ssh_connectivity if ssh key is not uploaded
+  (asari.ruby@gmail.com)
+
 * Wed Jan 23 2013 Adam Miller <admiller@redhat.com> 1.3.7-1
 - Merge pull request #283 from smarterclayton/bug_903164_take_args_correctly
   (dmcphers+openshiftbot@redhat.com)
