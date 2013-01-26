@@ -15,7 +15,7 @@ module RHC::Commands
       carts = rest_client.cartridges.sort_by{ |c| "#{c.type == 'standalone' && 1}_#{c.tags.include?('experimental') ? 1 : 0}_#{(c.display_name || c.name).downcase}" }
 
       list = if options.verbose
-        carts.map do |c| 
+        carts.map do |c|
           name = c.display_name != c.name && "#{color(c.display_name, :cyan)} [#{c.name}]" || c.name
           tags = c.tags - RHC::Rest::Cartridge::HIDDEN_TAGS
           [
@@ -191,8 +191,6 @@ module RHC::Commands
       0
     end
 
-=begin
-    #  Commenting this out for US2438
     summary 'View/manipulate storage on a cartridge'
     syntax '<cartridge> -a app [--show] [--add|--remove|--set amount] [--namespace namespace]'
     argument :cart_type, "The name of the cartridge", ["-c", "--cartridge cart_type"], :arg_type => :list
@@ -266,7 +264,6 @@ module RHC::Commands
 
       0
     end
-=end
 
     private
       include RHC::CartridgeHelpers

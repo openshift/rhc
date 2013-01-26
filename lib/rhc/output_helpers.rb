@@ -69,7 +69,7 @@ module RHC
 
     def format_cart_header(cart)
       [
-        cart.name, 
+        cart.name,
         cart.name != cart.display_name ? "(#{cart.display_name})" : nil,
       ].compact.join(' ')
     end
@@ -127,8 +127,6 @@ module RHC
       ].compact.join(' ')
     end
 
-=begin
-#  Commenting this out for US2438
     def display_cart_storage_info(cart, title="Storage Info")
       say_table \
         title,
@@ -141,7 +139,6 @@ module RHC
         display_cart_storage_info(cart, cart.display_name)
       end
     end
-=end
 
     #---------------------------
     # Misc information
@@ -204,11 +201,8 @@ module RHC
           (value == -1 ? "available" : value)
         when :gear_info
           format_gear_info(value)
-=begin
-#  Commenting this out for US2438
         when :base_gear_storage,:additional_gear_storage
           ((value.nil? or value == 0) ? "None" : "#{value}GB")
-=end
         when :aliases
           value.join ', '
         else

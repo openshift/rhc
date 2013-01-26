@@ -370,9 +370,8 @@ describe RHC::Commands::Cartridge do
     end
   end
 
-=begin
-#  Commenting this out for US2438
   describe 'cartridge storage' do
+    let!(:rest_client){ MockRestClient.new }
     let(:cmd_base) { ['cartridge', 'storage'] }
     let(:std_args) { ['-a', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] | (@extra_args || []) }
     let(:cart_type) { ['mock_cart-1'] }
@@ -458,5 +457,4 @@ describe RHC::Commands::Cartridge do
       end
     end
   end
-=end
 end
