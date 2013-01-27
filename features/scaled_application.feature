@@ -34,7 +34,7 @@ Feature: Scaled Application Operations
 
     Examples:
       | cart    | type  | value |
-      | php-5.3 | min   |   3   |
+      | php-5.3 | min   |   1   |
       | php-5.3 | max   |   5   |
       | php-5.3 | max   |   -1  |
 
