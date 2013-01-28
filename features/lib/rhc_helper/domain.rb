@@ -1,4 +1,3 @@
-require 'dnsruby'
 require 'rhc/rest'
 
 module RHCHelper
@@ -9,7 +8,6 @@ module RHCHelper
     extend Runnable
     extend Commandify
     extend API
-    include Dnsruby
 
     class << self
       attr_reader :domain_output, :domain_show_output, :exitcode
