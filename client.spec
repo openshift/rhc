@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.4.1
+Version: 1.4.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -113,6 +113,13 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Jan 29 2013 Adam Miller <admiller@redhat.com> 1.4.2-1
+- Merge pull request #286 from BanzaiMan/dev/hasari/fix_rhc_extended
+  (dmcphers+openshiftbot@redhat.com)
+- Fix RHC Extended test failures. (asari.ruby@gmail.com)
+- Match the new min for scaled php cartridge (asari.ruby@gmail.com)
+- Adding back cartridge storage functionality. (jharris@redhat.com)
+
 * Wed Jan 23 2013 Adam Miller <admiller@redhat.com> 1.4.1-1
 - bump_minor_versions for sprint 23 (admiller@redhat.com)
 
