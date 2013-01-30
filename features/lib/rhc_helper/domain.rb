@@ -16,14 +16,10 @@ module RHCHelper
     end
 
     def self.unique_namespace(prefix)
-      namepace = nil
-      begin
-        # Loop until we find a unique namespace
-        chars = ("1".."9").to_a
-        namespace = prefix + Array.new(8, '').collect{chars[rand(chars.size)]}.join
-
-       end while reserved?(namespace)
-       namespace
+      # TODO:  Due to DNS changes with the model refactor,
+      #        the namespace is not checked here - see #reserved?
+      chars = ("1".."9").to_a
+      prefix + Array.new(8, '').collect{chars[rand(chars.size)]}.join
     end
 
     def self.create_if_needed(prefix="test")
