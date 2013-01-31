@@ -89,7 +89,7 @@ module RHC
           1
         rescue RHC::Exception, RHC::Rest::Exception => e
           RHC::Helpers.error e.message
-          e.code.nil? ? 128 : e.code
+          e.code.nil? ? 128 : [1, (e.code || 1).to_i].max
         end
       else
         run_active_command

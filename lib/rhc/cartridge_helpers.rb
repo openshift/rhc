@@ -1,40 +1,89 @@
 module RHC
   module CartridgeHelpers
 
-    def find_cartridge(rest_obj, cartridge_name, type="embedded")
-      carts = find_cartridges(rest_obj, [cartridge_name], type)
+    protected
+      def check_cartridges(names, opts={}, &block)
+        cartridge_names = Array(names).map{ |s| s.strip if s && s.length > 0 }.compact
+        from = opts[:from] || all_cartridges
 
-      if carts.length == 0
-        valid_carts = rest_obj.cartridges.collect { |c| c.name if c.type == type }.compact
-
-        msg = if RHC::Rest::Application === rest_obj
-                "Cartridge '#{cartridge_name}' cannot be found in application '#{rest_obj.name}'."
-              else
-                "Cartridge '#{cartridge_name}' is not a valid cartridge name."
-              end
-
-        unless valid_carts.empty?
-          msg += "  Valid cartridges are (#{valid_carts.join(', ')})."
+        cartridge_names.map do |name|
+          name = name.downcase
+          from.find{ |c| c.name.downcase == name } ||
+          begin
+            carts = from.select{ |c| (c.name || "").downcase.include?(name) or (c.description || "").downcase.include?(name) or (c.tags || []).join(' ').downcase.include?(name) }
+            if carts.empty?
+              paragraph { list_cartridges(from) }
+              raise RHC::CartridgeNotFoundException, "There are no cartridges that match '#{name}'."
+            elsif carts.length == 1
+              use_cart(carts.first, name)
+            else
+              carts.instance_variable_set(:@for, name)
+              carts
+            end
+          end
+        end.tap do |carts|
+          yield carts if block_given?
+        end.each do |carts|
+          if carts.is_a? Array
+            name = carts.instance_variable_get(:@for)
+            paragraph { list_cartridges(carts) }
+            raise RHC::MultipleCartridgesException, "There are multiple cartridges matching '#{name}'. Please provide the short name of the correct cart."
+          end
         end
-
-        raise RHC::CartridgeNotFoundException, msg
-      elsif carts.length > 1
-        msg = "Multiple cartridge versions match your criteria. Please specify one."
-        carts.each { |cart| msg += "\n  #{cart.name}" }
-        raise RHC::MultipleCartridgesException, msg
       end
 
-      carts[0]
-    end
+      def use_cart(cart, for_cartridge_name)
+        info "Using #{cart.name}#{cart.display_name ? " (#{cart.display_name})" : ''} for '#{for_cartridge_name}'"
+        cart
+      end
 
-    def find_cartridges(rest_obj, cartridge_list, type='embedded')
-      rest_obj.find_cartridges :regex => cartridge_list.collect { |c| cart_regex c }.join('|'), :type => type
-    end
+      def web_carts_only
+        lambda{ |cart|
+          next cart unless cart.is_a? Array
+          name = cart.instance_variable_get(:@for)
+          matching = cart.select(&:only_in_new?)
+          if matching.empty?
+            raise RHC::MultipleCartridgesException, "You must select only a single web cartridge. '#{name}' matches web cartridges."
+          elsif matching.size == 1
+            use_cart(matching.first, name)
+          else
+            matching.instance_variable_set(:@for, name)
+            matching
+          end
+        }
+      end
 
-    private
+      def other_carts_only
+        lambda{ |cart|
+          next cart unless cart.is_a? Array
+          name = cart.instance_variable_get(:@for)
+          matching = cart.select{ |c| not c.only_in_new? }
+          if matching.empty?
+            raise RHC::MultipleCartridgesException, "You must select only a single web cartridge. '#{name}' matches web cartridges."
+          elsif matching.size == 1
+            use_cart(matching.first, name)
+          else
+            matching.instance_variable_set(:@for, name)
+            matching
+          end
+        }
+      end
 
-    def cart_regex(cart)
-      "^#{cart.rstrip}(-[0-9\.]+){0,1}$"
-    end
+      def standalone_cartridges
+        @standalone_cartridges ||= all_cartridges.select{ |c| c.type == 'standalone' }
+      end
+      def not_standalone_cartridges
+        @not_standalone_cartridges ||= all_cartridges.select{ |c| c.type != 'standalone' }
+      end
+      def all_cartridges
+        @all_cartridges = rest_client.cartridges
+      end
+
+      def list_cartridges(cartridges)
+        carts = cartridges.map{ |c| [c.name, c.display_name || ''] }.sort{ |a,b| a[1].downcase <=> b[1].downcase }
+        carts.unshift ['==========', '=========']
+        carts.unshift ['Short Name', 'Full name']
+        say table(carts).join("\n")
+      end
   end
 end
