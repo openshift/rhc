@@ -24,7 +24,7 @@ module RHC
           else
             [
               options.delete(:url) ||
-                (options[:server] && "https://#{options.delete(:server)}/broker/rest/api"), 
+                (options[:server] && "https://#{options.delete(:server)}/broker/rest/api"),
               options.delete(:debug),
               options.delete(:preferred_api_versions)
             ]
