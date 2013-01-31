@@ -43,6 +43,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency  'fakefs',       '>= 0.4'
   s.add_development_dependency  'thor'
   s.add_development_dependency  'cucumber'
-  s.add_development_dependency  'dnsruby'
   s.add_development_dependency  'activesupport', '~> 3.0'
 end

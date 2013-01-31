@@ -90,19 +90,6 @@ rm -rf $RPM_BUILD_ROOT
 %doc LICENSE
 %doc COPYRIGHT
 %{_bindir}/rhc
-%{_bindir}/rhc-app
-%{_bindir}/rhc-domain
-%{_bindir}/rhc-sshkey
-%{_bindir}/rhc-chk
-%{_bindir}/rhc-create-app
-%{_bindir}/rhc-create-domain
-%{_bindir}/rhc-ctl-domain
-%{_bindir}/rhc-domain-info
-%{_bindir}/rhc-user-info
-%{_bindir}/rhc-ctl-app
-%{_bindir}/rhc-snapshot
-%{_bindir}/rhc-tail-files
-%{_bindir}/rhc-port-forward
 %{_mandir}/man1/rhc*
 %{_mandir}/man5/express*
 %{gemdir}/gems/rhc-%{version}/
