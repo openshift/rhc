@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.4.2
+Version: 1.4.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -100,6 +100,15 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Jan 31 2013 Adam Miller <admiller@redhat.com> 1.4.3-1
+- Merge pull request #287 from jtharris/features/US3159
+  (dmcphers+openshiftbot@redhat.com)
+- Fixing infinite loop in cuke namespace check. (jharris@redhat.com)
+- Removing rhc-* commands from spec. (jharris@redhat.com)
+- Clearing out DNS and coverage for legacy commands. (jharris@redhat.com)
+- Removing legacy rhc-* man pages. (jharris@redhat.com)
+- Removing deprecated rhc- commands. (jharris@redhat.com)
+
 * Tue Jan 29 2013 Adam Miller <admiller@redhat.com> 1.4.2-1
 - Merge pull request #286 from BanzaiMan/dev/hasari/fix_rhc_extended
   (dmcphers+openshiftbot@redhat.com)
