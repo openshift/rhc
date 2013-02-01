@@ -32,7 +32,6 @@ Gem::Specification.new do |s|
 
   s.add_dependency              'net-ssh',      '>= 2.0.11'
   s.add_dependency              'archive-tar-minitar'
-  s.add_dependency              'test-unit' # used by rhc domain status in ruby 1.9
   s.add_runtime_dependency      'commander',    '>= 4.0'
   s.add_runtime_dependency      'highline',     '>= 1.5.1'
   s.add_runtime_dependency      'httpclient',   '>= 2.2'
