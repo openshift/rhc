@@ -10,14 +10,14 @@ module RHC
           name = name.downcase
           from.find{ |c| c.name.downcase == name } ||
           begin
-            carts = from.select{ |c| (c.name || "").downcase.include?(name) or (c.description || "").downcase.include?(name) or (c.tags || []).join(' ').downcase.include?(name) }
+            carts = from.select{ |c| match_cart(c, name) }
             if carts.empty?
               paragraph { list_cartridges(from) }
               raise RHC::CartridgeNotFoundException, "There are no cartridges that match '#{name}'."
             elsif carts.length == 1
               use_cart(carts.first, name)
             else
-              carts.instance_variable_set(:@for, name)
+              carts.sort!.instance_variable_set(:@for, name)
               carts
             end
           end
@@ -35,6 +35,15 @@ module RHC
       def use_cart(cart, for_cartridge_name)
         info "Using #{cart.name}#{cart.display_name ? " (#{cart.display_name})" : ''} for '#{for_cartridge_name}'"
         cart
+      end
+
+      def match_cart(cart, search)
+        search = search.to_s.downcase.gsub(/[_\-\s]/,' ')
+        [
+           cart.name, 
+           cart.description, 
+          (cart.tags || []).join(' '),
+        ].compact.any?{ |s| s.present? && s.downcase.gsub(/[_\-\s]/,' ').include?(search) }
       end
 
       def web_carts_only

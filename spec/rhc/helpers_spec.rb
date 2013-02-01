@@ -509,4 +509,22 @@ describe RHC::CartridgeHelpers do
   describe '#web_carts_only' do
     it { expect{ subject.send(:web_carts_only).call([]) }.to raise_error(RHC::MultipleCartridgesException, /You must select only a single web/) }
   end
+
+  describe '#match_cart' do
+    context 'with a nil cart' do
+      let(:cart){ OpenStruct.new(:name => nil, :description => nil, :tags => nil) }
+      it{ subject.send(:match_cart, cart, 'foo').should be_false }
+    end
+    context 'with simple strings' do
+      let(:cart){ OpenStruct.new(:name => 'FOO-more_max any', :description => 'bar', :tags => [:baz]) }
+      it{ subject.send(:match_cart, cart, 'foo').should be_true }
+      it{ subject.send(:match_cart, cart, 'fo').should be_true }
+      it{ subject.send(:match_cart, cart, 'oo').should be_true }
+      it{ subject.send(:match_cart, cart, 'bar').should be_true }
+      it{ subject.send(:match_cart, cart, 'baz').should be_true }
+      it{ subject.send(:match_cart, cart, 'more max').should be_true }
+      it{ subject.send(:match_cart, cart, 'foo more max any').should be_true }
+      it{ subject.send(:match_cart, cart, 'foo_more max-any').should be_true }
+    end
+  end
 end
