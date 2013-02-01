@@ -12,12 +12,15 @@ require 'rhc/core_ext'
 
 module RHC
   autoload :Auth,           'rhc/auth'
+  autoload :CartridgeHelpers, 'rhc/cartridge_helpers'
   autoload :CommandRunner,  'rhc/command_runner'
   autoload :Commands,       'rhc/commands'
   autoload :Config,         'rhc/config'
+  autoload :GitHelpers,     'rhc/git_helpers'
   autoload :Helpers,        'rhc/helpers'
   autoload :HelpFormatter,  'rhc/help_formatter'
   autoload :Rest,           'rhc/rest'
+  autoload :SSHHelpers,     'rhc/ssh_helpers'
   autoload :TarGz,          'rhc/tar_gz'
   autoload :VERSION,        'rhc/version'
 end

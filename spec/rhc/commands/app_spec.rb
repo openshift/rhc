@@ -80,8 +80,6 @@ describe RHC::Commands::App do
     context 'when no cartridges are returned' do
       before(:each) do
         domain = rest_client.domains.first
-        #rest_client.stub(:cartridges) { [] }
-#        domain.stub(:add_application).and_raise(RHC::Rest::ValidationException.new('Each application needs a web cartridge', '', '109'))
       end
       context 'without trace' do
         let(:arguments) { ['app', 'create', 'app1', 'nomatch_cart', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
@@ -94,14 +92,38 @@ describe RHC::Commands::App do
     end
   end
 
-  describe 'app create too many carts found error' do
-    let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart', '--trace', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+  describe 'cart matching behavior' do
+    before(:each) do
+      domain = rest_client.add_domain("mockdomain")
+    end
 
-    context 'when run' do
-      before(:each) do
-        domain = rest_client.add_domain("mockdomain")
-      end
+    context 'multiple web matches' do
+      let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart', '--trace', '--noprompt'] }
       it { expect { run }.should raise_error(RHC::MultipleCartridgesException) }
+    end
+    context 'when only a single cart can match' do
+      let(:arguments) { ['app', 'create', 'app1', 'unique', '--trace', '--noprompt'] }
+      it('picks the cart') { run_output.should match('Using mock_unique_standalone_cart-1') }
+    end
+    context 'when I pick a web cart and an ambiguous non web cart' do
+      let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart-1', 'unique', '--trace', '--noprompt'] }
+      it('picks the non web cart') { run_output.should match('Using unique_mock_cart-1') }
+    end
+    context 'when I pick very ambiguous carts' do
+      let(:arguments) { ['app', 'create', 'app1', 'mock', '--noprompt'] }
+      it('shows only web carts') { run_output.should_not match('unique_mock_cart-1') }
+    end
+    context 'when I pick only embedded carts' do
+      let(:arguments) { ['app', 'create', 'app1', 'mock_cart', '--trace', '--noprompt'] }
+      it { expect { run }.should raise_error(RHC::CartridgeNotFoundException, /Every application needs a web cartridge/) }
+    end
+    context 'when I pick multiple embedded carts' do
+      let(:arguments) { ['app', 'create', 'app1', 'unique_standalone', 'mock_cart', '--trace', '--noprompt'] }
+      it { expect { run }.should raise_error(RHC::MultipleCartridgesException, /There are multiple cartridges matching 'mock_cart'/) }
+    end
+    context 'when I pick multiple standalone carts' do
+      let(:arguments) { ['app', 'create', 'app1', 'unique_standalone', 'mock_standalone_cart', '--trace', '--noprompt'] }
+      it { expect { run }.should raise_error(RHC::MultipleCartridgesException, /You must select only a single web cart/) }
     end
   end
 

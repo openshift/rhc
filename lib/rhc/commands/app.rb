@@ -51,7 +51,7 @@ module RHC::Commands
     argument :cartridges, "The web framework this application should use", ["-t", "--type cartridge"], :arg_type => :list
     #argument :additional_cartridges, "A list of other cartridges such as databases you wish to add. Cartridges can also be added later using 'rhc cartridge add'", [], :arg_type => :list
     def create(name, cartridges)
-      cartridges = check_cartridges(cartridges)
+      cartridges = check_cartridges(cartridges, &require_one_web_cart) 
 
       options.default \
         :dns => true,
@@ -292,54 +292,26 @@ module RHC::Commands
     private
       include RHC::GitHelpers
       include RHC::CartridgeHelpers
+      
+      def require_one_web_cart
+        lambda{ |carts|
+          match, ambiguous = carts.partition{ |c| not c.is_a?(Array) }
+          selected_web = match.any?(&:only_in_new?)
+          possible_web = ambiguous.flatten.any?(&:only_in_new?)
+          if not (selected_web or possible_web)
+            section(:bottom => 1){ list_cartridges(standalone_cartridges) }
+            raise RHC::CartridgeNotFoundException, "Every application needs a web cartridge to handle incoming web requests. Please provide the short name of one of the carts listed above."         
+          end
+          if selected_web
+            carts.map! &other_carts_only
+          elsif possible_web
+            carts.map! &web_carts_only
+          end
+        }
+      end
 
       def check_sshkeys!
         RHC::SSHWizard.new(rest_client, config, options).run
-      end
-
-      def standalone_cartridges
-        @standalone_cartridges ||= all_cartridges.select{ |c| c.type == 'standalone' }
-      end
-      def all_cartridges
-        @all_cartridges = rest_client.cartridges
-      end
-
-      def check_cartridges(cartridge_names)
-        cartridge_names = Array(cartridge_names).map{ |s| s.strip if s && s.length > 0 }.compact
-
-        cartridge_names.map do |name|
-          all_cartridges.find{ |c| c.name == name } ||
-            begin
-              matching_cartridges = all_cartridges.select{ |c| c.name.include?(name) }
-              unless matching_cartridges.length == 1
-                if matching_cartridges.present?
-                  paragraph { list_cartridges(matching_cartridges) }
-                  raise RHC::MultipleCartridgesException, "There are multiple web cartridges named '#{name}'. Please provide the short name of your desired cart." if matching_cartridges.present?
-                else
-                  paragraph { list_cartridges(all_cartridges) }
-                  raise RHC::CartridgeNotFoundException, "There are no cartridges that match '#{name}'."
-                end
-              end
-              use_cart(matching_cartridges.first, name)
-            end
-        end.tap do |carts|
-          if carts.none?(&:only_in_new?)
-            section(:bottom => 1){ list_cartridges }
-            raise RHC::CartridgeNotFoundException, "Every application needs a web cartridge to handle incoming web requests. Please provide the short name of one of the carts listed above."         
-          end
-        end
-      end
-
-      def use_cart(cart, for_cartridge_name)
-        info "Using #{cart.name}#{cart.display_name ? " (#{cart.display_name})" : ''} for '#{for_cartridge_name}'"
-        cart
-      end
-
-      def list_cartridges(cartridges=standalone_cartridges)
-        carts = cartridges.map{ |c| [c.name, c.display_name || ''] }.sort{ |a,b| a[1].downcase <=> b[1].downcase }
-        carts.unshift ['==========', '=========']
-        carts.unshift ['Short Name', 'Full name']
-        say table(carts).join("\n")
       end
 
       def app_action(app, action, *args)
@@ -363,7 +335,7 @@ module RHC::Commands
       rescue RHC::Rest::Exception => e
         if e.code == 109
           paragraph{ say "Valid cartridge types:" }
-          paragraph{ list_cartridges }
+          paragraph{ list_cartridges(standalone_cartridges) }
         end
         raise
       end
