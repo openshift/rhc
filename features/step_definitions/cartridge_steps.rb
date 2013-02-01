@@ -32,7 +32,7 @@ Then /^the (.+) cartridge should be (.*)$/ do |name,status|
              when :stopped
                "(.+) stopped"
              when :removed
-               "Cartridge '#{name}' cannot be found in application"
+               "There are no cartridges that match '#{name}'"
              else
                raise "Unrecognized status type #{status}"
              end
