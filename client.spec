@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.4.3
+Version: 1.4.4
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -100,6 +100,17 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Feb 01 2013 Adam Miller <admiller@redhat.com> 1.4.4-1
+- Merge pull request #291 from
+  smarterclayton/search_cartridge_names_consistently
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #290 from jtharris/jenkins_fix
+  (dmcphers+openshiftbot@redhat.com)
+- Allow more flexible searching (ccoleman@redhat.com)
+- Search cartridge names more consistently across all commands
+  (ccoleman@redhat.com)
+- Removing test-unit as a dependency. (jharris@redhat.com)
+
 * Thu Jan 31 2013 Adam Miller <admiller@redhat.com> 1.4.3-1
 - Merge pull request #287 from jtharris/features/US3159
   (dmcphers+openshiftbot@redhat.com)
