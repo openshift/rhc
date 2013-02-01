@@ -1,6 +1,4 @@
-require 'rhc/helpers'
-require 'rhc/ssh_helpers'
-require 'rhc/git_helpers'
+require 'rhc'
 require 'highline/system_extensions'
 require 'fileutils'
 require 'socket'
@@ -59,6 +57,7 @@ module RHC
       include RHC::Helpers
       include RHC::SSHHelpers
       include RHC::GitHelpers
+      include RHC::CartridgeHelpers
       attr_reader :config, :options
       attr_accessor :auth, :user
 
@@ -352,8 +351,7 @@ module RHC
 
           paragraph{ say "Run 'rhc app create' to create your first application." }
           paragraph do
-            application_types = rest_client.find_cartridges :type => "standalone"
-            say table(application_types.sort {|a,b| a.display_name <=> b.display_name }.map do |cart|
+            say table(standalone_cartridges.sort {|a,b| a.display_name <=> b.display_name }.map do |cart|
               [' ', cart.display_name, "rhc app create <app name> #{cart.name}"]
             end).join("\n")
           end

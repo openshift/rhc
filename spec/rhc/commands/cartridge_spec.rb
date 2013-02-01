@@ -392,7 +392,7 @@ describe RHC::Commands::Cartridge do
 
     context 'when run for a non-existent cartridge' do
       let(:arguments) { cmd_base | ['bogus_cart'] | std_args }
-      it { fail_with_message("Cartridge bogus_cart can't be found in application", 154) }
+      it { fail_with_message("There are no cartridges that match 'bogus_cart'.", 154) }
     end
 
     context 'when run with -c flag' do

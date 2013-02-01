@@ -490,6 +490,7 @@ describe RHC::CartridgeHelpers do
 
   subject do
     Class.new(Object) do
+      include RHC::Helpers
       include RHC::CartridgeHelpers
 
       def config
@@ -498,26 +499,32 @@ describe RHC::CartridgeHelpers do
     end.new
   end
 
-  describe '#find_cartridge' do
+  describe '#check_cartridges' do
     let(:cartridges){ [] }
     let(:find_cartridges){ [] }
     context "with a generic object" do
-      let(:rest_obj) do
-        Object.new.tap do |o|
-          o.stub(:find_cartridges).and_return(find_cartridges)
-          o.stub(:cartridges).and_return(cartridges)
-        end
-      end
-      it { expect{ subject.find_cartridge(rest_obj, 'foo') }.should raise_error(RHC::CartridgeNotFoundException, 'Cartridge \'foo\' is not a valid cartridge name.') }
+      it { expect{ subject.send(:check_cartridges, 'foo', :from => cartridges) }.should raise_error(RHC::CartridgeNotFoundException, 'There are no cartridges that match \'foo\'.') }
     end
-    context "with an Application" do
-      let(:rest_obj) do
-        RHC::Rest::Application.new('name' => 'my_app').tap do |o|
-          o.stub(:find_cartridges).and_return(find_cartridges)
-          o.stub(:cartridges).and_return(cartridges)
-        end
-      end
-      it { expect{ subject.find_cartridge(rest_obj, 'foo') }.should raise_error(RHC::CartridgeNotFoundException, 'Cartridge \'foo\' cannot be found in application \'my_app\'.') }
+  end
+  describe '#web_carts_only' do
+    it { expect{ subject.send(:web_carts_only).call([]) }.to raise_error(RHC::MultipleCartridgesException, /You must select only a single web/) }
+  end
+
+  describe '#match_cart' do
+    context 'with a nil cart' do
+      let(:cart){ OpenStruct.new(:name => nil, :description => nil, :tags => nil) }
+      it{ subject.send(:match_cart, cart, 'foo').should be_false }
+    end
+    context 'with simple strings' do
+      let(:cart){ OpenStruct.new(:name => 'FOO-more_max any', :description => 'bar', :tags => [:baz]) }
+      it{ subject.send(:match_cart, cart, 'foo').should be_true }
+      it{ subject.send(:match_cart, cart, 'fo').should be_true }
+      it{ subject.send(:match_cart, cart, 'oo').should be_true }
+      it{ subject.send(:match_cart, cart, 'bar').should be_true }
+      it{ subject.send(:match_cart, cart, 'baz').should be_true }
+      it{ subject.send(:match_cart, cart, 'more max').should be_true }
+      it{ subject.send(:match_cart, cart, 'foo more max any').should be_true }
+      it{ subject.send(:match_cart, cart, 'foo_more max-any').should be_true }
     end
   end
 end

@@ -42,7 +42,7 @@ module RHC::Commands
     argument :cart_type, "The type of the cartridge you are adding (run 'rhc cartridge list' to obtain a list of available cartridges)", ["-c", "--cartridge cart_type"]
     alias_action :"app cartridge add", :root_command => true, :deprecated => true
     def add(cart_type)
-      cart = find_cartridge rest_client, cart_type
+      cart = check_cartridges(cart_type, :from => not_standalone_cartridges).first
 
       say "Adding #{cart.name} to application '#{options.app}' ... "
 
@@ -67,7 +67,7 @@ module RHC::Commands
     def show(cartridge)
       rest_domain = rest_client.find_domain(options.namespace)
       rest_app = rest_domain.find_application(options.app)
-      rest_cartridge = find_cartridge rest_app, cartridge, nil
+      rest_cartridge = check_cartridges(cartridge, :from => rest_app.cartridges).first
 
       display_cart(rest_cartridge)
 
@@ -85,7 +85,7 @@ module RHC::Commands
 
       rest_domain = rest_client.find_domain(options.namespace)
       rest_app = rest_domain.find_application(options.app)
-      rest_cartridge = rest_app.find_cartridge cartridge, :type => "embedded"
+      rest_cartridge = check_cartridges(cartridge, :from => rest_app.cartridges).first
 
       confirm_action "Removing a cartridge is a destructive operation that may result in loss of data associated with the cartridge.\n\nAre you sure you wish to remove #{rest_cartridge.name} from '#{rest_app.name}'?"
 
@@ -103,9 +103,7 @@ module RHC::Commands
     option ["-a", "--app app"], "Application the cartridge", :context => :app_context, :required => true
     alias_action :"app cartridge start", :root_command => true, :deprecated => true
     def start(cartridge)
-      cartridge_action cartridge, :start
-
-      results { say "#{cartridge} started!" }
+      cartridge_action(cartridge, :start){ |_, c| results{ say "#{c.name} started" } }
       0
     end
 
@@ -116,9 +114,7 @@ module RHC::Commands
     option ["-a", "--app app"], "Application you the cartridge belongs to", :context => :app_context, :required => true
     alias_action :"app cartridge stop", :root_command => true, :deprecated => true
     def stop(cartridge)
-      cartridge_action cartridge, :stop
-
-      results { say "#{cartridge} stopped!" }
+      cartridge_action(cartridge, :stop){ |_, c| results{ say "#{c.name} stopped" } }
       0
     end
 
@@ -129,9 +125,7 @@ module RHC::Commands
     option ["-a", "--app app"], "Application the cartridge belongs to", :context => :app_context, :required => true
     alias_action :"app cartridge restart", :root_command => true, :deprecated => true
     def restart(cartridge)
-      cartridge_action cartridge, :restart
-
-      results { say "#{cartridge} restarted!" }
+      cartridge_action(cartridge, :restart){ |_, c| results{ say "#{c.name} restarted" } }
       0
     end
 
@@ -144,7 +138,7 @@ module RHC::Commands
     def status(cartridge)
       rest_domain = rest_client.find_domain(options.namespace)
       rest_app = rest_domain.find_application(options.app)
-      rest_cartridge = find_cartridge(rest_app, cartridge)
+      rest_cartridge = check_cartridges(cartridge, :from => rest_app.cartridges).first
       results { rest_cartridge.status.each{ |msg| say msg['message'] } }
       0
     end
@@ -156,9 +150,7 @@ module RHC::Commands
     option ["-a", "--app app"], "Application the cartridge belongs to", :context => :app_context, :required => true
     alias_action :"app cartridge reload", :root_command => true, :deprecated => true
     def reload(cartridge)
-      cartridge_action cartridge, :reload
-
-      results { say "#{cartridge} config reloaded!" }
+      cartridge_action(cartridge, :reload){ |_, c| results{ say "#{c.name} reloaded" } }
       0
     end
 
@@ -174,7 +166,7 @@ module RHC::Commands
 
       rest_domain = rest_client.find_domain(options.namespace)
       rest_app = rest_domain.find_application(options.app)
-      rest_cartridge = find_cartridge rest_app, cartridge, nil
+      rest_cartridge = check_cartridges(cartridge, :from => rest_app.cartridges).first
 
       raise RHC::CartridgeNotScalableException unless rest_cartridge.scalable?
 
@@ -201,11 +193,8 @@ module RHC::Commands
     option ["--remove amount"], "Remove the indicated amount from the additional storage capacity"
     option ["--set amount"], "Set the specified amount of additional storage capacity"
     option ["-f", "--force"], "Force the action"
-    def storage(cartridges)
-      # Make sure that we are dealing with an array (-c param will only pass in a string)
-      # BZ 883658
-      cartridges = [cartridges].flatten
-
+    def storage(cartridge)
+      cartridges = Array(cartridge)
       rest_domain = rest_client.find_domain(options.namespace)
       rest_app = rest_domain.find_application(options.app)
 
@@ -225,8 +214,7 @@ module RHC::Commands
           if cartridges.length == 0
             display_cart_storage_list rest_app.cartridges
           else
-            cartridges.each do |cartridge_name|
-              cart = rest_app.find_cartridge(cartridge_name)
+            check_cartridges(cartridge, :from => rest_app.cartridges).each do |cart|
               display_cart_storage_info cart, cart.display_name
             end
           end
@@ -235,7 +223,7 @@ module RHC::Commands
         raise RHC::MultipleCartridgesException,
           'Exactly one cartridge must be specified for this operation' if cartridges.length != 1
 
-        rest_cartridge = find_cartridge rest_app, cartridges.first, nil
+        rest_cartridge = check_cartridges(cartridge, :from => rest_app.cartridges).first
         amount = amount.match(/^(\d+)(GB)?$/i)
         raise RHC::AdditionalStorageValueException if amount.nil?
 
@@ -268,12 +256,14 @@ module RHC::Commands
     private
       include RHC::CartridgeHelpers
 
-      def cartridge_action(cartridge, action)
+      def cartridge_action(cartridge, action, &block)
         rest_domain = rest_client.find_domain(options.namespace)
         rest_app = rest_domain.find_application(options.app)
-        rest_cartridge = find_cartridge rest_app, cartridge
+        rest_cartridge = check_cartridges(cartridge, :from => rest_app.cartridges).first
         result = rest_cartridge.send action
-        [result, rest_cartridge, rest_app, rest_domain]
+        resp = [result, rest_cartridge, rest_app, rest_domain]
+        yield resp if block_given?
+        resp
       end
   end
 end

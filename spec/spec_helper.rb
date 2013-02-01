@@ -55,7 +55,6 @@ class FakeFS::File
   end
 end
 
-#include 'mocha'
 require 'rhc/cli'
 
 include WebMock::API
