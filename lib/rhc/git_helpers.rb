@@ -1,4 +1,4 @@
-require 'open4'
+  require 'open4'
 
 module RHC
   module GitHelpers
