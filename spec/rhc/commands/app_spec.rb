@@ -403,6 +403,58 @@ describe RHC::Commands::App do
     end
   end
 
+  describe 'app ssh' do
+    let(:arguments) { ['app', 'ssh', 'app1'] }
+
+    context 'when run' do
+      before(:each) do
+        @domain = rest_client.add_domain("mockdomain")
+        @domain.add_application("app1", "mock_type")
+        Kernel.should_receive(:system).with("ssh fakeuuidfortestsapp1@127.0.0.1").and_return(0)
+      end
+      it { run_output.should match("Connecting to fakeuuidfortestsapp") }
+      it { expect { run }.should exit_with_code(0) }
+    end
+  end
+
+  describe 'app ssh no system ssh' do
+    let(:arguments) { ['app', 'ssh', 'app1'] }
+
+    context 'when run' do
+      before(:each) do
+        @domain = rest_client.add_domain("mockdomain")
+        @domain.add_application("app1", "mock_type")
+        @instance.should_receive(:has_ssh?).and_return(false)
+      end
+      it { run_output.should match("Please use the --ssh option to specify the path to your SSH executable, or install SSH.") }
+      it { expect { run }.should exit_with_code(1) }
+    end
+  end
+
+  describe 'app ssh can use system exec' do
+    let(:arguments) { ['app', 'ssh', 'app1', '--ssh', 'path_to_ssh'] }
+
+    context 'when run' do
+      before(:each) do
+        @domain = rest_client.add_domain("mockdomain")
+        @domain.add_application("app1", "mock_type")
+        @instance.should_not_receive(:has_ssh?)
+        Kernel.should_receive(:system).with("path_to_ssh fakeuuidfortestsapp1@127.0.0.1").and_return(1)
+      end
+      it { run_output.should match("Connecting to fakeuuidfortestsapp") }
+      it { expect { run }.should exit_with_code(1) }
+    end
+  end
+
+  describe 'ssh tests' do
+    let(:arguments) { ['app', 'ssh', 'app1', '-s /bin/blah'] }
+
+    context 'has_ssh?' do
+      before{ @instance.stub(:ssh_version){ raise "Fake Exception" } }
+      its(:has_ssh?) { should be_false }
+    end
+  end
+
   describe 'app status' do
     let(:arguments) { ['app', 'status', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
