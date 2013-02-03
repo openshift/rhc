@@ -403,6 +403,51 @@ describe RHC::Commands::App do
     end
   end
 
+  describe 'app ssh' do
+    let(:arguments) { ['app', 'ssh', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+
+    context 'when run' do
+      before(:each) do
+        @domain = rest_client.add_domain("mockdomain")
+        @domain.add_application("app1", "mock_type")
+      end
+      it { run_output.should match("Please wait while we attempt an SSH connection to") }
+    end
+  end
+
+  describe 'app ssh no system ssh' do
+    let(:arguments) { ['app', 'ssh', 'app1', '--nossh', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+
+    context 'when run' do
+      before(:each) do
+        @domain = rest_client.add_domain("mockdomain")
+        @domain.add_application("app1", "mock_type")
+      end
+      it { run_output.should match("Please use the -s option to specify the path to your SSH executable, or install SSH.") }
+    end
+  end
+
+  describe 'app ssh -s does exists' do
+    let(:arguments) { ['app', 'ssh', 'app1', '-s ssh', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+
+    context 'when run' do
+      before(:each) do
+        @domain = rest_client.add_domain("mockdomain")
+        @domain.add_application("app1", "mock_type")
+      end
+      it { run_output.should match("Using user specified executable:") }
+    end
+  end
+
+  describe 'ssh tests' do
+    let(:arguments) { ['app', 'ssh', 'app1', '-s /bin/blah', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+
+    context 'has_ssh?' do
+      before{ @instance.stub(:ssh_version){ raise "Fake Exception" } }
+      its(:has_ssh?) { should be_false }
+    end
+  end
+
   describe 'app status' do
     let(:arguments) { ['app', 'status', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 

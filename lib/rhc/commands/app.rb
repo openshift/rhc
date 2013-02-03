@@ -281,21 +281,23 @@ module RHC::Commands
     summary "SSH into the specified application"
     syntax "<app>"
     argument :app, "The name of the application you want to SSH into", ["-a", "--app app"], :context => :app_context
-    option ["-s", "--ssh ssh_executable"], "Your SSH executable"
+    option ["-s", "--ssh path/to/ssh"], "Path to your SSH executable"
+    option ["-o", "--nossh"], "Do not use system SSH executable"
     option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
     def ssh(app_name)
       domain = rest_client.find_domain(options.namespace)
       app = domain.find_application(app_name)
 
       say "Please wait while we attempt an SSH connection to #{app.ssh_string.to_s}"
-      if !options.ssh
+      if options.ssh
+        say "Using user specified executable: #{options.ssh}"
+        system "#{options.ssh} #{app.ssh_string.to_s}"
+      elsif has_ssh? && !options.nossh
         say "Trying system command: ssh"
         system "ssh #{app.ssh_string.to_s}"
       else
-        say "Using user specified executable: #{options.ssh}"
-        system "#{options.ssh} #{app.ssh_string.to_s}"
+        say "Please use the -s option to specify the path to your SSH executable, or install SSH."
       end
-
       0
     end
 
@@ -452,6 +454,22 @@ module RHC::Commands
         `ping #{host} -n 2`
         $?.exitstatus == 0
         # :nocov:
+      end
+
+      # check the version of SSH that is installed
+      def ssh_version
+        @ssh_version ||= `ssh -V 2>&1`.strip
+      end
+
+      # return whether or not SSH is installed
+      def has_ssh?
+        @has_ssh ||= begin
+          @ssh_version = nil
+          ssh_version
+          $?.success?
+        rescue
+          false
+        end
       end
 
       def windows_nslookup_bug?(rest_app)
