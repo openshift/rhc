@@ -404,7 +404,7 @@ describe RHC::Commands::App do
   end
 
   describe 'app ssh' do
-    let(:arguments) { ['app', 'ssh', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+    let(:arguments) { ['app', 'ssh', 'app1', '--dryrun','--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     context 'when run' do
       before(:each) do
@@ -412,6 +412,7 @@ describe RHC::Commands::App do
         @domain.add_application("app1", "mock_type")
       end
       it { run_output.should match("Please wait while we attempt an SSH connection to") }
+      it { run_output.should match ("ssh fakeuuidfortestsapp1@127.0.0.1")}
     end
   end
 
@@ -428,7 +429,7 @@ describe RHC::Commands::App do
   end
 
   describe 'app ssh -s does exists' do
-    let(:arguments) { ['app', 'ssh', 'app1', '-s ssh', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+    let(:arguments) { ['app', 'ssh', 'app1', '-s ssh', '--dryrun', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     context 'when run' do
       before(:each) do
@@ -436,6 +437,7 @@ describe RHC::Commands::App do
         @domain.add_application("app1", "mock_type")
       end
       it { run_output.should match("Using user specified executable:") }
+      it { run_output.should match ("ssh fakeuuidfortestsapp1@127.0.0.1")}
     end
   end
 

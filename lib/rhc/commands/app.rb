@@ -283,18 +283,19 @@ module RHC::Commands
     argument :app, "The name of the application you want to SSH into", ["-a", "--app app"], :context => :app_context
     option ["-s", "--ssh path/to/ssh"], "Path to your SSH executable"
     option ["-o", "--nossh"], "Do not use system SSH executable"
+    option ["-d", "--dryrun"], "Don't actually execute SSH"
     option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
     def ssh(app_name)
       domain = rest_client.find_domain(options.namespace)
       app = domain.find_application(app_name)
-
+      ssh_command = (options.dryrun ? 'say' : 'system')
       say "Please wait while we attempt an SSH connection to #{app.ssh_string.to_s}"
       if options.ssh
         say "Using user specified executable: #{options.ssh}"
-        system "#{options.ssh} #{app.ssh_string.to_s}"
+        Kernel.send(ssh_command.to_sym,"#{options.ssh} #{app.ssh_string.to_s}")
       elsif has_ssh? && !options.nossh
         say "Trying system command: ssh"
-        system "ssh #{app.ssh_string.to_s}"
+        Kernel.send(ssh_command.to_sym, "ssh #{app.ssh_string.to_s}")
       else
         say "Please use the -s option to specify the path to your SSH executable, or install SSH."
       end
