@@ -279,27 +279,26 @@ module RHC::Commands
     end
 
     summary "SSH into the specified application"
-    syntax "<app>"
+    syntax "<app> [--ssh path_to_ssh_executable]"
     argument :app, "The name of the application you want to SSH into", ["-a", "--app app"], :context => :app_context
-    option ["-s", "--ssh path/to/ssh"], "Path to your SSH executable"
-    option ["-o", "--nossh"], "Do not use system SSH executable"
-    option ["-d", "--dryrun"], "Don't actually execute SSH"
+    option ["--ssh PATH"], "Path to your SSH executable"
     option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
+    alias_action 'ssh', :root_command => true
     def ssh(app_name)
+      raise ArgumentError, "No application specified" unless app_name.present?
+      raise OptionParser::InvalidOption, "No system SSH available. Please use the --ssh option to specify the path to your SSH executable, or install SSH." unless options.ssh or has_ssh?
+
       domain = rest_client.find_domain(options.namespace)
       app = domain.find_application(app_name)
-      ssh_command = (options.dryrun ? 'say' : 'system')
-      say "Please wait while we attempt an SSH connection to #{app.ssh_string.to_s}"
+
+      say "Connecting to #{app.ssh_string.to_s} ..."
       if options.ssh
-        say "Using user specified executable: #{options.ssh}"
-        Kernel.send(ssh_command.to_sym,"#{options.ssh} #{app.ssh_string.to_s}")
-      elsif has_ssh? && !options.nossh
-        say "Trying system command: ssh"
-        Kernel.send(ssh_command.to_sym, "ssh #{app.ssh_string.to_s}")
+        debug "Using user specified SSH: #{options.ssh}"
+        Kernel.send(:system, "#{options.ssh} #{app.ssh_string.to_s}")
       else
-        say "Please use the -s option to specify the path to your SSH executable, or install SSH."
+        debug "Using system ssh"
+        Kernel.send(:system, "ssh #{app.ssh_string.to_s}")
       end
-      0
     end
 
     summary "DEPRECATED use 'show <app> --state' instead"
