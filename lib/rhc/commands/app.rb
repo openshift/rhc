@@ -281,25 +281,19 @@ module RHC::Commands
     summary "SSH into the specified application"
     syntax "<app>"
     argument :app, "The name of the application you want to SSH into", ["-a", "--app app"], :context => :app_context
+    option ["-s", "--ssh ssh_executable"], "Your SSH executable"
     option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
     def ssh(app_name)
       domain = rest_client.find_domain(options.namespace)
       app = domain.find_application(app_name)
-      ssh_executable = nil
 
-      exts = ENV['PATHEXT'] ? ENV['PATHEXT'].split(';') : ['']
-      ENV['PATH'].split(File::PATH_SEPARATOR).each do |path|
-        exts.each { |ext|
-          exe = File.join(path, "ssh#{ext}")
-          ssh_executable = exe if File.executable? exe
-        }
-      end
-        say "Please wait while we attempt an SSH connection to #{app.ssh_string.to_s}"
-      if !ssh_executable.nil?
-        system "#{ssh_executable} #{app.ssh_string.to_s}"
+      say "Please wait while we attempt an SSH connection to #{app.ssh_string.to_s}"
+      if !options.ssh
+        say "Trying system command: ssh"
+        system "ssh #{app.ssh_string.to_s}"
       else
-        say "Could not find SSH executable on your PATH!"
-        say "SSH executable must be named ssh or ssh.<extension>."
+        say "Using user specified executable: #{options.ssh}"
+        system "#{options.ssh} #{app.ssh_string.to_s}"
       end
 
       0
