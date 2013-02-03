@@ -118,10 +118,10 @@ module RHC
                   "A secure connection could not be established to the server (#{e.message}). You may disable secure connections to your server with the -k (or --insecure) option '#{args[1]}'.\n\n"\
                   "If your server is using a self-signed certificate, you may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.")
               end
-          rescue SocketError => e
+          rescue SocketError, Errno::ECONNREFUSED => e
             raise ConnectionException.new(
               "Unable to connect to the server (#{e.message})."\
-              "#{client.proxy.present? ? " Check that you have correctly specified your proxy server '#{client.proxy}' as well as your OpenShift server '#{args[1]}'." : " Check that you have correctly specified your OpenShift server '#{args[0]}'."}")
+              "#{client.proxy.present? ? " Check that you have correctly specified your proxy server '#{client.proxy}' as well as your OpenShift server '#{args[1]}'." : " Check that you have correctly specified your OpenShift server '#{args[1]}'."}")
           rescue RHC::Rest::Exception
             raise
           rescue => e

@@ -278,6 +278,29 @@ module RHC::Commands
       0
     end
 
+    summary "SSH into the specified application"
+    syntax "<app> [--ssh path_to_ssh_executable]"
+    argument :app, "The name of the application you want to SSH into", ["-a", "--app app"], :context => :app_context
+    option ["--ssh PATH"], "Path to your SSH executable"
+    option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
+    alias_action 'ssh', :root_command => true
+    def ssh(app_name)
+      raise ArgumentError, "No application specified" unless app_name.present?
+      raise OptionParser::InvalidOption, "No system SSH available. Please use the --ssh option to specify the path to your SSH executable, or install SSH." unless options.ssh or has_ssh?
+
+      domain = rest_client.find_domain(options.namespace)
+      app = domain.find_application(app_name)
+
+      say "Connecting to #{app.ssh_string.to_s} ..."
+      if options.ssh
+        debug "Using user specified SSH: #{options.ssh}"
+        Kernel.send(:system, "#{options.ssh} #{app.ssh_string.to_s}")
+      else
+        debug "Using system ssh"
+        Kernel.send(:system, "ssh #{app.ssh_string.to_s}")
+      end
+    end
+
     summary "DEPRECATED use 'show <app> --state' instead"
     syntax "<app> [--namespace namespace] [--app app]"
     argument :app, "The name of the application you are getting information on", ["-a", "--app app"], :context => :app_context
@@ -431,6 +454,22 @@ module RHC::Commands
         `ping #{host} -n 2`
         $?.exitstatus == 0
         # :nocov:
+      end
+
+      # check the version of SSH that is installed
+      def ssh_version
+        @ssh_version ||= `ssh -V 2>&1`.strip
+      end
+
+      # return whether or not SSH is installed
+      def has_ssh?
+        @has_ssh ||= begin
+          @ssh_version = nil
+          ssh_version
+          $?.success?
+        rescue
+          false
+        end
       end
 
       def windows_nslookup_bug?(rest_app)
