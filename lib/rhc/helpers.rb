@@ -462,13 +462,8 @@ module RHC
         begin
           resolver = Resolv::Hosts.new
           resolver.getaddress host
-        rescue Resolv::ResolvError
         rescue => e
-          debug "Error resolving host with Resolv::Hosts"
-          debug "You can bypass this check with '--no-dns'."
-          debug "  #{e.class}"
-          debug "  #{e.message}"
-          debug "  #{e.backtrace}"
+          debug "Error while resolving with Resolv::Hosts: #{e.message}(#{e.class})\n  #{e.backtrace.join("\n  ")}"
         end
       end
       # :nocov:
