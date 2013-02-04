@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.4.4
+Version: 1.4.5
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -100,6 +100,19 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Feb 04 2013 Adam Miller <admiller@redhat.com> 1.4.5-1
+- Some stylistic tweaks - you don't need --dryrun because you can stub
+  themethods directly.  Also fail fast on invalid arguments.
+  (ccoleman@redhat.com)
+- fixing tests and code so that tests will pass using dryrun
+  (cdaley1981+github@gmail.com)
+- making updates and writing tests for new rhc app ssh command
+  (cdaley1981+github@gmail.com)
+- updating rhc app ssh command code (cdaley1981+github@gmail.com)
+- added rhc app ssh <app> command to ssh into application
+  (cdaley1981+github@gmail.com)
+- Fix cartridge steps broken by my commit (ccoleman@redhat.com)
+
 * Fri Feb 01 2013 Adam Miller <admiller@redhat.com> 1.4.4-1
 - Merge pull request #291 from
   smarterclayton/search_cartridge_names_consistently
