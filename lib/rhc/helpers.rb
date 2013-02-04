@@ -458,9 +458,38 @@ module RHC
 
     def hosts_file_contains?(host)
       # :nocov:
-      resolver = Resolv::Hosts.new
-      resolver.getaddress host
-    rescue Resolv::ResolvError
+      with_tolerant_encoding do
+        begin
+          resolver = Resolv::Hosts.new
+          resolver.getaddress host
+        rescue Resolv::ResolvError
+        rescue => e
+          debug "Error resolving host with Resolv::Hosts"
+          debug "You can bypass this check with '--no-dns'."
+          debug "  #{e.class}"
+          debug "  #{e.message}"
+          debug "  #{e.backtrace}"
+        end
+      end
+      # :nocov:
+    end
+    
+    def with_tolerant_encoding(&block)
+      # :nocov:
+      if RUBY_VERSION.to_f >= 1.9
+        orig_default_internal = Encoding.default_internal
+        Encoding.default_internal = 'ISO-8859-1'
+      else
+        orig_default_kcode = $KCODE
+        $KCODE = 'N'
+      end
+      yield
+    ensure
+      if RUBY_VERSION.to_f >= 1.9
+        Encoding.default_internal = orig_default_internal
+      else
+        $KCODE = orig_default_kcode
+      end
       # :nocov:
     end
 
