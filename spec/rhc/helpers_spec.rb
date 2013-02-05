@@ -335,18 +335,17 @@ describe RHC::Helpers do
     
     context "when hosts file has the desired host" do
       it "does not raise error" do
-        puts subject.hosts_file_contains?(existent_host)
-        lambda {
+        expect {
           subject.hosts_file_contains?(existent_host)
-        }.should_not raise_error
+        }.to_not raise_error
       end
     end
 
     context "when hosts file does not have the desired host" do
       it "does not raise error" do
-        lambda {
+        expect {
           subject.hosts_file_contains?(nonexistent_host)
-        }.should_not raise_error
+        }.to_not raise_error
       end
     end
   end
