@@ -457,7 +457,6 @@ module RHC
     end
 
     def hosts_file_contains?(host)
-      # :nocov:
       with_tolerant_encoding do
         begin
           resolver = Resolv::Hosts.new
@@ -466,7 +465,6 @@ module RHC
           debug "Error while resolving with Resolv::Hosts: #{e.message}(#{e.class})\n  #{e.backtrace.join("\n  ")}"
         end
       end
-      # :nocov:
     end
     
     def with_tolerant_encoding(&block)

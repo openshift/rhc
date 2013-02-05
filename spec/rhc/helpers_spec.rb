@@ -8,6 +8,7 @@ require 'highline/import'
 require 'rhc/config'
 require 'rhc/helpers'
 require 'date'
+require 'resolv'
 
 describe RHC::Helpers do
   before(:each) do
@@ -318,6 +319,35 @@ describe RHC::Helpers do
       Net::SSH::KeyFactory.should_receive(:load_public_key).with('1').and_raise(Net::SSH::Exception.new("An error"))
       subject.should_receive(:error).with('An error')
       subject.fingerprint_for_local_key('1').should be_nil
+    end
+  end
+  
+  context "Resolv helper" do
+    let(:resolver) { Object.new }
+    let(:existent_host) { 'real_host' }
+    let(:nonexistent_host) { 'fake_host' }
+    
+    before :all do
+      Resolv::Hosts.stub(:new) { resolver }
+      resolver.stub(:getaddress).with(existent_host)   { existent_host }
+      resolver.stub(:getaddress).with(nonexistent_host){ Resolv::ResolvError }
+    end
+    
+    context "when hosts file has the desired host" do
+      it "does not raise error" do
+        puts subject.hosts_file_contains?(existent_host)
+        lambda {
+          subject.hosts_file_contains?(existent_host)
+        }.should_not raise_error
+      end
+    end
+
+    context "when hosts file does not have the desired host" do
+      it "does not raise error" do
+        lambda {
+          subject.hosts_file_contains?(nonexistent_host)
+        }.should_not raise_error
+      end
     end
   end
 
