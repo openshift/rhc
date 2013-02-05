@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.4.5
+Version: 1.4.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -100,6 +100,12 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Feb 05 2013 Adam Miller <admiller@redhat.com> 1.4.6-1
+- Merge pull request #296 from
+  smarterclayton/bug_903057_use_system_path_for_errors
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 903057 - Use system_path for files (ccoleman@redhat.com)
+
 * Mon Feb 04 2013 Adam Miller <admiller@redhat.com> 1.4.5-1
 - Some stylistic tweaks - you don't need --dryrun because you can stub
   themethods directly.  Also fail fast on invalid arguments.
