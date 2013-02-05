@@ -82,13 +82,17 @@ module RHC
         auth.send(:password)
       end
 
+      def print_dot
+        $terminal.instance_variable_get(:@output).print('.')
+      end
+
     private
-    
+
     # cache SSH keys from the REST client
     def ssh_keys
       @ssh_keys ||= rest_client.sshkeys
     end
-    
+
     # clear SSH key cache
     def clear_ssh_keys_cache
       @ssh_keys = nil
@@ -377,10 +381,20 @@ module RHC
     def setup_test_stage
       say "Checking common problems "
       tests = private_methods.select {|m| m.to_s.start_with? 'test_'}
+      failed = false
       tests.sort.each do |test|
-        send(test)
+        begin
+          send(test)
+          print_dot unless failed
+          true
+        rescue => e
+          say "\n" unless failed
+          failed = true
+          paragraph{ error e.message }
+          false
+        end
       end.tap do |pass|
-        success(' done') if pass
+        success(' done') if !failed
       end
 
       true
@@ -398,32 +412,27 @@ module RHC
       pub_key_file = RHC::Config.ssh_pub_key_file_path
       private_key_file = RHC::Config.ssh_priv_key_file_path
       if File.exist?(private_key_file)
-        report_result (File.exist?(private_key_file) and File.stat(private_key_file).mode.to_s(8) =~ /[4-7]00$/),
-          "#{private_key_file} should not be accessible by anyone but the current user"
-      else
-        #:nocov:
-        true
-        #:nocov:
+        unless File.stat(private_key_file).mode.to_s(8) =~ /[4-7]00$/
+          raise "Your private SSH key file should be set as readable only to yourself.  Please run 'chmod 600 #{system_path(private_key_file)}'"
+        end
       end
+      true
     end
 
     # test connectivity an app
     def test_ssh_connectivity
-      unless ssh_key_uploaded?
-        return true
-      end
-      
+      return true unless ssh_key_uploaded?
+
       applications.take(1).each do |app|
         begin
           ssh = Net::SSH.start(app.host, app.uuid, :timeout => 60)
-          return true
         rescue => e
-          report_result(ssh, "An SSH connection could not be established to #{app.host}. Your SSH configuration may not be correct, or the application may not be responding. #{e.message} (#{e.class})", false)
-          return false
+          raise "An SSH connection could not be established to #{app.host}. Your SSH configuration may not be correct, or the application may not be responding. #{e.message} (#{e.class})"
         ensure
           ssh.close if ssh
         end
       end
+      true
     end
 
     ###
