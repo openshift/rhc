@@ -417,18 +417,19 @@ module RHC::Commands
         Kernel.sleep 5
 
         # Now start checking for DNS
-        for i in 0..MAX_RETRIES-1
-          found = host_exists?(host) || hosts_file_contains?(host)
-          break if found
+        host_found = hosts_file_contains?(host) or
+        1.upto(MAX_RETRIES) { |i|
+          host_found = host_exists?(host)
+          break found if host_found
 
-          say "    retry # #{i+1} - Waiting for DNS: #{host}"
+          say "    retry # #{i} - Waiting for DNS: #{host}"
           Kernel.sleep sleep_time.to_i
           sleep_time *= DEFAULT_DELAY_THROTTLE
-        end
+        }
 
         debug "End checking for application dns @ '#{host} - found=#{found}'"
 
-        found
+        host_found
       end
 
       def enable_jenkins?
