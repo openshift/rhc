@@ -56,12 +56,7 @@ describe RHC::Wizard do
       subject.should_receive(:ssh_key_uploaded?).and_return(true)
       subject.should_receive(:applications).and_return([app])
       Net::SSH.should_receive(:start).and_raise(StandardError.new('an_error'))
-      subject.should_receive(:report_result) do |ssh, msg|
-        ssh.should be_nil
-        msg.should match('An SSH connection could not be established')
-        msg.should match('an_error')
-      end
-      subject.send(:test_ssh_connectivity).should be_false
+      expect{ subject.send(:test_ssh_connectivity) }.to raise_error(RuntimeError, /An SSH connection could not be established to foo.com/)
     end
   end
 
