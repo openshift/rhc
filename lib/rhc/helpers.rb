@@ -254,14 +254,6 @@ module RHC
       count == 1 ? "#{count} #{s}" : "#{count} #{s}s"
     end
 
-    ## report a result (true/false) and return result
-    ## if the result is false, msg is displayed
-    def report_result(result, msg, fatal = true)
-      result ? $terminal.instance_variable_get(:@output).print('.') : error(msg)
-      # ignore the result if non-fatal
-      fatal ? result : true
-    end
-
     # given an array of arrays "items", construct an array of strings that can
     # be used to print in tabular form.
     def table(items, opts={}, &block)
