@@ -66,7 +66,9 @@ module RHC::Commands
 
     UP_TO_256 = /25[0-5]|2[0-4][0-9]|[01]?(?:[0-9][0-9]?)/
     UP_TO_65535 = /6553[0-5]|655[0-2][0-9]|65[0-4][0-9][0-9]|6[0-4][0-9][0-9][0-9]|[0-5]?(?:[0-9][0-9]{0,3})/
-    IP_AND_PORT = /\b(#{UP_TO_256}(?:\.#{UP_TO_256}){3})\:(#{UP_TO_65535})\b/
+    # 'host' part is a bit lax; we rely on 'rhc-list-ports' to hand us a reasonable output
+    # about the host information, be it numeric or FQDN in IPv4 or IPv6.
+    HOST_AND_PORT = /(.+):(#{UP_TO_65535})\b/
 
     summary "Forward remote ports to the workstation"
     syntax "<application>"
@@ -96,7 +98,7 @@ module RHC::Commands
                 raise RHC::PermissionDeniedException.new "Permission denied." if line =~ /permission denied/i
                 # ...and also which services are available for the application
                 # for us to forward ports for.
-                if line =~ /\A\s*(\S+) -> #{IP_AND_PORT}/
+                if line =~ /\A\s*(\S+) -> #{HOST_AND_PORT}\z/
                   debug fs = ForwardingSpec.new($1, $2, $3.to_i)
                   forwarding_specs << fs
                 else
