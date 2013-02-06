@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.4.6
+Version: 1.4.7
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -100,6 +100,17 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Feb 06 2013 Adam Miller <admiller@redhat.com> 1.4.7-1
+- Merge pull request #297 from BanzaiMan/dev/hasari/bz907742
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 907742 (asari.ruby@gmail.com)
+- Merge pull request #295 from BanzaiMan/bz903403 (dmcphers@redhat.com)
+- Clean up (asari.ruby@gmail.com)
+- Specs for RHC::Helpers.hosts_file_contains? (asari.ruby@gmail.com)
+- Spec for Bug 903403. (asari.ruby@gmail.com)
+- Tweak error message. (asari.ruby@gmail.com)
+- Bug 903403 (asari.ruby@gmail.com)
+
 * Tue Feb 05 2013 Adam Miller <admiller@redhat.com> 1.4.6-1
 - Merge pull request #296 from
   smarterclayton/bug_903057_use_system_path_for_errors
