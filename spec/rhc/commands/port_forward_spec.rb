@@ -139,19 +139,28 @@ describe RHC::Commands::PortForward do
     end
 
     context 'when port forwarding a scaled app with ports to forward' do
+      let(:haproxy_host_1) { '127.0.0.1' }
+      let(:haproxy_host_2) { '127.0.0.2' }
+      let(:mongo_host) { '51125bb94a-test907742.dev.rhcloud.com' }
+      let(:ipv6_host) { '::1' }
       before(:each) do
         Net::SSH.should_receive(:start).with(@uri.host, @uri.user).and_yield(@ssh).twice
-        @ssh.should_receive(:exec!).with("rhc-list-ports").and_yield(nil, :stderr, "httpd -> 127.0.0.1:8080\nhttpd -> 127.0.0.2:8080")
+        @ssh.should_receive(:exec!).with("rhc-list-ports").
+          and_yield(nil, :stderr, "httpd -> #{haproxy_host_1}:8080\nhttpd -> #{haproxy_host_2}:8080\nmongodb -> #{mongo_host}:35541\nmysqld -> #{ipv6_host}:3306")
         forward = mock(Net::SSH::Service::Forward)
         @ssh.should_receive(:forward).at_least(3).times.and_return(forward)
         if mac?
-          forward.should_receive(:local).with(8080, '127.0.0.1', 8080)
-          forward.should_receive(:local).with(8080, '127.0.0.2', 8080).and_raise(Errno::EADDRINUSE)
-          forward.should_receive(:local).with(8081, '127.0.0.2', 8080)
+          forward.should_receive(:local).with(8080, haproxy_host_1, 8080)
+          forward.should_receive(:local).with(8080, haproxy_host_2, 8080).and_raise(Errno::EADDRINUSE)
+          forward.should_receive(:local).with(8081, haproxy_host_2, 8080)
+          forward.should_receive(:local).with(35541, mongo_host, 35541)
+          forward.should_receive(:local).with(3306, ipv6_host, 3306)
         else
-          forward.should_receive(:local).with('127.0.0.1', 8080, '127.0.0.1', 8080)
-          forward.should_receive(:local).with('127.0.0.2', 8080, '127.0.0.2', 8080).and_raise(Errno::EADDRINUSE)
-          forward.should_receive(:local).with('127.0.0.2', 8081, '127.0.0.2', 8080)
+          forward.should_receive(:local).with(haproxy_host_1, 8080, haproxy_host_1, 8080)
+          forward.should_receive(:local).with(haproxy_host_2, 8080, haproxy_host_2, 8080).and_raise(Errno::EADDRINUSE)
+          forward.should_receive(:local).with(haproxy_host_2, 8081, haproxy_host_2, 8080)
+          forward.should_receive(:local).with(mongo_host, 35541, mongo_host, 35541)
+          forward.should_receive(:local).with(ipv6_host, 3306, ipv6_host, 3306)
         end
         @ssh.should_receive(:loop).and_raise(Interrupt.new)
       end
