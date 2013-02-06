@@ -2,6 +2,7 @@ require 'spec_helper'
 require 'rest_spec_helper'
 require 'rhc/commands/app'
 require 'rhc/config'
+require 'resolv'
 
 describe RHC::Commands::App do
   let!(:rest_client){ MockRestClient.new }
@@ -58,6 +59,18 @@ describe RHC::Commands::App do
       it { expect { run }.should exit_with_code(0) }
       it { run_output.should match("Success") }
       it { run_output.should match("Cartridges: mock_standalone_cart-1\n") }
+    end
+
+    context 'when Hosts resolver raises an Exception' do
+      let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart-1', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+      before :each do
+        resolver = Object.new
+        Resolv::Hosts.should_receive(:new).and_return(resolver)
+        resolver.should_receive(:getaddress).with('app1-mockdomain.fake.foo').and_raise(ArgumentError)
+      end
+      
+      it { expect { run }.should exit_with_code(0) }
+      it { run_output.should match("Success") }
     end
 
     context 'when run with multiple carts' do

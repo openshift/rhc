@@ -449,10 +449,32 @@ module RHC
     end
 
     def hosts_file_contains?(host)
+      with_tolerant_encoding do
+        begin
+          resolver = Resolv::Hosts.new
+          resolver.getaddress host
+        rescue => e
+          debug "Error while resolving with Resolv::Hosts: #{e.message}(#{e.class})\n  #{e.backtrace.join("\n  ")}"
+        end
+      end
+    end
+    
+    def with_tolerant_encoding(&block)
       # :nocov:
-      resolver = Resolv::Hosts.new
-      resolver.getaddress host
-    rescue Resolv::ResolvError
+      if RUBY_VERSION.to_f >= 1.9
+        orig_default_internal = Encoding.default_internal
+        Encoding.default_internal = 'ISO-8859-1'
+      else
+        orig_default_kcode = $KCODE
+        $KCODE = 'N'
+      end
+      yield
+    ensure
+      if RUBY_VERSION.to_f >= 1.9
+        Encoding.default_internal = orig_default_internal
+      else
+        $KCODE = orig_default_kcode
+      end
       # :nocov:
     end
 
