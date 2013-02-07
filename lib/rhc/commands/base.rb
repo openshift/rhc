@@ -28,8 +28,16 @@ class RHC::Commands::Base
     # the output (or failures) into exceptions and
     # formatted object output.  Most interactions 
     # should be through this call pattern.
-    def rest_client
-      @rest_client ||= client_from_options(:auth => RHC::Auth::Basic.new(options))
+    def rest_client(opts={})
+      @rest_client ||= begin
+          auth = RHC::Auth::Basic.new(options)
+          auth = RHC::Auth::Token.new(options, auth, token_store)
+          client_from_options(:auth => auth)
+        end
+    end
+
+    def token_store
+      @token_store ||= RHC::Auth::TokenStore.new(config.home_conf_path)
     end
 
     def help(*args)

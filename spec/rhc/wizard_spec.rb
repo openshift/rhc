@@ -27,6 +27,11 @@ describe RHC::Wizard do
     it{ subject.send(:finalize_stage).should be_true }
   end
 
+  describe "#token_store" do
+    subject{ RHC::Wizard.new(config, options) }
+    it{ subject.send(:token_store).should be_a(RHC::Auth::TokenStore) }
+  end
+
   describe "#test_ssh_connectivity" do
     subject{ RHC::Wizard.new(config, options) }
     let(:app) do
@@ -68,28 +73,36 @@ describe RHC::Wizard do
 
     subject{ RHC::Wizard.new(config, options) }
 
-    def expect_client_test
+    def expect_client_test(with_sessions=false)
       subject.should_receive(:new_client_for_options).ordered.and_return(rest_client)
       rest_client.should_receive(:api).ordered
       rest_client.should_receive(:user).ordered.and_return(true)
+      rest_client.should_receive(:supports_sessions?).ordered.and_return(with_sessions)
     end
     def expect_raise_from_api(error)
-      #subject.send(:auth).should_receive(:ask).with("Using #{user} to login to openshift.redhat.com").and_return(username).ordered
-      #subject.send(:auth).should_receive(:ask).with("Password: ").and_return(password).ordered
       subject.should_receive(:new_client_for_options).ordered.and_return(rest_client)
       rest_client.should_receive(:api).ordered.and_raise(error)
     end
 
     it "should prompt for user and password" do
-      #auth.should_receive(:ask).with("Login to openshift.redhat.com: ").ordered.and_return(user)
-      #auth.should_receive(:ask).with("Password: ").ordered.and_return(password)
       expect_client_test
-
       subject.send(:login_stage).should be_true
+    end
+
+    context "with token" do
+      let(:token){ 'a_test_value' }
+      let(:default_options){ {:token => token, :rhlogin => user} }
+      before{ subject.should_receive(:say).with(/Using an existing token for #{user} to login to /).ordered }
+
+      it "should continue without prompt" do
+        expect_client_test
+        subject.send(:login_stage).should be_true
+      end
     end
 
     context "with credentials" do
       let(:default_options){ {:rhlogin => user, :password => password} }
+      before{ subject.should_receive(:say).with(/Using #{user} to login to /).ordered }
 
       it "should warn about a self signed cert error" do
         expect_raise_from_api(RHC::Rest::SelfSignedCertificate.new('reason', 'message'))
@@ -130,6 +143,36 @@ describe RHC::Wizard do
 
         subject.send(:login_stage).should be_nil
         options.insecure.should be_false
+      end
+
+      context "with a server that supports tokens" do
+        before{ expect_client_test(true) }
+        let(:token){ 'a_test_value' }
+        let(:auth_token){ mock(:token => token, :expires_in_seconds => 100) }
+        let(:store){ mock() }
+        before{ RHC::Auth::TokenStore.should_receive(:new).any_number_of_times.and_return(store) }
+
+        it "should not generate a token if the user does not request it" do
+          subject.should_receive(:info).with(/OpenShift can create and store a token on disk/).ordered
+          subject.should_receive(:agree).with(/Generate a token now?/).ordered.and_return(false)
+
+          subject.send(:login_stage).should be_true
+          options.token.should be_nil
+        end
+
+        it "should generate a token if the user requests it" do
+          subject.should_receive(:info).with(/OpenShift can create and store a token on disk/).ordered
+          subject.should_receive(:agree).with(/Generate a token now?/).ordered.and_return(true)
+          subject.should_receive(:say).with(/Generating an authorization token for this client /).ordered
+          rest_client.should_receive(:new_session).ordered.and_return(auth_token)
+          store.should_receive(:put).with(user, subject.send(:openshift_server), token).ordered.and_return(true)
+          subject.should_receive(:new_client_for_options).ordered.and_return(rest_client)
+          rest_client.should_receive(:user).ordered.and_return(true)
+          subject.should_receive(:success).with(/lasts 1 minute/).ordered
+
+          subject.send(:login_stage).should be_true
+          options.token.should == token
+        end
       end
     end
   end

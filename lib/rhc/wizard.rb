@@ -71,15 +71,27 @@ module RHC
         })
       end
 
-      def auth
-        @auth ||= RHC::Auth::Basic.new(options)
+      def core_auth
+        @core_auth ||= RHC::Auth::Basic.new(options)
+      end
+
+      def auth(reset=false)
+        @auth = nil if reset
+        @auth ||= begin
+            if options.token
+              RHC::Auth::Token.new(options, core_auth, token_store)
+            else
+              core_auth
+            end
+          end
+      end
+
+      def token_store
+        @token_store ||= RHC::Auth::TokenStore.new(config.home_conf_path)
       end
 
       def username
-        auth.send(:username)
-      end
-      def password
-        auth.send(:password)
+        auth.username if auth.respond_to?(:username)
       end
 
       def print_dot
@@ -109,7 +121,11 @@ module RHC
     end
 
     def login_stage
-      say "Using #{options.rhlogin} to login to #{openshift_server}" if options.rhlogin
+      if options.token
+        say "Using an existing token for #{options.rhlogin} to login to #{openshift_server}"
+      elsif options.rhlogin
+        say "Using #{options.rhlogin} to login to #{openshift_server}"
+      end
 
       self.rest_client = new_client_for_options
 
@@ -137,6 +153,23 @@ module RHC
       end
 
       self.user = rest_client.user
+
+      if rest_client.supports_sessions? && !options.token
+        paragraph do 
+          info "OpenShift can create and store a token on disk which allows to you to access the server without using your password. The key is stored in your home directory and should be kept secret.  You can delete the key at any time by running 'rhc logout'."
+          if agree "Generate a token now? (yes|no) "
+            say "Generating an authorization token for this client ... "
+
+            token = rest_client.new_session
+            options.token = token.token
+            self.auth(true).save(token.token)
+            self.rest_client = new_client_for_options
+            self.user = rest_client.user
+
+            success "lasts #{distance_of_time_in_words(token.expires_in_seconds)}"
+          end
+        end
+      end
       true
     end
 
@@ -152,7 +185,7 @@ module RHC
 
         changed = Commander::Command::Options.new(options)
         changed.rhlogin = username
-        changed.password = password
+        changed.password = nil
 
         FileUtils.mkdir_p File.dirname(config.path)
         config.save!(changed)
@@ -211,9 +244,8 @@ module RHC
           return nil
         end
 
-        hostname = Socket.gethostname.gsub(/\..*\z/,'')
         userkey = username ? username.gsub(/@.*/, '') : ''
-        pubkey_base_name = "#{userkey}#{hostname}".gsub(/[^A-Za-z0-9]/,'').slice(0,16)
+        pubkey_base_name = "#{userkey}#{hostname.gsub(/\..*\z/,'')}".gsub(/[^A-Za-z0-9]/,'').slice(0,16)
         default_name = find_unique_key_name(
           :keys => ssh_keys,
           :base => pubkey_base_name,
@@ -517,6 +549,10 @@ EOF
 
     def debug?
       @debug
+    end
+
+    def hostname
+      Socket.gethostname
     end
 
     protected

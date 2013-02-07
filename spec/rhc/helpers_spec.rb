@@ -54,6 +54,8 @@ describe RHC::Helpers do
   it("should return true on success"){ subject.success('anything').should be_true }
   it("should return true on success"){ subject.warn('anything').should be_true }
 
+  it("should invoke debug from debug_error"){ expect{ subject.debug_error(mock(:class => "Mock", :message => 'msg', :backtrace => [])) }.to call(:debug).on(subject).with("msg (Mock)\n  ") }
+
   it("should draw a table") do
     subject.table([[10,2], [3,40]]) do |i|
       i.map(&:to_s)
@@ -69,6 +71,18 @@ describe RHC::Helpers do
     d.day.should == 24
     d.month.should == 6
     d.year.should == 2012
+  end
+
+  describe "#distance_of_time_in_words" do
+    it{ subject.distance_of_time_in_words(0, 1).should == 'less than 1 minute' }
+    it{ subject.distance_of_time_in_words(0, 60).should == '1 minute' }
+    it{ subject.distance_of_time_in_words(0, 130).should == '2 minutes' }
+    it{ subject.distance_of_time_in_words(0, 50*60).should == 'about 1 hour' }
+    it{ subject.distance_of_time_in_words(0, 3*60*60).should == 'about 3 hours' }
+    it{ subject.distance_of_time_in_words(0, 25*60*60).should == 'about 1 day' }
+    it{ subject.distance_of_time_in_words(0, 3*24*60*60).should == '3 days' }
+    it{ subject.distance_of_time_in_words(0, 40*24*60*60).should == 'about 1 month' }
+    it{ subject.distance_of_time_in_words(0, 10*30*24*60*60).should == 'about 10 months' }
   end
 
   context 'using the current time' do

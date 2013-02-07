@@ -17,7 +17,6 @@ module RHC
 
       #Find Key by name
       def find_key(name)
-        #TODO do a regex caomparison
         keys.detect { |key| key.name == name }
       end
 

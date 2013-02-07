@@ -58,6 +58,29 @@ module RHC
       "Unknown date"
     end
 
+    def distance_of_time_in_words(from_time, to_time = 0)
+      from_time = from_time.to_time if from_time.respond_to?(:to_time)
+      to_time = to_time.to_time if to_time.respond_to?(:to_time)
+      distance_in_minutes = (((to_time - from_time).abs)/60).round
+      distance_in_seconds = ((to_time - from_time).abs).round
+
+      case distance_in_minutes
+        when 0..1
+          return distance_in_minutes == 0 ?
+                 "less than 1 minute" :
+                 "#{distance_in_minutes} minute"
+
+        when 2..44           then "#{distance_in_minutes} minutes"
+        when 45..89          then "about 1 hour"
+        when 90..1439        then "about #{(distance_in_minutes.to_f / 60.0).round} hours"
+        when 1440..2519      then "about 1 day"
+        when 2520..43199     then "#{(distance_in_minutes.to_f / 1440.0).round} days"
+        when 43200..86399    then "about 1 month"
+        else
+          "about #{(distance_in_minutes.to_f / 43200.0).round} months"
+      end
+    end
+
     def datetime_rfc3339(s)
       DateTime.strptime(s, '%Y-%m-%dT%H:%M:%S%z')
       # Replace with d = DateTime.rfc3339(s)
@@ -74,8 +97,11 @@ module RHC
     #
     # Global config
     #
+
     global_option '-l', '--rhlogin LOGIN', "OpenShift login"
     global_option '-p', '--password PASSWORD', "OpenShift password"
+    global_option '--token TOKEN', "An authorization token for accessing your account.", :context => :token_context
+
     global_option '-d', '--debug', "Turn on debugging", :hide => true
 
     global_option '--server NAME', String, 'An OpenShift server hostname (default: openshift.redhat.com)'
@@ -159,6 +185,9 @@ module RHC
 
     def debug(msg)
       $stderr.puts "DEBUG: #{msg}" if debug?
+    end
+    def debug_error(e)
+      debug "#{e.message} (#{e.class})\n  #{e.backtrace.join("\n  ")}"
     end
     def debug?
       false

@@ -1,7 +1,5 @@
 module RHC::Auth
   class Basic
-    attr_reader :cookie
-
     def initialize(*args)
       if args[0].is_a?(String) or args.length > 1
         @username, @password = args
@@ -15,30 +13,37 @@ module RHC::Auth
     end
 
     def to_request(request)
-      (request[:cookies] ||= {})[:rh_sso] = cookie if cookie
       request[:user] ||= username || (request[:lazy_auth] != true && ask_username) || nil
       request[:password] ||= password || (username? && request[:lazy_auth] != true && ask_password) || nil
       request
     end
 
-    def retry_auth?(response)
+    def retry_auth?(response, client)
       if response.status == 401
-        @cookie = nil
+        credentials_rejected
+      else
+        false
+      end
+    end
+
+    def can_authenticate?
+      username? and not (password.nil? and @skip_interactive and @no_interactive)
+    end
+
+    attr_reader :username
+
+    protected
+      include RHC::Helpers
+      attr_reader :options, :password
+
+      def credentials_rejected
         error "Username or password is not correct" if username? && password
         unless @skip_interactive or @no_interactive
           ask_username unless username?
           ask_password
           true
         end
-      else
-        @cookie ||= Array(response.cookies).inject(nil){ |v, c| c.name == 'rh_sso' ? c.value : v }
-        false
       end
-    end
-
-    protected
-      include RHC::Helpers
-      attr_reader :options, :username, :password
 
       def ask_username
         @username = ask("Login to #{openshift_server}: ") unless @no_interactive

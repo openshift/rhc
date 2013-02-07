@@ -33,6 +33,12 @@ module RHC
         @preferred_api_versions ||= CLIENT_API_VERSIONS
         @debug ||= false
 
+        if options[:token]
+          self.headers[:authorization] = "Bearer #{options.delete(:token)}"
+          options.delete(:user)
+          options.delete(:password)
+        end
+
         @auth = options.delete(:auth)
 
         self.headers.merge!(options.delete(:headers)) if options[:headers]
@@ -49,13 +55,14 @@ module RHC
         (0..(1.0/0.0)).each do |i|
           begin
             client, args = new_request(options.dup)
+            auth = options[:auth] || self.auth
 
             #debug "Request: #{client.object_id} #{args.inspect}\n-------------" if debug?
             response = client.request(*(args << true))
             #debug "Response: #{response.status} #{response.headers.inspect}\n#{response.content}\n-------------" if debug? && response
 
             next if retry_proxy(response, i, args, client)
-            auth.retry_auth?(response) and redo if auth
+            auth.retry_auth?(response, self) and redo if auth
             handle_error!(response, args[1], client) unless response.ok?
 
             break (if block_given?
@@ -68,7 +75,7 @@ module RHC
               debug "Response: #{e.res.status} #{e.res.headers.inspect}\n#{e.res.content}\n-------------" if debug?
 
               next if retry_proxy(e.res, i, args, client)
-              auth.retry_auth?(e.res) and redo if auth
+              auth.retry_auth?(e.res, self) and redo if auth
               handle_error!(e.res, args[1], client)
             end
             raise ConnectionException.new(
@@ -237,6 +244,36 @@ module RHC
         key.destroy
       end
 
+      def supports_sessions?
+        api.supports? 'ADD_AUTHORIZATION'
+      end
+
+      def authorizations
+        if api.supports? 'LIST_AUTHORIZATIONS'
+          api.rest_method 'LIST_AUTHORIZATIONS'
+        else
+          []
+        end
+      end
+
+      def new_session(options={})
+        if supports_sessions?
+          api.rest_method('ADD_AUTHORIZATION', {:scope => 'session', :note => 'rhc session', :reuse => true}, options)
+        end
+      end
+
+      def delete_authorizations
+        if supports_sessions?
+          api.rest_method('LIST_AUTHORIZATIONS', nil, {:method => :delete})
+        end
+      end
+
+      def delete_authorization(token)
+        if supports_sessions?
+          api.rest_method('SHOW_AUTHORIZATION', nil, {:method => :delete, :params => {':id' => token}})
+        end
+      end
+
       def logout
         #TODO logout
         debug "Logout/Close client"
@@ -303,18 +340,20 @@ module RHC
         def new_request(options)
           options.reverse_merge!(self.options)
 
-          headers = (self.headers.to_a + (options.delete(:headers) || []).to_a).inject({}) do |h,(k,v)|
-            v = "application/#{v}" if k == :accept && v.is_a?(Symbol)
-            h[k.to_s.downcase.gsub(/_/, '-')] = v
-            h
-          end
-
           options[:connect_timeout] ||= options[:timeout] || 120
           options[:receive_timeout] ||= options[:timeout] || 0
           options[:send_timeout] ||= options[:timeout] || 0
           options[:timeout] = nil
 
-          auth.to_request(options) if auth
+          if auth = options[:auth] || self.auth
+            auth.to_request(options)
+          end
+
+          headers = (self.headers.to_a + (options.delete(:headers) || []).to_a).inject({}) do |h,(k,v)|
+            v = "application/#{v}" if k == :accept && v.is_a?(Symbol)
+            h[k.to_s.downcase.gsub(/_/, '-')] = v
+            h
+          end
 
           query = options.delete(:query) || {}
           payload = options.delete(:payload)
@@ -360,6 +399,10 @@ module RHC
             data.map{ |json| Domain.new(json, self) }
           when 'domain'
             Domain.new(data, self)
+          when 'authorization'
+            Authorization.new(data, self)
+          when 'authorizations'
+            data.map{ |json| Authorization.new(json, self) }
           when 'applications'
             data.map{ |json| Application.new(json, self) }
           when 'application'
@@ -388,7 +431,7 @@ module RHC
           "The server did not respond correctly. This may be an issue "\
           "with the server configuration or with your connection to the "\
           "server (such as a Web proxy or firewall)."\
-          "#{client.proxy.present? ? " Please verify that your proxy server is working correctly (#{client.proxy}) and that you can access the OpenShift server #{url}" : "Please verify that you can access the OpenShift server #{url}"}"
+          "#{client.proxy.present? ? " Please verify that your proxy server is working correctly (#{client.proxy}) and that you can access the OpenShift server #{url}" : " Please verify that you can access the OpenShift server #{url}"}"
         end
 
         def handle_error!(response, url, client)

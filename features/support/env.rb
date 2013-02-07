@@ -97,6 +97,9 @@ def clean_applications(leave_domain = false)
   $namespace = nil unless leave_domain
   $keyed_users = []
 
+  client = RHC::Rest::Client.new(:url => $end_point, :user => $username, :password => $password, :verify_mode => OpenSSL::SSL::VERIFY_NONE)
+  $supports_auth_tokens = client.supports_sessions?
+
   users.each do |user|
     _log "\tUser: #{user}"
     client = RHC::Rest::Client.new(:url => $end_point, :user => user, :password => $password, :verify_mode => OpenSSL::SSL::VERIFY_NONE)
