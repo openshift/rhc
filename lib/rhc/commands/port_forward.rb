@@ -14,21 +14,19 @@ module RHC::Commands
       @service     = service
       @remote_host = remote_host
       @port_to     = port_to
-      @host_from   = mac? ? "localhost" : remote_host # forward locally on a Mac
+      @host_from   = 'localhost'
       @port_from   = port_from || port_to # match ports if possible
       @bound       = false
     end
 
     def to_cmd_arg
       # string to be used in a direct SSH command
-      mac? ? "-L #{port_from}:#{remote_host}:#{port_to}" : "-L #{remote_host}:#{port_from}:#{remote_host}:#{port_to}"
+      "-L #{port_from}:#{remote_host}:#{port_to}"
     end
 
     def to_fwd_args
       # array of arguments to be passed to Net::SSH::Service::Forward#local
-      args = [port_from.to_i, remote_host, port_to.to_i]
-      args.unshift(remote_host) unless mac?
-      args
+      [port_from.to_i, remote_host, port_to.to_i]
     end
 
     def bound?
