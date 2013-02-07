@@ -38,6 +38,7 @@ module RHC
       end
       alias :delete :destroy
 
+      # Deprecated: It is much faster to use rest_client.find_application(domain_name,app_name)
       def find_application(name, options={})
         if name.is_a?(Hash)
           options = name.merge(options)

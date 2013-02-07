@@ -150,9 +150,9 @@ describe RHC::Commands::App do
       it "should create a jenkins app and a regular app with an embedded jenkins client" do
         #puts run_output
         expect { run }.should exit_with_code(0)
-        jenkins_app = @domain.find_application("jenkins")
+        jenkins_app = rest_client.find_application(@domain.id,"jenkins")
         jenkins_app.cartridges[0].name.should == "jenkins-1.4"
-        app = @domain.find_application("app1")
+        app = rest_client.find_application(@domain.id,"app1")
         app.find_cartridge("jenkins-client-1.4")
       end
     end

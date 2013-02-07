@@ -177,9 +177,7 @@ module RHC::Commands
     argument :app, "The application you wish to delete", ["-a", "--app name"], :context => :app_context
     alias_action :destroy, :deprecated => true
     def delete(app)
-
-      rest_domain = rest_client.find_domain(options.namespace)
-      rest_app = rest_domain.find_application(app)
+      rest_app = rest_client.find_application(options.namespace,app)
 
       confirm_action "#{color("This is a non-reversible action! Your application code and data will be permanently deleted if you continue!", :yellow)}\n\nAre you sure you want to delete the application '#{app}'?"
 
@@ -262,17 +260,16 @@ module RHC::Commands
     option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
     option ["--state"], "Get the current state of the application's gears"
     def show(app_name)
-      domain = rest_client.find_domain(options.namespace)
-      app = domain.find_application(app_name)
+      rest_app = rest_client.find_application(options.namespace,app_name)
 
       if options.state
         results do
-          app.gear_groups.each do |gg|
+          rest_app.gear_groups.each do |gg|
             say "Gear group #{gg.cartridges.collect { |c| c['name'] }.join('+')} is #{gg.gears.first['state']}"
           end
         end
       else
-        display_app(app, app.cartridges)
+        display_app(rest_app, rest_app.cartridges)
       end
 
       0
@@ -288,16 +285,15 @@ module RHC::Commands
       raise ArgumentError, "No application specified" unless app_name.present?
       raise OptionParser::InvalidOption, "No system SSH available. Please use the --ssh option to specify the path to your SSH executable, or install SSH." unless options.ssh or has_ssh?
 
-      domain = rest_client.find_domain(options.namespace)
-      app = domain.find_application(app_name)
+      rest_app = rest_client.find_application(options.namespace,app_name)
 
-      say "Connecting to #{app.ssh_string.to_s} ..."
+      say "Connecting to #{rest_app.ssh_string.to_s} ..."
       if options.ssh
         debug "Using user specified SSH: #{options.ssh}"
-        Kernel.send(:system, "#{options.ssh} #{app.ssh_string.to_s}")
+        Kernel.send(:system, "#{options.ssh} #{rest_app.ssh_string.to_s}")
       else
         debug "Using system ssh"
-        Kernel.send(:system, "ssh #{app.ssh_string.to_s}")
+        Kernel.send(:system, "ssh #{rest_app.ssh_string.to_s}")
       end
     end
 
@@ -338,8 +334,7 @@ module RHC::Commands
       end
 
       def app_action(app, action, *args)
-        rest_domain = rest_client.find_domain(options.namespace)
-        rest_app = rest_domain.find_application(app)
+        rest_app = rest_client.find_application(options.namespace,app)
         result = rest_app.send action, *args
         result
       end

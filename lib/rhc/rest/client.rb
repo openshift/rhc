@@ -198,6 +198,28 @@ module RHC
         raise RHC::DomainNotFoundException.new("Domain #{id} does not exist")
       end
 
+      def find_application(domain,application)
+        begin
+          request({
+            :url => nested_app_link(domain,application).gsub(%r(([^:])//), '\1/'),
+            :method => "GET"
+          })
+        rescue RHC::Rest::ResourceNotFoundException => e
+          case (msg = e.message)
+          when /^Application/
+            raise RHC::ApplicationNotFoundException.new(msg)
+          when /^Domain/
+            # TODO: This doesn't exactly match what the broker returns
+            # The broker returns "Domain X not found"
+            raise RHC::DomainNotFoundException.new("Domain #{domain} does not exist")
+          end
+        end
+      end
+
+      def nested_app_link(domain,application)
+        "#{api.links['LIST_DOMAINS']['href']}/#{domain}/applications/#{application}"
+      end
+
       #Find Cartridge by name or regex
       def find_cartridges(name)
         debug "Finding cartridge #{name}"
