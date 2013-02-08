@@ -2,10 +2,20 @@
 Feature: Scaled Application Operations
 
   @init
-  Scenario: Scaled Application Creation
-    When a scaled php-5.3 application is created
+  Scenario Outline: Scaled Application Creation
+    When a scaled <php_version> application is created
     Then the application should be accessible
     Then the application should be scalable
+
+    @fedora-only
+    Scenario: Fedora 18
+      | php_version |
+      | php-5.4     |
+
+    @rhel-only
+    Scenario: RHEL
+      | php_version |
+      | php-5.3     |
 
   # The state in these examples should be able to be broken into before hooks when we update cucumber
   Scenario Outline: Running Scaled Application Commands
@@ -32,6 +42,14 @@ Feature: Scaled Application Operations
     And the <type> scaling value is set to <value>
     Then the <type> scaling value should be <value>
 
+    @fedora-only
+    Examples:
+      | cart    | type  | value |
+      | php-5.4 | min   |   1   |
+      | php-5.4 | max   |   5   |
+      | php-5.4 | max   |   -1  |
+
+    @rhel-only
     Examples:
       | cart    | type  | value |
       | php-5.3 | min   |   1   |
@@ -43,6 +61,12 @@ Feature: Scaled Application Operations
     And the <type> scaling value is set to <value>
     Then it should fail with code <code>
 
-    Examples:
+    @fedora-only
+    Examples: Fedora 18
+      | cart    | type  | value | code |
+      | php-5.4 | min   |   a   |  1   |
+
+    @rhel-only
+    Examples: RHEL
       | cart    | type  | value | code |
       | php-5.3 | min   |   a   |  1   |

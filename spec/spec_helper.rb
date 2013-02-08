@@ -282,7 +282,7 @@ module ClassSpecHelpers
 end
 
 module ExitCodeMatchers
-  Spec::Matchers.define :exit_with_code do |code|
+  RSpec::Matchers.define :exit_with_code do |code|
     actual = nil
     match do |block|
       begin
@@ -306,7 +306,7 @@ module ExitCodeMatchers
 end
 
 module CommanderInvocationMatchers
-  Spec::Matchers.define :call do |method|
+  RSpec::Matchers.define :call do |method|
     chain :on do |object|
       @object = object
     end
@@ -334,7 +334,7 @@ def mac?
   RbConfig::CONFIG['host_os'] =~ /^darwin/
 end
 
-Spec::Runner.configure do |config|
+RSpec.configure do |config|
   config.include(ExitCodeMatchers)
   config.include(CommanderInvocationMatchers)
   config.include(ClassSpecHelpers)

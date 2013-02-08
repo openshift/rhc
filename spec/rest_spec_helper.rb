@@ -4,7 +4,7 @@ require 'rhc/rest/mock'
 require 'rhc/exceptions'
 require 'base64'
 
-Spec::Matchers.define :have_same_attributes_as do |expected|
+RSpec::Matchers.define :have_same_attributes_as do |expected|
   match do |actual|
     (actual.instance_variables == expected.instance_variables) &&
       (actual.instance_variables.map { |i| instance_variable_get(i) } ==
@@ -26,6 +26,6 @@ module RestSpecHelper
   include RHC::Rest::Mock
 end
 
-Spec::Runner.configure do |configuration|
+RSpec.configure do |configuration|
   include(RestSpecHelper)
 end

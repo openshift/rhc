@@ -2,10 +2,21 @@
 Feature: Multiple Cartridge Tests
 
   @init
-  Scenario: Supporting Cartridge Added
-    Given an existing or new php-5.3 application with an embedded mysql-5.1 cartridge
+  Scenario Outline: Supporting Cartridge Added
+    Given an existing or new <php_version> application with an embedded mysql-5.1 cartridge
     When the phpmyadmin-3.4 cartridge is added
     Then the phpmyadmin-3.4 cartridge should be running
+
+    @fedora-only
+    Scenario: Fedora 18
+      | php_version |
+      | php-5.4     |
+
+    @rhel-only
+    Scenario: RHEL
+      | php_version |
+      | php-5.3     |
+
 
   Scenario: Conflicting Cartridge Fails
     Then adding the postgresql-8.5 cartridge should fail
