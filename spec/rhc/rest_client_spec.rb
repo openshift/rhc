@@ -216,7 +216,8 @@ module RHC
           end
         end
 
-        context "#find_application" do
+        # This tests the older hierarchical function for the domain model
+        context "domain #find_application" do
           before(:each) do
             stub_api_request(:any, client_links['LIST_DOMAINS']['relative']).
               to_return({ :body   => {
@@ -275,6 +276,74 @@ module RHC
           end
           it "Raises an excpetion when no matching applications can be found" do
             expect { client.domains[0].find_application('no_match') }.should raise_error(RHC::ApplicationNotFoundException)
+          end
+        end
+
+        # This tests the newer hierarchical function for the client
+        context "client #find_application" do
+          let(:domain_id) { 'mock_domain_0' }
+          let(:app_name)  { 'mock_app' }
+          let(:missing)   { 'no_match' }
+          before(:each) do
+            stub_api_request(:any, "#{client_links['LIST_DOMAINS']['relative']}#{domain_id}/applications/#{app_name}").
+              to_return({:body   => {
+                            :type => 'application',
+                            :data => {
+                              :domain_id       => domain_id,
+                              :name            => app_name,
+                              :creation_time   => Time.new.to_s,
+                              :uuid            => 1234,
+                              :aliases         => ['alias_1', 'alias_2'],
+                              :server_identity => 'mock_server_identity',
+                              :links           => mock_response_links(mock_app_links(domain_id,app_name)),
+                            }
+                          }.to_json,
+                          :status => 200
+                        })
+            stub_api_request(:any, "#{client_links['LIST_DOMAINS']['relative']}#{domain_id}/applications/#{missing}").
+              to_return({:body   => {
+                            :type => nil,
+                            :data => nil,
+                            :messages => [
+                              :exit_code => 101,
+                              :field => nil,
+                              :severity => 'error',
+                              :text => "Application '#{missing}' not found for domain '#{domain_id}'"
+                            ],
+                            :status => 'not_found'
+                          }.to_json,
+                          :status => 404
+                        })
+            stub_api_request(:any, "#{client_links['LIST_DOMAINS']['relative']}#{missing}/applications/#{app_name}").
+              to_return({:body   => {
+                            :type => nil,
+                            :data => nil,
+                            :messages => [
+                              :exit_code => 127,
+                              :field => nil,
+                              :severity => 'error',
+                              :text => "Domain #{missing} not found"
+                            ],
+                            :status => 'not_found'
+                          }.to_json,
+                          :status => 404
+                        })
+
+
+          end
+          it "returns application object for nested application IDs" do
+              match = client.find_application(domain_id, app_name)
+              match.class.should     == RHC::Rest::Application
+              match.name.should      == app_name
+              match.domain_id.should == domain_id
+              match.send(:links).should     ==
+                mock_response_links(mock_app_links(domain_id, app_name))
+          end
+          it "Raises an exception when no matching applications can be found" do
+            expect { client.find_application(domain_id,missing) }.should raise_error(RHC::ApplicationNotFoundException)
+          end
+          it "Raises an exception when no matching domain can be found" do
+            expect { client.find_application(missing,app_name) }.should raise_error(RHC::DomainNotFoundException)
           end
         end
 

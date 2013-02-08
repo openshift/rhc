@@ -382,6 +382,10 @@ module RHC::Rest::Mock
     def delete_key(name)
       @user.keys.delete_if { |key| key.name == name }
     end
+
+    def find_application(domain_name,app_name)
+      find_domain(domain_name).find_application(app_name)
+    end
   end
 
   class MockRestApi < RHC::Rest::Api
