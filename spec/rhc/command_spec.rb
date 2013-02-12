@@ -35,6 +35,8 @@ describe RHC::Commands::Base do
 
     let(:instance) { subject.new }
     let(:commands) { RHC::Commands.send(:commands) }
+    before{ @saved_commands = RHC::Commands.instance_variable_get(:@commands).dup }
+    after{ Kernel.send(:remove_const, subject) rescue nil; RHC::Commands.instance_variable_set(:@commands, @saved_commands) }
 
     context 'when dynamically instantiating without an object name' do
       subject { const_for(Class.new(RHC::Commands::Base) { def run; 1; end }) }
