@@ -95,5 +95,7 @@ module RHC
     class SelfSignedCertificate < CertificateVerificationFailed; end
 
     class SSLVersionRejected < SSLConnectionFailed; end
+
+    class MultipleCartridgeCreationNotSupported < Exception; end
   end
 end
