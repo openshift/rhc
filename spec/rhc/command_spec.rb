@@ -7,6 +7,12 @@ describe RHC::Commands::Base do
 
   before{ base_config }
 
+  before{ c = RHC::Commands.instance_variable_get(:@commands); @saved_commands = c && c.dup || nil }
+  after do 
+    (Kernel.send(:remove_const, subject) if subject.is_a?(Class)) rescue nil
+    RHC::Commands.instance_variable_set(:@commands, @saved_commands)
+  end
+
   describe '#object_name' do
     subject { described_class }
     its(:object_name) { should == 'base' }
@@ -35,8 +41,6 @@ describe RHC::Commands::Base do
 
     let(:instance) { subject.new }
     let(:commands) { RHC::Commands.send(:commands) }
-    before{ @saved_commands = RHC::Commands.instance_variable_get(:@commands).dup }
-    after{ Kernel.send(:remove_const, subject) rescue nil; RHC::Commands.instance_variable_set(:@commands, @saved_commands) }
 
     context 'when dynamically instantiating without an object name' do
       subject { const_for(Class.new(RHC::Commands::Base) { def run; 1; end }) }
@@ -241,9 +245,19 @@ describe RHC::Commands::Base do
 
       context "with token" do
         let(:username){ 'foo' }
-        let(:token){ 'bar' }
+        let(:token){ 'a_token' }
         let(:arguments){ ['test', '--token', token, '--server', mock_uri] }
         before{ stub_api(:token => token); stub_user(:token => token) }
+        it("calls the server") { rest_client.user }
+      end
+
+      context "with username and a stored token" do
+        let(:username){ 'foo' }
+        let(:token){ 'a_token' }
+        let(:arguments){ ['test', '-l', username, '--server', mock_uri] }
+        before{ instance.send(:token_store).should_receive(:get).with{ |user, server| user.should == username; server.should == instance.send(:openshift_server) }.and_return(token) }
+        before{ stub_api; stub_user(:token => token) }
+        it("has token set") { command_for(*arguments).send(:options).token.should == token }
         it("calls the server") { rest_client.user }
       end
     end

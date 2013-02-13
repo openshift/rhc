@@ -101,7 +101,8 @@ describe RHC::Wizard do
     end
 
     context "with credentials" do
-      let(:default_options){ {:rhlogin => user, :password => password} }
+      let(:server){ mock_uri }
+      let(:default_options){ {:rhlogin => user, :password => password, :server => server} }
       before{ subject.should_receive(:say).with(/Using #{user} to login to /).ordered }
 
       it "should warn about a self signed cert error" do
@@ -149,7 +150,7 @@ describe RHC::Wizard do
         before{ expect_client_test(true) }
         let(:token){ 'a_test_value' }
         let(:auth_token){ mock(:token => token, :expires_in_seconds => 100) }
-        let(:store){ mock() }
+        let(:store){ mock }
         before{ RHC::Auth::TokenStore.should_receive(:new).any_number_of_times.and_return(store) }
 
         it "should not generate a token if the user does not request it" do
@@ -165,7 +166,7 @@ describe RHC::Wizard do
           subject.should_receive(:agree).with(/Generate a token now?/).ordered.and_return(true)
           subject.should_receive(:say).with(/Generating an authorization token for this client /).ordered
           rest_client.should_receive(:new_session).ordered.and_return(auth_token)
-          store.should_receive(:put).with(user, subject.send(:openshift_server), token).ordered.and_return(true)
+          store.should_receive(:put).with(user, server, token).ordered.and_return(true)
           subject.should_receive(:new_client_for_options).ordered.and_return(rest_client)
           rest_client.should_receive(:user).ordered.and_return(true)
           subject.should_receive(:success).with(/lasts 1 minute/).ordered

@@ -75,11 +75,15 @@ module RHC
         @core_auth ||= RHC::Auth::Basic.new(options)
       end
 
+      def token_auth
+        RHC::Auth::Token.new(options, core_auth, token_store)
+      end
+
       def auth(reset=false)
         @auth = nil if reset
         @auth ||= begin
             if options.token
-              RHC::Auth::Token.new(options, core_auth, token_store)
+              token_auth
             else
               core_auth
             end
@@ -157,7 +161,7 @@ module RHC
       if rest_client.supports_sessions? && !options.token
         paragraph do 
           info "OpenShift can create and store a token on disk which allows to you to access the server without using your password. The key is stored in your home directory and should be kept secret.  You can delete the key at any time by running 'rhc logout'."
-          if agree "Generate a token now? (yes|no) "
+          if options.use_token or agree "Generate a token now? (yes|no) "
             say "Generating an authorization token for this client ... "
 
             token = rest_client.new_session

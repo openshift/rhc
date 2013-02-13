@@ -129,7 +129,7 @@ module RHC
       commands[opts[:name]] = opts
     end
     def self.global_option(*args, &block)
-      global_options << [args, block]
+      global_options << [args.freeze, block]
     end
 
     def self.deprecated?
@@ -158,6 +158,7 @@ module RHC
 
     def self.to_commander(instance=Commander::Runner.instance)
       global_options.each do |args, block|
+        args = args.dup
         opts = (args.pop if Hash === args.last) || {}
         option = instance.global_option(*args, &block).last
         option.merge!(opts)
