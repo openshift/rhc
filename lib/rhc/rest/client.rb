@@ -122,7 +122,7 @@ module RHC
             raise ConnectionException.new(
               "Unable to connect to the server (#{e.message})."\
               "#{client.proxy.present? ? " Check that you have correctly specified your proxy server '#{client.proxy}' as well as your OpenShift server '#{args[1]}'." : " Check that you have correctly specified your OpenShift server '#{args[1]}'."}")
-          rescue RHC::Rest::Exception
+          rescue RHC::Rest::Exception, RHC::ApplicationNotFoundException, RHC::DomainNotFoundException
             raise
           rescue => e
             if debug?
@@ -199,23 +199,10 @@ module RHC
       end
 
       def find_application(domain, application)
-        begin
-          response = request({
-            :url => link_show_application_by_domain_name(domain, application),
-            :method => "GET"
-          })
-        rescue RHC::Rest::ResourceNotFoundException => e
-          binding.pry
-          # TODO: Rescue on error codes. The request error handling will need to return the code
-          case (msg = e.message)
-          when /^Application/
-            raise RHC::ApplicationNotFoundException.new(msg)
-          when /^Domain/
-            # TODO: This doesn't exactly match what the broker returns
-            # The broker returns "Domain X not found"
-            raise RHC::DomainNotFoundException.new("Domain #{domain} does not exist")
-          end
-        end
+        response = request({
+          :url => link_show_application_by_domain_name(domain, application),
+          :method => "GET"
+        })
       end
 
       def link_show_application_by_domain_name(domain, application)
@@ -456,6 +443,14 @@ module RHC
           when 403
             raise RequestDeniedException, messages_to_error(messages) || "You are not authorized to perform this operation."
           when 404
+            if messages.length == 1
+              case messages.first['exit_code']
+              when 127
+                raise RHC::DomainNotFoundException.new(messages.first['text'])
+              when 101
+                raise RHC::ApplicationNotFoundException.new(messages.first['text'])
+              end
+            end
             raise ResourceNotFoundException, messages_to_error(messages) || generic_error_message(url, client)
           when 409
             raise_generic_error(url, client) if messages.empty?

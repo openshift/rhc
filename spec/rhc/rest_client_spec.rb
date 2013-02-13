@@ -285,7 +285,7 @@ module RHC
           let(:app_name)  { 'mock_app' }
           let(:missing)   { 'no_match' }
           before(:each) do
-            stub_api_request(:any, "#{client_links['LIST_DOMAINS']['relative']}#{domain_id}/applications/#{app_name}").
+            stub_api_request(:any, "#{client_links['LIST_DOMAINS']['relative']}/#{domain_id}/applications/#{app_name}").
               to_return({:body   => {
                             :type => 'application',
                             :data => {
@@ -300,7 +300,7 @@ module RHC
                           }.to_json,
                           :status => 200
                         })
-            stub_api_request(:any, "#{client_links['LIST_DOMAINS']['relative']}#{domain_id}/applications/#{missing}").
+            stub_api_request(:any, "#{client_links['LIST_DOMAINS']['relative']}/#{domain_id}/applications/#{missing}").
               to_return({:body   => {
                             :type => nil,
                             :data => nil,
@@ -314,7 +314,7 @@ module RHC
                           }.to_json,
                           :status => 404
                         })
-            stub_api_request(:any, "#{client_links['LIST_DOMAINS']['relative']}#{missing}/applications/#{app_name}").
+            stub_api_request(:any, "#{client_links['LIST_DOMAINS']['relative']}/#{missing}/applications/#{app_name}").
               to_return({:body   => {
                             :type => nil,
                             :data => nil,
@@ -322,14 +322,12 @@ module RHC
                               :exit_code => 127,
                               :field => nil,
                               :severity => 'error',
-                              :text => "Domain #{missing} not found"
+                              :text => "Domain '#{missing}' not found"
                             ],
                             :status => 'not_found'
                           }.to_json,
                           :status => 404
                         })
-
-
           end
           it "returns application object for nested application IDs" do
               match = client.find_application(domain_id, app_name)
