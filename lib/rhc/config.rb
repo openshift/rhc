@@ -76,7 +76,7 @@ module RHC
       when :integer, :boolean
         value.nil? ? "<#{type}>" : value
       else
-        "\"#{value.nil? ? "<#{type || 'string'}>" : value}\""
+        value.nil? ? "<#{type || 'string'}>" : value
       end
     end
 
