@@ -38,6 +38,15 @@ module RHC::Rest::Mock
           }.to_json
         })
     end
+    def stub_api_v12(auth=false)
+      stub_api_request(:get, 'broker/rest/api', auth).
+        to_return({
+          :body => {
+            :data => mock_response_links(mock_real_client_links),
+            :supported_api_versions => [1.0, 1.1, 1.2],
+          }.to_json
+        })
+    end
     def stub_user(auth=mock_user_auth)
       stub_api_request(:get, 'broker/rest/user', auth).to_return(simple_user(username))
     end
@@ -112,7 +121,8 @@ module RHC::Rest::Mock
           :body => {
             :type => 'domains',
             :data => [{:id => name, :links => mock_response_links([
-              ['LIST_APPLICATIONS', "broker/rest/domains/#{name}/applications", 'get']
+              ['LIST_APPLICATIONS', "broker/rest/domains/#{name}/applications", 'get'],
+              ['ADD_APPLICATION', "broker/rest/domains/#{name}/applications", 'post'],
             ])}],
           }.to_json
         })
