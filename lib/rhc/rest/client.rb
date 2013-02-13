@@ -200,8 +200,8 @@ module RHC
 
       def find_application(domain,application)
         begin
-          request({
-            :url => nested_app_link(domain,application).gsub(%r(([^:])//), '\1/'),
+          response = request({
+            :url => link_show_application_by_domain_name(domain, application),
             :method => "GET"
           })
         rescue RHC::Rest::ResourceNotFoundException => e
@@ -216,8 +216,14 @@ module RHC
         end
       end
 
-      def nested_app_link(domain,application)
-        "#{api.links['LIST_DOMAINS']['href']}/#{domain}/applications/#{application}"
+      def link_show_application_by_domain_name(domain, application)
+        uri_args = [
+          api.links['LIST_DOMAINS']['href'],
+          domain,
+          "applications",
+          application
+        ]
+        URI.escape(uri_args.join("/"))
       end
 
       #Find Cartridge by name or regex
