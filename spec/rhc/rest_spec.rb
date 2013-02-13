@@ -29,6 +29,46 @@ describe RHC::Rest::Cartridge do
   end
 end
 
+describe RHC::Rest::Domain do
+  subject{ RHC::Rest::Client.new(:server => mock_uri) }
+  let(:user_auth){ nil }
+  let(:domain) { subject.domains.first }
+  context "against a 1.2 server" do
+    before{ stub_api_v12; stub_one_domain('bar') }
+    before do 
+      stub_api_request(:post, 'broker/rest/domains/bar/applications', false).
+        with(:body => {:name => 'foo', :cartridge => 'bar'}.to_json).
+        to_return(:status => 201, :body => {:type => 'application', :data => {:id => '1'}}.to_json)
+    end
+
+    it{ domain.add_application('foo', :cartridges => ['bar']).should be_true }
+    it{ expect{ domain.add_application('foo', :cartridges => ['bar', 'other']) }.to raise_error(RHC::Rest::MultipleCartridgeCreationNotSupported) }
+    it{ domain.add_application('foo', :cartridges => 'bar').should be_true }
+    it{ domain.add_application('foo', :cartridge => 'bar').should be_true }
+    it{ domain.add_application('foo', :cartridge => ['bar']).should be_true }
+  end
+  context "against a server newer than 1.3" do
+    let(:cartridges){ ['bar'] }
+    before{ stub_api; stub_one_domain('bar') }
+    before do 
+      stub_api_request(:post, 'broker/rest/domains/bar/applications', false).
+        with(:body => {:name => 'foo', :cartridges => cartridges}.to_json).
+        to_return(:status => 201, :body => {:type => 'application', :data => {:id => '1'}}.to_json)
+    end
+
+    it{ domain.add_application('foo', :cartridges => ['bar']).should be_true }
+    it{ domain.add_application('foo', :cartridges => 'bar').should be_true }
+    it{ domain.add_application('foo', :cartridge => 'bar').should be_true }
+    it{ domain.add_application('foo', :cartridge => ['bar']).should be_true }
+
+    context "with multiple cartridges" do
+      let(:cartridges){ ['bar'] }
+      it{ domain.add_application('foo', :cartridges => cartridges).should be_true }
+      it{ domain.add_application('foo', :cartridge => cartridges).should be_true }
+    end
+  end
+end
+
 module RHC
 
   describe Rest do
