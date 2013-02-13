@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.4.7
+Version: 1.4.8
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -100,6 +100,11 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Feb 13 2013 Dan McPherson <dmcphers@redhat.com> 1.4.8-1
+- Bug 910442 - Write config file without quotes (ccoleman@redhat.com)
+- Bug 910630 - rhc app create broken against older servers
+  (ccoleman@redhat.com)
+
 * Wed Feb 06 2013 Adam Miller <admiller@redhat.com> 1.4.7-1
 - Merge pull request #297 from BanzaiMan/dev/hasari/bz907742
   (dmcphers+openshiftbot@redhat.com)
