@@ -383,7 +383,7 @@ module RHC::Rest::Mock
       @user.keys.delete_if { |key| key.name == name }
     end
 
-    def find_application(domain_name,app_name)
+    def find_application(domain_name, app_name)
       find_domain(domain_name).find_application(app_name)
     end
   end

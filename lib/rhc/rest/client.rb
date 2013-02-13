@@ -198,13 +198,15 @@ module RHC
         raise RHC::DomainNotFoundException.new("Domain #{id} does not exist")
       end
 
-      def find_application(domain,application)
+      def find_application(domain, application)
         begin
           response = request({
             :url => link_show_application_by_domain_name(domain, application),
             :method => "GET"
           })
         rescue RHC::Rest::ResourceNotFoundException => e
+          binding.pry
+          # TODO: Rescue on error codes. The request error handling will need to return the code
           case (msg = e.message)
           when /^Application/
             raise RHC::ApplicationNotFoundException.new(msg)

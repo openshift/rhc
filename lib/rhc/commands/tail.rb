@@ -14,7 +14,7 @@ module RHC::Commands
     option ["-f", "--files files"], "File glob relative to app (default <application_name>/logs/*) (optional)"
     alias_action :"app tail", :root_command => true, :deprecated => true
     def run(app_name)
-      rest_app = rest_client.find_application(options.namespace,app_name)
+      rest_app = rest_client.find_application(options.namespace, app_name)
       cartridges = rest_app.cartridges
 
       tail(cartridges.first.name, URI(rest_app.ssh_url), options)

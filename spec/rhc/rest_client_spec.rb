@@ -340,10 +340,10 @@ module RHC
                 mock_response_links(mock_app_links(domain_id, app_name))
           end
           it "Raises an exception when no matching applications can be found" do
-            expect { client.find_application(domain_id,missing) }.should raise_error(RHC::ApplicationNotFoundException)
+            expect { client.find_application(domain_id, missing) }.should raise_error(RHC::ApplicationNotFoundException)
           end
           it "Raises an exception when no matching domain can be found" do
-            expect { client.find_application(missing,app_name) }.should raise_error(RHC::DomainNotFoundException)
+            expect { client.find_application(missing, app_name) }.should raise_error(RHC::DomainNotFoundException)
           end
         end
 

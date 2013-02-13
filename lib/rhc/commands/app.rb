@@ -177,7 +177,7 @@ module RHC::Commands
     argument :app, "The application you wish to delete", ["-a", "--app name"], :context => :app_context
     alias_action :destroy, :deprecated => true
     def delete(app)
-      rest_app = rest_client.find_application(options.namespace,app)
+      rest_app = rest_client.find_application(options.namespace, app)
 
       confirm_action "#{color("This is a non-reversible action! Your application code and data will be permanently deleted if you continue!", :yellow)}\n\nAre you sure you want to delete the application '#{app}'?"
 
@@ -260,7 +260,7 @@ module RHC::Commands
     option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
     option ["--state"], "Get the current state of the application's gears"
     def show(app_name)
-      rest_app = rest_client.find_application(options.namespace,app_name)
+      rest_app = rest_client.find_application(options.namespace, app_name)
 
       if options.state
         results do
@@ -285,7 +285,7 @@ module RHC::Commands
       raise ArgumentError, "No application specified" unless app_name.present?
       raise OptionParser::InvalidOption, "No system SSH available. Please use the --ssh option to specify the path to your SSH executable, or install SSH." unless options.ssh or has_ssh?
 
-      rest_app = rest_client.find_application(options.namespace,app_name)
+      rest_app = rest_client.find_application(options.namespace, app_name)
 
       say "Connecting to #{rest_app.ssh_string.to_s} ..."
       if options.ssh
@@ -334,7 +334,7 @@ module RHC::Commands
       end
 
       def app_action(app, action, *args)
-        rest_app = rest_client.find_application(options.namespace,app)
+        rest_app = rest_client.find_application(options.namespace, app)
         result = rest_app.send action, *args
         result
       end

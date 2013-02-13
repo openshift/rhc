@@ -6,7 +6,7 @@ module RHC::Commands
     option ["-n", "--namespace namespace"], "Namespace of your application", :context => :namespace_context, :required => true
     argument :app, "Name of the application on which to execute the thread dump", ["-a", "--app name"]
     def run(app)
-      rest_app = rest_client.find_application(options.namespace,app)
+      rest_app = rest_client.find_application(options.namespace, app)
       rest_app.threaddump.messages.each { |m| say m }
 
       0
