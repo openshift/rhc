@@ -198,10 +198,11 @@ module RHC
         raise RHC::DomainNotFoundException.new("Domain #{id} does not exist")
       end
 
-      def find_application(domain, application)
+      def find_application(domain, application, options = {})
         response = request({
           :url => link_show_application_by_domain_name(domain, application),
-          :method => "GET"
+          :method => "GET",
+          :payload => options
         })
       end
 
