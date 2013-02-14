@@ -445,11 +445,12 @@ module RHC
             raise RequestDeniedException, messages_to_error(messages) || "You are not authorized to perform this operation."
           when 404
             if messages.length == 1
+              missing = messages.first['text'].scan(/^(?:Domain|Application) '(.*)'/).flatten.first
               case messages.first['exit_code']
               when 127
-                raise RHC::DomainNotFoundException.new(messages.first['text'])
+                raise RHC::DomainNotFoundException.new("Domain #{missing} does not exist")
               when 101
-                raise RHC::ApplicationNotFoundException.new(messages.first['text'])
+                raise RHC::ApplicationNotFoundException.new("Application #{missing} does not exist")
               end
             end
             raise ResourceNotFoundException, messages_to_error(messages) || generic_error_message(url, client)

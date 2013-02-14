@@ -308,7 +308,7 @@ module RHC
                               :exit_code => 101,
                               :field => nil,
                               :severity => 'error',
-                              :text => "Application '#{missing}' not found for domain '#{domain_id}'"
+                              :text => "Application '#{missing}' not found"
                             ],
                             :status => 'not_found'
                           }.to_json,
