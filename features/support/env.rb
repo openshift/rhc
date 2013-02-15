@@ -67,7 +67,7 @@ set_endpoint
 raise "Username not found in environment (RHC_USERNAME)" unless $username
 raise "Password not found in environment (RHC_PASSWORD)" unless $password
 
-$user_register_script_format = "/usr/bin/ss-register-user -l admin -p admin --username %s --userpass %s"
+$user_register_script_format = "oo-register-user -l admin -p admin --username %s --userpass %s"
 if ENV['REGISTER_USER']
   command = $user_register_script_format % [$username,$password]
   %x[#{command}]
