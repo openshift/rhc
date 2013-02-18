@@ -122,7 +122,7 @@ module RHC
             raise ConnectionException.new(
               "Unable to connect to the server (#{e.message})."\
               "#{client.proxy.present? ? " Check that you have correctly specified your proxy server '#{client.proxy}' as well as your OpenShift server '#{args[1]}'." : " Check that you have correctly specified your OpenShift server '#{args[1]}'."}")
-          rescue RHC::Rest::Exception, RHC::ApplicationNotFoundException, RHC::DomainNotFoundException
+          rescue RHC::Rest::Exception
             raise
           rescue => e
             if debug?
@@ -195,7 +195,7 @@ module RHC
         debug "Finding domain #{id}"
         domains.each { |domain| return domain if domain.id == id }
 
-        raise RHC::DomainNotFoundException.new("Domain #{id} does not exist")
+        raise RHC::Rest::DomainNotFoundException.new("Domain #{id} not found")
       end
 
       def find_application(domain, application, options = {})
@@ -445,12 +445,11 @@ module RHC
             raise RequestDeniedException, messages_to_error(messages) || "You are not authorized to perform this operation."
           when 404
             if messages.length == 1
-              missing = messages.first['text'].scan(/^(?:Domain|Application) '(.*)'/).flatten.first
               case messages.first['exit_code']
               when 127
-                raise RHC::DomainNotFoundException.new("Domain #{missing} does not exist")
+                raise DomainNotFoundException, messages_to_error(messages) || generic_error_message(url, client)
               when 101
-                raise RHC::ApplicationNotFoundException.new("Application #{missing} does not exist")
+                raise ApplicationNotFoundException, messages_to_error(messages) || generic_error_message(url, client)
               end
             end
             raise ResourceNotFoundException, messages_to_error(messages) || generic_error_message(url, client)

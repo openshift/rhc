@@ -212,7 +212,7 @@ module RHC
             match.class.should == RHC::Rest::Domain
           end
           it "raise an error when no matching domain IDs can be found" do
-            expect { client.find_domain('mock_domain_2') }.should raise_error(RHC::DomainNotFoundException)
+            expect { client.find_domain('mock_domain_2') }.should raise_error(RHC::Rest::DomainNotFoundException)
           end
         end
 
@@ -275,7 +275,7 @@ module RHC
             end
           end
           it "Raises an excpetion when no matching applications can be found" do
-            expect { client.domains[0].find_application('no_match') }.should raise_error(RHC::ApplicationNotFoundException)
+            expect { client.domains[0].find_application('no_match') }.should raise_error(RHC::Rest::ApplicationNotFoundException)
           end
         end
 
@@ -338,10 +338,10 @@ module RHC
                 mock_response_links(mock_app_links(domain_id, app_name))
           end
           it "Raises an exception when no matching applications can be found" do
-            expect { client.find_application(domain_id, missing) }.should raise_error(RHC::ApplicationNotFoundException)
+            expect { client.find_application("mock_domain_0", "no_match") }.should raise_error(RHC::Rest::ApplicationNotFoundException)
           end
           it "Raises an exception when no matching domain can be found" do
-            expect { client.find_application(missing, app_name) }.should raise_error(RHC::DomainNotFoundException)
+            expect { client.find_application("no_match", "mock_app") }.should raise_error(RHC::Rest::DomainNotFoundException)
           end
         end
 

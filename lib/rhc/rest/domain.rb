@@ -52,7 +52,7 @@ module RHC
           return app if (name.nil? or app.name.downcase == name.downcase) and (framework.nil? or app.framework == framework)
         end
 
-        raise RHC::ApplicationNotFoundException.new("Application #{name} does not exist")
+        raise RHC::Rest::ApplicationNotFoundException.new("Application #{name} not found")
       end
     end
   end

@@ -191,7 +191,7 @@ describe RHC::Commands::App do
       it "should use existing jenkins" do
         expect { run }.should exit_with_code(0)
         expect { @domain.find_application("jenkins") }.should_not raise_error
-        expect { @domain.find_application("jenkins2") }.should raise_error(RHC::ApplicationNotFoundException)
+        expect { @domain.find_application("jenkins2") }.should raise_error(RHC::Rest::ApplicationNotFoundException)
       end
     end
   end
@@ -328,7 +328,7 @@ describe RHC::Commands::App do
       before{ @domain = rest_client.add_domain("mockdomain") }
 
       it "should raise cartridge not found exception when no apps exist" do
-        expect { run }.should raise_error RHC::ApplicationNotFoundException
+        expect { run }.should raise_error RHC::Rest::ApplicationNotFoundException
       end
 
       context "with an app" do
