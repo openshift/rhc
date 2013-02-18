@@ -190,8 +190,8 @@ describe RHC::Commands::App do
       end
       it "should use existing jenkins" do
         expect { run }.should exit_with_code(0)
-        expect { @domain.find_application("jenkins") }.should_not raise_error
-        expect { @domain.find_application("jenkins2") }.should raise_error(RHC::Rest::ApplicationNotFoundException)
+        expect { rest_client.find_application(@domain.id,"jenkins") }.should_not raise_error
+        expect { rest_client.find_application(@domain.id,"jenkins2") }.should raise_error(RHC::Rest::ApplicationNotFoundException)
       end
     end
   end

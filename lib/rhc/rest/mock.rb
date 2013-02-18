@@ -108,7 +108,7 @@ module RHC::Rest::Mock
           }.to_json
         })
     end
-    def stub_one_application(domain_name, name)
+    def stub_one_application(domain_name, name, *args)
       stub_api_request(:get, "broker/rest/domains/#{domain_name}/applications", mock_user_auth).
         to_return({
           :body => {
@@ -123,7 +123,26 @@ module RHC::Rest::Mock
             }],
           }.to_json
         })
+      stub_relative_application(domain_name,name, *args)
     end
+
+    def stub_relative_application(domain_name, app_name, body = {}, status = 200)
+      url = client_links['LIST_DOMAINS']['relative'] rescue "broker/rest/domains"
+      stub_api_request(:any, "#{url}/#{domain_name}/applications/#{app_name}").
+        to_return({
+          :body   => {
+            :type => 'application',
+            :data => {
+              :domain_id         => domain_name,
+              :name              => app_name,
+              :id                => 1,
+              :links             => mock_response_links(mock_app_links(domain_name,app_name)),
+            }
+          }.merge(body).to_json,
+          :status => status
+        })
+    end
+
     def stub_simple_carts
       stub_api_request(:get, 'broker/rest/cartridges', mock_user_auth).to_return(simple_carts)
     end
@@ -383,8 +402,13 @@ module RHC::Rest::Mock
       @user.keys.delete_if { |key| key.name == name }
     end
 
-    def find_application(domain_name, app_name, options = {})
-      find_domain(domain_name).find_application(app_name)
+    # Need to mock this since we are not registering HTTP requests when adding apps to the mock domain
+    def find_application(domain, name, options = {})
+      find_domain(domain).applications.each do |app|
+        return app if app.name.downcase == name.downcase
+      end
+
+      raise RHC::Rest::ApplicationNotFoundException.new("Application #{name} does not exist")
     end
   end
 

@@ -37,23 +37,6 @@ module RHC
         rest_method "DELETE", :force => force
       end
       alias :delete :destroy
-
-      # Deprecated: It is much faster to use rest_client.find_application(domain_name, app_name)
-      # This is still used in the tests but can be moved there if this is not longer needed
-      def find_application(name, options={})
-        if name.is_a?(Hash)
-          options = name.merge(options)
-          name = options[:name]
-        end
-        framework = options[:framework]
-
-        debug "Finding application :name => #{name}, :framework => #{framework}"
-        applications.each do |app|
-          return app if (name.nil? or app.name.downcase == name.downcase) and (framework.nil? or app.framework == framework)
-        end
-
-        raise RHC::Rest::ApplicationNotFoundException.new("Application #{name} not found")
-      end
     end
   end
 end

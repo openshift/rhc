@@ -216,132 +216,48 @@ module RHC
           end
         end
 
-        # This tests the older hierarchical function for the domain model
-        context "domain #find_application" do
+        context "find_application" do
+          let(:mock_domain){ 'mock_domain_0' }
+          let(:mock_app){ 'mock_app' }
+          let(:missing){ 'no_match' }
           before(:each) do
-            stub_api_request(:any, client_links['LIST_DOMAINS']['relative']).
-              to_return({ :body   => {
-                            :type => 'domains',
-                            :data =>
-                            [{ :id    => 'mock_domain_0',
-                               :links => mock_response_links(mock_domain_links('mock_domain_0')),
-                             },
-                             { :id    => 'mock_domain_1',
-                               :links => mock_response_links(mock_domain_links('mock_domain_1')),
-                             }]
-                          }.to_json,
-                          :status => 200
-                        })
-            stub_api_request(:any, domain_0_links['LIST_APPLICATIONS']['relative']).
-              to_return({ :body   => {
-                            :type => 'applications',
-                            :data =>
-                            [{ :domain_id       => 'mock_domain_0',
-                               :name            => 'mock_app',
-                               :creation_time   => Time.new.to_s,
-                               :uuid            => 1234,
-                               :aliases         => ['alias_1', 'alias_2'],
-                               :server_identity => 'mock_server_identity',
-                               :links           => mock_response_links(mock_app_links('mock_domain_0','mock_app')),
-                             }]
-                          }.to_json,
-                          :status => 200
-                        })
-            stub_api_request(:any, domain_1_links['LIST_APPLICATIONS']['relative']).
-              to_return({ :body   => {
-                            :type => 'applications',
-                            :data =>
-                            [{ :domain_id       => 'mock_domain_1',
-                               :name            => 'mock_app',
-                               :creation_time   => Time.new.to_s,
-                               :uuid            => 1234,
-                               :aliases         => ['alias_1', 'alias_2'],
-                               :server_identity => 'mock_server_identity',
-                               :links           => mock_response_links(mock_app_links('mock_domain_1','mock_app')),
-                             }]
-                          }.to_json,
-                          :status => 200
-                        })
-          end
-          it "returns application objects for matching application IDs" do
-            domain = client.domains[0]
-            domain.applications.each do |app|
-              match = domain.find_application(app.name)
-              match.class.should     == RHC::Rest::Application
-              match.name.should      == 'mock_app'
-              match.domain_id.should == "#{domain.id}"
-              match.send(:links).should     ==
-                mock_response_links(mock_app_links("#{domain.id}",'mock_app'))
-            end
-          end
-          it "Raises an excpetion when no matching applications can be found" do
-            expect { client.domains[0].find_application('no_match') }.should raise_error(RHC::Rest::ApplicationNotFoundException)
-          end
-        end
-
-        # This tests the newer hierarchical function for the client
-        context "client #find_application" do
-          let(:domain_id) { 'mock_domain_0' }
-          let(:app_name)  { 'mock_app' }
-          let(:missing)   { 'no_match' }
-          before(:each) do
-            stub_api_request(:any, "#{client_links['LIST_DOMAINS']['relative']}/#{domain_id}/applications/#{app_name}").
-              to_return({:body   => {
-                            :type => 'application',
-                            :data => {
-                              :domain_id       => domain_id,
-                              :name            => app_name,
-                              :creation_time   => Time.new.to_s,
-                              :uuid            => 1234,
-                              :aliases         => ['alias_1', 'alias_2'],
-                              :server_identity => 'mock_server_identity',
-                              :links           => mock_response_links(mock_app_links(domain_id,app_name)),
-                            }
-                          }.to_json,
-                          :status => 200
-                        })
-            stub_api_request(:any, "#{client_links['LIST_DOMAINS']['relative']}/#{domain_id}/applications/#{missing}").
-              to_return({:body   => {
-                            :type => nil,
-                            :data => nil,
-                            :messages => [
-                              :exit_code => 101,
-                              :field => nil,
-                              :severity => 'error',
-                              :text => "Application '#{missing}' not found"
-                            ],
-                            :status => 'not_found'
-                          }.to_json,
-                          :status => 404
-                        })
-            stub_api_request(:any, "#{client_links['LIST_DOMAINS']['relative']}/#{missing}/applications/#{app_name}").
-              to_return({:body   => {
-                            :type => nil,
-                            :data => nil,
-                            :messages => [
-                              :exit_code => 127,
-                              :field => nil,
-                              :severity => 'error',
-                              :text => "Domain '#{missing}' not found"
-                            ],
-                            :status => 'not_found'
-                          }.to_json,
-                          :status => 404
-                        })
+            stub_one_application(mock_domain, mock_app)
+            stub_one_application(mock_domain, missing, {
+              :type => nil,
+              :data => nil,
+              :messages => [{
+                :exit_code => 101,
+                :field => nil,
+                :severity => 'error',
+                :text => "Application #{missing} not found"
+              }],
+              :status => 'not_found'
+            }, 404)
+            stub_one_application(missing, mock_app, {
+              :type => nil,
+              :data => nil,
+              :messages => [{
+                :exit_code => 127,
+                :field => nil,
+                :severity => 'error',
+                :text => "Domain #{missing} not found"
+              }],
+              :status => 'not_found'
+            }, 404)
           end
           it "returns application object for nested application IDs" do
-              match = client.find_application(domain_id, app_name)
+              match = client.find_application(mock_domain, mock_app)
               match.class.should     == RHC::Rest::Application
-              match.name.should      == app_name
-              match.domain_id.should == domain_id
+              match.name.should      == mock_app
+              match.domain_id.should == mock_domain
               match.send(:links).should     ==
-                mock_response_links(mock_app_links(domain_id, app_name))
+                mock_response_links(mock_app_links(mock_domain, mock_app))
           end
           it "Raises an exception when no matching applications can be found" do
-            expect { client.find_application("mock_domain_0", "no_match") }.should raise_error(RHC::Rest::ApplicationNotFoundException)
+            expect { client.find_application(mock_domain, missing) }.should raise_error(RHC::Rest::ApplicationNotFoundException)
           end
           it "Raises an exception when no matching domain can be found" do
-            expect { client.find_application("no_match", "mock_app") }.should raise_error(RHC::Rest::DomainNotFoundException)
+            expect { client.find_application(missing, mock_app) }.should raise_error(RHC::Rest::DomainNotFoundException)
           end
         end
 
