@@ -329,6 +329,48 @@ module CommanderInvocationMatchers
   end  
 end
 
+module ColorMatchers
+  COLORS = {
+    :green => 32,
+    :yellow => 33,
+    :cyan => 36,
+    :red => 31,
+    :clear => 0
+  }
+
+  Spec::Matchers.define :be_colorized do |msg,color|
+    match do |actual|
+      actual == colorized_message(msg,color)
+    end
+
+    failure_message_for_should do |actual|
+      failure_message(actual,msg,color)
+    end
+
+    failure_message_for_should_not do |actual|
+      failure_message(actual,msg,color)
+    end
+
+    def failure_message(actual,msg,color)
+      "expected: #{colorized_message(msg,color).inspect}\n" +
+      "     got: #{actual.inspect}"
+    end
+
+    def ansi_code(color)
+      "\e[#{ColorMatchers::COLORS[color]}m"
+    end
+
+    def colorized_message(msg,color)
+      [
+        ansi_code(color),
+        msg,
+        ansi_code(:clear),
+        "\n"
+      ].join('')
+    end
+  end
+end
+
 def mac?
   RbConfig::CONFIG['host_os'] =~ /^darwin/
 end
@@ -336,6 +378,7 @@ end
 Spec::Runner.configure do |config|
   config.include(ExitCodeMatchers)
   config.include(CommanderInvocationMatchers)
+  config.include(ColorMatchers)
   config.include(ClassSpecHelpers)
 end
 
