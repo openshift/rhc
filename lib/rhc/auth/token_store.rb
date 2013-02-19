@@ -24,7 +24,7 @@ module RHC::Auth
       end
 
       def filename(key)
-        "token_#{Digest::MD5.digest(key).gsub(/[^\w\@]/,'_')}"
+        "token_#{Base64.encode64(Digest::MD5.digest(key)).gsub(/[^\w\@]/,'')}"
       end
 
       def []=(key, value)
@@ -34,7 +34,9 @@ module RHC::Auth
       end
 
       def [](key)
-        IO.read(path(key)).presence# rescue nil
+        s = IO.read(path(key)).presence
+        s = s.strip.gsub(/[\n\r\t]/,'') if s
+        s
       rescue Errno::ENOENT
         nil
       end
