@@ -51,6 +51,18 @@ module RHC
     class ResourceNotFoundException < ClientErrorException; end
     class ApiEndpointNotFound < ResourceNotFoundException; end
 
+    # 404 errors for specific resource types
+    class DomainNotFoundException < ResourceNotFoundException
+      def initialize(msg)
+        super(msg,127)
+      end
+    end
+    class ApplicationNotFoundException < ResourceNotFoundException
+      def initialize(msg)
+        super(msg,101)
+      end
+    end
+
     #Exceptions thrown in case of an HTTP 422 is received.
     class ValidationException < ClientErrorException
       attr_reader :field

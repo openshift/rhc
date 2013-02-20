@@ -118,7 +118,7 @@ describe RHC::Commands::Domain do
         expect { run }.should exit_with_code(127)
         rest_client.domains.empty?.should be_true
       end
-      it { run_output.should match("does not exist") }
+      it { run_output.should match("not found") }
     end
   end
 
@@ -155,7 +155,7 @@ describe RHC::Commands::Domain do
         expect { run }.should exit_with_code(127)
         rest_client.domains[0].id.should == 'dontdelete'
       end
-      it { run_output.should match("Domain deleteme does not exist") }
+      it { run_output.should match("Domain deleteme not found") }
     end
 
     context 'when there are applications on the domain' do

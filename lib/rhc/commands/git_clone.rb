@@ -17,9 +17,8 @@ module RHC::Commands
     # TODO: Implement default values for arguments once ffranz has added context arguments
     # argument :directory, "The name of a new directory to clone into", [], :default => nil
     def run(app_name)
-      domain = rest_client.find_domain(options.namespace)
-      app = domain.find_application(app_name)
-      git_clone_application(app)
+      rest_app = rest_client.find_application(options.namespace, app_name)
+      git_clone_application(rest_app)
 
       0
     end
