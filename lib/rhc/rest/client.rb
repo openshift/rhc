@@ -146,11 +146,14 @@ module RHC
       end
 
       def api
-        @api ||= RHC::Rest::Api.new(self, @preferred_api_versions)
+        @api ||= RHC::Rest::Api.new(self, @preferred_api_versions).tap do |api| 
+          self.current_api_version = api.api_version_negotiated
+        end
       end
 
       def api_version_negotiated
-        api.api_version_negotiated
+        api
+        current_api_version
       end
 
       ################################################
@@ -284,9 +287,10 @@ module RHC
         include RHC::Helpers
 
         attr_reader :auth
+        attr_accessor :current_api_version
         def headers
           @headers ||= {
-            'Accept' => 'application/json',
+            :accept => :json
           }
         end
 
@@ -355,6 +359,10 @@ module RHC
             h
           end
 
+          modifiers = []
+          version = options.delete(:api_version) || current_api_version
+          modifiers << ";version=#{version}" if version
+
           query = options.delete(:query) || {}
           payload = options.delete(:payload)
           if options[:method].to_s.upcase == 'GET'
@@ -363,10 +371,14 @@ module RHC
           else
             headers['content-type'] ||= begin
                 payload = payload.to_json unless payload.nil? || payload.is_a?(String)
-                'application/json'
+                "application/json#{modifiers.join}"
               end
           end
           query = nil if query.blank?
+
+          if headers['accept'] && modifiers.present?
+            headers['accept'] << modifiers.join
+          end
 
           args = [options.delete(:method), options.delete(:url), query, payload, headers, true]
           [httpclient_for(options), args]

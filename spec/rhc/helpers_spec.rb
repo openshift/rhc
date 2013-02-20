@@ -45,14 +45,32 @@ describe RHC::Helpers do
 
   it("should decode json"){ subject.decode_json("{\"a\" : 1}").should == {'a' => 1} }
 
-  it("should output green on success") do
-    capture{ subject.success 'this is green' }.should == "\e[32mthis is green\e[0m\n"
+  shared_examples_for "colorized output" do
+    it("should be colorized") do
+      message = "this is #{_color}"
+      output = capture{ subject.send(method,message) }
+      output.should be_colorized(message,_color)
+    end
+    it("should return true"){ subject.send(method,'anything').should be_true }
   end
-  it("should output yellow on warn") do
-    capture{ subject.success 'this is yellow' }.should == "\e[32mthis is yellow\e[0m\n"
+
+  context "success output" do
+    let(:_color){ :green }
+    let(:method){ :success }
+    it_should_behave_like "colorized output"
   end
-  it("should return true on success"){ subject.success('anything').should be_true }
-  it("should return true on success"){ subject.warn('anything').should be_true }
+
+  context "warn output" do
+    let(:_color){ :yellow }
+    let(:method){ :warn }
+    it_should_behave_like "colorized output"
+  end
+
+  context "info output" do
+    let(:_color){ :cyan }
+    let(:method){ :info }
+    it_should_behave_like "colorized output"
+  end
 
   it("should invoke debug from debug_error"){ expect{ subject.debug_error(mock(:class => "Mock", :message => 'msg', :backtrace => [])) }.to call(:debug).on(subject).with("msg (Mock)\n  ") }
 
@@ -62,7 +80,13 @@ describe RHC::Helpers do
     end.should == ['10 2','3  40']
   end
 
-  it("should output a table") do 
+  context "error output" do
+    let(:_color){ :red }
+    let(:method){ :error }
+    it_should_behave_like "colorized output"
+  end
+
+  it("should output a table") do
     subject.send(:display_no_info, 'test').should == ['This test has no information to show']
   end
 
