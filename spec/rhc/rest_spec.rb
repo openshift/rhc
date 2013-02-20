@@ -239,6 +239,15 @@ module RHC
       end
     end
 
+    describe "#new_request" do
+      it{ subject.send(:new_request, :api_version => 2.0).last[4]['accept'].should == 'application/json;version=2.0' }
+      it{ subject.send(:new_request, :headers => {:accept => :xml}, :api_version => 2.0).last[4]['accept'].should == 'application/xml;version=2.0' }
+      context "with the default api version" do
+        before{ subject.should_receive(:current_api_version).and_return('1.0') }
+        it{ subject.send(:new_request, {}).last[4]['accept'].should == 'application/json;version=1.0' }
+      end
+    end
+
     # request function
     describe "#request" do
       let(:response){ lambda { subject.request(request) } }
@@ -267,12 +276,12 @@ module RHC
             :status  => 200,
             :headers => { 'Set-Cookie' => "rh_sso=test_ssh_cookie" }
           }
-          stub_request(:get, mock_href).to_return(return_data)
+          stub_request(:get, mock_href).with{ |req| req.headers['Accept'].should == 'application/json;version=1.0' }.to_return(return_data)
         end
 
         it "sends the response to be deserialized" do
           dom_obj = RHC::Rest::Domain.new(object)
-          subject.request(request.merge(:payload => {}, :timeout => 300)).should have_same_attributes_as(dom_obj)
+          subject.request(request.merge(:payload => {}, :api_version => '1.0', :timeout => 300)).should have_same_attributes_as(dom_obj)
         end
       end
 
