@@ -24,7 +24,8 @@ module RHC
             @server_api_versions, links = api_info({
               :url => client.url,
               :method => :get,
-              :headers => {'Accept' => "application/json; version=#{api_version_negotiated}"},
+              :accept => :json,
+              :api_version => api_version_negotiated,
               :lazy_auth => true,
             })
           end
