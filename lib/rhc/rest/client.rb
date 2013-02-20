@@ -259,9 +259,17 @@ module RHC
         end
       end
 
+      #
+      # Returns nil if creating sessions is not supported, raises on error, otherwise
+      # returns an Authorization object.
+      #
       def new_session(options={})
         if supports_sessions?
-          api.rest_method('ADD_AUTHORIZATION', {:scope => 'session', :note => 'rhc session', :reuse => true}, options)
+          api.rest_method('ADD_AUTHORIZATION', {
+            :scope => 'session',
+            :note => "RHC/#{RHC::VERSION::STRING} (from #{Socket.gethostname rescue 'unknown'} on #{RUBY_PLATFORM})",
+            :reuse => true
+          }, options)
         end
       end
 
