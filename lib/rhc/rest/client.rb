@@ -195,7 +195,25 @@ module RHC
         debug "Finding domain #{id}"
         domains.each { |domain| return domain if domain.id == id }
 
-        raise RHC::DomainNotFoundException.new("Domain #{id} does not exist")
+        raise RHC::Rest::DomainNotFoundException.new("Domain #{id} not found")
+      end
+
+      def find_application(domain, application, options = {})
+        response = request({
+          :url => link_show_application_by_domain_name(domain, application),
+          :method => "GET",
+          :payload => options
+        })
+      end
+
+      def link_show_application_by_domain_name(domain, application)
+        uri_args = [
+          api.links['LIST_DOMAINS']['href'],
+          domain,
+          "applications",
+          application
+        ]
+        URI.escape(uri_args.join("/"))
       end
 
       #Find Cartridge by name or regex
@@ -426,6 +444,14 @@ module RHC
           when 403
             raise RequestDeniedException, messages_to_error(messages) || "You are not authorized to perform this operation."
           when 404
+            if messages.length == 1
+              case messages.first['exit_code']
+              when 127
+                raise DomainNotFoundException, messages_to_error(messages) || generic_error_message(url, client)
+              when 101
+                raise ApplicationNotFoundException, messages_to_error(messages) || generic_error_message(url, client)
+              end
+            end
             raise ResourceNotFoundException, messages_to_error(messages) || generic_error_message(url, client)
           when 409
             raise_generic_error(url, client) if messages.empty?

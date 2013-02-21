@@ -14,7 +14,8 @@ module RHC::Commands
     argument :app, "Application you are saving a snapshot (required)", ["-a", "--app app"]
     alias_action :"app snapshot save", :root_command => true, :deprecated => true
     def save(app)
-      ssh_uri = URI.parse(rest_client.find_domain(options.namespace).find_application(app).ssh_url)
+      rest_app = rest_client.find_application(options.namespace, app)
+      ssh_uri = URI.parse(rest_app.ssh_url)
       filename = options.filepath ? options.filepath : "#{app}.tar.gz"
 
       ssh_cmd = "ssh #{ssh_uri.user}@#{ssh_uri.host} 'snapshot' > #{filename}"
@@ -64,8 +65,8 @@ module RHC::Commands
       if File.exists? filename
 
         include_git = RHC::Helpers.windows? ? true : RHC::TarGz.contains(filename, './*/git')
-
-        ssh_uri = URI.parse(rest_client.find_domain(options.namespace).find_application(app).ssh_url)
+        rest_app = rest_client.find_application(options.namespace, app)
+        ssh_uri = URI.parse(rest_app.ssh_url)
 
         ssh_cmd = "cat #{filename} | ssh #{ssh_uri.user}@#{ssh_uri.host} 'restore#{include_git ? ' INCLUDE_GIT' : ''}'"
 

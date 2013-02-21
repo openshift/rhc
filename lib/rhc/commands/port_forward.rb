@@ -75,9 +75,7 @@ module RHC::Commands
     option ["-n", "--namespace namespace"], "Namespace of the application you are port forwarding to", :context => :namespace_context, :required => true
     argument :app, "Application you are port forwarding to (required)", ["-a", "--app app"]
     def run(app)
-
-      rest_domain = rest_client.find_domain options.namespace
-      rest_app = rest_domain.find_application app
+      rest_app = rest_client.find_application(options.namespace, app)
 
       ssh_uri = URI.parse(rest_app.ssh_url)
       say "Using #{rest_app.ssh_url}..." if options.debug
