@@ -99,5 +99,11 @@ module RHC
     class SSLVersionRejected < SSLConnectionFailed; end
 
     class MultipleCartridgeCreationNotSupported < Exception; end
+
+    class AuthorizationsNotSupported < Exception
+      def initialize(message="The server does not support setting or retrieving authorizations.")
+        super(message, 1)
+      end
+    end
   end
 end

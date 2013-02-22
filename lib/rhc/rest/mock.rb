@@ -15,6 +15,10 @@ module RHC::Rest::Mock
 
   module Helpers
 
+    def mock_date_1
+      '2013-02-21T01:00:01Z'
+    end
+
     def mock_user
       "test_user"
     end
@@ -65,6 +69,24 @@ module RHC::Rest::Mock
         with(:body => hash_including({:id => name})).
         to_return(new_domain(name))
     end
+    def stub_authorizations
+      stub_api_request(:get, 'broker/rest/user/authorizations', mock_user_auth).
+        to_return({
+          :status => 200,
+          :body => {
+            :type => 'authorizations',
+            :data => [
+              {
+                :note => 'an_authorization',
+                :token => 'a_token_value',
+                :created_at => mock_date_1,
+                :expires_in_seconds => 60,
+                :scopes => 'session read'
+              }
+            ]
+          }.to_json
+        })
+    end
     def stub_delete_authorizations
       stub_api_request(:delete, 'broker/rest/user/authorizations', mock_user_auth).
         to_return(:status => 204)
@@ -72,6 +94,11 @@ module RHC::Rest::Mock
     def stub_delete_authorization(token)
       stub_api_request(:delete, "broker/rest/user/authorizations/#{token}", mock_user_auth).
         to_return(:status => 204)
+    end
+    def stub_add_authorization(params)
+      stub_api_request(:post, 'broker/rest/user/authorizations', mock_user_auth).
+        with(:body => hash_including(params)).
+        to_return(new_authorization(params))
     end
     def stub_no_keys
       stub_api_request(:get, 'broker/rest/user/keys', mock_user_auth).to_return(no_keys)
@@ -215,6 +242,22 @@ module RHC::Rest::Mock
         }.to_json
       }
     end
+    def new_authorization(params)
+      {
+        :status => 201,
+        :body => {
+          :type => 'authorization',
+          :data => {
+            :note => params[:note],
+            :token => 'a_token_value',
+            :scopes => (params[:scope] || "userinfo").gsub(/,/, ' '),
+            :expires_in => (params[:expires_in] || 60).to_i,
+            :expires_in_seconds => (params[:expires_in] || 60).to_i,
+            :created_at => mock_date_1,
+          },
+        }.to_json
+      }
+    end
 
     def mock_pass
       "test pass"
@@ -255,7 +298,7 @@ module RHC::Rest::Mock
         # this is not used by the API classes.
         link_set[operation] = { 'href' => mock_href(href), 'method' => method, 'relative' => href }
       end
-      return link_set
+      link_set
     end
 
     def mock_app_links(domain_id='test_domain',app_id='test_app')

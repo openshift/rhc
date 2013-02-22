@@ -6,160 +6,12 @@ require 'httpclient'
 
 module RHC
   module Rest
-    class Client < Base
 
-      # Keep the list of supported API versions here
-      # The list may not necessarily be sorted; we will select the last
-      # matching one supported by the server.
-      # See #api_version_negotiated
-      CLIENT_API_VERSIONS = [1.1, 1.2, 1.3]
-
-      def initialize(*args)
-        options = args[0].is_a?(Hash) && args[0] || {}
-        @end_point, @debug, @preferred_api_versions =
-          if options.empty?
-            options[:user] = args.delete_at(1)
-            options[:password] = args.delete_at(1)
-            args
-          else
-            [
-              options.delete(:url) ||
-                (options[:server] && "https://#{options.delete(:server)}/broker/rest/api"),
-              options.delete(:debug),
-              options.delete(:preferred_api_versions)
-            ]
-          end
-
-        @preferred_api_versions ||= CLIENT_API_VERSIONS
-        @debug ||= false
-
-        if options[:token]
-          self.headers[:authorization] = "Bearer #{options.delete(:token)}"
-          options.delete(:user)
-          options.delete(:password)
-        end
-
-        @auth = options.delete(:auth)
-
-        self.headers.merge!(options.delete(:headers)) if options[:headers]
-        self.options.merge!(options)
-
-        debug "Connecting to #{@end_point}"
-      end
-
-      def debug?
-        @debug
-      end
-
-      def request(options, &block)
-        (0..(1.0/0.0)).each do |i|
-          begin
-            client, args = new_request(options.dup)
-            auth = options[:auth] || self.auth
-
-            #debug "Request: #{client.object_id} #{args.inspect}\n-------------" if debug?
-            response = client.request(*(args << true))
-            #debug "Response: #{response.status} #{response.headers.inspect}\n#{response.content}\n-------------" if debug? && response
-
-            next if retry_proxy(response, i, args, client)
-            auth.retry_auth?(response, self) and redo if auth
-            handle_error!(response, args[1], client) unless response.ok?
-
-            break (if block_given?
-                yield response
-              else
-                parse_response(response.content) unless response.nil? or response.code == 204
-              end)
-          rescue HTTPClient::BadResponseError => e
-            if e.res
-              debug "Response: #{e.res.status} #{e.res.headers.inspect}\n#{e.res.content}\n-------------" if debug?
-
-              next if retry_proxy(e.res, i, args, client)
-              auth.retry_auth?(e.res, self) and redo if auth
-              handle_error!(e.res, args[1], client)
-            end
-            raise ConnectionException.new(
-              "An unexpected error occured when connecting to the server: #{e.message}")
-          rescue HTTPClient::TimeoutError => e
-            raise TimeoutException.new(
-              "Connection to server timed out. "\
-              "It is possible the operation finished without being able "\
-              "to report success. Use 'rhc domain show' or 'rhc app show' "\
-              "to see the status of your applications.")
-          rescue EOFError => e
-            raise ConnectionException.new(
-              "Connection to server got interrupted: #{e.message}")
-          rescue OpenSSL::SSL::SSLError => e
-            raise SelfSignedCertificate.new(
-              'self signed certificate',
-              "The server is using a self-signed certificate, which means that a secure connection can't be established '#{args[1]}'.\n\n"\
-              "You may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.") if self_signed?
-            raise case e.message
-              when /self signed certificate/
-                CertificateVerificationFailed.new(
-                  e.message,
-                  "The server is using a self-signed certificate, which means that a secure connection can't be established '#{args[1]}'.\n\n"\
-                  "You may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.")
-              when /certificate verify failed/
-                CertificateVerificationFailed.new(
-                  e.message,
-                  "The server's certificate could not be verified, which means that a secure connection can't be established to the server '#{args[1]}'.\n\n"\
-                  "If your server is using a self-signed certificate, you may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.")
-              when /unable to get local issuer certificate/
-                SSLConnectionFailed.new(
-                  e.message,
-                  "The server's certificate could not be verified, which means that a secure connection can't be established to the server '#{args[1]}'.\n\n"\
-                  "You may need to specify your system CA certificate file with --ssl-ca-file=<path_to_file>. If your server is using a self-signed certificate, you may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.")
-              when /^SSL_connect returned=1 errno=0 state=SSLv2\/v3 read server hello A/
-                SSLVersionRejected.new(
-                  e.message,
-                  "The server has rejected your connection attempt with an older SSL protocol.  Pass --ssl-version=sslv3 on the command line to connect to this server.")
-              when /^SSL_CTX_set_cipher_list:: no cipher match/
-                SSLVersionRejected.new(
-                  e.message,
-                  "The server has rejected your connection attempt because it does not support the requested SSL protocol version.\n\n"\
-                  "Check with the administrator for a valid SSL version to use and pass --ssl-version=<version> on the command line to connect to this server.")
-              else
-                SSLConnectionFailed.new(
-                  e.message,
-                  "A secure connection could not be established to the server (#{e.message}). You may disable secure connections to your server with the -k (or --insecure) option '#{args[1]}'.\n\n"\
-                  "If your server is using a self-signed certificate, you may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.")
-              end
-          rescue SocketError, Errno::ECONNREFUSED => e
-            raise ConnectionException.new(
-              "Unable to connect to the server (#{e.message})."\
-              "#{client.proxy.present? ? " Check that you have correctly specified your proxy server '#{client.proxy}' as well as your OpenShift server '#{args[1]}'." : " Check that you have correctly specified your OpenShift server '#{args[1]}'."}")
-          rescue RHC::Rest::Exception
-            raise
-          rescue => e
-            if debug?
-              logger.debug "#{e.message} (#{e.class})"
-              logger.debug e.backtrace.join("\n  ")
-            end
-            raise ConnectionException.new("An unexpected error occured: #{e.message}").tap{ |n| n.set_backtrace(e.backtrace) }
-          end
-        end
-      end
-
-      def url
-        @end_point
-      end
-
-      def api
-        @api ||= RHC::Rest::Api.new(self, @preferred_api_versions).tap do |api| 
-          self.current_api_version = api.api_version_negotiated
-        end
-      end
-
-      def api_version_negotiated
-        api
-        current_api_version
-      end
-
-      ################################################
-      # Delegate methods to API, should be moved there
-      # and then simply passed through.
-
+    #
+    # These are methods that belong to the API object but are
+    # callable from the client for convenience.
+    #
+    module ApiMethods
       def add_domain(id)
         debug "Adding domain #{id}"
         @domains = nil
@@ -252,11 +104,8 @@ module RHC
       end
 
       def authorizations
-        if api.supports? 'LIST_AUTHORIZATIONS'
-          api.rest_method 'LIST_AUTHORIZATIONS'
-        else
-          []
-        end
+        raise AuthorizationsNotSupported unless supports_sessions?
+        api.rest_method 'LIST_AUTHORIZATIONS'
       end
 
       #
@@ -273,15 +122,28 @@ module RHC
         end
       end
 
+      def add_authorization(options={})
+        raise AuthorizationsNotSupported unless supports_sessions?
+        api.rest_method('ADD_AUTHORIZATION', options, options)
+      end
+
       def delete_authorizations
-        if supports_sessions?
-          api.rest_method('LIST_AUTHORIZATIONS', nil, {:method => :delete})
-        end
+        raise AuthorizationsNotSupported unless supports_sessions?
+        api.rest_method('LIST_AUTHORIZATIONS', nil, {:method => :delete})
       end
 
       def delete_authorization(token)
-        if supports_sessions?
-          api.rest_method('SHOW_AUTHORIZATION', nil, {:method => :delete, :params => {':id' => token}})
+        raise AuthorizationsNotSupported unless supports_sessions?
+        api.rest_method('SHOW_AUTHORIZATION', nil, {:method => :delete, :params => {':id' => token}})
+      end
+
+      def authorization_scope_list
+        raise AuthorizationsNotSupported unless supports_sessions?
+        link = api.links['ADD_AUTHORIZATION']
+        scope = link['optional_params'].find{ |h| h['name'] == 'scope' }
+        scope['description'].scan(/(?!\n)\*(.*?)\n(.*?)(?:\n|\Z)/m).inject([]) do |h, (a, b)|
+          h << [a.strip, b.strip] if a.present? && b.present?
+          h
         end
       end
 
@@ -290,6 +152,158 @@ module RHC
         debug "Logout/Close client"
       end
       alias :close :logout
+    end
+
+    class Client < Base
+      include ApiMethods
+
+      # Keep the list of supported API versions here
+      # The list may not necessarily be sorted; we will select the last
+      # matching one supported by the server.
+      # See #api_version_negotiated
+      CLIENT_API_VERSIONS = [1.1, 1.2, 1.3]
+
+      def initialize(*args)
+        options = args[0].is_a?(Hash) && args[0] || {}
+        @end_point, @debug, @preferred_api_versions =
+          if options.empty?
+            options[:user] = args.delete_at(1)
+            options[:password] = args.delete_at(1)
+            args
+          else
+            [
+              options.delete(:url) ||
+                (options[:server] && "https://#{options.delete(:server)}/broker/rest/api"),
+              options.delete(:debug),
+              options.delete(:preferred_api_versions)
+            ]
+          end
+
+        @preferred_api_versions ||= CLIENT_API_VERSIONS
+        @debug ||= false
+
+        if options[:token]
+          self.headers[:authorization] = "Bearer #{options.delete(:token)}"
+          options.delete(:user)
+          options.delete(:password)
+        end
+
+        @auth = options.delete(:auth)
+
+        self.headers.merge!(options.delete(:headers)) if options[:headers]
+        self.options.merge!(options)
+
+        debug "Connecting to #{@end_point}"
+      end
+
+      def debug?
+        @debug
+      end
+
+      def url
+        @end_point
+      end
+
+      def api
+        @api ||= RHC::Rest::Api.new(self, @preferred_api_versions).tap do |api| 
+          self.current_api_version = api.api_version_negotiated
+        end
+      end
+
+      def api_version_negotiated
+        api
+        current_api_version
+      end
+
+      def request(options, &block)
+        (0..(1.0/0.0)).each do |i|
+          begin
+            client, args = new_request(options.dup)
+            auth = options[:auth] || self.auth
+
+            #debug "Request: #{client.object_id} #{args.inspect}\n-------------" if debug?
+            response = client.request(*(args << true))
+            #debug "Response: #{response.status} #{response.headers.inspect}\n#{response.content}\n-------------" if debug? && response
+
+            next if retry_proxy(response, i, args, client)
+            auth.retry_auth?(response, self) and redo if auth
+            handle_error!(response, args[1], client) unless response.ok?
+
+            break (if block_given?
+                yield response
+              else
+                parse_response(response.content) unless response.nil? or response.code == 204
+              end)
+          rescue HTTPClient::BadResponseError => e
+            if e.res
+              debug "Response: #{e.res.status} #{e.res.headers.inspect}\n#{e.res.content}\n-------------" if debug?
+
+              next if retry_proxy(e.res, i, args, client)
+              auth.retry_auth?(e.res, self) and redo if auth
+              handle_error!(e.res, args[1], client)
+            end
+            raise ConnectionException.new(
+              "An unexpected error occured when connecting to the server: #{e.message}")
+          rescue HTTPClient::TimeoutError => e
+            raise TimeoutException.new(
+              "Connection to server timed out. "\
+              "It is possible the operation finished without being able "\
+              "to report success. Use 'rhc domain show' or 'rhc app show' "\
+              "to see the status of your applications.")
+          rescue EOFError => e
+            raise ConnectionException.new(
+              "Connection to server got interrupted: #{e.message}")
+          rescue OpenSSL::SSL::SSLError => e
+            raise SelfSignedCertificate.new(
+              'self signed certificate',
+              "The server is using a self-signed certificate, which means that a secure connection can't be established '#{args[1]}'.\n\n"\
+              "You may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.") if self_signed?
+            raise case e.message
+              when /self signed certificate/
+                CertificateVerificationFailed.new(
+                  e.message,
+                  "The server is using a self-signed certificate, which means that a secure connection can't be established '#{args[1]}'.\n\n"\
+                  "You may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.")
+              when /certificate verify failed/
+                CertificateVerificationFailed.new(
+                  e.message,
+                  "The server's certificate could not be verified, which means that a secure connection can't be established to the server '#{args[1]}'.\n\n"\
+                  "If your server is using a self-signed certificate, you may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.")
+              when /unable to get local issuer certificate/
+                SSLConnectionFailed.new(
+                  e.message,
+                  "The server's certificate could not be verified, which means that a secure connection can't be established to the server '#{args[1]}'.\n\n"\
+                  "You may need to specify your system CA certificate file with --ssl-ca-file=<path_to_file>. If your server is using a self-signed certificate, you may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.")
+              when /^SSL_connect returned=1 errno=0 state=SSLv2\/v3 read server hello A/
+                SSLVersionRejected.new(
+                  e.message,
+                  "The server has rejected your connection attempt with an older SSL protocol.  Pass --ssl-version=sslv3 on the command line to connect to this server.")
+              when /^SSL_CTX_set_cipher_list:: no cipher match/
+                SSLVersionRejected.new(
+                  e.message,
+                  "The server has rejected your connection attempt because it does not support the requested SSL protocol version.\n\n"\
+                  "Check with the administrator for a valid SSL version to use and pass --ssl-version=<version> on the command line to connect to this server.")
+              else
+                SSLConnectionFailed.new(
+                  e.message,
+                  "A secure connection could not be established to the server (#{e.message}). You may disable secure connections to your server with the -k (or --insecure) option '#{args[1]}'.\n\n"\
+                  "If your server is using a self-signed certificate, you may disable certificate checks with the -k (or --insecure) option. Using this option means that your data is potentially visible to third parties.")
+              end
+          rescue SocketError, Errno::ECONNREFUSED => e
+            raise ConnectionException.new(
+              "Unable to connect to the server (#{e.message})."\
+              "#{client.proxy.present? ? " Check that you have correctly specified your proxy server '#{client.proxy}' as well as your OpenShift server '#{args[1]}'." : " Check that you have correctly specified your OpenShift server '#{args[1]}'."}")
+          rescue RHC::Rest::Exception
+            raise
+          rescue => e
+            if debug?
+              logger.debug "#{e.message} (#{e.class})"
+              logger.debug e.backtrace.join("\n  ")
+            end
+            raise ConnectionException.new("An unexpected error occured: #{e.message}").tap{ |n| n.set_backtrace(e.backtrace) }
+          end
+        end
+      end
 
       protected
         include RHC::Helpers

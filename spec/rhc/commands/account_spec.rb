@@ -61,7 +61,7 @@ describe RHC::Commands::Account do
       let(:arguments) { ['account', 'logout', '--all'] }
 
       context "if the server does not implement authorizations" do
-        it("should display a message"){ run_output.should match(/Deleting all authorizations associated with your account.*done/) }
+        it("should display a message"){ run_output.should match(/Deleting all authorizations associated with your account.*not supported/) }
         it("should exit with success"){ expect{ run }.should exit_with_code(0) }
       end
 
@@ -79,7 +79,7 @@ describe RHC::Commands::Account do
       def user_auth; { :token => 'foo' }; end
 
       context "if the server does not implement authorizations" do
-        it("should display a message"){ run_output.should match(/Ending session on server.*deleted/) }
+        it("should display a message"){ run_output.should match(/Ending session on server.*not supported/) }
         it("should exit with success"){ expect{ run }.should exit_with_code(0) }
       end
 

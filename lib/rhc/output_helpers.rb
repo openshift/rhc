@@ -120,6 +120,17 @@ module RHC
       )
     end
 
+    def display_authorization(auth, default=nil)
+      say_table(
+        auth.note || "<no description>",
+        get_properties(auth, :token, :scopes, :creation_time, :expires_in_seconds),
+        {
+          :delete => true,
+          :color => (:green if auth.token == default),
+        }
+      )
+    end
+
     def format_key_header(key)
       [
         key.name,
@@ -205,6 +216,8 @@ module RHC
           ((value.nil? or value == 0) ? "None" : "#{value}GB")
         when :aliases
           value.join ', '
+        when :expires_in_seconds
+          distance_of_time_in_words(value)
         else
           case value
           when Array then value.join(', ')

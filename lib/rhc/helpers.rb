@@ -47,7 +47,7 @@ module RHC
 
     def date(s)
       now = Date.today
-      d = datetime_rfc3339(s)
+      d = datetime_rfc3339(s).to_time
       if now.year == d.year
         return d.strftime('%l:%M %p').strip if now.yday == d.yday
         d.strftime('%b %d %l:%M %p')
@@ -325,6 +325,7 @@ module RHC
       # Predefined headings (or parts of headings)
       headings.merge!({
         :creation_time  => "Created",
+        :expires_in_seconds => "Expires In",
         :uuid           => "UUID",
         :current_scale  => "Current",
         :scales_from    => "Minimum",

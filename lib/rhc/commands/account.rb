@@ -39,14 +39,20 @@ module RHC::Commands
       if options.all
         rest_client.user # force authentication
         say "Deleting all authorizations associated with your account ... "
-        rest_client.delete_authorizations
-        success "done"
+        begin
+          rest_client.delete_authorizations
+          success "done"
+        rescue RHC::Rest::AuthorizationsNotSupported
+          info "not supported"
+        end
       elsif options.token
         options.noprompt = true
         say "Ending session on server ... "
         begin
           rest_client.delete_authorization(options.token)
           success "deleted"
+        rescue RHC::Rest::AuthorizationsNotSupported
+          info "not supported"
         rescue RHC::Rest::TokenExpiredOrInvalid
           info "already closed"
         rescue => e

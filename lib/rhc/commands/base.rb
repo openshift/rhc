@@ -87,7 +87,7 @@ class RHC::Commands::Base
       indent = o.scan(/^[ \t]*(?=\S)/).min.size || 0
       options[:description] =
         o.gsub(/^[ \t]{#{indent}}/, '').
-          gsub(/(\b)\s*\n(?!\s*\n)(\S)/m, '\1 \2').
+          gsub(/(\b|')\s*\n(?!\s*\n)(\S)/m, '\1 \2').
           gsub(/\n+\Z/, '').
           gsub(/\n{3,}/, "\n\n")
     end
