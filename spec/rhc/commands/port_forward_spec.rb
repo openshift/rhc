@@ -65,11 +65,7 @@ describe RHC::Commands::PortForward do
         @ssh.should_receive(:exec!).with("rhc-list-ports").and_yield(nil, :stderr, 'mysql -> 127.0.0.1:3306')
         forward = mock(Net::SSH::Service::Forward)
         @ssh.should_receive(:forward).and_return(forward)
-        if mac?
-          forward.should_receive(:local).with(3306, '127.0.0.1', 3306)
-        else
-          forward.should_receive(:local).with('127.0.0.1', 3306, '127.0.0.1', 3306)
-        end
+        forward.should_receive(:local).with(3306, '127.0.0.1', 3306)
         @ssh.should_receive(:loop)
       end
       it "should run successfully" do
@@ -108,11 +104,7 @@ describe RHC::Commands::PortForward do
         @ssh.should_receive(:exec!).with("rhc-list-ports").and_yield(nil, :stderr, 'mysql -> 127.0.0.1:3306')
         forward = mock(Net::SSH::Service::Forward)
         @ssh.should_receive(:forward).and_return(forward)
-        if mac?
-          forward.should_receive(:local).with(3306, '127.0.0.1', 3306)
-        else
-          forward.should_receive(:local).with('127.0.0.1', 3306, '127.0.0.1', 3306)
-        end
+        forward.should_receive(:local).with(3306, '127.0.0.1', 3306)
         @ssh.should_receive(:loop).and_raise(Interrupt.new)
       end
       it "should exit when user interrupts" do
@@ -149,19 +141,11 @@ describe RHC::Commands::PortForward do
           and_yield(nil, :stderr, "httpd -> #{haproxy_host_1}:8080\nhttpd -> #{haproxy_host_2}:8080\nmongodb -> #{mongo_host}:35541\nmysqld -> #{ipv6_host}:3306")
         forward = mock(Net::SSH::Service::Forward)
         @ssh.should_receive(:forward).at_least(3).times.and_return(forward)
-        if mac?
-          forward.should_receive(:local).with(8080, haproxy_host_1, 8080)
-          forward.should_receive(:local).with(8080, haproxy_host_2, 8080).and_raise(Errno::EADDRINUSE)
-          forward.should_receive(:local).with(8081, haproxy_host_2, 8080)
-          forward.should_receive(:local).with(35541, mongo_host, 35541)
-          forward.should_receive(:local).with(3306, ipv6_host, 3306)
-        else
-          forward.should_receive(:local).with(haproxy_host_1, 8080, haproxy_host_1, 8080)
-          forward.should_receive(:local).with(haproxy_host_2, 8080, haproxy_host_2, 8080).and_raise(Errno::EADDRINUSE)
-          forward.should_receive(:local).with(haproxy_host_2, 8081, haproxy_host_2, 8080)
-          forward.should_receive(:local).with(mongo_host, 35541, mongo_host, 35541)
-          forward.should_receive(:local).with(ipv6_host, 3306, ipv6_host, 3306)
-        end
+        forward.should_receive(:local).with(8080, haproxy_host_1, 8080)
+        forward.should_receive(:local).with(8080, haproxy_host_2, 8080).and_raise(Errno::EADDRINUSE)
+        forward.should_receive(:local).with(8081, haproxy_host_2, 8080)
+        forward.should_receive(:local).with(35541, mongo_host, 35541)
+        forward.should_receive(:local).with(3306, ipv6_host, 3306)
         @ssh.should_receive(:loop).and_raise(Interrupt.new)
       end
       it "should exit when user interrupts" do
