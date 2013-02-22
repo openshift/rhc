@@ -107,7 +107,7 @@ module RHCHelper
     def is_created?
       new_client.domains[0].find_application(name)
       true
-    rescue RHC::ApplicationNotFoundException
+    rescue RHC::Rest::ApplicationNotFoundException
       false
     end
 

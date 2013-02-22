@@ -46,8 +46,7 @@ module RHC::Commands
 
       say "Adding #{cart.name} to application '#{options.app}' ... "
 
-      rest_domain = rest_client.find_domain(options.namespace)
-      rest_app = rest_domain.find_application(options.app)
+      rest_app = rest_client.find_application(options.namespace, options.app, :include => :cartridges)
       rest_cartridge = rest_app.add_cartridge(cart.name)
 
       success "Success"
@@ -65,8 +64,7 @@ module RHC::Commands
     option ["-a", "--app app"], "Application you are adding the cartridge to", :context => :app_context, :required => true
     argument :cartridge, "The name of the cartridge", ["-c", "--cartridge cart_type"]
     def show(cartridge)
-      rest_domain = rest_client.find_domain(options.namespace)
-      rest_app = rest_domain.find_application(options.app)
+      rest_app = rest_client.find_application(options.namespace, options.app, :include => :cartridges)
       rest_cartridge = check_cartridges(cartridge, :from => rest_app.cartridges).first
 
       display_cart(rest_cartridge)
@@ -82,9 +80,7 @@ module RHC::Commands
     option ["--confirm"], "Pass to confirm removing the cartridge"
     alias_action :"app cartridge remove", :root_command => true, :deprecated => true
     def remove(cartridge)
-
-      rest_domain = rest_client.find_domain(options.namespace)
-      rest_app = rest_domain.find_application(options.app)
+      rest_app = rest_client.find_application(options.namespace, options.app, :include => :cartridges)
       rest_cartridge = check_cartridges(cartridge, :from => rest_app.cartridges).first
 
       confirm_action "Removing a cartridge is a destructive operation that may result in loss of data associated with the cartridge.\n\nAre you sure you wish to remove #{rest_cartridge.name} from '#{rest_app.name}'?"
@@ -136,8 +132,7 @@ module RHC::Commands
     option ["-a", "--app app"], "Application the cartridge belongs to", :context => :app_context, :required => true
     alias_action :"app cartridge status", :root_command => true, :deprecated => true
     def status(cartridge)
-      rest_domain = rest_client.find_domain(options.namespace)
-      rest_app = rest_domain.find_application(options.app)
+      rest_app = rest_client.find_application(options.namespace, options.app, :include => :cartridges)
       rest_cartridge = check_cartridges(cartridge, :from => rest_app.cartridges).first
       results { rest_cartridge.status.each{ |msg| say msg['message'] } }
       0
@@ -164,8 +159,7 @@ module RHC::Commands
     def scale(cartridge)
       raise RHC::MissingScalingValueException unless options.min || options.max
 
-      rest_domain = rest_client.find_domain(options.namespace)
-      rest_app = rest_domain.find_application(options.app)
+      rest_app = rest_client.find_application(options.namespace, options.app, :include => :cartridges)
       rest_cartridge = check_cartridges(cartridge, :from => rest_app.cartridges).first
 
       raise RHC::CartridgeNotScalableException unless rest_cartridge.scalable?
@@ -195,8 +189,7 @@ module RHC::Commands
     option ["-f", "--force"], "Force the action"
     def storage(cartridge)
       cartridges = Array(cartridge)
-      rest_domain = rest_client.find_domain(options.namespace)
-      rest_app = rest_domain.find_application(options.app)
+      rest_app = rest_client.find_application(options.namespace, options.app, :include => :cartridges)
 
       # Pull the desired action
       #
@@ -257,11 +250,10 @@ module RHC::Commands
       include RHC::CartridgeHelpers
 
       def cartridge_action(cartridge, action, &block)
-        rest_domain = rest_client.find_domain(options.namespace)
-        rest_app = rest_domain.find_application(options.app)
+        rest_app = rest_client.find_application(options.namespace, options.app, :include => :cartridges)
         rest_cartridge = check_cartridges(cartridge, :from => rest_app.cartridges).first
         result = rest_cartridge.send action
-        resp = [result, rest_cartridge, rest_app, rest_domain]
+        resp = [result, rest_cartridge, rest_app]
         yield resp if block_given?
         resp
       end

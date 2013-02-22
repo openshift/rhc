@@ -44,21 +44,6 @@ module RHC
         rest_method "DELETE", :force => force
       end
       alias :delete :destroy
-
-      def find_application(name, options={})
-        if name.is_a?(Hash)
-          options = name.merge(options)
-          name = options[:name]
-        end
-        framework = options[:framework]
-
-        debug "Finding application :name => #{name}, :framework => #{framework}"
-        applications.each do |app|
-          return app if (name.nil? or app.name.downcase == name.downcase) and (framework.nil? or app.framework == framework)
-        end
-
-        raise RHC::ApplicationNotFoundException.new("Application #{name} does not exist")
-      end
     end
   end
 end

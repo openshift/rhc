@@ -13,18 +13,6 @@ module RHC
     end
   end
 
-  class DomainNotFoundException < Exception
-    def initialize(message="Domain not found")
-      super message, 127
-    end
-  end
-
-  class ApplicationNotFoundException < Exception
-    def initialize(message="Application not found")
-      super message, 101
-    end
-  end
-
   class CartridgeNotFoundException < Exception
     def initialize(message="Cartridge not found")
       super message, 154
