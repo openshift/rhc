@@ -2,22 +2,13 @@ language: ruby
 rvm:
   - 1.8.7
   - 1.9.3
+  - 2.0.0
 gemfile: Gemfile
 after_install: gem list
 script: bundle exec rake spec
 notifications:
   email:
-    recipients:
-      - dev@openshift.redhat.com
+    #recipients:
+    #  - dev@lists.openshift.redhat.com
   irc:
     - "irc.freenode.org#openshift-dev"
-env:
-  global:
-    - "ARTIFACTS_AWS_REGION=us-east-1"
-    - "ARTIFACTS_S3_BUCKET=libra_travis_artifacts"
-    - secure: "X/3WPJkR5dQOyZbklqovK3EB8gye5k7yeczfqoRIjfsf7Y3GQbyNR10kAIX9\nwx4TFxV3617GSxqPrFI2esU0N2uqwbGsGdnd7sHcz27df861CsIdtgwtX3mM\nw/ZoEVwe5DRjCUPXroMwfmh20q8kVXUnlW2wR8vbzRC/fQji+u0="
-    - secure: "lKAXyrHz4cbzKbDrOsAWrv/r8S9ZFPw4f2Zev1PRBMqO0FPdntcsoIESE9hQ\nKnrwIIyRfYaSHgN8jKquUPvSotGfiubrTXww9fOLUlJDvkbumxYqVxge92ut\nXP4XOyGw5Lcpc582kTdfg/uYElkqH1VC7FesFcWewEgL8Rhhz+8="
-before_script:
-  - "gem install travis-artifacts"
-after_failure: 
-  - "travis-artifacts upload --path coverage/spec --private"

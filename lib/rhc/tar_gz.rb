@@ -1,5 +1,4 @@
 require 'stringio'
-require 'rhc/vendor/zliby'
 require 'archive/tar/minitar'
 include Archive::Tar
 
@@ -16,7 +15,7 @@ module RHC
       regex = Regexp.new search
       if RHC::Helpers.windows? or force_ruby
         begin
-          RHC::Vendor::Zlib::GzipReader.open(filename) do |gz|
+          zlib::GzipReader.open(filename) do |gz|
             Minitar::Reader.open gz do |tar|
               tar.each_entry do |entry|
                 if entry.full_name =~ regex
@@ -25,16 +24,28 @@ module RHC
               end
             end
           end
-        rescue RHC::Vendor::Zlib::GzipFile::Error
-          return false
+        rescue zlib::GzipFile::Error, zlib::GzipFile::Error
+          false
         end
       else
         # combining STDOUT and STDERR (i.e., 2>&1) does not suppress output
         # when the specs run via 'bundle exec rake spec'
-        return system "#{TAR_BIN} --wildcards -tf #{filename} #{regex.source} 2>/dev/null >/dev/null"
+        system "#{TAR_BIN} --wildcards -tf #{filename} #{regex.source} 2>/dev/null >/dev/null"
       end
     end
 
+    private
+      def self.zlib
+        #:nocov:
+        require 'zlib' rescue nil
+        if defined? Zlib::GzipReader 
+          Zlib
+        else
+          require 'rhc/vendor/zliby'
+          RHC::Vendor::Zlib
+        end
+        #:nocov:
+      end
   end
 
 end

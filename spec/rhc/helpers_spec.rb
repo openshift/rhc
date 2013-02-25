@@ -25,7 +25,7 @@ describe RHC::Helpers do
         @config ||= RHC::Config.new
       end
       def options
-        @options ||= OpenStruct.new([:server])
+        @options ||= OpenStruct.new(:server => nil)
       end
     end.new
   end
