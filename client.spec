@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.5.3
+Version: 1.5.4
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -100,6 +100,33 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Feb 25 2013 Adam Miller <admiller@redhat.com> 1.5.4-1
+- Add support for ruby 2.0.0-p0, needed to preferentially use zlib
+  (ccoleman@redhat.com)
+- Merge pull request #298 from BanzaiMan/dev/hasari/bz907742
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #308 from maxamillion/dev/admiller/new_brew_tags
+  (dmcphers+openshiftbot@redhat.com)
+- new brew tag (admiller@redhat.com)
+- Merge pull request #303 from kraman/origin_rhel_fixes
+  (dmcphers+openshiftbot@redhat.com)
+- updates for rhel6.4 (admiller@redhat.com)
+- Merge pull request #300 from fotioslindiakos/find_application
+  (dmcphers+openshiftbot@redhat.com)
+- Using stub_one_application (fotios@redhat.com)
+- Converted RHC::ApplicationNotFound exception to
+  RHC::Rest::ApplicationNotFound (fotios@redhat.com)
+- Fix error messages to bring them in line with old values (fotios@redhat.com)
+- Added options to find_application (fotios@redhat.com)
+- Raise errors based on exit code (fotios@redhat.com)
+- Fixed spacing for find_application calls (fotios@redhat.com)
+- Changed function name and proper URI creation (fotios@redhat.com)
+- Modified spec tests to use new client.find_application Added rest_spec tests
+  to ensure the client is using the proper find_application (fotios@redhat.com)
+- Added find_application to rest_client (fotios@redhat.com)
+- Fix name of oo-register-user (kraman@gmail.com)
+- Use 'localhost' exclusively for local port forwarding. (asari.ruby@gmail.com)
+
 * Wed Feb 20 2013 Adam Miller <admiller@redhat.com> 1.5.3-1
 - RHC is not sending the API version after negotiation (ccoleman@redhat.com)
 
