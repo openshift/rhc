@@ -28,8 +28,10 @@ module RHC::Auth
       end
 
       def []=(key, value)
-        File.open(path(key), 'w'){ |f| f.write(value) }
-        File.chmod(0600, path(key))
+        file = path(key)
+        FileUtils.mkdir_p File.dirname(file)
+        File.open(file, 'w'){ |f| f.write(value) }
+        File.chmod(0600, file)
         value
       end
 
