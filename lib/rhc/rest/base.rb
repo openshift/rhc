@@ -20,7 +20,8 @@ module RHC
         link = links[link_name.to_s]
         raise "No link defined for #{link_name}" unless link
         url = link['href']
-        method = link['method']
+        url = url.gsub(/:\w+/) { |s| options[:params][s] } if options[:params]
+        method = options[:method] || link['method']
 
         client.request(options.merge({
           :url => url,
@@ -31,6 +32,10 @@ module RHC
 
       def links
         attributes['links'] || {}
+      end
+
+      def supports?(sym)
+        links.has_key?(sym.to_s) || links.has_key?(sym.to_s.upcase)
       end
 
       protected

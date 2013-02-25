@@ -6,7 +6,174 @@ require 'httpclient'
 
 module RHC
   module Rest
+
+    #
+    # These are methods that belong to the API object but are
+    # callable from the client for convenience.
+    #
+    module ApiMethods
+      def add_domain(id)
+        debug "Adding domain #{id}"
+        @domains = nil
+        api.rest_method "ADD_DOMAIN", :id => id
+      end
+
+      def domains
+        debug "Getting all domains"
+        @domains ||= api.rest_method "LIST_DOMAINS"
+      end
+
+      def cartridges
+        debug "Getting all cartridges"
+        @cartridges ||= api.rest_method("LIST_CARTRIDGES", nil, :lazy_auth => true)
+      end
+
+      def user
+        debug "Getting user info"
+        @user ||= api.rest_method "GET_USER"
+      end
+
+      def sshkeys
+        debug "Finding all keys for #{user.login}"
+        user.keys
+      end
+
+      def add_key(name, key, content)
+        debug "Adding key #{key} for #{user.login}"
+        user.add_key name, key, content
+      end
+
+      def delete_key(name)
+        debug "Deleting key '#{name}'"
+        key = find_key(name)
+        key.destroy
+      end
+
+      #Find Domain by namesapce
+      def find_domain(id)
+        debug "Finding domain #{id}"
+        domains.each { |domain| return domain if domain.id == id }
+
+        raise DomainNotFoundException.new("Domain #{id} not found")
+      end
+
+      def find_application(domain, application, options = {})
+        response = request({
+          :url => link_show_application_by_domain_name(domain, application),
+          :method => "GET",
+          :payload => options
+        })
+      end
+
+      def link_show_application_by_domain_name(domain, application)
+        uri_args = [
+          api.links['LIST_DOMAINS']['href'],
+          domain,
+          "applications",
+          application
+        ]
+        URI.escape(uri_args.join("/"))
+      end
+
+      #Find Cartridge by name or regex
+      def find_cartridges(name)
+        debug "Finding cartridge #{name}"
+        if name.is_a?(Hash)
+          regex = name[:regex]
+          type = name[:type]
+          name = name[:name]
+        end
+
+        filtered = Array.new
+        cartridges.each do |cart|
+          if regex
+            filtered.push(cart) if cart.name.match(regex) and (type.nil? or cart.type == type)
+          else
+            filtered.push(cart) if (name.nil? or cart.name == name) and (type.nil? or cart.type == type)
+          end
+        end
+        return filtered
+      end
+
+      #find Key by name
+      def find_key(name)
+        debug "Finding key #{name}"
+        user.find_key(name) or raise RHC::KeyNotFoundException.new("Key #{name} does not exist")
+      end
+
+      def sshkeys
+        logger.debug "Finding all keys for #{user.login}" if @mydebug
+        user.keys
+      end
+
+      def add_key(name, key, content)
+        logger.debug "Adding key #{key} for #{user.login}" if @mydebug
+        user.add_key name, key, content
+      end
+
+      def delete_key(name)
+        logger.debug "Deleting key '#{name}'" if @mydebug
+        key = find_key(name)
+        key.destroy
+      end
+
+      def supports_sessions?
+        api.supports? 'ADD_AUTHORIZATION'
+      end
+
+      def authorizations
+        raise AuthorizationsNotSupported unless supports_sessions?
+        api.rest_method 'LIST_AUTHORIZATIONS'
+      end
+
+      #
+      # Returns nil if creating sessions is not supported, raises on error, otherwise
+      # returns an Authorization object.
+      #
+      def new_session(options={})
+        if supports_sessions?
+          api.rest_method('ADD_AUTHORIZATION', {
+            :scope => 'session',
+            :note => "RHC/#{RHC::VERSION::STRING} (from #{Socket.gethostname rescue 'unknown'} on #{RUBY_PLATFORM})",
+            :reuse => true
+          }, options)
+        end
+      end
+
+      def add_authorization(options={})
+        raise AuthorizationsNotSupported unless supports_sessions?
+        api.rest_method('ADD_AUTHORIZATION', options, options)
+      end
+
+      def delete_authorizations
+        raise AuthorizationsNotSupported unless supports_sessions?
+        api.rest_method('LIST_AUTHORIZATIONS', nil, {:method => :delete})
+      end
+
+      def delete_authorization(token)
+        raise AuthorizationsNotSupported unless supports_sessions?
+        api.rest_method('SHOW_AUTHORIZATION', nil, {:method => :delete, :params => {':id' => token}})
+      end
+
+      def authorization_scope_list
+        raise AuthorizationsNotSupported unless supports_sessions?
+        link = api.links['ADD_AUTHORIZATION']
+        scope = link['optional_params'].find{ |h| h['name'] == 'scope' }
+        scope['description'].scan(/(?!\n)\*(.*?)\n(.*?)(?:\n|\Z)/m).inject([]) do |h, (a, b)|
+          h << [a.strip, b.strip] if a.present? && b.present?
+          h
+        end
+      end
+
+      def logout
+        #TODO logout
+        debug "Logout/Close client"
+      end
+      alias :close :logout
+    end
+
     class Client < Base
+      include ApiMethods
 
       # Keep the list of supported API versions here
       # The list may not necessarily be sorted; we will select the last
@@ -33,6 +200,12 @@ module RHC
         @preferred_api_versions ||= CLIENT_API_VERSIONS
         @debug ||= false
 
+        if options[:token]
+          self.headers[:authorization] = "Bearer #{options.delete(:token)}"
+          options.delete(:user)
+          options.delete(:password)
+        end
+
         @auth = options.delete(:auth)
 
         self.headers.merge!(options.delete(:headers)) if options[:headers]
@@ -45,17 +218,33 @@ module RHC
         @debug
       end
 
+      def url
+        @end_point
+      end
+
+      def api
+        @api ||= RHC::Rest::Api.new(self, @preferred_api_versions).tap do |api| 
+          self.current_api_version = api.api_version_negotiated
+        end
+      end
+
+      def api_version_negotiated
+        api
+        current_api_version
+      end
+
       def request(options, &block)
         (0..(1.0/0.0)).each do |i|
           begin
             client, args = new_request(options.dup)
+            auth = options[:auth] || self.auth
 
             #debug "Request: #{client.object_id} #{args.inspect}\n-------------" if debug?
             response = client.request(*(args << true))
             #debug "Response: #{response.status} #{response.headers.inspect}\n#{response.content}\n-------------" if debug? && response
 
             next if retry_proxy(response, i, args, client)
-            auth.retry_auth?(response) and redo if auth
+            auth.retry_auth?(response, self) and redo if auth
             handle_error!(response, args[1], client) unless response.ok?
 
             break (if block_given?
@@ -68,7 +257,7 @@ module RHC
               debug "Response: #{e.res.status} #{e.res.headers.inspect}\n#{e.res.content}\n-------------" if debug?
 
               next if retry_proxy(e.res, i, args, client)
-              auth.retry_auth?(e.res) and redo if auth
+              auth.retry_auth?(e.res, self) and redo if auth
               handle_error!(e.res, args[1], client)
             end
             raise ConnectionException.new(
@@ -134,136 +323,6 @@ module RHC
         end
       end
 
-      def url
-        @end_point
-      end
-
-      def api
-        @api ||= RHC::Rest::Api.new(self, @preferred_api_versions).tap do |api| 
-          self.current_api_version = api.api_version_negotiated
-        end
-      end
-
-      def api_version_negotiated
-        api
-        current_api_version
-      end
-
-      ################################################
-      # Delegate methods to API, should be moved there
-      # and then simply passed through.
-
-      def add_domain(id)
-        debug "Adding domain #{id}"
-        @domains = nil
-        api.rest_method "ADD_DOMAIN", :id => id
-      end
-
-      def domains
-        debug "Getting all domains"
-        @domains ||= api.rest_method "LIST_DOMAINS"
-      end
-
-      def cartridges
-        debug "Getting all cartridges"
-        @cartridges ||= api.rest_method("LIST_CARTRIDGES", nil, :lazy_auth => true)
-      end
-
-      def user
-        debug "Getting user info"
-        @user ||= api.rest_method "GET_USER"
-      end
-
-      def sshkeys
-        debug "Finding all keys for #{user.login}"
-        user.keys
-      end
-
-      def add_key(name, key, content)
-        debug "Adding key #{key} for #{user.login}"
-        user.add_key name, key, content
-      end
-
-      def delete_key(name)
-        debug "Deleting key '#{name}'"
-        key = find_key(name)
-        key.destroy
-      end
-
-      #Find Domain by namesapce
-      def find_domain(id)
-        debug "Finding domain #{id}"
-        domains.each { |domain| return domain if domain.id == id }
-
-        raise RHC::Rest::DomainNotFoundException.new("Domain #{id} not found")
-      end
-
-      def find_application(domain, application, options = {})
-        response = request({
-          :url => link_show_application_by_domain_name(domain, application),
-          :method => "GET",
-          :payload => options
-        })
-      end
-
-      def link_show_application_by_domain_name(domain, application)
-        uri_args = [
-          api.links['LIST_DOMAINS']['href'],
-          domain,
-          "applications",
-          application
-        ]
-        URI.escape(uri_args.join("/"))
-      end
-
-      #Find Cartridge by name or regex
-      def find_cartridges(name)
-        debug "Finding cartridge #{name}"
-        if name.is_a?(Hash)
-          regex = name[:regex]
-          type = name[:type]
-          name = name[:name]
-        end
-
-        filtered = Array.new
-        cartridges.each do |cart|
-          if regex
-            filtered.push(cart) if cart.name.match(regex) and (type.nil? or cart.type == type)
-          else
-            filtered.push(cart) if (name.nil? or cart.name == name) and (type.nil? or cart.type == type)
-          end
-        end
-        return filtered
-      end
-
-      #find Key by name
-      def find_key(name)
-        debug "Finding key #{name}"
-        user.find_key(name) or raise RHC::KeyNotFoundException.new("Key #{name} does not exist")
-      end
-
-      def sshkeys
-        logger.debug "Finding all keys for #{user.login}" if @mydebug
-        user.keys
-      end
-
-      def add_key(name, key, content)
-        logger.debug "Adding key #{key} for #{user.login}" if @mydebug
-        user.add_key name, key, content
-      end
-
-      def delete_key(name)
-        logger.debug "Deleting key '#{name}'" if @mydebug
-        key = find_key(name)
-        key.destroy
-      end
-
-      def logout
-        #TODO logout
-        debug "Logout/Close client"
-      end
-      alias :close :logout
-
       protected
         include RHC::Helpers
 
@@ -325,18 +384,20 @@ module RHC
         def new_request(options)
           options.reverse_merge!(self.options)
 
-          headers = (self.headers.to_a + (options.delete(:headers) || []).to_a).inject({}) do |h,(k,v)|
-            v = "application/#{v}" if k == :accept && v.is_a?(Symbol)
-            h[k.to_s.downcase.gsub(/_/, '-')] = v
-            h
-          end
-
           options[:connect_timeout] ||= options[:timeout] || 120
           options[:receive_timeout] ||= options[:timeout] || 0
           options[:send_timeout] ||= options[:timeout] || 0
           options[:timeout] = nil
 
-          auth.to_request(options) if auth
+          if auth = options[:auth] || self.auth
+            auth.to_request(options)
+          end
+
+          headers = (self.headers.to_a + (options.delete(:headers) || []).to_a).inject({}) do |h,(k,v)|
+            v = "application/#{v}" if k == :accept && v.is_a?(Symbol)
+            h[k.to_s.downcase.gsub(/_/, '-')] = v
+            h
+          end
 
           modifiers = []
           version = options.delete(:api_version) || current_api_version
@@ -390,6 +451,10 @@ module RHC
             data.map{ |json| Domain.new(json, self) }
           when 'domain'
             Domain.new(data, self)
+          when 'authorization'
+            Authorization.new(data, self)
+          when 'authorizations'
+            data.map{ |json| Authorization.new(json, self) }
           when 'applications'
             data.map{ |json| Application.new(json, self) }
           when 'application'
@@ -418,7 +483,7 @@ module RHC
           "The server did not respond correctly. This may be an issue "\
           "with the server configuration or with your connection to the "\
           "server (such as a Web proxy or firewall)."\
-          "#{client.proxy.present? ? " Please verify that your proxy server is working correctly (#{client.proxy}) and that you can access the OpenShift server #{url}" : "Please verify that you can access the OpenShift server #{url}"}"
+          "#{client.proxy.present? ? " Please verify that your proxy server is working correctly (#{client.proxy}) and that you can access the OpenShift server #{url}" : " Please verify that you can access the OpenShift server #{url}"}"
         end
 
         def handle_error!(response, url, client)

@@ -72,6 +72,86 @@ module Commander::UI
 end
 
 
+module CommandExampleHelpers
+  #
+  # Allow this example to stub command methods
+  # by guaranteeing the instance exists prior
+  # to command execution.  Use with methods on
+  # CommandHelpers
+  #
+  def using_command_instance
+    subject{ described_class }
+    let(:instance) { described_class.new }
+  end
+end
+#
+# Helper methods for executing commands and
+# stubbing/mocking methods
+#
+module CommandHelpers
+  def command_runner(*args)
+    mock_terminal
+    new_command_runner *args do
+      instance #ensure instance is created before subject :new is mocked
+      subject.should_receive(:new).any_number_of_times.and_return(instance)
+      RHC::Commands.to_commander
+    end
+  end
+  def run!(*args)
+    command_runner(*args).run!
+  end
+  def expects_running(*args, &block)
+    r = command_runner(*args)
+    lambda { r.run! }
+  end
+  def command_for(*args)
+    command = nil
+    RHC::Commands.stub(:execute){ |cmd, method, args| command = cmd; 0 }
+    command_runner(*args).run!
+    command
+  end
+
+  #
+  # These methods assume the example has declared
+  # let(:arguments){ [<arguments>] }
+  #
+
+  def run_command
+    mock_terminal
+    input.each { |i| $terminal.write_line(i) } if respond_to?(:input)
+    $terminal.close_write
+    run!(*arguments)
+  end
+  def command_output
+    run_command
+  rescue SystemExit => e
+    "#{@output.string}\n#{$stderr.string}#{e}"
+  else
+    "#{@output.string}\n#{$stderr.string}"
+  end
+
+  #
+  # These methods bypass normal command stubbing.
+  # Should really be used when stubbing the whole
+  # path.  Most specs should use run_instance.
+  #
+  def run(input=[])
+    mock_terminal
+    input.each { |i| $terminal.write_line(i) }
+    $terminal.close_write
+    RHC::CLI.start(arguments)
+  end
+
+  def run_output(input=[])
+    run(input)
+  rescue SystemExit => e
+    "#{@output.string}\n#{$stderr.string}#{e}"
+  else
+    "#{@output.string}\n#{$stderr.string}"
+  end
+
+end
+
 module ClassSpecHelpers
 
   include Commander::Delegates
@@ -106,31 +186,6 @@ module ClassSpecHelpers
     #create_test_command
     yield if block
     Commander::Runner.instance
-  end
-
-  #
-  # 
-  #
-  def expects_running(*args, &block)
-    mock_terminal
-    r = new_command_runner *args do
-      instance #ensure instance is created before subject :new is mocked
-      subject.should_receive(:new).any_number_of_times.and_return(instance)
-      RHC::Commands.to_commander
-    end
-    lambda { r.run! }
-  end
-  def command_for(*args)
-    mock_terminal
-    r = new_command_runner *args do
-      instance #ensure instance is created before subject :new is mocked
-      subject.should_receive(:new).any_number_of_times.and_return(instance)
-      RHC::Commands.to_commander
-    end
-    command = nil
-    RHC::Commands.stub(:execute){ |cmd, method, args| command = cmd; 0 }
-    r.run!
-    command
   end
 
   class MockHighLineTerminal < HighLine
@@ -222,23 +277,6 @@ module ClassSpecHelpers
     $stdout = old_stdout
     $stderr = old_stderr
     $terminal = old_terminal
-  end
-
-  def run(input=[])
-    #Commander::Runner.instance_variable_set :"@singleton", nil
-    mock_terminal
-    input.each { |i| $terminal.write_line(i) }
-    $terminal.close_write
-    #"#{@output.string}\n#{$stderr.string}"
-    RHC::CLI.start(arguments)
-  end
-
-  def run_output(input=[])
-    run(input)
-  rescue SystemExit => e
-    "#{@output.string}\n#{$stderr.string}#{e}"
-  else
-    "#{@output.string}\n#{$stderr.string}"
   end
 
   #
@@ -380,6 +418,8 @@ Spec::Runner.configure do |config|
   config.include(CommanderInvocationMatchers)
   config.include(ColorMatchers)
   config.include(ClassSpecHelpers)
+  config.include(CommandHelpers)
+  config.extend(CommandExampleHelpers)
 end
 
 module TestEnv

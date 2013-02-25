@@ -15,6 +15,10 @@ module RHC::Rest::Mock
 
   module Helpers
 
+    def mock_date_1
+      '2013-02-21T01:00:01Z'
+    end
+
     def mock_user
       "test_user"
     end
@@ -24,16 +28,26 @@ module RHC::Rest::Mock
     end
 
     def stub_api_request(method, uri, with_auth=true)
-      stub_request(method, mock_href(uri, with_auth)).
-        with(&user_agent_header)
+      api = stub_request(method, mock_href(uri, with_auth))
+      api.with(&lambda{ |r| request.headers['Authorization'] == "Bearer #{with_auth[:token]}" }) if with_auth.respond_to?(:[]) && with_auth[:token]
+      api.with(&user_agent_header)
     end
 
-    def stub_api(auth=false)
+    def stub_api(auth=false, authorizations=false)
+      stub_api_request(:get, 'broker/rest/api', auth).
+        to_return({
+          :body => {
+            :data => mock_response_links(authorizations ? mock_api_with_authorizations : mock_real_client_links),
+            :supported_api_versions => [1.0, 1.1, 1.2, 1.3],
+          }.to_json
+        })
+    end
+    def stub_api_v12(auth=false)
       stub_api_request(:get, 'broker/rest/api', auth).
         to_return({
           :body => {
             :data => mock_response_links(mock_real_client_links),
-            :supported_api_versions => [1.0, 1.1, 1.2, 1.3],
+            :supported_api_versions => [1.0, 1.1, 1.2],
           }.to_json
         })
     end
@@ -54,6 +68,37 @@ module RHC::Rest::Mock
       stub_api_request(:post, 'broker/rest/domains', mock_user_auth).
         with(:body => hash_including({:id => name})).
         to_return(new_domain(name))
+    end
+    def stub_authorizations
+      stub_api_request(:get, 'broker/rest/user/authorizations', mock_user_auth).
+        to_return({
+          :status => 200,
+          :body => {
+            :type => 'authorizations',
+            :data => [
+              {
+                :note => 'an_authorization',
+                :token => 'a_token_value',
+                :created_at => mock_date_1,
+                :expires_in_seconds => 60,
+                :scopes => 'session read'
+              }
+            ]
+          }.to_json
+        })
+    end
+    def stub_delete_authorizations
+      stub_api_request(:delete, 'broker/rest/user/authorizations', mock_user_auth).
+        to_return(:status => 204)
+    end
+    def stub_delete_authorization(token)
+      stub_api_request(:delete, "broker/rest/user/authorizations/#{token}", mock_user_auth).
+        to_return(:status => 204)
+    end
+    def stub_add_authorization(params)
+      stub_api_request(:post, 'broker/rest/user/authorizations', mock_user_auth).
+        with(:body => hash_including(params)).
+        to_return(new_authorization(params))
     end
     def stub_no_keys
       stub_api_request(:get, 'broker/rest/user/keys', mock_user_auth).to_return(no_keys)
@@ -103,7 +148,8 @@ module RHC::Rest::Mock
           :body => {
             :type => 'domains',
             :data => [{:id => name, :links => mock_response_links([
-              ['LIST_APPLICATIONS', "broker/rest/domains/#{name}/applications", 'get']
+              ['LIST_APPLICATIONS', "broker/rest/domains/#{name}/applications", 'get'],
+              ['ADD_APPLICATION', "broker/rest/domains/#{name}/applications", 'post'],
             ])}],
           }.to_json
         })
@@ -215,6 +261,22 @@ module RHC::Rest::Mock
         }.to_json
       }
     end
+    def new_authorization(params)
+      {
+        :status => 201,
+        :body => {
+          :type => 'authorization',
+          :data => {
+            :note => params[:note],
+            :token => 'a_token_value',
+            :scopes => (params[:scope] || "userinfo").gsub(/,/, ' '),
+            :expires_in => (params[:expires_in] || 60).to_i,
+            :expires_in_seconds => (params[:expires_in] || 60).to_i,
+            :created_at => mock_date_1,
+          },
+        }.to_json
+      }
+    end
 
     def mock_pass
       "test pass"
@@ -233,7 +295,11 @@ module RHC::Rest::Mock
           password = respond_to?(:password) ? self.password : mock_pass
           "#{username}:#{password}@#{mock_uri}"
         elsif with_auth
-          "#{with_auth[:user]}:#{with_auth[:password]}@#{server}"
+          if with_auth[:token]
+            mock_uri
+          else
+            "#{with_auth[:user]}:#{with_auth[:password]}@#{server}"
+          end
         else
           server
         end
@@ -251,7 +317,7 @@ module RHC::Rest::Mock
         # this is not used by the API classes.
         link_set[operation] = { 'href' => mock_href(href), 'method' => method, 'relative' => href }
       end
-      return link_set
+      link_set
     end
 
     def mock_app_links(domain_id='test_domain',app_id='test_app')
@@ -286,6 +352,13 @@ module RHC::Rest::Mock
        ['ADD_DOMAIN',      "broker/rest/domains",    'POST'],
        ['LIST_CARTRIDGES', "broker/rest/cartridges", 'GET'],
       ]
+    end
+    def mock_api_with_authorizations
+      mock_real_client_links.concat([
+        ['LIST_AUTHORIZATIONS', "broker/rest/user/authorizations", 'GET'],
+        ['ADD_AUTHORIZATION',   "broker/rest/user/authorizations", 'POST'],
+        ['SHOW_AUTHORIZATION',  "broker/rest/user/authorizations/:id", 'GET'],
+      ])
     end
 
     def mock_domain_links(domain_id='test_domain')
