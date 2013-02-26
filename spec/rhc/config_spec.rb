@@ -6,6 +6,7 @@ describe RHC::Config do
   subject{ RHC::Config }
   before(:all) do
     ENV['LIBRA_SERVER'] = nil
+    ENV['HTTP_PROXY'] = nil
     ENV['http_proxy'] = nil
     mock_terminal
     RHC::Config.stub(:home_dir).and_return('/home/mock_user')
@@ -15,6 +16,8 @@ describe RHC::Config do
 
   after(:all) do
     FakeFS.deactivate!
+    ENV['HTTP_PROXY'] = nil
+    ENV['http_proxy'] = nil
   end
 
   describe "class" do

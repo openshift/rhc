@@ -49,6 +49,16 @@ unless HTTP::Message.method_defined? :ok?
   #:nocov:
 end
 
+unless DateTime.method_defined? :to_time 
+  #:nocov:
+  class DateTime
+    def to_time
+      Time.parse(to_s)
+    end
+  end
+  #:nocov:
+end
+
 #
 # Allow http => https redirection, see 
 # http://bugs.ruby-lang.org/issues/859 to 1.8.7 for rough

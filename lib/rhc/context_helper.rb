@@ -12,6 +12,10 @@ module RHC
       ENV['LIBRA_SERVER'] || (!options.clean && config['libra_server']) || "openshift.redhat.com"
     end
 
+    def token_context
+      token_store.get(options.rhlogin, options.server) if options.rhlogin
+    end
+
     def app_context
       debug "Getting app context"
 

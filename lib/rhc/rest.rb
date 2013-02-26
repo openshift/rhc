@@ -4,14 +4,15 @@ module RHC
     autoload :Base,        'rhc/rest/base'
     autoload :Attributes,  'rhc/rest/attributes'
 
-    autoload :Api,         'rhc/rest/api'
-    autoload :Application, 'rhc/rest/application'
-    autoload :Cartridge,   'rhc/rest/cartridge'
-    autoload :Client,      'rhc/rest/client'
-    autoload :Domain,      'rhc/rest/domain'
-    autoload :Key,         'rhc/rest/key'
-    autoload :User,        'rhc/rest/user'
-    autoload :GearGroup,   'rhc/rest/gear_group'
+    autoload :Api,           'rhc/rest/api'
+    autoload :Application,   'rhc/rest/application'
+    autoload :Authorization, 'rhc/rest/authorization'
+    autoload :Cartridge,     'rhc/rest/cartridge'
+    autoload :Client,        'rhc/rest/client'
+    autoload :Domain,        'rhc/rest/domain'
+    autoload :Key,           'rhc/rest/key'
+    autoload :User,          'rhc/rest/user'
+    autoload :GearGroup,     'rhc/rest/gear_group'
 
     class Exception < RuntimeError
       attr_reader :code
@@ -88,6 +89,7 @@ module RHC
     #included Authorization credentials, then the 401 response indicates 
     #that authorization has been refused for those credentials. 
     class UnAuthorizedException < ClientErrorException; end
+    class TokenExpiredOrInvalid < UnAuthorizedException; end
 
     # DEPRECATED Unreachable host, SSL Exception
     class ResourceAccessException < Exception; end
@@ -107,5 +109,13 @@ module RHC
     class SelfSignedCertificate < CertificateVerificationFailed; end
 
     class SSLVersionRejected < SSLConnectionFailed; end
+
+    class MultipleCartridgeCreationNotSupported < Exception; end
+
+    class AuthorizationsNotSupported < Exception
+      def initialize(message="The server does not support setting or retrieving authorizations.")
+        super(message, 1)
+      end
+    end
   end
 end

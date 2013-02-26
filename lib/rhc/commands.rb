@@ -62,13 +62,34 @@ end
 #
 module Commander
   class Command
+    remove_const(:Options)
     class Options
       def initialize(init=nil)
         @table = {}
         default(init) if init
       end
+      def respond_to?(meth)
+        super || meth.to_s =~ /^\w+(=)?$/
+      end
       def method_missing meth, *args, &block
-        meth.to_s =~ /=$/ ? self[meth.to_s.chop] = args.first : self[meth]
+        if meth.to_s =~ /^\w+=$/
+          raise ArgumentError, "Options does not support #{meth} without a single argument" if args.length != 1
+          self[meth.to_s.chop] = args.first
+        elsif meth.to_s =~ /^\w+$/
+          if !@table.has_key?(meth)
+            begin; return super; rescue NoMethodError; nil; end
+          end
+          raise ArgumentError, "Options does not support #{meth} with arguments" if args.length != 0
+          self[meth]
+        else
+          super
+        end
+      end
+      def respond_to_missing?(meth, private_method = false)
+        meth.to_s =~ /^\w+(=)?$/
+      end
+      def ==(other)
+        __hash__ == other.__hash__
       end
       def []=(meth, value)
         @table[meth.to_sym] = value
@@ -83,6 +104,9 @@ module Commander
       end
       def __replace__(options)
         @table = __to_hash__(options).dup
+      end
+      def __hash__
+        @table
       end
       def __to_hash__(obj)
         Options === obj ? obj.__hash__ : obj
@@ -105,7 +129,7 @@ module RHC
       commands[opts[:name]] = opts
     end
     def self.global_option(*args, &block)
-      global_options << [args, block]
+      global_options << [args.freeze, block]
     end
 
     def self.deprecated?
@@ -134,6 +158,7 @@ module RHC
 
     def self.to_commander(instance=Commander::Runner.instance)
       global_options.each do |args, block|
+        args = args.dup
         opts = (args.pop if Hash === args.last) || {}
         option = instance.global_option(*args, &block).last
         option.merge!(opts)
@@ -148,7 +173,7 @@ module RHC
           (options_metadata = opts[:options] || []).each do |o|
             option_data = [o[:switches], o[:description]].flatten(1)
             c.option *option_data
-            o[:arg] = Commander::Runner.switch_to_sym(o[:switches].last)
+            o[:arg] = Commander::Runner.switch_to_sym(Array(o[:switches]).last)
           end
 
           deprecated[name.to_sym] = opts[:deprecated] unless opts[:deprecated].nil?
@@ -202,6 +227,13 @@ module RHC
       end
 
       def self.fill_arguments(cmd, options, args_metadata, options_metadata, args)
+        Commander::Runner.instance.options.each do |opt|
+          if opt[:context]
+            arg = Commander::Runner.switch_to_sym(opt[:switches].last)
+            options[arg] ||= lambda{ cmd.send(opt[:context]) }
+          end
+        end
+
         # process options
         options_metadata.each do |option_meta|
           arg = option_meta[:arg]

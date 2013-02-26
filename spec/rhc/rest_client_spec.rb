@@ -564,6 +564,33 @@ module RHC
           end
         end
       end
+
+      describe "#supports_sessions?" do
+        before{ subject.should_receive(:api).at_least(2).times.and_return(stub) }
+        context "with ADD_AUTHORIZATION link" do
+          before{ subject.api.should_receive(:supports?).twice.with('ADD_AUTHORIZATION').and_return(true) }
+          its(:supports_sessions?){ should be_true }
+        end
+        context "without ADD_AUTHORIZATION link" do
+          before{ subject.api.should_receive(:supports?).twice.with('ADD_AUTHORIZATION').and_return(false) }
+          its(:supports_sessions?){ should be_false }
+        end
+      end
+
+      describe "#authorizations" do
+        before do
+          stub_api_request(:get, '').to_return({:body => {
+              :data => mock_response_links(mock_api_with_authorizations),
+              :supported_api_versions => [1.0, 1.1]
+            }.to_json,
+            :status => 200
+          })
+          stub_authorizations
+        end
+        it{ client.authorizations.first.token.should == 'a_token_value' }
+        it{ client.authorizations.first.note.should == 'an_authorization' }
+        it{ client.authorizations.first.expires_in_seconds.should == 60 }
+      end
     end
   end
 end
