@@ -3,8 +3,8 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.5.4
-Release:       2%{?dist}
+Version: 1.5.5
+Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
 URL:           http://openshift.redhat.com
@@ -100,6 +100,30 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Feb 26 2013 Adam Miller <admiller@redhat.com> 1.5.5-1
+- Bug 913375 - Tail should be logging all carts in the head gear
+  (ccoleman@redhat.com)
+- Merge pull request #310 from smarterclayton/session_auth_support_2
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 915203 - Create token directory lazily (ccoleman@redhat.com)
+- Merge remote-tracking branch 'origin/master' into session_auth_support_2
+  (ccoleman@redhat.com)
+- Add authorization management commands and unit tests (ccoleman@redhat.com)
+- Set a better client string on new tokens (ccoleman@redhat.com)
+- Merge branch 'rhc_not_sending_version' into session_auth_support_2
+  (ccoleman@redhat.com)
+- Bug 912606 - Guard against bad file input, fix bad md5sums
+  (ccoleman@redhat.com)
+- Missed coverage of token loading in clean environment (ccoleman@redhat.com)
+- Bug 910442 - Write config file without quotes (ccoleman@redhat.com)
+- Bug 910630 - rhc app create broken against older servers
+  (ccoleman@redhat.com)
+- Print out missed lines when the number is relatively low
+  (ccoleman@redhat.com)
+- Allow tests to be run in reverse order by fixing cleanup problems
+  (ccoleman@redhat.com)
+- Negotiate token auth with server and support logout (ccoleman@redhat.com)
+
 * Mon Feb 25 2013 Adam Miller <admiller@redhat.com> 1.5.4-2
 - bump Release for fixed build target rebuild (admiller@redhat.com)
 
