@@ -58,6 +58,9 @@ module RHC::Auth
         if token && !@fetch_once && @no_interactive
           raise RHC::Rest::TokenExpiredOrInvalid, "Your authorization token is expired or invalid."
         end
+        if token and not client.supports_sessions?
+          raise RHC::Rest::AuthorizationsNotSupported
+        end
 
         if token
           warn "Your session has expired. Please sign in to start a new session."
