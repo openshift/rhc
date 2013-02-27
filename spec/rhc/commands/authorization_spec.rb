@@ -22,7 +22,7 @@ describe RHC::Commands::Authorization do
   def self.expect_an_unsupported_message
     context "without authorizations" do
       without_authorization
-      it('should warn that the server doesn\'t support auth'){ run_output.should =~ /The server does not support setting or retrieving authorizations/ }
+      it('should warn that the server doesn\'t support auth'){ run_output.should =~ /The server does not support setting, retrieving, or authenticating with authorization tokens/ }
       it{ expect{ run }.should exit_with_code(1) }
     end
   end

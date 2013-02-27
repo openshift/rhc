@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'base64'
 require 'rhc/commands'
 
 describe RHC::Auth::Basic do
@@ -346,6 +347,10 @@ describe RHC::Auth::Token do
       context "with a nested auth object" do
         let(:auth){ mock(:can_authenticate? => true) }
 
+        it("should invoke raise an error on retry because sessions are not supported") do
+          expect{ subject.retry_auth?(response, client) }.to raise_error RHC::Rest::AuthorizationsNotSupported
+        end
+
         context "when noprompt is requested" do
           subject{ described_class.new(options, auth) }
           let(:default_options){ {:token => token, :noprompt => true} }
@@ -354,6 +359,7 @@ describe RHC::Auth::Token do
 
         context "we expect a warning and a call to client" do
           let(:auth_token){ nil }
+          let(:client){ mock(:supports_sessions? => true) }
           before{ client.should_receive(:new_session).with(:auth => auth).and_return(auth_token) }
 
           context "when the token request fails" do
