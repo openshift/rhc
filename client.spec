@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.5.5
+Version: 1.5.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -100,6 +100,10 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Feb 28 2013 Adam Miller <admiller@redhat.com> 1.5.6-1
+- Bug 916058 - Show error when auth token operation not supported
+  (ccoleman@redhat.com)
+
 * Tue Feb 26 2013 Adam Miller <admiller@redhat.com> 1.5.5-1
 - Bug 913375 - Tail should be logging all carts in the head gear
   (ccoleman@redhat.com)
