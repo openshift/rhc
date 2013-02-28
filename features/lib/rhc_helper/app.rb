@@ -105,7 +105,7 @@ module RHCHelper
 
     # Get a REST client to verify the application is on the server
     def is_created?
-      new_client.domains[0].find_application(name)
+      new_client.find_application($namespace,name)
       true
     rescue RHC::Rest::ApplicationNotFoundException
       false
