@@ -11,13 +11,13 @@ describe RHC::Commands::Server do
     let(:arguments) { ['server', '--server', 'foo.com', '-l', 'person', '-p', ''] }
 
     context 'when server refuses connection' do
-      before { stub_request(:get, 'https://person:@foo.com/broker/rest/api').with(&user_agent_header).to_raise(SocketError) }
+      before { stub_request(:get, 'https://foo.com/broker/rest/api').with(&user_agent_header).with(&expect_authorization(:user => 'person')).to_raise(SocketError) }
       it('should output an error') { run_output.should =~ /Connected to foo.com.*Unable to connect to the server/m }
       it { expect { run }.should exit_with_code(1) }
     end
 
     context 'when API is missing' do
-      before { stub_request(:get, 'https://person:@foo.com/broker/rest/api').with(&user_agent_header).to_return(:status => 404) }
+      before { stub_request(:get, 'https://foo.com/broker/rest/api').with(&user_agent_header).with(&expect_authorization(:user => 'person')).to_return(:status => 404) }
       it('should output an error') { run_output.should =~ /Connected to foo.com.*server is not responding correctly/m }
       it { expect { run }.should exit_with_code(1) }
     end

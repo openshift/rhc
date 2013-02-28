@@ -27,9 +27,25 @@ module RHC::Rest::Mock
       respond_to?(:user_auth) ? self.user_auth : {:user => username, :password => password}
     end
 
+    def credentials_for(with_auth)
+      if with_auth == true
+        [respond_to?(:username) ? self.username : mock_user, respond_to?(:password) ? self.password : mock_pass]
+      elsif with_auth
+        with_auth.values_at(:user, :password)
+      end
+    end
+
+    def expect_authorization(with_auth)
+      username, password = credentials_for(with_auth)
+      lambda{ |r|
+        !username || (r.headers['Authorization'] == "Basic #{["#{username}:#{password}"].pack('m').tr("\n", '')}")
+      }
+    end
+
     def stub_api_request(method, uri, with_auth=true)
       api = stub_request(method, mock_href(uri, with_auth))
       api.with(&lambda{ |r| request.headers['Authorization'] == "Bearer #{with_auth[:token]}" }) if with_auth.respond_to?(:[]) && with_auth[:token]
+      api.with(&expect_authorization(with_auth))
       api.with(&user_agent_header)
     end
 
@@ -289,20 +305,7 @@ module RHC::Rest::Mock
     # Creates consistent hrefs for testing
     def mock_href(relative="", with_auth=false)
       server = respond_to?(:server) ? self.server : mock_uri
-      uri_string =
-        if with_auth == true
-          username = respond_to?(:username) ? self.username : mock_user
-          password = respond_to?(:password) ? self.password : mock_pass
-          "#{username}:#{password}@#{mock_uri}"
-        elsif with_auth
-          if with_auth[:token]
-            mock_uri
-          else
-            "#{with_auth[:user]}:#{with_auth[:password]}@#{server}"
-          end
-        else
-          server
-        end
+      uri_string = server
       "https://#{uri_string}/#{relative}"
     end
 
