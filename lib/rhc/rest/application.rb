@@ -3,8 +3,6 @@ require 'uri'
 module RHC
   module Rest
     class Application < Base
-      include Rest
-
       define_attr :domain_id, :name, :creation_time, :uuid, :aliases,
                   :git_url, :app_url, :gear_profile, :framework,
                   :scalable, :health_check_path, :embedded, :gear_count,
@@ -142,12 +140,15 @@ module RHC
       end
 
       def host
-        @host ||= URI(app_url).host
+        @host ||= URI.parse(app_url).host rescue nil
       end
 
       def ssh_string
-        uri = URI(ssh_url)
+        uri = URI.parse(ssh_url)
         "#{uri.user}@#{uri.host}"
+      rescue => e
+        RHC::Helpers.debug_error(e)
+        ssh_url
       end
 
       def <=>(other)
