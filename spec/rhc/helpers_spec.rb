@@ -238,6 +238,14 @@ describe RHC::Helpers do
     it{ run_output.should match("The certificate 'not_a_file' cannot be loaded: No such file or directory ") }
   end
 
+  describe "#get_properties" do
+    it{ tests.send(:get_properties, stub(:plan_id => 'freeshift'), :plan_id).should == [[:plan_id, 'FreeShift']] }
+    context "when an error is raised" do
+      subject{ stub.tap{ |s| s.should_receive(:foo).and_raise(::Exception) } }
+      it{ tests.send(:get_properties, subject, :foo).should == [[:foo, '<error>']] }
+    end
+  end
+
   context "Formatter" do
     before{ tests.reset }
 
@@ -391,6 +399,7 @@ describe RHC::Helpers do
   class OutputTests
     include RHC::Helpers
     include RHC::SSHHelpers
+    include RHC::OutputHelpers
 
     def initialize
       @print_num = 0

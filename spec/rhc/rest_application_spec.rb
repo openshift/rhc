@@ -28,6 +28,30 @@ module RHC
         end
       end
 
+      describe "#ssh_string" do
+        context "with valid url" do
+          subject{ described_class.new('ssh_url' => "ssh://foo@bar.com/path") }
+          its(:ssh_string){ should == "foo@bar.com" }
+        end
+        context "with bad url" do
+          subject{ described_class.new('ssh_url' => "ssh://") }
+          its(:ssh_string){ should == "ssh://" }
+        end
+      end
+
+      describe "#host" do
+        context "with bad url" do
+          subject{ described_class.new('app_url' => "http://") }
+          its(:app_url){ should == "http://" }
+          its(:host){ should be_nil }
+        end
+        context "with http url" do
+          subject{ described_class.new('app_url' => "http://bar.com/path") }
+          its(:app_url){ should == "http://bar.com/path" }
+          its(:host){ should == "bar.com" }
+        end
+      end
+
       context "#add_cartridge" do
         before do
           stub_api_request(:any, app_links['ADD_CARTRIDGE']['relative']).

@@ -188,9 +188,12 @@ module RHC
       def get_properties(object,*properties)
         properties.map do |prop|
           # Either send the property to the object or yield it
-          value = block_given? ? yield(prop) : object.send(prop)
-          # Some values (like date) need some special handling
-
+          value = begin
+                    block_given? ? yield(prop) : object.send(prop)
+                  rescue ::Exception => e
+                    debug_error(e)
+                    "<error>"
+                  end
           [prop, format_value(prop,value)]
         end
       end
