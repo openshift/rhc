@@ -227,7 +227,7 @@ module RHC
         when :base_gear_storage,:additional_gear_storage
           ((value.nil? or value == 0) ? "None" : "#{value}GB")
         when :aliases
-          value.join ', '
+          value.kind_of?(Array) ? value.join(', ') : value
         when :expires_in_seconds
           distance_of_time_in_words(value)
         else

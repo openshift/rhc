@@ -297,6 +297,9 @@ module RHC
       align = opts[:align] || []
       join = opts[:join] || ' '
       if opts[:header]
+        opts[:header].each_with_index do |s, i|
+          widths[i] = [widths[i] || 0, s.length].max
+        end
         sep = opts[:separator] || "="
         ary = Array.new(opts[:header].length)
         items.unshift ary.each_with_index {|obj, idx| ary[idx] = sep.to_s * (widths[idx] || 1)}

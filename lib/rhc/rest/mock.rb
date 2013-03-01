@@ -54,7 +54,7 @@ module RHC::Rest::Mock
         to_return({
           :body => {
             :data => mock_response_links(authorizations ? mock_api_with_authorizations : mock_real_client_links),
-            :supported_api_versions => [1.0, 1.1, 1.2, 1.3],
+            :supported_api_versions => [1.0, 1.1, 1.2, 1.3, 1.4],
           }.to_json
         })
     end
@@ -334,6 +334,7 @@ module RHC::Rest::Mock
        ['THREAD_DUMP',     "domains/#{domain_id}/apps/#{app_id}/event",     'post'],
        ['ADD_ALIAS',       "domains/#{domain_id}/apps/#{app_id}/event",     'post'],
        ['REMOVE_ALIAS',    "domains/#{domain_id}/apps/#{app_id}/event",     'post'],
+       ['LIST_ALIASES',    "domains/#{domain_id}/apps/#{app_id}/aliases",   'get'],
        ['DELETE',          "domains/#{domain_id}/apps/#{app_id}/delete",    'post']]
     end
 
@@ -380,6 +381,12 @@ module RHC::Rest::Mock
     def mock_user_links
       [['ADD_KEY',   'user/keys/add', 'post'],
        ['LIST_KEYS', 'user/keys/',    'get' ]]
+    end
+
+    def mock_alias_links(domain_id='test_domain',app_id='test_app',alias_id='test.foo.com')
+      [['DELETE',   "domains/#{domain_id}/apps/#{app_id}/aliases/#{alias_id}/delete", 'post'],
+       ['GET',      "domains/#{domain_id}/apps/#{app_id}/aliases/#{alias_id}",        'get' ],
+       ['UPDATE',   "domains/#{domain_id}/apps/#{app_id}/aliases/#{alias_id}/update", 'post' ]]
     end
 
     def mock_cartridge_response(cart_count=1)
@@ -583,6 +590,33 @@ module RHC::Rest::Mock
     end
   end
 
+  class MockRestAlias < RHC::Rest::Alias
+    include Helpers
+
+    def initialize(id, has_private_ssl_certificate=false, certificate_added_at=nil)
+      super({}, client)
+      @id = id
+      @has_private_ssl_certificate = has_private_ssl_certificate
+      @certificate_added_at = certificate_added_at
+    end
+
+    def add_certificate(ssl_certificate_content, private_key_content, pass_phrase)
+      @has_private_ssl_certificate = true
+      @certificate_added_at = Time.now
+    end
+
+    def delete_certificate
+      @has_private_ssl_certificate = false
+      @certificate_added_at = nil
+    end
+
+    def destroy 
+      puts @application.inspect
+      puts self.inspect
+      @application.aliases.delete self
+    end
+  end
+
   class MockRestApplication < RHC::Rest::Application
     include Helpers
     def fakeuuid
@@ -661,6 +695,18 @@ module RHC::Rest::Mock
 
     def tidy
       @app
+    end
+
+    def add_alias(app_alias)
+      @aliases << MockRestAlias.new(app_alias)
+    end
+
+    def remove_alias(app_alias)
+      @aliases.delete_if {|x| x.id == app_alias}
+    end
+
+    def aliases
+      @aliases
     end
   end
 
