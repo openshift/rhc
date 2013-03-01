@@ -14,7 +14,7 @@ module RHC::Commands
       @service     = service
       @remote_host = remote_host
       @port_to     = port_to
-      @host_from   = 'localhost'
+      @host_from   = '127.0.0.1'
       @port_from   = port_from || port_to # match ports if possible
       @bound       = false
     end
