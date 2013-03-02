@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.5.6
+Version: 1.5.7
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -100,6 +100,15 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Mar 01 2013 Adam Miller <admiller@redhat.com> 1.5.7-1
+- During output, defend against exceptions caused by bad apps
+  (ccoleman@redhat.com)
+- Merge pull request #315 from BanzaiMan/dev/hasari/bz916122
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 916122: Avoid misleading port-forwarding specification for MySQL.
+  (asari.ruby@gmail.com)
+- rhc_extended: Fixed find_application in rhc_helper (fotios@redhat.com)
+
 * Thu Feb 28 2013 Adam Miller <admiller@redhat.com> 1.5.6-1
 - Bug 916058 - Show error when auth token operation not supported
   (ccoleman@redhat.com)
