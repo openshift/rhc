@@ -55,6 +55,7 @@ module RHC::Commands
     end
 
     summary "Delete one or more authorization tokens"
+    syntax "<token_or_id> [...<token_or_id>]"
     description <<-DESC
       Delete one or more of the authorization tokens associated with 
       your account. After deletion, any clients using the token will
@@ -62,6 +63,7 @@ module RHC::Commands
       DESC
     argument :auth_token, "The token you wish to delete", ['--auth-token TOKEN'], :arg_type => :list
     def delete(tokens)
+      raise ArgumentError, "You must specify one or more tokens to delete" if tokens.blank?
       say "Deleting authorization ... "
       tokens.each{ |token| rest_client.delete_authorization(token) }
       success "done"
