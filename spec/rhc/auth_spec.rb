@@ -345,46 +345,67 @@ describe RHC::Auth::Token do
       end
 
       context "with a nested auth object" do
-        let(:auth){ mock(:can_authenticate? => true) }
+        let(:auth){ mock('nested_auth', :can_authenticate? => true) }
+        subject{ described_class.new(options, auth) }
 
-        it("should invoke raise an error on retry because sessions are not supported") do
-          expect{ subject.retry_auth?(response, client) }.to raise_error RHC::Rest::AuthorizationsNotSupported
+        it("should not use token auth") do 
+          auth.should_receive(:retry_auth?).with(response, client).and_return true
+          subject.retry_auth?(response, client).should be_true
         end
 
         context "when noprompt is requested" do
-          subject{ described_class.new(options, auth) }
           let(:default_options){ {:token => token, :noprompt => true} }
           it("should raise an error"){ expect{ subject.retry_auth?(response, client) }.to raise_error(RHC::Rest::TokenExpiredOrInvalid) }
         end
 
-        context "we expect a warning and a call to client" do
-          let(:auth_token){ nil }
-          let(:client){ mock(:supports_sessions? => true) }
-          before{ client.should_receive(:new_session).with(:auth => auth).and_return(auth_token) }
+        context "when authorization tokens are enabled locally" do
+          let(:default_options){ {:use_authorization_tokens => true} }
 
-          context "when the token request fails" do
-            before{ subject.should_receive(:warn).with('Your session has expired. Please sign in to start a new session.') }
-            it("should invoke retry on the parent") do
-              auth.should_receive(:retry_auth?).with(response, client).and_return false
-              subject.retry_auth?(response, client).should be_false
+          context "without session support" do
+            let(:default_options){ {:use_authorization_tokens => true, :token => 'foo'} }
+            let(:client){ mock('client', :supports_sessions? => false) }
+
+            it("should invoke raise an error on retry because sessions are not supported") do
+              expect{ subject.retry_auth?(response, client) }.to raise_error RHC::Rest::AuthorizationsNotSupported
             end
           end
 
-          context "when the token request succeeds" do
-            let(:auth_token){ mock(:token => 'bar') }
-            before{ subject.should_receive(:warn).with('Your session has expired. Please sign in to start a new session.') }
-            it("should save the token and return true") do
-              subject.should_receive(:save).with(auth_token.token).and_return true
-              subject.retry_auth?(response, client).should be_true
-            end
-          end
+          context "we expect a warning and a call to client" do
+            let(:auth_token){ nil }
+            let(:client){ mock('client', :supports_sessions? => true) }
+            before{ client.should_receive(:new_session).with(:auth => auth).and_return(auth_token) }
 
-          context "when no token is specified" do
-            subject{ described_class.new(options, auth) }
             it("should print a message") do 
               subject.should_receive(:info).with("Please sign in to start a new session to #{subject.openshift_server}.")
               auth.should_receive(:retry_auth?).with(response, client).and_return true
               subject.retry_auth?(response, client).should be_true
+            end
+
+            context "with a token" do
+              let(:default_options){ {:use_authorization_tokens => true, :token => 'foo'} }
+              it("should invoke raise an error on retry because sessions are not supported") do
+                subject.should_receive(:warn).with("Your authorization token has expired. Please sign in now to continue.")
+                auth.should_receive(:retry_auth?).with(response, client).and_return true
+                subject.retry_auth?(response, client).should be_true
+                #expect{ subject.retry_auth?(response, client) }.to raise_error RHC::Rest::AuthorizationsNotSupported
+              end
+            end
+
+            context "when the token request fails" do
+              before{ subject.should_receive(:info).with("Please sign in to start a new session to #{subject.openshift_server}.") }
+              it("should invoke retry on the parent") do
+                auth.should_receive(:retry_auth?).with(response, client).and_return false
+                subject.retry_auth?(response, client).should be_false
+              end
+            end
+
+            context "when the token request succeeds" do
+              let(:auth_token){ mock('auth_token', :token => 'bar') }
+              before{ subject.should_receive(:info).with("Please sign in to start a new session to #{subject.openshift_server}.") }
+              it("should save the token and return true") do
+                subject.should_receive(:save).with(auth_token.token).and_return true
+                subject.retry_auth?(response, client).should be_true
+              end
             end
           end
         end
