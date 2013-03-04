@@ -56,6 +56,12 @@ describe RHC::Commands::Authorization do
       after{ a_request(:delete, mock_href('broker/rest/user/authorizations/bar', true)).should have_been_made }
     end
 
+    context "without a token in the command line" do
+      let(:arguments) { ['authorization', 'delete'] }
+      it('should display success') { run_output.should =~ /You must specify one or more tokens to delete/ }
+      it{ expect{ run }.should exit_with_code(1) }
+    end
+
     expect_an_unsupported_message
   end
 
