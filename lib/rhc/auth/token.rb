@@ -7,6 +7,7 @@ module RHC::Auth
         @options = opt || Commander::Command::Options.new
         @token = options[:token]
         @no_interactive = options[:noprompt]
+        @allows_tokens = options[:use_authorization_tokens]
       end
       @auth = auth
       @store = store
@@ -48,26 +49,34 @@ module RHC::Auth
       attr_reader :options, :token, :auth, :store
 
       def token_rejected(response, client)
+        has_token = !!token
+        @token = nil
+
         unless auth && auth.can_authenticate?
-          if token
+          if has_token
             raise RHC::Rest::TokenExpiredOrInvalid, "Your authorization token is expired or invalid."
           end
-          @token = nil
           return false
         end
-        if token && !@fetch_once && @no_interactive
-          raise RHC::Rest::TokenExpiredOrInvalid, "Your authorization token is expired or invalid."
-        end
-        if token and not client.supports_sessions?
-          raise RHC::Rest::AuthorizationsNotSupported
+
+        if has_token
+          if cannot_retry?
+            raise RHC::Rest::TokenExpiredOrInvalid, "Your authorization token is expired or invalid."
+          end
+          if not client.supports_sessions?
+            raise RHC::Rest::AuthorizationsNotSupported
+          end
         end
 
-        if token
-          warn "Your session has expired. Please sign in to start a new session."
-        else
+        can_get_token = client.supports_sessions? && @allows_tokens
+
+        if has_token
+          warn "Your authorization token has expired. Please sign in now to continue."
+        elsif can_get_token
           info "Please sign in to start a new session to #{openshift_server}."
         end
-        @token = nil
+
+        return auth.retry_auth?(response, client) unless can_get_token
 
         if auth_token = client.new_session(:auth => auth)
           @fetch_once = true
@@ -80,6 +89,10 @@ module RHC::Auth
 
       def read_token
         @token ||= store.get(username, openshift_server) if store
+      end
+
+      def cannot_retry?
+        !@fetch_once && @no_interactive
       end
   end
 end

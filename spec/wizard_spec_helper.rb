@@ -37,6 +37,7 @@ module WizardStepsHelper
     RHC::Vendor::ParseConfig.new(current_config_path).tap do |cp|
       cp["default_rhlogin"].should == username
       cp["libra_server"].should == mock_uri
+      cp["use_authorization_tokens"].should == 'false'
     end
   end
 

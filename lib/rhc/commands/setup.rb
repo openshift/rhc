@@ -22,11 +22,11 @@ module RHC::Commands
       to .openshift/express.conf).
 
       If the server supports authorization tokens, you may pass the 
-      --use-token option to instruct the wizard to generate a key for you.
+      --create-token option to instruct the wizard to generate a key for you.
       DESC
     option ["--server NAME"], "Hostname of an OpenShift server", :context => :server_context, :required => true
     option ['--clean'], "Ignore any saved configuration options"
-    option ['--use-token'], "Create an authorization token for this server"
+    option ['--[no-]create-token'], "Create an authorization token for this server"
     def run
       raise OptionParser::InvalidOption, "Setup can not be run with the --noprompt option" if options.noprompt
       RHC::RerunWizard.new(config, options).run ?  0 : 1
