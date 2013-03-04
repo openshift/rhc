@@ -52,6 +52,8 @@ module RHC
       :server =>      ['libra_server', nil, 'The OpenShift server to connect to'],
       :rhlogin =>     ['default_rhlogin', nil, 'Your OpenShift login name'],
       :password =>    nil,
+      :use_authorization_tokens =>
+                      [nil, :boolean, 'If true, the server will attempt to create and use authorization tokens to connect to the server'],
       :timeout =>     [nil, :integer, 'The default timeout for network operations'],
       :insecure =>    [nil, :boolean, "If true, certificate errors will be ignored.\nWARNING: This may allow others to eavesdrop on your communication with OpenShift."],
       :ssl_version => [nil, nil, 'The SSL protocol version to use when connecting to this server'],
@@ -133,7 +135,14 @@ module RHC
           opts = Array(opts)
           value = self[opts[0] || name.to_s]
           if value
-            value = value unless value.blank?
+            value = case opts[1]
+                    when :integer
+                      Integer(value)
+                    when :boolean
+                      !!(value =~ /^\s*(y|yes|1|t|true)\s*$/i)
+                    else
+                      value unless value.blank?
+                    end
             h[name] = value unless value.nil?
           end
           h

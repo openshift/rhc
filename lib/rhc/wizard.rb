@@ -158,12 +158,11 @@ module RHC
 
       self.user = rest_client.user
 
-      if rest_client.supports_sessions? && !options.token
-        paragraph do 
+      if rest_client.supports_sessions? && !options.token && options.create_token != false
+        paragraph do
           info "OpenShift can create and store a token on disk which allows to you to access the server without using your password. The key is stored in your home directory and should be kept secret.  You can delete the key at any time by running 'rhc logout'."
-          if options.use_token or agree "Generate a token now? (yes|no) "
+          if options.create_token or agree "Generate a token now? (yes|no) "
             say "Generating an authorization token for this client ... "
-
             token = rest_client.new_session
             options.token = token.token
             self.auth(true).save(token.token)
@@ -190,6 +189,7 @@ module RHC
         changed = Commander::Command::Options.new(options)
         changed.rhlogin = username
         changed.password = nil
+        changed.use_authorization_tokens = options.create_token != false && !changed.token.nil?
 
         FileUtils.mkdir_p File.dirname(config.path)
         config.save!(changed)

@@ -40,6 +40,8 @@ module Commander
             if sw = opts.send(:search, :long, key.to_s.gsub(/_/, '-'))
               _, cb, val = sw.send(:conv_arg, nil, value) {|*exc| raise(*exc) }
               cb.call(val) if cb
+            else
+              proxy_options << [key, value]
             end
           end
         end
