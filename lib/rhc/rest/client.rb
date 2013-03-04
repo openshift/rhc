@@ -239,7 +239,7 @@ module RHC
             client, args = new_request(options.dup)
             auth = options[:auth] || self.auth
 
-            debug "Request #{args[0].upcase} #{args[1]}" if debug?
+            debug "Request #{args[0].to_s.upcase} #{args[1]}" if debug?
             response = client.request(*(args << true))
             debug "   code #{response.status}" if debug? && response
 
