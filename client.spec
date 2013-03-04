@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.5.7
+Version: 1.5.8
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -100,6 +100,18 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Mar 04 2013 Adam Miller <admiller@redhat.com> 1.5.8-1
+- Merge pull request #319 from
+  smarterclayton/bug_917514_require_one_argument_to_authorization
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #318 from
+  smarterclayton/bug_915255_track_user_preference_for_auth
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 917514 - 'authorization delete' should require at least one token
+  (ccoleman@redhat.com)
+- Bug 915255 - Track auth preference in the config (ccoleman@redhat.com)
+- Update reference to rubygems.org to avoid warning (asari.ruby@gmail.com)
+
 * Fri Mar 01 2013 Adam Miller <admiller@redhat.com> 1.5.7-1
 - During output, defend against exceptions caused by bad apps
   (ccoleman@redhat.com)
