@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.5.8
+Version: 1.5.9
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -100,6 +100,13 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Mar 04 2013 Adam Miller <admiller@redhat.com> 1.5.9-1
+- Merge pull request #320 from
+  smarterclayton/bug_917721_catch_exceptions_in_ssh_key_parse
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 917721 - Don't let exceptions get raised from fingerprint tests
+  (ccoleman@redhat.com)
+
 * Mon Mar 04 2013 Adam Miller <admiller@redhat.com> 1.5.8-1
 - Merge pull request #319 from
   smarterclayton/bug_917514_require_one_argument_to_authorization
