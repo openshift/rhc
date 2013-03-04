@@ -117,10 +117,13 @@ module RHC
       Net::SSH::KeyFactory.load_public_key(key).fingerprint
     rescue NoMethodError, NotImplementedError => e
       ssh_keygen_fallback key
-      return nil
+      nil
     rescue OpenSSL::PKey::PKeyError, Net::SSH::Exception => e
       error e.message
-      return nil
+      nil
+    rescue => e
+      error e.message
+      nil
     end
 
     def fingerprint_for_default_key
