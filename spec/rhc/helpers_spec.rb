@@ -366,8 +366,14 @@ describe RHC::Helpers do
       subject.should_receive(:error).with('An error')
       subject.fingerprint_for_local_key('1').should be_nil
     end
+
+    it "should catch exceptions from fingerprint failures" do
+      Net::SSH::KeyFactory.should_receive(:load_public_key).with('1').and_raise(StandardError.new("An error"))
+      subject.should_receive(:error).with('An error')
+      subject.fingerprint_for_local_key('1').should be_nil
+    end
   end
-  
+
   context "Resolv helper" do
     let(:resolver) { Object.new }
     let(:existent_host) { 'real_host' }
