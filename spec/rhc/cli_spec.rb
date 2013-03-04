@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'rhc/wizard'
 
 describe RHC::CLI do
 
@@ -9,6 +10,13 @@ describe RHC::CLI do
     it('should describe basic command') { run_output.should =~ /Working with apps:/ }
     it('should mention the help command') { run_output.should =~ /See 'rhc help <command>'/ }
     it('should mention the help options command') { run_output.should =~ /rhc help options/ }
+  end
+
+  shared_examples_for 'a first run wizard' do
+    let(:arguments) { @arguments or raise "no arguments" }
+    let!(:wizard){ RHC::Wizard.new }
+    before{ RHC::Wizard.should_receive(:new).and_return(wizard) }
+    it('should create and run a new wizard') { expect{ run }.to call(:run).on(wizard) }
   end
 
   shared_examples_for 'a help page' do
@@ -52,9 +60,16 @@ describe RHC::CLI do
   end
 
   describe '#start' do
+    before{ RHC::Wizard.stub(:has_configuration?).and_return(true) }
+
     context 'with no arguments' do
       before(:each) { @arguments = [] }
       it_should_behave_like 'a global help page'
+
+      context "without a config file" do
+        before{ RHC::Wizard.stub(:has_configuration?).and_return(false) }
+        it_should_behave_like 'a first run wizard'
+      end
     end
 
     context 'with an ambiguous option' do

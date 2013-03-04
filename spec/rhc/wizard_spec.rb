@@ -22,18 +22,24 @@ describe RHC::Wizard do
   let(:default_options){ {} }
 
   describe "#finalize_stage" do
-    subject{ RHC::Wizard.new(config, options) }
+    subject{ described_class.new(config, options) }
     before{ subject.should_receive(:say).with(/The OpenShift client tools have been configured/) }
     it{ subject.send(:finalize_stage).should be_true }
   end
 
   describe "#token_store" do
-    subject{ RHC::Wizard.new(config, options) }
+    subject{ described_class.new(config, options) }
     it{ subject.send(:token_store).should be_a(RHC::Auth::TokenStore) }
   end
 
+  describe "#has_configuration?" do
+    subject{ described_class }
+    before{ File.should_receive(:exists?).with(RHC::Config.local_config_path).at_least(1).times.and_return(true) }
+    its(:has_configuration?){ should be_true }
+  end
+
   describe "#test_ssh_connectivity" do
-    subject{ RHC::Wizard.new(config, options) }
+    subject{ described_class.new(config, options) }
     let(:app) do
       app = Object.new
       app.should_receive(:host).at_least(1).and_return('foo.com')
@@ -71,7 +77,7 @@ describe RHC::Wizard do
     let(:rest_client){ stub }
     let(:auth){ subject.send(:auth) }
 
-    subject{ RHC::Wizard.new(config, options) }
+    subject{ described_class.new(config, options) }
 
     def expect_client_test(with_sessions=false)
       subject.should_receive(:new_client_for_options).ordered.and_return(rest_client)
