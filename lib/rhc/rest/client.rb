@@ -239,9 +239,9 @@ module RHC
             client, args = new_request(options.dup)
             auth = options[:auth] || self.auth
 
-            #debug "Request: #{client.object_id} #{args.inspect}\n-------------" if debug?
+            debug "Request #{args[0].to_s.upcase} #{args[1]}" if debug?
             response = client.request(*(args << true))
-            #debug "Response: #{response.status} #{response.headers.inspect}\n#{response.content}\n-------------" if debug? && response
+            debug "   code #{response.status}" if debug? && response
 
             next if retry_proxy(response, i, args, client)
             auth.retry_auth?(response, self) and redo if auth
@@ -399,6 +399,12 @@ module RHC
             h
           end
 
+          user = options.delete(:user)
+          password = options.delete(:password)
+          if user
+            headers['Authorization'] ||= "Basic #{["#{user}:#{password}"].pack('m').tr("\n", '')}"
+          end
+
           modifiers = []
           version = options.delete(:api_version) || current_api_version
           modifiers << ";version=#{version}" if version
@@ -419,6 +425,9 @@ module RHC
           if headers['accept'] && modifiers.present?
             headers['accept'] << modifiers.join
           end
+
+          # remove all unnecessary options
+          options.delete(:lazy_auth)
 
           args = [options.delete(:method), options.delete(:url), query, payload, headers, true]
           [httpclient_for(options), args]

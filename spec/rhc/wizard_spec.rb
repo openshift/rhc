@@ -275,9 +275,8 @@ describe RHC::Wizard do
           should_be_done
         end
       end
-
       context "when the user inputs incorrect authentication" do
-        before{ stub_api_request(:get, 'broker/rest/user', :user => username, :password => 'invalid').to_return(:status => 401) }
+        before{ stub_api_request(:get, 'broker/rest/user', :user => username, :password => 'invalid').to_return(:status => 401).times(1).to_return(simple_user(username)) }
         it "should prompt them again" do
           should_greet_user
 
