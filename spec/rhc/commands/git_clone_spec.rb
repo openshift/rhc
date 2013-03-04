@@ -1,6 +1,7 @@
 require 'spec_helper'
 require 'rest_spec_helper'
 require 'rhc/commands/git_clone'
+require 'fileutils'
 
 describe RHC::Commands::GitClone do
   before(:each) do
@@ -43,6 +44,21 @@ describe RHC::Commands::GitClone do
 
         it { expect { run }.should exit_with_code(0) }
         it { run_output.should match("Cloned") }
+      end
+
+      context "testing git_clone_deploy_hooks" do
+        before do
+          @instance.stub(:git_clone_repo) do |git_url, repo_dir|
+            FileUtils.mkdir_p "#{repo_dir}/.git/hooks"
+            FileUtils.mkdir_p "#{repo_dir}/.openshift/git_hooks"
+            FileUtils.touch "#{repo_dir}/.openshift/git_hooks/pre_commit"
+            @instance.git_clone_deploy_hooks(repo_dir)
+            say "Copied" if File.exists?("#{repo_dir}/.git/hooks/pre_commit")
+            true
+          end
+        end
+        it { expect { run }.should exit_with_code(0) }
+        it { run_output.should match("Copied") }
       end
 
       context "reports failure" do

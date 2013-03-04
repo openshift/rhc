@@ -1,4 +1,5 @@
   require 'open4'
+require 'fileutils'
 
 module RHC
   module GitHelpers
@@ -16,6 +17,15 @@ module RHC
         end
     end
 
+    def git_clone_deploy_hooks(repo_dir)
+      debug "Deploy default hooks"
+      Dir.chdir(repo_dir) do |dir|
+        Dir.glob(".openshift/git_hooks/*") do |hook|
+          FileUtils.cp(hook, ".git/hooks/")
+        end
+      end
+    end
+
     def git_clone_application(app)
       repo_dir = options.repo || app.name
 
@@ -28,6 +38,8 @@ module RHC
         git_config_set "rhc.app-name", app.name
         git_config_set "rhc.domain-name", app.domain_id
       end
+
+      git_clone_deploy_hooks(repo_dir)
 
       true
     end
