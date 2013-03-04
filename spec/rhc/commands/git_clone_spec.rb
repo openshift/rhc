@@ -56,6 +56,14 @@ describe RHC::Commands::GitClone do
             say "Copied" if File.exists?("#{repo_dir}/.git/hooks/pre_commit")
             true
           end
+
+          # Get around the FakeFS bug (defunkt/fakefs#177) by
+          # stubbing the #cp call to inject a expected fs entry
+          FileUtils.stub(:cp) do |hook, dir|
+            FakeFS::FileSystem.add(
+              File.join(dir, File.basename(hook)),
+              FakeFS::FileSystem.find(hook))
+          end
         end
         it { expect { run }.should exit_with_code(0) }
         it { run_output.should match("Copied") }
