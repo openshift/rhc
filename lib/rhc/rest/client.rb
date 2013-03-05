@@ -7,6 +7,8 @@ require 'httpclient'
 module RHC
   module Rest
 
+    MAX_RETRIES = 5
+
     #
     # These are methods that belong to the API object but are
     # callable from the client for convenience.
@@ -234,7 +236,7 @@ module RHC
       end
 
       def request(options, &block)
-        (0..(1.0/0.0)).each do |i|
+        (0..MAX_RETRIES).each do |i|
           begin
             client, args = new_request(options.dup)
             auth = options[:auth] || self.auth
@@ -244,7 +246,7 @@ module RHC
             debug "   code #{response.status}" if debug? && response
 
             next if retry_proxy(response, i, args, client)
-            auth.retry_auth?(response, self) and redo if auth
+            auth.retry_auth?(response, self) and next if auth
             handle_error!(response, args[1], client) unless response.ok?
 
             break (if block_given?
@@ -257,7 +259,7 @@ module RHC
               debug "Response: #{e.res.status} #{e.res.headers.inspect}\n#{e.res.content}\n-------------" if debug?
 
               next if retry_proxy(e.res, i, args, client)
-              auth.retry_auth?(e.res, self) and redo if auth
+              auth.retry_auth?(e.res, self) and next if auth
               handle_error!(e.res, args[1], client)
             end
             raise ConnectionException.new(
