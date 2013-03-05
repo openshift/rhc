@@ -5,7 +5,7 @@ require 'rest_spec_helper'
 
 describe RHC::Commands::Base do
 
-  before{ base_config }
+  let!(:config){ base_config }
 
   before{ c = RHC::Commands.instance_variable_get(:@commands); @saved_commands = c && c.dup || nil }
   after do 
@@ -218,6 +218,8 @@ describe RHC::Commands::Base do
       let(:instance) { subject.new }
       let(:rest_client){ command_for(*arguments).send(:rest_client) }
       let(:basic_auth){ rest_client.send(:auth).send(:auth) }
+      let(:stored_token){ nil }
+      before{ instance.send(:token_store).stub(:get).and_return(nil) unless stored_token }
 
       context "with credentials" do
         let(:arguments){ ['test', '-l', 'foo', '-p', 'bar'] }
@@ -253,12 +255,25 @@ describe RHC::Commands::Base do
 
       context "with username and a stored token" do
         let(:username){ 'foo' }
-        let(:token){ 'a_token' }
+        let(:stored_token){ 'a_token' }
         let(:arguments){ ['test', '-l', username, '--server', mock_uri] }
-        before{ instance.send(:token_store).should_receive(:get).with{ |user, server| user.should == username; server.should == instance.send(:openshift_server) }.and_return(token) }
-        before{ stub_api; stub_user(:token => token) }
-        it("has token set") { command_for(*arguments).send(:options).token.should == token }
+        before{ instance.send(:token_store).should_receive(:get).with{ |user, server| user.should == username; server.should == instance.send(:openshift_server) }.and_return(stored_token) }
+        before{ stub_api; stub_user(:token => stored_token) }
+        it("has token set") { command_for(*arguments).send(:options).token.should == stored_token }
         it("calls the server") { rest_client.user }
+      end
+
+      context "with username and tokens enabled" do
+        let!(:config){ base_config{ |c, d| d.add('use_authorization_tokens', 'true') } }
+        let(:username){ 'foo' }
+        let(:auth_token){ stub(:token => 'a_token') }
+        let(:arguments){ ['test', '-l', username, '--server', mock_uri] }
+        before{ instance.send(:token_store).should_receive(:get).with{ |user, server| user.should == username; server.should == instance.send(:openshift_server) }.twice.and_return(nil) }
+        before{ stub_api(false, true); stub_api_request(:get, 'broker/rest/user', false).to_return{ |request| request.headers['Authorization'] =~ /Bearer/ ? simple_user(username) : {:status => 401} } }
+        it("should attempt to create a new token") do 
+          rest_client.should_receive(:new_session).ordered.and_return(auth_token)
+          rest_client.user
+        end
       end
     end
   end
