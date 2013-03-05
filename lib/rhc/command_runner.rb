@@ -61,6 +61,7 @@ module RHC
           run_active_command
         rescue InvalidCommandError => e
           if provided_arguments.empty?
+            return RHC::Wizard.new.run unless RHC::Wizard.has_configuration?
             say RHC::HelpFormatter.new(self).render
           else
             RHC::Helpers.error "The command '#{program :name} #{provided_arguments.join(' ')}' is not recognized.\n"

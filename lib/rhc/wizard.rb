@@ -7,6 +7,10 @@ module RHC
   class Wizard
     include HighLine::SystemExtensions
 
+    def self.has_configuration?
+      File.exists? RHC::Config.local_config_path
+    end
+
     DEFAULT_MAX_LENGTH = 16
 
     STAGES = [:greeting_stage,
