@@ -106,6 +106,11 @@ module RHC
           concat(cart.properties.map{ |p| ["#{table_heading(p['name'])}:", p['value']] }.sort{ |a,b| a[0] <=> b[0] }),
         :delete => true
       display_no_info("cartridge") unless @table_displayed
+
+      if cart.usage_rate?
+         say "\n"
+         say format_usage_message(cart)
+      end
     end
 
     def display_key(key, *properties)
@@ -149,6 +154,10 @@ module RHC
         puts
         display_cart_storage_info(cart, cart.display_name)
       end
+    end
+
+    def format_usage_message(cart)
+      "This gear costs an additional $#{cart.usage_rate} per gear after the first 3 gears."
     end
 
     #---------------------------

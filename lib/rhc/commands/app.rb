@@ -12,25 +12,25 @@ module RHC::Commands
 
     summary "Create an application"
     description <<-DESC
-      Create an application. Every OpenShift application must have one 
+      Create an application. Every OpenShift application must have one
       web cartridge which serves web requests, and can have a number of
-      other cartridges which provide capabilities like databases, 
+      other cartridges which provide capabilities like databases,
       scheduled jobs, or continuous integration.
 
-      You can see a list of all valid cartridge types by running 
+      You can see a list of all valid cartridge types by running
       'rhc cartridge list'.
 
       When your application is created, a domain name that is a combination
-      of the name of your app and the namespace of your domain will be 
+      of the name of your app and the namespace of your domain will be
       registered in DNS.  A copy of the code for your application
-      will be checked out locally into a folder with the same name as 
+      will be checked out locally into a folder with the same name as
       your application.  Note that different types of applications may
       require different structures - check the README provided with the
       cartridge if you have questions.
 
-      OpenShift runs the components of your application on small virtual 
+      OpenShift runs the components of your application on small virtual
       servers called "gears".  Each account or plan is limited to a number
-      of gears which you can use across multiple applications.  Some 
+      of gears which you can use across multiple applications.  Some
       accounts or plans provide access to gears with more memory or more
       CPU.  Run 'rhc account' to see the number and sizes of gears available
       to you.  When creating an application the --gear-size parameter
@@ -51,7 +51,7 @@ module RHC::Commands
     argument :cartridges, "The web framework this application should use", ["-t", "--type cartridge"], :arg_type => :list
     #argument :additional_cartridges, "A list of other cartridges such as databases you wish to add. Cartridges can also be added later using 'rhc cartridge add'", [], :arg_type => :list
     def create(name, cartridges)
-      cartridges = check_cartridges(cartridges, &require_one_web_cart) 
+      cartridges = check_cartridges(cartridges, &require_one_web_cart)
 
       options.default \
         :dns => true,
@@ -63,10 +63,14 @@ module RHC::Commands
       rest_domain = rest_client.find_domain(options.namespace)
       rest_app = nil
 
+      cart_names = cartridges.collect do |c|
+        c.usage_rate? ? "#{c.name} (addtl. costs may apply)" : c.name
+      end.join(', ')
+
       paragraph do
         header "Application Options"
         table([["Namespace:", options.namespace],
-               ["Cartridges:", cartridges.map(&:name).join(', ')],
+               ["Cartridges:", cart_names],
               (["Source Code:", options.from_code] if options.from_code),
                ["Gear Size:", options.gear_size || "default"],
                ["Scaling:", options.scaling ? "yes" : "no"],
@@ -311,7 +315,7 @@ module RHC::Commands
     private
       include RHC::GitHelpers
       include RHC::CartridgeHelpers
-      
+
       def require_one_web_cart
         lambda{ |carts|
           match, ambiguous = carts.partition{ |c| not c.is_a?(Array) }
@@ -319,7 +323,7 @@ module RHC::Commands
           possible_web = ambiguous.flatten.any?(&:only_in_new?)
           if not (selected_web or possible_web)
             section(:bottom => 1){ list_cartridges(standalone_cartridges) }
-            raise RHC::CartridgeNotFoundException, "Every application needs a web cartridge to handle incoming web requests. Please provide the short name of one of the carts listed above."         
+            raise RHC::CartridgeNotFoundException, "Every application needs a web cartridge to handle incoming web requests. Please provide the short name of one of the carts listed above."
           end
           if selected_web
             carts.map! &other_carts_only

@@ -68,7 +68,7 @@ describe RHC::Commands::App do
         Resolv::Hosts.should_receive(:new).and_return(resolver)
         resolver.should_receive(:getaddress).with('app1-mockdomain.fake.foo').and_raise(ArgumentError)
       end
-      
+
       it { expect { run }.should exit_with_code(0) }
       it { run_output.should match("Success") }
     end
@@ -103,6 +103,7 @@ describe RHC::Commands::App do
         it { expect { run }.should raise_error(RHC::CartridgeNotFoundException, "There are no cartridges that match 'nomatch_cart'.") }
       end
     end
+
   end
 
   describe 'cart matching behavior' do
