@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.5.9
+Version: 1.5.10
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -100,6 +100,23 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Mar 05 2013 Adam Miller <admiller@redhat.com> 1.5.10-1
+- Merge pull request #322 from
+  smarterclayton/bug_917728_rhc_should_invoke_setup_with_no_args
+  (dmcphers@redhat.com)
+- Merge pull request #313 from smarterclayton/client_is_too_lazy
+  (dmcphers@redhat.com)
+- Merge pull request #321 from BanzaiMan/dev/feature/add_commit_script
+  (dmcphers@redhat.com)
+- Bug 917728 - rhc with no args should invoke setup if the express.conf file
+  does not exist (ccoleman@redhat.com)
+- Extra debugging was breaking output (ccoleman@redhat.com)
+- Get around FakeFS bug (defunkt/fakefs#177) (asari.ruby@gmail.com)
+- httpclient is too lazy for auth, sending double the number of necessary
+  requests (ccoleman@redhat.com)
+- add rspec test, but not working for now (misc@zarb.org)
+- automatically deploy git hooks upon clone (misc@zarb.org)
+
 * Mon Mar 04 2013 Adam Miller <admiller@redhat.com> 1.5.9-1
 - Merge pull request #320 from
   smarterclayton/bug_917721_catch_exceptions_in_ssh_key_parse
