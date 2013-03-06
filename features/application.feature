@@ -19,6 +19,7 @@ Feature: Application Operations
       | running | snapshot  | the snapshot    | be found |
       | running | tidied    | it              | succeed |
       | running | shown     | it              | succeed |
+      | running | visualized| it              | succeed |
       | running | stopped   | the application | not be accessible |
       | stopped | started   | the application | be accessible |
       # After the app is deleted, it is resolving to the OpenShift server

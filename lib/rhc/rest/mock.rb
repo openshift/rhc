@@ -486,6 +486,14 @@ module RHC::Rest::Mock
 
       raise RHC::Rest::ApplicationNotFoundException.new("Application #{name} does not exist")
     end
+
+    def find_application_gear_groups(domain, name, options = {})
+      find_domain(domain).applications.each do |app|
+        return app.gear_groups if app.name.downcase == name.downcase
+      end
+
+      raise RHC::Rest::ApplicationNotFoundException.new("Application #{name} does not exist")
+    end
   end
 
   class MockRestApi < RHC::Rest::Api

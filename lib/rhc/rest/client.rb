@@ -59,7 +59,7 @@ module RHC
         raise DomainNotFoundException.new("Domain #{id} not found")
       end
 
-      def find_application(domain, application, options = {})
+      def find_application(domain, application, options={})
         response = request({
           :url => link_show_application_by_domain_name(domain, application),
           :method => "GET",
@@ -67,14 +67,21 @@ module RHC
         })
       end
 
-      def link_show_application_by_domain_name(domain, application)
-        uri_args = [
+      def find_application_gear_groups(domain, application, options={})
+        response = request({
+          :url => link_show_application_by_domain_name(domain, application, "gear_groups"),
+          :method => "GET",
+          :payload => options
+        })
+      end
+
+      def link_show_application_by_domain_name(domain, application, *args)
+        [
           api.links['LIST_DOMAINS']['href'],
           domain,
           "applications",
-          application
-        ]
-        URI.escape(uri_args.join("/"))
+          application,
+        ].concat(args).map{ |s| URI.escape(s) }.join("/")
       end
 
       #Find Cartridge by name or regex

@@ -70,7 +70,8 @@ When /^the application is (\w+)$/ do |command|
     :shown   => :show,
     :tidied  => :tidy,
     :snapshot => :snapshot_save,
-    :deleted => :delete
+    :deleted => :delete,
+    :visualized => :show_gears,
   }
 
   # Use an alias if it exists, or just remove 'ed' (like from started)

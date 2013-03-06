@@ -43,8 +43,9 @@ module RHCHelper
       cmd.gsub!('add alias', 'add-alias')
       cmd.gsub!('remove alias', 'remove-alias')
       cmd.gsub!('force stop', 'force-stop')
+      cmd.gsub!('show gears', 'show --gears')
 
-      return cmd
+      cmd
     end
 
     # Print out the command arguments based on the state of the application instance
