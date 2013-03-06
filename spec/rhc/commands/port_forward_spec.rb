@@ -116,6 +116,21 @@ describe RHC::Commands::PortForward do
       it { run_output.should include("Ending port forward") }
     end
 
+    context 'when local port is already bound' do
+      before(:each) do
+        Net::SSH.should_receive(:start).with(@uri.host, @uri.user).and_yield(@ssh).twice
+        @ssh.should_receive(:exec!).with("rhc-list-ports").and_yield(nil, :stderr, 'mysql -> 127.0.0.1:3306')
+        forward = mock(Net::SSH::Service::Forward)
+        @ssh.should_receive(:forward).at_least(2).and_return(forward)
+        forward.should_receive(:local).with(3306, '127.0.0.1', 3306).and_raise(Errno::EACCES)
+        forward.should_receive(:local).with(3307, '127.0.0.1', 3306)
+        @ssh.should_receive(:loop).and_raise(Interrupt.new)
+      end
+      it 'should bind to a higher port' do
+        run_output.should include("3307")
+      end
+    end
+
     context 'when host refuses connection' do
       before(:each) do
         Net::SSH.should_receive(:start).with(@uri.host, @uri.user).and_yield(@ssh).twice
