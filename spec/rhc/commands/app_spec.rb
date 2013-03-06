@@ -43,6 +43,12 @@ describe RHC::Commands::App do
     end
   end
 
+  describe '#gear_group_state' do
+    it("shows single state"){ subject.send(:gear_group_state, ['started']).should == 'started' }
+    it("shows unique states"){ subject.send(:gear_group_state, ['idle', 'idle']).should == 'idle' }
+    it("shows number of started"){ subject.send(:gear_group_state, ['started', 'idle']).should == '1/2 started' }
+  end
+
   describe 'app create' do
     before(:each) do
       domain = rest_client.add_domain("mockdomain")
@@ -413,6 +419,18 @@ describe RHC::Commands::App do
         @domain.add_application("app1", "mock_type")
       end
       it { run_output.should match("started") }
+    end
+  end
+
+  describe 'app show --gears' do
+    let(:arguments) { ['app', 'show', 'app1', '--gears', '--noprompt'] }
+
+    context 'when run' do
+      before(:each) do
+        @domain = rest_client.add_domain("mockdomain")
+        @domain.add_application("app1", "mock_type")
+      end
+      it { run_output.should match("fakegearid started fake_geargroup_cart-0.1") }
     end
   end
 

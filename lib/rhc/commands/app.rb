@@ -258,18 +258,19 @@ module RHC::Commands
     syntax "<app> [--namespace namespace]"
     argument :app, "The name of the application you are getting information on", ["-a", "--app app"], :context => :app_context
     option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
-    option ["--state"], "Get the current state of the application's gears"
+    option ["--state"], "Get the current state of the cartridges in this application"
+    option ["--gears"], "Show the ID, state, and cartridges on each gear in this application"
     def show(app_name)
-      rest_app = rest_client.find_application(options.namespace, app_name)
 
       if options.state
-        results do
-          rest_app.gear_groups.each do |gg|
-            say "Gear group #{gg.cartridges.collect { |c| c['name'] }.join('+')} is #{gg.gears.first['state']}"
-          end
+        gear_groups_for_app(app_name).each do |gg|
+          say "Cartridge #{gg.cartridges.collect { |c| c['name'] }.join(', ')} is #{gear_group_state(gg.gears.map{ |g| g['state'] })}"
         end
+      elsif options.gears
+        say table(gear_groups_for_app(app_name).map{ |gg| gg.gears.map{ |g| [g['id'], g['state'], gg.cartridges.map{ |c| c['name'] }.join(", ")] } }.flatten(1))
       else
-        display_app(rest_app, rest_app.cartridges)
+        app = rest_client.find_application(options.namespace, app_name, :include => :cartridges)
+        display_app(app, app.cartridges)
       end
 
       0
@@ -331,6 +332,15 @@ module RHC::Commands
 
       def check_sshkeys!
         RHC::SSHWizard.new(rest_client, config, options).run
+      end
+
+      def gear_groups_for_app(app_name)
+        rest_client.find_application_gear_groups(options.namespace, app_name)
+      end
+
+      def gear_group_state(states)
+        return states[0] if states.length == 1 || states.uniq.length == 1
+        "#{states.select{ |s| s == 'started' }.count}/#{states.length} started"
       end
 
       def app_action(app, action, *args)
