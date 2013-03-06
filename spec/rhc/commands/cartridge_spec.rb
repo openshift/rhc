@@ -49,6 +49,7 @@ describe RHC::Commands::Cartridge do
       it{ run_output.should match /mock_standalone_cart\-1\s+Mock1 Cart\s+web/ }
       it{ run_output.should match /mock_standalone_cart\-2\s+web/ }
       it{ run_output.should match /mock_embedded_cart\-1\s+Mock1 Embedded Cart\s+addon/ }
+      it{ run_output.should match /premium_cart\-1 \(\*\)\s+Premium Cart\s+web/ }
       it{ expect{ run }.should exit_with_code(0) }
 
       context 'with verbose list' do

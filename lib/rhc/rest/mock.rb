@@ -255,6 +255,7 @@ module RHC::Rest::Mock
             {:name => 'mock_standalone_cart-1', :type => 'standalone', :tags => ['cartridge'], :display_name => 'Mock1 Cart'},
             {:name => 'mock_standalone_cart-2', :type => 'standalone', :description => 'Mock2 description'},
             {:name => 'mock_embedded_cart-1', :type => 'embedded', :tags => ['scheduled'], :display_name => 'Mock1 Embedded Cart'},
+            {:name => 'premium_cart-1', :type => 'standalone', :tags => ['premium'], :display_name => 'Premium Cart', :usage_rate_usd => '0.02'},
           ],
         }.to_json
       }

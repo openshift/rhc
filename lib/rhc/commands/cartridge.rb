@@ -26,11 +26,16 @@ module RHC::Commands
           ].compact << "\n"
         end.flatten
       else
-        table(carts.map{ |c| [c.name, c.display_name, c.only_in_new? ? 'web' : 'addon'] })
+        table(carts.collect do |c|
+          [c.usage_rate? ? "#{c.name} (*)" : c.name,
+           c.display_name,
+           c.only_in_new? ? 'web' : 'addon']
+        end)
       end
 
       say list.join("\n")
       paragraph{ say "Note: Web cartridges can only be added to new applications." }
+      paragraph{ say "(*) denotes a cartridge with additional usage costs." } if carts.any? { |c| c.usage_rate? }
 
       0
     end
