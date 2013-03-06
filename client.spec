@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.5.10
+Version: 1.5.11
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -100,6 +100,16 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Mar 06 2013 Adam Miller <admiller@redhat.com> 1.5.11-1
+- Wrap it up in paragraph (asari.ruby@gmail.com)
+- Bug 917605 (asari.ruby@gmail.com)
+- Bug 917457 (asari.ruby@gmail.com)
+- Merge pull request #323 from smarterclayton/bug_915255_recreate_token
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 915255 - Correctly regenerate token when use_authorization_tokens is true
+  (ccoleman@redhat.com)
+- Don't retry infinitely when in a loop (ccoleman@redhat.com)
+
 * Tue Mar 05 2013 Adam Miller <admiller@redhat.com> 1.5.10-1
 - Merge pull request #322 from
   smarterclayton/bug_917728_rhc_should_invoke_setup_with_no_args
