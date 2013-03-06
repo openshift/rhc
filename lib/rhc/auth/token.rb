@@ -17,7 +17,7 @@ module RHC::Auth
     def to_request(request)
       if token
         (request[:headers] ||= {})['authorization'] = "Bearer #{token}"
-      elsif auth
+      elsif auth and !@allows_tokens
         auth.to_request(request)
       end
       request
