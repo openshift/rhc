@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.5.11
+Version: 1.5.12
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -100,6 +100,12 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Mar 06 2013 Adam Miller <admiller@redhat.com> 1.5.12-1
+- Merge pull request #326 from smarterclayton/add_rhc_gears_call
+  (dmcphers@redhat.com)
+- Add rhc app show --gears to display info about the gears
+  (ccoleman@redhat.com)
+
 * Wed Mar 06 2013 Adam Miller <admiller@redhat.com> 1.5.11-1
 - Wrap it up in paragraph (asari.ruby@gmail.com)
 - Bug 917605 (asari.ruby@gmail.com)
