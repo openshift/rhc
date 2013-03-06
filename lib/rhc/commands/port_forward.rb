@@ -141,10 +141,13 @@ module RHC::Commands
 
               bound_ports = forwarding_specs.select(&:bound?)
               if bound_ports.length > 0
+                paragraph {
+                  say "To connect to a service running on OpenShift, use the Local address"
+                }
                 items = bound_ports.map do |fs|
                   [fs.service, "#{fs.host_from}:#{fs.port_from}", " => ", "#{fs.remote_host}:#{fs.port_to.to_s}"]
                 end
-                table(items, :header => ["Service", "Connect to", "    ", "Forward to"]).each { |s| success "  #{s}" }
+                table(items, :header => ["Service", "Local", "    ", "OpenShift"]).each { |s| success "  #{s}" }
               end
 
               # for failed port forwarding attempts
