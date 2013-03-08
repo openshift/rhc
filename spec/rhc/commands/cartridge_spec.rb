@@ -49,6 +49,7 @@ describe RHC::Commands::Cartridge do
       it{ run_output.should match /mock_standalone_cart\-1\s+Mock1 Cart\s+web/ }
       it{ run_output.should match /mock_standalone_cart\-2\s+web/ }
       it{ run_output.should match /mock_embedded_cart\-1\s+Mock1 Embedded Cart\s+addon/ }
+      it{ run_output.should match /premium_cart\-1 \(\*\)\s+Premium Cart\s+web/ }
       it{ expect{ run }.should exit_with_code(0) }
 
       context 'with verbose list' do
@@ -162,6 +163,17 @@ describe RHC::Commands::Cartridge do
       end
       it {
         fail_with_code 155
+      }
+    end
+
+    context 'when cart is premium' do
+      let(:arguments) { ['cartridge', 'add', 'premium_cart', '-a', 'app1','--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+      before(:each) do
+        domain = rest_client.add_domain("mock_domain")
+        app = domain.add_application("app1", "mock_type")
+      end
+      it {
+        succeed_with_message /This gear costs an additional \$0\.05 per gear after the first 3 gears\./
       }
     end
   end
@@ -303,6 +315,21 @@ describe RHC::Commands::Cartridge do
     context 'when run with different case from how cartrige was created' do
       it { run_output.should match('Connection URL: http://fake.url') }
       it { run_output.should match(/Prop1:\s+value1/) }
+    end
+  end
+
+  describe 'cartridge show' do
+    let(:arguments) { ['cartridge', 'show', 'premium_cart', '-a', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+
+    before(:each) do
+      @rc = MockRestClient.new
+      domain = @rc.add_domain("mock_domain")
+      app = domain.add_application("app1", "mock_type")
+      app.cartridges << @rc.cartridges.find {|c| c.name == 'premium_cart'}
+    end
+
+    context 'when run with a premium cartridge' do
+      it { run_output.should match(/This gear costs an additional \$0\.05 per gear after the first 3 gears./) }
     end
   end
 

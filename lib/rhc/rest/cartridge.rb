@@ -31,6 +31,21 @@ module RHC
         attribute(:display_name) || name
       end
 
+      def usage_rate?
+        rate = usage_rate
+        rate && rate > 0.0
+      end
+
+      def usage_rate
+        rate = attribute(:usage_rate_usd)
+
+        if attribute(:usage_rates)
+          rate ||= attribute(:usage_rates).inject(0) { |total, rate| total + rate['usd'].to_f }
+        end
+
+        rate.to_f rescue 0.0
+      end
+
       def scaling
         {
           :current_scale => current_scale,
@@ -56,7 +71,7 @@ module RHC
         rest_method "START", :event => "start"
       end
 
-      def stop()
+      def stop
         debug "Stopping cartridge #{name}"
         rest_method "STOP", :event => "stop"
       end
