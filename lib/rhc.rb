@@ -11,6 +11,7 @@ require 'pry' if ENV['PRY']
 require 'rhc/core_ext'
 
 module RHC
+  autoload :AutoComplete,   'rhc/autocomplete'
   autoload :Auth,           'rhc/auth'
   autoload :CartridgeHelpers, 'rhc/cartridge_helpers'
   autoload :CommandRunner,  'rhc/command_runner'

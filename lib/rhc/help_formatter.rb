@@ -18,7 +18,7 @@ module RHC
       @command = command
       @actions = instance_commands.collect do |command_name, command_class|
         next if command_class.summary.nil?
-        m = /^#{command.name} ([^ ]+)/.match(command_name)
+        m = /^#{command.name}[\s\-]([^ ]+)/.match(command_name)
         # if we have a match and it is not an alias then we can use it
         m and command_name == command_class.name ? {:name => m[1], :summary => command_class.summary || ""} : nil
       end

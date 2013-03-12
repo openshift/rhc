@@ -166,6 +166,14 @@ module RHC
         option.merge!(opts)
       end
       commands.each_pair do |name, opts|
+        names = [name]
+        if name.include? ' '
+          s = name.split(' ')
+          names.unshift s.join('-')
+          names.unshift s.reverse.join('-')
+          name = names.first
+        end
+
         instance.command name do |c|
           c.description = opts[:description]
           c.summary = opts[:summary]
@@ -204,6 +212,8 @@ module RHC
               instance.alias_command "#{alias_cmd}", :"#{name}"
             end
           end
+
+          names[1..-1].each{ |alt| instance.alias_command alt, names.first }
 
           c.when_called do |args, options|
             deprecated?
