@@ -5,9 +5,12 @@ require 'commander/command'
 #  to avoid conflicts and side effects of similar short switches
 module Commander
   class Command
-    attr_accessor :default_action
+    attr_accessor :default_action, :root
     def default_action?
       default_action.present?
+    end
+    def root?
+      root.present?
     end
 
     def parse_options_and_call_procs *args
@@ -137,8 +140,10 @@ module RHC
     def self.deprecated?
       command_name = Commander::Runner.instance.command_name_from_args
       command = Commander::Runner.instance.active_command
+      
+      info = commands[commands.keys.find{ |k| k.join('-') == command.name }]
+      new_cmd = info[:deprecated] || info[:aliases].select{ |a| ['-',' '].map{ |s| Array(a[:action]).join(s) }.include?(command_name) }.map{ |a| a[:deprecated] }.first
 
-      new_cmd = deprecated[command_name.to_sym]
       if new_cmd
         new_cmd = "rhc #{command.name}" if new_cmd == true
         RHC::Helpers.deprecated_command new_cmd
@@ -166,43 +171,45 @@ module RHC
         option.merge!(opts)
       end
       commands.each_pair do |name, opts|
+        name = Array(name)
+        names = [name.reverse.join('-'), name.join(' ')] if name.length > 1
+        name = name.join('-')
+
         instance.command name do |c|
           c.description = opts[:description]
           c.summary = opts[:summary]
           c.syntax = opts[:syntax]
           c.default_action = opts[:default]
 
-          (options_metadata = opts[:options] || []).each do |o|
+          (options_metadata = Array(opts[:options])).each do |o|
             option_data = [o[:switches], o[:description]].flatten(1)
             c.option *option_data
             o[:arg] = Commander::Runner.switch_to_sym(Array(o[:switches]).last)
           end
 
-          deprecated[name.to_sym] = opts[:deprecated] unless opts[:deprecated].nil?
+          #deprecated[name] = opts[:deprecated] unless opts[:deprecated].nil?
 
-          args_metadata = opts[:args] || []
-          args_metadata.each do |arg_meta|
-            arg_switches = arg_meta[:switches]
-            unless arg_switches.nil? or arg_switches.empty?
-              arg_switches << arg_meta[:description]
-              c.option *arg_switches
+          (args_metadata = Array(opts[:args])).each do |meta|
+            switches = meta[:switches]
+            unless switches.nil? or switches.empty?
+              switches << meta[:description]
+              c.option *switches
             end
           end
 
-          unless opts[:aliases].nil?
-            opts[:aliases].each do |a|
-              alias_cmd = a[:action]
-
-              unless a[:root_command]
-                # prepend the current resource
-                alias_components = name.split(" ")
-                alias_components[-1] = a[:action]
-                alias_cmd = alias_components.join(' ').to_sym
-              end
-
-              deprecated[alias_cmd] = true if a[:deprecated]
-              instance.alias_command "#{alias_cmd}", :"#{name}"
+          Array(opts[:aliases]).each do |a|
+            action = Array(a[:action])
+            [' ', '-'].each do |s|
+              cmd = action.join(s)
+              #deprecated[cmd] = true if a[:deprecated]
+              instance.alias_command cmd, name
             end
+          end
+
+          if names
+            names.each{ |alt| instance.alias_command alt, name }
+          else
+            c.root = true
           end
 
           c.when_called do |args, options|
@@ -291,9 +298,6 @@ module RHC
       end
       def self.global_options
         @options ||= []
-      end
-      def self.deprecated
-        @deprecated ||= {}
       end
   end
 end

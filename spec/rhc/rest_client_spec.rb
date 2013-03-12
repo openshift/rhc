@@ -2,7 +2,7 @@ require 'base64'
 require 'spec_helper'
 require 'stringio'
 require 'rest_spec_helper'
-require 'rhc/rest/client'
+require 'rhc/rest'
 
 # This object is used in a few cases where we need to inspect
 # the logged output.
@@ -27,22 +27,19 @@ module RHC
 
       it 'should set the proxy protocol if it is missing' do
         ENV['http_proxy'] = 'foo.bar.com:8081'
-        load 'rhc/rest/client.rb'
-
+        RHC::Rest::Client.new
         ENV['http_proxy'].should == 'http://foo.bar.com:8081'
       end
 
       it 'should not alter the proxy protocol if it is present' do
         ENV['http_proxy'] = 'http://foo.bar.com:8081'
-        load 'rhc/rest/client.rb'
-
+        RHC::Rest::Client.new
         ENV['http_proxy'].should == 'http://foo.bar.com:8081'
       end
 
       it 'should not affect the proxy protocol if nil' do
         ENV['http_proxy'] = nil
-        load 'rhc/rest/client.rb'
-
+        RHC::Rest::Client.new
         ENV['http_proxy'].should be_nil
       end
 

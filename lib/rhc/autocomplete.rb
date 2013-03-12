@@ -1,8 +1,6 @@
-require 'rhc'
 require 'commander'
 require 'commander/runner'
 require 'commander/delegates'
-require 'rhc/commands'
 
 module RHC
   class AutoCompleteBindings
@@ -42,7 +40,7 @@ module RHC
 
           if name.rindex(' ').nil?
             @top_level_commands << name
-          else
+          elsif false
             commands = name.split ' '
             action = commands.pop
             id = commands.join(' ')

@@ -60,12 +60,15 @@ class RHC::Commands::Base
       return if private_method_defined? method
       return if protected_method_defined? method
 
+      prefix = self.object_name
       method_name = method.to_s == 'run' ? nil : method.to_s.gsub("_", "-")
-      name = [method_name]
-      name.unshift(self.object_name).compact!
+      name = [prefix, method_name].compact
       raise InvalidCommand, "Either object_name must be set or a non default method defined" if name.empty?
+
+      aliases.each{ |a| a[:action] = [prefix, a[:action]] unless a[:root_command] || prefix.nil? }
+
       RHC::Commands.add((@options || {}).merge({
-        :name => name.join(' '),
+        :name => name,
         :class => self,
         :method => method
       }));
@@ -108,13 +111,17 @@ class RHC::Commands::Base
       @suppress_wizard
     end
 
+    #
+    # Provide an alias to the command.  The alias will not be shown in help, but will
+    # be available in autocompletion and at execution time.
+    #
+    # Supported options:
+    # 
+    #   :deprecated - if true, a warning will be displayed when the command is executed
+    #   :root_command - if true, do not prepend the object name to the command
+    # 
     def self.alias_action(action, options={})
-      # if it is a root_command we simply alias it to the passed in action
-      # if not we prepend the current resource to the action
-      # default == false
-      options[:root_command] ||= false
       options[:action] = action
-      options[:deprecated] ||= false
       aliases << options
     end
 
@@ -159,10 +166,10 @@ class RHC::Commands::Base
       def self.args_metadata
         options[:args] ||= []
       end
-      def self.options
-        @options ||= {}
-      end
       def self.aliases
         options[:aliases] ||= []
+      end
+      def self.options
+        @options ||= {}
       end
 end
