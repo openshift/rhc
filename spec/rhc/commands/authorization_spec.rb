@@ -42,6 +42,15 @@ describe RHC::Commands::Authorization do
 
     expect_an_unsupported_message
   end
+  
+  describe '#run' do
+    let(:arguments) { ['authorization', '--h']}
+    context 'given --h' do
+      it 'should not raise SystemStackError' do
+        expect{ run }.should_not raise_error(SystemStackError)
+      end
+    end
+  end
 
   describe "#delete" do
     let(:arguments) { ['authorization', 'delete', 'foo', 'bar'] }
