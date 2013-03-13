@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.5.12
+Version: 1.5.13
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -100,6 +100,11 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Mar 13 2013 Adam Miller <admiller@redhat.com> 1.5.13-1
+- When user is contacting a non auth service with use_authorization_tokens
+  true, their credentials aren't passed to the server.  Instead, they get in a
+  loop prompt. (ccoleman@redhat.com)
+
 * Wed Mar 06 2013 Adam Miller <admiller@redhat.com> 1.5.12-1
 - Merge pull request #326 from smarterclayton/add_rhc_gears_call
   (dmcphers@redhat.com)
