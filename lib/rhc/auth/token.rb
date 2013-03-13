@@ -17,7 +17,7 @@ module RHC::Auth
     def to_request(request)
       if token
         (request[:headers] ||= {})['authorization'] = "Bearer #{token}"
-      elsif auth and !@allows_tokens
+      elsif auth and (!@allows_tokens or @can_get_token == false)
         auth.to_request(request)
       end
       request
@@ -68,15 +68,15 @@ module RHC::Auth
           end
         end
 
-        can_get_token = client.supports_sessions? && @allows_tokens
+        @can_get_token = client.supports_sessions? && @allows_tokens
 
         if has_token
           warn "Your authorization token has expired. Please sign in now to continue."
-        elsif can_get_token
+        elsif @can_get_token
           info "Please sign in to start a new session to #{openshift_server}."
         end
 
-        return auth.retry_auth?(response, client) unless can_get_token
+        return auth.retry_auth?(response, client) unless @can_get_token
 
         if auth_token = client.new_session(:auth => auth)
           @fetch_once = true

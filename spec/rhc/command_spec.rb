@@ -275,6 +275,18 @@ describe RHC::Commands::Base do
           rest_client.user
         end
       end
+
+      context "with username and tokens enabled against a server without tokens" do
+        let!(:config){ base_config{ |c, d| d.add('use_authorization_tokens', 'true') } }
+        let(:username){ 'foo' }
+        let(:arguments){ ['test', '-l', username, '--server', mock_uri] }
+        before{ instance.send(:token_store).should_receive(:get).with{ |user, server| user.should == username; server.should == instance.send(:openshift_server) }.twice.and_return(nil) }
+        before{ stub_api(false, false); stub_api_request(:get, 'broker/rest/user', false).to_return{ |request| request.headers['Authorization'] =~ /Basic/ ? simple_user(username) : {:status => 401} } }
+        it("should prompt for password") do 
+          basic_auth.should_receive(:ask).once.and_return('password')
+          rest_client.user
+        end
+      end
     end
   end
 end
