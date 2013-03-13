@@ -22,15 +22,20 @@ module RHC::Commands
             underline("#{name} (#{c.only_in_new? ? 'web' : 'addon'})"),
             c.description,
             tags.present? ? "\nTagged with: #{tags.sort.join(', ')}" : nil,
+            c.usage_rate? ? "\n#{format_usage_message(c)}" : nil,
           ].compact << "\n"
         end.flatten
       else
-        table(carts.map{ |c| [c.name, c.display_name, c.only_in_new? ? 'web' : 'addon'] })
+        table(carts.collect do |c|
+          [c.usage_rate? ? "#{c.name} (*)" : c.name,
+           c.display_name,
+           c.only_in_new? ? 'web' : 'addon']
+        end)
       end
-
 
       say list.join("\n")
       paragraph{ say "Note: Web cartridges can only be added to new applications." }
+      paragraph{ say "(*) denotes a cartridge with additional usage costs." } if carts.any? { |c| c.usage_rate? }
 
       0
     end
@@ -45,6 +50,8 @@ module RHC::Commands
       cart = check_cartridges(cart_type, :from => not_standalone_cartridges).first
 
       say "Adding #{cart.name} to application '#{options.app}' ... "
+
+      say format_usage_message(cart) if cart.usage_rate?
 
       rest_app = rest_client.find_application(options.namespace, options.app, :include => :cartridges)
       rest_cartridge = rest_app.add_cartridge(cart.name)
