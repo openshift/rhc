@@ -47,9 +47,7 @@ describe RHC::Commands::Authorization do
     let(:arguments) { ['authorization', '--h']}
     context 'given --h' do
       it 'should not raise SystemStackError' do
-        pending 'work on resolving infinite recursion on OptionParser' do
-          expect{ run }.should_not raise_error(SystemStackError)
-        end
+        expect{ run }.should_not raise_error(SystemStackError)
       end
     end
   end
