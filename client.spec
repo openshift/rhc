@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.6.1
+Version: 1.6.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -100,6 +100,26 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Mar 14 2013 Adam Miller <admiller@redhat.com> 1.6.2-1
+- Merge pull request #332 from jtharris/highline_fix (dmcphers@redhat.com)
+- Merge pull request #331 from BanzaiMan/dev/hasari/bz920028
+  (dmcphers@redhat.com)
+- Always use color for mock highline. (jharris@redhat.com)
+- This spec now passes. (asari.ruby@gmail.com)
+- Bug 920028. (asari.ruby@gmail.com)
+- Merge pull request #328 from
+  smarterclayton/unable_to_auth_when_tokens_missing
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #327 from jtharris/features/US2627
+  (dmcphers+openshiftbot@redhat.com)
+- When user is contacting a non auth service with use_authorization_tokens
+  true, their credentials aren't passed to the server.  Instead, they get in a
+  loop prompt. (ccoleman@redhat.com)
+- Mark the failing spec as pending. (asari.ruby@gmail.com)
+- Add spec for Bug 920028. (asari.ruby@gmail.com)
+- Bug 918667 (jharris@redhat.com)
+- Adding usage rate reminders. (jharris@redhat.com)
+
 * Thu Mar 07 2013 Adam Miller <admiller@redhat.com> 1.6.1-1
 - bump_minor_versions for sprint 25 (admiller@redhat.com)
 
