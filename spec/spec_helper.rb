@@ -189,6 +189,11 @@ module ClassSpecHelpers
   end
 
   class MockHighLineTerminal < HighLine
+
+    def self.use_color?
+      true
+    end
+
     def initialize(input, output)
       super
       @last_read_pos = 0
@@ -363,8 +368,8 @@ module CommanderInvocationMatchers
     end
     description do
       "expect block to invoke '#{method}' on #{@object} with #{@args}"
-    end    
-  end  
+    end
+  end
 end
 
 module ColorMatchers
