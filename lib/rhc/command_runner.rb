@@ -37,7 +37,10 @@ module RHC
       #trap('INT') { program(:int_block).call } if program(:int_block)
 
       global_option('-h', '--help', 'Help on any command', :hide => true) do
-        args = @args - %w[-h --help]
+        # we need to remove '--h', '--he', '--hel' as well in order to avoid
+        # infinite recursion.
+        # See https://bugzilla.redhat.com/show_bug.cgi?id=920028#c3 for a detailed explanation
+        args = @args - %w[-h --h --he --hel --help]
         command(:help).run(*args)
         return
       end
