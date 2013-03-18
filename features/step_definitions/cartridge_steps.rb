@@ -4,14 +4,17 @@ require 'rhc/config'
 include RHCHelper
 
 When /^the (.+) cartridge is added$/ do |name|
+  name = map_cartridge_type(name)
   @app.add_cartridge name
 end
 
 When /^the (.+) cartridge is removed$/ do |name|
+  name = map_cartridge_type(name)
   @app.remove_cartridge name
 end
 
 When /^the (.+) cartridge is (stopped|(?:re)?started)$/ do |name,command|
+  name = map_cartridge_type(name)
   cmd = case command.to_sym
         when :stopped
           'stop'
@@ -26,6 +29,7 @@ When /^the (.+) cartridge is (stopped|(?:re)?started)$/ do |name,command|
 end
 
 Then /^the (.+) cartridge should be (.*)$/ do |name,status|
+  name = map_cartridge_type(name)
   expected = case status.to_sym
              when :running
                "(.+) is running|Uptime:"
@@ -40,10 +44,12 @@ Then /^the (.+) cartridge should be (.*)$/ do |name,status|
 end
 
 Then /^adding the (.+) cartridge should fail$/ do |name|
+  name = map_cartridge_type(name)
   @app.add_cartridge(name).should == 154
 end
 
 When /^we are updating the (.+) cartridge$/ do |cart|
+  cart = map_cartridge_type(cart)
   @cartridge_name = cart
 end
 
@@ -81,7 +87,8 @@ Then /^it should fail with code (\d+)$/ do |code|
   @exitcode.should == code.to_i
 end
 
-Then /^the list should contain the cartridge ([^\s]+) with display name "([^"]+)"$/ do |name, display_name|
+Then /^the list should contain the cartridge ([^\s]+) with display name$/ do |name|
+  display_name = map_cartridge_name(name)
   line = @cartridge_output.each_line.find{ |s| s.include?(name) }
   line.should_not be_nil
   line.should match(display_name)
