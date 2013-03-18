@@ -27,9 +27,18 @@ Feature: Single Cartridge Tests
     When we list cartridges
     Then the list should contain the cartridge <cart> with display name "<name>"
 
+    @rhel-only
     Examples:
       | cart        | name          |
       | php-5.3     | PHP 5.3       |
+
+    @fedora-only
+    Examples:
+      | cart        | name          |
+      | php-5.4     | PHP 5.4       |
+
+    Examples:
+      | cart        | name          |
       | mongodb-2.2 | MongoDB NoSQL |
       | cron-1.4    | Cron 1.4      |
 

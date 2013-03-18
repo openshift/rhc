@@ -2,9 +2,19 @@
 Feature: Application Operations
 
   @init
-  Scenario: Application Creation
-    When a php-5.3 application is created
+  Scenario Outline: Application Creation
+    When a <php_version> application is created
     Then the application should be accessible
+
+    @fedora-only
+    Scenario: Fedora 18
+      | php_version |
+      | php-5.4     |
+
+    @rhel-only
+    Scenario: RHEL
+      | php_version |
+      | php-5.3     |
 
   # The state in these examples should be able to be broken into before hooks when we update cucumber
   Scenario Outline: Running Application Commands
