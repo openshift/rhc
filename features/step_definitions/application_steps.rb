@@ -18,7 +18,7 @@ end
 # Use the transformed array so we can reuse this step for all combinations
 Given /^an existing (or new )?(scaled )?(.+) (application with.*)$/ do |create, scaled, type, embeds|
   options = { :type => type }
-  options[:embed] = embeds if embeds
+  options[:embed] = embeds.map{ |c| map_cartridge_type(c) } if embeds
   options[:scalable] = scaled if scaled
   @app = App.find_on_fs(options)
 
@@ -51,7 +51,8 @@ When /^(\d+) (.+) applications are created$/ do |app_count, type|
   @app = old_app
 end
 
-When /^a (scaled )?(.+) application is created(?: with a (.*) gear)?$/ do |scaled, type, gear_profile|
+When /^a (scaled )?(.+) application is created(?: with a (.*) gear)?$/ do |scaled, type, gear_profile|  
+  type = map_cartridge_type(type)
   @app = App.create_unique(type, scaled, gear_profile)
   @app.rhc_app_create
 end
@@ -111,7 +112,7 @@ Then /^it should succeed$/ do
 end
 
 Then /^the application should be scalable/ do
-  step "the haproxy-1.4 cartridge should be running"
+  step "the haproxy cartridge should be running"
 end
 
 Then /^the application should have a (.*) gear$/ do |gear_profile|

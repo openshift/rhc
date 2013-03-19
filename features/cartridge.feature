@@ -10,12 +10,12 @@ Feature: Single Cartridge Tests
 
     Examples:
       | type            | command   | status  |
-      | mysql-5.1       | added     | running |
+      | mysql           | added     | running |
 
   Scenario Outline: Cartridge Commands
-    Given we have a <state> mysql-5.1 cartridge
-    When the mysql-5.1 cartridge is <command>
-    Then the mysql-5.1 cartridge should be <status>
+    Given we have a <state> mysql cartridge
+    When the mysql cartridge is <command>
+    Then the mysql cartridge should be <status>
 
     Examples:
       | state   | command   | status  |
@@ -25,13 +25,14 @@ Feature: Single Cartridge Tests
 
   Scenario Outline: Cartridge List
     When we list cartridges
-    Then the list should contain the cartridge <cart> with display name "<name>"
+    Then the list should contain the cartridge <cart> with display name
 
     Examples:
-      | cart        | name          |
-      | php-5.3     | PHP 5.3       |
-      | mongodb-2.2 | MongoDB NoSQL |
-      | cron-1.4    | Cron 1.4      |
+      | cart    |
+      | php     |
+      | mongodb |
+      | cron    |
+
 
 #  Commenting this out for US2438
 #  Scenario Outline: Cartridge Storage
