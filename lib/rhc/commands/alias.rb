@@ -94,12 +94,12 @@ module RHC::Commands
     def list(app)
       rest_app = rest_client.find_application(options.namespace, app)
       items = rest_app.aliases.map do |a|
-        [a.id, a.has_private_ssl_certificate? ? 'yes' : 'no', a.has_private_ssl_certificate? ? Date.parse(a.certificate_added_at) : '']
+        [a.id, a.has_private_ssl_certificate? ? 'yes' : 'no', a.has_private_ssl_certificate? ? Date.parse(a.certificate_added_at) : '-']
       end
       if items.empty?
-        results { say "No SSL certificate associated with the application #{app}." }
+        results { say "No aliases associated with the application #{app}." }
       else
-        table(items, :header => ["Alias", "Has Certificate?", "Certificate Added"]).each { |s| success s }
+        table(items, :header => ["Alias", "Has Certificate?", "Certificate Added"]).each { |s| say s }
       end
       0
     end
