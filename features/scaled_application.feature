@@ -3,7 +3,7 @@ Feature: Scaled Application Operations
 
   @init
   Scenario: Scaled Application Creation
-    When a scaled php-5.3 application is created
+    When a scaled php application is created
     Then the application should be accessible
     Then the application should be scalable
 
@@ -34,9 +34,9 @@ Feature: Scaled Application Operations
 
     Examples:
       | cart    | type  | value |
-      | php-5.3 | min   |   1   |
-      | php-5.3 | max   |   5   |
-      | php-5.3 | max   |   -1  |
+      | php     | min   |   1   |
+      | php     | max   |   5   |
+      | php     | max   |   -1  |
 
   Scenario Outline: Invalid Scaling Values
     When we are updating the <cart> cartridge
@@ -45,4 +45,4 @@ Feature: Scaled Application Operations
 
     Examples:
       | cart    | type  | value | code |
-      | php-5.3 | min   |   a   |  1   |
+      | php     | min   |   a   |  1   |

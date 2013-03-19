@@ -3,7 +3,7 @@ Feature: Application Operations
 
   @init
   Scenario: Application Creation
-    When a php-5.3 application is created
+    When a php application is created
     Then the application should be accessible
 
   # The state in these examples should be able to be broken into before hooks when we update cucumber
