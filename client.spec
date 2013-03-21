@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.6.3
+Version: 1.6.4
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -100,6 +100,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Mar 21 2013 Adam Miller <admiller@redhat.com> 1.6.4-1
+- Updates to enable RHC extended tests to run on Fedora 18 (kraman@gmail.com)
+
 * Mon Mar 18 2013 Adam Miller <admiller@redhat.com> 1.6.3-1
 - Display the duration of http requests in the debug output
   (ccoleman@redhat.com)
