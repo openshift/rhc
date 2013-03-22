@@ -178,7 +178,7 @@ describe RHC::Commands::Alias do
         '--certificate', File.expand_path('../../assets/cert.crt', __FILE__),
         '--private-key', File.expand_path('../../assets/cert_key_rsa', __FILE__) ] }
       it { expect { run }.should exit_with_code(0) }
-      it { run_output.should =~ /SSL Certificate successfully added/m }
+      it { run_output.should =~ /SSL certificate successfully added/m }
     end
     context 'cert file not found' do
       let(:arguments) { ['alias', 'update-cert', 'mock_app_0', 'www.foo.bar', 
@@ -207,7 +207,7 @@ describe RHC::Commands::Alias do
     context 'delete existing certificate' do
       let(:arguments) { ['alias', 'delete-cert', 'mock_app_0', 'www.foo.bar', '--confirm'] }
       it { expect { run }.should exit_with_code(0) }
-      it { run_output.should =~ /SSL Certificate successfully deleted/m }
+      it { run_output.should =~ /SSL certificate successfully deleted/m }
     end
     context 'delete not existing certificate' do
       let(:arguments) { ['alias', 'delete-cert', 'mock_app_0', 'www.unicorns.com', '--confirm'] }
@@ -227,7 +227,7 @@ describe RHC::Commands::Alias do
     context 'list app without certificates' do
       let(:arguments) { ['alias', 'list', 'mock_app_1'] }
       it { expect { run }.should exit_with_code(0) }
-      it { run_output.should =~ /No SSL Certificate associated with the application mock_app_1/m }
+      it { run_output.should =~ /No SSL certificate associated with the application mock_app_1/m }
     end
   end
 
