@@ -38,7 +38,7 @@ module RHC::Commands
       Add or update the SSL certificate for your custom domain alias to 
       allow secure HTTPS communication with your app.
 
-      Certificate files must be Base64 PEM-encoded and tipically have a
+      Certificate files must be Base64 PEM-encoded and typically have a
       .crt or .pem extension. You may combine multiple certificates and
       certificate chains in a single file. The RSA or DSA private key 
       must always be provided in a separate file.
@@ -60,13 +60,13 @@ module RHC::Commands
       private_key_file_path = options.private_key
       raise ArgumentError, "Private key file not found: #{private_key_file_path}" if !File.exist?(private_key_file_path) || !File.file?(private_key_file_path)
 
-      certificate_content = File.open(certificate_file_path, "rb").read
-      private_key_content = File.open(private_key_file_path, "rb").read
+      certificate_content = File.read(certificate_file_path, "rb")
+      private_key_content = File.read(private_key_file_path, "rb")
 
       rest_app = rest_client.find_application(options.namespace, app)
       rest_alias = rest_app.find_alias(app_alias)
       rest_alias.add_certificate(certificate_content, private_key_content, options.passphrase)
-      results { say "SSL Certificate successfully added." }
+      results { say "SSL certificate successfully added." }
       0
     end
 
