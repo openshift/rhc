@@ -19,6 +19,12 @@ module RHC
     end
   end
 
+  class AliasNotFoundException < Exception
+    def initialize(message="Alias not found")
+      super message, 156
+    end
+  end
+
   class MultipleCartridgesException < Exception
     def initialize(message="Multiple cartridge found")
       super message, 155

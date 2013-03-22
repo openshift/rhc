@@ -8,10 +8,13 @@ describe RHC::Commands::Alias do
   let(:domain_0_links) { mock_response_links(mock_domain_links('mock_domain_0')) }
   let(:domain_1_links) { mock_response_links(mock_domain_links('mock_domain_1')) }
   let(:app_0_links)    { mock_response_links(mock_app_links('mock_domain_0', 'mock_app_0')) }
+  let(:alias_0_links)  { mock_response_links(mock_alias_links('mock_domain_0', 'mock_app_0', 'www.foo.bar')) }
   let!(:rest_client){ MockRestClient.new }
   before(:each) do
     user_config
-    rest_client.add_domain("mock_domain_0").add_application("mock_app_0", "ruby-1.8.7")
+    domain = rest_client.add_domain("mock_domain_0")
+    domain.add_application("mock_app_0", "ruby-1.8.7").add_alias("www.foo.bar")
+    domain.add_application("mock_app_1", "ruby-1.8.7")
     stub_api_request(:any, client_links['LIST_DOMAINS']['relative']).
             to_return({ :body   => {
                           :type => 'domains',
@@ -74,6 +77,20 @@ describe RHC::Commands::Alias do
                         }.to_json,
                         :status => 200
                       })
+    stub_api_request(:any, app_0_links['LIST_ALIASES']['relative'], false).
+            to_return({ :body   => {
+                    :type => 'aliases',
+                    :data =>
+                    [{ :domain_id                   => 'mock_domain_0',
+                       :application_id              => 'mock_app_0',
+                       :id                          => 'www.foo.bar',
+                       :certificate_added_at        => nil,
+                       :has_private_ssl_certificate => false,
+                       :links                       => mock_response_links(mock_alias_links('mock_domain_0','mock_app_0', 'www.foo.bar')),
+                     }]
+                  }.to_json,
+                  :status => 200
+                })
 
   end
 
@@ -110,15 +127,108 @@ describe RHC::Commands::Alias do
     end
   end
 
+  describe 'alias update-cert --help' do
+    let(:arguments) { ['alias', 'update-cert', '--help'] }
+
+    context 'help is run' do
+      it "should display help" do
+        expect { run }.should exit_with_code(0)
+      end
+      it('should output usage') { run_output.should match("Usage: rhc alias update-cert <application> <alias> --certificate FILE --private-key FILE [--passphrase passphrase]") }
+    end
+  end
+
+  describe 'alias delete-cert --help' do
+    let(:arguments) { ['alias', 'delete-cert', '--help'] }
+
+    context 'help is run' do
+      it "should display help" do
+        expect { run }.should exit_with_code(0)
+      end
+      it('should output usage') { run_output.should match("Usage: rhc alias delete-cert <application> <alias>") }
+    end
+  end
+
+  describe 'alias list --help' do
+    let(:arguments) { ['alias', 'list', '--help'] }
+
+    context 'help is run' do
+      it "should display help" do
+        expect { run }.should exit_with_code(0)
+      end
+      it('should output usage') { run_output.should match("Usage: rhc alias list <application>") }
+    end
+  end
+
   describe 'add alias' do
     let(:arguments) { ['alias', 'add', 'mock_app_0', 'www.foo.bar' ] }
     it { expect { run }.should exit_with_code(0) }
-    it { run_output.should =~ /'add-alias' successful/m }
+    it { run_output.should =~ /Alias 'www.foo.bar' has been added/m }
   end
 
   describe 'remove alias' do
     let(:arguments) { ['alias', 'remove', 'mock_app_0', 'www.foo.bar' ] }
     it { expect { run }.should exit_with_code(0) }
-    it { run_output.should =~ /'remove-alias' successful/m }
+    it { run_output.should =~ /Alias 'www.foo.bar' has been removed/m }
   end
+
+  describe 'alias update-cert' do
+    context 'add valid certificate with valid private key without pass phrase' do
+      let(:arguments) { ['alias', 'update-cert', 'mock_app_0', 'www.foo.bar', 
+        '--certificate', File.expand_path('../../assets/cert.crt', __FILE__),
+        '--private-key', File.expand_path('../../assets/cert_key_rsa', __FILE__) ] }
+      it { expect { run }.should exit_with_code(0) }
+      it { run_output.should =~ /SSL certificate successfully added/m }
+    end
+    context 'cert file not found' do
+      let(:arguments) { ['alias', 'update-cert', 'mock_app_0', 'www.foo.bar', 
+        '--certificate', File.expand_path('../../assets/nothing.foo', __FILE__),
+        '--private-key', File.expand_path('../../assets/cert_key_rsa', __FILE__) ] }
+      it { expect { run }.should exit_with_code(1) }
+      it { run_output.should =~ /Certificate file not found/m }
+    end
+    context 'private key file not found' do
+      let(:arguments) { ['alias', 'update-cert', 'mock_app_0', 'www.foo.bar', 
+        '--certificate', File.expand_path('../../assets/cert.crt', __FILE__),
+        '--private-key', File.expand_path('../../assets/nothing.foo', __FILE__) ] }
+      it { expect { run }.should exit_with_code(1) }
+      it { run_output.should =~ /Private key file not found/m }
+    end
+    context 'not existing certificate alias' do
+      let(:arguments) { ['alias', 'update-cert', 'mock_app_0', 'www.unicorns.com', 
+        '--certificate', File.expand_path('../../assets/cert.crt', __FILE__),
+        '--private-key', File.expand_path('../../assets/cert_key_rsa', __FILE__) ] }
+      it { expect { run }.should exit_with_code(156) }
+      it { run_output.should =~ /Alias www.unicorns.com can't be found in application/m }
+    end
+  end
+
+  describe 'alias delete-cert' do
+    context 'delete existing certificate' do
+      let(:arguments) { ['alias', 'delete-cert', 'mock_app_0', 'www.foo.bar', '--confirm'] }
+      it { expect { run }.should exit_with_code(0) }
+      it { run_output.should =~ /SSL certificate successfully deleted/m }
+    end
+    context 'delete not existing certificate' do
+      let(:arguments) { ['alias', 'delete-cert', 'mock_app_0', 'www.unicorns.com', '--confirm'] }
+      it { expect { run }.should exit_with_code(156) }
+      it { run_output.should =~ /Alias www.unicorns.com can't be found in application mock_app_0/m }
+    end
+  end
+
+  describe 'alias list' do
+    context 'list app with existing certificate' do
+      let(:arguments) { ['alias', 'list', 'mock_app_0'] }
+      it { expect { run }.should exit_with_code(0) }
+      it { run_output.should =~ /Has Certificate?/m }
+      it { run_output.should =~ /Certificate Added/m }
+      it { run_output.should =~ /www.foo.bar/m }
+    end
+    context 'list app without certificates' do
+      let(:arguments) { ['alias', 'list', 'mock_app_1'] }
+      it { expect { run }.should exit_with_code(0) }
+      it { run_output.should =~ /No SSL certificate associated with the application mock_app_1/m }
+    end
+  end
+
 end

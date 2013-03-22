@@ -13,6 +13,7 @@ module RHC
     autoload :Key,           'rhc/rest/key'
     autoload :User,          'rhc/rest/user'
     autoload :GearGroup,     'rhc/rest/gear_group'
+    autoload :Alias,         'rhc/rest/alias'
 
     class Exception < RuntimeError
       attr_reader :code
