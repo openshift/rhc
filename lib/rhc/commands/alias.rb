@@ -60,8 +60,8 @@ module RHC::Commands
       private_key_file_path = options.private_key
       raise ArgumentError, "Private key file not found: #{private_key_file_path}" if !File.exist?(private_key_file_path) || !File.file?(private_key_file_path)
 
-      certificate_content = File.read(certificate_file_path, "rb")
-      private_key_content = File.read(private_key_file_path, "rb")
+      certificate_content = File.read(certificate_file_path)
+      private_key_content = File.read(private_key_file_path)
 
       rest_app = rest_client.find_application(options.namespace, app)
       rest_alias = rest_app.find_alias(app_alias)
