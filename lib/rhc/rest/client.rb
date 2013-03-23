@@ -76,6 +76,14 @@ module RHC
         })
       end
 
+      def find_application_aliases(domain, application, options={})
+        response = request({
+          :url => link_show_application_by_domain_name(domain, application, "aliases"),
+          :method => "GET",
+          :payload => options
+        })
+      end
+
       def link_show_application_by_domain_name(domain, application, *args)
         [
           api.links['LIST_DOMAINS']['href'],
@@ -189,7 +197,7 @@ module RHC
       # The list may not necessarily be sorted; we will select the last
       # matching one supported by the server.
       # See #api_version_negotiated
-      CLIENT_API_VERSIONS = [1.1, 1.2, 1.3]
+      CLIENT_API_VERSIONS = [1.1, 1.2, 1.3, 1.4]
 
       def initialize(*args)
         options = args[0].is_a?(Hash) && args[0] || {}
@@ -491,6 +499,8 @@ module RHC
             Key.new(data, self)
           when 'gear_groups'
             data.map{ |json| GearGroup.new(json, self) }
+          when 'aliases'
+            data.map{ |json| Alias.new(json, self) }
           else
             data
           end
