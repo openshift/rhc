@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.6.4
+Version: 1.6.5
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -100,6 +100,13 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Mar 25 2013 Adam Miller <admiller@redhat.com> 1.6.5-1
+- Minor bug fixes (ffranz@redhat.com)
+- Minor bug fixes and typos (ffranz@redhat.com)
+- Minor bug fixes and typos (ffranz@redhat.com)
+- Card #239: Added support to alias creation and deletion and SSL certificate
+  upload to the CLI (ffranz@redhat.com)
+
 * Thu Mar 21 2013 Adam Miller <admiller@redhat.com> 1.6.4-1
 - Updates to enable RHC extended tests to run on Fedora 18 (kraman@gmail.com)
 
