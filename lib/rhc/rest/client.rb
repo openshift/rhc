@@ -199,6 +199,14 @@ module RHC
       # See #api_version_negotiated
       CLIENT_API_VERSIONS = [1.1, 1.2, 1.3, 1.4]
 
+      # Set the http_proxy env variable, read by
+      # HTTPClient, being sure to add the http protocol
+      # if not specified already
+      proxy = ENV['http_proxy'] || ENV['HTTP_PROXY']
+      if proxy && proxy !~ /^(\w+):\/\// then
+        ENV['http_proxy'] = "http://#{proxy}"
+      end
+
       def initialize(*args)
         options = args[0].is_a?(Hash) && args[0] || {}
         @end_point, @debug, @preferred_api_versions =
@@ -241,7 +249,7 @@ module RHC
       end
 
       def api
-        @api ||= RHC::Rest::Api.new(self, @preferred_api_versions).tap do |api| 
+        @api ||= RHC::Rest::Api.new(self, @preferred_api_versions).tap do |api|
           self.current_api_version = api.api_version_negotiated
         end
       end
