@@ -3,7 +3,7 @@ require 'uri'
 module RHC
   module Rest
     class Application < Base
-      define_attr :domain_id, :name, :creation_time, :uuid, :aliases,
+      define_attr :domain_id, :name, :creation_time, :uuid,
                   :git_url, :app_url, :gear_profile, :framework,
                   :scalable, :health_check_path, :embedded, :gear_count,
                   :ssh_url, :building_app, :cartridges, :initial_git_url
@@ -97,7 +97,23 @@ module RHC
 
       def remove_alias(app_alias)
         debug "Running remove_alias for #{name}"
-        rest_method "REMOVE_ALIAS", :event => "remove-alias", :alias => app_alias
+        find_alias(app_alias).destroy
+      end
+
+      def aliases
+        debug "Getting all aliases for application #{name}"
+        rest_method "LIST_ALIASES"
+      end
+
+      def find_alias(name, options={})
+        debug "Finding alias #{name} in app #{@name}"
+
+        if name.is_a?(Hash)
+          options = name
+          name = options[:name]
+        end
+        aliases.each { |a| return a if a.id == name }
+        raise RHC::AliasNotFoundException.new("Alias #{name} can't be found in application #{@name}.")
       end
 
       #Find Cartridge by name

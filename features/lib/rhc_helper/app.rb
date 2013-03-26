@@ -118,7 +118,7 @@ module RHCHelper
 
     def get_index_file
       case @type
-        when "php-5.3" then "php/index.php"
+        when "php-5.3","php-5.4" then "php/index.php"
         when "ruby-1.8" then "config.ru"
         when "python-2.6" then "wsgi/application"
         when "perl-5.10" then "perl/index.pl"
@@ -130,7 +130,7 @@ module RHCHelper
 
     def get_mysql_file
       case @type
-        when "php-5.3" then File.expand_path("../misc/php/db_test.php", File.expand_path(File.dirname(__FILE__)))
+        when "php-5.3","php-5.4" then File.expand_path("../misc/php/db_test.php", File.expand_path(File.dirname(__FILE__)))
       end
     end
   end

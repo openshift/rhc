@@ -70,7 +70,14 @@ raise "Password not found in environment (RHC_PASSWORD)" unless $password
 $user_register_script_format = "oo-register-user -l admin -p admin --username %s --userpass %s"
 if ENV['REGISTER_USER']
   command = $user_register_script_format % [$username,$password]
-  %x[#{command}]
+  if Object.const_defined?('Bundler')
+    Bundler::with_clean_env do
+      system "gem install activeresource bundler parseconfig --no-ri --no-rdoc"
+      system command
+    end
+  else
+    system command
+  end
 end
 
 def _log(msg)

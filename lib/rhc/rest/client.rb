@@ -3,6 +3,7 @@ require 'rhc/helpers'
 require 'uri'
 require 'logger'
 require 'httpclient'
+require 'benchmark'
 
 module RHC
   module Rest
@@ -70,6 +71,14 @@ module RHC
       def find_application_gear_groups(domain, application, options={})
         response = request({
           :url => link_show_application_by_domain_name(domain, application, "gear_groups"),
+          :method => "GET",
+          :payload => options
+        })
+      end
+
+      def find_application_aliases(domain, application, options={})
+        response = request({
+          :url => link_show_application_by_domain_name(domain, application, "aliases"),
           :method => "GET",
           :payload => options
         })
@@ -188,7 +197,15 @@ module RHC
       # The list may not necessarily be sorted; we will select the last
       # matching one supported by the server.
       # See #api_version_negotiated
-      CLIENT_API_VERSIONS = [1.1, 1.2, 1.3]
+      CLIENT_API_VERSIONS = [1.1, 1.2, 1.3, 1.4]
+
+      # Set the http_proxy env variable, read by
+      # HTTPClient, being sure to add the http protocol
+      # if not specified already
+      proxy = ENV['http_proxy'] || ENV['HTTP_PROXY']
+      if proxy && proxy !~ /^(\w+):\/\// then
+        ENV['http_proxy'] = "http://#{proxy}"
+      end
 
       def initialize(*args)
         options = args[0].is_a?(Hash) && args[0] || {}
@@ -232,7 +249,7 @@ module RHC
       end
 
       def api
-        @api ||= RHC::Rest::Api.new(self, @preferred_api_versions).tap do |api| 
+        @api ||= RHC::Rest::Api.new(self, @preferred_api_versions).tap do |api|
           self.current_api_version = api.api_version_negotiated
         end
       end
@@ -247,10 +264,11 @@ module RHC
           begin
             client, args = new_request(options.dup)
             auth = options[:auth] || self.auth
+            response = nil
 
             debug "Request #{args[0].to_s.upcase} #{args[1]}" if debug?
-            response = client.request(*(args << true))
-            debug "   code #{response.status}" if debug? && response
+            time = Benchmark.realtime{ response = client.request(*(args << true)) }
+            debug "   code %s %4i ms" % [response.status, (time*1000).to_i] if debug? && response
 
             next if retry_proxy(response, i, args, client)
             auth.retry_auth?(response, self) and next if auth
@@ -489,6 +507,8 @@ module RHC
             Key.new(data, self)
           when 'gear_groups'
             data.map{ |json| GearGroup.new(json, self) }
+          when 'aliases'
+            data.map{ |json| Alias.new(json, self) }
           else
             data
           end
