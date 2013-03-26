@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.6.5
+Version: 1.6.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -100,6 +100,10 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Mar 26 2013 Adam Miller <admiller@redhat.com> 1.6.6-1
+- Merge pull request #336 from jtharris/bugs/BZ924863 (dmcphers@redhat.com)
+- http_proxy ENV variable does not have to set protocol. (jharris@redhat.com)
+
 * Mon Mar 25 2013 Adam Miller <admiller@redhat.com> 1.6.5-1
 - Minor bug fixes (ffranz@redhat.com)
 - Minor bug fixes and typos (ffranz@redhat.com)
