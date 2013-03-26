@@ -23,14 +23,14 @@ describe RHC::Commands::Account do
     it('should show the maximum gears') { run_output.should =~ /Gears Allowed:\s*3/ }
     it { expect { run }.should exit_with_code(0) }
 
-    context 'with a freeshift plan' do
-      let(:user_plan_id){ 'freeshift' }
-      it('should show') { run_output.should =~ /Plan:\s*FreeShift/ }
+    context 'with a free plan' do
+      let(:user_plan_id){ 'free' }
+      it('should show') { run_output.should =~ /Plan:\s*Free/ }
     end
 
-    context 'with a megashift plan' do
-      let(:user_plan_id){ 'megashift' }
-      it('should show') { run_output.should =~ /Plan:\s*MegaShift/ }
+    context 'with a silver plan' do
+      let(:user_plan_id){ 'silver' }
+      it('should show') { run_output.should =~ /Plan:\s*Silver/ }
     end
 
     context 'with a arbitrary plan' do
