@@ -122,7 +122,7 @@ module RHC
       error e.message
       nil
     rescue => e
-      error e.message
+      debug e.message
       nil
     end
 
