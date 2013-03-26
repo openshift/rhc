@@ -22,13 +22,34 @@ module RHC
   module Rest
     describe Client do
 
+      it 'should set the proxy protocol if it is missing' do
+        ENV['http_proxy'] = 'foo.bar.com:8081'
+        load 'rhc/rest/client.rb'
+
+        ENV['http_proxy'].should == 'http://foo.bar.com:8081'
+      end
+
+      it 'should not alter the proxy protocol if it is present' do
+        ENV['http_proxy'] = 'http://foo.bar.com:8081'
+        load 'rhc/rest/client.rb'
+
+        ENV['http_proxy'].should == 'http://foo.bar.com:8081'
+      end
+
+      it 'should not affect the proxy protocol if nil' do
+        ENV['http_proxy'] = nil
+        load 'rhc/rest/client.rb'
+
+        ENV['http_proxy'].should be_nil
+      end
+
       let(:endpoint){ mock_href }
       let(:username){ nil }# mock_user }
       let(:password){ nil }# mock_pass }
       let(:use_debug){ false }
       #let(:spec_versions){ nil }
-      let(:client) do 
-        respond_to?(:spec_versions) ? 
+      let(:client) do
+        respond_to?(:spec_versions) ?
           RHC::Rest::Client.new(endpoint, username, password, use_debug, spec_versions) :
           RHC::Rest::Client.new(endpoint, username, password, use_debug)
       end
@@ -262,7 +283,7 @@ module RHC
         end
 
         describe RHC::Rest::Cartridge do
-          subject do 
+          subject do
             described_class.new({
               :name => 'foo',
               :links => mock_response_links([
@@ -270,7 +291,7 @@ module RHC
               ])}, client)
           end
           context "when several messages are present" do
-            before do 
+            before do
               stub_api_request(:get, 'broker/rest/cartridge', true).
                 with(:query => {:include => :status_messages}).
                 to_return(:body => {
@@ -308,7 +329,7 @@ module RHC
                           :status => 200
                         })
           end
-          it "returns a list of existing cartridges" do 
+          it "returns a list of existing cartridges" do
             carts = client.cartridges
             carts.length.should equal(2)
             (0..1).each do |idx|
