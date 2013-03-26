@@ -29,6 +29,16 @@ module RHC
       end
     end
 
+    HELP_OPTIONS = ['--help', '-h']
+
+    def options_parse_help
+      if (@args & HELP_OPTIONS).present?
+        args = (@args -= HELP_OPTIONS)
+        args.shift if args.first == 'help' && !command_exists?(args.join(' '))
+        exit run_help(args, nil)
+      end
+    end
+
     # override so we can do our own error handling
     def run!
       trace = false
@@ -36,15 +46,8 @@ module RHC
       #trap('INT') { abort program(:int_message) } if program(:int_message)
       #trap('INT') { program(:int_block).call } if program(:int_block)
 
-      global_option('-h', '--help', 'Help on any command', :hide => true) do
-        # we need to remove '--h', '--he', '--hel' as well in order to avoid
-        # infinite recursion.
-        # See https://bugzilla.redhat.com/show_bug.cgi?id=920028#c3 for a detailed explanation
-        args = @args - %w[-h --h --he --hel --help]
-        command(:help).run(*args)
-        return
-      end
-      global_option('--version', 'Display version information', :hide => true) { say version; return }
+      global_option('-h', '--help', 'Help on any command', :hide => true)
+      global_option('--version', 'Display version information', :hide => true)
 
       # remove these because we monkey patch Commands to process all options
       # at once, avoiding conflicts between the global and command options
@@ -58,6 +61,9 @@ module RHC
 
       # special case --version so it is processed before an invalid command
       options_parse_version
+
+      # help is a special branch prior to command execution
+      options_parse_help
 
       unless trace
         begin
@@ -113,7 +119,6 @@ module RHC
 
     def create_default_commands
       command 'help options' do |c|
-#        c.syntax = ''
         c.description = "Display all global options and information about configuration"
         c.when_called do |args, options|
           say help_formatter.render_options self
@@ -122,21 +127,25 @@ module RHC
       command :help do |c|
         c.syntax = '<command>'
         c.description = 'Display global or <command> help documentation.'
-        c.when_called do |args, options|
-          cmd = (1..args.length).reverse_each.map{ |n| args[0,n].join(' ') }.find{ |cmd| command_exists?(cmd) }
+        c.when_called(&method(:run_help))
+      end
+    end
 
-          if args.empty?
-            say help_formatter.render
-          elsif cmd.nil?
-            RHC::Helpers.error "The command '#{program :name} #{provided_arguments.join(' ')}' is not recognized.\n"
-            say "See '#{program :name} help' for a list of valid commands."
-            next
-          else
-            command = command(cmd)
-            help_bindings = CommandHelpBindings.new command, commands, self
-            say help_formatter.render_command help_bindings
-          end
-        end
+    def run_help(args, options)
+      cmd = (1..args.length).reverse_each.map{ |n| args[0,n].join(' ') }.find{ |cmd| command_exists?(cmd) }
+
+      if args.empty?
+        say help_formatter.render
+        0
+      elsif cmd.nil?
+        RHC::Helpers.error "The command '#{program :name} #{provided_arguments.join(' ')}' is not recognized.\n"
+        say "See '#{program :name} help' for a list of valid commands."
+        1
+      else
+        command = command(cmd)
+        help_bindings = CommandHelpBindings.new command, commands, self
+        say help_formatter.render_command help_bindings
+        0
       end
     end
   end
