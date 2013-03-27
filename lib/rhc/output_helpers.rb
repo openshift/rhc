@@ -212,8 +212,8 @@ module RHC
         case prop
         when :plan_id
           case value
-          when 'freeshift' then 'FreeShift'
-          when 'megashift' then 'MegaShift'
+          when 'free' then 'Free'
+          when 'silver' then 'Silver'
           else value && value.capitalize || nil
           end
         when :visible_to_ssh?
