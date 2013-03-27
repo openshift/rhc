@@ -102,7 +102,11 @@ module RHC
 
       def aliases
         debug "Getting all aliases for application #{name}"
-        rest_method "LIST_ALIASES"
+        if (client.api_version_negotiated >= 1.4)
+          rest_method "LIST_ALIASES"
+        else
+          attributes['aliases']
+        end
       end
 
       def find_alias(name, options={})
@@ -112,7 +116,7 @@ module RHC
           options = name
           name = options[:name]
         end
-        aliases.each { |a| return a if a.id == name }
+        aliases.each { |a| return a if a.is_a?(String) || a.id == name }
         raise RHC::AliasNotFoundException.new("Alias #{name} can't be found in application #{@name}.")
       end
 

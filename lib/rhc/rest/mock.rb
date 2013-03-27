@@ -593,7 +593,7 @@ module RHC::Rest::Mock
   class MockRestAlias < RHC::Rest::Alias
     include Helpers
 
-    def initialize(id, has_private_ssl_certificate=false, certificate_added_at=nil)
+    def initialize(client, id, has_private_ssl_certificate=false, certificate_added_at=nil)
       super({}, client)
       @id = id
       @has_private_ssl_certificate = has_private_ssl_certificate
@@ -601,13 +601,21 @@ module RHC::Rest::Mock
     end
 
     def add_certificate(ssl_certificate_content, private_key_content, pass_phrase)
-      @has_private_ssl_certificate = true
-      @certificate_added_at = Time.now
+      if (client.api_version_negotiated >= 1.4)
+        @has_private_ssl_certificate = true
+        @certificate_added_at = Time.now
+      else
+        raise RHC::Rest::SslCertificatesNotSupported, "The server does not support SSL certificates for custom aliases."
+      end
     end
 
     def delete_certificate
-      @has_private_ssl_certificate = false
-      @certificate_added_at = nil
+      if (client.api_version_negotiated >= 1.4)
+        @has_private_ssl_certificate = false
+        @certificate_added_at = nil
+      else
+        raise RHC::Rest::SslCertificatesNotSupported, "The server does not support SSL certificates for custom aliases."
+      end
     end
 
     def destroy 
@@ -698,7 +706,7 @@ module RHC::Rest::Mock
     end
 
     def add_alias(app_alias)
-      @aliases << MockRestAlias.new(app_alias)
+      @aliases << MockRestAlias.new(@client, app_alias)
     end
 
     def remove_alias(app_alias)
