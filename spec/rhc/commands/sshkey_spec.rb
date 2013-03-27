@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'rest_spec_helper'
 require 'rhc/commands/sshkey'
 require 'rhc/config'
 
@@ -58,6 +59,24 @@ describe RHC::Commands::Sshkey do
           rest_client.sshkeys.length.should == num_keys
         end
       end
+
+      it "does not throw an error on an empty file" do
+        FakeFS do
+          keys = rest_client.sshkeys
+          num_keys = keys.length
+          File.open('id_rsa.pub', 'w') do |f|
+            f << ''
+          end
+          expect { run }.should exit_with_code(128)
+          expect { run_output.should match(/Name:.* mockkey/) }
+          rest_client.sshkeys.length.should == num_keys
+        end
+      end
+
+      it "exits with status code Errno::EACCES::Errno" do
+        IO.should_receive(:read).and_return("ssh_foo bar")
+        expect { run }.should exit_with_code(128)
+      end
     end
 
     context "when adding an invalid key with --confirm" do
@@ -99,7 +118,7 @@ describe RHC::Commands::Sshkey do
       #end
     
       it "exits with status code Errno::EACCES::Errno" do
-        File.should_receive(:open).and_raise(Errno::EACCES)
+        IO.should_receive(:read).and_raise(Errno::EACCES)
         expect { run }.should exit_with_code(128)
       end
 

@@ -38,6 +38,23 @@ describe RHC::Wizard do
     its(:has_configuration?){ should be_true }
   end
 
+  describe "#setup_test_stage" do
+    subject{ described_class.new(config, options) }
+    it "should rescue problems" do
+      subject.should_receive(:all_test_methods).and_return([:_test])
+      subject.should_receive(:_test).and_raise(StandardError.new("An error message"))
+      capture{ subject.send(:setup_test_stage) }.should match "An error message"
+    end
+  end
+
+  describe "#test_private_key_mode" do
+    it "should raise when the file is in the wrong mode" do
+      File.open(RHC::Config.ssh_priv_key_file_path, 'w'){}
+      File.chmod(0666, RHC::Config.ssh_priv_key_file_path)
+      expect{ subject.send(:test_private_key_mode) }.to raise_error(StandardError)
+    end
+  end
+
   describe "#test_ssh_connectivity" do
     subject{ described_class.new(config, options) }
     let(:app) do
@@ -310,6 +327,7 @@ describe RHC::Wizard do
           input_line 'yes'
           input_line 'a'
           next_stage
+
           last_output do |s|
             s.should match(/a \(type: ssh-rsa\)/)
             s.should match("Fingerprint: #{rsa_key_fingerprint_public}")

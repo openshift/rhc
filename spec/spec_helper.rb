@@ -55,6 +55,24 @@ class FakeFS::File
   end
 end
 
+IO.instance_eval{ alias :read_orig :read }
+
+module FakeFS
+  class << self
+    alias_method :activate_orig, :activate!
+    alias_method :deactivate_orig, :deactivate!
+
+    def activate!
+      IO.instance_eval{ def self.read(path); FakeFS::File.read(path); end }
+      activate_orig
+    end
+    def deactivate!
+      IO.instance_eval{ alias :read :read_orig }
+      deactivate_orig
+    end
+  end
+end
+
 require 'rhc/cli'
 
 include WebMock::API
