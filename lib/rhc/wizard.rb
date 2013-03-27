@@ -420,9 +420,8 @@ module RHC
     # Thus, we force an order with #sort to ensure spec passage on both.
     def setup_test_stage
       say "Checking common problems "
-      tests = private_methods.select {|m| m.to_s.start_with? 'test_'}
       failed = false
-      tests.sort.each do |test|
+      all_test_methods.sort.each do |test|
         begin
           send(test)
           print_dot unless failed
@@ -438,6 +437,10 @@ module RHC
       end
 
       true
+    end
+
+    def all_test_methods
+      private_methods.select {|m| m.to_s.start_with? 'test_'}
     end
 
     # cached list of applications needed for test stage

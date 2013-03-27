@@ -135,13 +135,12 @@ module RHC
     # which is basically the space-separated list of the SSH public key content
     def ssh_key_triple_for(key)
       begin
-        file = File.open key
+        IO.read(key).chomp.split
       rescue Errno::ENOENT => e
         raise ::RHC::KeyFileNotExistentException.new("File '#{key}' does not exist.")
       rescue Errno::EACCES => e
         raise ::RHC::KeyFileAccessDeniedException.new("Access denied to '#{key}'.")
       end
-      file.gets.chomp.split
     end
     
     def ssh_key_triple_for_default_key
