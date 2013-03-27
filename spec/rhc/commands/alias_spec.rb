@@ -227,7 +227,7 @@ describe RHC::Commands::Alias do
     context 'list app without certificates' do
       let(:arguments) { ['alias', 'list', 'mock_app_1'] }
       it { expect { run }.should exit_with_code(0) }
-      it { run_output.should =~ /No SSL certificate associated with the application mock_app_1/m }
+      it { run_output.should =~ /No aliases associated with the application mock_app_1/m }
     end
   end
 
