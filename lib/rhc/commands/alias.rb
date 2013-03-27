@@ -61,7 +61,10 @@ module RHC::Commands
       raise ArgumentError, "Private key file not found: #{private_key_file_path}" if !File.exist?(private_key_file_path) || !File.file?(private_key_file_path)
 
       certificate_content = File.read(certificate_file_path)
+      raise ArgumentError, "Invalid certificate file: #{certificate_file_path} is empty" if certificate_content.to_s.strip.length == 0
+
       private_key_content = File.read(private_key_file_path)
+      raise ArgumentError, "Invalid private key file: #{private_key_file_path} is empty" if private_key_content.to_s.strip.length == 0
 
       rest_app = rest_client.find_application(options.namespace, app)
       rest_alias = rest_app.find_alias(app_alias)

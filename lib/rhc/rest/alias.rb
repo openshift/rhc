@@ -19,7 +19,7 @@ module RHC
       def add_certificate(ssl_certificate_content, private_key_content, pass_phrase)
         debug "Running add_certificate for alias #{@id}"
         if (client.api_version_negotiated >= 1.4)
-          rest_method "UPDATE", {
+          foo = rest_method "UPDATE", {
             :ssl_certificate => ssl_certificate_content, 
             :private_key => private_key_content, 
             :pass_phrase => pass_phrase

@@ -214,6 +214,20 @@ describe RHC::Commands::Alias do
       it { expect { run }.should exit_with_code(1) }
       it { run_output.should =~ /The server does not support SSL certificates for custom aliases/m }
     end
+    context 'invalid certificate file (empty)' do
+      let(:arguments) { ['alias', 'update-cert', 'mock_app_0', 'www.foo.bar', 
+        '--certificate', File.expand_path('../../assets/empty.txt', __FILE__),
+        '--private-key', File.expand_path('../../assets/cert_key_rsa', __FILE__) ] }
+      it { expect { run }.should exit_with_code(1) }
+      it { run_output.should =~ /Invalid certificate file/m }
+    end
+    context 'invalid private key file (empty)' do
+      let(:arguments) { ['alias', 'update-cert', 'mock_app_0', 'www.foo.bar', 
+        '--certificate', File.expand_path('../../assets/cert.crt', __FILE__),
+        '--private-key', File.expand_path('../../assets/empty.txt', __FILE__) ] }
+      it { expect { run }.should exit_with_code(1) }
+      it { run_output.should =~ /Invalid private key file/m }
+    end
   end
 
   describe 'alias delete-cert' do
