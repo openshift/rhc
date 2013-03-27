@@ -245,7 +245,7 @@ module RHC
         key_fingerprint = fingerprint_for_default_key
         unless key_fingerprint
           paragraph do
-            say "Your ssh public key at #{system_path(RHC::Config.ssh_pub_key_file_path)} is invalid or unreadable. "\
+            warn "Your ssh public key at #{system_path(RHC::Config.ssh_pub_key_file_path)} is invalid or unreadable. "\
                 "Setup can not continue until you manually remove or fix your "\
                 "public and private keys id_rsa keys."
           end
