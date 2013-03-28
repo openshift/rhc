@@ -97,7 +97,11 @@ module RHC
 
       def remove_alias(app_alias)
         debug "Running remove_alias for #{name}"
-        find_alias(app_alias).destroy
+        if (client.api_version_negotiated >= 1.4)
+          find_alias(app_alias).destroy
+        else
+          rest_method "REMOVE_ALIAS", :event => "remove-alias", :alias => app_alias
+        end
       end
 
       def aliases
