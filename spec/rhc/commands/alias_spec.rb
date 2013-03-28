@@ -167,9 +167,22 @@ describe RHC::Commands::Alias do
   end
 
   describe 'remove alias' do
-    let(:arguments) { ['alias', 'remove', 'mock_app_0', 'www.foo.bar' ] }
-    it { expect { run }.should exit_with_code(0) }
-    it { run_output.should =~ /Alias 'www.foo.bar' has been removed/m }
+    before do 
+      rest_client.stub(:api_version_negotiated).and_return(1.4)
+    end
+    context 'remove alias successfully' do
+      let(:arguments) { ['alias', 'remove', 'mock_app_0', 'www.foo.bar' ] }
+      it { expect { run }.should exit_with_code(0) }
+      it { run_output.should =~ /Alias 'www.foo.bar' has been removed/m }
+    end
+    context 'remove alias with server api <= 1.3' do
+      let(:arguments) { ['alias', 'remove', 'mock_app_0', 'www.foo.bar' ] }
+      before do 
+        rest_client.stub(:api_version_negotiated).and_return(1.3)
+      end
+      it { expect { run }.should exit_with_code(0) }
+      it { run_output.should =~ /Alias 'www.foo.bar' has been removed/m }
+    end
   end
 
   describe 'alias update-cert' do
