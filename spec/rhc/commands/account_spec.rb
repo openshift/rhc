@@ -42,7 +42,7 @@ describe RHC::Commands::Account do
   describe '#logout' do
     let(:arguments) { ['account', 'logout'] }
     let(:username) { 'foo' }
-    let(:password) { 'pass' }
+    let(:password) { nil }
     let(:supports_auth) { false }
     let(:server) { mock_uri }
     let!(:token_store) { RHC::Auth::TokenStore.new(Dir.mktmpdir) }

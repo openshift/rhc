@@ -31,7 +31,7 @@ class RHC::Commands::Base
     def rest_client(opts={})
       @rest_client ||= begin
           auth = RHC::Auth::Basic.new(options)
-          auth = RHC::Auth::Token.new(options, auth, token_store)
+          auth = RHC::Auth::Token.new(options, auth, token_store) if (options.use_authorization_tokens || options.token) && !(options.rhlogin && options.password)
           client_from_options(:auth => auth)
         end
     end

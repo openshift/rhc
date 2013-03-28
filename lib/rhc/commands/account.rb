@@ -45,11 +45,11 @@ module RHC::Commands
         rescue RHC::Rest::AuthorizationsNotSupported
           info "not supported"
         end
-      elsif options.token
+      elsif token_for_user
         options.noprompt = true
         say "Ending session on server ... "
         begin
-          rest_client.delete_authorization(options.token)
+          rest_client.delete_authorization(token_for_user)
           success "deleted"
         rescue RHC::Rest::AuthorizationsNotSupported
           info "not supported"
