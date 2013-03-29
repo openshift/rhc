@@ -113,6 +113,8 @@ module RHC
 
     class MultipleCartridgeCreationNotSupported < Exception; end
 
+    class InitialGitUrlNotSupported < Exception; end
+
     class SslCertificatesNotSupported < Exception; end
 
     class AuthorizationsNotSupported < Exception

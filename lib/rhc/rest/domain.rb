@@ -16,11 +16,15 @@ module RHC
         options.each{ |key, value| payload[key.to_sym] = value }
 
         cartridges = Array(payload.delete(:cartridge)).concat(Array(payload.delete(:cartridges))).compact.uniq
-        if (client.api_version_negotiated >= 1.3)
+        if client.api_version_negotiated >= 1.3
           payload[:cartridges] = cartridges
         else
           raise RHC::Rest::MultipleCartridgeCreationNotSupported, "The server only supports creating an application with a single web cartridge." if cartridges.length > 1
           payload[:cartridge] = cartridges.first
+        end
+
+        if client.api_version_negotiated < 1.3 && payload[:initial_git_url]
+          raise RHC::Rest::InitialGitUrlNotSupported, "The server does not support creating applications from a source repository."
         end
 
         options = {:timeout => options[:scale] && 0 || nil}
