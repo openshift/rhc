@@ -10,25 +10,35 @@ require 'rhc/helpers'
 require 'date'
 require 'resolv'
 
+class MockHelpers
+  include RHC::Helpers
+  include RHC::SSHHelpers
+
+  def config
+    @config ||= RHC::Config.new
+  end
+  def options
+    @options ||= OpenStruct.new(:server => nil)
+  end
+end
+
+class MockCartridgeHelpers
+  include RHC::Helpers
+  include RHC::CartridgeHelpers
+
+  def config
+    @config ||= RHC::Config.new
+  end
+end
+
 describe RHC::Helpers do
-  before(:each) do
+  before do
     mock_terminal
     user_config
   end
 
-  subject do
-    Class.new(Object) do
-      include RHC::Helpers
-      include RHC::SSHHelpers
+  subject{ MockHelpers.new }
 
-      def config
-        @config ||= RHC::Config.new
-      end
-      def options
-        @options ||= OpenStruct.new(:server => nil)
-      end
-    end.new
-  end
   let(:tests) { OutputTests.new }
 
   its(:openshift_server) { should == 'openshift.redhat.com' }
@@ -526,6 +536,8 @@ describe OpenURI do
 end
 
 describe HighLine do
+  before{ mock_terminal }
+
   it "should wrap the terminal" do
     $terminal.wrap_at = 10
     say "Lorem ipsum dolor sit amet"
@@ -569,16 +581,7 @@ describe RHC::CartridgeHelpers do
     mock_terminal
   end
 
-  subject do
-    Class.new(Object) do
-      include RHC::Helpers
-      include RHC::CartridgeHelpers
-
-      def config
-        @config ||= RHC::Config.new
-      end
-    end.new
-  end
+  subject{ MockCartridgeHelpers.new }
 
   describe '#check_cartridges' do
     let(:cartridges){ [] }

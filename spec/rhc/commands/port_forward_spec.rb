@@ -26,7 +26,7 @@ describe RHC::Commands::PortForward do
         @gg.should_receive(:gears).and_return([{'state' => 'stopped', 'id' => 'fakegearid'}])
       end
       it "should error out and suggest restarting the application" do
-        expect { run }.should exit_with_code(1)
+        expect { run }.to exit_with_code(1)
       end
       it { run_output.should match(/Application \S+ is stopped\..*restart/m) }
     end
@@ -37,7 +37,7 @@ describe RHC::Commands::PortForward do
         @ssh.should_receive(:exec!).with("rhc-list-ports").and_yield(nil, :stderr, '127.0.0.1:3306')
       end
       it "should error out as no ports to forward" do
-        expect { run }.should exit_with_code(102)
+        expect { run }.to exit_with_code(102)
         rest_client.domains[0].id.should == 'mockdomain'
         rest_client.domains[0].applications.size.should == 1
         rest_client.domains[0].applications[0].name.should == 'mockapp'
@@ -51,7 +51,7 @@ describe RHC::Commands::PortForward do
         @ssh.should_receive(:exec!).with("rhc-list-ports").and_yield(nil, :stderr, 'permission denied')
       end
       it "should error out as permission denied" do
-        expect { run }.should exit_with_code(129)
+        expect { run }.to exit_with_code(129)
         rest_client.domains[0].id.should == 'mockdomain'
         rest_client.domains[0].applications.size.should == 1
         rest_client.domains[0].applications[0].name.should == 'mockapp'
@@ -69,7 +69,7 @@ describe RHC::Commands::PortForward do
         @ssh.should_receive(:loop)
       end
       it "should run successfully" do
-        expect { run }.should exit_with_code(0)
+        expect { run }.to exit_with_code(0)
         rest_client.domains[0].id.should == 'mockdomain'
         rest_client.domains[0].applications.size.should == 1
         rest_client.domains[0].applications[0].name.should == 'mockapp'
@@ -82,7 +82,7 @@ describe RHC::Commands::PortForward do
         Net::SSH.should_receive(:start).and_raise(Errno::EHOSTUNREACH)
       end
       it "should error out" do
-        expect { run }.should exit_with_code(1)
+        expect { run }.to exit_with_code(1)
         rest_client.domains[0].id.should == 'mockdomain'
         rest_client.domains[0].applications.size.should == 1
         rest_client.domains[0].applications[0].name.should == 'mockapp'
@@ -94,7 +94,7 @@ describe RHC::Commands::PortForward do
       before(:each) do
         rest_client.should_receive(:find_domain).and_raise(RHC::Rest::ConnectionException)
       end
-      it("should error out") { expect { run }.should exit_with_code(1) }
+      it("should error out") { expect { run }.to exit_with_code(1) }
       it{ run_output.should match("Connection.*failed:") }
     end
 
@@ -108,7 +108,7 @@ describe RHC::Commands::PortForward do
         @ssh.should_receive(:loop).and_raise(Interrupt.new)
       end
       it "should exit when user interrupts" do
-        expect { run }.should exit_with_code(0)
+        expect { run }.to exit_with_code(0)
         rest_client.domains[0].id.should == 'mockdomain'
         rest_client.domains[0].applications.size.should == 1
         rest_client.domains[0].applications[0].name.should == 'mockapp'
@@ -139,7 +139,7 @@ describe RHC::Commands::PortForward do
         @ssh.should_receive(:forward).and_raise(Errno::ECONNREFUSED)
       end
       it "should error out" do
-        expect { run }.should exit_with_code(0)
+        expect { run }.to exit_with_code(0)
       end
       it { run_output.should include("ssh -N") }
       it { run_output.should include("Error forwarding") }
@@ -164,7 +164,7 @@ describe RHC::Commands::PortForward do
         @ssh.should_receive(:loop).and_raise(Interrupt.new)
       end
       it "should exit when user interrupts" do
-        expect { run }.should exit_with_code(0)
+        expect { run }.to exit_with_code(0)
         rest_client.domains[0].id.should == 'mockdomain'
         rest_client.domains[0].applications.size.should == 1
         rest_client.domains[0].applications[0].name.should == 'mockapp'

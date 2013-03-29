@@ -9,7 +9,7 @@ describe RHC::Commands::Snapshot do
   APP_NAME = 'mockapp'
 
   let!(:rest_client) { MockRestClient.new }
-  before(:each) do
+  before do
     user_config
     @app = rest_client.add_domain("mockdomain").add_application APP_NAME, 'mock-1.0'
     @ssh_uri = URI.parse @app.ssh_url
@@ -17,14 +17,14 @@ describe RHC::Commands::Snapshot do
     FileUtils.cp(File.expand_path('../../assets/targz_sample.tar.gz', __FILE__), filename)
   end
 
-  after(:each) do
+  after do
     filename = APP_NAME + '.tar.gz'
     File.delete filename if File.exist? filename
   end
 
   describe 'snapshot without an action' do
     let(:arguments) {['snapshot', '--trace', '--noprompt']}
-    it('should raise') { expect{ run }.should raise_error(ArgumentError, /Please specify an action to take/) }
+    it('should raise') { expect{ run }.to raise_error(ArgumentError, /Please specify an action to take/) }
   end
 
   describe 'snapshot save' do
@@ -35,7 +35,7 @@ describe RHC::Commands::Snapshot do
         `(exit 0)`
         Kernel.should_receive(:`).with("ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'snapshot' > #{@app.name}.tar.gz")
       end
-      it { expect { run }.should exit_with_code(0) }
+      it { expect { run }.to exit_with_code(0) }
     end
 
     context 'when failing to save a snapshot' do
@@ -43,7 +43,7 @@ describe RHC::Commands::Snapshot do
         `(exit 1)`
         Kernel.should_receive(:`).with("ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'snapshot' > #{@app.name}.tar.gz")
       end
-      it { expect { run }.should exit_with_code(130) }
+      it { expect { run }.to exit_with_code(130) }
     end
 
     context 'when saving a snapshot on windows' do
@@ -55,7 +55,7 @@ describe RHC::Commands::Snapshot do
         Net::SSH.should_receive(:start).with(@ssh_uri.host, @ssh_uri.user).and_yield(ssh)
         ssh.should_receive(:exec!).with("snapshot").and_yield(nil, :stdout, 'foo').and_yield(nil, :stderr, 'foo')
       end
-      it { expect { run }.should exit_with_code(0) }
+      it { expect { run }.to exit_with_code(0) }
       it { run_output.should match("Success") }
     end
 
@@ -67,7 +67,7 @@ describe RHC::Commands::Snapshot do
         ssh = mock(Net::SSH)
         Net::SSH.should_receive(:start).with(@ssh_uri.host, @ssh_uri.user).and_raise(Timeout::Error)
       end
-      it { expect { run }.should exit_with_code(130) }
+      it { expect { run }.to exit_with_code(130) }
     end
 
   end
@@ -82,7 +82,7 @@ describe RHC::Commands::Snapshot do
         `(exit 0)`
         Kernel.should_receive(:`).with("cat #{@app.name}.tar.gz | ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'restore INCLUDE_GIT'")
       end
-      it { expect { run }.should exit_with_code(0) }
+      it { expect { run }.to exit_with_code(0) }
     end
 
     context 'when restoring a snapshot and failing to ssh' do
@@ -92,7 +92,7 @@ describe RHC::Commands::Snapshot do
         Kernel.should_receive(:`).with("cat #{@app.name}.tar.gz | ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'restore INCLUDE_GIT'")
         $?.stub(:exitstatus) { 1 }
       end
-      it { expect { run }.should exit_with_code(130) }
+      it { expect { run }.to exit_with_code(130) }
     end
 
     context 'when restoring a snapshot on windows' do
@@ -119,7 +119,7 @@ describe RHC::Commands::Snapshot do
         channel.should_receive(:eof!)
         session.should_receive(:loop)
       end
-      it { expect { run }.should exit_with_code(0) }
+      it { expect { run }.to exit_with_code(0) }
     end
 
     context 'when timing out on windows' do
@@ -130,7 +130,7 @@ describe RHC::Commands::Snapshot do
         ssh = mock(Net::SSH)
         Net::SSH.should_receive(:start).with(@ssh_uri.host, @ssh_uri.user).and_raise(Timeout::Error)
       end
-      it { expect { run }.should exit_with_code(130) }
+      it { expect { run }.to exit_with_code(130) }
     end
 
   end
@@ -138,7 +138,7 @@ describe RHC::Commands::Snapshot do
   describe 'snapshot restore file not found' do
     let(:arguments) {['snapshot', 'restore', '--noprompt', '-l', 'test@test.foo', '-p', 'password', '--app', 'mockapp', '-f', 'foo.tar.gz']}
     context 'when restoring a snapshot' do
-      it { expect { run }.should exit_with_code(130) }
+      it { expect { run }.to exit_with_code(130) }
     end
   end
 
