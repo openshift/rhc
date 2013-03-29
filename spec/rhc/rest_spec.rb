@@ -43,6 +43,7 @@ describe RHC::Rest::Domain do
 
     it{ domain.add_application('foo', :cartridges => ['bar']).should be_true }
     it{ expect{ domain.add_application('foo', :cartridges => ['bar', 'other']) }.to raise_error(RHC::Rest::MultipleCartridgeCreationNotSupported) }
+    it{ expect{ domain.add_application('foo', :initial_git_url => 'a_url') }.to raise_error(RHC::Rest::InitialGitUrlNotSupported) }
     it{ domain.add_application('foo', :cartridges => 'bar').should be_true }
     it{ domain.add_application('foo', :cartridge => 'bar').should be_true }
     it{ domain.add_application('foo', :cartridge => ['bar']).should be_true }
@@ -66,6 +67,15 @@ describe RHC::Rest::Domain do
       it{ domain.add_application('foo', :cartridges => cartridges).should be_true }
       it{ domain.add_application('foo', :cartridge => cartridges).should be_true }
     end
+
+    context "with a url" do
+      before do
+        stub_api_request(:post, 'broker/rest/domains/bar/applications', false).
+          with(:body => {:name => 'foo', :initial_git_url => 'a_url', :cartridges => []}.to_json).
+          to_return(:status => 201, :body => {:type => 'application', :data => {:id => '1'}}.to_json)
+      end
+      it{ domain.add_application('foo', :initial_git_url => 'a_url').should be_true }
+    end    
   end
 end
 
