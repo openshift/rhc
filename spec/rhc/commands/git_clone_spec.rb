@@ -42,7 +42,7 @@ describe RHC::Commands::GitClone do
           end
         end
 
-        it { expect { run }.should exit_with_code(0) }
+        it { expect { run }.to exit_with_code(0) }
         it { run_output.should match("Cloned") }
       end
 
@@ -65,14 +65,14 @@ describe RHC::Commands::GitClone do
               FakeFS::FileSystem.find(hook))
           end
         end
-        it { expect { run }.should exit_with_code(0) }
+        it { expect { run }.to exit_with_code(0) }
         it { run_output.should match("Copied") }
       end
 
       context "reports failure" do
         before{ @instance.stub(:git_clone_repo).and_raise(RHC::GitException) }
 
-        it { expect { run }.should exit_with_code(216) }
+        it { expect { run }.to exit_with_code(216) }
         it { run_output.should match("Git returned an error") }
       end
     end

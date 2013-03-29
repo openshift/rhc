@@ -24,14 +24,14 @@ describe RHC::Commands::Setup do
 
     context 'when no issues' do
       it "should exit 0" do
-        expect { run }.should exit_with_code(0)
+        expect { run }.to exit_with_code(0)
       end
     end
 
     context 'when there is an issue' do
       it "should exit 1" do
         @wizard.stub!(:run).and_return(false)
-        expect { run }.should exit_with_code(1)
+        expect { run }.to exit_with_code(1)
       end
     end
   end
@@ -72,7 +72,7 @@ describe RHC::Commands::Setup do
     let(:input) { ['', 'y', '', ''] }
     let!(:rest_client){ MockRestClient.new }
 
-    it("succeeds"){ FakeFS{ expect { run input }.should exit_with_code 0 } }
+    it("succeeds"){ FakeFS{ expect { run input }.to exit_with_code 0 } }
     it("the output includes debug output") do
       FakeFS{ run_output( input ).should match 'DEBUG' }
     end
@@ -84,7 +84,7 @@ describe RHC::Commands::Setup do
     let(:input) { ['', 'y', '', ''] }
     let!(:rest_client){ MockRestClient.new }
 
-    it("succeeds"){ FakeFS{ expect { run input }.should exit_with_code 0 } }
+    it("succeeds"){ FakeFS{ expect { run input }.to exit_with_code 0 } }
     it("sets the user name to the value given by the command line") do
       FakeFS{ run_output( input ).should match 'test@test.foo' }
     end
@@ -96,7 +96,7 @@ describe RHC::Commands::Setup do
     context 'help is run' do
       it "should display help" do
         @wizard.stub!(:run).and_return(true)
-        expect { run }.should exit_with_code(0)
+        expect { run }.to exit_with_code(0)
       end
       it('should output usage') { run_output.should match("Connects to an OpenShift server to get you started. Will") }
     end

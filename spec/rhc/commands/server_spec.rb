@@ -13,13 +13,13 @@ describe RHC::Commands::Server do
     context 'when server refuses connection' do
       before { stub_request(:get, 'https://foo.com/broker/rest/api').with(&user_agent_header).with(&expect_authorization(:user => 'person')).to_raise(SocketError) }
       it('should output an error') { run_output.should =~ /Connected to foo.com.*Unable to connect to the server/m }
-      it { expect { run }.should exit_with_code(1) }
+      it { expect { run }.to exit_with_code(1) }
     end
 
     context 'when API is missing' do
       before { stub_request(:get, 'https://foo.com/broker/rest/api').with(&user_agent_header).with(&expect_authorization(:user => 'person')).to_return(:status => 404) }
       it('should output an error') { run_output.should =~ /Connected to foo.com.*server is not responding correctly/m }
-      it { expect { run }.should exit_with_code(1) }
+      it { expect { run }.to exit_with_code(1) }
     end
 
     context 'when API is at version 1.2' do
@@ -27,7 +27,7 @@ describe RHC::Commands::Server do
         rest_client.stub(:api_version_negotiated).and_return('1.2')
       end
       it('should output an error') { run_output.should =~ /Connected to foo.com.*Using API version 1.2/m }
-      it { expect { run }.should exit_with_code(0) }
+      it { expect { run }.to exit_with_code(0) }
     end
   end
 
@@ -38,7 +38,7 @@ describe RHC::Commands::Server do
     context 'when no issues' do
       before { stub_request(:get, 'https://openshift.redhat.com/app/status/status.json').with(&user_agent_header).to_return(:body => {'issues' => []}.to_json) }
       it('should output success') { run_output.should =~ /All systems running fine/ }
-      it { expect { run }.should exit_with_code(0) }
+      it { expect { run }.to exit_with_code(0) }
     end
 
     context 'when 1 issue' do
@@ -55,7 +55,7 @@ describe RHC::Commands::Server do
               }] 
             }}]}.to_json)
       end
-      it { expect { run }.should exit_with_code(1) }
+      it { expect { run }.to exit_with_code(1) }
       it('should output message') { run_output.should =~ /1 open issue/ }
       it('should output title') { run_output.should =~ /Root cause/ }
       it('should contain update') { run_output.should =~ /Working on update/ }

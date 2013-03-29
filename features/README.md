@@ -179,7 +179,7 @@ doesn't exist.
 Given "a demo directory exists or is created" do
   begin
     Given "the demo directory exists"
-  rescue Spec::Expectations::ExpectationNotMetError
+  rescue RSpec::Expectations::ExpectationNotMetError
     Then "create the demo directory"
   end
 end

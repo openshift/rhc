@@ -4,7 +4,7 @@ require 'net/http'
 
 describe RHC::Config do
   subject{ RHC::Config }
-  before(:all) do
+  before do
     ENV['LIBRA_SERVER'] = nil
     ENV['HTTP_PROXY'] = nil
     ENV['http_proxy'] = nil
@@ -14,10 +14,12 @@ describe RHC::Config do
     FakeFS::FileSystem.clear
   end
 
-  after(:all) do
+  after do
     FakeFS.deactivate!
     ENV['HTTP_PROXY'] = nil
     ENV['http_proxy'] = nil
+    ENV['LIBRA_SERVER'] = nil
+    RHC::Config.send(:instance_variable_set, :@default, nil)
   end
 
   describe "class" do
@@ -86,6 +88,7 @@ describe RHC::Config do
   end
 
   context "Config values with /etc/openshift/express.conf" do
+
     it "should have only a global config" do
       ConfigHelper.write_out_config(ConfigHelper.global_config_path, "global.openshift.redhat.com", "global@redhat.com")
       subject.initialize
@@ -260,11 +263,8 @@ describe RHC::Config do
   end
 
   context "Debug options" do
-    after(:all) do
-      FakeFS::FileSystem.clear
-    end
-
     it "should show debug as false because nothing is set" do
+      subject.initialize
       ConfigHelper.check_legacy_debug({}).should be_false
     end
 

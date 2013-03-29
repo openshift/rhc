@@ -6,7 +6,7 @@ require 'rhc/config'
 describe RHC::Commands::Cartridge do
 
   def exit_with_code_and_message(code, message = nil)
-    expect{ run }.should exit_with_code(code)
+    expect{ run }.to exit_with_code(code)
     run_output.should match(message) if message
   end
 
@@ -50,7 +50,7 @@ describe RHC::Commands::Cartridge do
       it{ run_output.should match /mock_standalone_cart\-2\s+web/ }
       it{ run_output.should match /mock_embedded_cart\-1\s+Mock1 Embedded Cart\s+addon/ }
       it{ run_output.should match /premium_cart\-1 \(\*\)\s+Premium Cart\s+web/ }
-      it{ expect{ run }.should exit_with_code(0) }
+      it{ expect{ run }.to exit_with_code(0) }
 
       context 'with verbose list' do
         let(:arguments){ ['cartridge', 'list', '--verbose'] }
@@ -200,12 +200,12 @@ describe RHC::Commands::Cartridge do
       end
       it "should remove cartridge" do
         @app.add_cartridge('mock_cart-1')
-        expect { run }.should exit_with_code(0)
+        expect { run }.to exit_with_code(0)
         # framework cart should be the only one listed
         @app.cartridges.length.should == 1
       end
       it "should raise cartridge not found exception" do
-        expect { run }.should raise_error RHC::CartridgeNotFoundException
+        expect { run }.to raise_error RHC::CartridgeNotFoundException
       end
     end
   end
