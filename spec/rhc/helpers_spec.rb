@@ -173,7 +173,7 @@ describe RHC::Helpers do
       Class.new(Object){ include RHC::Helpers }.new
     end
 
-    it("should raise on config"){ expect{ subject.config }.should raise_error }
+    it("should raise on config"){ expect{ subject.config }.to raise_error }
   end
 
   context "with a bad timeout value" do
@@ -341,7 +341,7 @@ describe RHC::Helpers do
         let(:stderr){ 'fatal: error' }
         let(:exit_status){ 1 }
 
-        it { capture{ expect{ subject.git_clone_repo("url", "repo") }.should raise_error(RHC::GitException) } }
+        it { capture{ expect{ subject.git_clone_repo("url", "repo") }.to raise_error(RHC::GitException) } }
         it { capture_all{ subject.git_clone_repo("url", "repo") rescue nil }.should match("fake git clone") }
         it { capture_all{ subject.git_clone_repo("url", "repo") rescue nil }.should match("fatal: error") }
       end
@@ -350,14 +350,14 @@ describe RHC::Helpers do
         let(:stderr){ "fatal: destination path 'foo' already exists and is not an empty directory." }
         let(:exit_status){ 1 }
 
-        it { capture{ expect{ subject.git_clone_repo("url", "repo") }.should raise_error(RHC::GitDirectoryExists) } }
+        it { capture{ expect{ subject.git_clone_repo("url", "repo") }.to raise_error(RHC::GitDirectoryExists) } }
       end
 
       context "permission denied" do
         let(:stderr){ "Permission denied (publickey,gssapi-mic)." }
         let(:exit_status){ 1 }
 
-        it { capture{ expect{ subject.git_clone_repo("url", "repo") }.should raise_error(RHC::GitPermissionDenied) } }
+        it { capture{ expect{ subject.git_clone_repo("url", "repo") }.to raise_error(RHC::GitPermissionDenied) } }
       end
     end
   end
@@ -587,7 +587,7 @@ describe RHC::CartridgeHelpers do
     let(:cartridges){ [] }
     let(:find_cartridges){ [] }
     context "with a generic object" do
-      it { expect{ subject.send(:check_cartridges, 'foo', :from => cartridges) }.should raise_error(RHC::CartridgeNotFoundException, 'There are no cartridges that match \'foo\'.') }
+      it { expect{ subject.send(:check_cartridges, 'foo', :from => cartridges) }.to raise_error(RHC::CartridgeNotFoundException, 'There are no cartridges that match \'foo\'.') }
     end
   end
   describe '#web_carts_only' do
