@@ -99,7 +99,7 @@ module RHC
       end
 
       def username
-        auth.username if auth.respond_to?(:username)
+        options.rhlogin || (auth.username if auth.respond_to?(:username))
       end
 
       def print_dot
@@ -129,7 +129,8 @@ module RHC
     end
 
     def login_stage
-      if options.token
+      if token_for_user
+        options.token = token_for_user
         say "Using an existing token for #{options.rhlogin} to login to #{openshift_server}"
       elsif options.rhlogin
         say "Using #{options.rhlogin} to login to #{openshift_server}"
@@ -161,6 +162,7 @@ module RHC
       end
 
       self.user = rest_client.user
+      options.rhlogin = self.user.login unless username
 
       if rest_client.supports_sessions? && !options.token && options.create_token != false
         paragraph do
