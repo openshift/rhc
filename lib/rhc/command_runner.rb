@@ -126,7 +126,7 @@ module RHC
     end
 
     def run_help(args=[], options=nil)
-      cmd = (1..args.length).reverse_each.map{ |n| args[0,n].join(' ') }.find{ |cmd| command_exists?(cmd) }
+      cmd = (1..args.length).reverse_each.map{ |n| args[0,n].join('-') }.find{ |cmd| command_exists?(cmd) }
 
       if args.empty?
         say help_formatter.render

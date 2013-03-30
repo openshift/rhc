@@ -65,7 +65,7 @@ class RHC::Commands::Base
       name = [prefix, method_name].compact
       raise InvalidCommand, "Either object_name must be set or a non default method defined" if name.empty?
 
-      aliases.each{ |a| a[:action] = [prefix, a[:action]] unless a[:root_command] || prefix.nil? }
+      aliases.each{ |a| a[:action].unshift(prefix) unless a[:root_command] } if prefix
 
       RHC::Commands.add((@options || {}).merge({
         :name => name,
@@ -116,7 +116,7 @@ class RHC::Commands::Base
     #   :root_command - if true, do not prepend the object name to the command
     # 
     def self.alias_action(action, options={})
-      options[:action] = action
+      options[:action] = action.is_a?(Array) ? action : action.to_s.split(' ')
       aliases << options
     end
 
