@@ -134,14 +134,14 @@ module CommandHelpers
   # let(:arguments){ [<arguments>] }
   #
 
-  def run_command
+  def run_command(args=arguments)
     mock_terminal
     input.each { |i| $terminal.write_line(i) } if respond_to?(:input)
     $terminal.close_write
-    run!(*arguments)
+    run!(*args)
   end
-  def command_output
-    run_command
+  def command_output(args=arguments)
+    run_command(args)
   rescue SystemExit => e
     "#{@output.string}\n#{$stderr.string}#{e}"
   else

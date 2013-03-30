@@ -54,6 +54,18 @@ describe RHC::Commands::App do
       domain = rest_client.add_domain("mockdomain")
     end
 
+    context "when we ask for help with the alias" do
+      before{ FakeFS.deactivate! }
+      context do
+        let(:arguments) { ['help', 'create-app'] }
+        it{ run_output.should match "Usage: rhc app-create <name>" }
+      end
+      context do
+        let(:arguments) { ['create-app', '-h'] }
+        it{ run_output.should match "Usage: rhc app-create <name>" }
+      end
+    end
+
     context 'when run without a cart' do
       before{ FakeFS.deactivate! }
       let(:arguments) { ['app', 'create', 'app1', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
