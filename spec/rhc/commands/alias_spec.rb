@@ -99,7 +99,7 @@ describe RHC::Commands::Alias do
 
     context 'help is run' do
       it "should display help" do
-        expect { run }.should exit_with_code(0)
+        expect { run }.to exit_with_code(0)
       end
       it('should output usage') { run_output.should match("Usage: rhc alias <command> <application> <alias> [--namespace namespace]") }
     end
@@ -110,7 +110,7 @@ describe RHC::Commands::Alias do
 
     context 'help is run' do
       it "should display help" do
-        expect { run }.should exit_with_code(0)
+        expect { run }.to exit_with_code(0)
       end
       it('should output usage') { run_output.should match("Usage: rhc alias add <application> <alias> [--namespace namespace]") }
     end
@@ -121,7 +121,7 @@ describe RHC::Commands::Alias do
 
     context 'help is run' do
       it "should display help" do
-        expect { run }.should exit_with_code(0)
+        expect { run }.to exit_with_code(0)
       end
       it('should output usage') { run_output.should match("Usage: rhc alias remove <application> <alias> [--namespace namespace]") }
     end
@@ -132,7 +132,7 @@ describe RHC::Commands::Alias do
 
     context 'help is run' do
       it "should display help" do
-        expect { run }.should exit_with_code(0)
+        expect { run }.to exit_with_code(0)
       end
       it('should output usage') { run_output.should match("Usage: rhc alias update-cert <application> <alias> --certificate FILE --private-key FILE [--passphrase passphrase]") }
     end
@@ -143,7 +143,7 @@ describe RHC::Commands::Alias do
 
     context 'help is run' do
       it "should display help" do
-        expect { run }.should exit_with_code(0)
+        expect { run }.to exit_with_code(0)
       end
       it('should output usage') { run_output.should match("Usage: rhc alias delete-cert <application> <alias>") }
     end
@@ -154,7 +154,7 @@ describe RHC::Commands::Alias do
 
     context 'help is run' do
       it "should display help" do
-        expect { run }.should exit_with_code(0)
+        expect { run }.to exit_with_code(0)
       end
       it('should output usage') { run_output.should match("Usage: rhc alias list <application>") }
     end
@@ -162,7 +162,7 @@ describe RHC::Commands::Alias do
 
   describe 'add alias' do
     let(:arguments) { ['alias', 'add', 'mock_app_0', 'www.foo.bar' ] }
-    it { expect { run }.should exit_with_code(0) }
+    it { expect { run }.to exit_with_code(0) }
     it { run_output.should =~ /Alias 'www.foo.bar' has been added/m }
   end
 
@@ -172,7 +172,7 @@ describe RHC::Commands::Alias do
     end
     context 'remove alias successfully' do
       let(:arguments) { ['alias', 'remove', 'mock_app_0', 'www.foo.bar' ] }
-      it { expect { run }.should exit_with_code(0) }
+      it { expect { run }.to exit_with_code(0) }
       it { run_output.should =~ /Alias 'www.foo.bar' has been removed/m }
     end
     context 'remove alias with server api <= 1.3' do
@@ -180,7 +180,7 @@ describe RHC::Commands::Alias do
       before do 
         rest_client.stub(:api_version_negotiated).and_return(1.3)
       end
-      it { expect { run }.should exit_with_code(0) }
+      it { expect { run }.to exit_with_code(0) }
       it { run_output.should =~ /Alias 'www.foo.bar' has been removed/m }
     end
   end
@@ -193,28 +193,28 @@ describe RHC::Commands::Alias do
       let(:arguments) { ['alias', 'update-cert', 'mock_app_0', 'www.foo.bar', 
         '--certificate', File.expand_path('../../assets/cert.crt', __FILE__),
         '--private-key', File.expand_path('../../assets/cert_key_rsa', __FILE__) ] }
-      it { expect { run }.should exit_with_code(0) }
+      it { expect { run }.to exit_with_code(0) }
       it { run_output.should =~ /SSL certificate successfully added/m }
     end
     context 'cert file not found' do
       let(:arguments) { ['alias', 'update-cert', 'mock_app_0', 'www.foo.bar', 
         '--certificate', File.expand_path('../../assets/nothing.foo', __FILE__),
         '--private-key', File.expand_path('../../assets/cert_key_rsa', __FILE__) ] }
-      it { expect { run }.should exit_with_code(1) }
+      it { expect { run }.to exit_with_code(1) }
       it { run_output.should =~ /Certificate file not found/m }
     end
     context 'private key file not found' do
       let(:arguments) { ['alias', 'update-cert', 'mock_app_0', 'www.foo.bar', 
         '--certificate', File.expand_path('../../assets/cert.crt', __FILE__),
         '--private-key', File.expand_path('../../assets/nothing.foo', __FILE__) ] }
-      it { expect { run }.should exit_with_code(1) }
+      it { expect { run }.to exit_with_code(1) }
       it { run_output.should =~ /Private key file not found/m }
     end
     context 'not existing certificate alias' do
       let(:arguments) { ['alias', 'update-cert', 'mock_app_0', 'www.unicorns.com', 
         '--certificate', File.expand_path('../../assets/cert.crt', __FILE__),
         '--private-key', File.expand_path('../../assets/cert_key_rsa', __FILE__) ] }
-      it { expect { run }.should exit_with_code(156) }
+      it { expect { run }.to exit_with_code(156) }
       it { run_output.should =~ /Alias www.unicorns.com can't be found in application/m }
     end
     context 'fails if server does not support' do
@@ -224,21 +224,21 @@ describe RHC::Commands::Alias do
       before do 
         rest_client.stub(:api_version_negotiated).and_return(1.3)
       end
-      it { expect { run }.should exit_with_code(1) }
+      it { expect { run }.to exit_with_code(1) }
       it { run_output.should =~ /The server does not support SSL certificates for custom aliases/m }
     end
     context 'invalid certificate file (empty)' do
       let(:arguments) { ['alias', 'update-cert', 'mock_app_0', 'www.foo.bar', 
         '--certificate', File.expand_path('../../assets/empty.txt', __FILE__),
         '--private-key', File.expand_path('../../assets/cert_key_rsa', __FILE__) ] }
-      it { expect { run }.should exit_with_code(1) }
+      it { expect { run }.to exit_with_code(1) }
       it { run_output.should =~ /Invalid certificate file/m }
     end
     context 'invalid private key file (empty)' do
       let(:arguments) { ['alias', 'update-cert', 'mock_app_0', 'www.foo.bar', 
         '--certificate', File.expand_path('../../assets/cert.crt', __FILE__),
         '--private-key', File.expand_path('../../assets/empty.txt', __FILE__) ] }
-      it { expect { run }.should exit_with_code(1) }
+      it { expect { run }.to exit_with_code(1) }
       it { run_output.should =~ /Invalid private key file/m }
     end
   end
@@ -249,12 +249,12 @@ describe RHC::Commands::Alias do
     end
     context 'delete existing certificate' do
       let(:arguments) { ['alias', 'delete-cert', 'mock_app_0', 'www.foo.bar', '--confirm'] }
-      it { expect { run }.should exit_with_code(0) }
+      it { expect { run }.to exit_with_code(0) }
       it { run_output.should =~ /SSL certificate successfully deleted/m }
     end
     context 'delete not existing certificate' do
       let(:arguments) { ['alias', 'delete-cert', 'mock_app_0', 'www.unicorns.com', '--confirm'] }
-      it { expect { run }.should exit_with_code(156) }
+      it { expect { run }.to exit_with_code(156) }
       it { run_output.should =~ /Alias www.unicorns.com can't be found in application mock_app_0/m }
     end
     context 'fails if server does not support' do
@@ -262,7 +262,7 @@ describe RHC::Commands::Alias do
       before do 
         rest_client.stub(:api_version_negotiated).and_return(1.3)
       end
-      it { expect { run }.should exit_with_code(1) }
+      it { expect { run }.to exit_with_code(1) }
       it { run_output.should =~ /The server does not support SSL certificates for custom aliases/m }
     end
   end
@@ -273,14 +273,14 @@ describe RHC::Commands::Alias do
     end
     context 'list app with existing certificate' do
       let(:arguments) { ['alias', 'list', 'mock_app_0'] }
-      it { expect { run }.should exit_with_code(0) }
+      it { expect { run }.to exit_with_code(0) }
       it { run_output.should =~ /Has Certificate?/m }
       it { run_output.should =~ /Certificate Added/m }
       it { run_output.should =~ /www.foo.bar/m }
     end
     context 'list app without certificates' do
       let(:arguments) { ['alias', 'list', 'mock_app_1'] }
-      it { expect { run }.should exit_with_code(0) }
+      it { expect { run }.to exit_with_code(0) }
       it { run_output.should =~ /No aliases associated with the application mock_app_1/m }
     end
     context 'simple list is server does not support ssl certs' do
@@ -288,7 +288,7 @@ describe RHC::Commands::Alias do
       before do 
         rest_client.stub(:api_version_negotiated).and_return(1.3)
       end
-      it { expect { run }.should exit_with_code(0) }
+      it { expect { run }.to exit_with_code(0) }
       it { run_output.should =~ /no/m }
       it { run_output.should =~ /-/m }
       it { run_output.should =~ /www.foo.bar/m }

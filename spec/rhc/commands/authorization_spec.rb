@@ -23,7 +23,7 @@ describe RHC::Commands::Authorization do
     context "without authorizations" do
       without_authorization
       it('should warn that the server doesn\'t support auth'){ run_output.should =~ /The server does not support setting, retrieving, or authenticating with authorization tokens/ }
-      it{ expect{ run }.should exit_with_code(1) }
+      it{ expect{ run }.to exit_with_code(1) }
     end
   end
 
@@ -37,7 +37,7 @@ describe RHC::Commands::Authorization do
       it('should display the expiration')     { run_output.should =~ /Expires In:\s+1 minute/ }
       it('should display the creation date')  { run_output.should =~ /Created:\s+#{RHC::Helpers.date('2013-02-21T01:00:01Z')}/ }
       it('should display the scopes')         { run_output.should =~ /Scopes:\s+session read/ }
-      it{ expect{ run }.should exit_with_code(0) }
+      it{ expect{ run }.to exit_with_code(0) }
     end
 
     expect_an_unsupported_message
@@ -47,7 +47,7 @@ describe RHC::Commands::Authorization do
     let(:arguments) { ['authorization', '--h']}
     context 'given --h' do
       it 'should not raise SystemStackError' do
-        expect{ run }.should_not raise_error(SystemStackError)
+        expect{ run }.to_not raise_error(SystemStackError)
       end
     end
   end
@@ -60,7 +60,7 @@ describe RHC::Commands::Authorization do
       before{ stub_delete_authorization('foo') }
       before{ stub_delete_authorization('bar') }
       it('should display success') { run_output.should =~ /Deleting auth.*done/ }
-      it{ expect{ run }.should exit_with_code(0) }
+      it{ expect{ run }.to exit_with_code(0) }
       after{ a_request(:delete, mock_href('broker/rest/user/authorizations/foo', true)).should have_been_made }
       after{ a_request(:delete, mock_href('broker/rest/user/authorizations/bar', true)).should have_been_made }
     end
@@ -68,7 +68,7 @@ describe RHC::Commands::Authorization do
     context "without a token in the command line" do
       let(:arguments) { ['authorization', 'delete'] }
       it('should display success') { run_output.should =~ /You must specify one or more tokens to delete/ }
-      it{ expect{ run }.should exit_with_code(1) }
+      it{ expect{ run }.to exit_with_code(1) }
     end
 
     expect_an_unsupported_message
@@ -81,7 +81,7 @@ describe RHC::Commands::Authorization do
       with_authorization
       before{ stub_delete_authorizations }
       it('should display success') { run_output.should =~ /Deleting all auth.*done/ }
-      it{ expect{ run }.should exit_with_code(0) }
+      it{ expect{ run }.to exit_with_code(0) }
       after{ a_request(:delete, mock_href('broker/rest/user/authorizations', true)).should have_been_made }
     end
 
@@ -105,7 +105,7 @@ describe RHC::Commands::Authorization do
       before{ instance.should_receive(:scope_help) }
 
       it('should display the scope help') { command_output.should =~ /When adding an authorization.*to see more options/m }
-      it{ expect{ run_command }.should exit_with_code(0) }
+      it{ expect{ run_command }.to exit_with_code(0) }
     end
 
     expect_an_unsupported_message
@@ -121,7 +121,7 @@ describe RHC::Commands::Authorization do
       it('should display the expiration')     { run_output.should =~ /Expires In:\s+5 minutes/ }
       it('should display the creation date')  { run_output.should =~ /Created:\s+#{RHC::Helpers.date(mock_date_1)}/ }
       it('should display the scopes')         { run_output.should =~ /Scopes:\s+foo bar/ }
-      it{ expect{ run }.should exit_with_code(0) }
+      it{ expect{ run }.to exit_with_code(0) }
 
       expect_an_unsupported_message
     end

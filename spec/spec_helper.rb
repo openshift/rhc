@@ -178,7 +178,7 @@ module ClassSpecHelpers
     if obj
       Object.const_set(const_for, obj)
     else
-      "#{description}".split(" ").map{|word| word.capitalize}.join.gsub(/[^\w]/, '')
+      "#{example.full_description}".split(" ").map{|word| word.capitalize}.join.gsub(/[^\w]/, '')
     end
   end
 
@@ -342,7 +342,7 @@ module ClassSpecHelpers
 end
 
 module ExitCodeMatchers
-  Spec::Matchers.define :exit_with_code do |code|
+  RSpec::Matchers.define :exit_with_code do |code|
     actual = nil
     match do |block|
       begin
@@ -366,7 +366,7 @@ module ExitCodeMatchers
 end
 
 module CommanderInvocationMatchers
-  Spec::Matchers.define :call do |method|
+  RSpec::Matchers.define :call do |method|
     chain :on do |object|
       @object = object
     end
@@ -399,7 +399,7 @@ module ColorMatchers
     :clear => 0
   }
 
-  Spec::Matchers.define :be_colorized do |msg,color|
+  RSpec::Matchers.define :be_colorized do |msg,color|
     match do |actual|
       actual == colorized_message(msg,color)
     end
@@ -436,7 +436,7 @@ def mac?
   RbConfig::CONFIG['host_os'] =~ /^darwin/
 end
 
-Spec::Runner.configure do |config|
+RSpec.configure do |config|
   config.include(ExitCodeMatchers)
   config.include(CommanderInvocationMatchers)
   config.include(ColorMatchers)

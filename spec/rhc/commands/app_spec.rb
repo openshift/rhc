@@ -10,8 +10,8 @@ describe RHC::Commands::App do
     FakeFS.activate!
     FakeFS::FileSystem.clear
     user_config
-    RHC::Helpers::remove_const(:MAX_RETRIES) rescue nil
-    RHC::Helpers::const_set(:MAX_RETRIES, 3)
+    RHC::Helpers.send(:remove_const, :MAX_RETRIES) rescue nil
+    RHC::Helpers.const_set(:MAX_RETRIES, 3)
     @instance = RHC::Commands::App.new
     RHC::Commands::App.stub(:new) do
       @instance.stub(:git_config_get) { "" }
@@ -62,7 +62,7 @@ describe RHC::Commands::App do
 
     context 'when run with a valid cart' do
       let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart-1', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
-      it { expect { run }.should exit_with_code(0) }
+      it { expect { run }.to exit_with_code(0) }
       it { run_output.should match("Success") }
       it { run_output.should match("Cartridges: mock_standalone_cart-1\n") }
     end
@@ -75,13 +75,13 @@ describe RHC::Commands::App do
         resolver.should_receive(:getaddress).with('app1-mockdomain.fake.foo').and_raise(ArgumentError)
       end
 
-      it { expect { run }.should exit_with_code(0) }
+      it { expect { run }.to exit_with_code(0) }
       it { run_output.should match("Success") }
     end
 
     context 'when run with multiple carts' do
       let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart-1', 'mock_cart-1', '--noprompt', '-p',  'password'] }
-      it { expect { run }.should exit_with_code(0) }
+      it { expect { run }.to exit_with_code(0) }
       it { run_output.should match("Success") }
       it { run_output.should match("Cartridges: mock_standalone_cart-1, mock_cart-1\n") }
       after{ rest_client.domains.first.applications.first.cartridges.find{ |c| c.name == 'mock_cart-1' }.should be_true }
@@ -89,7 +89,7 @@ describe RHC::Commands::App do
 
     context 'when run with a git url' do
       let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart-1', '--from', 'git://url', '--noprompt', '-p',  'password'] }
-      it { expect { run }.should exit_with_code(0) }
+      it { expect { run }.to exit_with_code(0) }
       it { run_output.should match("Success") }
       it { run_output.should match("Source Code: git://url\n") }
       it { run_output.should match("Initial Git URL: git://url\n") }
@@ -106,7 +106,7 @@ describe RHC::Commands::App do
       end
       context 'with trace' do
         let(:arguments) { ['app', 'create', 'app1', 'nomatch_cart', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password', '--trace'] }
-        it { expect { run }.should raise_error(RHC::CartridgeNotFoundException, "There are no cartridges that match 'nomatch_cart'.") }
+        it { expect { run }.to raise_error(RHC::CartridgeNotFoundException, "There are no cartridges that match 'nomatch_cart'.") }
       end
     end
 
@@ -119,7 +119,7 @@ describe RHC::Commands::App do
 
     context 'multiple web matches' do
       let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart', '--trace', '--noprompt'] }
-      it { expect { run }.should raise_error(RHC::MultipleCartridgesException) }
+      it { expect { run }.to raise_error(RHC::MultipleCartridgesException) }
     end
     context 'when only a single cart can match' do
       let(:arguments) { ['app', 'create', 'app1', 'unique', '--trace', '--noprompt'] }
@@ -135,15 +135,15 @@ describe RHC::Commands::App do
     end
     context 'when I pick only embedded carts' do
       let(:arguments) { ['app', 'create', 'app1', 'mock_cart', '--trace', '--noprompt'] }
-      it { expect { run }.should raise_error(RHC::CartridgeNotFoundException, /Every application needs a web cartridge/) }
+      it { expect { run }.to raise_error(RHC::CartridgeNotFoundException, /Every application needs a web cartridge/) }
     end
     context 'when I pick multiple embedded carts' do
       let(:arguments) { ['app', 'create', 'app1', 'unique_standalone', 'mock_cart', '--trace', '--noprompt'] }
-      it { expect { run }.should raise_error(RHC::MultipleCartridgesException, /There are multiple cartridges matching 'mock_cart'/) }
+      it { expect { run }.to raise_error(RHC::MultipleCartridgesException, /There are multiple cartridges matching 'mock_cart'/) }
     end
     context 'when I pick multiple standalone carts' do
       let(:arguments) { ['app', 'create', 'app1', 'unique_standalone', 'mock_standalone_cart', '--trace', '--noprompt'] }
-      it { expect { run }.should raise_error(RHC::MultipleCartridgesException, /You must select only a single web cart/) }
+      it { expect { run }.to raise_error(RHC::MultipleCartridgesException, /You must select only a single web cart/) }
     end
   end
 
@@ -156,7 +156,7 @@ describe RHC::Commands::App do
       end
       it "should create a jenkins app and a regular app with an embedded jenkins client" do
         #puts run_output
-        expect { run }.should exit_with_code(0)
+        expect { run }.to exit_with_code(0)
         jenkins_app = rest_client.find_application(@domain.id,"jenkins")
         jenkins_app.cartridges[0].name.should == "jenkins-1.4"
         app = rest_client.find_application(@domain.id,"app1")
@@ -172,7 +172,7 @@ describe RHC::Commands::App do
       before(:each) do
         domain = rest_client.add_domain("mockdomain")
       end
-      it { expect { run }.should_not raise_error(ArgumentError, /The --no-dns option can't be used in conjunction with --enable-jenkins/) }
+      it { expect { run }.to_not raise_error(ArgumentError, /The --no-dns option can't be used in conjunction with --enable-jenkins/) }
     end
   end
 
@@ -183,7 +183,7 @@ describe RHC::Commands::App do
       before(:each) do
         domain = rest_client.add_domain("mockdomain")
       end
-      it { expect { run }.should raise_error(ArgumentError, /You have named both your main application and your Jenkins application/) }
+      it { expect { run }.to raise_error(ArgumentError, /You have named both your main application and your Jenkins application/) }
     end
   end
 
@@ -196,9 +196,9 @@ describe RHC::Commands::App do
         @domain.add_application("jenkins", "jenkins-1.4")
       end
       it "should use existing jenkins" do
-        expect { run }.should exit_with_code(0)
-        expect { rest_client.find_application(@domain.id,"jenkins") }.should_not raise_error
-        expect { rest_client.find_application(@domain.id,"jenkins2") }.should raise_error(RHC::Rest::ApplicationNotFoundException)
+        expect { run }.to exit_with_code(0)
+        expect { rest_client.find_application(@domain.id,"jenkins") }.to_not raise_error
+        expect { rest_client.find_application(@domain.id,"jenkins2") }.to raise_error(RHC::Rest::ApplicationNotFoundException)
       end
     end
   end
@@ -324,7 +324,7 @@ describe RHC::Commands::App do
     end
 
     context 'when run' do
-      it { expect { run }.should exit_with_code(0) }
+      it { expect { run }.to exit_with_code(0) }
     end
   end
 
@@ -335,34 +335,34 @@ describe RHC::Commands::App do
       before{ @domain = rest_client.add_domain("mockdomain") }
 
       it "should raise cartridge not found exception when no apps exist" do
-        expect { run }.should raise_error RHC::Rest::ApplicationNotFoundException
+        expect { run }.to raise_error RHC::Rest::ApplicationNotFoundException
       end
 
       context "with an app" do
         before{ @app = @domain.add_application("app1", "mock_type") }
 
         it "should not remove app when no is sent as input" do
-          expect { run(["no"]) }.should raise_error(RHC::ConfirmationError)
+          expect { run(["no"]) }.to raise_error(RHC::ConfirmationError)
           @domain.applications.length.should == 1
           @domain.applications[0] == @app
         end
 
         it "should remove app when yes is sent as input" do
-          expect { run(["yes"]) }.should exit_with_code(0)
+          expect { run(["yes"]) }.to exit_with_code(0)
           @domain.applications.length.should == 0
         end
 
         context "with --noprompt but without --confirm" do
           let(:arguments) { ['app', 'delete', 'app1', '--noprompt', '--trace'] }
           it "should not remove the app" do
-            expect { run(["no"]) }.should raise_error(RHC::ConfirmationError)
+            expect { run(["no"]) }.to raise_error(RHC::ConfirmationError)
             @domain.applications.length.should == 1
           end
         end
         context "with --noprompt and --confirm" do
           let(:arguments) { ['app', 'delete', 'app1', '--noprompt', '--confirm'] }
           it "should remove the app" do
-            expect { run }.should exit_with_code(0)
+            expect { run }.to exit_with_code(0)
             @domain.applications.length.should == 0
           end
         end
@@ -445,7 +445,7 @@ describe RHC::Commands::App do
         Kernel.should_receive(:system).with("ssh fakeuuidfortestsapp1@127.0.0.1").and_return(0)
       end
       it { run_output.should match("Connecting to fakeuuidfortestsapp") }
-      it { expect { run }.should exit_with_code(0) }
+      it { expect { run }.to exit_with_code(0) }
     end
   end
 
@@ -459,7 +459,7 @@ describe RHC::Commands::App do
         @instance.should_receive(:has_ssh?).and_return(false)
       end
       it { run_output.should match("Please use the --ssh option to specify the path to your SSH executable, or install SSH.") }
-      it { expect { run }.should exit_with_code(1) }
+      it { expect { run }.to exit_with_code(1) }
     end
   end
 
@@ -474,7 +474,7 @@ describe RHC::Commands::App do
         Kernel.should_receive(:system).with("path_to_ssh fakeuuidfortestsapp1@127.0.0.1").and_return(1)
       end
       it { run_output.should match("Connecting to fakeuuidfortestsapp") }
-      it { expect { run }.should exit_with_code(1) }
+      it { expect { run }.to exit_with_code(1) }
     end
   end
 

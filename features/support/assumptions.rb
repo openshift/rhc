@@ -9,7 +9,7 @@ Given 'we have an existing domain' do
   begin
     step 'the key "key1" is shown'
     step 'the output includes the key information for "key1"'
-  rescue Spec::Expectations::ExpectationNotMetError
+  rescue RSpec::Expectations::ExpectationNotMetError
     step 'a new SSH key "key1.pub" is added as "key1"'
   end
 end
@@ -27,7 +27,7 @@ Given /^we have a (.*) (.*) cartridge$/ do |status,type|
   retried = false
   begin
     step "the #{type} cartridge should be #{status}"
-  rescue Spec::Expectations::ExpectationNotMetError
+  rescue RSpec::Expectations::ExpectationNotMetError
     step "the #{type} cartridge is #{cmd}"
     (retried = true && retry) unless retried
   end
@@ -43,7 +43,7 @@ Given /^we have a (stopped|running) application$/ do |state|
 
   begin
     step "the application should #{before}"
-  rescue Spec::Expectations::ExpectationNotMetError
+  rescue RSpec::Expectations::ExpectationNotMetError
     step "the application is #{after}"
   end
 end

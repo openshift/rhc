@@ -53,7 +53,7 @@ describe RHC::Wizard do
         mock_config
         FileUtils.mkdir_p(RHC::Config.ssh_dir)
         File.open(RHC::Config.ssh_priv_key_file_path, 'w'){}
-        File.chmod(0666, RHC::Config.ssh_priv_key_file_path)
+        File.expect_mode(RHC::Config.ssh_priv_key_file_path, 0666)
         expect{ subject.send(:test_private_key_mode) }.to raise_error(StandardError)
       end
     end

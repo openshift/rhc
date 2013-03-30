@@ -1,5 +1,19 @@
 $: << File.expand_path(File.join(File.dirname(__FILE__), "../lib"))
 
+begin
+  require 'rspec/expectations'
+  World(RSpec::Matchers)
+rescue
+  puts "Require RSpec >= 2"
+  exit 1
+end
+
+if File.exist?("/etc/fedora-release")
+  $target_os = "Fedora"
+else
+  $target_os = "RHEL"
+end
+
 require 'rhc/coverage_helper'
 SimpleCov.at_exit{ SimpleCov.result.format! } if defined? SimpleCov
 
