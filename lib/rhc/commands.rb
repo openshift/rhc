@@ -5,12 +5,18 @@ require 'commander/command'
 #  to avoid conflicts and side effects of similar short switches
 module Commander
   class Command
-    attr_accessor :default_action, :root
+    attr_accessor :default_action, :root, :info
     def default_action?
       default_action.present?
     end
     def root?
       root.present?
+    end
+
+    def deprecated(as_alias=nil)
+      return false unless info
+      return info[:deprecated] if info[:deprecated]
+      info[:aliases].select{ |a| ['-',' '].map{ |s| Array(a[:action]).join(s) }.include?(as_alias) }.map{ |a| a[:deprecated] }.first if as_alias
     end
 
     def parse_options_and_call_procs *args
@@ -137,14 +143,12 @@ module RHC
       global_options << [args.freeze, block]
     end
 
-    def self.deprecated?
-      command_name = Commander::Runner.instance.command_name_from_args
-      command = Commander::Runner.instance.active_command
+    def self.deprecated!
+      instance = Commander::Runner.instance
+      command_name = instance.command_name_from_args
+      command = instance.active_command
       
-      info = commands[commands.keys.find{ |k| k.join('-') == command.name }]
-      new_cmd = info[:deprecated] || info[:aliases].select{ |a| ['-',' '].map{ |s| Array(a[:action]).join(s) }.include?(command_name) }.map{ |a| a[:deprecated] }.first
-
-      if new_cmd
+      if new_cmd = command.deprecated(command_name)
         new_cmd = "rhc #{command.name}" if new_cmd == true
         RHC::Helpers.deprecated_command new_cmd
       end
@@ -181,13 +185,13 @@ module RHC
           c.syntax = opts[:syntax]
           c.default_action = opts[:default]
 
+          c.info = opts
+
           (options_metadata = Array(opts[:options])).each do |o|
             option_data = [o[:switches], o[:description]].flatten(1)
             c.option *option_data
             o[:arg] = Commander::Runner.switch_to_sym(Array(o[:switches]).last)
           end
-
-          #deprecated[name] = opts[:deprecated] unless opts[:deprecated].nil?
 
           (args_metadata = Array(opts[:args])).each do |meta|
             switches = meta[:switches]
@@ -201,7 +205,6 @@ module RHC
             action = Array(a[:action])
             [' ', '-'].each do |s|
               cmd = action.join(s)
-              #deprecated[cmd] = true if a[:deprecated]
               instance.alias_command cmd, name
             end
           end
@@ -213,7 +216,7 @@ module RHC
           end
 
           c.when_called do |args, options|
-            deprecated?
+            deprecated!
 
             config = c.instance_variable_get(:@config)
 
