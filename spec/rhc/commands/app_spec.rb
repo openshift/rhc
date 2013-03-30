@@ -496,7 +496,7 @@ describe RHC::Commands::App do
         @domain.add_application("app1", "mock_type")
       end
       it { run_output.should match("started") }
-      it { run_output.should match("deprecated") }
+      it("should warn about deprecation") { run_output.should match("deprecated") }
     end
   end
 

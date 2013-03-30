@@ -411,10 +411,8 @@ describe RHC::Commands::Cartridge do
 
     context 'when run with no arguments' do
       let(:arguments) { cmd_base | std_args }
-      it "should show a list of storage info for all carts" do
-        run_output.should match('mock_type')
-        run_output.should match('mock_cart-1')
-      end
+      it ("should show the mock_type"){ run_output.should match('mock_type') }
+      it ('should show mock_cart-1'){ run_output.should match('mock_cart-1') }
     end
 
     context 'when run for a non-existent cartridge' do

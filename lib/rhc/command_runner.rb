@@ -35,7 +35,7 @@ module RHC
       if (@args & HELP_OPTIONS).present?
         args = (@args -= HELP_OPTIONS)
         args.shift if args.first == 'help' && !command_exists?(args.join(' '))
-        exit run_help(args, nil)
+        exit run_help(args)
       end
     end
 
@@ -69,14 +69,8 @@ module RHC
         begin
           run_active_command
         rescue InvalidCommandError => e
-          if provided_arguments.empty?
-            return RHC::Wizard.new.run unless RHC::Wizard.has_configuration?
-            say RHC::HelpFormatter.new(self).render
-          else
-            RHC::Helpers.error "The command '#{program :name} #{provided_arguments.join(' ')}' is not recognized.\n"
-            say "See '#{program :name} help' for a list of valid commands."
-          end
-          1
+          return RHC::Wizard.new.run unless RHC::Wizard.has_configuration? || provided_arguments.present?
+          run_help(provided_arguments)
         rescue \
           OptionParser::InvalidOption => e
           RHC::Helpers.error e.message
@@ -131,7 +125,7 @@ module RHC
       end
     end
 
-    def run_help(args, options)
+    def run_help(args=[], options=nil)
       cmd = (1..args.length).reverse_each.map{ |n| args[0,n].join(' ') }.find{ |cmd| command_exists?(cmd) }
 
       if args.empty?
