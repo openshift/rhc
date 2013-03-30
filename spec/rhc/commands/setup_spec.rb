@@ -101,4 +101,13 @@ describe RHC::Commands::Setup do
       it('should output usage') { run_output.should match("Connects to an OpenShift server to get you started. Will") }
     end
   end
+
+  describe '--autocomplete' do
+    let(:arguments) { ['setup', '--autocomplete'] }
+
+    context 'is passed' do
+      it('should output information') { run_output.should match("To enable tab-completion") }
+      it('should output the gem path') { run_output.should match File.join(Gem.loaded_specs['rhc'].full_gem_path, 'autocomplete') }
+    end
+  end
 end

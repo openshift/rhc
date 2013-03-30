@@ -87,12 +87,7 @@ class RHC::Commands::Base
 
     def self.description(*args)
       o = args.join(' ')
-      indent = o.scan(/^[ \t]*(?=\S)/).min.size || 0
-      options[:description] =
-        o.gsub(/^[ \t]{#{indent}}/, '').
-          gsub(/(\b|')\s*\n(?!\s*\n)(\S)/m, '\1 \2').
-          gsub(/\n+\Z/, '').
-          gsub(/\n{3,}/, "\n\n")
+      options[:description] = o.strip_heredoc
     end
     def self.summary(value)
       options[:summary] = value

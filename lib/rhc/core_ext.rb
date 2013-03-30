@@ -37,6 +37,14 @@ class String
   def wrap(wrap_length=80, char="\n")
     scan(/.{#{wrap_length}}|.+/).join(char)
   end
+
+  def strip_heredoc
+    indent = scan(/^[ \t]*(?=\S)/).min.size || 0
+    gsub(/^[ \t]{#{indent}}/, '').
+      gsub(/(\b|\S)[^\S\n]*\n(\S)/m, '\1 \2').
+      gsub(/\n+\Z/, '').
+      gsub(/\n{3,}/, "\n\n")
+  end
 end
 
 unless HTTP::Message.method_defined? :ok?
