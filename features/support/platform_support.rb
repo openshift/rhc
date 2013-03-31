@@ -1,4 +1,4 @@
-if File.exist?("/etc/fedora-release")
+if $target_os == 'Fedora'
   CARTRIDGE_MAP = {
     "php"         => { type: "php-5.4", name: "PHP 5.4" },
     "mysql"       => { type: "mysql-5.1", name: "MySQL Database 5.1" },
