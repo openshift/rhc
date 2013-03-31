@@ -3,12 +3,13 @@ Usage: rhc [--help] [--version] [--debug] <command> [<args>]
 <%= Array(program :description).first %>
 
 <%
-remaining = Hash[@commands.dup.select{ |name, command| not alias?(name) and not command.summary.blank? }]
-basic = remaining.slice!('setup', 'app create', 'apps', 'cartridge list', 'cartridge add', 'server', 'account logout')
+remaining = Hash[@commands.dup.select{ |name, command| not command.summary.blank? }]
+basic = remaining.slice!('setup', 'create-app', 'apps', 'list-cartridge', 'add-cartridge', 'server', 'logout')
+remaining.delete_if{ |name, command| alias?(name) }
 begin -%>
 Getting started:
 <% for name, command in basic -%>
-  <%="%-18s %s\n" % [command.name, command.summary || command.description] -%>
+  <%="%-18s %s\n" % [name, command.summary || command.description] -%>
 <% end %>
 <% end unless basic.empty?
 
@@ -22,7 +23,7 @@ end unless debugging.empty?
 %>
 Management commands:
 <% for name, command in remaining.sort -%>
-	<%- unless alias? name or name.include?(' ') or command.summary.nil? -%>  <%="%-18s %s\n" % [command.name, command.summary || command.description] %><%- end -%>
+	<%- unless !command.root? or command.summary.nil? -%>  <%="%-18s %s\n" % [command.name, command.summary || command.description] %><%- end -%>
 <%- end -%>
 
 See '<%= Array(program :name).first %> help <command>' for more information on a specific command.  See 'rhc help options' for a list of global command-line options and information about the config file.

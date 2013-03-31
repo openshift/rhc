@@ -150,10 +150,7 @@ module RHC
     end
 
     def display_cart_storage_list(carts)
-      carts.each do |cart|
-        puts
-        display_cart_storage_info(cart, cart.display_name)
-      end
+      carts.each{ |cart| paragraph{ display_cart_storage_info(cart, cart.display_name) } }
     end
 
     def format_usage_message(cart)

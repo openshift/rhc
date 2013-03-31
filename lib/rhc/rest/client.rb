@@ -199,14 +199,6 @@ module RHC
       # See #api_version_negotiated
       CLIENT_API_VERSIONS = [1.1, 1.2, 1.3, 1.4]
 
-      # Set the http_proxy env variable, read by
-      # HTTPClient, being sure to add the http protocol
-      # if not specified already
-      proxy = ENV['http_proxy'] || ENV['HTTP_PROXY']
-      if proxy && proxy !~ /^(\w+):\/\// then
-        ENV['http_proxy'] = "http://#{proxy}"
-      end
-
       def initialize(*args)
         options = args[0].is_a?(Hash) && args[0] || {}
         @end_point, @debug, @preferred_api_versions =
@@ -236,6 +228,8 @@ module RHC
 
         self.headers.merge!(options.delete(:headers)) if options[:headers]
         self.options.merge!(options)
+
+        update_http_proxy_env
 
         debug "Connecting to #{@end_point}"
       end
@@ -597,6 +591,14 @@ module RHC
         def messages_to_fields(messages)
           keys = messages.group_by{ |m| m['field'] }.keys.compact.sort.map(&:to_sym) rescue []
           [messages_to_error(messages), keys]
+        end
+
+        def update_http_proxy_env
+          # Set the http_proxy env variable, read by
+          # HTTPClient, being sure to add the http protocol
+          # if not specified already
+          proxy = ENV['http_proxy'] || ENV['HTTP_PROXY']
+          ENV['http_proxy'] = "http://#{proxy}" if proxy && proxy !~ /^(\w+):\/\//
         end
     end
   end

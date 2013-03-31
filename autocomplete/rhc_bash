@@ -1,0 +1,1183 @@
+#
+# This is the bash auto completion script for the rhc command
+#
+_rhc()
+{
+  local cur opts prev
+  COMPREPLY=()
+  cur="${COMP_WORDS[COMP_CWORD]}"
+  if [ $COMP_CWORD -eq 1 ]; then
+    if [[ "$cur" == -* ]]; then
+      opts="--clean --config --debug --insecure --mock --noprompt --password --rhlogin --server --ssl-ca-file --ssl-client-cert-file --ssl-version --timeout --token"
+    elif [ -z $cur ]; then
+      opts="account account-logout alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert app app-create app-delete app-force-stop app-reload app-restart app-show app-ssh app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all cartridge cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage domain domain-create domain-delete domain-show domain-update git-clone port-forward server setup snapshot snapshot-restore snapshot-save sshkey sshkey-add sshkey-list sshkey-remove sshkey-show tail threaddump"
+    else
+      opts="account account-logout add-alias add-authorization add-cartridge add-sshkey alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert app app-create app-delete app-force-stop app-reload app-restart app-show app-ssh app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all cartridge cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage create-app create-domain delete-all-authorization delete-app delete-authorization delete-cert-alias delete-domain domain domain-alter domain-create domain-delete domain-destroy domain-show domain-update force-stop-app git-clone list-alias list-cartridge list-sshkey logout logout-account port-forward reload-app reload-cartridge remove-alias remove-cartridge remove-sshkey restart-app restart-cartridge restore-snapshot save-snapshot scale-cartridge server setup show-app show-cartridge show-domain show-sshkey snapshot snapshot-restore snapshot-save ssh ssh-app sshkey sshkey-add sshkey-delete sshkey-list sshkey-remove sshkey-show start-app start-cartridge status-cartridge stop-app stop-cartridge storage-cartridge tail threaddump tidy-app update-cert-alias update-domain"
+    fi
+  else
+    prev="${COMP_WORDS[@]:0:COMP_CWORD}"
+    SAVE_IFS=$IFS
+    IFS=" "
+    case "${prev[*]}" in
+
+      "rhc account")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts="logout"
+        fi
+        ;;
+
+      "rhc account logout")
+        if [[ "$cur" == -* ]]; then
+          opts="--all"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc account-logout")
+        if [[ "$cur" == -* ]]; then
+          opts="--all"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc add-alias")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc add-authorization")
+        if [[ "$cur" == -* ]]; then
+          opts="--expires-in --note --scopes"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc add-cartridge")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --cartridge --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc add-sshkey")
+        if [[ "$cur" == -* ]]; then
+          opts="--confirm"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc alias")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts="add remove update-cert delete-cert list"
+        fi
+        ;;
+
+      "rhc alias add")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc alias delete-cert")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --confirm --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc alias list")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc alias remove")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc alias update-cert")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --certificate --namespace --passphrase --private-key"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc alias-add")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc alias-delete-cert")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --confirm --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc alias-list")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc alias-remove")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc alias-update-cert")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --certificate --namespace --passphrase --private-key"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc app")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts="create delete start stop force-stop restart reload tidy show ssh"
+        fi
+        ;;
+
+      "rhc app create")
+        if [[ "$cur" == -* ]]; then
+          opts="--[no-]dns --[no-]git --app --enable-jenkins --from-code --gear-size --namespace --nogit --repo --scaling --type"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc app delete")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --bypass --confirm --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc app force-stop")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc app reload")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc app restart")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc app show")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --gears --namespace --state"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc app snapshot")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc app ssh")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace --ssh"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc app start")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc app stop")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc app tidy")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc app-create")
+        if [[ "$cur" == -* ]]; then
+          opts="--[no-]dns --[no-]git --app --enable-jenkins --from-code --gear-size --namespace --nogit --repo --scaling --type"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc app-delete")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --bypass --confirm --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc app-force-stop")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc app-reload")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc app-restart")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc app-show")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --gears --namespace --state"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc app-ssh")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace --ssh"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc app-start")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc app-stop")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc app-tidy")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc apps")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc authorization")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts="add delete delete-all"
+        fi
+        ;;
+
+      "rhc authorization add")
+        if [[ "$cur" == -* ]]; then
+          opts="--expires-in --note --scopes"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc authorization delete")
+        if [[ "$cur" == -* ]]; then
+          opts="--auth-token"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc authorization delete-all")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc authorization-add")
+        if [[ "$cur" == -* ]]; then
+          opts="--expires-in --note --scopes"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc authorization-delete")
+        if [[ "$cur" == -* ]]; then
+          opts="--auth-token"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc authorization-delete-all")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc cartridge")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts="list add show remove start stop restart status reload scale storage"
+        fi
+        ;;
+
+      "rhc cartridge add")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --cartridge --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc cartridge list")
+        if [[ "$cur" == -* ]]; then
+          opts="--verbose"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc cartridge reload")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --cartridge --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc cartridge remove")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --cartridge --confirm --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc cartridge restart")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --cartridge --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc cartridge scale")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --cartridge --max --min --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc cartridge show")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --cartridge --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc cartridge start")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --cartridge --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc cartridge status")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --cartridge --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc cartridge stop")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --cartridge --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc cartridge storage")
+        if [[ "$cur" == -* ]]; then
+          opts="--add --app --cartridge --force --namespace --remove --set --show"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc cartridge-add")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --cartridge --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc cartridge-list")
+        if [[ "$cur" == -* ]]; then
+          opts="--verbose"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc cartridge-reload")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --cartridge --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc cartridge-remove")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --cartridge --confirm --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc cartridge-restart")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --cartridge --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc cartridge-scale")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --cartridge --max --min --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc cartridge-show")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --cartridge --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc cartridge-start")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --cartridge --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc cartridge-status")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --cartridge --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc cartridge-stop")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --cartridge --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc cartridge-storage")
+        if [[ "$cur" == -* ]]; then
+          opts="--add --app --cartridge --force --namespace --remove --set --show"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc create-app")
+        if [[ "$cur" == -* ]]; then
+          opts="--[no-]dns --[no-]git --app --enable-jenkins --from-code --gear-size --namespace --nogit --repo --scaling --type"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc create-domain")
+        if [[ "$cur" == -* ]]; then
+          opts="--namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc delete-all-authorization")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc delete-app")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --bypass --confirm --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc delete-authorization")
+        if [[ "$cur" == -* ]]; then
+          opts="--auth-token"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc delete-cert-alias")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --confirm --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc delete-domain")
+        if [[ "$cur" == -* ]]; then
+          opts="--namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc domain")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts="create alter update show destroy delete"
+        fi
+        ;;
+
+      "rhc domain alter")
+        if [[ "$cur" == -* ]]; then
+          opts="--namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc domain create")
+        if [[ "$cur" == -* ]]; then
+          opts="--namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc domain delete")
+        if [[ "$cur" == -* ]]; then
+          opts="--namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc domain destroy")
+        if [[ "$cur" == -* ]]; then
+          opts="--namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc domain show")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc domain update")
+        if [[ "$cur" == -* ]]; then
+          opts="--namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc domain-alter")
+        if [[ "$cur" == -* ]]; then
+          opts="--namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc domain-create")
+        if [[ "$cur" == -* ]]; then
+          opts="--namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc domain-delete")
+        if [[ "$cur" == -* ]]; then
+          opts="--namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc domain-destroy")
+        if [[ "$cur" == -* ]]; then
+          opts="--namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc domain-show")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc domain-update")
+        if [[ "$cur" == -* ]]; then
+          opts="--namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc force-stop-app")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc git-clone")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace --repo"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc list-alias")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc list-cartridge")
+        if [[ "$cur" == -* ]]; then
+          opts="--verbose"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc list-sshkey")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc logout")
+        if [[ "$cur" == -* ]]; then
+          opts="--all"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc logout-account")
+        if [[ "$cur" == -* ]]; then
+          opts="--all"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc port-forward")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc reload-app")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc reload-cartridge")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --cartridge --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc remove-alias")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc remove-cartridge")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --cartridge --confirm --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc remove-sshkey")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc restart-app")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc restart-cartridge")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --cartridge --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc restore-snapshot")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --filepath --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc save-snapshot")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --filepath --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc scale-cartridge")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --cartridge --max --min --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc server")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc setup")
+        if [[ "$cur" == -* ]]; then
+          opts="--[no-]create-token --clean --server"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc show-app")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --gears --namespace --state"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc show-cartridge")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --cartridge --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc show-domain")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc show-sshkey")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc snapshot")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts="save restore"
+        fi
+        ;;
+
+      "rhc snapshot restore")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --filepath --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc snapshot save")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --filepath --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc snapshot-restore")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --filepath --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc snapshot-save")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --filepath --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc ssh")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace --ssh"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc ssh-app")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace --ssh"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc sshkey")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts="list show add delete remove"
+        fi
+        ;;
+
+      "rhc sshkey add")
+        if [[ "$cur" == -* ]]; then
+          opts="--confirm"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc sshkey delete")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc sshkey list")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc sshkey remove")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc sshkey show")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc sshkey-add")
+        if [[ "$cur" == -* ]]; then
+          opts="--confirm"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc sshkey-delete")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc sshkey-list")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc sshkey-remove")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc sshkey-show")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc start-app")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc start-cartridge")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --cartridge --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc status-cartridge")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --cartridge --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc stop-app")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc stop-cartridge")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --cartridge --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc storage-cartridge")
+        if [[ "$cur" == -* ]]; then
+          opts="--add --app --cartridge --force --namespace --remove --set --show"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc tail")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --files --namespace --opts"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc threaddump")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc tidy-app")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc update-cert-alias")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --certificate --namespace --passphrase --private-key"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc update-domain")
+        if [[ "$cur" == -* ]]; then
+          opts="--namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+    esac
+    IFS=$SAVE_IFS
+  fi
+
+  COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+  return 0
+}
+
+complete -o default -F _rhc rhc

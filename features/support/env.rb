@@ -8,11 +8,7 @@ rescue
   exit 1
 end
 
-if File.exist?("/etc/fedora-release")
-  $target_os = "Fedora"
-else
-  $target_os = "RHEL"
-end
+$target_os = ENV['RHC_TARGET'] || (File.exist?("/etc/fedora-release") ? "Fedora" : "RHEL")
 
 require 'rhc/coverage_helper'
 SimpleCov.at_exit{ SimpleCov.result.format! } if defined? SimpleCov

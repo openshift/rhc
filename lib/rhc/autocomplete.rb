@@ -1,68 +1,57 @@
-require 'rhc'
-require 'commander'
-require 'commander/runner'
-require 'commander/delegates'
-require 'rhc/commands'
-
 module RHC
-  class AutoCompleteBindings
-    attr_reader :top_level_opts, :commands
-    def initialize(top_level_opts, commands)
-      @top_level_opts = top_level_opts
-      @commands = commands
-    end
-  end
-
   class AutoComplete
-    def initialize(script="rhc")
-      @script_erb = ERB.new(File.read(File.join(File.dirname(__FILE__), 'autocomplete_templates', "#{script}.erb")), nil, '-')
-      cli_init
-      # :name => {:actions => [], :switches => []}
-      @command_data = {}
-      @top_level_commands = []
-      @global_switches = []
-      Commander::Runner.instance.options.each { |o| @global_switches << o[:switches][-1] }
+    attr_reader :runner
+
+    def initialize(runner=::Commander::Runner.instance, shell='bash')
+      @runner, @shell = runner, shell
     end
 
-    def gen()
-      process_data
-      gen_script
+    def to_s
+      @s ||= template.result AutoCompleteBindings.new(self).get_binding
     end
 
     private
-      def cli_init
-        runner = RHC::CommandRunner.new([])
-        Commander::Runner.instance_variable_set :@singleton, runner
-        RHC::Commands.load.to_commander
-      end
 
-      def process_data
-        Commander::Runner.instance.commands.each_pair do |name, cmd|
-          next if cmd.summary.nil?
-
-          if name.rindex(' ').nil?
-            @top_level_commands << name
-          else
-            commands = name.split ' '
-            action = commands.pop
-            id = commands.join(' ')
-            data = @command_data[:"#{id}"] || {:actions => [],
-                                               :switches => []}
-            data[:actions] << action
-            @command_data[:"#{id}"] = data
-          end
-
-          switches = []
-          cmd.options { |o| switches << o[:switches][-1] if o[:switches] }
-          data = @command_data[:"#{name}"] || {:actions => [],
-                                               :switches => []}
-          data[:switches] = switches.concat(@global_switches)
-          @command_data[:"#{name}"] = data
-        end
-      end
-
-      def gen_script
-        @script_erb.result AutoCompleteBindings.new(@top_level_commands.join(' '), @command_data).get_binding
+      def template
+        @template ||= ERB.new(File.read(File.join(File.dirname(__FILE__), 'autocomplete_templates', "#{@shell}.erb")), nil, '-')
       end
   end
+
+  class AutoCompleteBindings
+    attr_reader :commands, :top_level_commands, :global_options
+
+    def initialize(data)
+      @commands = {}
+      @top_level_commands = []
+
+      data.runner.commands.each_pair do |name, cmd|
+        next if cmd.summary.nil?
+        next if cmd.deprecated(name)
+
+        if cmd.root?
+          if cmd.name == name
+            @top_level_commands << name
+          end
+        else
+          @top_level_commands << name if name == cmd.name
+          commands = name.split ' '
+          action = commands.pop
+          id = commands.join(' ')
+          v = @commands[id] || {:actions => [], :switches => []}
+          v[:actions] << action unless id == '' && name != cmd.name
+          @commands[id] = v
+        end
+
+        v = @commands[name.to_s] || {:actions => [], :switches => []}
+        v[:switches].concat(cmd.options.map{ |o| o[:switches][-1].split(' ')[0] if o[:switches] }.compact.sort)
+        @commands[name.to_s] = v
+      end
+      @commands.delete('')
+      @commands = @commands.to_a.sort{ |a,b| a[0] <=> b[0] }
+
+      @top_level_commands.sort!
+
+      @global_options = data.runner.options.map{ |o| o[:switches][-1].split(' ')[0] }.sort
+    end
+  end  
 end

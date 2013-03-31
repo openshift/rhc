@@ -29,18 +29,6 @@ module RHC
     MAX_RETRIES = 7
     DEFAULT_DELAY_THROTTLE = 2.0
 
-    def disable_deprecated?
-      # 1) default for now is false
-      # 2) when releasing a 1.0 beta flip this to true
-      # 3) all deprecated aliases should be removed right before 1.0
-      disable = false
-
-      env_disable = ENV['DISABLE_DEPRECATED']
-      disable = true if env_disable == '1'
-
-      disable
-    end
-
     def decode_json(s)
       RHC::Vendor::OkJson.decode(s)
     end
@@ -197,22 +185,20 @@ module RHC
       false
     end
 
-    def deprecated_command(correct,short = false)
-      deprecated("This command is deprecated. Please use '#{correct}' instead.",short)
+    def disable_deprecated?
+      ENV['DISABLE_DEPRECATED'] == '1'
     end
 
-    def deprecated_option(deprecated,new)
-      deprecated("The option '#{deprecated}' is deprecated. Please use '#{new}' instead")
+    def deprecated_command(correct, short=false)
+      deprecated("This command is deprecated. Please use '#{correct}' instead.", short)
+    end
+
+    def deprecated_option(deprecated, other)
+      deprecated("The option '#{deprecated}' is deprecated. Please use '#{other}' instead")
     end
 
     def deprecated(msg,short = false)
-      HighLine::use_color = false if windows? # handle deprecated commands that does not start through highline
-
-      info = " For porting and testing purposes you may switch this %s to %s by setting the DISABLE_DEPRECATED environment variable to %d.  It is not recommended to do so in a production environment as this option will be removed in a future release."
-      msg << info unless short
-
       raise DeprecatedError.new(msg % ['an error','a warning',0]) if disable_deprecated?
-
       warn "Warning: #{msg}\n" % ['a warning','an error',1]
     end
 
