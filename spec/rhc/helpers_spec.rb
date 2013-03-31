@@ -57,7 +57,7 @@ describe RHC::Helpers do
 
   shared_examples_for "colorized output" do
     it("should be colorized") do
-      message = "this is #{_color}"
+      message = "this is #{_color} -"
       output = capture{ subject.send(method,message) }
       output.should be_colorized(message,_color)
     end
@@ -258,6 +258,7 @@ describe RHC::Helpers do
 
   context "Formatter" do
     before{ tests.reset }
+    after(:all){ tests.reset }
 
     it "should print out a paragraph with open endline on the same line" do
       tests.section_same_line
