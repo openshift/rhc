@@ -4,7 +4,7 @@ Usage: rhc [--help] [--version] [--debug] <command> [<args>]
 
 <%
 remaining = Hash[@commands.dup.select{ |name, command| not command.summary.blank? }]
-basic = remaining.slice!('setup', 'create-app', 'apps', 'list-cartridge', 'add-cartridge', 'server', 'logout')
+basic = remaining.slice!('setup', 'create-app', 'apps', 'cartridges', 'add-cartridge', 'server', 'logout')
 remaining.delete_if{ |name, command| alias?(name) }
 begin -%>
 Getting started:

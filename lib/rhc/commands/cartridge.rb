@@ -11,29 +11,29 @@ module RHC::Commands
     summary "List available cartridges"
     option ["-v", "--verbose"], "Display more details about each cartridge"
     alias_action :"app cartridge list", :root_command => true, :deprecated => true
+    alias_action :"cartridges", :root_command => true
     def list
       carts = rest_client.cartridges.sort_by{ |c| "#{c.type == 'standalone' && 1}_#{c.tags.include?('experimental') ? 1 : 0}_#{(c.display_name || c.name).downcase}" }
 
-      list = if options.verbose
-        carts.map do |c|
-          name = c.display_name != c.name && "#{color(c.display_name, :cyan)} [#{c.name}]" || c.name
-          tags = c.tags - RHC::Rest::Cartridge::HIDDEN_TAGS
-          [
-            underline("#{name} (#{c.only_in_new? ? 'web' : 'addon'})"),
-            c.description,
-            tags.present? ? "\nTagged with: #{tags.sort.join(', ')}" : nil,
-            c.usage_rate? ? "\n#{format_usage_message(c)}" : nil,
-          ].compact << "\n"
-        end.flatten
+      if options.verbose
+        carts.each do |c|
+          paragraph do 
+            name = c.display_name != c.name && "#{color(c.display_name, :cyan)} [#{c.name}]" || c.name
+            tags = c.tags - RHC::Rest::Cartridge::HIDDEN_TAGS
+            say header([name, "(#{c.only_in_new? ? 'web' : 'addon'})"])
+            say c.description
+            paragraph{ say "Tagged with: #{tags.sort.join(', ')}" } if tags.present?
+            paragraph{ say format_usage_message(c) } if c.usage_rate?
+          end
+        end
       else
-        table(carts.collect do |c|
+        say table(carts.collect do |c|
           [c.usage_rate? ? "#{c.name} (*)" : c.name,
            c.display_name,
            c.only_in_new? ? 'web' : 'addon']
         end)
       end
 
-      say list.join("\n")
       paragraph{ say "Note: Web cartridges can only be added to new applications." }
       paragraph{ say "(*) denotes a cartridge with additional usage costs." } if carts.any? { |c| c.usage_rate? }
 

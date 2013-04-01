@@ -1,7 +1,6 @@
 # From Rails core_ext/object.rb
 require 'rhc/json'
 require 'open-uri'
-require 'highline'
 require 'httpclient'
 
 class Object
@@ -44,6 +43,71 @@ class String
       gsub(/(\b|\S)[^\S\n]*\n(\S)/m, '\1 \2').
       gsub(/\n+\Z/, '').
       gsub(/\n{3,}/, "\n\n")
+  end
+
+  ANSI_ESCAPE_SEQUENCE = /\e\[(\d{1,2}(?:;\d{1,2})*[@-~])/
+  ANSI_ESCAPE_MATCH = '\e\[\d+(?:;\d+)*[@-~]'
+  CHAR_SKIP_ANSI = "(?:(?:#{ANSI_ESCAPE_MATCH})+.?|.(?:#{ANSI_ESCAPE_MATCH})*)"
+
+  #
+  # Split the given string at limit, treating ANSI escape sequences as
+  # zero characters in length.  Will insert an ANSI reset code (\e[0m)
+  # at the end of each line containing an ANSI code, assuming that a
+  # reset was not in the wrapped segment.
+  #
+  # All newlines are preserved.
+  #
+  # Lines longer than limit without natural breaks will be forcibly 
+  # split at the exact limit boundary.
+  #
+  # Returns an Array
+  #
+  def textwrap_ansi(limit, breakword=true)
+    re = breakword ? /
+      ( 
+        # Match substrings that end in whitespace shorter than limit
+        #{CHAR_SKIP_ANSI}{1,#{limit}} # up to limit
+        (?:\s+|$)                     # require the limit to end on whitespace
+        |
+        # Match substrings equal to the limit
+        #{CHAR_SKIP_ANSI}{1,#{limit}} 
+      )
+      /x :
+      /
+      ( 
+        # Match substrings that end in whitespace shorter than limit
+        #{CHAR_SKIP_ANSI}{1,#{limit}}
+        (?:\s|$)                     # require the limit to end on whitespace
+        |
+        # Match all continguous whitespace strings
+        #{CHAR_SKIP_ANSI}+?
+        (?:\s|$)
+        (?:\s+|$)?
+      )
+      /x
+
+    split("\n",-1).inject([]) do |a, line|
+      if line.length < limit
+        a << line 
+      else
+        line.scan(re) do |segment, other|
+          # short escape sequence matches have whitespace from regex
+          a << segment.rstrip   
+          # find any escape sequences after the last 0m reset, in order
+          escapes = segment.scan(ANSI_ESCAPE_SEQUENCE).map{ |e| e.first }.reverse.take_while{ |e| e != '0m' }.uniq.reverse
+          if escapes.present?
+            a[-1] << "\e[0m"
+            # TODO: Apply the unclosed sequences to the beginning of the
+            #       next string
+          end
+        end
+      end
+      a
+    end
+  end
+
+  def strip_ansi
+    gsub(ANSI_ESCAPE_SEQUENCE, '')
   end
 end
 
@@ -105,80 +169,5 @@ class Hash
   def reverse_merge!(other_hash)
     # right wins if there is no left
     merge!( other_hash ){|key,left,right| left }
-  end
-end
-
-# Some versions of highline get in an infinite loop when trying to wrap.
-# Fixes BZ 866530.
-class HighLine
-
-  def wrap_line(line)
-    wrapped_line = []
-    i = chars_in_line = 0
-    word = []
-
-    while i < line.length
-      # we have to give a length to the index because ruby 1.8 returns the
-      # byte code when using a single fixednum index
-      c = line[i, 1]
-      color_code = nil
-      # escape character probably means color code, let's check
-      if c == "\e"
-        color_code = line[i..i+6].match(/\e\[\d{1,2}m/)
-        if color_code
-          # first the existing word buffer then the color code
-          wrapped_line << word.join.wrap(@wrap_at) << color_code[0]
-          word.clear
-
-          i += color_code[0].length
-        end
-      end
-
-      # visible character
-      if !color_code
-        chars_in_line += 1
-        word << c
-
-        # time to wrap the line?
-        if chars_in_line == @wrap_at
-          if c == ' ' or line[i+1, 1] == ' ' or word.length == @wrap_at
-            wrapped_line << word.join
-            word.clear
-          end
-
-          wrapped_line[-1].rstrip!
-          wrapped_line << "\n"
-
-          # consume any spaces at the begining of the next line
-          word = word.join.lstrip.split(//)
-          chars_in_line = word.length
-
-          if line[i+1, 1] == ' '
-            i += 1 while line[i+1, 1] == ' '
-          end
-
-        else
-          if c == ' '
-            wrapped_line << word.join
-            word.clear
-          end
-        end
-
-        i += 1
-      end
-    end
-
-    wrapped_line << word.join
-    wrapped_line.join
-  end
-
-  def wrap(text)
-    wrapped_text = []
-    lines = text.split(/\r?\n/)
-    lines.each_with_index do |line, i|
-      wrapped_text << wrap_line(i == lines.length - 1 ? line : line.rstrip)
-    end
-
-    return wrapped_text.join("\n")
   end
 end

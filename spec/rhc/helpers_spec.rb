@@ -1,33 +1,24 @@
 require 'spec_helper'
-require 'rhc/helpers'
+require 'rhc'
 require 'rhc/ssh_helpers'
 require 'rhc/cartridge_helpers'
 require 'rhc/git_helpers'
 require 'rhc/core_ext'
-require 'highline/import'
 require 'rhc/config'
-require 'rhc/helpers'
 require 'date'
 require 'resolv'
+require 'ostruct'
 
 class MockHelpers
   include RHC::Helpers
   include RHC::SSHHelpers
+  include RHC::CartridgeHelpers
 
   def config
     @config ||= RHC::Config.new
   end
   def options
     @options ||= OpenStruct.new(:server => nil)
-  end
-end
-
-class MockCartridgeHelpers
-  include RHC::Helpers
-  include RHC::CartridgeHelpers
-
-  def config
-    @config ||= RHC::Config.new
   end
 end
 
@@ -38,8 +29,6 @@ describe RHC::Helpers do
   end
 
   subject{ MockHelpers.new }
-
-  let(:tests) { OutputTests.new }
 
   its(:openshift_server) { should == 'openshift.redhat.com' }
   its(:openshift_url) { should == 'https://openshift.redhat.com' }
@@ -87,7 +76,7 @@ describe RHC::Helpers do
   it("should draw a table") do
     subject.table([[10,2], [3,40]]) do |i|
       i.map(&:to_s)
-    end.should == ['10 2','3  40']
+    end.to_a.should == ['10 2','3  40']
   end
 
   context "error output" do
@@ -97,7 +86,7 @@ describe RHC::Helpers do
   end
 
   it("should output a table") do
-    subject.send(:display_no_info, 'test').should == ['This test has no information to show']
+    subject.send(:format_no_info, 'test').to_a.should == ['This test has no information to show']
   end
 
   it "should parse an RFC3339 date" do
@@ -248,72 +237,11 @@ describe RHC::Helpers do
     it{ run_output.should match("The certificate 'not_a_file' cannot be loaded: No such file or directory ") }
   end
 
-  describe "#get_properties" do
-    it{ tests.send(:get_properties, stub(:plan_id => 'free'), :plan_id).should == [[:plan_id, 'Free']] }
+  context "#get_properties" do
+    it{ subject.send(:get_properties, stub(:plan_id => 'free'), :plan_id).should == [[:plan_id, 'Free']] }
     context "when an error is raised" do
-      subject{ stub.tap{ |s| s.should_receive(:foo).and_raise(::Exception) } }
-      it{ tests.send(:get_properties, subject, :foo).should == [[:foo, '<error>']] }
-    end
-  end
-
-  context "Formatter" do
-    before{ tests.reset }
-    after(:all){ tests.reset }
-
-    it "should print out a paragraph with open endline on the same line" do
-      tests.section_same_line
-      $terminal.read.should == "section 1 word\n"
-    end
-
-    it "should print out a section without any line breaks" do
-      tests.section_no_breaks
-      $terminal.read.should == "section 1 \n"
-    end
-
-    it "should print out a section with trailing line break" do
-      tests.section_one_break
-      $terminal.read.should == "section 1\n"
-    end
-
-    it "should print out 2 sections with matching bottom and top margins generating one space between" do
-      tests.sections_equal_bottom_top
-      $terminal.read.should == "section 1\n\nsection 2\n"
-    end
-
-    it "should print out 2 sections with larger bottom margin generating two spaces between" do
-      tests.sections_larger_bottom
-      $terminal.read.should == "section 1\n\n\nsection 2\n"
-    end
-
-    it "should print out 2 sections with larger top margin generating two spaces between" do
-      tests.sections_larger_top
-      $terminal.read.should == "section 1\n\n\nsection 2\n"
-    end
-
-    it "should print out 4 sections and not collapse open sections" do
-      tests.sections_four_on_three_lines
-      $terminal.read.should == "section 1\n\nsection 2 \nsection 3\n\nsection 4\n"
-    end
-
-    it "should show the equivilance of paragaph to section(:top => 1, :bottom => 1)" do
-      tests.section_1_1
-      section_1_1 = $terminal.read
-      tests.reset
-      tests.section_paragraph
-      paragraph = $terminal.read
-
-      section_1_1.should == paragraph
-
-      tests.reset
-      tests.section_1_1
-      tests.section_paragraph
-
-      $terminal.read.should == "section\n\nsection\n"
-    end
-
-    it "should not collapse explicit newline sections" do
-      tests.outside_newline
-      $terminal.read.should == "section 1\n\n\nsection 2\n"
+      let(:bar){ stub.tap{ |s| s.should_receive(:foo).and_raise(::Exception) } }
+      it{ subject.send(:get_properties, bar, :foo).should == [[:foo, '<error>']] }
     end
   end
 
@@ -384,6 +312,45 @@ describe RHC::Helpers do
     end
   end
 
+  describe "#wrap" do
+    it{ "abc".wrap(1).should == "a\nb\nc" }
+  end
+
+  describe "#textwrap_ansi" do
+    it{ "".textwrap_ansi(80).should == [] }
+    it{ "\n".textwrap_ansi(80).should == ["",""] }
+    it{ "a".textwrap_ansi(1).should == ['a'] }
+    it{ "ab".textwrap_ansi(1).should == ['a','b'] }
+    it{ "ab".textwrap_ansi(2).should == ['ab'] }
+    it{ "ab cd".textwrap_ansi(4).should == ['ab', 'cd'] }
+    it{ " ab".textwrap_ansi(2).should == [' a','b'] }
+    it{ "a b".textwrap_ansi(1).should == ['a','b'] }
+    it{ "a w b".textwrap_ansi(2).should == ['a','w','b'] }
+    it{ "a w b".textwrap_ansi(3).should == ['a w','b'] }
+    it{ "a\nb".textwrap_ansi(1).should == ['a','b'] }
+    it{ "\e[1m".textwrap_ansi(1).should == ["\e[1m\e[0m"] }
+    it{ "\e[31;1m".textwrap_ansi(1).should == ["\e[31;1m\e[0m"] }
+    it{ "\e[1ma".textwrap_ansi(1).should == ["\e[1ma\e[0m"] }
+    it{ "a\e[12m".textwrap_ansi(1).should == ["a\e[12m\e[0m"] }
+    it{ "a\e[12m\e[34mb".textwrap_ansi(1).should == ["a\e[12m\e[34m\e[0m","b"] }
+    it{ "\e[12;34ma".textwrap_ansi(1).should == ["\e[12;34ma\e[0m"] }
+    it{ "\e[1m\e[1m".textwrap_ansi(1).should == ["\e[1m\e[1m\e[0m"] }
+    it{ "\e[1m \e[1m".textwrap_ansi(1).should == ["\e[1m\e[0m", "\e[1m\e[0m"] }
+
+    it{ "ab".textwrap_ansi(1,false).should == ['ab'] }
+    it{ " abc".textwrap_ansi(3,false).should == [' abc'] }
+    it{ "abcd".textwrap_ansi(3,false).should == ['abcd'] }
+    it{ "abcd\e[1m".textwrap_ansi(3,false).should == ["abcd\e[1m\e[0m"] }
+    it{ "abcd efg a".textwrap_ansi(3,false).should == ['abcd', 'efg', 'a'] }
+    it('next line'){ "abcd e a".textwrap_ansi(5,false).should == ['abcd', 'e a'] }
+    it{ "abcd efgh a".textwrap_ansi(3,false).should == ['abcd', 'efgh', 'a'] }
+    it{ " abcd efg a".textwrap_ansi(3,false).should == [' abcd', 'efg', 'a'] }
+  end
+
+  describe "#strip_ansi" do
+    it{ "\e[1m \e[1m".strip_ansi.should == " " }
+  end
+
   context "Resolv helper" do
     let(:resolver) { Object.new }
     let(:existent_host) { 'real_host' }
@@ -409,86 +376,6 @@ describe RHC::Helpers do
           subject.hosts_file_contains?(nonexistent_host)
         }.to_not raise_error
       end
-    end
-  end
-
-  class OutputTests
-    include RHC::Helpers
-    include RHC::SSHHelpers
-    include RHC::OutputHelpers
-
-    def initialize
-      @print_num = 0
-      @options = Commander::Command::Options.new
-    end
-
-    def config
-      @config ||= RHC::Config
-    end
-
-    def next_print_num
-      @print_num += 1
-    end
-
-    def output
-      say "section #{next_print_num}"
-    end
-
-    def output_no_breaks
-      say "section #{next_print_num} "
-    end
-    
-    def section_same_line
-      section { output_no_breaks; say 'word' }
-    end
-
-    def section_no_breaks
-      section { output_no_breaks }
-    end
-
-    def section_one_break
-      section { output }
-    end
-
-    def sections_equal_bottom_top
-      section(:bottom => 1) { output }
-      section(:top => 1) { output }
-    end
-
-    def sections_larger_bottom
-      section(:bottom => 2) { output }
-      section(:top => 1) { output }
-    end
-
-    def sections_larger_top
-      section(:bottom => 1) { output }
-      section(:top => 2) { output }
-    end
-
-    def sections_four_on_three_lines
-      section { output }
-      section(:top => 1) { output_no_breaks }
-      section(:bottom => 1) { output }
-      section(:top => 1) { output }
-    end
-
-    def outside_newline
-      section(:bottom => -1) { output }
-      say "\n"
-      section(:top => 1) { output }
-    end
-
-    def section_1_1
-      section(:top => 1, :bottom => 1) { say "section" }
-    end
-
-    def section_paragraph
-      paragraph { say "section" }
-    end
-
-    # call section without output to reset spacing to 0
-    def reset
-      RHC::Helpers.send(:class_variable_set, :@@margin, nil)
     end
   end
 end
@@ -536,53 +423,12 @@ describe OpenURI do
   end
 end
 
-describe HighLine do
-  before{ mock_terminal }
-
-  it "should wrap the terminal" do
-    $terminal.wrap_at = 10
-    say "Lorem ipsum dolor sit amet"
-    output = $terminal.read
-    output.should match "Lorem\nipsum\ndolor sit\namet"
-  end
-  it "should wrap the terminal" do
-    $terminal.wrap_at = 16
-    say "Lorem ipsum dolor sit amet"
-    output = $terminal.read
-    output.should match "Lorem ipsum\ndolor sit amet"
-  end
-  it "should not wrap the terminal" do
-    $terminal.wrap_at = 50
-    say "Lorem ipsum dolor sit amet"
-    output = $terminal.read
-    output.should match "Lorem ipsum dolor sit amet"
-  end
-  it "should wrap the terminal when using color codes" do
-    $terminal.wrap_at = 10
-    say $terminal.color("Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet", :red)
-    output = $terminal.read
-    output.should match "Lorem\nipsum\ndolor sit\namet Lorem\nipsum\ndolor sit\namet"
-  end
-  it "should wrap the terminal with other escape characters" do
-    $terminal.wrap_at = 10
-    say "Lorem ipsum dolor sit am\eet"
-    output = $terminal.read
-    output.should match "Lorem\nipsum\ndolor sit\nam\eet"
-  end
-  it "should wrap the terminal when words are smaller than wrap length" do
-    $terminal.wrap_at = 3
-    say "Antidisestablishmentarianism"
-    output = $terminal.read
-    output.should match "Ant\nidi\nses\ntab\nlis\nhme\nnta\nria\nnis\nm"
-  end
-end
-
 describe RHC::CartridgeHelpers do
   before(:each) do
     mock_terminal
   end
 
-  subject{ MockCartridgeHelpers.new }
+  subject{ MockHelpers.new }
 
   describe '#check_cartridges' do
     let(:cartridges){ [] }

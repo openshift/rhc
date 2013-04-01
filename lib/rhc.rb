@@ -28,3 +28,8 @@ end
 
 require 'rhc/exceptions'
 
+require 'commander'
+require 'commander/delegates'
+require 'highline/system_extensions'
+
+require 'rhc/highline_extensions'

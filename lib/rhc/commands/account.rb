@@ -12,11 +12,13 @@ module RHC::Commands
     def run
       user = rest_client.user
 
-      say_table nil, get_properties(user, :login, :plan_id, :consumed_gears, :max_gears) + get_properties(user.capabilities, :gear_sizes).unshift(['Server:', openshift_server]) << ['SSL Certificates Supported:', user.capabilities.private_ssl_certificates ? 'yes' : 'no'], :delete => true
-
-      if openshift_online_server?
-      else
-      end
+      say format_table \
+            nil, 
+            get_properties(user, :login, :plan_id, :consumed_gears, :max_gears).
+              concat(get_properties(user.capabilities, :gear_sizes)).
+              unshift(['Server:', openshift_server]).
+              push(['SSL Certificates Supported:', user.capabilities.private_ssl_certificates ? 'yes' : 'no']), 
+            :delete => true
 
       0
     end

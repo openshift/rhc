@@ -1,0 +1,366 @@
+#
+# Add specific improved functionality
+#
+class HighLineExtension < HighLine
+  [:ask, :agree].each do |sym|
+    define_method(sym) do |*args, &block|
+      separate_blocks
+      super(*args, &block)
+    end
+  end
+
+  # OVERRIDE
+  def say(msg)
+    if msg.respond_to? :to_str
+      separate_blocks
+
+      statement = msg.to_str
+      return statement unless statement.present?
+
+      template  = ERB.new(statement, nil, "%")
+      statement = template.result(binding)
+
+      statement = statement.textwrap_ansi(@wrap_at, false).join("#{indentation}\n") unless @wrap_at.nil?
+      statement = send(:page_print, statement) unless @page_at.nil?
+
+      @output.print(indentation) unless @last_line_open
+
+      @last_line_open = 
+        if statement[-1, 1] == " " or statement[-1, 1] == "\t"
+          @output.print(statement)
+          @output.flush
+        else
+          @output.puts(statement)
+        end
+
+    elsif msg.respond_to? :each
+      separate_blocks
+
+      @output.print if @last_line_open
+      @last_line_open = false
+
+      msg.each do |s|
+        @output.print indentation
+        @output.puts s
+      end
+      @output.flush      
+    end
+
+    msg
+  end
+
+  # given an array of arrays "items", construct an array of strings that can
+  # be used to print in tabular form.
+  def table(items, opts={}, &block)
+    items = items.map &block if block_given?
+    opts[:width] ||= default_max_width
+    Table.new(items, opts)
+  end
+
+  def default_max_width
+    @wrap_at ? @wrap_at - indentation.length : nil
+  end
+
+  def header(str,opts = {}, &block)
+    say Header.new(str, default_max_width, '  ')
+    if block_given?
+      indent &block
+    end
+  end
+
+  #:nocov:
+  # Backport from Highline 1.6.16
+  unless HighLine.method_defined? :indent
+    #
+    # Outputs indentation with current settings
+    #
+    def indentation
+      return ' '*@indent_size*@indent_level
+    end
+
+    #
+    # Executes block or outputs statement with indentation
+    #
+    def indent(increase=1, statement=nil, multiline=nil)
+      @indent_level += increase
+      multi = @multi_indent
+      @multi_indent = multiline unless multiline.nil?
+      if block_given?
+          yield self
+      else
+          say(statement)
+      end
+    ensure
+      @multi_indent = multi
+      @indent_level -= increase
+    end
+  end 
+  #:nocov:
+
+  ##
+  # section
+  #
+  # highline helper mixin which correctly formats block of say and ask
+  # output to have correct margins.  section remembers the last margin
+  # used and calculates the relitive margin from the previous section.
+  # For example:
+  #
+  # section(bottom=1) do
+  #   say "Hello"
+  # end
+  #
+  # section(top=1) do
+  #   say "World"
+  # end
+  #
+  # Will output:
+  #
+  # > Hello
+  # >
+  # > World 
+  #
+  # with only one newline between the two.  Biggest margin wins.
+  #
+  # params:
+  #  top - top margin specified in lines
+  #  bottom - bottom margin specified in line
+  #
+  def section(params={}, &block)
+    top = params[:top] || 0
+    bottom = params[:bottom] || 0
+
+    # the first section cannot take a newline
+    top = 0 unless @margin
+    @margin = [top, @margin || 0].max
+
+    value = block.call
+
+    say "\n" if @last_line_open
+    @margin = [bottom, @margin].max
+
+    value
+  end
+
+  ##
+  # paragraph
+  #
+  # highline helper which creates a section with margins of 1, 1
+  #
+  def paragraph(&block)
+    section(:top => 1, :bottom => 1, &block)
+  end
+
+  private
+    def separate_blocks
+      if (@margin ||= 0) > 0 && !@last_line_open
+        @output.print "\n" * @margin
+        @margin = 0
+      end
+    end
+end
+
+#
+# An element capable of being split into multiple logical rows
+#
+module RowBased
+  def each_line(&block)
+    rows.each(&block)
+  end
+  alias_method :each, :each_line
+
+  def to_a
+    rows
+  end
+end
+
+class HighLine::Header < Struct.new(:text, :width, :indent)
+  include RowBased
+
+  protected
+    def rows
+      @rows ||= begin
+        if !width || width == 0
+          [text.is_a?(Array) ? text.join(' ') : text]
+
+        elsif text.is_a? Array
+          widths = text.map{ |s| s.strip_ansi.length }
+          chars, join, indented = 0, 1, (indent || '').length
+          narrow = width - indented
+          text.zip(widths).inject([]) do |rows, (section, w)|
+            if rows.empty?
+              if w > width
+                rows.concat(section.textwrap_ansi(width))
+              else
+                rows << section
+                chars += w
+              end
+            else
+              if w + chars + join > narrow
+                rows.concat(section.textwrap_ansi(narrow).map{ |s| "#{indent}#{s}" })
+                chars = 0
+              elsif chars == 0
+                rows << "#{indent}#{section}"
+                chars += w + indented
+              else
+                rows[-1] << " #{section}"
+                chars += w + join
+              end
+            end
+            rows
+          end
+        else
+          text.textwrap_ansi(width)
+        end
+      end.tap do |rows|
+        rows << '-' * rows.map{ |s| s.strip_ansi.length }.max
+      end
+    end
+end
+
+#
+# Represent a columnar layout of items with wrapping and flexible layout.
+# 
+class HighLine::Table
+  include RowBased
+
+  def initialize(items=nil,options={},&mapper)
+    @items, @options, @mapper = items, options, mapper
+  end
+
+  protected 
+    attr_reader :items
+
+    def opts
+      @options
+    end
+
+    def align
+      opts[:align] || []
+    end
+    def join
+      opts[:join] || ' '
+    end
+    def indent
+      opts[:indent] || ''
+    end
+    def heading
+      @heading ||= opts[:heading] ? HighLine::Header.new(opts[:heading], calculated_width, indent) : nil
+    end
+
+    def source_rows
+      @source_rows ||= begin
+        (@mapper ? (items.map &@mapper) : items).each do |row|
+          row.map!{ |col| col.is_a?(String) ? col : col.to_s }
+        end
+      end
+    end
+
+    def headers
+      @headers ||= opts[:header] ? [Array(opts[:header])] : []
+    end
+
+    def columns
+      @columns ||= source_rows.map(&:length).max
+    end
+
+    def column_widths
+      @column_widths ||= begin
+        widths = Array.new(columns){ Width.new(0,0,0) }
+        (source_rows + headers).each do |row|
+          row.each_with_index do |col, i|
+            w = widths[i]
+            s = col.strip_ansi
+            word_length = s.scan(/\b\S+/).inject(0){ |l, word| l = word.length if l <= word.length; l }
+            w.min = word_length unless w.min > word_length
+            w.max = s.length unless w.max > s.length
+          end
+        end
+        widths
+      end
+    end
+
+    Width = Struct.new(:min, :max, :set)
+
+    def allocate_widths_for(available)
+      available -= (columns-1) * join.length + indent.length
+      return column_widths.map(&:max) if available >= column_widths.inject(0){ |sum, w| sum + w.max } || column_widths.inject(0){ |sum, w| sum + w.min } > available
+
+      fair = available / columns
+      column_widths.each do |w| 
+        w.set = if w.max <= fair
+            available -= w.max
+            w.max
+          else
+            0
+          end
+      end
+
+      remaining = column_widths.inject(0){ |sum, w| if w.set == 0; sum += w.max; available -= w.min; end; sum }
+      fair = available.to_f / remaining.to_f
+
+      column_widths.
+        each do |w| 
+          if w.set == 0
+            available -= (alloc = (w.max * fair).to_i)
+            w.set = alloc + w.min
+          end
+        end.
+        each{ |w| if available > 0; w.set += 1; available -= 1; end }.
+        map(&:set)
+    end
+
+    def widths
+      if @widths.nil?
+        @widths ||= begin
+          case w = opts[:width]
+          when Array
+            w[w.length] = nil
+            w[0,w.length]
+          when Integer
+            allocate_widths_for(w)
+          else
+            false
+          end
+        end
+      else
+        @widths
+      end
+    end
+
+    def calculated_width
+      @calculated_width ||= widths ? widths.inject(0){ |sum,x| sum + x } + (columns-1) * join.length + indent.length : 0
+    end
+
+    def header_rows
+      @header_rows ||= begin
+        headers << column_widths.map{ |w| '-' * (w.set > 0 ? w.set : w.max) } if headers.present?
+        headers
+      end
+    end
+
+    def rows
+      @rows ||= begin
+        body = if widths
+          fmt = "#{indent}#{widths.zip(align).map{ |w, al| "%#{al == :right ? '' : '-'}#{w}s" }.join(join)}"
+          
+          (header_rows + source_rows).inject([]) do |a,row| 
+            row = row.zip(widths).map{ |column,w| w ? column.textwrap_ansi(w, false) : [column] }
+            row.map(&:length).max.times do |i|
+              a << (fmt % row.map{ |r| r[i] }).rstrip
+            end
+            a
+          end
+        else
+          (header_rows + source_rows).map do |row|
+            "#{indent}#{row.each_with_index.map{ |s,i| s.send((align[i] == :right ? :rjust : :ljust), column_widths[i].max, ' ') }.join(join).rstrip}"
+          end
+        end
+        
+        body = heading.to_a.concat(body) if heading
+        body
+      end
+    end
+end
+
+$terminal = HighLineExtension.new
+$terminal.indent_size = 2

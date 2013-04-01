@@ -1,11 +1,5 @@
 require 'rhc'
-require 'commander'
-require 'commander/runner'
-require 'commander/delegates'
 require 'rhc/commands'
-
-include Commander::UI
-include Commander::UI::AskForClass
 
 module RHC
   #
