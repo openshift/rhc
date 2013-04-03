@@ -38,6 +38,27 @@ describe RHC::Wizard do
     its(:has_configuration?){ should be_true }
   end
 
+  describe "#setup_test_stage" do
+    subject{ described_class.new(config, options) }
+    it "should rescue problems" do
+      subject.should_receive(:all_test_methods).and_return([:_test])
+      subject.should_receive(:_test).and_raise(StandardError.new("An error message"))
+      capture{ subject.send(:setup_test_stage) }.should match "An error message"
+    end
+  end
+
+  describe "#test_private_key_mode" do
+    it "should raise when the file is in the wrong mode" do
+      FakeFS do
+        mock_config
+        FileUtils.mkdir_p(RHC::Config.ssh_dir)
+        File.open(RHC::Config.ssh_priv_key_file_path, 'w'){}
+        File.expect_mode(RHC::Config.ssh_priv_key_file_path, 0666)
+        expect{ subject.send(:test_private_key_mode) }.to raise_error(StandardError)
+      end
+    end
+  end
+
   describe "#test_ssh_connectivity" do
     subject{ described_class.new(config, options) }
     let(:app) do
@@ -76,13 +97,14 @@ describe RHC::Wizard do
     let(:password){ 'test pass' }
     let(:rest_client){ stub }
     let(:auth){ subject.send(:auth) }
+    let(:user_obj){ stub(:login => user) }
 
     subject{ described_class.new(config, options) }
 
     def expect_client_test(with_sessions=false)
       subject.should_receive(:new_client_for_options).ordered.and_return(rest_client)
       rest_client.should_receive(:api).ordered
-      rest_client.should_receive(:user).ordered.and_return(true)
+      rest_client.should_receive(:user).ordered.and_return(user_obj)
       rest_client.should_receive(:supports_sessions?).ordered.and_return(with_sessions)
     end
     def expect_raise_from_api(error)
@@ -93,6 +115,7 @@ describe RHC::Wizard do
     it "should prompt for user and password" do
       expect_client_test
       subject.send(:login_stage).should be_true
+      subject.send(:options).rhlogin.should == user
     end
 
     context "with token" do
@@ -160,6 +183,7 @@ describe RHC::Wizard do
         before{ RHC::Auth::TokenStore.should_receive(:new).any_number_of_times.and_return(store) }
 
         it "should not generate a token if the user does not request it" do
+          store.should_receive(:get).and_return(nil)
           subject.should_receive(:info).with(/OpenShift can create and store a token on disk/).ordered
           subject.should_receive(:agree).with(/Generate a token now?/).ordered.and_return(false)
 
@@ -168,6 +192,7 @@ describe RHC::Wizard do
         end
 
         it "should generate a token if the user requests it" do
+          store.should_receive(:get).and_return(nil)
           subject.should_receive(:info).with(/OpenShift can create and store a token on disk/).ordered
           subject.should_receive(:agree).with(/Generate a token now?/).ordered.and_return(true)
           subject.should_receive(:say).with(/Generating an authorization token for this client /).ordered
@@ -310,6 +335,7 @@ describe RHC::Wizard do
           input_line 'yes'
           input_line 'a'
           next_stage
+
           last_output do |s|
             s.should match(/a \(type: ssh-rsa\)/)
             s.should match("Fingerprint: #{rsa_key_fingerprint_public}")

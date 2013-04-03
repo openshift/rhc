@@ -1,9 +1,9 @@
-require "spec/rake/spectask"
+require "rspec/core/rake_task"
 require 'cucumber'
 require 'cucumber/rake/task'
 
 desc "Run specs"
-Spec::Rake::SpecTask.new(:spec) do |t|
+RSpec::Core::RakeTask.new(:spec) do |t|
   t.verbose = false
 end
 

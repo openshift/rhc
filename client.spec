@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.6.5
+Version: 1.7.1
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -87,7 +87,6 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-%doc doc/USAGE.txt
 %doc LICENSE
 %doc COPYRIGHT
 %{_bindir}/rhc
@@ -101,6 +100,40 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Mar 28 2013 Adam Miller <admiller@redhat.com> 1.7.1-1
+- bump_minor_versions for sprint 26 (admiller@redhat.com)
+- removing old API doc (dmcphers@redhat.com)
+
+* Wed Mar 27 2013 Adam Miller <admiller@redhat.com> 1.6.7-1
+- Bug 924633 - now dealing with empty certificate and private key files
+  (ffranz@redhat.com)
+- Bug 928210 - now handling server with no support to SSL certificates
+  (ffranz@redhat.com)
+- Fixed tests (ffranz@redhat.com)
+- REST API version is now 1.4 (ffranz@redhat.com)
+- Small wording improvement (ffranz@redhat.com)
+- Merge pull request #339 from smarterclayton/bug_924142_should_safe_read_file
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #337 from smarterclayton/update_to_new_plan_values
+  (dmcphers+openshiftbot@redhat.com)
+- Wizard spec should be on FakeFS (ccoleman@redhat.com)
+- Bug 924142 - Safely handle empty sshkey files (ccoleman@redhat.com)
+- Merge pull request #340 from BanzaiMan/dev/hasari/bz920059
+  (dmcphers+openshiftbot@redhat.com)
+- Fix Bug 920059 (asari.ruby@gmail.com)
+- Merge pull request #338 from
+  smarterclayton/bug_924594_help_shouldnt_trigger_wizard
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 924594 - Any combination of help should never trigger wizard behavior
+  (ccoleman@redhat.com)
+- Merge remote-tracking branch 'origin/master' into update_to_new_plan_values
+  (ccoleman@redhat.com)
+- Rename 'MegaShift' to 'Silver' (ccoleman@redhat.com)
+
+* Tue Mar 26 2013 Adam Miller <admiller@redhat.com> 1.6.6-1
+- Merge pull request #336 from jtharris/bugs/BZ924863 (dmcphers@redhat.com)
+- http_proxy ENV variable does not have to set protocol. (jharris@redhat.com)
+
 * Mon Mar 25 2013 Adam Miller <admiller@redhat.com> 1.6.5-1
 - Minor bug fixes (ffranz@redhat.com)
 - Minor bug fixes and typos (ffranz@redhat.com)

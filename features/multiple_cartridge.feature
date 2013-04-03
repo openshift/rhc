@@ -8,8 +8,9 @@ Feature: Multiple Cartridge Tests
     Then the phpmyadmin cartridge should be running
 
   @not-origin
-  Scenario: Conflicting Cartridge Fails
-    Then adding the postgresql cartridge should fail
+  Scenario: Multiple DBs Allowed
+    When the postgresql cartridge is added
+    Then the postgresql cartridge should be running
 
   Scenario: Cartridge Removed
     When the phpmyadmin cartridge is removed

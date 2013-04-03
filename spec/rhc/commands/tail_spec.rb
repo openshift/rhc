@@ -17,7 +17,7 @@ describe RHC::Commands::Tail do
 
     context 'help is run' do
       it "should display help" do
-        expect { run }.should exit_with_code(0)
+        expect { run }.to exit_with_code(0)
       end
       it('should output usage') { run_output.should match("Usage: rhc tail") }
     end
@@ -28,24 +28,24 @@ describe RHC::Commands::Tail do
 
     context 'when ssh connects' do
       before (:each) {Net::SSH.should_receive(:start).with('test.domain.com', 'user') }
-      it { expect { run }.should exit_with_code(0) }
+      it { expect { run }.to exit_with_code(0) }
     end
 
     context 'is run on an unreachable domain' do
       before (:each) {Net::SSH.should_receive(:start).and_raise(SocketError) }
-      it { expect { run }.should exit_with_code(1) }
+      it { expect { run }.to exit_with_code(1) }
       it { run_output.should =~ /The connection to test.domain.com failed: / }
     end
 
     context 'is refused' do
       before (:each) {Net::SSH.should_receive(:start).and_raise(Errno::ECONNREFUSED) }
-      it { expect { run }.should exit_with_code(1) }
+      it { expect { run }.to exit_with_code(1) }
       it { run_output.should =~ /The server test.domain.com refused a connection with user user/ }
     end
 
     context 'succeeds and exits on Interrupt' do
       before (:each) { rest_client.stub(:find_domain) { raise Interrupt } }
-      it { expect { run }.should raise_error(Interrupt) }
+      it { expect { run }.to raise_error(Interrupt) }
     end
   end
 end

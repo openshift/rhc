@@ -100,7 +100,7 @@ module RHC
 
     global_option '-l', '--rhlogin LOGIN', "OpenShift login"
     global_option '-p', '--password PASSWORD', "OpenShift password"
-    global_option '--token TOKEN', "An authorization token for accessing your account.", :context => :token_context
+    global_option '--token TOKEN', "An authorization token for accessing your account."
 
     global_option '-d', '--debug', "Turn on debugging", :hide => true
 
@@ -153,6 +153,10 @@ module RHC
       uri = to_uri((options.server rescue nil) || ENV['LIBRA_SERVER'] || "openshift.redhat.com")
       uri.path = '/broker/rest/api' if uri.path.blank? || uri.path == '/'
       uri
+    end
+    
+    def token_for_user
+      options.token or (token_store.get(options.rhlogin, options.server) if options.rhlogin)
     end
 
     def client_from_options(opts)

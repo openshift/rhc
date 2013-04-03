@@ -10,25 +10,35 @@ require 'rhc/helpers'
 require 'date'
 require 'resolv'
 
+class MockHelpers
+  include RHC::Helpers
+  include RHC::SSHHelpers
+
+  def config
+    @config ||= RHC::Config.new
+  end
+  def options
+    @options ||= OpenStruct.new(:server => nil)
+  end
+end
+
+class MockCartridgeHelpers
+  include RHC::Helpers
+  include RHC::CartridgeHelpers
+
+  def config
+    @config ||= RHC::Config.new
+  end
+end
+
 describe RHC::Helpers do
-  before(:each) do
+  before do
     mock_terminal
     user_config
   end
 
-  subject do
-    Class.new(Object) do
-      include RHC::Helpers
-      include RHC::SSHHelpers
+  subject{ MockHelpers.new }
 
-      def config
-        @config ||= RHC::Config.new
-      end
-      def options
-        @options ||= OpenStruct.new(:server => nil)
-      end
-    end.new
-  end
   let(:tests) { OutputTests.new }
 
   its(:openshift_server) { should == 'openshift.redhat.com' }
@@ -163,7 +173,7 @@ describe RHC::Helpers do
       Class.new(Object){ include RHC::Helpers }.new
     end
 
-    it("should raise on config"){ expect{ subject.config }.should raise_error }
+    it("should raise on config"){ expect{ subject.config }.to raise_error }
   end
 
   context "with a bad timeout value" do
@@ -239,7 +249,7 @@ describe RHC::Helpers do
   end
 
   describe "#get_properties" do
-    it{ tests.send(:get_properties, stub(:plan_id => 'freeshift'), :plan_id).should == [[:plan_id, 'FreeShift']] }
+    it{ tests.send(:get_properties, stub(:plan_id => 'free'), :plan_id).should == [[:plan_id, 'Free']] }
     context "when an error is raised" do
       subject{ stub.tap{ |s| s.should_receive(:foo).and_raise(::Exception) } }
       it{ tests.send(:get_properties, subject, :foo).should == [[:foo, '<error>']] }
@@ -331,7 +341,7 @@ describe RHC::Helpers do
         let(:stderr){ 'fatal: error' }
         let(:exit_status){ 1 }
 
-        it { capture{ expect{ subject.git_clone_repo("url", "repo") }.should raise_error(RHC::GitException) } }
+        it { capture{ expect{ subject.git_clone_repo("url", "repo") }.to raise_error(RHC::GitException) } }
         it { capture_all{ subject.git_clone_repo("url", "repo") rescue nil }.should match("fake git clone") }
         it { capture_all{ subject.git_clone_repo("url", "repo") rescue nil }.should match("fatal: error") }
       end
@@ -340,14 +350,14 @@ describe RHC::Helpers do
         let(:stderr){ "fatal: destination path 'foo' already exists and is not an empty directory." }
         let(:exit_status){ 1 }
 
-        it { capture{ expect{ subject.git_clone_repo("url", "repo") }.should raise_error(RHC::GitDirectoryExists) } }
+        it { capture{ expect{ subject.git_clone_repo("url", "repo") }.to raise_error(RHC::GitDirectoryExists) } }
       end
 
       context "permission denied" do
         let(:stderr){ "Permission denied (publickey,gssapi-mic)." }
         let(:exit_status){ 1 }
 
-        it { capture{ expect{ subject.git_clone_repo("url", "repo") }.should raise_error(RHC::GitPermissionDenied) } }
+        it { capture{ expect{ subject.git_clone_repo("url", "repo") }.to raise_error(RHC::GitPermissionDenied) } }
       end
     end
   end
@@ -369,7 +379,6 @@ describe RHC::Helpers do
 
     it "should catch exceptions from fingerprint failures" do
       Net::SSH::KeyFactory.should_receive(:load_public_key).with('1').and_raise(StandardError.new("An error"))
-      subject.should_receive(:error).with('An error')
       subject.fingerprint_for_local_key('1').should be_nil
     end
   end
@@ -527,6 +536,8 @@ describe OpenURI do
 end
 
 describe HighLine do
+  before{ mock_terminal }
+
   it "should wrap the terminal" do
     $terminal.wrap_at = 10
     say "Lorem ipsum dolor sit amet"
@@ -570,22 +581,13 @@ describe RHC::CartridgeHelpers do
     mock_terminal
   end
 
-  subject do
-    Class.new(Object) do
-      include RHC::Helpers
-      include RHC::CartridgeHelpers
-
-      def config
-        @config ||= RHC::Config.new
-      end
-    end.new
-  end
+  subject{ MockCartridgeHelpers.new }
 
   describe '#check_cartridges' do
     let(:cartridges){ [] }
     let(:find_cartridges){ [] }
     context "with a generic object" do
-      it { expect{ subject.send(:check_cartridges, 'foo', :from => cartridges) }.should raise_error(RHC::CartridgeNotFoundException, 'There are no cartridges that match \'foo\'.') }
+      it { expect{ subject.send(:check_cartridges, 'foo', :from => cartridges) }.to raise_error(RHC::CartridgeNotFoundException, 'There are no cartridges that match \'foo\'.') }
     end
   end
   describe '#web_carts_only' do

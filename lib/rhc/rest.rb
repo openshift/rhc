@@ -113,6 +113,10 @@ module RHC
 
     class MultipleCartridgeCreationNotSupported < Exception; end
 
+    class InitialGitUrlNotSupported < Exception; end
+
+    class SslCertificatesNotSupported < Exception; end
+
     class AuthorizationsNotSupported < Exception
       def initialize(message="The server does not support setting, retrieving, or authenticating with authorization tokens.")
         super(message, 1)

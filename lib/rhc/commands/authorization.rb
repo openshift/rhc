@@ -12,7 +12,7 @@ module RHC::Commands
       remembering what is available.
       DESC
     def run
-      rest_client.authorizations.each{ |auth| paragraph{ display_authorization(auth, options.token) } } or info "No authorizations"
+      rest_client.authorizations.each{ |auth| paragraph{ display_authorization(auth, token_for_user) } } or info "No authorizations"
 
       0
     end

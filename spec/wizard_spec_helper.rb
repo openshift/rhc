@@ -61,7 +61,7 @@ module WizardStepsHelper
     input_line 'yes'
 
     next_stage.should_not be_nil
-
+    
     last_output do |s|
       s.should match('Since you do not have any keys associated')
       s.should match(/Fingerprint\: (?:[a-f0-9]{2}\:){15}/)
@@ -321,7 +321,7 @@ EOF
   end
 end
 
-Spec::Runner.configure do |config|
+RSpec.configure do |config|
   config.include(WizardHelper)
   config.include(WizardStepsHelper)
 end

@@ -21,16 +21,16 @@ describe RHC::Commands::Account do
     it('should show the gear capabilities') { run_output.should =~ /Allowed Gear Sizes:\s*small/ }
     it('should show the consumed gears') { run_output.should =~ /Gears Used:\s*0/ }
     it('should show the maximum gears') { run_output.should =~ /Gears Allowed:\s*3/ }
-    it { expect { run }.should exit_with_code(0) }
+    it { expect { run }.to exit_with_code(0) }
 
-    context 'with a freeshift plan' do
-      let(:user_plan_id){ 'freeshift' }
-      it('should show') { run_output.should =~ /Plan:\s*FreeShift/ }
+    context 'with a free plan' do
+      let(:user_plan_id){ 'free' }
+      it('should show') { run_output.should =~ /Plan:\s*Free/ }
     end
 
-    context 'with a megashift plan' do
-      let(:user_plan_id){ 'megashift' }
-      it('should show') { run_output.should =~ /Plan:\s*MegaShift/ }
+    context 'with a silver plan' do
+      let(:user_plan_id){ 'silver' }
+      it('should show') { run_output.should =~ /Plan:\s*Silver/ }
     end
 
     context 'with a arbitrary plan' do
@@ -42,7 +42,7 @@ describe RHC::Commands::Account do
   describe '#logout' do
     let(:arguments) { ['account', 'logout'] }
     let(:username) { 'foo' }
-    let(:password) { 'pass' }
+    let(:password) { nil }
     let(:supports_auth) { false }
     let(:server) { mock_uri }
     let!(:token_store) { RHC::Auth::TokenStore.new(Dir.mktmpdir) }
@@ -53,8 +53,8 @@ describe RHC::Commands::Account do
       RHC::Auth::TokenStore.should_receive(:new).at_least(1).and_return(token_store)
     end
 
-    it("should clear the token cache"){ expect{ run }.should call(:clear).on(token_store) }
-    it("should exit with success"){ expect{ run }.should exit_with_code(0) }
+    it("should clear the token cache"){ expect{ run }.to call(:clear).on(token_store) }
+    it("should exit with success"){ expect{ run }.to exit_with_code(0) }
     it("should display a message"){ run_output.should match("All local sessions removed.") }
 
     context "when --all is requested" do
@@ -62,7 +62,7 @@ describe RHC::Commands::Account do
 
       context "if the server does not implement authorizations" do
         it("should display a message"){ run_output.should match(/Deleting all authorizations associated with your account.*not supported/) }
-        it("should exit with success"){ expect{ run }.should exit_with_code(0) }
+        it("should exit with success"){ expect{ run }.to exit_with_code(0) }
       end
 
       context "if the server implements authorizations" do
@@ -70,7 +70,7 @@ describe RHC::Commands::Account do
         before{ stub_delete_authorizations }
 
         it("should display a message"){ run_output.should match(/Deleting all authorizations associated with your account.*done/) }
-        it("should exit with success"){ expect{ run }.should exit_with_code(0) }
+        it("should exit with success"){ expect{ run }.to exit_with_code(0) }
       end
     end
 
@@ -80,7 +80,7 @@ describe RHC::Commands::Account do
 
       context "if the server does not implement authorizations" do
         it("should display a message"){ run_output.should match(/Ending session on server.*not supported/) }
-        it("should exit with success"){ expect{ run }.should exit_with_code(0) }
+        it("should exit with success"){ expect{ run }.to exit_with_code(0) }
       end
 
       context "if the server implements authorizations" do
@@ -90,24 +90,24 @@ describe RHC::Commands::Account do
           before{ stub_delete_authorization('foo') }
 
           it("should display a message"){ run_output.should match(/Ending session on server.*deleted/) }
-          it("should exit with success"){ expect{ run }.should exit_with_code(0) }
-          it("should clear the token cache"){ expect{ run }.should call(:clear).on(token_store) }
+          it("should exit with success"){ expect{ run }.to exit_with_code(0) }
+          it("should clear the token cache"){ expect{ run }.to call(:clear).on(token_store) }
         end
 
         context "if the server rejects the token" do
           before{ stub_request(:delete, mock_href('broker/rest/user/authorizations/foo', false)).to_return(:status => 401, :body => {}.to_json) }
 
           it("should display a message"){ run_output.should match(/Ending session on server.*already closed/) }
-          it("should exit with success"){ expect{ run }.should exit_with_code(0) }
-          it("should clear the token cache"){ expect{ run }.should call(:clear).on(token_store) }
+          it("should exit with success"){ expect{ run }.to exit_with_code(0) }
+          it("should clear the token cache"){ expect{ run }.to call(:clear).on(token_store) }
         end
 
         context "if the server returns an unexpected error" do
           before{ stub_request(:delete, mock_href('broker/rest/user/authorizations/foo', false)).to_return(:status => 500, :body => {}.to_json) }
 
           it("should display a message"){ run_output.should match(/Ending session on server.*The server did not respond/) }
-          it("should exit with success"){ expect{ run }.should exit_with_code(0) }
-          it("should clear the token cache"){ expect{ run }.should call(:clear).on(token_store) }
+          it("should exit with success"){ expect{ run }.to exit_with_code(0) }
+          it("should clear the token cache"){ expect{ run }.to call(:clear).on(token_store) }
         end
       end
     end

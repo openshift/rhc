@@ -95,6 +95,11 @@ describe RHC::CLI do
     context 'with --help' do
       before(:each){ @arguments = ['--help'] }
       it_should_behave_like 'a global help page'
+
+      context 'without a config file' do
+        before{ RHC::Wizard.stub(:has_configuration?).and_return(false) }
+        it_should_behave_like 'a global help page'
+      end
     end
 
     context 'with -h' do

@@ -63,7 +63,7 @@ describe RHC::Commands::Threaddump do
 
     context 'help is run' do
       it "should display help" do
-        expect { run }.should exit_with_code(0)
+        expect { run }.to exit_with_code(0)
       end
       it('should output usage') { run_output.should match("Usage: rhc threaddump") }
     end
@@ -71,14 +71,14 @@ describe RHC::Commands::Threaddump do
 
   describe 'threaddump' do
     let(:arguments) { ['threaddump', 'mock_app_0'] }
-    it { expect { run }.should exit_with_code(0) }
+    it { expect { run }.to exit_with_code(0) }
     it { run_output.should =~ /Application test thread dump complete/ }
   end
 
   describe 'threaddump no args' do
     let(:arguments) { ['threaddump'] }
     context 'args not supplied' do
-      it { expect { run }.should exit_with_code(1) }
+      it { expect { run }.to exit_with_code(1) }
     end
   end
 end

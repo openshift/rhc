@@ -99,7 +99,7 @@ module RHC
       end
 
       def username
-        auth.username if auth.respond_to?(:username)
+        options.rhlogin || (auth.username if auth.respond_to?(:username))
       end
 
       def print_dot
@@ -129,7 +129,8 @@ module RHC
     end
 
     def login_stage
-      if options.token
+      if token_for_user
+        options.token = token_for_user
         say "Using an existing token for #{options.rhlogin} to login to #{openshift_server}"
       elsif options.rhlogin
         say "Using #{options.rhlogin} to login to #{openshift_server}"
@@ -161,6 +162,7 @@ module RHC
       end
 
       self.user = rest_client.user
+      options.rhlogin = self.user.login unless username
 
       if rest_client.supports_sessions? && !options.token && options.create_token != false
         paragraph do
@@ -245,7 +247,7 @@ module RHC
         key_fingerprint = fingerprint_for_default_key
         unless key_fingerprint
           paragraph do
-            say "Your ssh public key at #{system_path(RHC::Config.ssh_pub_key_file_path)} is invalid or unreadable. "\
+            warn "Your ssh public key at #{system_path(RHC::Config.ssh_pub_key_file_path)} is invalid or unreadable. "\
                 "Setup can not continue until you manually remove or fix your "\
                 "public and private keys id_rsa keys."
           end
@@ -420,9 +422,8 @@ module RHC
     # Thus, we force an order with #sort to ensure spec passage on both.
     def setup_test_stage
       say "Checking common problems "
-      tests = private_methods.select {|m| m.to_s.start_with? 'test_'}
       failed = false
-      tests.sort.each do |test|
+      all_test_methods.sort.each do |test|
         begin
           send(test)
           print_dot unless failed
@@ -438,6 +439,10 @@ module RHC
       end
 
       true
+    end
+
+    def all_test_methods
+      private_methods.select {|m| m.to_s.start_with? 'test_'}
     end
 
     # cached list of applications needed for test stage

@@ -232,7 +232,7 @@ module RHC
         Commander::Runner.instance.options.each do |opt|
           if opt[:context]
             arg = Commander::Runner.switch_to_sym(opt[:switches].last)
-            options[arg] ||= lambda{ cmd.send(opt[:context]) }
+            options.__hash__[arg] ||= lambda{ cmd.send(opt[:context]) }
           end
         end
 

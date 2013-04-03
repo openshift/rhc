@@ -61,13 +61,20 @@ module RHC::Commands
       raise ArgumentError, "Private key file not found: #{private_key_file_path}" if !File.exist?(private_key_file_path) || !File.file?(private_key_file_path)
 
       certificate_content = File.read(certificate_file_path)
+      raise ArgumentError, "Invalid certificate file: #{certificate_file_path} is empty" if certificate_content.to_s.strip.length == 0
+
       private_key_content = File.read(private_key_file_path)
+      raise ArgumentError, "Invalid private key file: #{private_key_file_path} is empty" if private_key_content.to_s.strip.length == 0
 
       rest_app = rest_client.find_application(options.namespace, app)
       rest_alias = rest_app.find_alias(app_alias)
-      rest_alias.add_certificate(certificate_content, private_key_content, options.passphrase)
-      results { say "SSL certificate successfully added." }
-      0
+      if rest_client.api_version_negotiated >= 1.4
+        rest_alias.add_certificate(certificate_content, private_key_content, options.passphrase)
+        results { say "SSL certificate successfully added." }
+        0
+      else
+        raise RHC::Rest::SslCertificatesNotSupported, "The server does not support SSL certificates for custom aliases."
+      end
     end
 
     summary "Delete the SSL certificate from an existing alias"
@@ -79,12 +86,14 @@ module RHC::Commands
     def delete_cert(app, app_alias)
       rest_app = rest_client.find_application(options.namespace, app)
       rest_alias = rest_app.find_alias(app_alias)
-
-      confirm_action "#{color("This is a non-reversible action! Your SSL certificate will be permanently deleted from application '#{app}'.", :yellow)}\n\nAre you sure you want to delete the SSL certificate?"
-
-      rest_alias.delete_certificate
-      results { say "SSL certificate successfully deleted." }
-      0
+      if rest_client.api_version_negotiated >= 1.4
+        confirm_action "#{color("This is a non-reversible action! Your SSL certificate will be permanently deleted from application '#{app}'.", :yellow)}\n\nAre you sure you want to delete the SSL certificate?"
+        rest_alias.delete_certificate
+        results { say "SSL certificate successfully deleted." }
+        0
+      else
+        raise RHC::Rest::SslCertificatesNotSupported, "The server does not support SSL certificates for custom aliases."
+      end
     end
 
     summary "List the aliases on an application"
@@ -94,12 +103,14 @@ module RHC::Commands
     def list(app)
       rest_app = rest_client.find_application(options.namespace, app)
       items = rest_app.aliases.map do |a|
-        [a.id, a.has_private_ssl_certificate? ? 'yes' : 'no', a.has_private_ssl_certificate? ? Date.parse(a.certificate_added_at) : '']
+        a.is_a?(String) ?
+          [a, 'no', '-'] :
+          [a.id, a.has_private_ssl_certificate? ? 'yes' : 'no', a.has_private_ssl_certificate? ? Date.parse(a.certificate_added_at) : '-']
       end
       if items.empty?
-        results { say "No SSL certificate associated with the application #{app}." }
+        results { say "No aliases associated with the application #{app}." }
       else
-        table(items, :header => ["Alias", "Has Certificate?", "Certificate Added"]).each { |s| success s }
+        table(items, :header => ["Alias", "Has Certificate?", "Certificate Added"]).each { |s| say s }
       end
       0
     end

@@ -18,6 +18,12 @@ Before('@geared_user_required') do
   $namespace = nil
 end
 
+Before('@certificates_capable_user_required') do
+  $old_username = $username
+  $username = "user_with_certificate_capabilities@test.com"
+  $namespace = nil
+end
+
 After do
   if $old_username
     $username = $old_username

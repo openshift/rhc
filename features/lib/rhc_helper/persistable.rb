@@ -31,7 +31,10 @@ module RHCHelper
       app.mysql_password = json['mysql_password']
       app.mysql_hostname = json['mysql_hostname']
       app.uid = json['uid']
-      return app
+      # Strip off any version info for the type
+      app.type = app.type.split('-').first
+
+      app
     end
   end
 

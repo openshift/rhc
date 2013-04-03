@@ -10,13 +10,13 @@ describe RHC::Commands::Domain do
     context 'when run with no domains' do
       let(:arguments) { ['domain', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
-      it { expect { run }.should exit_with_code(1) }
+      it { expect { run }.to exit_with_code(1) }
       it { run_output.should match(/In order to deploy applications.*rhc domain create/) }
     end
     context 'when help is shown' do
       let(:arguments) { ['domain', '--noprompt', '--help'] }
 
-      it { expect { run }.should exit_with_code(0) }
+      it { expect { run }.to exit_with_code(0) }
       it { run_output.should match(/The default action for this resource is 'show'/) }
     end
   end
@@ -25,14 +25,14 @@ describe RHC::Commands::Domain do
     let(:arguments) { ['domain', 'show', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     context 'when run with no domains' do
-      it { expect { run }.should exit_with_code(1) }
+      it { expect { run }.to exit_with_code(1) }
       it { run_output.should match(/In order to deploy applications.*rhc domain create/) }
     end
 
     context 'when run with one domain no apps' do
       before{ rest_client.add_domain("onedomain") }
 
-      it { expect { run }.should exit_with_code(0) }
+      it { expect { run }.to exit_with_code(0) }
       it "should match output" do
         output = run_output
         output.should match("The domain onedomain exists but has no applications. You can use")
@@ -44,7 +44,7 @@ describe RHC::Commands::Domain do
         rest_client.add_domain("firstdomain")
         rest_client.add_domain("seconddomain")
       end
-      it { expect { run }.should exit_with_code(0) }
+      it { expect { run }.to exit_with_code(0) }
       it "should match output" do
         output = run_output
         output.should match("The domain firstdomain exists but has no applications. You can use")
@@ -61,7 +61,7 @@ describe RHC::Commands::Domain do
         a.add_cartridge("testcart-2")
         a.add_cartridge("testcart-3")
       end
-      it { expect { run }.should exit_with_code(0) }
+      it { expect { run }.to exit_with_code(0) }
       it "should match output" do
         output = run_output
         output.should match("app_no_carts")
@@ -78,7 +78,7 @@ describe RHC::Commands::Domain do
         d = rest_client.add_domain("appdomain")
         a = d.add_application("app_no_carts")
       end
-      it { expect { run }.should exit_with_code(0) }
+      it { expect { run }.to exit_with_code(0) }
       it "should match output" do
         output = run_output
         output.should match("app_no_carts")
@@ -93,7 +93,7 @@ describe RHC::Commands::Domain do
     context 'when no issues with ' do
 
       it "should create a domain" do
-        expect { run }.should exit_with_code(0)
+        expect { run }.to exit_with_code(0)
         rest_client.domains[0].id.should == 'testnamespace'
       end
       it { run_output.should match(/'testnamespace'.*?RESULT:.*?Success/m) }
@@ -107,7 +107,7 @@ describe RHC::Commands::Domain do
       before{ rest_client.add_domain("olddomain") }
 
       it "should update a domain" do
-        expect { run }.should exit_with_code(0)
+        expect { run }.to exit_with_code(0)
         rest_client.domains[0].id.should == 'alterednamespace'
       end
       it { run_output.should match(/Changing namespace 'olddomain' to 'alterednamespace'.*?RESULT:.*?Success/m) }
@@ -115,7 +115,7 @@ describe RHC::Commands::Domain do
 
     context 'when there is no domain' do
       it "should not create a domain" do
-        expect { run }.should exit_with_code(127)
+        expect { run }.to exit_with_code(127)
         rest_client.domains.empty?.should be_true
       end
       it { run_output.should match("not found") }
@@ -129,7 +129,7 @@ describe RHC::Commands::Domain do
       before{ rest_client.add_domain("olddomain") }
 
       it "should update a domain" do
-        expect { run }.should exit_with_code(0)
+        expect { run }.to exit_with_code(0)
         rest_client.domains[0].id.should == 'alterednamespace'
       end
       it { run_output.should match(/Changing namespace 'olddomain' to 'alterednamespace'.*?RESULT:.*?Success/m) }
@@ -143,7 +143,7 @@ describe RHC::Commands::Domain do
       before{ rest_client.add_domain("deleteme") }
 
       it "should delete a domain" do
-        expect { run }.should exit_with_code(0)
+        expect { run }.to exit_with_code(0)
         rest_client.domains.empty?.should be_true
       end
     end
@@ -152,7 +152,7 @@ describe RHC::Commands::Domain do
       before{ rest_client.add_domain("dontdelete") }
 
       it "should error out" do
-        expect { run }.should exit_with_code(127)
+        expect { run }.to exit_with_code(127)
         rest_client.domains[0].id.should == 'dontdelete'
       end
       it { run_output.should match("Domain deleteme not found") }
@@ -164,7 +164,7 @@ describe RHC::Commands::Domain do
         domain.add_application 'testapp1', 'mock-1.0'
       end
       it "should error out" do
-        expect { run }.should exit_with_code(128)
+        expect { run }.to exit_with_code(128)
         rest_client.domains[0].id.should == 'deleteme'
       end
       it { run_output.should match("Domain contains applications.*?Delete applications first.") }
@@ -178,7 +178,7 @@ describe RHC::Commands::Domain do
       before{ rest_client.add_domain("deleteme") }
 
       it "should delete a domain" do
-        expect { run }.should exit_with_code(0)
+        expect { run }.to exit_with_code(0)
         rest_client.domains.empty?.should be_true
       end
     end
@@ -189,7 +189,7 @@ describe RHC::Commands::Domain do
 
     context 'help is run' do
       it "should display help" do
-        expect { run }.should exit_with_code(0)
+        expect { run }.to exit_with_code(0)
       end
       it('should output usage') { run_output.should match("Usage: rhc domain") }
     end

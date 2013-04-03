@@ -122,18 +122,27 @@ describe RHC::Commands::Base do
             summary "Test command execute-list"
             def execute_list(args); 1; end
 
+            RHC::Helpers.global_option '--test-context', 'Test', :context => :context_var
+            def execute_implicit
+            end
+
             def raise_error
               raise StandardError.new("test exception")
             end
             def raise_exception
               raise Exception.new("test exception")
             end
+
+            protected
+              def context_var
+                "contextual"
+              end
           end
         end
         Static
       end
 
-      it("should register itself") { expect { subject }.to change(commands, :length).by(5) }
+      it("should register itself") { expect { subject }.to change(commands, :length).by(6) }
       it("should have an object name of the class") { subject.object_name.should == 'static' }
 
       context 'and when test is called' do
@@ -169,6 +178,10 @@ describe RHC::Commands::Base do
         it('should make the option available') { command_for('static', 'execute-list', '1', '2', '3').send(:options).tests.should == ['1','2','3'] }
       end
 
+      context 'and when execute is called with a contextual global option' do
+        it("calls the helper") { command_for('static', 'execute-implicit').send(:options).test_context.should == 'contextual' }
+      end
+
       context 'and when an error is raised in a call' do
         it { expects_running('static', 'raise-error').should raise_error(StandardError, "test exception") }
       end
@@ -200,15 +213,22 @@ describe RHC::Commands::Base do
     let(:instance){ subject }
 
     context "when initializing the object" do
-      let(:auth){ mock }
-      let(:basic_auth){ mock }
-      before{ RHC::Auth::Basic.should_receive(:new).once.with{ |arg| arg.should == instance.send(:options) }.and_return(basic_auth) }
-      before{ RHC::Auth::Token.should_receive(:new).once.with{ |arg, arg2, arg3| [arg, arg2, arg3].should == [instance.send(:options), basic_auth, instance.send(:token_store)] }.and_return(auth) }
+      let(:auth){ mock('auth') }
+      let(:basic_auth){ mock('basic_auth') }
+      before{ RHC::Auth::Basic.should_receive(:new).at_least(1).times.with{ |arg| arg.should == instance.send(:options) }.and_return(basic_auth) }
+      before{ RHC::Auth::Token.should_receive(:new).any_number_of_times.with{ |arg, arg2, arg3| [arg, arg2, arg3].should == [instance.send(:options), basic_auth, instance.send(:token_store)] }.and_return(auth) }
 
-      it "should create a new auth object" do
-        subject.should_receive(:client_from_options).with(:auth => auth)
-        subject.send(:rest_client)
+      context "with no options" do
+        before{ subject.should_receive(:client_from_options).with(:auth => basic_auth) }
+        it("should create only a basic auth object"){ subject.send(:rest_client) }
       end
+
+      context "with use_authorization_tokens" do
+        before{ subject.send(:options).use_authorization_tokens = true }
+        before{ subject.should_receive(:client_from_options).with(:auth => auth) }
+        it("should create a token auth object"){ subject.send(:rest_client) }
+      end
+
       it { subject.send(:rest_client).should be_a(RHC::Rest::Client) }
       it { subject.send(:rest_client).should equal subject.send(:rest_client) }
     end
@@ -217,7 +237,7 @@ describe RHC::Commands::Base do
       subject{ Class.new(RHC::Commands::Base){ object_name :test; def run; 0; end } }
       let(:instance) { subject.new }
       let(:rest_client){ command_for(*arguments).send(:rest_client) }
-      let(:basic_auth){ rest_client.send(:auth).send(:auth) }
+      let(:basic_auth){ auth = rest_client.send(:auth); auth.is_a?(RHC::Auth::Basic) ? auth : auth.send(:auth) }
       let(:stored_token){ nil }
       before{ instance.send(:token_store).stub(:get).and_return(nil) unless stored_token }
 
@@ -257,10 +277,18 @@ describe RHC::Commands::Base do
         let(:username){ 'foo' }
         let(:stored_token){ 'a_token' }
         let(:arguments){ ['test', '-l', username, '--server', mock_uri] }
-        before{ instance.send(:token_store).should_receive(:get).with{ |user, server| user.should == username; server.should == instance.send(:openshift_server) }.and_return(stored_token) }
         before{ stub_api; stub_user(:token => stored_token) }
-        it("has token set") { command_for(*arguments).send(:options).token.should == stored_token }
-        it("calls the server") { rest_client.user }
+
+        context "when tokens are not allowed" do
+          it("calls the server") { rest_client.send(:auth).is_a? RHC::Auth::Basic }
+        end
+
+        context "when tokens are allowed" do
+          let!(:config){ base_config{ |c, d| d.add('use_authorization_tokens', 'true') } }
+          before{ instance.send(:token_store).should_receive(:get).with{ |user, server| user.should == username; server.should == instance.send(:openshift_server) }.and_return(stored_token) }
+          it("has token set") { command_for(*arguments).send(:token_for_user).should == stored_token }
+          it("calls the server") { rest_client.user }
+        end
       end
 
       context "with username and tokens enabled" do
@@ -268,7 +296,7 @@ describe RHC::Commands::Base do
         let(:username){ 'foo' }
         let(:auth_token){ stub(:token => 'a_token') }
         let(:arguments){ ['test', '-l', username, '--server', mock_uri] }
-        before{ instance.send(:token_store).should_receive(:get).with{ |user, server| user.should == username; server.should == instance.send(:openshift_server) }.twice.and_return(nil) }
+        before{ instance.send(:token_store).should_receive(:get).with{ |user, server| user.should == username; server.should == instance.send(:openshift_server) }.and_return(nil) }
         before{ stub_api(false, true); stub_api_request(:get, 'broker/rest/user', false).to_return{ |request| request.headers['Authorization'] =~ /Bearer/ ? simple_user(username) : {:status => 401} } }
         it("should attempt to create a new token") do 
           rest_client.should_receive(:new_session).ordered.and_return(auth_token)
@@ -280,7 +308,7 @@ describe RHC::Commands::Base do
         let!(:config){ base_config{ |c, d| d.add('use_authorization_tokens', 'true') } }
         let(:username){ 'foo' }
         let(:arguments){ ['test', '-l', username, '--server', mock_uri] }
-        before{ instance.send(:token_store).should_receive(:get).with{ |user, server| user.should == username; server.should == instance.send(:openshift_server) }.twice.and_return(nil) }
+        before{ instance.send(:token_store).should_receive(:get).with{ |user, server| user.should == username; server.should == instance.send(:openshift_server) }.and_return(nil) }
         before{ stub_api(false, false); stub_api_request(:get, 'broker/rest/user', false).to_return{ |request| request.headers['Authorization'] =~ /Basic/ ? simple_user(username) : {:status => 401} } }
         it("should prompt for password") do 
           basic_auth.should_receive(:ask).once.and_return('password')

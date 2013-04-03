@@ -22,13 +22,37 @@ module RHC
   module Rest
     describe Client do
 
+      after{ ENV['http_proxy'] = nil }
+      after{ ENV['HTTP_PROXY'] = nil }
+
+      it 'should set the proxy protocol if it is missing' do
+        ENV['http_proxy'] = 'foo.bar.com:8081'
+        load 'rhc/rest/client.rb'
+
+        ENV['http_proxy'].should == 'http://foo.bar.com:8081'
+      end
+
+      it 'should not alter the proxy protocol if it is present' do
+        ENV['http_proxy'] = 'http://foo.bar.com:8081'
+        load 'rhc/rest/client.rb'
+
+        ENV['http_proxy'].should == 'http://foo.bar.com:8081'
+      end
+
+      it 'should not affect the proxy protocol if nil' do
+        ENV['http_proxy'] = nil
+        load 'rhc/rest/client.rb'
+
+        ENV['http_proxy'].should be_nil
+      end
+
       let(:endpoint){ mock_href }
       let(:username){ nil }# mock_user }
       let(:password){ nil }# mock_pass }
       let(:use_debug){ false }
       #let(:spec_versions){ nil }
-      let(:client) do 
-        respond_to?(:spec_versions) ? 
+      let(:client) do
+        respond_to?(:spec_versions) ?
           RHC::Rest::Client.new(endpoint, username, password, use_debug, spec_versions) :
           RHC::Rest::Client.new(endpoint, username, password, use_debug)
       end
@@ -59,13 +83,13 @@ module RHC
         context "against an endpoint that won't connect" do
           let(:endpoint){ mock_href('api_error') }
           it "raises an error message" do
-            expect{ client.api }.should raise_error
+            expect{ client.api }.to raise_error
           end
         end
         context "against an endpoint that has a generic error" do
           let(:endpoint){ mock_href('other_error') }
           it "raises a generic error for any other error condition" do
-            expect{ client.api }.should raise_error(RHC::Rest::ConnectionException, "An unexpected error occured: Other Error")
+            expect{ client.api }.to raise_error(RHC::Rest::ConnectionException, "An unexpected error occured: Other Error")
           end
         end
       end
@@ -206,13 +230,13 @@ module RHC
           end
           it "returns a domain object for matching domain IDs" do
             match = nil
-            expect { match = client.find_domain('mock_domain_0') }.should_not raise_error
+            expect { match = client.find_domain('mock_domain_0') }.to_not raise_error
 
             match.id.should == 'mock_domain_0'
             match.class.should == RHC::Rest::Domain
           end
           it "raise an error when no matching domain IDs can be found" do
-            expect { client.find_domain('mock_domain_2') }.should raise_error(RHC::Rest::DomainNotFoundException)
+            expect { client.find_domain('mock_domain_2') }.to raise_error(RHC::Rest::DomainNotFoundException)
           end
         end
 
@@ -254,23 +278,23 @@ module RHC
                 mock_response_links(mock_app_links(mock_domain, mock_app))
           end
           it "Raises an exception when no matching applications can be found" do
-            expect { client.find_application(mock_domain, missing) }.should raise_error(RHC::Rest::ApplicationNotFoundException)
+            expect { client.find_application(mock_domain, missing) }.to raise_error(RHC::Rest::ApplicationNotFoundException)
           end
           it "Raises an exception when no matching domain can be found" do
-            expect { client.find_application(missing, mock_app) }.should raise_error(RHC::Rest::DomainNotFoundException)
+            expect { client.find_application(missing, mock_app) }.to raise_error(RHC::Rest::DomainNotFoundException)
           end
         end
 
         describe RHC::Rest::Cartridge do
-          subject do 
-            described_class.new({
+          subject do
+            RHC::Rest::Cartridge.new({
               :name => 'foo',
               :links => mock_response_links([
                 ['GET', 'broker/rest/cartridge', 'get']
               ])}, client)
           end
           context "when several messages are present" do
-            before do 
+            before do
               stub_api_request(:get, 'broker/rest/cartridge', true).
                 with(:query => {:include => :status_messages}).
                 to_return(:body => {
@@ -308,7 +332,7 @@ module RHC
                           :status => 200
                         })
           end
-          it "returns a list of existing cartridges" do 
+          it "returns a list of existing cartridges" do
             carts = client.cartridges
             carts.length.should equal(2)
             (0..1).each do |idx|
@@ -423,7 +447,7 @@ module RHC
           end
           it "returns a list of key objects for matching keys" do
             key = nil
-            expect { key = client.find_key('mock_key_0') }.should_not raise_error
+            expect { key = client.find_key('mock_key_0') }.to_not raise_error
 
             key.class.should   == RHC::Rest::Key
             key.name.should    == 'mock_key_0'
@@ -433,7 +457,7 @@ module RHC
               mock_response_links(mock_key_links('mock_key_0'))
           end
           it "raise an error when no matching keys can be found" do
-            expect { client.find_key('no_match') }.should raise_error(RHC::KeyNotFoundException)
+            expect { client.find_key('no_match') }.to raise_error(RHC::KeyNotFoundException)
           end
         end
 
@@ -500,12 +524,11 @@ module RHC
           end
 
           it "should delete keys" do
-            expect { client.delete_key('mock_key_0') }.should be_true
+            expect { client.delete_key('mock_key_0') }.to be_true
           end
 
           it 'raises an error if nonexistent key is requested' do
-            expect { client.find_key('no_match') }.
-              should raise_error(RHC::KeyNotFoundException)
+            expect { client.find_key('no_match') }.to raise_error(RHC::KeyNotFoundException)
           end
         end
 
@@ -568,11 +591,11 @@ module RHC
       describe "#supports_sessions?" do
         before{ subject.should_receive(:api).at_least(2).times.and_return(stub) }
         context "with ADD_AUTHORIZATION link" do
-          before{ subject.api.should_receive(:supports?).twice.with('ADD_AUTHORIZATION').and_return(true) }
+          before{ subject.api.should_receive(:supports?).with('ADD_AUTHORIZATION').and_return(true) }
           its(:supports_sessions?){ should be_true }
         end
         context "without ADD_AUTHORIZATION link" do
-          before{ subject.api.should_receive(:supports?).twice.with('ADD_AUTHORIZATION').and_return(false) }
+          before{ subject.api.should_receive(:supports?).with('ADD_AUTHORIZATION').and_return(false) }
           its(:supports_sessions?){ should be_false }
         end
       end
