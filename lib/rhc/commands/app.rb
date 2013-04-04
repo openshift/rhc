@@ -102,9 +102,6 @@ module RHC::Commands
 
             begin
               build_app_exists = add_jenkins_app(rest_domain)
-              
-              # Let Jenkins come up all the way
-              sleep 30
 
               success "done"
               messages.concat(build_app_exists.messages)
@@ -376,7 +373,47 @@ module RHC::Commands
       end
 
       def add_jenkins_app(rest_domain)
-        create_app(jenkins_app_name, "jenkins-1.4", rest_domain)
+        jenkins_app = create_app(jenkins_app_name, "jenkins-1.4", rest_domain)
+        
+        uid = ????????????????
+        
+        jenkins_user = `source /var/lib/openshift/#{uid}/.env/JENKINS_USERNAME;echo $JENKINS_USERNAME`.chomp!
+        jenkins_password = `source /var/lib/openshift/#{uid}/.env/JENKINS_PASSWORD;echo $JENKINS_PASSWORD`.chomp!
+        jenkins_url = `source /var/lib/openshift/#{uid}/.env/JENKINS_URL;echo $JENKINS_URL`.chomp!
+        
+        jenkins_job_url = "#{jenkins_url}job/#{name}-build/"
+        jenkins_build = "curl -ksS -X GET #{jenkins_job_url}api/json --user '#{jenkins_user}:#{jenkins_password}'"
+        
+        successful, attempts = false, 1
+        while (!successful && exit_code == 157 && attempts < MAX_RETRIES)
+          begin
+            response = `#{jenkins_build}`
+            
+            job = JSON.parse(response)
+
+          rescue RHC::Rest::ServerErrorException => e
+            if (e.code == 157)
+              # error downloading Jenkins /jnlpJars/jenkins-cli.jar
+              attempts += 1
+              debug "Jenkins server could not be contacted, sleep and then retry: attempt #{attempts}\n    #{e.message}"
+              Kernel.sleep(10)
+            end
+            exit_code = e.code
+            exit_message = e.message
+          rescue Exception => e
+            # timeout and other exceptions
+            exit_code = 1
+            exit_message = e.message
+          end
+        end
+        unless successful
+          warn "not complete"
+          add_issue("Jenkins failed to completely start - #{exit_message}",
+                    "Install the jenkins client",
+                    "rhc cartridge add jenkins-client -a #{rest_app.name}")
+        end
+        
+        jenkins_app
       end
 
       def add_jenkins_cartridge(rest_app)
