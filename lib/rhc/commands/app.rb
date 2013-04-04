@@ -2,9 +2,11 @@ require 'rhc/commands/base'
 require 'resolv'
 require 'rhc/git_helpers'
 require 'rhc/cartridge_helpers'
+require 'active_support'
 
 module RHC::Commands
   class App < Base
+    include ActiveSupport::JSON
     summary "Commands for creating and managing applications"
     description "Creates and controls an OpenShift application.  To see the list of all applications use the rhc domain show command.  Note that delete is not reversible and will stop your application and then remove the application and repo from the remote server. No local changes are made."
     syntax "<action>"
@@ -384,7 +386,7 @@ module RHC::Commands
         jenkins_job_url = "#{jenkins_url}job/#{name}-build/"
         jenkins_build = "curl -ksS -X GET #{jenkins_job_url}api/json --user '#{jenkins_user}:#{jenkins_password}'"
         
-        successful, attempts = false, 1
+        successful, attempts = false, 3
         while (!successful && exit_code == 157 && attempts < MAX_RETRIES)
           begin
             response = `#{jenkins_build}`
