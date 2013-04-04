@@ -102,6 +102,9 @@ module RHC::Commands
 
             begin
               build_app_exists = add_jenkins_app(rest_domain)
+              
+              # Let Jenkins come up all the way
+              sleep 30
 
               success "done"
               messages.concat(build_app_exists.messages)
