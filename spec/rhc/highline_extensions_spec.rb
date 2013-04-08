@@ -115,9 +115,9 @@ describe HighLineExtension do
   end
   it "should wrap the terminal when using color codes" do
     subject.wrap_at = 10
-    subject.say subject.color("Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet", :red)
+    subject.say subject.color("Lorem ipsum", :red)
     output = subject.read
-    output.should == "\e[31mLorem\e\[0m\nipsum\ndolor sit\namet Lorem\nipsum\ndolor sit\namet\e[0m\n"
+    output.should == "\e[31mLorem\e\[0m\n\e[31mipsum\e[0m\n"
   end
   it "should wrap the terminal with other escape characters" do
     subject.wrap_at = 10
