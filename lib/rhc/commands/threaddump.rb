@@ -3,7 +3,7 @@ module RHC::Commands
   class Threaddump < Base
     summary "Trigger a thread dump for JBoss and Ruby apps"
     syntax "<application>"
-    option ["-n", "--namespace namespace"], "Namespace of your application", :context => :namespace_context, :required => true
+    option ["-n", "--namespace NAME"], "Namespace of your application", :context => :namespace_context, :required => true
     argument :app, "Name of the application on which to execute the thread dump", ["-a", "--app name"]
     def run(app)
       rest_app = rest_client.find_application(options.namespace, app)

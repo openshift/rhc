@@ -70,8 +70,8 @@ module RHC::Commands
 
     summary "Forward remote ports to the workstation"
     syntax "<application>"
-    option ["-n", "--namespace namespace"], "Namespace of the application you are port forwarding to", :context => :namespace_context, :required => true
-    argument :app, "Application you are port forwarding to (required)", ["-a", "--app app"]
+    option ["-n", "--namespace NAME"], "Namespace of the application you are port forwarding to", :context => :namespace_context, :required => true
+    argument :app, "Application you are port forwarding to (required)", ["-a", "--app NAME"]
     def run(app)
       rest_app = rest_client.find_application(options.namespace, app)
 

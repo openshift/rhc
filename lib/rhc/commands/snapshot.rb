@@ -19,9 +19,9 @@ module RHC::Commands
 
     summary "Save a snapshot of your app to disk"
     syntax "<application> [--filepath FILE]"
-    option ["-n", "--namespace STRING"], "Namespace of the application you are saving a snapshot", :context => :namespace_context, :required => true
+    option ["-n", "--namespace NAME"], "Namespace of the application you are saving a snapshot", :context => :namespace_context, :required => true
     option ["-f", "--filepath FILE"], "Local path to save tarball (default: ./$APPNAME.tar.gz)"
-    argument :app, "Application you are saving a snapshot", ["-a", "--app app"]
+    argument :app, "Application you are saving a snapshot", ["-a", "--app NAME"]
     alias_action :"app snapshot save", :root_command => true, :deprecated => true
     def save(app)
       rest_app = rest_client.find_application(options.namespace, app)
@@ -64,9 +64,9 @@ module RHC::Commands
 
     summary "Restores a previously saved snapshot"
     syntax "<application> [--filepath FILE]"
-    option ["-n", "--namespace STRING"], "Namespace of the application you are restoring a snapshot", :context => :namespace_context, :required => true
+    option ["-n", "--namespace NAME"], "Namespace of the application you are restoring a snapshot", :context => :namespace_context, :required => true
     option ["-f", "--filepath FILE"], "Local path to restore tarball"
-    argument :app, "Application of which you are restoring a snapshot", ["-a", "--app app"]
+    argument :app, "Application of which you are restoring a snapshot", ["-a", "--app NAME"]
     alias_action :"app snapshot restore", :root_command => true, :deprecated => true
     def restore(app)
 

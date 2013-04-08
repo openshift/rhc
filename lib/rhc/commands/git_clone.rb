@@ -9,8 +9,8 @@ module RHC::Commands
                 "UUID to the local repository.  It also automatically",
                 "figures out the Git url from the application name so you don't",
                 "have to look it up."
-    syntax "<app> [--namespace namespace]"
-    option ["-n", "--namespace namespace"], "Namespace of the application", :context => :namespace_context, :required => true
+    syntax "<app> [--namespace NAME]"
+    option ["-n", "--namespace NAME"], "Namespace of the application", :context => :namespace_context, :required => true
     option ["-r", "--repo dir"], "Path to the Git repository (defaults to ./$app_name)"
     argument :app, "The application you wish to clone", ["-a", "--app name"]
     alias_action 'app git-clone', :deprecated => true, :root_command => true

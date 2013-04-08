@@ -19,7 +19,7 @@ module RHC::Commands
 
     summary "Define a namespace for your applications to share."
     syntax "<namespace>"
-    argument :namespace, "Namespace for your application(s) (alphanumeric)", ["-n", "--namespace namespace"]
+    argument :namespace, "Namespace for your application(s) (alphanumeric)", ["-n", "--namespace NAME"]
     def create(namespace)
       paragraph { say "Creating domain with namespace '#{namespace}'" }
       rest_client.add_domain(namespace)
@@ -35,7 +35,7 @@ module RHC::Commands
     summary "Change current namespace (will change application urls)"
     syntax "<old namespace> <new namespace>"
     argument :old_namespace, "Old namespace to change", []
-    argument :new_namespace, "New namespace to change", ["-n", "--namespace namespace"]
+    argument :new_namespace, "New namespace to change", ["-n", "--namespace NAME"]
     alias_action :alter
     def update(old_namespace, new_namespace)
       domain = rest_client.find_domain(old_namespace)
@@ -84,7 +84,7 @@ module RHC::Commands
 
     summary "Deletes your domain."
     syntax "<namespace>"
-    argument :namespace, "Namespace you wish to destroy", ["-n", "--namespace namespace"]
+    argument :namespace, "Namespace you wish to destroy", ["-n", "--namespace NAME"]
     alias_action :destroy
     def delete(namespace)
       domain = rest_client.find_domain namespace

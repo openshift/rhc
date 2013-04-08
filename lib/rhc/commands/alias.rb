@@ -4,7 +4,7 @@ require 'rhc/config'
 module RHC::Commands
   class Alias < Base
     summary "Add or remove a custom domain name for an app"
-    syntax "<command> <application> <alias> [--namespace namespace]"
+    syntax "<action>"
     description <<-DESC
       Each application may have one or more custom domain names (known as
       aliases) mapped to it. You may then configure your custom DNS entry
@@ -17,10 +17,10 @@ module RHC::Commands
     default_action :help
 
     summary "Add a custom domain name for the application"
-    syntax "<application> <alias> [--namespace namespace]"
+    syntax "<application> <alias> [--namespace NAME]"
     argument :app, "Application name (required)", ["-a", "--app name"], :context => :app_context, :required => true
     argument :app_alias, "Custom domain name for the application", []
-    option ["-n", "--namespace namespace"], "Namespace of your application", :context => :namespace_context, :required => true
+    option ["-n", "--namespace NAME"], "Namespace of your application", :context => :namespace_context, :required => true
     alias_action :"app add-alias", :root_command => true, :deprecated => true
     def add(app, app_alias)
       rest_app = rest_client.find_application(options.namespace, app)
@@ -30,10 +30,10 @@ module RHC::Commands
     end
 
     summary "Remove a custom domain name for the application"
-    syntax "<application> <alias> [--namespace namespace]"
+    syntax "<application> <alias> [--namespace NAME]"
     argument :app, "Application name (required)", ["-a", "--app name"], :context => :app_context, :required => true
     argument :app_alias, "Custom domain name for the application", []
-    option ["-n", "--namespace namespace"], "Namespace of your application", :context => :namespace_context, :required => true
+    option ["-n", "--namespace NAME"], "Namespace of your application", :context => :namespace_context, :required => true
     alias_action :"app remove-alias", :root_command => true, :deprecated => true
     def remove(app, app_alias)
       rest_app = rest_client.find_application(options.namespace, app)
@@ -61,7 +61,7 @@ module RHC::Commands
     option ["--certificate FILE"], "SSL certificate filepath (file in .crt or .pem format)", :required => true
     option ["--private-key FILE"], "Private key filepath for the given SSL certificate", :required => true
     option ["--passphrase passphrase"], "Private key pass phrase, required if the private key is encripted", :required => false
-    option ["-n", "--namespace namespace"], "Namespace of your application", :context => :namespace_context, :required => true
+    option ["-n", "--namespace NAME"], "Namespace of your application", :context => :namespace_context, :required => true
     def update_cert(app, app_alias)
       certificate_file_path = options.certificate
       raise ArgumentError, "Certificate file not found: #{certificate_file_path}" if !File.exist?(certificate_file_path) || !File.file?(certificate_file_path)
@@ -91,7 +91,7 @@ module RHC::Commands
     argument :app, "Application name (required)", ["-a", "--app name"], :context => :app_context, :required => true
     argument :app_alias, "Custom domain name for the application (required)", []
     option ["--confirm"], "Pass to confirm deleting the application"
-    option ["-n", "--namespace namespace"], "Namespace of your application", :context => :namespace_context, :required => true
+    option ["-n", "--namespace NAME"], "Namespace of your application", :context => :namespace_context, :required => true
     def delete_cert(app, app_alias)
       rest_app = rest_client.find_application(options.namespace, app)
       rest_alias = rest_app.find_alias(app_alias)
@@ -108,7 +108,7 @@ module RHC::Commands
     summary "List the aliases on an application"
     syntax "<application>"
     argument :app, "Application name (required)", ["-a", "--app name"], :context => :app_context, :required => true
-    option ["-n", "--namespace namespace"], "Namespace of your application", :context => :namespace_context, :required => true
+    option ["-n", "--namespace NAME"], "Namespace of your application", :context => :namespace_context, :required => true
     def list(app)
       rest_app = rest_client.find_application(options.namespace, app)
       items = rest_app.aliases.map do |a|

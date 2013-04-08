@@ -101,7 +101,7 @@ describe RHC::Commands::Alias do
       it "should display help" do
         expect { run }.to exit_with_code(0)
       end
-      it('should output usage') { run_output.should match("Usage: rhc alias <command> <application> <alias> [--namespace namespace]") }
+      it('should output usage') { run_output.should match("Usage: rhc alias <action>$") }
     end
   end
 
@@ -112,7 +112,7 @@ describe RHC::Commands::Alias do
       it "should display help" do
         expect { run }.to exit_with_code(0)
       end
-      it('should output usage') { run_output.should match("Usage: rhc alias-add <application> <alias> [--namespace namespace]") }
+      it('should output usage') { run_output.should match("Usage: rhc alias-add <application> <alias> [--namespace NAME]") }
     end
   end
 
@@ -123,7 +123,7 @@ describe RHC::Commands::Alias do
       it "should display help" do
         expect { run }.to exit_with_code(0)
       end
-      it('should output usage') { run_output.should match("Usage: rhc alias-remove <application> <alias> [--namespace namespace]") }
+      it('should output usage') { run_output.should match("Usage: rhc alias-remove <application> <alias> [--namespace NAME]") }
     end
   end
 
