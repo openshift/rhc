@@ -5,6 +5,26 @@ module RHC::Commands
   class Cartridge < Base
     summary "Manage your application cartridges"
     syntax "<action>"
+    description <<-DESC
+      Cartridges add functionality to OpenShift applications.  Each application
+      has one web cartridge to listens for HTTP requests, and any number
+      of addon cartridges.  Addons may include databases like MySQL and Mongo, 
+      administrative tools like phpMyAdmin, or build clients like Jenkins.
+
+      Most cartridges that listen for incoming network traffic are placed on
+      one or more gears (a small server instance).  Other cartridges may be
+      available across all of the gears of an application to listen for changes
+      (like Jenkins) or provide environment variables.
+
+      Use the 'cartridges' command to see a list of all available cartridges.
+      Add a new cartridge to your application with 'add-cartridge'. 
+
+      For scalable applications, use the 'cartridge-scale' command on the web
+      cartridge to set the minimum and maximum scale.
+
+      Commands that affect a cartridge within an application will affect all
+      gears the cartridge is installed to.
+      DESC
     alias_action :"app cartridge", :root_command => true, :deprecated => true
     default_action :list
 

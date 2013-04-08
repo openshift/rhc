@@ -149,7 +149,7 @@ module RHC
           opts[:delete] and arr.last.blank?
         end
 
-        table(values, :heading => heading, :indent => heading ? '  ' : nil)
+        table(values, :heading => heading, :indent => heading ? '  ' : nil, :color => opts[:color])
       end
 
       def format_no_info(type)

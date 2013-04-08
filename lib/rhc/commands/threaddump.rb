@@ -1,7 +1,7 @@
 require 'rhc/commands/base'
 module RHC::Commands
   class Threaddump < Base
-    summary "Trigger a thread dump for JBoss and Ruby applications."
+    summary "Trigger a thread dump for JBoss and Ruby apps"
     syntax "<application>"
     option ["-n", "--namespace namespace"], "Namespace of your application", :context => :namespace_context, :required => true
     argument :app, "Name of the application on which to execute the thread dump", ["-a", "--app name"]

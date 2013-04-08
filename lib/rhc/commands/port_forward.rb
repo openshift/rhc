@@ -81,7 +81,7 @@ module RHC::Commands
       forwarding_specs = []
 
       begin
-        say "Checking available ports..."
+        say "Checking available ports ... "
 
         Net::SSH.start(ssh_uri.host, ssh_uri.user) do |ssh|
           ssh.exec! "rhc-list-ports" do |channel, stream, data|
@@ -119,9 +119,11 @@ module RHC::Commands
             end
           end
 
+          success "done"
+
           begin
             Net::SSH.start(ssh_uri.host, ssh_uri.user) do |ssh|
-              say "Forwarding ports"
+              say "Forwarding ports ..."
               forwarding_specs.each do |fs|
                 given_up = nil
                 while !fs.bound? && !given_up
@@ -141,13 +143,15 @@ module RHC::Commands
 
               bound_ports = forwarding_specs.select(&:bound?)
               if bound_ports.length > 0
-                paragraph {
-                  say "To connect to a service running on OpenShift, use the Local address"
-                }
-                items = bound_ports.map do |fs|
-                  [fs.service, "#{fs.host_from}:#{fs.port_from}", " => ", "#{fs.remote_host}:#{fs.port_to.to_s}"]
+                paragraph{ say "To connect to a service running on OpenShift, use the Local address" }
+                paragraph do
+                  say table(
+                        bound_ports.map do |fs|
+                          [fs.service, "#{fs.host_from}:#{fs.port_from}", " => ", "#{fs.remote_host}:#{fs.port_to.to_s}"]
+                        end, 
+                        :header => ["Service", "Local", "    ", "OpenShift"]
+                      )
                 end
-                table(items, :header => ["Service", "Local", "    ", "OpenShift"]).each { |s| success "  #{s}" }
               end
 
               # for failed port forwarding attempts
@@ -167,7 +171,7 @@ module RHC::Commands
               ssh.loop { true }
             end
           rescue Interrupt
-            results { say "Ending port forward" }
+            say " Ending port forward"
             return 0
           end
 

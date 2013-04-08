@@ -229,7 +229,7 @@ module RHC
       $terminal.color(*args)
     end
 
-    [:indent, :paragraph, :section, :header, :table].each do |sym|
+    [:indent, :paragraph, :section, :header, :table, :table_args].each do |sym|
       define_method(sym) do |*args, &block|
         $terminal.send(sym, *args, &block)
       end

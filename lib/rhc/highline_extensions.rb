@@ -39,10 +39,15 @@ class HighLineExtension < HighLine
       @output.print if @last_line_open
       @last_line_open = false
 
+      color = msg.color if msg.respond_to? :color
+      @output.print HighLine::Style(color).code if color
+
       msg.each do |s|
         @output.print indentation
         @output.puts s
       end
+
+      @output.print HighLine::CLEAR if color
       @output.flush      
     end
 
@@ -52,9 +57,16 @@ class HighLineExtension < HighLine
   # given an array of arrays "items", construct an array of strings that can
   # be used to print in tabular form.
   def table(items, opts={}, &block)
-    items = items.map &block if block_given?
+    items = items.map(&block) if block_given?
     opts[:width] ||= default_max_width
     Table.new(items, opts)
+  end
+
+  def table_args(indent=nil, *args)
+    opts = {}
+    opts[:indent] = indent
+    opts[:width] = [default_max_width, *args]
+    opts
   end
 
   def default_max_width
@@ -163,17 +175,12 @@ end
 # An element capable of being split into multiple logical rows
 #
 module RowBased
-  def each_line(&block)
-    rows.each(&block)
-  end
-  alias_method :each, :each_line
-
-  def to_a
-    rows
-  end
+  extend Forwardable
+  def_delegators :rows, :each, :to_a, :join
+  alias_method :each_line, :each
 end
 
-class HighLine::Header < Struct.new(:text, :width, :indent)
+class HighLine::Header < Struct.new(:text, :width, :indent, :color)
   include RowBased
 
   protected
@@ -227,6 +234,10 @@ class HighLine::Table
     @items, @options, @mapper = items, options, mapper
   end
 
+  def color
+    opts[:color]
+  end
+
   protected 
     attr_reader :items
 
@@ -237,14 +248,14 @@ class HighLine::Table
     def align
       opts[:align] || []
     end
-    def join
+    def joiner
       opts[:join] || ' '
     end
     def indent
       opts[:indent] || ''
     end
     def heading
-      @heading ||= opts[:heading] ? HighLine::Header.new(opts[:heading], calculated_width, indent) : nil
+      @heading ||= opts[:heading] ? HighLine::Header.new(opts[:heading], max_width, indent) : nil
     end
 
     def source_rows
@@ -282,11 +293,15 @@ class HighLine::Table
     Width = Struct.new(:min, :max, :set)
 
     def allocate_widths_for(available)
-      available -= (columns-1) * join.length + indent.length
-      return column_widths.map(&:max) if available >= column_widths.inject(0){ |sum, w| sum + w.max } || column_widths.inject(0){ |sum, w| sum + w.min } > available
+      available -= (columns-1) * joiner.length + indent.length
+      return column_widths.map{ |w| w.max } if available >= column_widths.inject(0){ |sum, w| sum + w.max } || column_widths.inject(0){ |sum, w| sum + w.min } > available
 
       fair = available / columns
-      column_widths.each do |w| 
+      column_widths.each do |w|
+        if w.set > 0
+          available -= w.set
+          next
+        end
         w.set = if w.max <= fair
             available -= w.max
             w.max
@@ -305,30 +320,29 @@ class HighLine::Table
             w.set = alloc + w.min
           end
         end.
-        each{ |w| if available > 0; w.set += 1; available -= 1; end }.
+        each{ |w| if available > 0 && w.set < w.max; w.set += 1; available -= 1; end }.
         map(&:set)
     end
 
     def widths
-      if @widths.nil?
-        @widths ||= begin
-          case w = opts[:width]
-          when Array
-            w[w.length] = nil
-            w[0,w.length]
-          when Integer
-            allocate_widths_for(w)
-          else
-            false
+      @widths ||= begin
+        case w = opts[:width]
+        when Array
+          column_widths.zip(w[1..-1]).each do |width, col| 
+            width.set = col || 0
+            width.max = width.set if width.set > width.max
           end
+          allocate_widths_for(w.first || 0)
+        when Integer
+          allocate_widths_for(w)
+        else
+          column_widths.map{ |w| w.max }
         end
-      else
-        @widths
       end
     end
 
-    def calculated_width
-      @calculated_width ||= widths ? widths.inject(0){ |sum,x| sum + x } + (columns-1) * join.length + indent.length : 0
+    def max_width
+      @max_width ||= opts[:width].is_a?(Array) ? opts[:width].first : (opts[:width] ? opts[:width] : 0)
     end
 
     def header_rows
@@ -340,20 +354,14 @@ class HighLine::Table
 
     def rows
       @rows ||= begin
-        body = if widths
-          fmt = "#{indent}#{widths.zip(align).map{ |w, al| "%#{al == :right ? '' : '-'}#{w}s" }.join(join)}"
+        fmt = "#{indent}#{widths.zip(align).map{ |w, al| "%#{al == :right ? '' : '-'}#{w}s" }.join(joiner)}"
           
-          (header_rows + source_rows).inject([]) do |a,row| 
-            row = row.zip(widths).map{ |column,w| w ? column.textwrap_ansi(w, false) : [column] }
-            row.map(&:length).max.times do |i|
-              a << (fmt % row.map{ |r| r[i] }).rstrip
-            end
-            a
+        body = (header_rows + source_rows).inject([]) do |a,row| 
+          row = row.zip(widths).map{ |column,w| w && w > 0 ? column.textwrap_ansi(w, false) : [column] }
+          row.map(&:length).max.times do |i|
+            a << (fmt % row.map{ |r| r[i] }).rstrip
           end
-        else
-          (header_rows + source_rows).map do |row|
-            "#{indent}#{row.each_with_index.map{ |s,i| s.send((align[i] == :right ? :rjust : :ljust), column_widths[i].max, ' ') }.join(join).rstrip}"
-          end
+          a
         end
         
         body = heading.to_a.concat(body) if heading

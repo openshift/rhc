@@ -4,14 +4,24 @@ module RHC::Commands
   class Snapshot < Base
     summary "Save the current state of your application locally"
     syntax "<action>"
+    description <<-DESC
+      Snapshots allow you to export the current state of your OpenShift application
+      into an archive on your local system, and then to restore it later.
+
+      The snapshot archive contains the Git repository, dumps of any attached databases,
+      and any other information that the cartridges decide to export.
+
+      WARNING: Both 'save' and 'restore' will stop the application and then restart
+      after the operation completes.
+      DESC
     alias_action :"app snapshot", :root_command => true
     default_action :help
 
-    summary "Pull down application snapshot for the specified application."
-    syntax "<application>"
-    option ["-n", "--namespace namespace"], "Namespace of the application you are saving a snapshot", :context => :namespace_context, :required => true
-    option ["-f", "--filepath filepath"], "Local path to save tarball (default: ./$APPNAME.tar.gz)"
-    argument :app, "Application you are saving a snapshot (required)", ["-a", "--app app"]
+    summary "Save a snapshot of your app to disk"
+    syntax "<application> [--filepath FILE]"
+    option ["-n", "--namespace STRING"], "Namespace of the application you are saving a snapshot", :context => :namespace_context, :required => true
+    option ["-f", "--filepath FILE"], "Local path to save tarball (default: ./$APPNAME.tar.gz)"
+    argument :app, "Application you are saving a snapshot", ["-a", "--app app"]
     alias_action :"app snapshot save", :root_command => true, :deprecated => true
     def save(app)
       rest_app = rest_client.find_application(options.namespace, app)
@@ -52,11 +62,11 @@ module RHC::Commands
       0
     end
 
-    summary "Restores a previously saved snapshot."
-    syntax "<application>"
-    option ["-n", "--namespace namespace"], "Namespace of the application you are restoring a snapshot", :context => :namespace_context, :required => true
-    option ["-f", "--filepath filepath"], "Local path to restore tarball"
-    argument :app, "Application of which you are restoring a snapshot (required)", ["-a", "--app app"]
+    summary "Restores a previously saved snapshot"
+    syntax "<application> [--filepath FILE]"
+    option ["-n", "--namespace STRING"], "Namespace of the application you are restoring a snapshot", :context => :namespace_context, :required => true
+    option ["-f", "--filepath FILE"], "Local path to restore tarball"
+    argument :app, "Application of which you are restoring a snapshot", ["-a", "--app app"]
     alias_action :"app snapshot restore", :root_command => true, :deprecated => true
     def restore(app)
 

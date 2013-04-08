@@ -7,7 +7,7 @@ module RHC::Commands
     description "This is a convenience wrapper for 'git clone' with the added",
                 "benefit of adding configuration data such as the application's",
                 "UUID to the local repository.  It also automatically",
-                "figures out the git url from the application name so you don't",
+                "figures out the Git url from the application name so you don't",
                 "have to look it up."
     syntax "<app> [--namespace namespace]"
     option ["-n", "--namespace namespace"], "Namespace of the application", :context => :namespace_context, :required => true

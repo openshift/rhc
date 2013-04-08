@@ -2,8 +2,19 @@ require 'rhc/commands/base'
 
 module RHC::Commands
   class Domain < Base
-    summary "Manage the domain and namespace for your applications."
+    summary "Add or rename the container for your apps"
     syntax "<action>"
+    description <<-DESC
+      OpenShift groups applications within a domain.  Each domain has a namespace value
+      that will be used as part of the public URL for an application.
+
+      For example, when creating a domain with the namespace "test", any applications 
+      created in that domain will have the public URL:
+
+        http://<appname>-test.rhcloud.com
+
+      Today, each account may have a single domain.
+      DESC
     default_action :show
 
     summary "Define a namespace for your applications to share."

@@ -116,6 +116,7 @@ module RHC
         c.description = "Display all global options and information about configuration"
         c.when_called do |args, options|
           say help_formatter.render_options self
+          0
         end
       end
       command :help do |c|

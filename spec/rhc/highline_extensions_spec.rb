@@ -199,7 +199,7 @@ describe HighLineExtension do
   end
 
   it "should force wrap a table based on columns" do
-    subject.table([["ab cd", "123"]], :width => [2]).to_a.should == [
+    subject.table([["ab cd", "123"]], :width => [6, 2]).to_a.should == [
       "ab 123",
       "cd",
     ]

@@ -3,8 +3,17 @@ require 'rhc/config'
 
 module RHC::Commands
   class Alias < Base
-    summary "Add or remove a custom domain name (alias) for the application"
+    summary "Add or remove a custom domain name for an app"
     syntax "<command> <application> <alias> [--namespace namespace]"
+    description <<-DESC
+      Each application may have one or more custom domain names (known as
+      aliases) mapped to it. You may then configure your custom DNS entry
+      CNAME to point to your OpenShift application to serve web requests
+      from that name.
+
+      Each alias may have a single SSL certificate associated with the name
+      to handle SSL traffic.  See the 'add' command for more info.
+      DESC
     default_action :help
 
     summary "Add a custom domain name for the application"

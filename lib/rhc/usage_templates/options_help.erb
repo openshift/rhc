@@ -1,14 +1,12 @@
 The following options can be passed to any command:
 
-<% for option in options -%>
-  <%= "%-25s %s\n" % [option[:switches].join(', '), option[:description]] -%>
-<% end -%>
+<%= table(options.map{ |option| [option[:switches].join(', '), option[:description]] }, table_args('  ', 26)).join("\n") %>
 
 The following configuration options are stored in the <%= RHC::Helpers.system_path('.openshift/express.conf') %> file in your home directory.  Passing any of these options to 'rhc setup' will save that value to the file:
 
-  <%= "%-25s %s\n" % ["Option", "In Config"] -%>
-
-<% for key, value in RHC::Config::OPTIONS -%>
-<% next if value.nil? -%>
-  <%= "%-25s %s\n" % ["--#{key.to_s.gsub('_','-')}", value[0] || key] -%>
-<% end -%>
+<%= table(
+	  RHC::Config::OPTIONS.select{ |key,value| not value.nil? }.map do |key,value| 
+		["--#{key.to_s.gsub('_','-')}", value[0] || key]
+	  end, 
+	  table_args('  ', 26).merge(:header => ['Option', 'In Config'])
+	).join("\n") -%>
