@@ -11,6 +11,7 @@ module RHC::Commands
       add an optional note to each authorization token to assist you in
       remembering what is available.
       DESC
+    alias_action 'authorizations', :root_command => true
     def run
       rest_client.authorizations.each{ |auth| paragraph{ display_authorization(auth, token_for_user) } } or info "No authorizations"
 
