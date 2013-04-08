@@ -121,14 +121,14 @@ describe RHC::CLI do
   describe '#set_terminal' do
     before(:each) { mock_terminal }
     it('should update $terminal.wrap_at') do 
-      $stdin.should_receive(:tty?).twice.and_return(true)
+      $stdin.should_receive(:tty?).once.and_return(true)
       HighLine::SystemExtensions.should_receive(:terminal_size).and_return([5])
       expect { RHC::CLI.set_terminal }.to change($terminal, :wrap_at)
     end
-    it('should update $terminal.page_at') do 
-      $stdin.should_receive(:tty?).twice.and_return(true)
-      $stdout.should_receive(:tty?).twice.and_return(true)
-      expect { RHC::CLI.set_terminal }.to change($terminal, :page_at)
+    it('should not update $terminal.page_at') do 
+      $stdin.should_receive(:tty?).once.and_return(true)
+      $stdout.should_receive(:tty?).once.and_return(true)
+      expect { RHC::CLI.set_terminal }.to_not change($terminal, :page_at)
     end
   end
 
