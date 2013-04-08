@@ -137,6 +137,7 @@ module RHC
         say "See '#{program :name} help' for a list of valid commands."
         1
       else
+        RHC::Helpers.pager
         command = command(cmd)
         help_bindings = CommandHelpBindings.new command, commands, self
         say help_formatter.render_command help_bindings

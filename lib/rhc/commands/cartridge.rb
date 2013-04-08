@@ -35,6 +35,8 @@ module RHC::Commands
     def list
       carts = rest_client.cartridges.sort_by{ |c| "#{c.type == 'standalone' && 1}_#{c.tags.include?('experimental') ? 1 : 0}_#{(c.display_name || c.name).downcase}" }
 
+      pager
+      
       if options.verbose
         carts.each do |c|
           paragraph do 
