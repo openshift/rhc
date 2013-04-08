@@ -85,21 +85,27 @@ class String
         (?:\s+|$)?
       )
       /x
+    escapes = []
 
     split("\n",-1).inject([]) do |a, line|
       if line.length < limit
         a << line 
       else
         line.scan(re) do |segment, other|
-          # short escape sequence matches have whitespace from regex
-          a << segment.rstrip   
-          # find any escape sequences after the last 0m reset, in order
-          escapes = segment.scan(ANSI_ESCAPE_SEQUENCE).map{ |e| e.first }.reverse.take_while{ |e| e != '0m' }.uniq.reverse
-          if escapes.present?
-            a[-1] << "\e[0m"
-            # TODO: Apply the unclosed sequences to the beginning of the
-            #       next string
+          if escapes.present? 
+            a << escapes.map{ |s| "\e[#{s}"}.join
+            a[-1] << segment.rstrip   
+          else
+            a << segment.rstrip
           end
+
+          segment.scan(ANSI_ESCAPE_SEQUENCE).map{ |e| e.first }.each do |e|
+            case e
+            when '0m' then escapes.clear
+            else escapes << e
+            end
+          end
+          a[-1] << "\e[0m" if escapes.present?
         end
       end
       a

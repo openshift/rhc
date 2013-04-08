@@ -332,10 +332,10 @@ describe RHC::Helpers do
     it{ "\e[31;1m".textwrap_ansi(1).should == ["\e[31;1m\e[0m"] }
     it{ "\e[1ma".textwrap_ansi(1).should == ["\e[1ma\e[0m"] }
     it{ "a\e[12m".textwrap_ansi(1).should == ["a\e[12m\e[0m"] }
-    it{ "a\e[12m\e[34mb".textwrap_ansi(1).should == ["a\e[12m\e[34m\e[0m","b"] }
+    it{ "a\e[12m\e[34mb".textwrap_ansi(1).should == ["a\e[12m\e[34m\e[0m","\e[12m\e[34mb\e[0m"] }
     it{ "\e[12;34ma".textwrap_ansi(1).should == ["\e[12;34ma\e[0m"] }
     it{ "\e[1m\e[1m".textwrap_ansi(1).should == ["\e[1m\e[1m\e[0m"] }
-    it{ "\e[1m \e[1m".textwrap_ansi(1).should == ["\e[1m\e[0m", "\e[1m\e[0m"] }
+    it{ "\e[1m \e[1m".textwrap_ansi(1).should == ["\e[1m\e[0m", "\e[1m\e[1m\e[0m"] }
 
     it{ "ab".textwrap_ansi(1,false).should == ['ab'] }
     it{ " abc".textwrap_ansi(3,false).should == [' abc'] }
