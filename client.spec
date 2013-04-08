@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.7.1
+Version: 1.7.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -99,6 +99,31 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Apr 08 2013 Adam Miller <admiller@redhat.com> 1.7.2-1
+- Replace expect{}.should with expect{}.to in remaining spots, depend on
+  webmock 1.8 (ccoleman@redhat.com)
+- Upgrade spec tests to passing, fix RSpec2 syntax errors, ensure randomized
+  tests pass correctly (ccoleman@redhat.com)
+- Merge pull request #347 from smarterclayton/delete_unused_files
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #348 from smarterclayton/bug_928240_prevent_from_code
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #346 from
+  smarterclayton/bug_927425_use_authorization_tokens_not_strict_enough
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #345 from fabianofranz/master
+  (dmcphers+openshiftbot@redhat.com)
+- Remove doc files from spec (ccoleman@redhat.com)
+- Bug 928240 - --from-code is not supported on clients where the latest API
+  version is < 1.3 (ccoleman@redhat.com)
+- Delete unused files (ccoleman@redhat.com)
+- Bug 927425 - The use_authorization_tokens flag should be strict
+  (ccoleman@redhat.com)
+- Merge pull request #344 from jtharris/bugs/BZ928357 (dmcphers@redhat.com)
+- Bug 928210 - fixed remove alias for API <= 1.3 (ffranz@redhat.com)
+- Tests allow multiple DB cartridges to be added. (jharris@redhat.com)
+- Bug 928357 - rhc_extended tests (jharris@redhat.com)
+
 * Thu Mar 28 2013 Adam Miller <admiller@redhat.com> 1.7.1-1
 - bump_minor_versions for sprint 26 (admiller@redhat.com)
 - removing old API doc (dmcphers@redhat.com)
