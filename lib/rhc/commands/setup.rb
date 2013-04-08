@@ -33,12 +33,17 @@ module RHC::Commands
     option ['--autocomplete'], "Instructions for enabling tab-completion"
     def run
       if options.autocomplete
-        path = File.join(File.join(Gem.loaded_specs['rhc'].full_gem_path, "autocomplete"), "rhc_bash")
+        src = File.join(File.join(Gem.loaded_specs['rhc'].full_gem_path, "autocomplete"), "rhc_bash")
+        dest = File.join(RHC::Config.home_conf_dir, "bash_autocomplete")
+        
+        FileUtils.mkdir_p(RHC::Config.home_conf_dir)
+        FileUtils.cp(src, dest)
+
         say <<-LINE.strip_heredoc
           To enable tab-completion for RHC under Bash shells, add the following command to
           your .bashrc or .bash_profile file:
 
-            . #{path}
+            . #{dest}
 
           Save your shell and then restart. Type "rhc" and then hit the TAB key twice to 
           trigger completion of your command.

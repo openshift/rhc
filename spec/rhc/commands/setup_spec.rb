@@ -104,10 +104,15 @@ describe RHC::Commands::Setup do
 
   describe '--autocomplete' do
     let(:arguments) { ['setup', '--autocomplete'] }
+    before do 
+      path = File.join(Gem.loaded_specs['rhc'].full_gem_path, "autocomplete")
+      FakeFS::FileUtils.mkdir_p(path)
+      FakeFS::FileUtils.touch(File.join(path, "rhc_bash"))
+    end
 
     context 'is passed' do
-      it('should output information') { run_output.should match("To enable tab-completion") }
-      it('should output the gem path') { run_output.should match File.join(Gem.loaded_specs['rhc'].full_gem_path, 'autocomplete') }
+      it('should output information') { FakeFS{ run_output.should match("To enable tab-completion") } }
+      it('should output the gem path') { FakeFS{ run_output.should match File.join(RHC::Config.home_conf_dir, 'bash_autocomplete') } }
     end
   end
 end
