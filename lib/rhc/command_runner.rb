@@ -127,16 +127,49 @@ module RHC
     end
 
     def run_help(args=[], options=nil)
-      cmd = (1..args.length).reverse_each.map{ |n| args[0,n].join('-') }.find{ |cmd| command_exists?(cmd) }
+      args.delete_if{ |a| a.start_with? '-' }
+      unless args[0] == 'commands'
+        variations = (1..args.length).reverse_each.map{ |n| args[0,n].join('-') }
+        cmd = variations.first(1).find{ |cmd| command_exists?(cmd) }
+      end
 
       if args.empty?
         say help_formatter.render
         0
-      elsif cmd.nil?
-        RHC::Helpers.error "The command '#{program :name} #{provided_arguments.join(' ')}' is not recognized.\n"
-        say "See '#{program :name} help' for a list of valid commands."
-        1
       else
+        if cmd.nil?
+          matches = (variations || ['']).inject(nil) do |candidates, term|
+            prefix = commands.keys.select{ |n| n.downcase.start_with? term.downcase }
+            inline = commands.keys.select{ |n| n.downcase.include? term.downcase }
+            break [term, prefix, inline - prefix] unless prefix.empty? && inline.empty?
+          end
+
+          unless matches
+            RHC::Helpers.error "The command '#{program :name} #{provided_arguments.join(' ')}' is not recognized.\n"
+            say "See '#{program :name} help' for a list of valid commands." 
+            return 1
+          end
+
+          candidates = (matches[1] + matches[2]).map{ |n| commands[n] }.uniq.sort_by{ |c| c.name }.reverse
+          if candidates.length == 1
+            cmd = candidates.first.name
+          else
+            RHC::Helpers.pager
+            RHC::Helpers.say matches[0] != '' ? "Showing commands matching '#{matches[0]}'" : "Showing all commands"
+            candidates.reverse.each do |command|
+              RHC::Helpers.paragraph do
+                aliases = (commands.map{ |(k,v)| k if command == v }.compact - [command.name]).map{ |s| "'#{s}'"}
+                aliases[0] = "(also #{aliases[0]}" if aliases[0]
+                aliases[-1] << ')' if aliases[0]
+
+                RHC::Helpers.header [RHC::Helpers.color(command.name, :cyan), *aliases.join(', ')]
+                say command.description || command.summary
+              end
+            end
+            return 1
+          end
+        end
+
         RHC::Helpers.pager
         command = command(cmd)
         help_bindings = CommandHelpBindings.new command, commands, self

@@ -25,7 +25,7 @@ Management commands:
 
   Some management commands have nested actions - run 'rhc help <command>' for more info.
 
-See '<%= Array(program :name).first %> help <command>' for more information on a specific command.  See 'rhc help options' for a list of global command-line options and information about the config file.
+See '<%= Array(program :name).first %> help <command>' for more information on a specific command.  You can see a list of all commands with 'rhc help commands'. See 'rhc help options' for a list of global command-line options and information about the config file.  
 <% if program :help -%>
   <% for title, body in program(:help) %>
   <%= $terminal.color title.to_s.upcase, :bold %>:
