@@ -1,3 +1,5 @@
+require 'delegate'
+
 #
 # Add specific improved functionality
 #
