@@ -7,7 +7,7 @@ module RHC::Commands
     syntax "<action>"
     description <<-DESC
       Cartridges add functionality to OpenShift applications.  Each application
-      has one web cartridge to listens for HTTP requests, and any number
+      has one web cartridge to listen for HTTP requests, and any number
       of addon cartridges.  Addons may include databases like MySQL and Mongo, 
       administrative tools like phpMyAdmin, or build clients like Jenkins.
 

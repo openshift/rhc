@@ -336,6 +336,7 @@ describe RHC::Helpers do
     it{ "\e[12;34ma".textwrap_ansi(1).should == ["\e[12;34ma\e[0m"] }
     it{ "\e[1m\e[1m".textwrap_ansi(1).should == ["\e[1m\e[1m\e[0m"] }
     it{ "\e[1m \e[1m".textwrap_ansi(1).should == ["\e[1m\e[0m", "\e[1m\e[1m\e[0m"] }
+    it{ "\e[1ma\nb".textwrap_ansi(80).should == ["\e[1ma","b"] }
 
     it{ "ab".textwrap_ansi(1,false).should == ['ab'] }
     it{ " abc".textwrap_ansi(3,false).should == [' abc'] }
@@ -349,6 +350,8 @@ describe RHC::Helpers do
 
   describe "#strip_ansi" do
     it{ "\e[1m \e[1m".strip_ansi.should == " " }
+    it{ "\eiei0".strip_ansi.should == "\eiei0" } 
+    it{ "\e[iei0]".strip_ansi.should == "\e[iei0]" } 
   end
 
   context "Resolv helper" do

@@ -33,6 +33,11 @@ module RHC
       RHC::Vendor::OkJson.decode(s)
     end
 
+    def system_path(path)
+      return path.gsub(File::SEPARATOR, File::ALT_SEPARATOR) if File.const_defined?('ALT_SEPARATOR') and File::ALT_SEPARATOR.present?
+      path
+    end
+
     def date(s)
       now = Date.today
       d = datetime_rfc3339(s).to_time
@@ -112,7 +117,7 @@ module RHC
     global_option '--noprompt', "Suppress all interactive operations command", :hide => true do
       $terminal.page_at = nil
     end
-    global_option '--config FILE', "Path of a different config file", :hide => true
+    global_option '--config FILE', "Path of a different config file (default: #{system_path("~/.openshift/express.conf")})", :hide => true
     global_option '--clean', "Ignore any saved configuration options", :hide => true
     global_option '--mock', "Run in mock mode", :hide => true do
       #:nocov:
@@ -307,11 +312,6 @@ module RHC
     def windows? ; RUBY_PLATFORM =~ /win(32|dows|ce)|djgpp|(ms|cyg|bcc)win|mingw32/i end
     def unix? ; !jruby? && !windows? end
     def mac? ; RbConfig::CONFIG['host_os'] =~ /^darwin/ end
-
-    def system_path(path)
-      return path.gsub(File::SEPARATOR, File::ALT_SEPARATOR) if File.const_defined?('ALT_SEPARATOR') and File::ALT_SEPARATOR.present?
-      path
-    end
 
     #
     # Check if host exists
