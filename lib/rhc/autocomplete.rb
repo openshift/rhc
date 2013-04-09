@@ -43,7 +43,16 @@ module RHC
         end
 
         v = @commands[name.to_s] || {:actions => [], :switches => []}
-        v[:switches].concat(cmd.options.map{ |o| o[:switches][-1].split(' ')[0] if o[:switches] }.compact.sort)
+        v[:switches].concat(cmd.options.map do |o| 
+          if o[:switches] 
+            s = o[:switches][-1].split(' ')[0]
+            if m = /--\[no-\](.+)/.match(s)
+              s = ["--#{m[1]}", "--no-#{m[1]}"]
+            else
+              s
+            end
+          end
+        end.flatten.compact.sort)
         @commands[name.to_s] = v
       end
       @commands.delete('')

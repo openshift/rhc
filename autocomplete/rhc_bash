@@ -174,7 +174,7 @@ _rhc()
 
       "rhc app create")
         if [[ "$cur" == -* ]]; then
-          opts="--[no-]dns --[no-]git --app --enable-jenkins --from-code --gear-size --namespace --nogit --repo --scaling --type"
+          opts="--app --dns --enable-jenkins --from-code --gear-size --git --namespace --no-dns --no-git --nogit --repo --scaling --type"
         else
           opts=""
         fi
@@ -262,7 +262,7 @@ _rhc()
 
       "rhc app-create")
         if [[ "$cur" == -* ]]; then
-          opts="--[no-]dns --[no-]git --app --enable-jenkins --from-code --gear-size --namespace --nogit --repo --scaling --type"
+          opts="--app --dns --enable-jenkins --from-code --gear-size --git --namespace --no-dns --no-git --nogit --repo --scaling --type"
         else
           opts=""
         fi
@@ -614,7 +614,7 @@ _rhc()
 
       "rhc create-app")
         if [[ "$cur" == -* ]]; then
-          opts="--[no-]dns --[no-]git --app --enable-jenkins --from-code --gear-size --namespace --nogit --repo --scaling --type"
+          opts="--app --dns --enable-jenkins --from-code --gear-size --git --namespace --no-dns --no-git --nogit --repo --scaling --type"
         else
           opts=""
         fi
@@ -918,7 +918,7 @@ _rhc()
 
       "rhc setup")
         if [[ "$cur" == -* ]]; then
-          opts="--[no-]create-token --autocomplete --clean --server"
+          opts="--autocomplete --clean --create-token --no-create-token --server"
         else
           opts=""
         fi
