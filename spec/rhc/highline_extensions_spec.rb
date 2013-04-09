@@ -93,7 +93,7 @@ describe HighLineExtension do
   subject{ MockHighLineTerminal.new }
 
   it("default_max_width should depend on wrap"){ subject.wrap_at = nil; subject.default_max_width.should be_nil}
-  it("default_max_width should handle indentation"){ subject.wrap_at = 10; subject.indent{ subject.default_max_width.should == 7 } }
+  it("default_max_width should handle indentation"){ subject.wrap_at = 10; subject.indent{ subject.default_max_width.should == 10 - subject.indentation.length } }
 
   it "should wrap the terminal" do
     subject.wrap_at = 10

@@ -87,6 +87,8 @@ class HighLineExtension < HighLine
     # Outputs indentation with current settings
     #
     def indentation
+      @indent_size ||= 2
+      @indent_level ||= 0
       return ' '*@indent_size*@indent_level
     end
 
@@ -94,6 +96,8 @@ class HighLineExtension < HighLine
     # Executes block or outputs statement with indentation
     #
     def indent(increase=1, statement=nil, multiline=nil)
+      @indent_size ||= 2
+      @indent_level ||= 0
       @indent_level += increase
       multi = @multi_indent
       @multi_indent = multiline unless multiline.nil?
@@ -399,4 +403,4 @@ class HighLine::Table
 end
 
 $terminal = HighLineExtension.new
-$terminal.indent_size = 2
+$terminal.indent_size = 2 if $terminal.respond_to? :indent_size
