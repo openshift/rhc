@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.7.2
+Version: 1.7.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -99,6 +99,11 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Apr 10 2013 Adam Miller <admiller@redhat.com> 1.7.3-1
+- Fix broken rhc_extended tests (ccoleman@redhat.com)
+- Ruby 1.8 treats Integer(nil) as 0, and 1.9 treats it as nil.  Switch to
+  default gracefully. (ccoleman@redhat.com)
+
 * Mon Apr 08 2013 Adam Miller <admiller@redhat.com> 1.7.2-1
 - Replace expect{}.should with expect{}.to in remaining spots, depend on
   webmock 1.8 (ccoleman@redhat.com)
