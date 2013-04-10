@@ -29,20 +29,13 @@ module RHC
     MAX_RETRIES = 7
     DEFAULT_DELAY_THROTTLE = 2.0
 
-    def disable_deprecated?
-      # 1) default for now is false
-      # 2) when releasing a 1.0 beta flip this to true
-      # 3) all deprecated aliases should be removed right before 1.0
-      disable = false
-
-      env_disable = ENV['DISABLE_DEPRECATED']
-      disable = true if env_disable == '1'
-
-      disable
-    end
-
     def decode_json(s)
       RHC::Vendor::OkJson.decode(s)
+    end
+
+    def system_path(path)
+      return path.gsub(File::SEPARATOR, File::ALT_SEPARATOR) if File.const_defined?('ALT_SEPARATOR') and File::ALT_SEPARATOR.present?
+      path
     end
 
     def date(s)
@@ -124,7 +117,7 @@ module RHC
     global_option '--noprompt', "Suppress all interactive operations command", :hide => true do
       $terminal.page_at = nil
     end
-    global_option '--config FILE', "Path of a different config file", :hide => true
+    global_option '--config FILE', "Path of a different config file (default: #{system_path("~/.openshift/express.conf")})", :hide => true
     global_option '--clean', "Ignore any saved configuration options", :hide => true
     global_option '--mock', "Run in mock mode", :hide => true do
       #:nocov:
@@ -197,64 +190,21 @@ module RHC
       false
     end
 
-    def deprecated_command(correct,short = false)
-      deprecated("This command is deprecated. Please use '#{correct}' instead.",short)
+    def disable_deprecated?
+      ENV['DISABLE_DEPRECATED'] == '1'
     end
 
-    def deprecated_option(deprecated,new)
-      deprecated("The option '#{deprecated}' is deprecated. Please use '#{new}' instead")
+    def deprecated_command(correct, short=false)
+      deprecated("This command is deprecated. Please use '#{correct}' instead.", short)
+    end
+
+    def deprecated_option(deprecated, other)
+      deprecated("The option '#{deprecated}' is deprecated. Please use '#{other}' instead")
     end
 
     def deprecated(msg,short = false)
-      HighLine::use_color = false if windows? # handle deprecated commands that does not start through highline
-
-      info = " For porting and testing purposes you may switch this %s to %s by setting the DISABLE_DEPRECATED environment variable to %d.  It is not recommended to do so in a production environment as this option will be removed in a future release."
-      msg << info unless short
-
       raise DeprecatedError.new(msg % ['an error','a warning',0]) if disable_deprecated?
-
       warn "Warning: #{msg}\n" % ['a warning','an error',1]
-    end
-
-    @@indent = 0
-    @@last_line_open = false
-    def say(msg, *args)
-      output = if Hash[*args][:stderr]
-          $stderr
-        else
-          separate_blocks
-          $terminal.instance_variable_get(:@output)
-        end
-
-      Array(msg).each do |statement|
-        statement = statement.to_str
-        next unless statement.present?
-
-        template  = ERB.new(statement, nil, "%")
-        statement = template.result(binding)
-
-        statement = $terminal.wrap(statement) unless $terminal.instance_variable_get(:@wrap_at).nil?
-        statement = $terminal.send(:page_print, statement) unless $terminal.instance_variable_get(:@page_at).nil?
-
-        output.print(' ' * @@indent * INDENT) unless @@last_line_open
-
-        @@last_line_open = 
-          if statement[-1, 1] == " " or statement[-1, 1] == "\t"
-            output.print(statement)
-            output.flush
-          else
-            output.puts(statement)
-          end
-      end
-
-      msg
-    end
-
-    [:ask, :agree].each do |sym|
-      define_method(sym) do |*args, &block|
-        separate_blocks
-        super(*args, &block)
-      end
     end
 
     def confirm_action(question)
@@ -279,39 +229,19 @@ module RHC
       say color(msg, :red), *args
     end
 
-    def color(s, color)
-      $terminal.color(s, color)
+    # OVERRIDE: Replaces default commander behavior
+    def color(*args)
+      $terminal.color(*args)
+    end
+
+    [:pager, :indent, :paragraph, :section, :header, :table, :table_args].each do |sym|
+      define_method(sym) do |*args, &block|
+        $terminal.send(sym, *args, &block)
+      end
     end
 
     def pluralize(count, s)
       count == 1 ? "#{count} #{s}" : "#{count} #{s}s"
-    end
-
-    # given an array of arrays "items", construct an array of strings that can
-    # be used to print in tabular form.
-    def table(items, opts={}, &block)
-      items = items.map &block if block_given?
-      widths = []
-      items.each do |item|
-        item.each_with_index do |s, i|
-          item[i] = s.to_s
-          widths[i] = [widths[i] || 0, item[i].length].max
-        end
-      end
-      align = opts[:align] || []
-      join = opts[:join] || ' '
-      if opts[:header]
-        opts[:header].each_with_index do |s, i|
-          widths[i] = [widths[i] || 0, s.length].max
-        end
-        sep = opts[:separator] || "="
-        ary = Array.new(opts[:header].length)
-        items.unshift ary.each_with_index {|obj, idx| ary[idx] = sep.to_s * (widths[idx] || 1)}
-        items.unshift(opts[:header])
-      end
-      items.map do |item|
-        item.each_with_index.map{ |s,i| s.send((align[i] == :right ? :rjust : :ljust), widths[i], ' ') }.join(join).rstrip
-      end
     end
 
     # This will format table headings for a consistent look and feel
@@ -364,92 +294,6 @@ module RHC
       end
     end
 
-    #def tee(&block)
-    #  original = [$stdout, $stderr]
-    #  $stdout, $stderr = (tees = original.map{ |io| StringTee.new(io) })
-    #  yield
-    #ensure
-    #  $stdout, $stderr = original
-    #  tees.each(&:close_write).map(&:string)
-    #end
-
-    def header(str,opts = {}, &block)
-      str = underline(str)
-      str = str.map{ |s| color(s, opts[:color]) } if opts[:color]
-      say str
-      if block_given?
-        indent &block
-      end
-    end
-
-    def underline(s)
-      [s, "-"*s.length]
-    end
-
-    INDENT = 2
-    def indent(&block)
-      @@indent += 1
-      begin
-        yield
-      ensure
-        @@indent -= 1
-      end
-    end
-
-    ##
-    # section
-    #
-    # highline helper mixin which correctly formats block of say and ask
-    # output to have correct margins.  section remembers the last margin
-    # used and calculates the relitive margin from the previous section.
-    # For example:
-    #
-    # section(bottom=1) do
-    #   say "Hello"
-    # end
-    #
-    # section(top=1) do
-    #   say "World"
-    # end
-    #
-    # Will output:
-    #
-    # > Hello
-    # >
-    # > World 
-    #
-    # with only one newline between the two.  Biggest margin wins.
-    #
-    # params:
-    #  top - top margin specified in lines
-    #  bottom - bottom margin specified in line
-    #
-    @@margin = nil
-    def section(params={}, &block)
-      top = params[:top] || 0
-      bottom = params[:bottom] || 0
-
-      # the first section cannot take a newline
-      top = 0 unless @@margin
-      @@margin = [top, @@margin || 0].max
-
-      value = block.call
-
-      say "\n" if @@last_line_open
-      @@margin = [bottom, @@margin].max
-
-      value
-    end
-
-    ##
-    # paragraph
-    #
-    # highline helper which creates a section with margins of 1, 1
-    #
-    def paragraph(&block)
-      section(:top => 1, :bottom => 1, &block)
-    end
-
     ##
     # results
     #
@@ -468,11 +312,6 @@ module RHC
     def windows? ; RUBY_PLATFORM =~ /win(32|dows|ce)|djgpp|(ms|cyg|bcc)win|mingw32/i end
     def unix? ; !jruby? && !windows? end
     def mac? ; RbConfig::CONFIG['host_os'] =~ /^darwin/ end
-
-    def system_path(path)
-      return path.gsub(File::SEPARATOR, File::ALT_SEPARATOR) if File.const_defined?('ALT_SEPARATOR') and File::ALT_SEPARATOR.present?
-      path
-    end
 
     #
     # Check if host exists
@@ -533,14 +372,5 @@ module RHC
 
       [status, stdout, stderr]
     end
-
-    private
-
-      def separate_blocks
-        if (@@margin ||= 0) > 0 && !@@last_line_open
-          $terminal.instance_variable_get(:@output).print "\n" * @@margin
-          @@margin = 0
-        end
-      end
   end
 end

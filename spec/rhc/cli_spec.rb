@@ -26,6 +26,20 @@ describe RHC::CLI do
     it('should provide a --config switch') { run_output.should =~ /\-\-config FILE/ }
   end
 
+  shared_examples_for 'a list of all commands' do
+    let(:arguments) { @arguments or raise "no arguments" }
+    it('should contain a message') { run_output.should =~ /Showing all commands/ }
+    it('should contain command help') { run_output.should =~ /Create an application./ }
+    it('should contain aliases') { run_output.should =~ /\(also/ }
+  end
+
+  shared_examples_for 'a list of commands' do
+    let(:arguments) { @arguments or raise "no arguments" }
+    it('should contain a message') { run_output.should =~ /Showing commands matching '/ }
+    it('should contain command help') { run_output.should =~ /Create an application./ }
+    it('should contain aliases') { run_output.should =~ /\(also/ }
+  end
+
   shared_examples_for 'a command-line options help page' do
     let(:arguments) { @arguments or raise "no arguments" }
     it('should contain an introduction') { run_output.should =~ /The following options can be passed to any/ }
@@ -92,6 +106,23 @@ describe RHC::CLI do
       it_should_behave_like 'an invalid command'
     end
 
+    context 'with help commands' do
+      before(:each) { @arguments = ['help', 'commands'] }
+      it_should_behave_like 'a list of all commands'
+    end
+
+    context 'with help and possible command matches' do
+      before(:each) { @arguments = ['help', 'app c'] }
+      it_should_behave_like 'a list of commands'
+    end
+
+    context 'with help and a single matching command segment' do
+      let(:arguments){ ['help', 'app creat'] }
+      it("prints the usage for the command"){ run_output.should match('Usage: rhc app-create <') }
+      it("prints part of the description for the command"){ run_output.should match('OpenShift runs the components of your') }
+      it("prints a local option"){ run_output.should match('--namespace NAME') }
+    end
+
     context 'with --help' do
       before(:each){ @arguments = ['--help'] }
       it_should_behave_like 'a global help page'
@@ -121,14 +152,14 @@ describe RHC::CLI do
   describe '#set_terminal' do
     before(:each) { mock_terminal }
     it('should update $terminal.wrap_at') do 
-      $stdin.should_receive(:tty?).twice.and_return(true)
+      $stdin.should_receive(:tty?).once.and_return(true)
       HighLine::SystemExtensions.should_receive(:terminal_size).and_return([5])
       expect { RHC::CLI.set_terminal }.to change($terminal, :wrap_at)
     end
-    it('should update $terminal.page_at') do 
-      $stdin.should_receive(:tty?).twice.and_return(true)
-      $stdout.should_receive(:tty?).twice.and_return(true)
-      expect { RHC::CLI.set_terminal }.to change($terminal, :page_at)
+    it('should not update $terminal.page_at') do 
+      $stdin.should_receive(:tty?).once.and_return(true)
+      $stdout.should_receive(:tty?).once.and_return(true)
+      expect { RHC::CLI.set_terminal }.to_not change($terminal, :page_at)
     end
   end
 

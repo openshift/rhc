@@ -38,7 +38,7 @@ module RHC::Commands
 
       DESC
     syntax "<name> <cartridge> [-n namespace]"
-    option ["-n", "--namespace namespace"], "Namespace for the application", :context => :namespace_context
+    option ["-n", "--namespace NAME"], "Namespace for the application", :context => :namespace_context
     option ["-g", "--gear-size size"], "Gear size controls how much memory and CPU your cartridges can use."
     option ["-s", "--scaling"], "Enable scaling for the web cartridge."
     option ["-r", "--repo dir"], "Path to the Git repository (defaults to ./$app_name)"
@@ -174,8 +174,8 @@ module RHC::Commands
     summary "Delete an application from the server"
     description "Deletes your application and all of its data from the server.",
                 "Use with caution as this operation is permanent."
-    syntax "<app> [--namespace namespace]"
-    option ["-n", "--namespace namespace"], "Namespace your application belongs to", :context => :namespace_context, :required => true
+    syntax "<app> [--namespace NAME]"
+    option ["-n", "--namespace NAME"], "Namespace your application belongs to", :context => :namespace_context, :required => true
     option ["-b", "--bypass"], "DEPRECATED Please use '--confirm'", :deprecated => {:key => :confirm, :value => true}
     option ["--confirm"], "Pass to confirm deleting the application"
     argument :app, "The application you wish to delete", ["-a", "--app name"], :context => :app_context
@@ -193,9 +193,9 @@ module RHC::Commands
     end
 
     summary "Start the application"
-    syntax "<app> [--namespace namespace] [--app app]"
-    argument :app, "The name of the application you are starting", ["-a", "--app app"], :context => :app_context
-    option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
+    syntax "<app> [--namespace NAME] [--app NAME]"
+    argument :app, "The name of the application you are starting", ["-a", "--app NAME"], :context => :app_context
+    option ["-n", "--namespace NAME"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
     def start(app)
       app_action app, :start
 
@@ -204,9 +204,9 @@ module RHC::Commands
     end
 
     summary "Stop the application"
-    syntax "<app> [--namespace namespace] [--app app]"
-    argument :app, "The name of the application you are stopping", ["-a", "--app app"], :context => :app_context
-    option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
+    syntax "<app> [--namespace NAME] [--app NAME]"
+    argument :app, "The name of the application you are stopping", ["-a", "--app NAME"], :context => :app_context
+    option ["-n", "--namespace NAME"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
     def stop(app)
       app_action app, :stop
 
@@ -215,9 +215,9 @@ module RHC::Commands
     end
 
     summary "Stops all application processes"
-    syntax "<app> [--namespace namespace] [--app app]"
-    argument :app, "The name of the application you are stopping", ["-a", "--app app"], :context => :app_context
-    option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
+    syntax "<app> [--namespace NAME] [--app NAME]"
+    argument :app, "The name of the application you are stopping", ["-a", "--app NAME"], :context => :app_context
+    option ["-n", "--namespace NAME"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
     def force_stop(app)
       app_action app, :stop, true
 
@@ -226,9 +226,9 @@ module RHC::Commands
     end
 
     summary "Restart the application"
-    syntax "<app> [--namespace namespace] [--app app]"
-    argument :app, "The name of the application you are restarting", ["-a", "--app app"], :context => :app_context
-    option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
+    syntax "<app> [--namespace NAME] [--app NAME]"
+    argument :app, "The name of the application you are restarting", ["-a", "--app NAME"], :context => :app_context
+    option ["-n", "--namespace NAME"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
     def restart(app)
       app_action app, :restart
 
@@ -237,9 +237,9 @@ module RHC::Commands
     end
 
     summary "Reload the application's configuration"
-    syntax "<app> [--namespace namespace] [--app app]"
-    argument :app, "The name of the application you are reloading", ["-a", "--app app"], :context => :app_context
-    option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
+    syntax "<app> [--namespace NAME] [--app NAME]"
+    argument :app, "The name of the application you are reloading", ["-a", "--app NAME"], :context => :app_context
+    option ["-n", "--namespace NAME"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
     def reload(app)
       app_action app, :reload
 
@@ -248,9 +248,9 @@ module RHC::Commands
     end
 
     summary "Clean out the application's logs and tmp directories and tidy up the git repo on the server"
-    syntax "<app> [--namespace namespace] [--app app]"
-    argument :app, "The name of the application you are tidying", ["-a", "--app app"], :context => :app_context
-    option ["-n", "--namespace namespace"], "Namespace of the application belongs to", :context => :namespace_context, :required => true
+    syntax "<app> [--namespace NAME] [--app NAME]"
+    argument :app, "The name of the application you are tidying", ["-a", "--app NAME"], :context => :app_context
+    option ["-n", "--namespace NAME"], "Namespace of the application belongs to", :context => :namespace_context, :required => true
     def tidy(app)
       app_action app, :tidy
 
@@ -259,9 +259,9 @@ module RHC::Commands
     end
 
     summary "Show information about an application"
-    syntax "<app> [--namespace namespace]"
-    argument :app, "The name of the application you are getting information on", ["-a", "--app app"], :context => :app_context
-    option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
+    syntax "<app> [--namespace NAME]"
+    argument :app, "The name of the application you are getting information on", ["-a", "--app NAME"], :context => :app_context
+    option ["-n", "--namespace NAME"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
     option ["--state"], "Get the current state of the cartridges in this application"
     option ["--gears"], "Show the ID, state, and cartridges on each gear in this application"
     def show(app_name)
@@ -282,9 +282,9 @@ module RHC::Commands
 
     summary "SSH into the specified application"
     syntax "<app> [--ssh path_to_ssh_executable]"
-    argument :app, "The name of the application you want to SSH into", ["-a", "--app app"], :context => :app_context
+    argument :app, "The name of the application you want to SSH into", ["-a", "--app NAME"], :context => :app_context
     option ["--ssh PATH"], "Path to your SSH executable"
-    option ["-n", "--namespace namespace"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
+    option ["-n", "--namespace NAME"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
     alias_action 'ssh', :root_command => true
     def ssh(app_name)
       raise ArgumentError, "No application specified" unless app_name.present?
@@ -303,9 +303,9 @@ module RHC::Commands
     end
 
     summary "DEPRECATED use 'show <app> --state' instead"
-    syntax "<app> [--namespace namespace] [--app app]"
-    argument :app, "The name of the application you are getting information on", ["-a", "--app app"], :context => :app_context
-    option ["-n", "--namespace namespace"], "Namespace of the application belongs to", :context => :namespace_context, :required => true
+    syntax "<app> [--namespace NAME] [--app NAME]"
+    argument :app, "The name of the application you are getting information on", ["-a", "--app NAME"], :context => :app_context
+    option ["-n", "--namespace NAME"], "Namespace of the application belongs to", :context => :namespace_context, :required => true
     deprecated "rhc app show --state"
     def status(app)
       # TODO: add a way to deprecate this and alias to show --apache

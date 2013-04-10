@@ -4,25 +4,32 @@ Usage: <%= Array(program :name).first %> <%= @command.name %> <%= @command.synta
 <% if @actions.blank? -%>
 <% unless @command.options.blank? or @command.options.all?{ |o| o[:hide] } -%>
 
-Options for <%= @command.name %>
-<% for option in @command.options -%><% next if option[:hide] -%>
-  <%= "%-25s %s\n" % [option[:switches].join(', '), option[:description]] -%>
-<% end -%>
+Options
+<%= table(
+	  @command.options.select do |opt| 
+	  	not opt[:hide]
+	  end.map do |opt| 
+	  	[opt[:switches].join(', '), opt[:description]] 
+	  end, 
+	  table_args('  ', 25)
+	).join("\n") %>
 <% end -%>
 
 Global Options
-<% for option in @global_options -%><% next if option[:hide] || @command.options.any?{ |o| (o[:switches] & option[:switches]).present? } -%>
-  <%= "%-25s %s\n" % [option[:switches].join(', '), option[:description]] -%>
-<% end -%>
+<%= table(
+	  @global_options.select do |opt| 
+	  	not (opt[:hide] || @command.options.any?{ |o| (o[:switches] & opt[:switches]).present? })
+	  end.map do |opt| 
+	  	[opt[:switches].join(', '), opt[:description]] 
+	  end, 
+	  table_args('  ', 25)
+	).join("\n") %>
 
-See 'rhc help options' for a full list of command-line options.
-
+  See 'rhc help options' for a full list of global options.
 <% else -%>
 
 List of Actions
-<% for action in @actions -%>
-  <%= "%-18s %s\n" % [action[:name], action[:summary]] -%>
-<% end -%>
+<%= table(@actions.map{ |a| [a[:name], a[:summary]] }, table_args('  ', 13)).join("\n") %>
 <% if @command.default_action? -%>
 
 The default action for this resource is '<%= @command.default_action %>'

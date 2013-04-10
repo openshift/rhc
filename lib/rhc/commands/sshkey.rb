@@ -4,11 +4,23 @@ module RHC::Commands
   class Sshkey < Base
     include RHC::SSHHelpers
 
-    summary 'Manage multiple keys for the registered rhcloud user.'
+    summary 'Add and remove keys for Git and SSH'
     syntax '<action>'
+    description <<-DESC
+      OpenShift uses public keys to securely access your application source
+      code and to control access to your application gears via SSH.  Your
+      account may have one or more public SSH keys associated with it, and
+      any computer with the private SSH key will be able to download code
+      from Git or SSH to the application.
+
+      Depending on your operating system, you may have to ensure that both
+      Git and the local SSH installation have access to your keys.  Running
+      the 'setup' command is any easy way to get your first key created and
+      uploaded.
+      DESC
     default_action :list
 
-    summary 'Display all the SSH keys for the user account'
+    summary 'Display all the SSH keys for your account'
     syntax ''
     def list
       keys = rest_client.sshkeys.each{ |key| paragraph{ display_key(key) } }
@@ -18,7 +30,7 @@ module RHC::Commands
       0
     end
 
-    summary 'List the SSH key with the given name'
+    summary 'Show the SSH key with the given name'
     syntax '<name>'
     argument :name, 'SSH key to display', []
     def show(name)
@@ -28,7 +40,7 @@ module RHC::Commands
       0
     end
 
-    summary 'Add SSH key to the user account'
+    summary 'Add SSH key to your account'
     syntax '<name> <path to SSH key file>'
     argument :name, 'Name for this key', []
     argument :key, 'SSH public key filepath', []
@@ -54,7 +66,7 @@ module RHC::Commands
       0
     end
 
-    summary 'Remove SSH key from the user account'
+    summary 'Remove SSH key from your account'
     syntax '<name>'
     alias_action :delete
     argument :name, 'SSH key to remove', []

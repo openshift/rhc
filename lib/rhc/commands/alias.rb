@@ -3,33 +3,42 @@ require 'rhc/config'
 
 module RHC::Commands
   class Alias < Base
-    summary "Add or remove a custom domain name (alias) for the application"
-    syntax "<command> <application> <alias> [--namespace namespace]"
+    summary "Add or remove a custom domain name for an app"
+    syntax "<action>"
+    description <<-DESC
+      Each application may have one or more custom domain names (known as
+      aliases) mapped to it. You may then configure your custom DNS entry
+      CNAME to point to your OpenShift application to serve web requests
+      from that name.
+
+      Each alias may have a single SSL certificate associated with the name
+      to handle SSL traffic.  See the 'add' command for more info.
+      DESC
     default_action :help
 
     summary "Add a custom domain name for the application"
-    syntax "<application> <alias> [--namespace namespace]"
+    syntax "<application> <alias> [--namespace NAME]"
     argument :app, "Application name (required)", ["-a", "--app name"], :context => :app_context, :required => true
     argument :app_alias, "Custom domain name for the application", []
-    option ["-n", "--namespace namespace"], "Namespace of your application", :context => :namespace_context, :required => true
+    option ["-n", "--namespace NAME"], "Namespace of your application", :context => :namespace_context, :required => true
     alias_action :"app add-alias", :root_command => true, :deprecated => true
     def add(app, app_alias)
       rest_app = rest_client.find_application(options.namespace, app)
       rest_app.add_alias(app_alias)
-      results { say "Alias '#{app_alias}' has been added." } 
+      success "Alias '#{app_alias}' has been added."
       0
     end
 
     summary "Remove a custom domain name for the application"
-    syntax "<application> <alias> [--namespace namespace]"
+    syntax "<application> <alias> [--namespace NAME]"
     argument :app, "Application name (required)", ["-a", "--app name"], :context => :app_context, :required => true
     argument :app_alias, "Custom domain name for the application", []
-    option ["-n", "--namespace namespace"], "Namespace of your application", :context => :namespace_context, :required => true
+    option ["-n", "--namespace NAME"], "Namespace of your application", :context => :namespace_context, :required => true
     alias_action :"app remove-alias", :root_command => true, :deprecated => true
     def remove(app, app_alias)
       rest_app = rest_client.find_application(options.namespace, app)
       rest_app.remove_alias(app_alias)
-      results { say "Alias '#{app_alias}' has been removed." } 
+      success "Alias '#{app_alias}' has been removed."
       0
     end
 
@@ -52,7 +61,7 @@ module RHC::Commands
     option ["--certificate FILE"], "SSL certificate filepath (file in .crt or .pem format)", :required => true
     option ["--private-key FILE"], "Private key filepath for the given SSL certificate", :required => true
     option ["--passphrase passphrase"], "Private key pass phrase, required if the private key is encripted", :required => false
-    option ["-n", "--namespace namespace"], "Namespace of your application", :context => :namespace_context, :required => true
+    option ["-n", "--namespace NAME"], "Namespace of your application", :context => :namespace_context, :required => true
     def update_cert(app, app_alias)
       certificate_file_path = options.certificate
       raise ArgumentError, "Certificate file not found: #{certificate_file_path}" if !File.exist?(certificate_file_path) || !File.file?(certificate_file_path)
@@ -70,7 +79,7 @@ module RHC::Commands
       rest_alias = rest_app.find_alias(app_alias)
       if rest_client.api_version_negotiated >= 1.4
         rest_alias.add_certificate(certificate_content, private_key_content, options.passphrase)
-        results { say "SSL certificate successfully added." }
+        success "SSL certificate successfully added."
         0
       else
         raise RHC::Rest::SslCertificatesNotSupported, "The server does not support SSL certificates for custom aliases."
@@ -82,14 +91,14 @@ module RHC::Commands
     argument :app, "Application name (required)", ["-a", "--app name"], :context => :app_context, :required => true
     argument :app_alias, "Custom domain name for the application (required)", []
     option ["--confirm"], "Pass to confirm deleting the application"
-    option ["-n", "--namespace namespace"], "Namespace of your application", :context => :namespace_context, :required => true
+    option ["-n", "--namespace NAME"], "Namespace of your application", :context => :namespace_context, :required => true
     def delete_cert(app, app_alias)
       rest_app = rest_client.find_application(options.namespace, app)
       rest_alias = rest_app.find_alias(app_alias)
       if rest_client.api_version_negotiated >= 1.4
         confirm_action "#{color("This is a non-reversible action! Your SSL certificate will be permanently deleted from application '#{app}'.", :yellow)}\n\nAre you sure you want to delete the SSL certificate?"
         rest_alias.delete_certificate
-        results { say "SSL certificate successfully deleted." }
+        success "SSL certificate successfully deleted."
         0
       else
         raise RHC::Rest::SslCertificatesNotSupported, "The server does not support SSL certificates for custom aliases."
@@ -99,7 +108,7 @@ module RHC::Commands
     summary "List the aliases on an application"
     syntax "<application>"
     argument :app, "Application name (required)", ["-a", "--app name"], :context => :app_context, :required => true
-    option ["-n", "--namespace namespace"], "Namespace of your application", :context => :namespace_context, :required => true
+    option ["-n", "--namespace NAME"], "Namespace of your application", :context => :namespace_context, :required => true
     def list(app)
       rest_app = rest_client.find_application(options.namespace, app)
       items = rest_app.aliases.map do |a|
@@ -108,9 +117,9 @@ module RHC::Commands
           [a.id, a.has_private_ssl_certificate? ? 'yes' : 'no', a.has_private_ssl_certificate? ? Date.parse(a.certificate_added_at) : '-']
       end
       if items.empty?
-        results { say "No aliases associated with the application #{app}." }
+        info "No aliases associated with the application #{app}."
       else
-        table(items, :header => ["Alias", "Has Certificate?", "Certificate Added"]).each { |s| say s }
+        say table(items, :header => ["Alias", "Has Certificate?", "Certificate Added"])
       end
       0
     end

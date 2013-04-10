@@ -101,7 +101,7 @@ describe RHC::Commands::Alias do
       it "should display help" do
         expect { run }.to exit_with_code(0)
       end
-      it('should output usage') { run_output.should match("Usage: rhc alias <command> <application> <alias> [--namespace namespace]") }
+      it('should output usage') { run_output.should match("Usage: rhc alias <action>$") }
     end
   end
 
@@ -112,7 +112,7 @@ describe RHC::Commands::Alias do
       it "should display help" do
         expect { run }.to exit_with_code(0)
       end
-      it('should output usage') { run_output.should match("Usage: rhc alias add <application> <alias> [--namespace namespace]") }
+      it('should output usage') { run_output.should match("Usage: rhc alias-add <application> <alias> [--namespace NAME]") }
     end
   end
 
@@ -123,7 +123,7 @@ describe RHC::Commands::Alias do
       it "should display help" do
         expect { run }.to exit_with_code(0)
       end
-      it('should output usage') { run_output.should match("Usage: rhc alias remove <application> <alias> [--namespace namespace]") }
+      it('should output usage') { run_output.should match("Usage: rhc alias-remove <application> <alias> [--namespace NAME]") }
     end
   end
 
@@ -134,7 +134,7 @@ describe RHC::Commands::Alias do
       it "should display help" do
         expect { run }.to exit_with_code(0)
       end
-      it('should output usage') { run_output.should match("Usage: rhc alias update-cert <application> <alias> --certificate FILE --private-key FILE [--passphrase passphrase]") }
+      it('should output usage') { run_output.should match("Usage: rhc alias-update-cert <application> <alias> --certificate FILE --private-key FILE [--passphrase passphrase]") }
     end
   end
 
@@ -145,7 +145,7 @@ describe RHC::Commands::Alias do
       it "should display help" do
         expect { run }.to exit_with_code(0)
       end
-      it('should output usage') { run_output.should match("Usage: rhc alias delete-cert <application> <alias>") }
+      it('should output usage') { run_output.should match("Usage: rhc alias-delete-cert <application> <alias>") }
     end
   end
 
@@ -156,7 +156,7 @@ describe RHC::Commands::Alias do
       it "should display help" do
         expect { run }.to exit_with_code(0)
       end
-      it('should output usage') { run_output.should match("Usage: rhc alias list <application>") }
+      it('should output usage') { run_output.should match("Usage: rhc alias-list <application>") }
     end
   end
 

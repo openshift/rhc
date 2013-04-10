@@ -134,7 +134,7 @@ This specifies that the action takes an argument.  Arguments are strings passed 
 <!-- language: ruby -->
     class Domain < Base
       ...
-      argument :namespace, "Namespace for your application(s) (alphanumeric)", "-n", "--namespace namespace"
+      argument :namespace, "Namespace for your application(s) (alphanumeric)", "-n", "--namespace NAME"
       def create(namespace)
         ...
       end
