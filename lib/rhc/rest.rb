@@ -19,7 +19,7 @@ module RHC
       attr_reader :code
       def initialize(message=nil, code=1)
         super(message)
-        @code = (Integer(code) rescue code)
+        @code = (Integer(code) rescue nil)
       end
     end
 
@@ -68,7 +68,7 @@ module RHC
     #Exceptions thrown in case of an HTTP 422 is received.
     class ValidationException < ClientErrorException
       attr_reader :field
-      def initialize(message, field=nil, error_code=nil)
+      def initialize(message, field=nil, error_code=1)
         super(message, error_code)
         @field = field
       end
