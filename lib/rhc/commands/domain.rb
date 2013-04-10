@@ -36,7 +36,7 @@ module RHC::Commands
     syntax "<old namespace> <new namespace>"
     argument :old_namespace, "Old namespace to change", []
     argument :new_namespace, "New namespace to change", ["-n", "--namespace NAME"]
-    alias_action :alter
+    alias_action :alter, :deprecated => true
     def update(old_namespace, new_namespace)
       domain = rest_client.find_domain(old_namespace)
 
@@ -85,7 +85,7 @@ module RHC::Commands
     summary "Deletes your domain."
     syntax "<namespace>"
     argument :namespace, "Namespace you wish to destroy", ["-n", "--namespace NAME"]
-    alias_action :destroy
+    alias_action :destroy, :deprecated => true
     def delete(namespace)
       domain = rest_client.find_domain namespace
 

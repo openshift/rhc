@@ -12,7 +12,7 @@ _rhc()
     elif [ -z $cur ]; then
       opts="account alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert app app-create app-delete app-force-stop app-reload app-restart app-show app-ssh app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all cartridge cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage domain domain-create domain-delete domain-show domain-update git-clone logout port-forward server setup snapshot snapshot-restore snapshot-save sshkey sshkey-add sshkey-list sshkey-remove sshkey-show tail threaddump"
     else
-      opts="account account-logout add-alias add-authorization add-cartridge add-sshkey alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert app app-create app-delete app-force-stop app-reload app-restart app-show app-snapshot app-ssh app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all authorizations cartridge cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage cartridges create-app create-domain delete-all-authorization delete-app delete-authorization delete-cert-alias delete-domain domain domain-alter domain-create domain-delete domain-destroy domain-show domain-update force-stop-app git-clone list-alias list-cartridge list-sshkey logout port-forward reload-app reload-cartridge remove-alias remove-cartridge remove-sshkey restart-app restart-cartridge restore-snapshot save-snapshot scale-cartridge server setup show-app show-cartridge show-domain show-sshkey snapshot snapshot-restore snapshot-save ssh ssh-app sshkey sshkey-add sshkey-delete sshkey-list sshkey-remove sshkey-show start-app start-cartridge status-cartridge stop-app stop-cartridge storage-cartridge tail threaddump tidy-app update-cert-alias update-domain"
+      opts="account account-logout add-alias add-authorization add-cartridge add-sshkey alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert app app-create app-delete app-force-stop app-reload app-restart app-show app-snapshot app-ssh app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all authorizations cartridge cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage cartridges create-app create-domain delete-all-authorization delete-app delete-authorization delete-cert-alias delete-domain domain domain-create domain-delete domain-show domain-update force-stop-app git-clone list-alias list-cartridge list-sshkey logout port-forward reload-app reload-cartridge remove-alias remove-cartridge remove-sshkey restart-app restart-cartridge restore-snapshot save-snapshot scale-cartridge server setup show-app show-cartridge show-domain show-sshkey snapshot snapshot-restore snapshot-save ssh ssh-app sshkey sshkey-add sshkey-delete sshkey-list sshkey-remove sshkey-show start-app start-cartridge status-cartridge stop-app stop-cartridge storage-cartridge tail threaddump tidy-app update-cert-alias update-domain"
     fi
   else
     prev="${COMP_WORDS[@]:0:COMP_CWORD}"
@@ -672,15 +672,7 @@ _rhc()
         if [[ "$cur" == -* ]]; then
           opts=""
         else
-          opts="create alter update show destroy delete"
-        fi
-        ;;
-
-      "rhc domain alter")
-        if [[ "$cur" == -* ]]; then
-          opts="--namespace"
-        else
-          opts=""
+          opts="create update show delete"
         fi
         ;;
 
@@ -693,14 +685,6 @@ _rhc()
         ;;
 
       "rhc domain delete")
-        if [[ "$cur" == -* ]]; then
-          opts="--namespace"
-        else
-          opts=""
-        fi
-        ;;
-
-      "rhc domain destroy")
         if [[ "$cur" == -* ]]; then
           opts="--namespace"
         else
@@ -724,14 +708,6 @@ _rhc()
         fi
         ;;
 
-      "rhc domain-alter")
-        if [[ "$cur" == -* ]]; then
-          opts="--namespace"
-        else
-          opts=""
-        fi
-        ;;
-
       "rhc domain-create")
         if [[ "$cur" == -* ]]; then
           opts="--namespace"
@@ -741,14 +717,6 @@ _rhc()
         ;;
 
       "rhc domain-delete")
-        if [[ "$cur" == -* ]]; then
-          opts="--namespace"
-        else
-          opts=""
-        fi
-        ;;
-
-      "rhc domain-destroy")
         if [[ "$cur" == -* ]]; then
           opts="--namespace"
         else
