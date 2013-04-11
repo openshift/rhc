@@ -23,11 +23,36 @@ module RHC::Commands
 
       If the server supports authorization tokens, you may pass the 
       --create-token option to instruct the wizard to generate a key for you.
+
+      If you would like to enable tab-completion in Bash shells, pass 
+      --autocomplete for more information.
       DESC
     option ["--server NAME"], "Hostname of an OpenShift server", :context => :server_context, :required => true
     option ['--clean'], "Ignore any saved configuration options"
     option ['--[no-]create-token'], "Create an authorization token for this server"
+    option ['--autocomplete'], "Instructions for enabling tab-completion"
     def run
+      if options.autocomplete
+        src = File.join(File.join(Gem.loaded_specs['rhc'].full_gem_path, "autocomplete"), "rhc_bash")
+        dest = File.join(RHC::Config.home_conf_dir, "bash_autocomplete")
+        
+        FileUtils.mkdir_p(RHC::Config.home_conf_dir)
+        FileUtils.cp(src, dest)
+
+        say <<-LINE.strip_heredoc
+          To enable tab-completion for RHC under Bash shells, add the following command to
+          your .bashrc or .bash_profile file:
+
+            . #{dest}
+
+          Save your shell and then restart. Type "rhc" and then hit the TAB key twice to 
+          trigger completion of your command.
+
+          Tab-completion is not available in the Windows terminal.
+          LINE
+        return 0
+      end
+
       raise OptionParser::InvalidOption, "Setup can not be run with the --noprompt option" if options.noprompt
       RHC::RerunWizard.new(config, options).run ?  0 : 1
     end

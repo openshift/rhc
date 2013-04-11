@@ -1,5 +1,4 @@
 require 'rhc'
-require 'highline/system_extensions'
 require 'fileutils'
 require 'socket'
 
@@ -399,7 +398,7 @@ module RHC
           paragraph do
             say table(standalone_cartridges.sort {|a,b| a.display_name <=> b.display_name }.map do |cart|
               [' ', cart.display_name, "rhc app create <app name> #{cart.name}"]
-            end).join("\n")
+            end)
           end
         end
         paragraph do

@@ -1,5 +1,3 @@
-require "rhc/rest"
-
 module RHC::Rest::Mock
 
   def self.start

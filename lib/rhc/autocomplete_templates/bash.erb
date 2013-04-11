@@ -7,13 +7,19 @@ _rhc()
   COMPREPLY=()
   cur="${COMP_WORDS[COMP_CWORD]}"
   if [ $COMP_CWORD -eq 1 ]; then
-    opts=<%= "\"%s\"" % @top_level_opts %>
+    if [[ "$cur" == -* ]]; then
+      opts=<%= "\"%s\"" % global_options.join(' ') %>
+    elif [ -z $cur ]; then
+      opts=<%= "\"%s\"" % top_level_commands.join(' ') %>
+    else
+      opts=<%= "\"%s\"" % commands.map{ |c| c.first }.delete_if{ |s| s.include? ' ' }.sort.join(' ') %>
+    fi
   else
     prev="${COMP_WORDS[@]:0:COMP_CWORD}"
     SAVE_IFS=$IFS
     IFS=" "
     case "${prev[*]}" in
-      <%- for name, data in @commands %>
+      <%- for name, data in commands %>
       <%= "\"rhc %s\")" % name %>
         if [[ "$cur" == -* ]]; then
           opts=<%= "\"%s\"" % data[:switches].join(" ") %>

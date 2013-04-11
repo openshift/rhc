@@ -32,3 +32,9 @@ end
 
 # Add the 'pkg' directory to the clean task
 CLEAN.include("pkg")
+
+task :autocomplete do
+  require 'rhc'
+  RHC::Commands.load.to_commander
+  IO.write('autocomplete/rhc_bash', RHC::AutoComplete.new.to_s)
+end

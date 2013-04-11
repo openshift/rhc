@@ -5,7 +5,5 @@ Pass '--help' to see the full list of options
 <% unless @actions.nil? or @actions.empty? -%>
 
 List of Actions
-<% for action in @actions -%>
-  <%= "%-18s %s\n" % [action[:name], action[:summary]] -%>
-<% end -%>
+<%= table(@actions.map{ |a| [a[:name], a[:summary]] }, table_args('  ', 18)).join("\n") %>
 <% end -%>

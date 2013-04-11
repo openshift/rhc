@@ -76,7 +76,7 @@ gem install --install-dir $RPM_BUILD_ROOT/%{gemdir} --bindir $RPM_BUILD_ROOT/%{_
 
 # Copy the bash autocompletion script
 mkdir -p "$RPM_BUILD_ROOT/etc/bash_completion.d/"
-cp autocomplete/rhc $RPM_BUILD_ROOT/etc/bash_completion.d/rhc
+cp autocomplete/rhc_bash $RPM_BUILD_ROOT/etc/bash_completion.d/rhc
 
 cp LICENSE $RPM_BUILD_ROOT/%{gemdir}/gems/rhc-%{version}/LICENSE
 cp COPYRIGHT $RPM_BUILD_ROOT/%{gemdir}/gems/rhc-%{version}/COPYRIGHT
