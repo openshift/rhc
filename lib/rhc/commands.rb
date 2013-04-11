@@ -266,6 +266,41 @@ module RHC
           end
           raise ArgumentError.new("Missing required option '#{arg}'.") if option_meta[:required] && options[arg].nil?
         end
+
+        available = args.dup
+        slots = Array.new(args_metadata.length)
+        args_metadata.each_with_index do |arg, i|
+          option = arg[:option_symbol]
+          context_helper = arg[:context_helper]
+
+          value = options.__hash__[option] if option
+          value = cmd.send(context_helper) if value.nil? and context_helper
+
+          if value.nil?
+            value = 
+              if arg[:arg_type] == :list
+                all = []
+                while available.first && available.first != '--'
+                  all << available.shift
+                end
+                available.shift if available.first == '--'
+                all
+              else
+                available.shift
+              end
+          end
+
+          if value.nil?
+            raise ArgumentError, "Missing required argument '#{arg[:name]}'." unless arg[:optional]
+            break if available.empty?
+          else
+            slots[i] = value
+            options.__hash__[option] = value if option
+          end
+        end
+
+        raise ArgumentError, "Too many arguments passed in: #{available.reverse.join(" ")}" unless available.empty?
+=begin
         # process args
         arg_slots = [].fill(nil, 0, args_metadata.length)
         fill_args = args.reverse
@@ -292,6 +327,8 @@ module RHC
         raise ArgumentError.new("Too many arguments passed in: #{fill_args.reverse.join(" ")}") unless fill_args.empty?
 
         arg_slots
+=end
+        slots
       end
 
       def self.commands

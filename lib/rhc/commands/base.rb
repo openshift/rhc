@@ -32,6 +32,7 @@ class RHC::Commands::Base
       @rest_client ||= begin
           auth = RHC::Auth::Basic.new(options)
           auth = RHC::Auth::Token.new(options, auth, token_store) if (options.use_authorization_tokens || options.token) && !(options.rhlogin && options.password)
+          debug "Authenticating with #{auth.class}"
           client_from_options(:auth => auth)
         end
     end
@@ -129,7 +130,7 @@ class RHC::Commands::Base
                           }
     end
 
-    def self.argument(name, description, switches, options={})
+    def self.argument(name, description, switches=[], options={})
       arg_type = options[:arg_type]
       raise ArgumentError("Only the last argument descriptor for an action can be a list") if arg_type == :list and list_argument_defined?
       list_argument_defined true if arg_type == :list
@@ -140,6 +141,7 @@ class RHC::Commands::Base
                         :switches => switches,
                         :context_helper => options[:context],
                         :option_symbol => option_symbol,
+                        :optional => options[:optional],
                         :arg_type => arg_type}
     end
 
