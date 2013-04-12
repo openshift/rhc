@@ -55,12 +55,12 @@ module RHC::Commands
       Pass phrase for the certificate private key is required if the 
       provided private key is encrypted.
     DESC
-    syntax "<application> <alias> --certificate FILE --private-key FILE [--passphrase passphrase]"
+    syntax "<application> <alias> --certificate FILE --private-key FILE [--passphrase PASSPHRASE]"
     argument :app, "Application name (required)", ["-a", "--app name"], :context => :app_context, :required => true
     argument :app_alias, "Custom domain name for the application (required)", []
     option ["--certificate FILE"], "SSL certificate filepath (file in .crt or .pem format)", :required => true
     option ["--private-key FILE"], "Private key filepath for the given SSL certificate", :required => true
-    option ["--passphrase passphrase"], "Private key pass phrase, required if the private key is encripted", :required => false
+    option ["--passphrase PASSPHRASE"], "Private key pass phrase, required if the private key is encrypted", :required => false
     option ["-n", "--namespace NAME"], "Namespace of your application", :context => :namespace_context, :required => true
     def update_cert(app, app_alias)
       certificate_file_path = options.certificate
