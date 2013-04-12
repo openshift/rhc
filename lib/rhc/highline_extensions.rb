@@ -170,7 +170,7 @@ class HighLineExtension < HighLine
 
   def pager
     #:nocov:
-    return if RUBY_PLATFORM =~ /win32/
+    return if RHC::Helpers.windows?
     return unless @output.tty?
 
     read, write = IO.pipe
