@@ -693,3 +693,12 @@ EOF
     end
   end
 end
+
+describe RHC::DomainWizard do
+  context "with a rest client" do
+    let(:rest_client){ stub }
+    it{ described_class.new(nil, nil, rest_client).rest_client.should == rest_client }
+    it{ subject.stages == [:config_namespace_stage] }
+    it{ expect{ described_class.new(nil, nil, rest_client).send(:config_namespace, '') }.to call(:add_domain).on(rest_client).and_stop }
+  end
+end

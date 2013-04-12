@@ -34,7 +34,11 @@ module Commander
         opts
       end
 
-      remaining = opts.parse! args
+      # Separate option lists with '--'
+      remaining = args.split('--').map{ |a| opts.parse!(a) }.inject([]) do |arr, sub| 
+        arr << '--' unless arr.empty?
+        arr.concat(sub)
+      end
 
       _, config_path = proxy_options.find{ |arg| arg[0] == :config }
       clean, _ = proxy_options.find{ |arg| arg[0] == :clean }
@@ -300,34 +304,7 @@ module RHC
         end
 
         raise ArgumentError, "Too many arguments passed in: #{available.reverse.join(" ")}" unless available.empty?
-=begin
-        # process args
-        arg_slots = [].fill(nil, 0, args_metadata.length)
-        fill_args = args.reverse
-        args_metadata.each_with_index do |arg_meta, i|
-          # check options
-          option = arg_meta[:option_symbol]
-          context_helper = arg_meta[:context_helper]
 
-          value = options.__hash__[option] if option
-          value = fill_args.pop if value.nil?
-          value = cmd.send(context_helper) if value.nil? and context_helper
-
-          if arg_meta[:arg_type] == :list
-            fill_args.push(value) unless value.nil?
-            value = fill_args.reverse
-            fill_args = []
-          elsif value.nil?
-            raise ArgumentError.new("Missing required argument '#{arg_meta[:name]}'.") if fill_args.empty?
-          end
-          arg_slots[i] = value
-          options.__hash__[option] = value if option
-        end
-
-        raise ArgumentError.new("Too many arguments passed in: #{fill_args.reverse.join(" ")}") unless fill_args.empty?
-
-        arg_slots
-=end
         slots
       end
 

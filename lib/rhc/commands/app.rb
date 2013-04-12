@@ -9,6 +9,7 @@ module RHC::Commands
     description "Creates and controls an OpenShift application.  To see the list of all applications use the rhc domain show command.  Note that delete is not reversible and will stop your application and then remove the application and repo from the remote server. No local changes are made."
     syntax "<action>"
     default_action :help
+    suppress_wizard
 
     summary "Create an application"
     description <<-DESC
@@ -53,6 +54,8 @@ module RHC::Commands
     #argument :additional_cartridges, "A list of other cartridges such as databases you wish to add. Cartridges can also be added later using 'rhc cartridge add'", [], :arg_type => :list
     def create(name, cartridges)
       check_config!
+
+      check_name!(name)
 
       cartridges = check_cartridges(cartridges, &require_one_web_cart)
 
@@ -341,6 +344,15 @@ module RHC::Commands
         RHC::SSHWizard.new(rest_client, config, options).run
       end
 
+      def check_name!(name)
+        return unless name.blank?
+
+        paragraph{ say "When creating an application, you must provide a name and a cartridge from the list below:" }
+        paragraph{ list_cartridges(standalone_cartridges) }
+
+        raise ArgumentError, "Please specify the name of the application and the web cartridge to install"
+      end
+
       def check_config!
         return if not interactive? or (!options.clean && config.has_local_config?) or (options.server && (options.rhlogin || options.token))
         RHC::EmbeddedWizard.new(config, options).run
@@ -354,7 +366,10 @@ module RHC::Commands
             raise RHC::Rest::DomainNotFoundException, "No domains found. Please create a domain with 'rhc domain create <namespace>' before creating applications." unless interactive?
             RHC::DomainWizard.new(config, options, rest_client).run
           end
-          rest_client.domains.first.tap{ |d| options.namespace = d.id if d }
+          domain = rest_client.domains.first
+          raise RHC::Rest::DomainNotFoundException, "No domains found. Please create a domain with 'rhc domain create <namespace>' before creating applications." unless domain
+          options.namespace = domain.id
+          domain
         end
       end
 

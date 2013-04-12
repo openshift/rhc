@@ -130,7 +130,7 @@ module WizardStepsHelper
 
     next_stage.should_not be_nil
     last_output do |s|
-      s.should match(/Checking common problems \.+.+?done/)
+      s.should match(/Checking common problems \.+.+? done/)
     end
   end
 
@@ -161,6 +161,7 @@ module WizardStepsHelper
       s.should match(/Checking your namespace .*none/)
       s.should match(/(?:Too long.*?){2}/m)
     end
+    subject.send(:options).__hash__[:namespace].should == 'testnamespace'
   end
 
   def should_skip_creating_namespace
@@ -173,12 +174,14 @@ module WizardStepsHelper
       s.should match("You will not be able to create applications without first creating a namespace")
       s.should match("You may create a namespace later through 'rhc domain create'")
     end
+    subject.send(:options).__hash__[:namespace].should be_nil
   end
 
   def should_find_a_namespace(namespace)
     next_stage.should_not be_nil
 
     last_output.should match(/Checking your namespace .*#{namespace}/)
+    subject.send(:options).__hash__[:namespace].should be_nil
   end
 
   def should_list_types_of_apps_to_create

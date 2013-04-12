@@ -472,7 +472,7 @@ module RHC
     end
 
     def all_test_methods
-      private_methods.select {|m| m.to_s.start_with? 'test_'}
+      (protected_methods + private_methods).select {|m| m.to_s.start_with? 'test_'}
     end
 
     ###
@@ -518,7 +518,7 @@ module RHC
 
     def config_namespace(namespace)
       # skip if string is empty
-      if namespace_optional? and (namespace.nil? or namespace.chomp.length == 0)
+      if namespace_optional? and (namespace.nil? or namespace.chomp.blank?)
         paragraph{ info "You may create a namespace later through 'rhc domain create'" }
         return true
       end
@@ -596,7 +596,7 @@ EOF
 
   class EmbeddedWizard < Wizard
     def stages
-      super - APP_STAGES
+      super - APP_STAGES - KEY_STAGES - [:setup_test_stage]
     end
 
     def finalize_stage

@@ -122,6 +122,12 @@ describe RHC::Commands::Base do
             summary "Test command execute-list"
             def execute_list(args); 1; end
 
+            argument :arg1, "Test arg", ['--test'], :optional => true
+            argument :arg2, "Test arg list", ['--test2'], :arg_type => :list, :optional => true
+            argument :arg3, "Test arg list", ['--test3'], :arg_type => :list, :optional => true
+            summary "Test command execute-vararg"
+            def execute_vararg(arg1, arg2, arg3); 1; end
+
             RHC::Helpers.global_option '--test-context', 'Test', :context => :context_var
             def execute_implicit
             end
@@ -142,7 +148,7 @@ describe RHC::Commands::Base do
         Static
       end
 
-      it("should register itself") { expect { subject }.to change(commands, :length).by(6) }
+      it("should register itself") { expect { subject }.to change(commands, :length).by(7) }
       it("should have an object name of the class") { subject.object_name.should == 'static' }
 
       context 'and when test is called' do
@@ -178,6 +184,14 @@ describe RHC::Commands::Base do
         it('should make the option available') { command_for('static-execute-list', '1', '2', '3').send(:options).tests.should == ['1','2','3'] }
       end
 
+      context 'and when execute_vararg is called' do
+        it{ expects_running('static-execute-vararg').should call(:execute_vararg).on(instance).with(nil, nil, nil) }
+        it{ expects_running('static-execute-vararg', '1', '2', '3').should call(:execute_vararg).on(instance).with('1', ['2', '3'], []) }
+        it("handles a list separator"){ expects_running('static-execute-vararg', '1', '2', '--', '3').should call(:execute_vararg).on(instance).with('1', ['2'], ['3']) }
+        it{ command_for('static-execute-vararg', '1', '2', '--', '3').send(:options).test.should == '1' }
+        it{ command_for('static-execute-vararg', '1', '2', '--', '3').send(:options).test2.should == ['2'] }
+        it{ command_for('static-execute-vararg', '1', '2', '--', '3').send(:options).test3.should == ['3'] }
+      end
       context 'and when execute is called with a contextual global option' do
         it("calls the helper") { command_for('static', 'execute-implicit').send(:options).test_context.should == 'contextual' }
       end

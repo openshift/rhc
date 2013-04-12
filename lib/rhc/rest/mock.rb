@@ -115,7 +115,7 @@ module RHC::Rest::Mock
         to_return(new_authorization(params))
     end
     def stub_no_keys
-      stub_api_request(:get, 'broker/rest/user/keys', mock_user_auth).to_return(no_keys)
+      stub_api_request(:get, 'broker/rest/user/keys', mock_user_auth).to_return(empty_keys)
     end
     def stub_mock_ssh_keys(name='test')
       stub_api_request(:get, 'broker/rest/user/keys', mock_user_auth).
@@ -154,7 +154,7 @@ module RHC::Rest::Mock
         })
     end
     def stub_no_domains
-      stub_api_request(:get, 'broker/rest/domains', mock_user_auth).to_return(no_domains)
+      stub_api_request(:get, 'broker/rest/domains', mock_user_auth).to_return(empty_domains)
     end
     def stub_one_domain(name)
       stub_api_request(:get, 'broker/rest/domains', mock_user_auth).
@@ -216,10 +216,10 @@ module RHC::Rest::Mock
       EOM
     end
 
-    def no_keys
+    def empty_keys
       empty_response_list('keys')
     end
-    def no_domains
+    def empty_domains
       empty_response_list('domains')
     end
 

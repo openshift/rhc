@@ -101,7 +101,7 @@ module RHC
     end
 
     def provided_arguments
-      @args[0, @args.find_index { |arg| arg.start_with?('-') } || @args.length]
+      @args[0, @args.find_index { |arg| arg != '--' and arg.start_with?('-') } || @args.length]
     end
 
     def global_option(*args, &block)

@@ -132,8 +132,6 @@ class RHC::Commands::Base
 
     def self.argument(name, description, switches=[], options={})
       arg_type = options[:arg_type]
-      raise ArgumentError("Only the last argument descriptor for an action can be a list") if arg_type == :list and list_argument_defined?
-      list_argument_defined true if arg_type == :list
 
       option_symbol = Commander::Runner.switch_to_sym(switches.last)
       args_metadata << {:name => name,
@@ -151,12 +149,6 @@ class RHC::Commands::Base
     end
 
     private
-      def self.list_argument_defined(bool)
-        options[:list_argument_defined] = bool
-      end
-      def self.list_argument_defined?
-        options[:list_argument_defined]
-      end
       def self.options_metadata
         options[:options] ||= []
       end
