@@ -219,100 +219,12 @@ module RHC
     # return true if the account has the public key defined by
     # RHC::Config::ssh_pub_key_file_path
     def ssh_key_uploaded?
-      ssh_keys.any? { |k| k.fingerprint == fingerprint_for_default_key }
+      ssh_keys.present? && ssh_keys.any? { |k| k.fingerprint.present? && k.fingerprint == fingerprint_for_default_key }
     end
 
     def existing_keys_info
       return unless ssh_keys
       indent{ ssh_keys.each{ |key| paragraph{ display_key(key) } } }
-    end
-
-    def get_preferred_key_name
-      key_name = 'default'
-
-      if ssh_keys.empty?
-        paragraph do
-          info "Since you do not have any keys associated with your OpenShift account, "\
-              "your new key will be uploaded as the 'default' key."
-        end
-      else
-        paragraph do
-          say "You can enter a name for your key, or leave it blank to use the default name. " \
-              "Using the same name as an existing key will overwrite the old key."
-        end
-
-        paragraph { existing_keys_info }
-
-        key_fingerprint = fingerprint_for_default_key
-        unless key_fingerprint
-          paragraph do
-            warn "Your ssh public key at #{system_path(RHC::Config.ssh_pub_key_file_path)} is invalid or unreadable. "\
-                "Setup can not continue until you manually remove or fix your "\
-                "public and private keys id_rsa keys."
-          end
-          return nil
-        end
-
-        userkey = username ? username.gsub(/@.*/, '') : ''
-        pubkey_base_name = "#{userkey}#{hostname.gsub(/\..*\z/,'')}".gsub(/[^A-Za-z0-9]/,'').slice(0,16)
-        default_name = find_unique_key_name(
-          :keys => ssh_keys,
-          :base => pubkey_base_name,
-          :max_length => DEFAULT_MAX_LENGTH
-        )
-
-        paragraph do
-          key_name = ask("Provide a name for this key: ") do |q|
-            q.default = default_name
-            q.validate = /^[0-9a-zA-Z]*$/
-            q.responses[:not_valid]    = 'Your key name must be letters and numbers only.'
-          end
-        end
-      end
-
-      key_name
-    end
-    
-    # given the base name and the maximum length,
-    # find a name that does not clash with what is in opts[:keys]
-    def find_unique_key_name(opts)
-      keys = opts[:keys] || ssh_keys
-      base = opts[:base] || 'default'
-      max  = opts[:max_length] || DEFAULT_MAX_LENGTH
-      key_name_suffix = 1
-      candidate = base
-      while ssh_keys.detect { |k| k.name == candidate }
-        candidate = base.slice(0, max - key_name_suffix.to_s.length) +
-          key_name_suffix.to_s
-        key_name_suffix += 1
-      end
-      candidate
-    end
-
-    def upload_ssh_key
-      key_name = get_preferred_key_name
-      return false unless key_name
-
-      type, content, comment = ssh_key_triple_for_default_key
-      indent do
-        say table([['Type:', type], ['Fingerprint:', fingerprint_for_default_key]])
-      end
-
-      paragraph do
-        if !ssh_keys.empty? && ssh_keys.any? { |k| k.name == key_name }
-          clear_ssh_keys_cache
-          say "Key with the name #{key_name} already exists. Updating ... "
-          key = rest_client.find_key(key_name)
-          key.update(type, content)
-        else
-          clear_ssh_keys_cache
-          say "Uploading key '#{key_name}' from #{system_path(RHC::Config::ssh_pub_key_file_path)} ... "
-          rest_client.add_key key_name, content, type
-        end
-        success "done"
-      end
-
-      true
     end
 
     def upload_ssh_key_stage
@@ -323,7 +235,31 @@ module RHC
       end
 
       if upload
-        upload_ssh_key
+        if ssh_keys.empty?
+          paragraph do
+            info "Since you do not have any keys associated with your OpenShift account, "\
+                "your new key will be uploaded as the 'default' key."
+            upload_ssh_key('default')
+          end
+        else
+          paragraph { existing_keys_info }
+
+          key_fingerprint = fingerprint_for_default_key
+          unless key_fingerprint
+            paragraph do
+              warn "Your ssh public key at #{system_path(RHC::Config.ssh_pub_key_file_path)} is invalid or unreadable. "\
+                  "Setup can not continue until you manually remove or fix your "\
+                  "public and private keys id_rsa keys."
+            end
+            return false
+          end
+
+          paragraph do
+            say "You can enter a name for your key, or leave it blank to use the default name. " \
+                "Using the same name as an existing key will overwrite the old key."
+          end
+          ask_for_key_name
+        end
       else
         paragraph do
           info "You can upload your SSH key at a later time using the 'rhc sshkey' command"
@@ -332,6 +268,65 @@ module RHC
 
       true
     end
+
+    def ask_for_key_name(default_name=get_preferred_key_name)
+      key_name = nil
+      paragraph do
+        begin
+          key_name = ask "Provide a name for this key: " do |q|
+            q.default = default_name
+            q.responses[:ask_on_error] = ''
+          end
+        end while !upload_ssh_key(key_name)
+      end
+    end
+
+    def get_preferred_key_name
+      userkey = username ? username.gsub(/@.*/, '') : ''
+      pubkey_base_name = "#{userkey}#{hostname.gsub(/\..*\z/,'')}".gsub(/[^A-Za-z0-9]/,'').slice(0,16)
+      find_unique_key_name(pubkey_base_name)
+    end
+
+    # given the base name and the maximum length,
+    # find a name that does not clash with what is in opts[:keys]
+    def find_unique_key_name(base='default')
+      max = DEFAULT_MAX_LENGTH
+      key_name_suffix = 1
+      candidate = base
+      while ssh_keys.detect { |k| k.name == candidate }
+        candidate = base.slice(0, max - key_name_suffix.to_s.length) + key_name_suffix.to_s
+        key_name_suffix += 1
+      end
+      candidate
+    end
+
+    def upload_ssh_key(key_name)
+      return false unless key_name.present?
+
+      type, content, comment = ssh_key_triple_for_default_key
+
+      if !ssh_keys.empty? && ssh_keys.any? { |k| k.name == key_name }
+        clear_ssh_keys_cache
+        paragraph do
+          say "Key with the name '#{key_name}' already exists. Updating ... "
+          key = rest_client.find_key(key_name)
+          key.update(type, content)
+          success "done"
+        end
+      else
+        clear_ssh_keys_cache
+        begin
+          rest_client.add_key(key_name, content, type)
+          paragraph{ say "Uploading key '#{key_name}' ... #{color('done', :green)}" }
+        rescue RHC::Rest::ValidationException => e
+          error e.message || "Unknown error during key upload."
+          return false
+        end
+      end
+
+      true
+    end    
+
 
     ##
     # Alert the user that they should manually install tools if they are not
