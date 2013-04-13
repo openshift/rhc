@@ -282,7 +282,7 @@ describe RHC::Wizard do
 
       context "when the user enters a domain and uploads a key" do
         before do
-          stub_create_default_key
+          stub_add_key
           stub_api_request(:post, 'broker/rest/domains', user_auth).
             with(:body => /(thisnamespaceistoobig|invalidnamespace)/).
             to_return({
@@ -344,6 +344,33 @@ describe RHC::Wizard do
         end
       end
 
+      context "when a multiple keys exist but is not the same" do
+        before{ setup_mock_ssh(true) }
+        before do 
+          stub_one_key('a_key')
+          stub_add_key_error('invalid```--', 'Invalid key name')
+          stub_add_key('another_key')
+        end
+        it "should give the user a name the key" do
+          should_greet_user
+          should_challenge_for(username, password)
+          should_write_config
+          should_not_create_an_ssh_keypair
+
+          input_line 'yes'
+          input_line 'invalid```--'
+          input_line 'another_key'
+          next_stage
+
+          last_output do |s|
+            s.should match(/a_key \(type: ssh-rsa\)/)
+            s.should match("Fingerprint: #{rsa_key_fingerprint_public}")
+            s.should match(" name |a_key|")
+            s.should match("Invalid key name")
+            s.should match("Uploading key 'another_key'")
+          end
+        end
+      end
       context "when the default key already exists on the server" do
         before{ setup_mock_ssh(true) }
         before{ stub_mock_ssh_keys }
@@ -366,7 +393,7 @@ describe RHC::Wizard do
         stub_api(:user => username)
         stub_user
         stub_no_keys
-        stub_create_default_key
+        stub_add_key
         stub_api_request(:post, 'broker/rest/domains', user_auth).
           with(:body => /(thisnamespaceistoobig|invalidnamespace)/).
           to_return({
@@ -418,7 +445,7 @@ describe RHC::Wizard do
 
       context "with no server keys" do
         before{ stub_no_keys }
-        before{ stub_create_default_key }
+        before{ stub_add_key }
 
         it "should generate and upload keys since the user does not have them" do
           input_line "yes"
@@ -455,42 +482,43 @@ describe RHC::Wizard do
       let(:wizard){ RerunWizardDriver.new }
 
       it "should cause ssh_key_upload? to catch NoMethodError and call the fallback to get the fingerprint" do
-        Net::SSH::KeyFactory.stub(:load_public_key) { raise NoMethodError }
-        @fallback_run = false
-        wizard.stub(:ssh_keygen_fallback) { @fallback_run = true }
-        key_data = wizard.get_mock_key_data
-        @rest_client.stub(:sshkeys) { key_data }
+        Net::SSH::KeyFactory.should_receive(:load_public_key).exactly(4).times.and_raise(NoMethodError)
+        wizard.should_receive(:ssh_keygen_fallback).exactly(4).times
+        wizard.should_receive(:ssh_keys).at_least(1).times.and_return(wizard.get_mock_key_data)
 
         wizard.send(:ssh_key_uploaded?)
-
-        @fallback_run.should be_true
       end
 
       it "should cause upload_ssh_key to catch NoMethodError and call the fallback to get the fingerprint" do
-        wizard.ssh_keys = wizard.get_mock_key_data
-        @fallback_run = false
-        wizard.stub(:ssh_keygen_fallback) do
-          @fallback_run = true
-          [OpenStruct.new( :name => 'default', :fingerprint => 'AA:BB:CC:DD:EE:FF', :type => 'ssh-rsa' )]
-        end
-        $?.stub(:exitstatus) { 255 }
-        Net::SSH::KeyFactory.stub(:load_public_key) { raise NoMethodError }
+        Net::SSH::KeyFactory.should_receive(:load_public_key).exactly(5).times.and_raise(NoMethodError)
+        wizard.stub(:ssh_keys).at_least(1).times.and_return(wizard.get_mock_key_data)
+        wizard.should_receive(:ssh_keygen_fallback).exactly(5).times.and_return(stub(:name => 'default', :fingerprint => 'AA:BB:CC:DD:EE:FF', :type => 'ssh-rsa' ))
 
-        wizard.send(:upload_ssh_key).should be_false
+        input_line 'y'
 
-        output = last_output
-        output.should match("Your ssh public key at .* is invalid or unreadable\.")
-        @fallback_run.should be_true
+        wizard.send(:upload_ssh_key_stage).should be_false
+
+        last_output.should match("Your ssh public key at .* is invalid or unreadable\.")
       end
 
       it "should cause upload_ssh_key to catch NotImplementedError and return false" do
-        wizard.ssh_keys = wizard.get_mock_key_data
-        Net::SSH::KeyFactory.stub(:load_public_key) { raise NotImplementedError }
+        Net::SSH::KeyFactory.should_receive(:load_public_key).exactly(5).times.and_raise(NoMethodError)
+        wizard.should_receive(:ssh_keys).at_least(1).times.and_return(wizard.get_mock_key_data)
 
-        wizard.send(:upload_ssh_key).should be_false
+        input_line 'y'
+
+        wizard.send(:upload_ssh_key_stage).should be_false
 
         output = last_output
         output.should match("Your ssh public key at .* is invalid or unreadable\.")
+      end
+
+      it "should find a unique name" do
+        wizard.should_receive(:ssh_keys).at_least(1).times.and_return(wizard.get_mock_key_data)
+
+        wizard.send(:find_unique_key_name, 'cb490595').should == 'cb4905951'
+        wizard.send(:find_unique_key_name, 'default').should == 'default1'
+        wizard.send(:find_unique_key_name, 'abc').should == 'abc'
       end
 
       it "should match ssh key fallback fingerprint to net::ssh fingerprint" do
@@ -525,12 +553,11 @@ describe RHC::Wizard do
           key_name = 'default'
           key_data = wizard.get_mock_key_data
           wizard.ssh_keys = key_data
-          wizard.stub(:get_preferred_key_name) { key_name }
           wizard.stub(:ssh_key_triple_for_default_key) { pub_key.chomp.split }
           wizard.stub(:fingerprint_for_default_key) { "" } # this value is irrelevant
-          wizard.rest_client.stub(:find_key) { key_data.detect { |k| k.name == key_name } }
+          wizard.rest_client = stub('RestClient').tap{ |o| o.stub(:find_key) { key_data.detect { |k| k.name == key_name } } }
 
-          wizard.send(:upload_ssh_key)
+          wizard.send(:upload_ssh_key, key_name)
           output = last_output
           output.should match 'Updating'
         end
@@ -544,9 +571,9 @@ describe RHC::Wizard do
           wizard.ssh_keys = key_data
           wizard.stub(:ssh_key_triple_for_default_key) { pub_key.chomp.split }
           wizard.stub(:fingerprint_for_default_key) { "" } # this value is irrelevant
-          wizard.rest_client.stub(:add_key) { true }
+          wizard.rest_client = stub('RestClient').tap{ |o| o.stub(:add_key) { true } }
 
-          wizard.send(:upload_ssh_key)
+          wizard.send(:upload_ssh_key, "other")
           output = last_output
           # since the clashing key name is short, we expect to present
           # a key name with "1" attached to it.
