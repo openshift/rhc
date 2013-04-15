@@ -64,8 +64,8 @@ module WizardStepsHelper
     
     last_output do |s|
       s.should match('Since you do not have any keys associated')
-      s.should match(/Fingerprint\: (?:[a-f0-9]{2}\:){15}/)
-      s.should match("Uploading key 'default' from #{current_ssh_dir}/id_rsa.pub ... ")
+      #s.should match(/Fingerprint\: (?:[a-f0-9]{2}\:){15}/)
+      s.should match("Uploading key 'default' ... ")
     end
   end
 

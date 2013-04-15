@@ -73,9 +73,9 @@ It should be noted that commander's command which is being setup above is separa
 Commands are setup via metadata which is placed in a hash by class methods during class import and then associated with a command via the `method_added` mechanism described above. This is one of the most important sub layers as it is how we are able to describe commands in a consistent manner that gets the implementation complexities away from the command implementors. Take for instance this code:
 
         summary "Add a cartridge to your application"
-        syntax "<cartridge_type> [--namespace namespace] [--app app]"
-        option ["-n", "--namespace namespace"], "Namespace of the application you are adding the cartridge to", :context => :namespace_context, :required => true
-        option ["-a", "--app app"], "Application you are adding the cartridge to", :context => :app_context, :required => true
+        syntax "<cartridge_type> [--namespace NAME] [--app NAME]"
+        option ["-n", "--namespace NAME"], "Namespace of the application you are adding the cartridge to", :context => :namespace_context, :required => true
+        option ["-a", "--app NAME"], "Application you are adding the cartridge to", :context => :app_context, :required => true
         argument :cart_type, "The type of the cartridge you are adding (run 'rhc cartridge list' to obtain a list of available cartridges)", ["-c", "--cartridge cart_type"]
         alias_action :"app cartridge add", :root_command => true, :deprecated => true
         def add(cart_type)

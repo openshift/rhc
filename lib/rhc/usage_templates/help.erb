@@ -3,30 +3,29 @@ Usage: rhc [--help] [--version] [--debug] <command> [<args>]
 <%= Array(program :description).first %>
 
 <%
-remaining = Hash[@commands.dup.select{ |name, command| not alias?(name) and not command.summary.blank? }]
-basic = remaining.slice!('setup', 'app create', 'apps', 'cartridge list', 'cartridge add', 'server', 'account logout')
+remaining = Hash[commands.dup.select{ |name, command| not command.summary.blank? }]
+basic = remaining.slice!('setup', 'create-app', 'apps', 'cartridges', 'add-cartridge', 'server', 'logout')
+remaining.delete_if{ |name, command| alias?(name) }
 begin -%>
 Getting started:
-<% for name, command in basic -%>
-  <%="%-18s %s\n" % [command.name, command.summary || command.description] -%>
-<% end %>
-<% end unless basic.empty?
+<%= table(basic.map{ |arr| arr[1] = arr[1].summary || arr[1].description; arr }, table_args('  ', 18)).join("\n") %>
+<% end unless basic.empty? %>
+<%
 
 debugging = remaining.slice!('app restart', 'app show', 'tail', 'port-forward', 'threaddump', 'snapshot', 'git-clone')
 begin -%>
 Working with apps:
-<% for name, command in debugging -%>
-  <%="%-18s %s\n" % [command.name, command.summary || command.description] -%>
-<% end
-end unless debugging.empty?
-%>
+<%= table(debugging.map{ |arr| arr[1] = arr[1].summary || arr[1].description; arr }, table_args('  ', 18)).join("\n") %>
+<% end unless debugging.empty? %>
 Management commands:
-<% for name, command in remaining.sort -%>
-	<%- unless alias? name or name.include?(' ') or command.summary.nil? -%>  <%="%-18s %s\n" % [command.name, command.summary || command.description] %><%- end -%>
-<%- end -%>
+<%= table(remaining.sort.select{ |arr| arr[1].root? and arr[1].summary.present? }.map do |arr| 
+		arr[1] = arr[1].summary || arr[1].description
+		arr 
+	end, table_args('  ', 18)).join("\n") %>
 
-See '<%= Array(program :name).first %> help <command>' for more information on a specific command.  See 'rhc help options' for a list of global command-line options and information about the config file.
+  Some management commands have nested actions - run 'rhc help <command>' for more info.
 
+See '<%= Array(program :name).first %> help <command>' for more information on a specific command.  You can see a list of all commands with 'rhc help commands'. See 'rhc help options' for a list of global command-line options and information about the config file.  
 <% if program :help -%>
   <% for title, body in program(:help) %>
   <%= $terminal.color title.to_s.upcase, :bold %>:

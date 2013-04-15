@@ -2,13 +2,24 @@ require 'rhc/commands/base'
 
 module RHC::Commands
   class Domain < Base
-    summary "Manage the domain and namespace for your applications."
+    summary "Add or rename the container for your apps"
     syntax "<action>"
+    description <<-DESC
+      OpenShift groups applications within a domain.  Each domain has a namespace value
+      that will be used as part of the public URL for an application.
+
+      For example, when creating a domain with the namespace "test", any applications 
+      created in that domain will have the public URL:
+
+        http://<appname>-test.rhcloud.com
+
+      Today, each account may have a single domain.
+      DESC
     default_action :show
 
     summary "Define a namespace for your applications to share."
     syntax "<namespace>"
-    argument :namespace, "Namespace for your application(s) (alphanumeric)", ["-n", "--namespace namespace"]
+    argument :namespace, "Namespace for your application(s) (alphanumeric)", ["-n", "--namespace NAME"]
     def create(namespace)
       paragraph { say "Creating domain with namespace '#{namespace}'" }
       rest_client.add_domain(namespace)
@@ -24,8 +35,8 @@ module RHC::Commands
     summary "Change current namespace (will change application urls)"
     syntax "<old namespace> <new namespace>"
     argument :old_namespace, "Old namespace to change", []
-    argument :new_namespace, "New namespace to change", ["-n", "--namespace namespace"]
-    alias_action :alter
+    argument :new_namespace, "New namespace to change", ["-n", "--namespace NAME"]
+    alias_action :alter, :deprecated => true
     def update(old_namespace, new_namespace)
       domain = rest_client.find_domain(old_namespace)
 
@@ -73,8 +84,8 @@ module RHC::Commands
 
     summary "Deletes your domain."
     syntax "<namespace>"
-    argument :namespace, "Namespace you wish to destroy", ["-n", "--namespace namespace"]
-    alias_action :destroy
+    argument :namespace, "Namespace you wish to destroy", ["-n", "--namespace NAME"]
+    alias_action :destroy, :deprecated => true
     def delete(namespace)
       domain = rest_client.find_domain namespace
 

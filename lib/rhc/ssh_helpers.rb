@@ -127,7 +127,7 @@ module RHC
     end
 
     def fingerprint_for_default_key
-      fingerprint_for_local_key RHC::Config.ssh_pub_key_file_path
+      fingerprint_for_local_key(RHC::Config.ssh_pub_key_file_path)
     end
 
     # for an SSH public key specified by 'key', return a triple
@@ -144,7 +144,7 @@ module RHC
     end
     
     def ssh_key_triple_for_default_key
-      ssh_key_triple_for RHC::Config.ssh_pub_key_file_path
+      ssh_key_triple_for(RHC::Config.ssh_pub_key_file_path)
     end
 
     private

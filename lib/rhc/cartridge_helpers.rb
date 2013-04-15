@@ -92,7 +92,7 @@ module RHC
         carts = cartridges.map{ |c| [c.name, c.display_name || ''] }.sort{ |a,b| a[1].downcase <=> b[1].downcase }
         carts.unshift ['==========', '=========']
         carts.unshift ['Short Name', 'Full name']
-        say table(carts).join("\n")
+        say table(carts)
       end
   end
 end

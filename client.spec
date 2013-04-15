@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.7.1
+Version: 1.7.5
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -77,7 +77,7 @@ gem install --install-dir $RPM_BUILD_ROOT/%{gemdir} --bindir $RPM_BUILD_ROOT/%{_
 
 # Copy the bash autocompletion script
 mkdir -p "$RPM_BUILD_ROOT/etc/bash_completion.d/"
-cp autocomplete/rhc $RPM_BUILD_ROOT/etc/bash_completion.d/rhc
+cp autocomplete/rhc_bash $RPM_BUILD_ROOT/etc/bash_completion.d/rhc
 
 cp LICENSE $RPM_BUILD_ROOT/%{gemdir}/gems/rhc-%{version}/LICENSE
 cp COPYRIGHT $RPM_BUILD_ROOT/%{gemdir}/gems/rhc-%{version}/COPYRIGHT
@@ -100,6 +100,86 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Sat Apr 13 2013 Krishna Raman <kraman@gmail.com> 1.7.5-1
+- Merge pull request #358 from
+  smarterclayton/bug_951352_should_retry_key_on_bad_name
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 951352 - Retry the key name during the wizard flow (ccoleman@redhat.com)
+- Merge pull request #355 from fabianofranz/master (dmcphers@redhat.com)
+- Bug 951436 - handling Windows platform on paging (ffranz@redhat.com)
+- Bug 951369 (ffranz@redhat.com)
+- tito releasers update (bleanhar@redhat.com)
+
+* Thu Apr 11 2013 Adam Miller <admiller@redhat.com> 1.7.4-1
+- Merge pull request #352 from
+  smarterclayton/origin_ui_13_autocomplete_and_wrapping
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 949910 - Mark alter and destroy as deprecated aliases
+  (ccoleman@redhat.com)
+- Generate separate switches for --[no-]-<...> switches in autocomplete
+  (ccoleman@redhat.com)
+- Review fixes (ccoleman@redhat.com)
+- Require 'delegate' for HighLine extensions (ccoleman@redhat.com)
+- Add help search capability and 'rhc help commands' (ccoleman@redhat.com)
+- Support HighLine 1.5.1 for now for RHEL (ccoleman@redhat.com)
+- Failing test case (ccoleman@redhat.com)
+- Add alias from 'authorization' to 'authorizations' (ccoleman@redhat.com)
+- Reopen ansi escape sequences after wrapping (ccoleman@redhat.com)
+- Cleanup option values for --app and --namespace, minor syntax tweaks
+  (ccoleman@redhat.com)
+- Add Linux pager support for cartridges list and help (ccoleman@redhat.com)
+- Tablify help output, add vastly improved root level help for commands.  Fix
+  minor bugs in wrapping. (ccoleman@redhat.com)
+- Autocomplete was not added to built gem (ccoleman@redhat.com)
+- Disable paging for now (ccoleman@redhat.com)
+- Separate HighLine extensions into their own class, use extension rather than
+  injection.  Fix unit tests to properly isolate $terminal.
+  (ccoleman@redhat.com)
+- Copy autocomplete into the home directory to ensure it's not lost
+  (ccoleman@redhat.com)
+- Properly reset formatter after execution (ccoleman@redhat.com)
+- Let RHEL/Fedora tests be run deliberately, fix ruby 1.8.7 test failure
+  (ccoleman@redhat.com)
+- Fix help for aliases and secondary commands, change core help page to use
+  more readable forms (ccoleman@redhat.com)
+- Move logout to root level (ccoleman@redhat.com)
+- Add autocompletion instructions and a revised script to RHC.  Expose 'rake
+  autocomplete' to generate a new version of the script. (ccoleman@redhat.com)
+- Rogue puts used in error (ccoleman@redhat.com)
+- All commands default to using dashes instead of spaces to separate them.
+  Help now displays dashed versions in preference to spaces form.  Also
+  supports a reversed "verb-noun" construct for commands. (ccoleman@redhat.com)
+
+* Wed Apr 10 2013 Adam Miller <admiller@redhat.com> 1.7.3-1
+- Fix broken rhc_extended tests (ccoleman@redhat.com)
+- Ruby 1.8 treats Integer(nil) as 0, and 1.9 treats it as nil.  Switch to
+  default gracefully. (ccoleman@redhat.com)
+
+* Mon Apr 08 2013 Adam Miller <admiller@redhat.com> 1.7.2-1
+- Replace expect{}.should with expect{}.to in remaining spots, depend on
+  webmock 1.8 (ccoleman@redhat.com)
+- Upgrade spec tests to passing, fix RSpec2 syntax errors, ensure randomized
+  tests pass correctly (ccoleman@redhat.com)
+- Merge pull request #347 from smarterclayton/delete_unused_files
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #348 from smarterclayton/bug_928240_prevent_from_code
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #346 from
+  smarterclayton/bug_927425_use_authorization_tokens_not_strict_enough
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #345 from fabianofranz/master
+  (dmcphers+openshiftbot@redhat.com)
+- Remove doc files from spec (ccoleman@redhat.com)
+- Bug 928240 - --from-code is not supported on clients where the latest API
+  version is < 1.3 (ccoleman@redhat.com)
+- Delete unused files (ccoleman@redhat.com)
+- Bug 927425 - The use_authorization_tokens flag should be strict
+  (ccoleman@redhat.com)
+- Merge pull request #344 from jtharris/bugs/BZ928357 (dmcphers@redhat.com)
+- Bug 928210 - fixed remove alias for API <= 1.3 (ffranz@redhat.com)
+- Tests allow multiple DB cartridges to be added. (jharris@redhat.com)
+- Bug 928357 - rhc_extended tests (jharris@redhat.com)
+
 * Thu Mar 28 2013 Adam Miller <admiller@redhat.com> 1.7.1-1
 - bump_minor_versions for sprint 26 (admiller@redhat.com)
 - removing old API doc (dmcphers@redhat.com)

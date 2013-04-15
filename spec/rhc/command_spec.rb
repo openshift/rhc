@@ -146,36 +146,36 @@ describe RHC::Commands::Base do
       it("should have an object name of the class") { subject.object_name.should == 'static' }
 
       context 'and when test is called' do
-        it { expects_running('static', 'test').should call(:test).on(instance).with(no_args) }
+        it { expects_running('static-test').should call(:test).on(instance).with(no_args) }
       end
 
       context 'and when execute is called with argument' do
-        it { expects_running('static', 'execute', 'simplearg').should call(:execute).on(instance).with('simplearg') }
+        it { expects_running('static-execute', 'simplearg').should call(:execute).on(instance).with('simplearg') }
       end
       context 'and when execute is called with argument switch' do
-        it { expects_running('static', 'execute', '--testarg', 'switcharg').should call(:execute).on(instance).with('switcharg') }
+        it { expects_running('static-execute', '--testarg', 'switcharg').should call(:execute).on(instance).with('switcharg') }
       end
       context 'and when execute is called with same argument and switch' do
-        it { expects_running('statis', 'execute', 'duparg', '--testarg', 'duparg2').should exit_with_code(1) }
+        it { expects_running('statis-execute', 'duparg', '--testarg', 'duparg2').should exit_with_code(1) }
       end
 
       context 'and when the provided option is ambiguous' do
-        it { expects_running('static', 'execute', '-t', '--trace').should raise_error(OptionParser::AmbiguousOption) }
+        it { expects_running('static-execute', '-t', '--trace').should raise_error(OptionParser::AmbiguousOption) }
       end
 
       context 'and when execute is called with too many arguments' do
-        it { expects_running('static', 'execute', 'arg1', 'arg2').should exit_with_code(1) }
+        it { expects_running('static-execute', 'arg1', 'arg2').should exit_with_code(1) }
       end
 
       context 'and when execute is called with a missing argument' do
-        it { expects_running('static', 'execute').should exit_with_code(1) }
+        it { expects_running('static-execute').should exit_with_code(1) }
       end
 
       context 'and when execute_list is called' do
-        it { expects_running('static', 'execute-list', '--trace').should call(:execute_list).on(instance).with([]) }
-        it { expects_running('static', 'execute-list', '1', '2', '3').should call(:execute_list).on(instance).with(['1', '2', '3']) }
-        it { expects_running('static', 'execute-list', '1', '2', '3').should call(:execute_list).on(instance).with(['1', '2', '3']) }
-        it('should make the option available') { command_for('static', 'execute-list', '1', '2', '3').send(:options).tests.should == ['1','2','3'] }
+        it { expects_running('static-execute-list', '--trace').should call(:execute_list).on(instance).with([]) }
+        it { expects_running('static-execute-list', '1', '2', '3').should call(:execute_list).on(instance).with(['1', '2', '3']) }
+        it { expects_running('static-execute-list', '1', '2', '3').should call(:execute_list).on(instance).with(['1', '2', '3']) }
+        it('should make the option available') { command_for('static-execute-list', '1', '2', '3').send(:options).tests.should == ['1','2','3'] }
       end
 
       context 'and when execute is called with a contextual global option' do
@@ -183,28 +183,28 @@ describe RHC::Commands::Base do
       end
 
       context 'and when an error is raised in a call' do
-        it { expects_running('static', 'raise-error').should raise_error(StandardError, "test exception") }
+        it { expects_running('static-raise-error').should raise_error(StandardError, "test exception") }
       end
 
       context 'and when an exception is raised in a call' do
-        it { expects_running('static', 'raise-exception').should raise_error(Exception, "test exception") }
+        it { expects_running('static-raise-exception').should raise_error(Exception, "test exception") }
       end
 
       context 'and when an exception is raised in a call with --trace option' do
-        it { expects_running('static', 'raise-exception', "--trace").should raise_error(Exception, "test exception") }
+        it { expects_running('static-raise-exception', "--trace").should raise_error(Exception, "test exception") }
       end
 
       context 'and when deprecated alias is called' do
-        it do
+        it("prints a warning") do
           expects_running('static', 'exe', "arg").should call(:execute).on(instance).with('arg')
-          stderr.should match("Warning: This command is deprecated. Please use 'rhc static execute' instead.")
+          stderr.should match("Warning: This command is deprecated. Please use 'rhc static-execute' instead.")
         end
       end
 
       context 'and when deprecated alias is called with DISABLE_DEPRECATED env var' do
         before { ENV['DISABLE_DEPRECATED'] = '1' }
         after { ENV['DISABLE_DEPRECATED'] = nil }
-        it { expects_running('static', 'exe', 'arg', '--trace').should raise_error(RHC::DeprecatedError) }
+        it("raises an error") { expects_running('static', 'exe', 'arg', '--trace').should raise_error(RHC::DeprecatedError) }
       end
     end
   end
