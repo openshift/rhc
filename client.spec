@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.7.5
+Version: 1.7.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -99,6 +99,14 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Apr 15 2013 Adam Miller <admiller@redhat.com> 1.7.6-1
+- Merge remote-tracking branch 'origin/master' into better_app_create_flow
+  (ccoleman@redhat.com)
+- Fix tests, reorganize wizard slightly (ccoleman@redhat.com)
+- During app create, try more aggressively to set the user up.  Includes
+  setting up the base config, domain, and keys.  Changes behavior of argument
+  parsing for app to be optional. (ccoleman@redhat.com)
+
 * Sat Apr 13 2013 Krishna Raman <kraman@gmail.com> 1.7.5-1
 - Merge pull request #358 from
   smarterclayton/bug_951352_should_retry_key_on_bad_name
