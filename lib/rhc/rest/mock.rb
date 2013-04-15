@@ -460,6 +460,10 @@ module RHC::Rest::Mock
       @domains
     end
 
+    def api_version_negotiated
+      1.4
+    end
+
     def cartridges
       premium_embedded = MockRestCartridge.new(self, "premium_cart", "embedded")
       premium_embedded.usage_rate = 0.05
@@ -621,7 +625,7 @@ module RHC::Rest::Mock
       end
     end
 
-    def destroy 
+    def destroy
       puts @application.inspect
       puts self.inspect
       @application.aliases.delete self

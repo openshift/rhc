@@ -216,6 +216,7 @@ module RHC::Commands
     option ["--remove amount"], "Remove the indicated amount from the additional storage capacity"
     option ["--set amount"], "Set the specified amount of additional storage capacity"
     option ["-f", "--force"], "Force the action"
+    minimum_api 1.3
     def storage(cartridge)
       cartridges = Array(cartridge)
       rest_app = rest_client.find_application(options.namespace, options.app, :include => :cartridges)

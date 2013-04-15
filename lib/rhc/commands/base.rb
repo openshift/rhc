@@ -10,6 +10,7 @@ require 'rhc/context_helper'
 class RHC::Commands::Base
 
   attr_writer :options, :config
+  attr_accessor :min_api
 
   def initialize(options=Commander::Command::Options.new,
                  config=RHC::Config.new)
@@ -26,14 +27,20 @@ class RHC::Commands::Base
     # to the OpenShift API that transforms intent
     # and options, to remote calls, and then handle
     # the output (or failures) into exceptions and
-    # formatted object output.  Most interactions 
+    # formatted object output.  Most interactions
     # should be through this call pattern.
     def rest_client(opts={})
       @rest_client ||= begin
           auth = RHC::Auth::Basic.new(options)
           auth = RHC::Auth::Token.new(options, auth, token_store) if (options.use_authorization_tokens || options.token) && !(options.rhlogin && options.password)
           debug "Authenticating with #{auth.class}"
-          client_from_options(:auth => auth)
+          client = client_from_options(:auth => auth)
+
+          if client && min_api.to_f > client.api_version_negotiated.to_f
+            raise RHC::ServerAPINotSupportedException.new(min_api, client.api_version_negotiated)
+          end
+
+          client
         end
     end
 
@@ -103,6 +110,10 @@ class RHC::Commands::Base
       @suppress_wizard = true
     end
 
+    def self.minimum_api(value)
+      options[:min_api] = value
+    end
+
     def self.suppress_wizard?
       @suppress_wizard
     end
@@ -112,10 +123,10 @@ class RHC::Commands::Base
     # be available in autocompletion and at execution time.
     #
     # Supported options:
-    # 
+    #
     #   :deprecated - if true, a warning will be displayed when the command is executed
     #   :root_command - if true, do not prepend the object name to the command
-    # 
+    #
     def self.alias_action(action, options={})
       options[:action] = action.is_a?(Array) ? action : action.to_s.split(' ')
       aliases << options

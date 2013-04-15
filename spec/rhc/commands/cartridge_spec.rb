@@ -481,5 +481,16 @@ describe RHC::Commands::Cartridge do
         fail_with_message("The amount format must be a number, optionally followed by 'GB'")
       end
     end
+
+    context 'when run against an outdated broker' do
+      before { rest_client.stub(:api_version_negotiated).and_return(1.2) }
+      let(:arguments) { cmd_base | cart_type | std_args }
+
+      it 'adding storage should raise a version error' do
+        @extra_args = ["--add", "1GB"]
+        fail_with_message('This operation requires API version 1.3.  Current version is 1.2.')
+      end
+
+    end
   end
 end

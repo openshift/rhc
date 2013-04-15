@@ -225,6 +225,7 @@ module RHC
             cmd = opts[:class].new
             cmd.options = options
             cmd.config = config
+            cmd.min_api = opts[:min_api]
 
             args = fill_arguments(cmd, options, args_metadata, options_metadata, args)
             needs_configuration!(cmd, options, config)
