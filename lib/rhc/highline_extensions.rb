@@ -7,7 +7,9 @@ class HighLineExtension < HighLine
   [:ask, :agree].each do |sym|
     define_method(sym) do |*args, &block|
       separate_blocks
-      super(*args, &block)
+      r = super(*args, &block)
+      @last_line_open = false
+      r
     end
   end
 
@@ -31,8 +33,10 @@ class HighLineExtension < HighLine
         if statement[-1, 1] == " " or statement[-1, 1] == "\t"
           @output.print(statement)
           @output.flush
+          true
         else
           @output.puts(statement)
+          false
         end
 
     elsif msg.respond_to? :each
@@ -170,7 +174,7 @@ class HighLineExtension < HighLine
 
   def pager
     #:nocov:
-    return if RUBY_PLATFORM =~ /win32/
+    return if RHC::Helpers.windows?
     return unless @output.tty?
 
     read, write = IO.pipe

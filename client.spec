@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.7.4
+Version: 1.7.5
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -99,6 +99,16 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Sat Apr 13 2013 Krishna Raman <kraman@gmail.com> 1.7.5-1
+- Merge pull request #358 from
+  smarterclayton/bug_951352_should_retry_key_on_bad_name
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 951352 - Retry the key name during the wizard flow (ccoleman@redhat.com)
+- Merge pull request #355 from fabianofranz/master (dmcphers@redhat.com)
+- Bug 951436 - handling Windows platform on paging (ffranz@redhat.com)
+- Bug 951369 (ffranz@redhat.com)
+- tito releasers update (bleanhar@redhat.com)
+
 * Thu Apr 11 2013 Adam Miller <admiller@redhat.com> 1.7.4-1
 - Merge pull request #352 from
   smarterclayton/origin_ui_13_autocomplete_and_wrapping

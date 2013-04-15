@@ -68,15 +68,20 @@ module RHC::Rest::Mock
     def stub_user(auth=mock_user_auth)
       stub_api_request(:get, 'broker/rest/user', auth).to_return(simple_user(username))
     end
-    def stub_create_default_key
+    def stub_add_key(name='default')
       stub_api_request(:post, 'broker/rest/user/keys', mock_user_auth).
-        with(:body => hash_including({:name => 'default', :type => 'ssh-rsa'})).
+        with(:body => hash_including({:name => name, :type => 'ssh-rsa'})).
         to_return({:status => 201, :body => {}.to_json})
     end
     def stub_update_key(name)
       stub_api_request(:put, "broker/rest/user/keys/#{name}", mock_user_auth).
         with(:body => hash_including({:type => 'ssh-rsa'})).
         to_return({:status => 200, :body => {}.to_json})
+    end
+    def stub_add_key_error(name, message, code=422)
+      stub_api_request(:post, "broker/rest/user/keys", mock_user_auth).
+        with(:body => hash_including({:type => 'ssh-rsa'})).
+        to_return({:status => code, :body => {:messages => [{:text => message, :field => 'name', :severity => 'error'}]}.to_json})
     end
     def stub_create_domain(name)
       stub_api_request(:post, 'broker/rest/domains', mock_user_auth).

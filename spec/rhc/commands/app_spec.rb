@@ -159,7 +159,7 @@ describe RHC::Commands::App do
       before{ rest_client.domains.clear }
       let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart-1'] }
       # skips login stage and insecure check because of mock rest client, doesn't check keys
-      it { run_output(['mydomain', 'y', 'mykey']).should match(/This wizard.*Checking your namespace.*Your domain name 'mydomain' has been successfully created.*Creating application.*Your public SSH key.*Uploading key 'mykey' from.*Downloading the application.*Success/m) }
+      it { run_output(['mydomain', 'y', 'mykey']).should match(/This wizard.*Checking your namespace.*Your domain name 'mydomain' has been successfully created.*Creating application.*Your public SSH key.*Uploading key 'mykey' .*Downloading the application.*Success/m) }
     end
 
     context 'when run without a cart' do
