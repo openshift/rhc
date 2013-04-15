@@ -8,7 +8,7 @@ module RHC::Commands
     description <<-DESC
       Cartridges add functionality to OpenShift applications.  Each application
       has one web cartridge to listen for HTTP requests, and any number
-      of addon cartridges.  Addons may include databases like MySQL and Mongo, 
+      of addon cartridges.  Addons may include databases like MySQL and Mongo,
       administrative tools like phpMyAdmin, or build clients like Jenkins.
 
       Most cartridges that listen for incoming network traffic are placed on
@@ -17,7 +17,7 @@ module RHC::Commands
       (like Jenkins) or provide environment variables.
 
       Use the 'cartridges' command to see a list of all available cartridges.
-      Add a new cartridge to your application with 'add-cartridge'. 
+      Add a new cartridge to your application with 'add-cartridge'.
 
       For scalable applications, use the 'cartridge-scale' command on the web
       cartridge to set the minimum and maximum scale.
@@ -36,10 +36,10 @@ module RHC::Commands
       carts = rest_client.cartridges.sort_by{ |c| "#{c.type == 'standalone' && 1}_#{c.tags.include?('experimental') ? 1 : 0}_#{(c.display_name || c.name).downcase}" }
 
       pager
-      
+
       if options.verbose
         carts.each do |c|
-          paragraph do 
+          paragraph do
             name = c.display_name != c.name && "#{color(c.display_name, :cyan)} [#{c.name}]" || c.name
             tags = c.tags - RHC::Rest::Cartridge::HIDDEN_TAGS
             say header([name, "(#{c.only_in_new? ? 'web' : 'addon'})"])
@@ -216,10 +216,9 @@ module RHC::Commands
     option ["--remove amount"], "Remove the indicated amount from the additional storage capacity"
     option ["--set amount"], "Set the specified amount of additional storage capacity"
     option ["-f", "--force"], "Force the action"
-    minimum_api 1.3
     def storage(cartridge)
       cartridges = Array(cartridge)
-      rest_app = rest_client.find_application(options.namespace, options.app, :include => :cartridges)
+      rest_app = rest_client(:min_api => 1.3).find_application(options.namespace, options.app, :include => :cartridges)
 
       # Pull the desired action
       #

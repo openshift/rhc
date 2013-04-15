@@ -35,7 +35,7 @@ module Commander
       end
 
       # Separate option lists with '--'
-      remaining = args.split('--').map{ |a| opts.parse!(a) }.inject([]) do |arr, sub| 
+      remaining = args.split('--').map{ |a| opts.parse!(a) }.inject([]) do |arr, sub|
         arr << '--' unless arr.empty?
         arr.concat(sub)
       end
@@ -151,7 +151,7 @@ module RHC
       instance = Commander::Runner.instance
       command_name = instance.command_name_from_args
       command = instance.active_command
-      
+
       if new_cmd = command.deprecated(command_name)
         new_cmd = "rhc #{command.name}" if new_cmd == true
         RHC::Helpers.deprecated_command new_cmd
@@ -225,7 +225,6 @@ module RHC
             cmd = opts[:class].new
             cmd.options = options
             cmd.config = config
-            cmd.min_api = opts[:min_api]
 
             args = fill_arguments(cmd, options, args_metadata, options_metadata, args)
             needs_configuration!(cmd, options, config)
@@ -282,7 +281,7 @@ module RHC
           value = cmd.send(context_helper) if value.nil? and context_helper
 
           if value.nil?
-            value = 
+            value =
               if arg[:arg_type] == :list
                 all = []
                 while available.first && available.first != '--'

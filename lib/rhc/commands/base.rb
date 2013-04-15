@@ -10,7 +10,6 @@ require 'rhc/context_helper'
 class RHC::Commands::Base
 
   attr_writer :options, :config
-  attr_accessor :min_api
 
   def initialize(options=Commander::Command::Options.new,
                  config=RHC::Config.new)
@@ -34,14 +33,14 @@ class RHC::Commands::Base
           auth = RHC::Auth::Basic.new(options)
           auth = RHC::Auth::Token.new(options, auth, token_store) if (options.use_authorization_tokens || options.token) && !(options.rhlogin && options.password)
           debug "Authenticating with #{auth.class}"
-          client = client_from_options(:auth => auth)
-
-          if client && min_api.to_f > client.api_version_negotiated.to_f
-            raise RHC::ServerAPINotSupportedException.new(min_api, client.api_version_negotiated)
-          end
-
-          client
+          client_from_options(:auth => auth)
         end
+
+        if opts[:min_api] && opts[:min_api].to_f > @rest_client.api_version_negotiated.to_f
+          raise RHC::ServerAPINotSupportedException.new(opts[:min_api], @rest_client.api_version_negotiated)
+        end
+
+      @rest_client
     end
 
     def token_store
@@ -108,10 +107,6 @@ class RHC::Commands::Base
     end
     def self.suppress_wizard
       @suppress_wizard = true
-    end
-
-    def self.minimum_api(value)
-      options[:min_api] = value
     end
 
     def self.suppress_wizard?
