@@ -236,7 +236,7 @@ class HighLine::Header < Struct.new(:text, :width, :indent, :color)
               if w > width
                 rows.concat(section.textwrap_ansi(width))
               else
-                rows << section
+                rows << section.dup
                 chars += w
               end
             else
