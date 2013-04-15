@@ -7,13 +7,14 @@ module RHC
     describe Application do
       let (:client) { RHC::Rest::Client.new('test.domain.com', 'test_user', 'test pass') }
       let (:app_links) { mock_response_links(mock_app_links('mock_domain','mock_app')) }
+      let (:app_aliases) { ['alias1','alias2'] }
       let (:app_obj) {
         args = {
           'domain_id'       => 'mock_domain',
           'name'            => 'mock_app',
           'creation_time'   => Time.now.to_s,
           'uuid'            => 1234,
-          'aliases'         => ['alias1','alias2'],
+          'aliases'         => app_aliases,
           'server_identity' => mock_uri,
           'links'           => app_links
         }
@@ -62,6 +63,32 @@ module RHC
           cart = app.add_cartridge('mock_cart_0')
           cart.should be_an_instance_of RHC::Rest::Cartridge
           cart.name.should == 'mock_cart_0'
+        end
+      end
+
+      context "#aliases" do
+        context "when the server returns an array of strings" do
+          it{ app_obj.aliases.first.should be_an_instance_of RHC::Rest::Alias }
+          it("converts to an object"){ app_obj.aliases.map(&:id).should == app_aliases }
+        end
+
+        context "when the server returns an object" do
+          let(:app_aliases){ [{'id' => 'alias1'}, {'id' => 'alias2'}] }
+          it{ app_obj.aliases.first.should be_an_instance_of RHC::Rest::Alias }
+          it{ app_obj.aliases.map(&:id).should == ['alias1', 'alias2'] }
+        end
+
+        context "when the server doesn't return aliases" do
+          let(:app_aliases){ nil }
+          context "when the client supports LIST_ALIASES" do
+            before{ stub_api_request(:any, app_links['LIST_ALIASES']['relative']).to_return(mock_alias_response(2)) }
+            it{ app_obj.aliases.first.should be_an_instance_of RHC::Rest::Alias }
+            it{ app_obj.aliases.map(&:id).should == ['www.alias0.com', 'www.alias1.com'] }
+          end
+          context "when the client doesn't support LIST_ALIASES" do
+            before{ app_links['LIST_ALIASES'] = nil }
+            it{ app_obj.aliases.should == [] }
+          end
         end
       end
 

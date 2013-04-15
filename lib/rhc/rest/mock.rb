@@ -414,6 +414,20 @@ module RHC::Rest::Mock
       }
     end
 
+    def mock_alias_response(count=1)
+      aliases = count.times.inject([]) do |arr, i|
+         arr << {:id  => "www.alias#{i}.com"}
+      end
+
+      return {
+        :body   => {
+          :type => count == 1 ? 'alias' : 'aliases',
+          :data => aliases
+        }.to_json,
+        :status => 200
+      }
+    end
+    
     def mock_gear_groups_response()
       groups = [{}]
       type  = 'gear_groups'

@@ -260,7 +260,7 @@ module RHC
             auth = options[:auth] || self.auth
             response = nil
 
-            debug "Request #{args[0].to_s.upcase} #{args[1]}" if debug?
+            debug "Request #{args[0].to_s.upcase} #{args[1]}#{"?#{args[2].map{|a| a.join('=')}.join(' ')}" if args[2] && args[0] == 'GET'}" if debug?
             time = Benchmark.realtime{ response = client.request(*(args << true)) }
             debug "   code %s %4i ms" % [response.status, (time*1000).to_i] if debug? && response
 
