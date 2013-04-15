@@ -9,6 +9,7 @@ module RHC::Commands
     description "Creates and controls an OpenShift application.  To see the list of all applications use the rhc domain show command.  Note that delete is not reversible and will stop your application and then remove the application and repo from the remote server. No local changes are made."
     syntax "<action>"
     default_action :help
+    suppress_wizard
 
     summary "Create an application"
     description <<-DESC
@@ -38,19 +39,24 @@ module RHC::Commands
 
       DESC
     syntax "<name> <cartridge> [-n namespace]"
-    option ["-n", "--namespace NAME"], "Namespace for the application", :context => :namespace_context
-    option ["-g", "--gear-size size"], "Gear size controls how much memory and CPU your cartridges can use."
+    option ["-n", "--namespace NAME"], "Namespace for the application"
+    option ["-g", "--gear-size SIZE"], "Gear size controls how much memory and CPU your cartridges can use."
     option ["-s", "--scaling"], "Enable scaling for the web cartridge."
-    option ["-r", "--repo dir"], "Path to the Git repository (defaults to ./$app_name)"
+    option ["-r", "--repo DIR"], "Path to the Git repository (defaults to ./$app_name)"
     option ["--from-code URL"], "URL to a Git repository that will become the initial contents of the application"
     option ["--[no-]git"], "Skip creating the local Git repository."
     option ["--nogit"], "DEPRECATED: Skip creating the local Git repository.", :deprecated => {:key => :git, :value => false}
     option ["--[no-]dns"], "Skip waiting for the application DNS name to resolve. Must be used in combination with --no-git"
-    option ["--enable-jenkins [server_name]"], "Enable Jenkins builds for this application (will create a Jenkins application if not already available). The default name will be 'jenkins' if not specified."
-    argument :name, "Name for your application", ["-a", "--app name"]
-    argument :cartridges, "The web framework this application should use", ["-t", "--type cartridge"], :arg_type => :list
+    option ['--no-keys'], "Skip checking SSH keys during app creation", :hide => true
+    option ["--enable-jenkins [NAME]"], "Enable Jenkins builds for this application (will create a Jenkins application if not already available). The default name will be 'jenkins' if not specified."
+    argument :name, "Name for your application", ["-a", "--app NAME"], :optional => true
+    argument :cartridges, "The web framework this application should use", ["-t", "--type CARTRIDGE"], :optional => true, :arg_type => :list
     #argument :additional_cartridges, "A list of other cartridges such as databases you wish to add. Cartridges can also be added later using 'rhc cartridge add'", [], :arg_type => :list
     def create(name, cartridges)
+      check_config!
+
+      check_name!(name)
+
       cartridges = check_cartridges(cartridges, &require_one_web_cart)
 
       options.default \
@@ -59,8 +65,7 @@ module RHC::Commands
 
       raise ArgumentError, "You have named both your main application and your Jenkins application '#{name}'. In order to continue you'll need to specify a different name with --enable-jenkins or choose a different application name." if jenkins_app_name == name && enable_jenkins?
 
-      raise RHC::Rest::DomainNotFoundException.new("No domains found. Please create a domain with 'rhc domain create <namespace>' before creating applications.") if rest_client.domains.empty?
-      rest_domain = rest_client.find_domain(options.namespace)
+      rest_domain = check_domain!
       rest_app = nil
 
       cart_names = cartridges.collect do |c|
@@ -121,6 +126,9 @@ module RHC::Commands
         end if build_app_exists
       end
 
+      debug "Checking SSH keys through the wizard"
+      check_sshkeys! unless options.no_keys
+
       if options.dns
         paragraph do
           say "Waiting for your DNS name to be available ... "
@@ -139,9 +147,6 @@ module RHC::Commands
 
         if options.git
           paragraph do
-            debug "Checking SSH keys through the wizard"
-            check_sshkeys! unless options.noprompt
-
             say "Downloading the application Git repository ..."
             paragraph do
               begin
@@ -335,8 +340,39 @@ module RHC::Commands
       end
 
       def check_sshkeys!
+        return unless interactive?
         RHC::SSHWizard.new(rest_client, config, options).run
       end
+
+      def check_name!(name)
+        return unless name.blank?
+
+        paragraph{ say "When creating an application, you must provide a name and a cartridge from the list below:" }
+        paragraph{ list_cartridges(standalone_cartridges) }
+
+        raise ArgumentError, "Please specify the name of the application and the web cartridge to install"
+      end
+
+      def check_config!
+        return if not interactive? or (!options.clean && config.has_local_config?) or (options.server && (options.rhlogin || options.token))
+        RHC::EmbeddedWizard.new(config, options).run
+      end
+
+      def check_domain!
+        if options.namespace
+          rest_client.find_domain(options.namespace)
+        else
+          if rest_client.domains.empty?
+            raise RHC::Rest::DomainNotFoundException, "No domains found. Please create a domain with 'rhc domain create <namespace>' before creating applications." unless interactive?
+            RHC::DomainWizard.new(config, options, rest_client).run
+          end
+          domain = rest_client.domains.first
+          raise RHC::Rest::DomainNotFoundException, "No domains found. Please create a domain with 'rhc domain create <namespace>' before creating applications." unless domain
+          options.namespace = domain.id
+          domain
+        end
+      end
+
 
       def gear_groups_for_app(app_name)
         rest_client.find_application_gear_groups(options.namespace, app_name)

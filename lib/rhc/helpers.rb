@@ -180,6 +180,10 @@ module RHC
     # Output helpers
     #
 
+    def interactive?
+      $stdout.tty? and not options.noprompt
+    end
+
     def debug(msg)
       $stderr.puts "DEBUG: #{msg}" if debug?
     end

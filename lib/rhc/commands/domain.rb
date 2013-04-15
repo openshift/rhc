@@ -89,7 +89,7 @@ module RHC::Commands
     def delete(namespace)
       domain = rest_client.find_domain namespace
 
-      say "Deleting domain '#{namespace}'"
+      say "Deleting domain '#{namespace}' ... "
 
       begin
         domain.destroy
@@ -97,7 +97,8 @@ module RHC::Commands
         raise RHC::Exception.new("Domain contains applications. Delete applications first.", 128)
       end
 
-      results { say "Success!" }
+      success "deleted"
+      
       0
     end
   end
