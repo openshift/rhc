@@ -35,7 +35,7 @@ module RHC
       end
 
       def supports?(sym)
-        links.has_key?(sym.to_s) || links.has_key?(sym.to_s.upcase)
+        !!(links[sym.to_s] || links[sym.to_s.upcase])
       end
 
       protected
