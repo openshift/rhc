@@ -137,7 +137,7 @@ module RHC
 
   class ServerAPINotSupportedException < Exception
     def initialize(min_version, current_version)
-      super "This operation requires API version #{min_version}.  Current version is #{current_version}."
+      super "The server does not support this command (requires #{min_version}, found #{current_version})."
     end
   end
 end

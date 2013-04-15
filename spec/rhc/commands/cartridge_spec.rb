@@ -398,7 +398,7 @@ describe RHC::Commands::Cartridge do
   end
 
   describe 'cartridge storage' do
-    let!(:rest_client){ MockRestClient.new }
+    let!(:rest_client){ MockRestClient.new(RHC::Config, 1.3) }
     let(:cmd_base) { ['cartridge', 'storage'] }
     let(:std_args) { ['-a', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] | (@extra_args || []) }
     let(:cart_type) { ['mock_cart-1'] }
@@ -488,7 +488,7 @@ describe RHC::Commands::Cartridge do
 
       it 'adding storage should raise a version error' do
         @extra_args = ["--add", "1GB"]
-        fail_with_message('This operation requires API version 1.3.  Current version is 1.2.')
+        fail_with_message('The server does not support this command \(requires 1.3, found 1.2\).')
       end
 
     end

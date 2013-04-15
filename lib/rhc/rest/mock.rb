@@ -431,7 +431,7 @@ module RHC::Rest::Mock
   class MockRestClient < RHC::Rest::Client
     include Helpers
 
-    def initialize(config=RHC::Config)
+    def initialize(config=RHC::Config, version=1.0)
       obj = self
       if RHC::Rest::Client.respond_to?(:stub)
         RHC::Rest::Client.stub(:new) { obj }
@@ -446,6 +446,7 @@ module RHC::Rest::Mock
       @domains = []
       @user = MockRestUser.new(client, config.username)
       @api = MockRestApi.new(client, config)
+      @version = version
     end
 
     def api
@@ -461,7 +462,7 @@ module RHC::Rest::Mock
     end
 
     def api_version_negotiated
-      1.4
+      @version
     end
 
     def cartridges
