@@ -12,16 +12,26 @@ module RHC
 
     DEFAULT_MAX_LENGTH = 16
 
-    STAGES = [:greeting_stage,
-              :login_stage,
-              :create_config_stage,
-              :config_ssh_key_stage,
-              :upload_ssh_key_stage,
-              :install_client_tools_stage,
-              :setup_test_stage,
-              :config_namespace_stage,
-              :show_app_info_stage,
-              :finalize_stage]
+    CONFIG_STAGES = [
+      :login_stage,
+      :create_config_stage,
+    ]
+    KEY_STAGES = [
+      :config_ssh_key_stage,
+      :upload_ssh_key_stage,
+    ]
+    TEST_STAGES = [
+      :install_client_tools_stage,
+      :setup_test_stage,
+    ]
+    NAMESPACE_STAGES = [
+      :config_namespace_stage,
+    ]
+    APP_STAGES = [
+      :show_app_info_stage,
+    ]
+    STAGES = [:greeting_stage] + CONFIG_STAGES + KEY_STAGES + TEST_STAGES + NAMESPACE_STAGES + APP_STAGES + [:finalize_stage]
+
     def stages
       STAGES
     end
@@ -57,55 +67,64 @@ module RHC
     end
 
     protected
-      include RHC::Helpers
-      include RHC::SSHHelpers
-      include RHC::GitHelpers
-      include RHC::CartridgeHelpers
-      attr_reader :config, :options
-      attr_accessor :auth, :user
 
-      def openshift_server
-        options.server || config['libra_server'] || "openshift.redhat.com"
-      end
+    include RHC::Helpers
+    include RHC::SSHHelpers
+    include RHC::GitHelpers
+    include RHC::CartridgeHelpers
+    attr_reader :config, :options
+    attr_accessor :auth, :user
+    attr_writer :rest_client
 
-      def new_client_for_options
-        client_from_options({
-          :auth => auth,
-        })
-      end
+    def debug?
+      @debug
+    end
 
-      def core_auth
-        @core_auth ||= RHC::Auth::Basic.new(options)
-      end
+    def hostname
+      Socket.gethostname
+    end
 
-      def token_auth
-        RHC::Auth::Token.new(options, core_auth, token_store)
-      end
+    def openshift_server
+      options.server || config['libra_server'] || "openshift.redhat.com"
+    end
 
-      def auth(reset=false)
-        @auth = nil if reset
-        @auth ||= begin
-            if options.token
-              token_auth
-            else
-              core_auth
-            end
+    def new_client_for_options
+      client_from_options({
+        :auth => auth,
+      })
+    end
+
+    def core_auth
+      @core_auth ||= RHC::Auth::Basic.new(options)
+    end
+
+    def token_auth
+      RHC::Auth::Token.new(options, core_auth, token_store)
+    end
+
+    def auth(reset=false)
+      @auth = nil if reset
+      @auth ||= begin
+          if options.token
+            token_auth
+          else
+            core_auth
           end
-      end
+        end
+    end
 
-      def token_store
-        @token_store ||= RHC::Auth::TokenStore.new(config.home_conf_path)
-      end
+    def token_store
+      @token_store ||= RHC::Auth::TokenStore.new(config.home_conf_path)
+    end
 
-      def username
-        options.rhlogin || (auth.username if auth.respond_to?(:username))
-      end
+    def username
+      options.rhlogin || (auth.username if auth.respond_to?(:username))
+    end
 
-      def print_dot
-        $terminal.instance_variable_get(:@output).print('.')
-      end
+    def print_dot
+      $terminal.instance_variable_get(:@output).print('.')
+    end
 
-    private
 
     # cache SSH keys from the REST client
     def ssh_keys
@@ -116,6 +135,29 @@ module RHC
     def clear_ssh_keys_cache
       @ssh_keys = nil
     end
+
+    # return true if the account has the public key defined by
+    # RHC::Config::ssh_pub_key_file_path
+    def ssh_key_uploaded?
+      ssh_keys.present? && ssh_keys.any? { |k| k.fingerprint.present? && k.fingerprint == fingerprint_for_default_key }
+    end
+
+    def existing_keys_info
+      return unless ssh_keys
+      indent{ ssh_keys.each{ |key| paragraph{ display_key(key) } } }
+    end
+
+    def applications
+      @applications ||= rest_client.domains.map(&:applications).flatten
+    end
+
+    def namespace_optional?
+      true
+    end
+
+    #
+    # Stages
+    #
 
     def greeting_stage
       info "OpenShift Client Tools (RHC) Setup Wizard"
@@ -214,17 +256,6 @@ module RHC
         paragraph{ say "    Created: #{ssh_pub_key_file_path}" }
       end
       true
-    end
-
-    # return true if the account has the public key defined by
-    # RHC::Config::ssh_pub_key_file_path
-    def ssh_key_uploaded?
-      ssh_keys.present? && ssh_keys.any? { |k| k.fingerprint.present? && k.fingerprint == fingerprint_for_default_key }
-    end
-
-    def existing_keys_info
-      return unless ssh_keys
-      indent{ ssh_keys.each{ |key| paragraph{ display_key(key) } } }
     end
 
     def upload_ssh_key_stage
@@ -436,12 +467,7 @@ module RHC
     end
 
     def all_test_methods
-      private_methods.select {|m| m.to_s.start_with? 'test_'}
-    end
-
-    # cached list of applications needed for test stage
-    def applications
-      @applications ||= rest_client.domains.map(&:applications).flatten
+      (protected_methods + private_methods).select {|m| m.to_s.start_with? 'test_'}
     end
 
     ###
@@ -487,13 +513,14 @@ module RHC
 
     def config_namespace(namespace)
       # skip if string is empty
-      if namespace.nil? or namespace.chomp.length == 0
+      if namespace_optional? and (namespace.nil? or namespace.chomp.blank?)
         paragraph{ info "You may create a namespace later through 'rhc domain create'" }
         return true
       end
 
       begin
         domain = rest_client.add_domain(namespace)
+        options.namespace = namespace
 
         success "Your domain name '#{domain.id}' has been successfully created"
       rescue RHC::Rest::ValidationException => e
@@ -509,9 +536,7 @@ module RHC
       namespace = nil
       paragraph do
         begin
-          namespace = ask "Please enter a namespace (letters and numbers only) |<none>|: " do |q|
-            #q.validate  = lambda{ |p| RHC::check_namespace p }
-            #q.responses[:not_valid]    = 'The namespace value must contain only letters and/or numbers (A-Za-z0-9):'
+          namespace = ask "Please enter a namespace (letters and numbers only)#{namespace_optional? ? " |<none>|" : ""}: " do |q|
             q.responses[:ask_on_error] = ''
           end
         end while !config_namespace(namespace)
@@ -553,21 +578,9 @@ We recommend these free applications:
 
 EOF
     end
-
-    def debug?
-      @debug
-    end
-
-    def hostname
-      Socket.gethostname
-    end
-
-    protected
-      attr_writer :rest_client
   end
 
   class RerunWizard < Wizard
-
     def finalize_stage
       section :top => 1 do
         success "Your client tools are now configured."
@@ -576,11 +589,36 @@ EOF
     end
   end
 
-  class SSHWizard < Wizard
-    STAGES = [:config_ssh_key_stage,
-              :upload_ssh_key_stage]
+  class EmbeddedWizard < Wizard
     def stages
-      STAGES
+      super - APP_STAGES - KEY_STAGES - [:setup_test_stage]
+    end
+
+    def finalize_stage
+      true
+    end
+  end
+
+  class DomainWizard < Wizard
+    def initialize(*args)
+      client = args.length == 3 ? args.pop : nil
+      super *args
+      self.rest_client = client || new_client_for_options
+    end
+
+    def stages
+      [:config_namespace_stage]
+    end
+
+    protected
+      def namespace_optional?
+        false
+      end
+  end
+
+  class SSHWizard < Wizard
+    def stages
+      KEY_STAGES
     end
 
     def initialize(rest_client, config, options)

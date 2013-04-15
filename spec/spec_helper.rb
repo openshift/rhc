@@ -365,17 +365,48 @@ module ExitCodeMatchers
 end
 
 module CommanderInvocationMatchers
+  InvocationMatch = Class.new(RuntimeError)
+
   RSpec::Matchers.define :call do |method|
     chain :on do |object|
       @object = object
     end
-    chain :with do |args|
+    chain :with do |*args|
       @args = args
+    end
+    chain :and_stop do
+      @stop = true
     end
 
     match do |block|
       e = @object.should_receive(method)
-      e.with(@args) if @args
+      e.and_raise(InvocationMatch) if @stop
+      e.with(*@args) if @args
+      begin
+        block.call
+        true
+      rescue InvocationMatch => e
+        true
+      rescue SystemExit => e
+        false
+      end
+    end
+    description do
+      "expect block to invoke '#{method}' on #{@object} with #{@args}"
+    end
+  end
+
+  RSpec::Matchers.define :not_call do |method|
+    chain :on do |object|
+      @object = object
+    end
+    chain :with do |*args|
+      @args = args
+    end
+
+    match do |block|
+      e = @object.should_not_receive(method)
+      e.with(*@args) if @args
       begin
         block.call
         true
@@ -386,7 +417,7 @@ module CommanderInvocationMatchers
     description do
       "expect block to invoke '#{method}' on #{@object} with #{@args}"
     end
-  end
+  end  
 end
 
 module ColorMatchers
