@@ -305,7 +305,7 @@ module RHC
 
       type, content, comment = ssh_key_triple_for_default_key
 
-      if !ssh_keys.empty? && ssh_keys.any? { |k| k.name == key_name }
+      if ssh_keys.present? && ssh_keys.any? { |k| k.name == key_name }
         clear_ssh_keys_cache
         paragraph do
           say "Key with the name '#{key_name}' already exists. Updating ... "
