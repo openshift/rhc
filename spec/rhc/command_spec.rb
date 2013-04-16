@@ -8,7 +8,7 @@ describe RHC::Commands::Base do
   let!(:config){ base_config }
 
   before{ c = RHC::Commands.instance_variable_get(:@commands); @saved_commands = c && c.dup || nil }
-  after do 
+  after do
     (Kernel.send(:remove_const, subject) if subject.is_a?(Class)) rescue nil
     RHC::Commands.instance_variable_set(:@commands, @saved_commands)
   end
@@ -19,7 +19,7 @@ describe RHC::Commands::Base do
 
     context 'when the class is at the root' do
       subject do
-        Kernel.module_eval do 
+        Kernel.module_eval do
           class StaticRootClass < RHC::Commands::Base; def run; 1; end; end
         end
         StaticRootClass
@@ -27,8 +27,8 @@ describe RHC::Commands::Base do
       its(:object_name) { should == 'static-root-class' }
     end
     context 'when the class is nested in a module' do
-      subject do 
-        Kernel.module_eval do 
+      subject do
+        Kernel.module_eval do
           module Nested; class StaticRootClass < RHC::Commands::Base; def run; 1; end; end; end
         end
         Nested::StaticRootClass
@@ -72,8 +72,8 @@ describe RHC::Commands::Base do
     end
 
     context 'when statically defined' do
-      subject do 
-        Kernel.module_eval do 
+      subject do
+        Kernel.module_eval do
           module Nested
             class Static < RHC::Commands::Base
               suppress_wizard
@@ -90,8 +90,8 @@ describe RHC::Commands::Base do
     end
 
     context 'when a command calls exit' do
-      subject do 
-        Kernel.module_eval do 
+      subject do
+        Kernel.module_eval do
           class Failing < RHC::Commands::Base
             def run
               exit 2
@@ -225,6 +225,7 @@ describe RHC::Commands::Base do
 
   describe "rest_client" do
     let(:instance){ subject }
+    before{ RHC::Rest::Client.any_instance.stub(:api_version_negotiated).and_return(1.4) }
 
     context "when initializing the object" do
       let(:auth){ mock('auth') }
@@ -312,7 +313,7 @@ describe RHC::Commands::Base do
         let(:arguments){ ['test', '-l', username, '--server', mock_uri] }
         before{ instance.send(:token_store).should_receive(:get).with{ |user, server| user.should == username; server.should == instance.send(:openshift_server) }.and_return(nil) }
         before{ stub_api(false, true); stub_api_request(:get, 'broker/rest/user', false).to_return{ |request| request.headers['Authorization'] =~ /Bearer/ ? simple_user(username) : {:status => 401} } }
-        it("should attempt to create a new token") do 
+        it("should attempt to create a new token") do
           rest_client.should_receive(:new_session).ordered.and_return(auth_token)
           rest_client.user
         end
@@ -324,7 +325,7 @@ describe RHC::Commands::Base do
         let(:arguments){ ['test', '-l', username, '--server', mock_uri] }
         before{ instance.send(:token_store).should_receive(:get).with{ |user, server| user.should == username; server.should == instance.send(:openshift_server) }.and_return(nil) }
         before{ stub_api(false, false); stub_api_request(:get, 'broker/rest/user', false).to_return{ |request| request.headers['Authorization'] =~ /Basic/ ? simple_user(username) : {:status => 401} } }
-        it("should prompt for password") do 
+        it("should prompt for password") do
           basic_auth.should_receive(:ask).once.and_return('password')
           rest_client.user
         end

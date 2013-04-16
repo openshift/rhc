@@ -398,7 +398,7 @@ describe RHC::Commands::Cartridge do
   end
 
   describe 'cartridge storage' do
-    let!(:rest_client){ MockRestClient.new }
+    let!(:rest_client){ MockRestClient.new(RHC::Config, 1.3) }
     let(:cmd_base) { ['cartridge', 'storage'] }
     let(:std_args) { ['-a', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] | (@extra_args || []) }
     let(:cart_type) { ['mock_cart-1'] }
@@ -480,6 +480,17 @@ describe RHC::Commands::Cartridge do
         @extra_args = ["--set", "5ZB"]
         fail_with_message("The amount format must be a number, optionally followed by 'GB'")
       end
+    end
+
+    context 'when run against an outdated broker' do
+      before { rest_client.stub(:api_version_negotiated).and_return(1.2) }
+      let(:arguments) { cmd_base | cart_type | std_args }
+
+      it 'adding storage should raise a version error' do
+        @extra_args = ["--add", "1GB"]
+        fail_with_message('The server does not support this command \(requires 1.3, found 1.2\).')
+      end
+
     end
   end
 end
