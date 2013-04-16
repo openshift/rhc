@@ -26,7 +26,7 @@ class RHC::Commands::Base
     # to the OpenShift API that transforms intent
     # and options, to remote calls, and then handle
     # the output (or failures) into exceptions and
-    # formatted object output.  Most interactions 
+    # formatted object output.  Most interactions
     # should be through this call pattern.
     def rest_client(opts={})
       @rest_client ||= begin
@@ -35,6 +35,12 @@ class RHC::Commands::Base
           debug "Authenticating with #{auth.class}"
           client_from_options(:auth => auth)
         end
+
+        if opts[:min_api] && opts[:min_api].to_f > @rest_client.api_version_negotiated.to_f
+          raise RHC::ServerAPINotSupportedException.new(opts[:min_api], @rest_client.api_version_negotiated)
+        end
+
+      @rest_client
     end
 
     def token_store
@@ -112,10 +118,10 @@ class RHC::Commands::Base
     # be available in autocompletion and at execution time.
     #
     # Supported options:
-    # 
+    #
     #   :deprecated - if true, a warning will be displayed when the command is executed
     #   :root_command - if true, do not prepend the object name to the command
-    # 
+    #
     def self.alias_action(action, options={})
       options[:action] = action.is_a?(Array) ? action : action.to_s.split(' ')
       aliases << options
