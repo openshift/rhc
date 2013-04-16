@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.7.6
+Version: 1.7.7
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -99,6 +99,22 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Apr 16 2013 Troy Dawson <tdawson@redhat.com> 1.7.7-1
+- Merge pull request #361 from jtharris/bugs/BZ928297
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #360 from smarterclayton/skip_nested_alias_load
+  (dmcphers@redhat.com)
+- Merge pull request #359 from smarterclayton/bug_952047_header_mutates_string
+  (dmcphers+openshiftbot@redhat.com)
+- API mismatch wording tweak (jharris@redhat.com)
+- min_api is specified in rest_client call (jharris@redhat.com)
+- Optional api version check for rest calls. (jharris@redhat.com)
+- Aliases are being lazily executed on app list view, even though they don't
+  have to be.  Clean up aliases retrieval to be based on capability, rather
+  than version. (ccoleman@redhat.com)
+- Bug 952047 - SSH key doesn't detect duplicate because name is changed
+  (ccoleman@redhat.com)
+
 * Mon Apr 15 2013 Adam Miller <admiller@redhat.com> 1.7.6-1
 - Merge remote-tracking branch 'origin/master' into better_app_create_flow
   (ccoleman@redhat.com)
