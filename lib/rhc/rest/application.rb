@@ -106,10 +106,15 @@ module RHC
 
       def aliases
         debug "Getting all aliases for application #{name}"
-        if (client.api_version_negotiated >= 1.4)
-          rest_method "LIST_ALIASES"
-        else
-          attributes['aliases']
+        @aliases ||= begin
+          aliases = attributes['aliases']
+          if aliases.nil? or not aliases.is_a?(Array)
+            supports?('LIST_ALIASES') ? rest_method("LIST_ALIASES") : []
+          else
+            aliases.map do |a| 
+              Alias.new(a.is_a?(String) ? {'id' => a} : a, client)
+            end
+          end
         end
       end
 
