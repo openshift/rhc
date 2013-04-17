@@ -278,7 +278,6 @@ module RHC
           context_helper = arg[:context_helper]
 
           value = options.__hash__[option] if option
-          value = cmd.send(context_helper) if value.nil? and context_helper
 
           if value.nil?
             value =
@@ -293,6 +292,8 @@ module RHC
                 available.shift
               end
           end
+
+          value = cmd.send(context_helper) if value.nil? and context_helper
 
           if value.nil?
             raise ArgumentError, "Missing required argument '#{arg[:name]}'." unless arg[:optional]
