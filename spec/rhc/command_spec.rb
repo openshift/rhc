@@ -132,6 +132,10 @@ describe RHC::Commands::Base do
             def execute_implicit
             end
 
+            argument :testarg, "Test arg", ["--testarg testarg"], :context => :context_var
+            summary "Test command execute"
+            def execute_context_arg(testarg); 1; end
+
             def raise_error
               raise StandardError.new("test exception")
             end
@@ -148,7 +152,7 @@ describe RHC::Commands::Base do
         Static
       end
 
-      it("should register itself") { expect { subject }.to change(commands, :length).by(7) }
+      it("should register itself") { expect { subject }.to change(commands, :length).by(8) }
       it("should have an object name of the class") { subject.object_name.should == 'static' }
 
       context 'and when test is called' do
@@ -194,6 +198,11 @@ describe RHC::Commands::Base do
       end
       context 'and when execute is called with a contextual global option' do
         it("calls the helper") { command_for('static', 'execute-implicit').send(:options).test_context.should == 'contextual' }
+      end
+
+      context 'and when execute-context-arg is called with a contextual argument' do
+        it("calls the helper") { command_for('static', 'execute-context-arg').send(:options).test_context.should == 'contextual' }
+        it("takes the argument") { command_for('static', 'execute-context-arg', 'arg1').send(:options).testarg.should == 'arg1' }
       end
 
       context 'and when an error is raised in a call' do
