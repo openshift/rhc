@@ -140,4 +140,10 @@ module RHC
       super "The server does not support this command (requires #{min_version}, found #{current_version})."
     end
   end
+
+  class InvalidURIException < Exception
+    def initialize(uri)
+      super "Invalid URI specified: #{uri}"
+    end
+  end
 end
