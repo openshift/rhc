@@ -23,12 +23,17 @@ describe RHC::Commands::Server do
     end
 
     context 'when API is at version 1.2' do
-      before do 
+      before do
         rest_client.stub(:api_version_negotiated).and_return('1.2')
       end
       it('should output an error') { run_output.should =~ /Connected to foo.com.*Using API version 1.2/m }
       it { expect { run }.to exit_with_code(0) }
     end
+  end
+
+  describe 'run against an invalid server url' do
+    let(:arguments) { ['server', '--server', 'invalid_uri', '-l', 'person', '-p', ''] }
+    it('should output an invalid URI error') { run_output.should match('Invalid URI specified: invalid_uri')  }
   end
 
   describe 'run' do
@@ -43,16 +48,16 @@ describe RHC::Commands::Server do
 
     context 'when 1 issue' do
       before do
-        stub_request(:get, 'https://openshift.redhat.com/app/status/status.json').with(&user_agent_header).to_return(:body => 
+        stub_request(:get, 'https://openshift.redhat.com/app/status/status.json').with(&user_agent_header).to_return(:body =>
           {'open' => [
-            {'issue' => { 
-              'created_at' => '2011-05-22T17:31:32-04:00', 
-              'id' => 11, 
-              'title' => 'Root cause', 
+            {'issue' => {
+              'created_at' => '2011-05-22T17:31:32-04:00',
+              'id' => 11,
+              'title' => 'Root cause',
               'updates' => [{
-                'created_at' => '2012-05-22T13:48:20-04:00', 
+                'created_at' => '2012-05-22T13:48:20-04:00',
                 'description' => 'Working on update'
-              }] 
+              }]
             }}]}.to_json)
       end
       it { expect { run }.to exit_with_code(1) }

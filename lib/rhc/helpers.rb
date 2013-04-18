@@ -140,14 +140,18 @@ module RHC
       s =~ %r(^http(?:s)?://) ? URI(s).host : s
     end
     def to_uri(s)
-      URI(s =~ %r(^http(?:s)?://) ? s : "https://#{s}")
+      begin
+        URI(s =~ %r(^http(?:s)?://) ? s : "https://#{s}")
+      rescue URI::InvalidURIError
+        raise RHC::InvalidURIException.new(s)
+      end
     end
     def openshift_rest_endpoint
       uri = to_uri((options.server rescue nil) || ENV['LIBRA_SERVER'] || "openshift.redhat.com")
       uri.path = '/broker/rest/api' if uri.path.blank? || uri.path == '/'
       uri
     end
-    
+
     def token_for_user
       options.token or (token_store.get(options.rhlogin, options.server) if options.rhlogin)
     end
@@ -338,7 +342,7 @@ module RHC
         end
       end
     end
-    
+
     def with_tolerant_encoding(&block)
       # :nocov:
       if RUBY_VERSION.to_f >= 1.9
