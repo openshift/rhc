@@ -299,6 +299,7 @@ module RHC
             raise ArgumentError, "Missing required argument '#{arg[:name]}'." unless arg[:optional]
             break if available.empty?
           else
+            value = Array(value) if arg[:arg_type] == :list
             slots[i] = value
             options.__hash__[option] = value if option
           end
