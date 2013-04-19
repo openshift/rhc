@@ -565,7 +565,7 @@ WARNING:  Your application was created successfully but had problems during
   If this doesn't work for you, let us know in the forums or in IRC and we'll
   make sure to get you up and running.
 
-    Forums - https://openshift.redhat.com/community/forums/openshift
+    Forums - https://www.openshift.com/forums/openshift
     IRC - #openshift (on Freenode)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
