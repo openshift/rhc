@@ -111,7 +111,7 @@ module RHC
           if aliases.nil? or not aliases.is_a?(Array)
             supports?('LIST_ALIASES') ? rest_method("LIST_ALIASES") : []
           else
-            aliases.map do |a| 
+            aliases.map do |a|
               Alias.new(a.is_a?(String) ? {'id' => a} : a, client)
             end
           end
@@ -173,11 +173,7 @@ module RHC
       end
 
       def ssh_string
-        uri = URI.parse(ssh_url)
-        "#{uri.user}@#{uri.host}"
-      rescue => e
-        RHC::Helpers.debug_error(e)
-        ssh_url
+        RHC::Helpers.ssh_string(ssh_url)
       end
 
       def <=>(other)

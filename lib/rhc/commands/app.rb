@@ -276,7 +276,18 @@ module RHC::Commands
           say "Cartridge #{gg.cartridges.collect { |c| c['name'] }.join(', ')} is #{gear_group_state(gg.gears.map{ |g| g['state'] })}"
         end
       elsif options.gears
-        say table(gear_groups_for_app(app_name).map{ |gg| gg.gears.map{ |g| [g['id'], g['state'], gg.cartridges.map{ |c| c['name'] }.join(", ")] } }.flatten(1))
+        gear_info = gear_groups_for_app(app_name).map do |group|
+          group.gears.map do |gear|
+            [
+              group.gear_profile,
+              gear['state'] == 'started' ? gear['state'] : color(gear['state'], :yellow),
+              group.cartridges.collect{ |c| c['name'] }.join(' '),
+              ssh_string(gear['ssh_url'])
+            ]
+          end
+        end.flatten(1)
+
+        say table(gear_info)
       else
         app = rest_client.find_application(options.namespace, app_name, :include => :cartridges)
         display_app(app, app.cartridges)
