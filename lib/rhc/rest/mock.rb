@@ -427,7 +427,7 @@ module RHC::Rest::Mock
         :status => 200
       }
     end
-    
+
     def mock_gear_groups_response()
       groups = [{}]
       type  = 'gear_groups'
@@ -608,7 +608,8 @@ module RHC::Rest::Mock
     def initialize(client=nil)
       super({}, client)
       @cartridges = [{'name' => 'fake_geargroup_cart-0.1'}]
-      @gears = [{'state' => 'started', 'id' => 'fakegearid'}]
+      @gears = [{'state' => 'started', 'id' => 'fakegearid', 'ssh_url' => 'ssh://fakegearid@fakesshurl.com'}]
+      @gear_profile = 'small'
     end
   end
 
