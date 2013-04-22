@@ -146,6 +146,16 @@ module RHC
         raise RHC::InvalidURIException.new(s)
       end
     end
+
+    def ssh_string(ssh_url)
+      return nil if ssh_url.nil?
+      uri = URI.parse(ssh_url)
+      "#{uri.user}@#{uri.host}"
+    rescue => e
+      RHC::Helpers.debug_error(e)
+      ssh_url
+    end
+
     def openshift_rest_endpoint
       uri = to_uri((options.server rescue nil) || ENV['LIBRA_SERVER'] || "openshift.redhat.com")
       uri.path = '/broker/rest/api' if uri.path.blank? || uri.path == '/'
