@@ -539,7 +539,7 @@ describe RHC::Commands::App do
         @domain = rest_client.add_domain("mockdomain")
         @domain.add_application("app1", "mock_type")
       end
-      it { run_output.should match("small started fake_geargroup_cart-0.1 fakegearid@fakesshurl.com") }
+      it { run_output.should match("fakegearid started fake_geargroup_cart-0.1 small fakegearid@fakesshurl.com") }
     end
   end
 
