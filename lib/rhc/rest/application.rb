@@ -47,6 +47,18 @@ module RHC
         rest_method "GET_GEAR_GROUPS"
       end
 
+      def gear_ssh_url(gear_id)
+        gear_groups.each do |group|
+          group.gears.each do |gear|
+            if gear['id'] == gear_id
+              return gear['ssh_url']
+            end
+          end
+        end
+
+        raise ArgumentError.new("No SSH URL found for gear #{gear_id}")
+      end
+
       def tidy
         debug "Starting application #{name}"
         rest_method 'TIDY', :event => "tidy"

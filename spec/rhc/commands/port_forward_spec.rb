@@ -172,6 +172,34 @@ describe RHC::Commands::PortForward do
       it { run_output.should include("Ending port forward") }
     end
 
+    context 'when port forwarding a single gear on a scaled app' do
+      let(:gear_host) { 'fakesshurl.com' }
+      let(:gear_user) { 'fakegearid' }
+      let(:arguments) { ['port-forward', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p', 'password', '--app', 'mockapp', '--gear', @gear_id] }
+
+      it 'should run successfully' do
+        @gear_id = 'fakegearid'
+        Net::SSH.should_receive(:start).with(gear_host, gear_user).and_yield(@ssh).twice
+
+        @ssh.should_receive(:exec!).with("rhc-list-ports").
+          and_yield(nil, :stderr, "mongodb -> #{gear_host}:35541")
+        forward = mock(Net::SSH::Service::Forward)
+        @ssh.should_receive(:forward).and_return(forward)
+        forward.should_receive(:local).with(35541, gear_host, 35541)
+        @ssh.should_receive(:loop).and_raise(Interrupt.new)
+
+        expect { run }.to exit_with_code(0)
+      end
+
+      it 'should fail if the specified gear is missing' do
+        @gear_id = 'notarealgearxxxxx'
+
+        expect { run }.to exit_with_code(1)
+        run_output.should include('No SSH URL found for gear notarealgearxxxxx')
+      end
+
+    end
+
   end
 end
 
