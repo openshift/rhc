@@ -42,7 +42,7 @@ module RHC::Commands
           paragraph do
             name = c.display_name != c.name && "#{color(c.display_name, :cyan)} [#{c.name}]" || c.name
             tags = c.tags - RHC::Rest::Cartridge::HIDDEN_TAGS
-            say header([name, "(#{c.only_in_new? ? 'web' : 'addon'})"])
+            say header([name, "(#{c.only_in_existing? ? 'addon' : 'web'})"])
             say c.description
             paragraph{ say "Tagged with: #{tags.sort.join(', ')}" } if tags.present?
             paragraph{ say format_usage_message(c) } if c.usage_rate?
@@ -52,7 +52,7 @@ module RHC::Commands
         say table(carts.collect do |c|
           [c.usage_rate? ? "#{c.name} (*)" : c.name,
            c.display_name,
-           c.only_in_new? ? 'web' : 'addon']
+           c.only_in_existing? ? 'addon' : 'web']
         end)
       end
 
@@ -71,12 +71,12 @@ module RHC::Commands
     def add(cart_type)
       cart = check_cartridges(cart_type, :from => not_standalone_cartridges).first
 
-      say "Adding #{cart.name} to application '#{options.app}' ... "
+      say "Adding #{cart.short_name} to application '#{options.app}' ... "
 
       say format_usage_message(cart) if cart.usage_rate?
 
       rest_app = rest_client.find_application(options.namespace, options.app, :include => :cartridges)
-      rest_cartridge = rest_app.add_cartridge(cart.name)
+      rest_cartridge = rest_app.add_cartridge(cart)
 
       success "Success"
 

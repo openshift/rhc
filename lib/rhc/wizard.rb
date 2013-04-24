@@ -420,10 +420,10 @@ module RHC
         else
           info "none"
 
-          paragraph{ say "Run 'rhc app create' to create your first application." }
+          paragraph{ say "Run 'rhc create-app' to create your first application." }
           paragraph do
             say table(standalone_cartridges.sort {|a,b| a.display_name <=> b.display_name }.map do |cart|
-              [' ', cart.display_name, "rhc app create <app name> #{cart.name}"]
+              [' ', cart.display_name, "rhc create-app <app name> #{cart.name}"]
             end)
           end
         end
