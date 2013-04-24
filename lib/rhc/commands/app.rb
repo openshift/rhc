@@ -279,15 +279,16 @@ module RHC::Commands
         gear_info = gear_groups_for_app(app_name).map do |group|
           group.gears.map do |gear|
             [
-              group.gear_profile,
+              gear['id'],
               gear['state'] == 'started' ? gear['state'] : color(gear['state'], :yellow),
               group.cartridges.collect{ |c| c['name'] }.join(' '),
+              group.gear_profile,
               ssh_string(gear['ssh_url'])
             ]
           end
         end.flatten(1)
 
-        say table(gear_info)
+        say table(gear_info, :header => ['ID', 'State', 'Cartridges', 'Size', 'SSH URL'])
       else
         app = rest_client.find_application(options.namespace, app_name, :include => :cartridges)
         display_app(app, app.cartridges)
