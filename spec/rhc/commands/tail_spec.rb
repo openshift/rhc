@@ -47,5 +47,13 @@ describe RHC::Commands::Tail do
       before (:each) { rest_client.stub(:find_domain) { raise Interrupt } }
       it { expect { run }.to raise_error(Interrupt) }
     end
+
+    context 'succeeds when a gear is specified' do
+      before (:each) {Net::SSH.should_receive(:start).with('fakesshurl.com', 'fakegearid') }
+      let(:arguments) { ['tail', 'mock-app-0', '--gear', 'fakegearid' ] }
+
+      it { expect { run }.to exit_with_code(0) }
+    end
+
   end
 end
