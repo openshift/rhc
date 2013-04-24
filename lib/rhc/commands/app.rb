@@ -24,11 +24,11 @@ module RHC::Commands
       scheduled jobs, or continuous integration.
 
       You can see a list of all valid cartridge types by running
-      'rhc cartridge list'. OpenShift also supports custom cartridges -
+      'rhc cartridge list'. OpenShift also supports external cartridges -
       pass a URL in place of the cartridge name and we'll download 
       and install that cartridge into your app.  Keep in mind that
-      custom cartridges receive no security updates.  Note that not
-      all OpenShift servers may allow custom cartridges.
+      external cartridges receive no security updates.  Note that not
+      all OpenShift servers may allow external cartridges.
 
       When your application is created, a domain name that is a combination
       of the name of your app and the namespace of your domain will be
@@ -60,7 +60,6 @@ module RHC::Commands
     option ["--enable-jenkins [NAME]"], "Enable Jenkins builds for this application (will create a Jenkins application if not already available). The default name will be 'jenkins' if not specified."
     argument :name, "Name for your application", ["-a", "--app NAME"], :optional => true
     argument :cartridges, "The web framework this application should use", ["-t", "--type CARTRIDGE"], :optional => true, :arg_type => :list
-    #argument :additional_cartridges, "A list of other cartridges such as databases you wish to add. Cartridges can also be added later using 'rhc cartridge add'", [], :arg_type => :list
     def create(name, cartridges)
       check_config!
 
@@ -97,13 +96,9 @@ module RHC::Commands
       paragraph do
         say "Creating application '#{name}' ... "
 
-
         # create the main app
-        rest_app = create_app(name, cartridges, rest_domain,
-                              options.gear_size, options.scaling, options.from_code)
-
+        rest_app = create_app(name, cartridges, rest_domain, options.gear_size, options.scaling, options.from_code)
         messages.concat(rest_app.messages)
-
         success "done"
       end
 
@@ -384,11 +379,11 @@ module RHC::Commands
           rest_client.find_domain(options.namespace)
         else
           if rest_client.domains.empty?
-            raise RHC::Rest::DomainNotFoundException, "No domains found. Please create a domain with 'rhc domain create <namespace>' before creating applications." unless interactive?
+            raise RHC::Rest::DomainNotFoundException, "No domains found. Please create a domain with 'rhc create-domain <namespace>' before creating applications." unless interactive?
             RHC::DomainWizard.new(config, options, rest_client).run
           end
           domain = rest_client.domains.first
-          raise RHC::Rest::DomainNotFoundException, "No domains found. Please create a domain with 'rhc domain create <namespace>' before creating applications." unless domain
+          raise RHC::Rest::DomainNotFoundException, "No domains found. Please create a domain with 'rhc create-domain <namespace>' before creating applications." unless domain
           options.namespace = domain.id
           domain
         end
@@ -467,7 +462,7 @@ module RHC::Commands
           warn "not complete"
           add_issue("Jenkins client failed to install - #{exit_message}",
                     "Install the jenkins client",
-                    "rhc cartridge add jenkins-client -a #{rest_app.name}")
+                    "rhc add-cartridge jenkins-client -a #{rest_app.name}")
         end
       end
 

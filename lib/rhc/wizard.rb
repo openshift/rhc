@@ -389,7 +389,7 @@ module RHC
           paragraph do
             say "Your namespace is unique to your account and is the suffix of the " \
                 "public URLs we assign to your applications. You may configure your " \
-                "namespace here or leave it blank and use 'rhc domain create' to " \
+                "namespace here or leave it blank and use 'rhc create-domain' to " \
                 "create a namespace later.  You will not be able to create " \
                 "applications without first creating a namespace."
           end
@@ -514,7 +514,7 @@ module RHC
     def config_namespace(namespace)
       # skip if string is empty
       if namespace_optional? and (namespace.nil? or namespace.chomp.blank?)
-        paragraph{ info "You may create a namespace later through 'rhc domain create'" }
+        paragraph{ info "You may create a namespace later through 'rhc create-domain'" }
         return true
       end
 

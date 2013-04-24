@@ -172,7 +172,7 @@ module WizardStepsHelper
     last_output do |s|
       s.should match(/Checking your namespace .*none/)
       s.should match("You will not be able to create applications without first creating a namespace")
-      s.should match("You may create a namespace later through 'rhc domain create'")
+      s.should match("You may create a namespace later through 'rhc create-domain'")
     end
     subject.send(:options).__hash__[:namespace].should be_nil
   end
@@ -188,8 +188,8 @@ module WizardStepsHelper
     next_stage.should_not be_nil
 
     last_output do |s|
-      s.should match('rhc app create <app name> mock_standalone_cart-1')
-      s.should match('rhc app create <app name> mock_standalone_cart-2')
+      s.should match('rhc create-app <app name> mock_standalone_cart-1')
+      s.should match('rhc create-app <app name> mock_standalone_cart-2')
     end
   end
 

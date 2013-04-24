@@ -14,11 +14,11 @@ module RHC
       end
 
       def only_in_new?
-        !url and type == 'standalone'
+        type == 'standalone'
       end
 
       def only_in_existing?
-        !url and type == 'embedded'
+        type == 'embedded'
       end
 
       def shares_gears?
@@ -37,7 +37,7 @@ module RHC
       end
 
       def display_name
-        attribute(:display_name) || url_basename || name
+        attribute(:display_name) || name || url_basename
       end
 
       #

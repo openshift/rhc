@@ -17,7 +17,11 @@ module RHC::Commands
       (like Jenkins) or provide environment variables.
 
       Use the 'cartridges' command to see a list of all available cartridges.
-      Add a new cartridge to your application with 'add-cartridge'.
+      Add a new cartridge to your application with 'add-cartridge'. OpenShift 
+      also supports external cartridges - pass a URL in place of the cartridge 
+      name and we'll download and install that cartridge into your app.  Keep 
+      in mind that external cartridges receive no security updates.  Note that 
+      not all OpenShift servers may allow external cartridges.
 
       For scalable applications, use the 'cartridge-scale' command on the web
       cartridge to set the minimum and maximum scale.
