@@ -72,7 +72,7 @@ module RHC::Commands
     syntax "<application>"
     option ["-n", "--namespace NAME"], "Namespace of the application you are port forwarding to", :context => :namespace_context, :required => true
     argument :app, "Application you are port forwarding to (required)", ["-a", "--app NAME"]
-    option ["-g", "--gear ID"], "Gear ID you are port forwarding to (optional)", :required => false
+    option ["-g", "--gear ID"], "Gear ID you are port forwarding to (optional)"
     def run(app)
       rest_app = rest_client.find_application(options.namespace, app)
       ssh_uri = URI.parse(options.gear ? rest_app.gear_ssh_url(options.gear) : rest_app.ssh_url)

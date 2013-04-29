@@ -195,7 +195,19 @@ describe RHC::Commands::PortForward do
         @gear_id = 'notarealgearxxxxx'
 
         expect { run }.to exit_with_code(1)
-        run_output.should include('No SSH URL found for gear notarealgearxxxxx')
+        run_output.should include('Gear notarealgearxxxxx not found')
+      end
+
+      it 'should fail if the specified gear has no ssh info' do
+        @gear_id = 'fakegearid'
+
+        # Given - gears in gear group should not have ssh info
+        gg = MockRestGearGroup.new(rest_client)
+        @app.stub(:gear_groups).and_return([gg])
+        gg.stub(:gears).and_return([{'state' => 'started', 'id' => 'fakegearid'}])
+
+        expect { run }.to exit_with_code(1)
+        run_output.should include('The server does not support per gear operations')
       end
 
     end

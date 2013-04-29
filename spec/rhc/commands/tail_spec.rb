@@ -55,5 +55,26 @@ describe RHC::Commands::Tail do
       it { expect { run }.to exit_with_code(0) }
     end
 
+    context 'fails when an invalid gear is specified' do
+      let(:arguments) { ['tail', 'mock-app-0', '--gear', 'gearthatdoesnotexist' ] }
+
+      it { expect { run }.to exit_with_code(1) }
+      it { run_output.should =~ /Gear gearthatdoesnotexist not found/ }
+    end
+
+    context 'fails when a gear with no ssh info is specified' do
+      let(:arguments) { ['tail', 'mock-app-0', '--gear', 'fakegearid' ] }
+
+      # Given - gears in gear group should not have ssh info
+      before(:each) do
+        gg = MockRestGearGroup.new(rest_client)
+        @app.stub(:gear_groups).and_return([gg])
+        gg.stub(:gears).and_return([{'state' => 'started', 'id' => 'fakegearid'}])
+      end
+
+      it { expect { run }.to exit_with_code(1) }
+      it { run_output.should =~ /The server does not support per gear operations/ }
+    end
+
   end
 end

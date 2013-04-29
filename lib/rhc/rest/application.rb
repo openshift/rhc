@@ -48,15 +48,10 @@ module RHC
       end
 
       def gear_ssh_url(gear_id)
-        gear_groups.each do |group|
-          group.gears.each do |gear|
-            if gear['id'] == gear_id
-              return gear['ssh_url']
-            end
-          end
-        end
+        gear = gear_groups.map { |group| group.gears }.flatten.find { |g| g['id'] == gear_id }
 
-        raise ArgumentError.new("No SSH URL found for gear #{gear_id}")
+        raise ArgumentError.new("Gear #{gear_id} not found") if gear.nil?
+        gear['ssh_url'] or raise OperationNotSupportedException.new("The server does not support per gear operations")
       end
 
       def tidy
