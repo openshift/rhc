@@ -72,11 +72,12 @@ module RHC::Commands
     syntax "<application>"
     option ["-n", "--namespace NAME"], "Namespace of the application you are port forwarding to", :context => :namespace_context, :required => true
     argument :app, "Application you are port forwarding to (required)", ["-a", "--app NAME"]
+    option ["-g", "--gear ID"], "Gear ID you are port forwarding to (optional)"
     def run(app)
       rest_app = rest_client.find_application(options.namespace, app)
+      ssh_uri = URI.parse(options.gear ? rest_app.gear_ssh_url(options.gear) : rest_app.ssh_url)
 
-      ssh_uri = URI.parse(rest_app.ssh_url)
-      say "Using #{rest_app.ssh_url}..." if options.debug
+      say "Using #{ssh_uri}..." if options.debug
 
       forwarding_specs = []
 
@@ -104,7 +105,7 @@ module RHC::Commands
               end
             end
           end
-          
+
           if forwarding_specs.length == 0
             # check if the gears have been stopped
             ggs = rest_app.gear_groups
@@ -115,7 +116,7 @@ module RHC::Commands
               warn "Application #{rest_app.name} is stopped. Please restart the application and try again."
               return 1
             else
-              raise RHC::NoPortsToForwardException.new "There are no available ports to forward for this application. Your application may be stopped." 
+              raise RHC::NoPortsToForwardException.new "There are no available ports to forward for this application. Your application may be stopped."
             end
           end
 
@@ -148,7 +149,7 @@ module RHC::Commands
                   say table(
                         bound_ports.map do |fs|
                           [fs.service, "#{fs.host_from}:#{fs.port_from}", " => ", "#{fs.remote_host}:#{fs.port_to.to_s}"]
-                        end, 
+                        end,
                         :header => ["Service", "Local", "    ", "OpenShift"]
                       )
                 end
