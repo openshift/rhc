@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.8.0
+Version: 1.8.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -99,6 +99,30 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Apr 30 2013 Adam Miller <admiller@redhat.com> 1.8.3-1
+- Merge pull request #373 from smarterclayton/test_enterprise_server
+  (dmcphers+openshiftbot@redhat.com)
+- Support running test cases without certain users (ccoleman@redhat.com)
+
+* Mon Apr 29 2013 Adam Miller <admiller@redhat.com> 1.8.2-1
+- Bug 957105 - Should remove the useless info in the result message when domain
+  updated successfully (jforrest@redhat.com)
+
+* Thu Apr 25 2013 Adam Miller <admiller@redhat.com> 1.8.1-1
+- rhc show app --gear includes gear id and header (jharris@redhat.com)
+- Gear info shows profile, status, carts, ssh (jharris@redhat.com)
+- Merge pull request #367 from smarterclayton/bug_953802_change_community_url
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 953802 - Change community url to be correct (ccoleman@redhat.com)
+- Bug 953767 - Arguments that are arrays should set the options to an array
+  (ccoleman@redhat.com)
+- Nicer error message on invalid server URI. (jharris@redhat.com)
+- Merge pull request #362 from smarterclayton/bug_952985_contextual_args_broken
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 952985 - Context arguments broken due to optional list changes
+  (ccoleman@redhat.com)
+- bump_minor_versions for sprint 2.0.26 (tdawson@redhat.com)
+
 * Tue Apr 16 2013 Troy Dawson <tdawson@redhat.com> 1.7.7-1
 - Merge pull request #361 from jtharris/bugs/BZ928297
   (dmcphers+openshiftbot@redhat.com)

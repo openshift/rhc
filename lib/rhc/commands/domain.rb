@@ -40,14 +40,12 @@ module RHC::Commands
     def update(old_namespace, new_namespace)
       domain = rest_client.find_domain(old_namespace)
 
-      say "Changing namespace '#{domain.id}' to '#{new_namespace}'..."
+      say "Changing namespace '#{domain.id}' to '#{new_namespace}' ... "
 
       domain.update(new_namespace)
 
-      results do
-        say "Success!"
-        say "You can use 'rhc apps' to view any url changes.  Be sure to update any links including the url in your local git config: <local_git_repo>/.git/config"
-      end
+      success "success"
+      info "Applications in this domain will use the new namespace in their URL."
 
       0
     end
