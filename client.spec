@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.8.3
+Version: 1.8.4
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -99,6 +99,13 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed May 01 2013 Adam Miller <admiller@redhat.com> 1.8.4-1
+- Merge pull request #371 from jtharris/features/Card39
+  (dmcphers+openshiftbot@redhat.com)
+- Expand gear ssh url to handle gear not found. (jharris@redhat.com)
+- --gear option for tail (jharris@redhat.com)
+- --gear option for port-forward (jharris@redhat.com)
+
 * Tue Apr 30 2013 Adam Miller <admiller@redhat.com> 1.8.3-1
 - Merge pull request #373 from smarterclayton/test_enterprise_server
   (dmcphers+openshiftbot@redhat.com)
