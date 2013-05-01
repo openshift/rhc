@@ -11,7 +11,7 @@ describe RHC::Commands::Apps do
       let(:arguments) { ['apps'] }
 
       it { expect { run }.to exit_with_code(1) }
-      it { run_output.should match(/In order to deploy applications.*rhc domain create/) }
+      it { run_output.should match(/In order to deploy applications.*rhc create-domain/) }
     end
 
     context 'with a domain' do
@@ -19,7 +19,7 @@ describe RHC::Commands::Apps do
       let!(:domain){ rest_client.add_domain("first") }
 
       it { expect { run }.to exit_with_code(1) }
-      it { run_output.should match(/No applications.*rhc app create/) }
+      it { run_output.should match(/No applications.*rhc create-app/) }
 
       context 'with apps' do
         let(:arguments) { ['apps'] }

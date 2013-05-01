@@ -15,7 +15,13 @@ module RHC
         payload = {:name => name}
         options.each{ |key, value| payload[key.to_sym] = value }
 
-        cartridges = Array(payload.delete(:cartridge)).concat(Array(payload.delete(:cartridges))).compact.uniq
+        cartridges = Array(payload.delete(:cartridge)).concat(Array(payload.delete(:cartridges))).map do |cart|
+            if cart.is_a? String or cart.respond_to? :[]
+              cart
+            else
+              cart.url ? {:url => cart.url} : cart.name
+            end
+          end.compact.uniq
         if client.api_version_negotiated >= 1.3
           payload[:cartridges] = cartridges
         else

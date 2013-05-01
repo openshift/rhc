@@ -21,11 +21,18 @@ module RHC
         carts.delete_if{|x| scales_with.include?(x.name)}
       end
 
-      def add_cartridge(name, options={})
+      def add_cartridge(cart, options={})
         debug "Adding cartridge #{name}"
-        @cartridges = nil
-        attributes['cartridges'] = nil
-        rest_method "ADD_CARTRIDGE", {:name => name}, options
+        clear_attribute :cartridges
+        rest_method(
+          "ADD_CARTRIDGE",
+          if cart.is_a? String or cart.respond_to? :[]
+            cart
+          else
+            cart.url ? {:url => cart.url} : cart.name
+          end,
+          options
+        )
       end
 
       def cartridges

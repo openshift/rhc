@@ -75,7 +75,18 @@ describe RHC::Rest::Domain do
           to_return(:status => 201, :body => {:type => 'application', :data => {:id => '1'}}.to_json)
       end
       it{ domain.add_application('foo', :initial_git_url => 'a_url').should be_true }
-    end    
+    end
+
+    context "with a cartridge url" do
+      before do
+        stub_api_request(:post, 'broker/rest/domains/bar/applications', false).
+          with(:body => {:name => 'foo', :cartridges => [{:url => 'a_url'}]}.to_json).
+          to_return(:status => 201, :body => {:type => 'application', :data => {:id => '1'}}.to_json)
+      end
+      it{ domain.add_application('foo', :cartridges => [{:url => 'a_url'}]).should be_true }
+      it{ domain.add_application('foo', :cartridge => RHC::Rest::Cartridge.for_url('a_url')).should be_true }
+      it{ domain.add_application('foo', :cartridge => [{'url' => 'a_url'}]).should be_true }
+    end      
   end
 end
 

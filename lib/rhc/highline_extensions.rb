@@ -24,7 +24,14 @@ class HighLineExtension < HighLine
       template  = ERB.new(statement, nil, "%")
       statement = template.result(binding)
 
-      statement = statement.textwrap_ansi(@wrap_at, false).join("#{indentation}\n") unless @wrap_at.nil?
+      if @wrap_at
+        statement = statement.textwrap_ansi(@wrap_at, false)
+        if @last_line_open && statement.length > 1
+          @last_line_open = false
+          @output.puts
+        end
+        statement = statement.join("#{indentation}\n") 
+      end
       statement = send(:page_print, statement) unless @page_at.nil?
 
       @output.print(indentation) unless @last_line_open
@@ -33,7 +40,7 @@ class HighLineExtension < HighLine
         if statement[-1, 1] == " " or statement[-1, 1] == "\t"
           @output.print(statement)
           @output.flush
-          true
+          statement.strip_ansi.length + (@last_line_open || 0)
         else
           @output.puts(statement)
           false

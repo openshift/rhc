@@ -392,12 +392,13 @@ module RHC::Rest::Mock
        ['UPDATE',   "domains/#{domain_id}/apps/#{app_id}/aliases/#{alias_id}/update", 'post' ]]
     end
 
-    def mock_cartridge_response(cart_count=1)
+    def mock_cartridge_response(cart_count=1, url=false)
       carts = []
       while carts.length < cart_count
         carts << {
           :name  => "mock_cart_#{carts.length}",
-          :type  => "mock_cart_#{carts.length}_type",
+          :url   => url ? "http://a.url/#{carts.length}" : nil,
+          :type  => carts.empty? ? 'standalone' : 'embedded',
           :links => mock_response_links(mock_cart_links('mock_domain','mock_app',"mock_cart_#{carts.length}"))
         }
       end
@@ -690,9 +691,22 @@ module RHC::Rest::Mock
       @domain.applications.delete self
     end
 
-    def add_cartridge(name, embedded=true)
+    def add_cartridge(cart, embedded=true)
+      name, url = 
+        if cart.is_a? String
+          [cart, nil]
+        elsif cart.respond_to? :[]
+          [cart[:name] || cart['name'], cart[:url] || cart['url']]
+        elsif RHC::Rest::Cartridge === cart
+          [cart.name, cart.url]
+        end
+
       type = embedded ? "embedded" : "standalone"
       c = MockRestCartridge.new(client, name, type, self)
+      if url 
+        c.url = url
+        c.name = c.url_basename
+      end
       c.properties << {'name' => 'prop1', 'value' => 'value1', 'description' => 'description1' }
       @cartridges << c
       c.messages << "Cartridge added with properties"
