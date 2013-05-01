@@ -263,12 +263,12 @@ describe RHC::Commands::App do
     end
     context 'when I pick a custom URL cart' do
       let(:arguments) { ['app', 'create', 'app1', 'http://foo.com', '--trace', '--noprompt'] }
-      it('tells me about custom carts') { run_output.should match("Custom cartridge 'http://foo.com' will be downloaded") }
+      it('tells me about custom carts') { run_output.should match("Personal cartridge 'http://foo.com' will be downloaded") }
       it('lists the cart using the short_name') { run_output.should match(%r(Cartridges:\s+http://foo.com$)) }
     end    
     context 'when I pick a custom URL cart and a web cart' do
       let(:arguments) { ['app', 'create', 'app1', 'http://foo.com', 'unique_standalone', '--trace', '--noprompt'] }
-      it('tells me about custom carts') { run_output.should match("Custom cartridge 'http://foo.com' will be downloaded") }
+      it('tells me about custom carts') { run_output.should match("Personal cartridge 'http://foo.com' will be downloaded") }
       it('lists the carts using the short_name') { run_output.should match(%r(Cartridges:\s+http://foo.com, mock_unique_standalone_cart-1$)) }
     end    
   end
