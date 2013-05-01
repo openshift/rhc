@@ -7,6 +7,8 @@ module RHC
         from = opts[:from] || all_cartridges
 
         cartridge_names.map do |name|
+          next use_cart(RHC::Rest::Cartridge.for_url(name), name) if name =~ %r(\Ahttps?://)i
+
           name = name.downcase
           from.find{ |c| c.name.downcase == name } ||
           begin
@@ -33,7 +35,11 @@ module RHC
       end
 
       def use_cart(cart, for_cartridge_name)
-        info "Using #{cart.name}#{cart.display_name ? " (#{cart.display_name})" : ''} for '#{for_cartridge_name}'"
+        if cart.custom?
+        info "Personal cartridge '#{cart.url}' will be downloaded and installed"
+        else
+          info "Using #{cart.name}#{cart.display_name ? " (#{cart.display_name})" : ''} for '#{for_cartridge_name}'"
+        end
         cart
       end
 
@@ -50,7 +56,7 @@ module RHC
         lambda{ |cart|
           next cart unless cart.is_a? Array
           name = cart.instance_variable_get(:@for)
-          matching = cart.select(&:only_in_new?)
+          matching = cart.select{ |c| not c.only_in_existing? }
           if matching.empty?
             raise RHC::MultipleCartridgesException, "You must select only a single web cartridge. '#{name}' matches web cartridges."
           elsif matching.size == 1
@@ -93,6 +99,6 @@ module RHC
         carts.unshift ['==========', '=========']
         carts.unshift ['Short Name', 'Full name']
         say table(carts)
-      end
+      end    
   end
 end

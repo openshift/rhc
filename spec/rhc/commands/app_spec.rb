@@ -195,6 +195,14 @@ describe RHC::Commands::App do
       after{ rest_client.domains.first.applications.first.cartridges.find{ |c| c.name == 'mock_cart-1' }.should be_true }
     end
 
+    context 'when run with a cart URL' do
+      let(:arguments) { ['app', 'create', 'app1', 'http://foo.com', 'mock_cart-1', '--noprompt', '-p',  'password'] }
+      it { expect { run }.to exit_with_code(0) }
+      it { run_output.should match("Success") }
+      it { run_output.should match("Cartridges: http://foo.com, mock_cart-1\n") }
+      after{ rest_client.domains.first.applications.first.cartridges.find{ |c| c.url == 'http://foo.com' }.should be_true }
+    end
+
     context 'when run with a git url' do
       let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart-1', '--from', 'git://url', '--noprompt', '-p',  'password'] }
       it { expect { run }.to exit_with_code(0) }
@@ -253,6 +261,16 @@ describe RHC::Commands::App do
       let(:arguments) { ['app', 'create', 'app1', 'unique_standalone', 'mock_standalone_cart', '--trace', '--noprompt'] }
       it { expect { run }.to raise_error(RHC::MultipleCartridgesException, /You must select only a single web cart/) }
     end
+    context 'when I pick a custom URL cart' do
+      let(:arguments) { ['app', 'create', 'app1', 'http://foo.com', '--trace', '--noprompt'] }
+      it('tells me about custom carts') { run_output.should match("Personal cartridge 'http://foo.com' will be downloaded") }
+      it('lists the cart using the short_name') { run_output.should match(%r(Cartridges:\s+http://foo.com$)) }
+    end    
+    context 'when I pick a custom URL cart and a web cart' do
+      let(:arguments) { ['app', 'create', 'app1', 'http://foo.com', 'unique_standalone', '--trace', '--noprompt'] }
+      it('tells me about custom carts') { run_output.should match("Personal cartridge 'http://foo.com' will be downloaded") }
+      it('lists the carts using the short_name') { run_output.should match(%r(Cartridges:\s+http://foo.com, mock_unique_standalone_cart-1$)) }
+    end    
   end
 
   describe 'app create enable-jenkins' do

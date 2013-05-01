@@ -38,7 +38,7 @@ module RHC
       # right now we don't have any logic since we only support one domain
       # TODO: add domain lookup based on uuid
       domain = rest_client.domains.first
-      raise RHC::Rest::DomainNotFoundException, "No domains configured for this user.  You may create one using 'rhc domain create'." if domain.nil?
+      raise RHC::Rest::DomainNotFoundException, "No domains configured for this user.  You may create one using 'rhc create-domain'." if domain.nil?
 
       domain.id
     end

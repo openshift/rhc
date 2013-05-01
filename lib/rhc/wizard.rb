@@ -389,7 +389,7 @@ module RHC
           paragraph do
             say "Your namespace is unique to your account and is the suffix of the " \
                 "public URLs we assign to your applications. You may configure your " \
-                "namespace here or leave it blank and use 'rhc domain create' to " \
+                "namespace here or leave it blank and use 'rhc create-domain' to " \
                 "create a namespace later.  You will not be able to create " \
                 "applications without first creating a namespace."
           end
@@ -420,10 +420,10 @@ module RHC
         else
           info "none"
 
-          paragraph{ say "Run 'rhc app create' to create your first application." }
+          paragraph{ say "Run 'rhc create-app' to create your first application." }
           paragraph do
             say table(standalone_cartridges.sort {|a,b| a.display_name <=> b.display_name }.map do |cart|
-              [' ', cart.display_name, "rhc app create <app name> #{cart.name}"]
+              [' ', cart.display_name, "rhc create-app <app name> #{cart.name}"]
             end)
           end
         end
@@ -514,7 +514,7 @@ module RHC
     def config_namespace(namespace)
       # skip if string is empty
       if namespace_optional? and (namespace.nil? or namespace.chomp.blank?)
-        paragraph{ info "You may create a namespace later through 'rhc domain create'" }
+        paragraph{ info "You may create a namespace later through 'rhc create-domain'" }
         return true
       end
 
