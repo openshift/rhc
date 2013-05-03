@@ -139,6 +139,14 @@ describe HighLineExtension do
     output.should match "Foo \nLorem\nipsum\n"
   end
 
+  it "should handle an empty table" do
+    subject.table([]).to_a.should == []
+  end
+
+  it "should handle an empty table" do
+    subject.table([[]]).to_a.should == []
+  end
+
   it "should wrap a table based on a max width" do
     subject.table([["abcd efgh", "1234 6789 a"]], :width => 9, :heading => 'Test').to_a.should == [
       'Test',
