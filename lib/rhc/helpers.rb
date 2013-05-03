@@ -163,7 +163,7 @@ module RHC
     end
 
     def token_for_user
-      options.token or (token_store.get(options.rhlogin, options.server) if options.rhlogin)
+      options.token or (token_store.get(options.rhlogin, options.server) if options.rhlogin && options.use_authorization_tokens)
     end
 
     def client_from_options(opts)

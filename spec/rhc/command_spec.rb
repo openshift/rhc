@@ -306,6 +306,7 @@ describe RHC::Commands::Base do
 
         context "when tokens are not allowed" do
           it("calls the server") { rest_client.send(:auth).is_a? RHC::Auth::Basic }
+          it("does not have a token set") { command_for(*arguments).send(:token_for_user).should be_nil }
         end
 
         context "when tokens are allowed" do
