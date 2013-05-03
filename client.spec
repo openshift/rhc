@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.8.5
+Version: 1.8.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -99,6 +99,11 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri May 03 2013 Adam Miller <admiller@redhat.com> 1.8.6-1
+- Merge pull request #374 from jtharris/bugs/BZ958668
+  (dmcphers+openshiftbot@redhat.com)
+- Tail the correct log dir for db carts (jharris@redhat.com)
+
 * Thu May 02 2013 Adam Miller <admiller@redhat.com> 1.8.5-1
 - Merge pull request #370 from smarterclayton/support_external_cartridges
   (dmcphers+openshiftbot@redhat.com)
