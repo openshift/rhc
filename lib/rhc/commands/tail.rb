@@ -32,7 +32,7 @@ module RHC::Commands
         host = ssh_url.host
         uuid = ssh_url.user
 
-        file_glob = options.files ? options.files : "#{cartridge_name}/logs/*"
+        file_glob = options.files ? options.files : "#{cartridge_name}/log*/*"
         remote_cmd = "tail#{options.opts ? ' --opts ' + Base64::encode64(options.opts).chomp : ''} #{file_glob}"
         ssh_cmd = "ssh -t #{uuid}@#{host} '#{remote_cmd}'"
         begin
