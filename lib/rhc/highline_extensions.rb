@@ -316,7 +316,7 @@ class HighLine::Table
     end
 
     def columns
-      @columns ||= source_rows.map(&:length).max
+      @columns ||= source_rows.map(&:length).max || 0
     end
 
     def column_widths
@@ -403,7 +403,7 @@ class HighLine::Table
           
         body = (header_rows + source_rows).inject([]) do |a,row| 
           row = row.zip(widths).map{ |column,w| w && w > 0 ? column.textwrap_ansi(w, false) : [column] }
-          row.map(&:length).max.times do |i|
+          (row.map(&:length).max || 0).times do |i|
             a << (fmt % row.map{ |r| r[i] }).rstrip
           end
           a
