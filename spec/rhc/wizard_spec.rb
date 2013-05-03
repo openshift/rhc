@@ -175,6 +175,23 @@ describe RHC::Wizard do
         options.insecure.should be_false
       end
 
+      context "when the config has enabled tokens" do
+        let(:default_options){ {:rhlogin => user, :password => password, :server => server, :use_authorization_tokens => true} }
+        let(:store){ mock }
+        before{ RHC::Auth::TokenStore.should_receive(:new).any_number_of_times.and_return(store) }
+        before{ expect_client_test(true) }
+
+        it "should check for an existing token" do
+          store.should_receive(:get).and_return(nil)
+
+          subject.should_receive(:info).with(/OpenShift can create and store a token on disk/).ordered
+          subject.should_receive(:agree).with(/Generate a token now?/).ordered.and_return(false)
+
+          subject.send(:login_stage).should be_true
+          options.token.should be_nil
+        end
+      end
+
       context "with a server that supports tokens" do
         before{ expect_client_test(true) }
         let(:token){ 'a_test_value' }
@@ -183,7 +200,7 @@ describe RHC::Wizard do
         before{ RHC::Auth::TokenStore.should_receive(:new).any_number_of_times.and_return(store) }
 
         it "should not generate a token if the user does not request it" do
-          store.should_receive(:get).and_return(nil)
+          store.should_not_receive(:get)
           subject.should_receive(:info).with(/OpenShift can create and store a token on disk/).ordered
           subject.should_receive(:agree).with(/Generate a token now?/).ordered.and_return(false)
 
@@ -192,7 +209,7 @@ describe RHC::Wizard do
         end
 
         it "should generate a token if the user requests it" do
-          store.should_receive(:get).and_return(nil)
+          store.should_not_receive(:get)
           subject.should_receive(:info).with(/OpenShift can create and store a token on disk/).ordered
           subject.should_receive(:agree).with(/Generate a token now?/).ordered.and_return(true)
           subject.should_receive(:say).with(/Generating an authorization token for this client /).ordered

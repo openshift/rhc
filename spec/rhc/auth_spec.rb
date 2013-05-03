@@ -422,6 +422,8 @@ describe RHC::Auth::TokenStore do
     before{ subject.put('foo', 'bar', 'token') }
     it("can be retrieved"){ subject.get('foo', 'bar').should == 'token' }
   end
+
+  it("should handle missing files"){ subject.get('foo', 'other').should be_nil }
   it("should put a file on disk"){ expect{ subject.put('test', 'server', 'value') }.to change{ Dir.entries(dir).length }.by(1) }
 
   describe "#clear" do
