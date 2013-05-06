@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.8.6
+Version: 1.8.7
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -99,6 +99,18 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon May 06 2013 Adam Miller <admiller@redhat.com> 1.8.7-1
+- Cannot add cart to app (missing tests) (ccoleman@redhat.com)
+- Merge pull request #376 from
+  smarterclayton/bug_959542_handle_empty_tables_better
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #375 from
+  smarterclayton/bug_959144_respect_disable_authorization_tokens_in_setup
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 959542 - Handle empty tables cleanly (ccoleman@redhat.com)
+- Bug 959144 - Respect use_authorization_tokens=false in rhc setup
+  (ccoleman@redhat.com)
+
 * Fri May 03 2013 Adam Miller <admiller@redhat.com> 1.8.6-1
 - Merge pull request #374 from jtharris/bugs/BZ958668
   (dmcphers+openshiftbot@redhat.com)
