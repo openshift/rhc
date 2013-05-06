@@ -54,20 +54,29 @@ module RHC
       end
 
       context "#add_cartridge" do
-        context "with a regular cart" do
-          before{ stub_api_request(:any, app_links['ADD_CARTRIDGE']['relative']).to_return(mock_cartridge_response) }
-          it "returns a new cartridge object" do
-            app  = app_obj
-            cart = app.add_cartridge('mock_cart_0')
+        context "with a name" do
+          before{ stub_api_request(:any, app_links['ADD_CARTRIDGE']['relative']).with(:body => {:name => 'mock_cart_0'}.to_json).to_return(mock_cartridge_response) }
+          it "accepts a string" do
+            cart = app_obj.add_cartridge('mock_cart_0')
             cart.should be_an_instance_of RHC::Rest::Cartridge
             cart.name.should == 'mock_cart_0'
           end
-        end
+          it "accepts an object" do
+            cart = app_obj.add_cartridge(stub(:name => 'mock_cart_0', :url => nil))
+            cart.should be_an_instance_of RHC::Rest::Cartridge
+            cart.name.should == 'mock_cart_0'
+          end
+          it "accepts a hash" do
+            cart = app_obj.add_cartridge(:name => 'mock_cart_0')
+            cart.should be_an_instance_of RHC::Rest::Cartridge
+            cart.name.should == 'mock_cart_0'
+          end          
+        end        
+
         context "with a URL cart" do
-          before{ stub_api_request(:any, app_links['ADD_CARTRIDGE']['relative']).to_return(mock_cartridge_response(1, true)) }
-          it "sends along a URL" do
-            app  = app_obj
-            cart = app.add_cartridge({:url => 'http://foo.com'})
+          before{ stub_api_request(:any, app_links['ADD_CARTRIDGE']['relative']).with(:body => {:url => 'http://foo.com'}.to_json).to_return(mock_cartridge_response(1, true)) }
+          it "accepts a hash" do
+            cart = app_obj.add_cartridge({:url => 'http://foo.com'})
             cart.should be_an_instance_of RHC::Rest::Cartridge
             cart.name.should == 'mock_cart_0'
             cart.url.should == 'http://a.url/0'
@@ -76,6 +85,16 @@ module RHC
             cart.only_in_new?.should be_true
             cart.only_in_existing?.should be_false
           end
+          it "accepts an object" do
+            cart = app_obj.add_cartridge(stub(:url => 'http://foo.com'))
+            cart.should be_an_instance_of RHC::Rest::Cartridge
+            cart.name.should == 'mock_cart_0'
+            cart.url.should == 'http://a.url/0'
+            cart.short_name.should == 'mock_cart_0'
+            cart.display_name.should == 'mock_cart_0'
+            cart.only_in_new?.should be_true
+            cart.only_in_existing?.should be_false
+          end          
         end
       end
 

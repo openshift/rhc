@@ -26,10 +26,12 @@ module RHC
         clear_attribute :cartridges
         rest_method(
           "ADD_CARTRIDGE",
-          if cart.is_a? String or cart.respond_to? :[]
+          if cart.is_a? String 
+            {:name => cart}
+          elsif cart.respond_to? :[]
             cart
           else
-            cart.url ? {:url => cart.url} : cart.name
+            cart.url ? {:url => cart.url} : {:name => cart.name}
           end,
           options
         )
