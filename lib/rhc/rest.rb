@@ -16,6 +16,7 @@ module RHC
     autoload :User,          'rhc/rest/user'
     autoload :GearGroup,     'rhc/rest/gear_group'
     autoload :Alias,         'rhc/rest/alias'
+    autoload :EnvironmentVariable,         'rhc/rest/environment_variable'
 
     class Exception < RuntimeError
       attr_reader :code
