@@ -116,7 +116,7 @@ module RHC::Commands
               warn "Application #{rest_app.name} is stopped. Please restart the application and try again."
               return 1
             else
-              raise RHC::NoPortsToForwardException.new "There are no available ports to forward for this application. Your application may be stopped."
+              raise RHC::NoPortsToForwardException.new "There are no available ports to forward for this application. Your application may be stopped or idled."
             end
           end
 
