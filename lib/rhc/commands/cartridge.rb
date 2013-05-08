@@ -18,10 +18,10 @@ module RHC::Commands
 
       Use the 'cartridges' command to see a list of all available cartridges.
       Add a new cartridge to your application with 'add-cartridge'. OpenShift 
-      also supports personal cartridges - pass a URL in place of the cartridge 
+      also supports downloading cartridges - pass a URL in place of the cartridge 
       name and we'll download and install that cartridge into your app.  Keep 
-      in mind that personal cartridges receive no security updates.  Note that 
-      not all OpenShift servers may allow personal cartridges.
+      in mind that these cartridges receive no security updates.  Note that 
+      not all OpenShift servers allow downloaded cartridges.
 
       For scalable applications, use the 'cartridge-scale' command on the web
       cartridge to set the minimum and maximum scale.

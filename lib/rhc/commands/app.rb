@@ -24,11 +24,11 @@ module RHC::Commands
       scheduled jobs, or continuous integration.
 
       You can see a list of all valid cartridge types by running
-      'rhc cartridge list'. OpenShift also supports personal cartridges -
+      'rhc cartridge list'. OpenShift also supports downloading cartridges -
       pass a URL in place of the cartridge name and we'll download 
       and install that cartridge into your app.  Keep in mind that
-      personal cartridges receive no security updates.  Note that not
-      all OpenShift servers may allow personal cartridges.
+      these cartridges receive no security updates.  Note that not
+      all OpenShift servers allow downloaded cartridges.
 
       When your application is created, a domain name that is a combination
       of the name of your app and the namespace of your domain will be
