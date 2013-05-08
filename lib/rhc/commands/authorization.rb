@@ -7,7 +7,7 @@ module RHC::Commands
       can add, edit, or delete authorizations with subcommands.
 
       An authorization token grants access to the OpenShift REST API with
-      a set of privleges called 'scopes' for a limited time.  You can
+      a set of privileges called 'scopes' for a limited time.  You can
       add an optional note to each authorization token to assist you in
       remembering what is available.
       DESC
@@ -25,7 +25,7 @@ module RHC::Commands
     syntax "--scopes SCOPES [--note NOTE] [--expires-in SECONDS]"
     description <<-DESC
       Add an authorization to your account. An authorization token grants
-      access to the OpenShift REST API with a set of privleges called 'scopes'
+      access to the OpenShift REST API with a set of privileges called 'scopes'
       for a limited time.  You can add an optional note to each authorization
       token to assist you in remembering what is available.
 
