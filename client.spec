@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.8.8
+Version: 1.8.9
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -99,6 +99,11 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed May 08 2013 Adam Miller <admiller@redhat.com> 1.8.9-1
+- Merge pull request #382 from jtharris/bugs/BZ958675
+  (dmcphers+openshiftbot@redhat.com)
+- Wording change when no ports can be forwarded. (jharris@redhat.com)
+
 * Wed May 08 2013 Adam Miller <admiller@redhat.com> 1.8.8-1
 - Merge pull request #381 from smarterclayton/bug_960808_spelling_errors
   (dmcphers+openshiftbot@redhat.com)
