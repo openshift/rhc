@@ -181,7 +181,7 @@ describe RHC::Commands::PortForward do
         @gear_id = 'fakegearid'
         Net::SSH.should_receive(:start).with(gear_host, gear_user).and_yield(@ssh).twice
 
-        @ssh.should_receive(:exec!).with("rhc-list-ports").
+        @ssh.should_receive(:exec!).with("rhc-list-ports --exclude-remote").
           and_yield(nil, :stderr, "mongodb -> #{gear_host}:35541")
         forward = mock(Net::SSH::Service::Forward)
         @ssh.should_receive(:forward).and_return(forward)

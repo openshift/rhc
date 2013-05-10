@@ -85,7 +85,9 @@ module RHC::Commands
         say "Checking available ports ... "
 
         Net::SSH.start(ssh_uri.host, ssh_uri.user) do |ssh|
-          ssh.exec! "rhc-list-ports" do |channel, stream, data|
+          # If a specific gear is targeted, do not include remote (e.g. database) ports
+          list_ports_cmd = "rhc-list-ports#{options.gear ? ' --exclude-remote' : ''}"
+          ssh.exec! list_ports_cmd do |channel, stream, data|
             if stream == :stderr
               data.each_line do |line|
                 line.chomp!
