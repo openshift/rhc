@@ -75,7 +75,12 @@ module RHC
 
         context "with a URL cart" do
           before{ stub_api_request(:any, app_links['ADD_CARTRIDGE']['relative']).with(:body => {:url => 'http://foo.com'}.to_json).to_return(mock_cartridge_response(1, true)) }
+          it "raises without a param" do
+            app_obj.should_receive(:has_param?).with('ADD_CARTRIDGE','url').and_return(false)
+            expect{ app_obj.add_cartridge({:url => 'http://foo.com'}) }.to raise_error(RHC::Rest::DownloadingCartridgesNotSupported)
+          end
           it "accepts a hash" do
+            app_obj.should_receive(:has_param?).with('ADD_CARTRIDGE','url').and_return(true)
             cart = app_obj.add_cartridge({:url => 'http://foo.com'})
             cart.should be_an_instance_of RHC::Rest::Cartridge
             cart.name.should == 'mock_cart_0'
@@ -86,6 +91,7 @@ module RHC
             cart.only_in_existing?.should be_false
           end
           it "accepts an object" do
+            app_obj.should_receive(:has_param?).with('ADD_CARTRIDGE','url').and_return(true)
             cart = app_obj.add_cartridge(stub(:url => 'http://foo.com'))
             cart.should be_an_instance_of RHC::Rest::Cartridge
             cart.name.should == 'mock_cart_0'

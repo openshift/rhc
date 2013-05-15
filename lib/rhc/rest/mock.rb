@@ -161,14 +161,14 @@ module RHC::Rest::Mock
     def stub_no_domains
       stub_api_request(:get, 'broker/rest/domains', mock_user_auth).to_return(empty_domains)
     end
-    def stub_one_domain(name)
+    def stub_one_domain(name, optional_params=nil)
       stub_api_request(:get, 'broker/rest/domains', mock_user_auth).
         to_return({
           :body => {
             :type => 'domains',
             :data => [{:id => name, :links => mock_response_links([
               ['LIST_APPLICATIONS', "broker/rest/domains/#{name}/applications", 'get'],
-              ['ADD_APPLICATION', "broker/rest/domains/#{name}/applications", 'post'],
+              ['ADD_APPLICATION', "broker/rest/domains/#{name}/applications", 'post', ({:optional_params => optional_params} if optional_params)],
             ])}],
           }.to_json
         })
@@ -313,16 +313,11 @@ module RHC::Rest::Mock
       "https://#{uri_string}/#{relative}"
     end
 
-    # This formats link lists for JSONification
     def mock_response_links(links)
       link_set = {}
       links.each do |link|
-        operation = link[0]
-        href      = link[1]
-        method    = link[2]
-        # Note that the 'relative' key/value pair below is a convenience for testing;
-        # this is not used by the API classes.
-        link_set[operation] = { 'href' => mock_href(href), 'method' => method, 'relative' => href }
+        options   = link[3] || {}
+        link_set[link[0]] = { 'href' => mock_href(link[1]), 'method' => link[2], 'relative' => link[1]}.merge(options)
       end
       link_set
     end
