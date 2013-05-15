@@ -44,13 +44,14 @@ describe RHC::Rest::Domain do
     it{ domain.add_application('foo', :cartridges => ['bar']).should be_true }
     it{ expect{ domain.add_application('foo', :cartridges => ['bar', 'other']) }.to raise_error(RHC::Rest::MultipleCartridgeCreationNotSupported) }
     it{ expect{ domain.add_application('foo', :initial_git_url => 'a_url') }.to raise_error(RHC::Rest::InitialGitUrlNotSupported) }
+    it{ expect{ domain.add_application('foo', :cartridges => [{:url => 'a_url'}]) }.to raise_error(RHC::Rest::DownloadingCartridgesNotSupported) }
     it{ domain.add_application('foo', :cartridges => 'bar').should be_true }
     it{ domain.add_application('foo', :cartridge => 'bar').should be_true }
     it{ domain.add_application('foo', :cartridge => ['bar']).should be_true }
   end
-  context "against a server newer than 1.3" do
+  context "against a server that supports initial git urls and downloaded carts" do
     let(:cartridges){ ['bar'] }
-    before{ stub_api; stub_one_domain('bar') }
+    before{ stub_api; stub_one_domain('bar', [{:name => 'initial_git_url'},{:name => 'cartridges[][url]'}]) }
     before do 
       stub_api_request(:post, 'broker/rest/domains/bar/applications', false).
         with(:body => {:name => 'foo', :cartridges => cartridges}.to_json).

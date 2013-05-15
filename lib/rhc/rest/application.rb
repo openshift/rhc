@@ -24,15 +24,22 @@ module RHC
       def add_cartridge(cart, options={})
         debug "Adding cartridge #{name}"
         clear_attribute :cartridges
-        rest_method(
-          "ADD_CARTRIDGE",
+        cart = 
           if cart.is_a? String 
             {:name => cart}
           elsif cart.respond_to? :[]
             cart
           else
             cart.url ? {:url => cart.url} : {:name => cart.name}
-          end,
+          end
+
+        if cart.respond_to?(:[]) and cart[:url] and !has_param?('ADD_CARTRIDGE', 'url')
+          raise RHC::Rest::DownloadingCartridgesNotSupported, "The server does not support downloading cartridges."
+        end
+
+        rest_method(
+          "ADD_CARTRIDGE",
+          cart,
           options
         )
       end
