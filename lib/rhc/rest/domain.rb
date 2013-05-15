@@ -22,6 +22,11 @@ module RHC
               cart.url ? {:url => cart.url} : cart.name
             end
           end.compact.uniq
+
+        if cartridges.any?{ |c| c.is_a?(Hash) and c[:url] } and !has_param?('ADD_APPLICATION', 'cartridges[][url]')
+          raise RHC::Rest::DownloadingCartridgesNotSupported, "The server does not support downloading cartridges."
+        end
+
         if client.api_version_negotiated >= 1.3
           payload[:cartridges] = cartridges
         else
@@ -29,7 +34,7 @@ module RHC
           payload[:cartridge] = cartridges.first
         end
 
-        if client.api_version_negotiated < 1.3 && payload[:initial_git_url]
+        if payload[:initial_git_url] and !has_param?('ADD_APPLICATION', 'initial_git_url')
           raise RHC::Rest::InitialGitUrlNotSupported, "The server does not support creating applications from a source repository."
         end
 
