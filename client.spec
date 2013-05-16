@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.9.1
+Version: 1.9.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -99,6 +99,19 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu May 16 2013 Adam Miller <admiller@redhat.com> 1.9.2-1
+- Bug 963419 - Don't check API versions, check client links
+  (ccoleman@redhat.com)
+- Support for initial_git_url and downloadable cartridges should be tested
+  against the presence of an optional parameter on the link relation.
+  (ccoleman@redhat.com)
+- Merge pull request #383 from jtharris/bugs/BZ958683
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #380 from smarterclayton/bug_960926_handle_pipe_closure
+  (dmcphers+openshiftbot@redhat.com)
+- Use --exclude-remote when targeting a single gear. (jharris@redhat.com)
+- Bug 960926 - Handle EPIPE gracefully with exit (ccoleman@redhat.com)
+
 * Wed May 08 2013 Adam Miller <admiller@redhat.com> 1.9.1-1
 - bump_minor_versions for sprint 28 (admiller@redhat.com)
 
