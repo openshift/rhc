@@ -295,6 +295,7 @@ module RHC
         :connection_info => "Connection URL",
         :gear_profile   => "Gear Size",
         :visible_to_ssh? => 'Available',
+        :downloaded_cartridge_url => 'From',
       })
 
       headings[value]
