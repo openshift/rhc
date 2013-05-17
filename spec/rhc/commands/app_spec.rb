@@ -522,6 +522,20 @@ describe RHC::Commands::App do
       it { run_output.should match(/Gears:\s+Located with mock_type/) }
       it { run_output.should match(/Gears:\s+1 medium/) }
     end
+
+    context 'when run with custom app' do
+      before(:each) do
+        @domain = rest_client.add_domain("mockdomain")
+        app = @domain.add_application("app1", "mock_type", true)
+        cart1 = app.add_cartridge('mock_cart-1')
+        cart1.url = 'https://foo.bar.com'
+      end
+      it { run_output.should match("app1 @ https://app1-mockdomain.fake.foo/") }
+      it { run_output.should match(/Scaling:.*x2/) }
+      it { run_output.should match(/Gears:\s+Located with mock_type/) }
+      it { run_output.should match(/Gears:\s+1 small/) }
+      it { run_output.should match(%r(From:\s+ https://foo.bar.com)) }
+    end    
   end
 
   describe 'app show' do

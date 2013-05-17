@@ -45,11 +45,11 @@ module RHC
       end
 
       def cartridges
-        debug "Getting all cartridges for application #{name}"
         @cartridges ||=
           unless (carts = attributes['cartridges']).nil?
             carts.map{|x| Cartridge.new(x, client) }
           else
+            debug "Getting all cartridges for application #{name}"
             rest_method "LIST_CARTRIDGES"
           end
       end
