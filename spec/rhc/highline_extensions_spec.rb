@@ -182,6 +182,14 @@ describe HighLineExtension do
     ]
   end
 
+  it "should give the header priority over width when color is involved" do
+    subject.table([["\e[31mabcd\e[0m", "1234567890"]], :header => ['abcdef', '123'], :width => 12).to_a.should == [
+      'abcdef 123',
+      '------ ----------',
+      "\e[31mabcd\e[0m   1234567890",
+    ]
+  end
+
   it "should add a header to a table" do
     subject.table([["abcd efgh", "1234 6789 a"]], :width => 9, :heading => "Alongtextstring").to_a.should == [
       "Alongtext",
