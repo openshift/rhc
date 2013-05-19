@@ -36,22 +36,6 @@ module RHC
         @user ||= api.rest_method "GET_USER"
       end
 
-      def sshkeys
-        debug "Finding all keys for #{user.login}"
-        user.keys
-      end
-
-      def add_key(name, key, content)
-        debug "Adding key #{key} for #{user.login}"
-        user.add_key name, key, content
-      end
-
-      def delete_key(name)
-        debug "Deleting key '#{name}'"
-        key = find_key(name)
-        key.destroy
-      end
-
       #Find Domain by namesapce
       def find_domain(id)
         debug "Finding domain #{id}"
@@ -120,17 +104,17 @@ module RHC
       end
 
       def sshkeys
-        logger.debug "Finding all keys for #{user.login}" if @mydebug
+        debug "Finding all keys for #{user.login}"
         user.keys
       end
 
       def add_key(name, key, content)
-        logger.debug "Adding key #{key} for #{user.login}" if @mydebug
+        debug "Adding key #{key} for #{user.login}"
         user.add_key name, key, content
       end
 
       def delete_key(name)
-        logger.debug "Deleting key '#{name}'" if @mydebug
+        debug "Deleting key '#{name}'"
         key = find_key(name)
         key.destroy
       end
@@ -182,12 +166,6 @@ module RHC
           h
         end
       end
-
-      def logout
-        #TODO logout
-        debug "Logout/Close client"
-      end
-      alias :close :logout
     end
 
     class Client < Base
@@ -234,10 +212,6 @@ module RHC
         debug "Connecting to #{@end_point}"
       end
 
-      def debug?
-        @debug
-      end
-
       def url
         @end_point
       end
@@ -260,9 +234,9 @@ module RHC
             auth = options[:auth] || self.auth
             response = nil
 
-            debug "Request #{args[0].to_s.upcase} #{args[1]}#{"?#{args[2].map{|a| a.join('=')}.join(' ')}" if args[2] && args[0] == 'GET'}" if debug?
+            debug "Request #{args[0].to_s.upcase} #{args[1]}#{"?#{args[2].map{|a| a.join('=')}.join(' ')}" if args[2] && args[0] == 'GET'}"
             time = Benchmark.realtime{ response = client.request(*(args << true)) }
-            debug "   code %s %4i ms" % [response.status, (time*1000).to_i] if debug? && response
+            debug "   code %s %4i ms" % [response.status, (time*1000).to_i] if response
 
             next if retry_proxy(response, i, args, client)
             auth.retry_auth?(response, self) and next if auth
@@ -335,10 +309,7 @@ module RHC
           rescue RHC::Rest::Exception
             raise
           rescue => e
-            if debug?
-              logger.debug "#{e.message} (#{e.class})"
-              logger.debug e.backtrace.join("\n  ")
-            end
+            debug_error(e)
             raise ConnectionException.new("An unexpected error occured: #{e.message}").tap{ |n| n.set_backtrace(e.backtrace) }
           end
         end
@@ -389,9 +360,9 @@ module RHC
               cert = ctx.current_cert
               if cert && (cert.subject.cmp(cert.issuer) == 0)
                 @self_signed = true
-                debug "SSL Verification failed -- Using self signed cert" if debug?
+                debug "SSL Verification failed -- Using self signed cert"
               else
-                debug "SSL Verification failed -- Preverify: #{is_ok}, Error: #{ctx.error_string} (#{ctx.error})" if debug?
+                debug "SSL Verification failed -- Preverify: #{is_ok}, Error: #{ctx.error_string} (#{ctx.error})"
               end
               return false
             end
@@ -456,7 +427,7 @@ module RHC
 
         def retry_proxy(response, i, args, client)
           if response.status == 502
-            debug "ERROR: Received bad gateway from server, will retry once if this is a GET" if debug?
+            debug "ERROR: Received bad gateway from server, will retry once if this is a GET"
             return true if i == 0 && args[0] == :get
             raise ConnectionException.new(
               "An error occurred while communicating with the server. This problem may only be temporary."\
@@ -529,7 +500,7 @@ module RHC
               m.blank?
             end
           rescue => e
-            logger.debug "Response did not include a message from server: #{e.message}" if debug?
+            debug "Response did not include a message from server: #{e.message}"
           end
           case response.status
           when 400
@@ -571,10 +542,6 @@ module RHC
         end
 
       private
-        def logger
-          @logger ||= Logger.new(STDOUT)
-        end
-
         def messages_to_error(messages)
           errors, remaining = messages.partition{ |m| (m['severity'] || "").upcase == 'ERROR' }
           if errors.present?

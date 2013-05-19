@@ -51,10 +51,6 @@ class RHC::Commands::Base
       raise ArgumentError, "Please specify an action to take"
     end
 
-    def debug?
-      @options.debug
-    end
-
     class InvalidCommand < StandardError ; end
 
     def self.inherited(klass)
