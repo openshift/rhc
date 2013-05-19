@@ -5,7 +5,7 @@ module RHC
 
   module ConfigEnv
     def conf_name
-      "#{ENV['OPENSHIFT_CONFIG'] || 'express'}.conf"
+      "#{ENV['OPENSHIFT_CONFIG'].presence || 'express'}.conf"
     end
     def home_conf_dir
       File.join(home_dir, '.openshift')

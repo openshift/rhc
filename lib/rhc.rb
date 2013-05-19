@@ -1,5 +1,4 @@
 # require 'rhc/version' #FIXME gem should know version
-# FIXME Remove rubygems from requirements, ensure library is correct
 
 # Only require external gem dependencies here
 require 'logger'
