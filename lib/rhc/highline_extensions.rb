@@ -392,19 +392,28 @@ class HighLine::Table
 
     def header_rows
       @header_rows ||= begin
-        headers << column_widths.map{ |w| '-' * (w.set > 0 ? w.set : w.max) } if headers.present?
+        headers << widths.map{ |w| '-' * w } if headers.present?
         headers
       end
     end
 
     def rows
       @rows ||= begin
-        fmt = "#{indent}#{widths.zip(align).map{ |w, al| "%#{al == :right ? '' : '-'}#{w}s" }.join(joiner)}"
-          
         body = (header_rows + source_rows).inject([]) do |a,row| 
           row = row.zip(widths).map{ |column,w| w && w > 0 ? column.textwrap_ansi(w, false) : [column] }
           (row.map(&:length).max || 0).times do |i|
-            a << (fmt % row.map{ |r| r[i] }).rstrip
+            s = []
+            row.each_with_index do |lines, j|
+              cell = lines[i]
+              l = cell ? cell.strip_ansi.length : 0
+              s << 
+                  if align[j] == :right 
+                    "#{' '*(widths[j]-l) if l < widths[j]}#{cell}"
+                  else
+                    "#{cell}#{' '*(widths[j]-l) if l < widths[j]}"
+                  end
+            end
+            a << "#{indent}#{s.join(joiner).rstrip}"
           end
           a
         end
