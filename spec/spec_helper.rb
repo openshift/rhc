@@ -8,6 +8,7 @@ require 'pry' if ENV['PRY']
 # Environment reset
 ENV['http_proxy'] = nil
 ENV['HTTP_PROXY'] = nil
+ENV['OPENSHIFT_CONFIG'] = nil
 
 class FakeFS::Mode
   def initialize(mode_s)

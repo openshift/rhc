@@ -45,7 +45,6 @@ module RHC
     def initialize(config=RHC::Config.new, opts=Commander::Command::Options.new)
       @config = config
       @options = opts
-      @debug = opts.debug if opts
     end
 
     # Public: Runs the setup wizard to make sure ~/.openshift and ~/.ssh are correct
@@ -75,10 +74,6 @@ module RHC
     attr_reader :config, :options
     attr_accessor :auth, :user
     attr_writer :rest_client
-
-    def debug?
-      @debug
-    end
 
     def hostname
       Socket.gethostname

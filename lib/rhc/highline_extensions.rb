@@ -4,6 +4,8 @@ require 'delegate'
 # Add specific improved functionality
 #
 class HighLineExtension < HighLine
+  attr_writer :debug
+
   [:ask, :agree].each do |sym|
     define_method(sym) do |*args, &block|
       separate_blocks
@@ -11,6 +13,16 @@ class HighLineExtension < HighLine
       @last_line_open = false
       r
     end
+  end
+
+  def debug(msg)
+    $stderr.puts "DEBUG: #{msg}" if debug?
+  end
+  def debug_error(e)
+    debug "#{e.message} (#{e.class})\n  #{e.backtrace.join("\n  ")}"
+  end
+  def debug?
+    @debug
   end
 
   # OVERRIDE

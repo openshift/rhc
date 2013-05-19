@@ -46,6 +46,7 @@ module Commander
       begin
         @config = RHC::Config.new
         @config.use_config(config_path) if config_path
+        $terminal.debug("Using config file #{@config.config_path}")
 
         unless clean
           @config.to_options.each_pair do |key, value|

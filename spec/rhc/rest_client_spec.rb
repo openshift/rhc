@@ -4,20 +4,6 @@ require 'stringio'
 require 'rest_spec_helper'
 require 'rhc/rest'
 
-# This object is used in a few cases where we need to inspect
-# the logged output.
-class MockClient < RHC::Rest::Client
-  def logger
-    Logger.new((@output = StringIO.new))
-  end
-  def use_debug
-    @debug = true
-  end
-  def logged
-    @output.string
-  end
-end
-
 module RHC
   module Rest
     describe Client do
@@ -458,32 +444,6 @@ module RHC
           end
         end
 
-        shared_examples_for "a logout method" do
-          before(:each) do
-            stub_api_request(:get, '').
-              to_return({ :body   => { :data => client_links, :supported_api_versions => [1.0, 1.1] }.to_json,
-                          :status => 200
-                        })
-          end
-          context "debug mode is on" do
-            let(:use_debug){ true }
-            it "writes a message to the logger" do
-              capture do
-                client.send logout_method.to_sym
-                stderr.should match(/Logout\/Close client$/)
-              end
-            end
-          end
-          context "debug mode is off" do
-            it "does nothing" do
-              capture do
-                client.send logout_method.to_sym
-                stderr.should be_empty
-              end
-            end
-          end
-        end
-
         context "#delete_key" do
           before(:each) do
             stub_api_request(:any, client_links['GET_USER']['relative']).
@@ -527,16 +487,6 @@ module RHC
           it 'raises an error if nonexistent key is requested' do
             expect { client.find_key('no_match') }.to raise_error(RHC::KeyNotFoundException)
           end
-        end
-
-        context "#logout" do
-          let(:logout_method) { :logout }
-          it_should_behave_like "a logout method"
-        end
-
-        context "#close" do
-          let(:logout_method) { :close }
-          it_should_behave_like "a logout method"
         end
       end
 
