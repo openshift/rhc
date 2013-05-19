@@ -2,16 +2,6 @@ require 'spec_helper'
 require 'rest_spec_helper'
 require 'rhc/rest'
 
-class RHCRest
-  include RHC::Rest
-  def debug?
-    false
-  end
-  def debug(*args)
-    raise "Unchecked debug"
-  end
-end
-
 module MockRestResponse
   attr_accessor :code, :read
 end
@@ -95,17 +85,6 @@ module RHC
 
   describe Rest do
     subject{ RHC::Rest::Client.new }
-
-    # logger function
-    describe "#logger" do
-      it "establishes a logger" do
-        logger = Logger.new(STDOUT)
-        subject.send(:logger).should have_same_attributes_as(logger)
-      end
-      it "reuses a logger" do
-        subject.send(:logger).should equal(subject.send(:logger))
-      end
-    end
 
     describe "#default_verify_callback" do
       def invoked_with(is_ok, ctx)

@@ -198,14 +198,14 @@ module RHC
       $stdout.tty? and not options.noprompt
     end
 
-    def debug(msg)
-      $stderr.puts "DEBUG: #{msg}" if debug?
+    def debug(*args)
+      $terminal.debug(*args)
     end
-    def debug_error(e)
-      debug "#{e.message} (#{e.class})\n  #{e.backtrace.join("\n  ")}"
+    def debug_error(*args)
+      $terminal.debug_error(*args)
     end
     def debug?
-      false
+      $terminal.debug?
     end
 
     def disable_deprecated?

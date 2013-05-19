@@ -71,7 +71,7 @@ describe RHC::Helpers do
     it_should_behave_like "colorized output"
   end
 
-  it("should invoke debug from debug_error"){ expect{ subject.debug_error(mock(:class => "Mock", :message => 'msg', :backtrace => [])) }.to call(:debug).on(subject).with("msg (Mock)\n  ") }
+  it("should invoke debug from debug_error"){ expect{ subject.debug_error(mock(:class => "Mock", :message => 'msg', :backtrace => [])) }.to call(:debug).on($terminal).with("msg (Mock)\n  ") }
 
   it("should draw a table") do
     subject.table([[10,2], [3,40]]) do |i|
