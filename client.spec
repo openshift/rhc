@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.9.2
+Version: 1.9.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -99,6 +99,18 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon May 20 2013 Dan McPherson <dmcphers@redhat.com> 1.9.3-1
+- Check for ENV presence (ccoleman@redhat.com)
+- Support OPENSHIFT_CONFIG, which is the name of a file in the config directory
+  to load. Switch to using a centralized debug output mechanism vs. individual
+  classes caring. (ccoleman@redhat.com)
+- Merge pull request #387 from
+  smarterclayton/string_format_cant_align_ansi_sequences
+  (dmcphers+openshiftbot@redhat.com)
+- String ansi sequences aren't properly aligned by string format - revert to
+  doing it ourselves (ccoleman@redhat.com)
+- Add downloadable cart info to RHC (ccoleman@redhat.com)
+
 * Thu May 16 2013 Adam Miller <admiller@redhat.com> 1.9.2-1
 - Bug 963419 - Don't check API versions, check client links
   (ccoleman@redhat.com)
