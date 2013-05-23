@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.9.3
+Version: 1.9.4
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -99,6 +99,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu May 23 2013 Adam Miller <admiller@redhat.com> 1.9.4-1
+- Handle empty http proxy (ccoleman@redhat.com)
+
 * Mon May 20 2013 Dan McPherson <dmcphers@redhat.com> 1.9.3-1
 - Check for ENV presence (ccoleman@redhat.com)
 - Support OPENSHIFT_CONFIG, which is the name of a file in the config directory
