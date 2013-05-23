@@ -565,7 +565,7 @@ module RHC
           # HTTPClient, being sure to add the http protocol
           # if not specified already
           proxy = ENV['http_proxy'] || ENV['HTTP_PROXY']
-          ENV['http_proxy'] = "http://#{proxy}" if proxy && proxy !~ /^(\w+):\/\//
+          ENV['http_proxy'] = "http://#{proxy}" if proxy.present? && proxy !~ /^(\w+):\/\//
         end
     end
   end
