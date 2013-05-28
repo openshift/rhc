@@ -39,7 +39,7 @@ module RHC
       #Find Domain by namesapce
       def find_domain(id)
         debug "Finding domain #{id}"
-        domains.each { |domain| return domain if domain.id == id }
+        domains.each { |domain| return domain if domain.id.downcase == id.downcase }
 
         raise DomainNotFoundException.new("Domain #{id} not found")
       end

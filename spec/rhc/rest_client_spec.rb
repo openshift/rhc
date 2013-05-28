@@ -214,7 +214,12 @@ module RHC
           it "returns a domain object for matching domain IDs" do
             match = nil
             expect { match = client.find_domain('mock_domain_0') }.to_not raise_error
-
+            match.id.should == 'mock_domain_0'
+            match.class.should == RHC::Rest::Domain
+          end
+          it "returns a domain object for matching case-insensitive domain IDs" do
+            match = nil
+            expect { match = client.find_domain('MOCK_DOMAIN_0') }.to_not raise_error
             match.id.should == 'mock_domain_0'
             match.class.should == RHC::Rest::Domain
           end
