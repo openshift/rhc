@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.9.4
+Version: 1.9.5
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -99,6 +99,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue May 28 2013 Adam Miller <admiller@redhat.com> 1.9.5-1
+- Fix bug 965923 - only trap supported signals (jliggitt@redhat.com)
+
 * Thu May 23 2013 Adam Miller <admiller@redhat.com> 1.9.4-1
 - Handle empty http proxy (ccoleman@redhat.com)
 
