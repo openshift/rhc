@@ -12,7 +12,8 @@ def get_args
 end
 
 begin
-  Signal.trap("PIPE", "EXIT")
+  signals = ["PIPE", "EXIT"] & Signal.list.keys
+  Signal.trap(*signals)
   
   retcode = begin
     require 'rhc/cli'
