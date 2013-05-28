@@ -45,7 +45,7 @@ Before('@cartridge_storage_user_required') do
   $namespace = nil
 
   if !$cleaned_storage
-    clean_applications($username)
+    clean_applications($username, true)
     $cleaned_storage = true
   end
 end
