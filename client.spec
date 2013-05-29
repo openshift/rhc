@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.9.5
+Version: 1.9.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -99,6 +99,16 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed May 29 2013 Adam Miller <admiller@redhat.com> 1.9.6-1
+- Merge pull request #393 from liggitt/bug_965923_trap_supported_signals
+  (dmcphers+openshiftbot@redhat.com)
+- Fix bug 965923 - only trap PIPE if supported (jordan@liggitt.net)
+- Merge pull request #392 from
+  liggitt/bug_967683_delete_domain_is_case_sensitive
+  (dmcphers+openshiftbot@redhat.com)
+- Fix bug 967683 - make domain id matching case-insensitive
+  (jliggitt@redhat.com)
+
 * Tue May 28 2013 Adam Miller <admiller@redhat.com> 1.9.5-1
 - Fix bug 965923 - only trap supported signals (jliggitt@redhat.com)
 
