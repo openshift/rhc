@@ -276,7 +276,7 @@ class HighLine::Header < Struct.new(:text, :width, :indent, :color)
           text.textwrap_ansi(width)
         end
       end.tap do |rows|
-        rows << '-' * rows.map{ |s| s.strip_ansi.length }.max
+        rows << '-' * (rows.map{ |s| s.strip_ansi.length }.max || 0)
       end
     end
 end
