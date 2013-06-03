@@ -392,6 +392,27 @@ module RHC
         it{ response.should raise_error(RHC::Rest::TimeoutException, /Connection to server timed out. It is possible/) }
       end
 
+      context "with a receive timeout" do
+        before{ stub_request(:get, mock_href).to_raise(HTTPClient::ReceiveTimeoutError) }
+        it{ response.should raise_error{ |e| e.on_receive?.should be_true } }
+      end
+
+      context "with a send timeout" do
+        before{ stub_request(:get, mock_href).to_raise(HTTPClient::SendTimeoutError) }
+        it{ response.should raise_error{ |e| e.on_send?.should be_true } }
+      end
+
+      context "with a connect timeout" do
+        before{ stub_request(:get, mock_href).to_raise(HTTPClient::ConnectTimeoutError) }
+        it{ response.should raise_error{ |e| e.on_connect?.should be_true } }
+      end
+
+      context "with a reset server connection" do
+        before{ stub_request(:get, mock_href).to_raise(Errno::ECONNRESET.new('Lost Server Connection')) }
+        it{ response.should raise_error(RHC::Rest::ConnectionException, /The server has closed the connection unexpectedly \(Connection reset by peer - Lost Server Connection\)/) }
+      end
+
+
       context "with a broken server connection" do
         before{ stub_request(:get, mock_href).to_raise(EOFError.new('Lost Server Connection')) }
         it{ response.should raise_error(RHC::Rest::ConnectionException, 'Connection to server got interrupted: Lost Server Connection') }

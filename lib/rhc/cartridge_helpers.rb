@@ -35,8 +35,8 @@ module RHC
       end
 
       def use_cart(cart, for_cartridge_name)
-        if cart.custom?
-        info "The cartridge '#{cart.url}' will be downloaded and installed"
+        if cart.name.blank? and cart.custom?
+          info "The cartridge '#{cart.url}' will be downloaded and installed"
         else
           info "Using #{cart.name}#{cart.display_name ? " (#{cart.display_name})" : ''} for '#{for_cartridge_name}'"
         end

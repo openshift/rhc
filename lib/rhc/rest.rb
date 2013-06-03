@@ -97,7 +97,22 @@ module RHC
 
     #I/O Exceptions Connection timeouts, etc
     class ConnectionException < Exception; end
-    class TimeoutException < ConnectionException; end
+    class TimeoutException < ConnectionException
+      def initialize(message, nested=nil)
+        super(message)
+        @nested = nested
+      end
+
+      def on_receive?
+        @nested.is_a? HTTPClient::ReceiveTimeoutError
+      end
+      def on_connect?
+        @nested.is_a? HTTPClient::ConnectTimeoutError
+      end
+      def on_send?
+        @nested.is_a? HTTPClient::SendTimeoutError
+      end
+    end
 
     class SSLConnectionFailed < ConnectionException
       attr_reader :reason
