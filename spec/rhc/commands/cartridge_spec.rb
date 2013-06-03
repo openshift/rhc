@@ -353,10 +353,10 @@ describe RHC::Commands::Cartridge do
     let(:arguments) { ['cartridge', 'scale', @cart_type || 'mock_type', '-a', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] | (@extra_args || []) }
 
     let(:current_scale) { 1 }
-    before(:each) do
+    before do
       domain = rest_client.add_domain("mock_domain")
-      app = domain.add_application("app1", "mock_type", scalable)
-      app.cartridges.first.stub(:current_scale).and_return(current_scale)
+      @app = domain.add_application("app1", "mock_type", scalable)
+      @app.cartridges.first.stub(:current_scale).and_return(current_scale)
     end
 
     context 'when run with scalable app' do
@@ -384,6 +384,14 @@ describe RHC::Commands::Cartridge do
       it "with an invalid max value" do
         @extra_args = ["--max","a"]
         fail_with_message "invalid argument: --max"
+      end
+
+      context "when the operation times out" do
+        before{ @app.cartridges.first.should_receive(:set_scales).twice.and_raise(RHC::Rest::TimeoutException.new('Timeout', HTTPClient::ReceiveTimeoutError.new)) }
+        it "displays an error" do
+          @extra_args = ["--min","2"]
+          fail_with_message "The server has closed the connection, but your scaling operation is still in progress"
+        end
       end
     end
 
