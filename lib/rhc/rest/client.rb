@@ -262,7 +262,7 @@ module RHC
               "Connection to server timed out. "\
               "It is possible the operation finished without being able "\
               "to report success. Use 'rhc domain show' or 'rhc app show' "\
-              "to see the status of your applications.")
+              "to see the status of your applications.", e)
           rescue EOFError => e
             raise ConnectionException.new(
               "Connection to server got interrupted: #{e.message}")
@@ -306,6 +306,9 @@ module RHC
             raise ConnectionException.new(
               "Unable to connect to the server (#{e.message})."\
               "#{client.proxy.present? ? " Check that you have correctly specified your proxy server '#{client.proxy}' as well as your OpenShift server '#{args[1]}'." : " Check that you have correctly specified your OpenShift server '#{args[1]}'."}")
+          rescue Errno::ECONNRESET => e
+            raise ConnectionException.new(
+              "The server has closed the connection unexpectedly (#{e.message}). Your last operation may still be running on the server; please check before retrying your last request.")
           rescue RHC::Rest::Exception
             raise
           rescue => e

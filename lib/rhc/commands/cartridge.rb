@@ -197,17 +197,22 @@ module RHC::Commands
 
       raise RHC::CartridgeNotScalableException unless rest_cartridge.scalable?
 
+      warn "This operation will run until the application is at the minimum scale and may take several minutes."
+      say "Setting scale range for #{rest_cartridge.name} ... "
+
       cart = rest_cartridge.set_scales({
         :scales_from => options.min,
         :scales_to   => options.max
       })
 
-      results do
-        paragraph{ display_cart(cart) }
-        success "Success: Scaling values updated"
-      end
+      success "done"
+      paragraph{ display_cart(cart) }
 
       0
+    rescue RHC::Rest::TimeoutException => e
+      raise unless e.on_receive?
+      info "The server has closed the connection, but your scaling operation is still in progress.  Please check the status of your operation via 'rhc show-app'."
+      1
     end
 
     summary 'View/manipulate storage on a cartridge'
@@ -269,11 +274,10 @@ module RHC::Commands
           total_amount = amount
         end
 
+        say "Set storage on cartridge ... "
         cart = rest_cartridge.set_storage(:additional_gear_storage => total_amount)
-        results do
-          say "Success: additional storage space set to #{total_amount}GB\n"
-          display_cart_storage_info cart
-        end
+        success "set to #{total_amount}GB"
+        paragraph{ display_cart_storage_info cart }
       end
 
       0
