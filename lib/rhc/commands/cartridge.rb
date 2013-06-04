@@ -182,14 +182,30 @@ module RHC::Commands
       0
     end
 
-    summary "Set the scaling range of a cartridge"
-    syntax "<cartridge> [--namespace NAME] [--app NAME] [--min min] [--max max]"
-    argument :cart_type, "The name of the cartridge you are reloading", ["-c", "--cartridge cartridge"]
+    summary "Set the scale range for a cartridge"
+    description <<-DESC
+      Each cartridge capable of scaling may have a minimum and a maximum set, although within that range 
+      each type of cartridge may make decisions to autoscale.  Web cartridges will scale based on incoming
+      request traffic - see https://www.openshift.com/developers/scaling for more information. Non web
+      cartridges such as databases may require specific increments of scaling (1, 3, 5) in order to 
+      properly function.  Please consult the cartridge documentation for more on specifics of scaling.
+
+      Set both values the same to guarantee a scale value.  You may pecify both values with the argument
+      'multiplier' or use '--min' and '--max' independently.
+
+      Scaling may take several minutes or more if the server must provision multiple gears. Your operation
+      will continue in the background if your client is disconnected.
+      DESC
+    syntax "<cartridge> [multiplier] [--namespace NAME] [--app NAME] [--min min] [--max max]"
+    argument :cartridge, "The name of the cartridge you are scaling", ["-c", "--cartridge cartridge"]
+    argument :multiplier, "The number of instances of this cartridge you need", [], :optional => true, :hide => true
     option ["-n", "--namespace NAME"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
     option ["-a", "--app NAME"], "Application the cartridge belongs to", :context => :app_context, :required => true
     option ["--min min", Integer], "Minimum scaling value"
     option ["--max max", Integer], "Maximum scaling value"
-    def scale(cartridge)
+    def scale(cartridge, multiplier)
+      options.default(:min => Integer(multiplier), :max => Integer(multiplier)) if multiplier rescue raise ArgumentError, "Multiplier must be a positive integer."
+
       raise RHC::MissingScalingValueException unless options.min || options.max
 
       rest_app = rest_client.find_application(options.namespace, options.app, :include => :cartridges)
