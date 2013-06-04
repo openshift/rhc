@@ -371,6 +371,21 @@ describe RHC::Commands::Cartridge do
         succeed_with_message "minimum: 6"
       end
 
+      it "with an explicit value" do
+        @extra_args = ["6"]
+        succeed_with_message "minimum: 6, maximum: 6"
+      end
+
+      it "with an invalid explicit value" do
+        @extra_args = ["a6"]
+        fail_with_message "Multiplier must be a positive integer"
+      end
+
+      it "with an explicit value and a different minimum" do
+        @extra_args = ["6", "--min", "5"]
+        succeed_with_message "minimum: 5, maximum: 6"
+      end
+
       it "with a max value" do
         @extra_args = ["--max","3"]
         succeed_with_message 'maximum: 3'
