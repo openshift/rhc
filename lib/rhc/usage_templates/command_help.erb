@@ -2,6 +2,19 @@ Usage: <%= Array(program :name).first %> <%= @command.name %> <%= @command.synta
 
 <%= @command.description || @command.summary %>
 <% if @actions.blank? -%>
+
+<% unless @command.info[:args].blank? -%>
+
+Arguments
+<%= table(
+	  @command.info[:args].select do |opt| 
+	  	not opt[:hide] and not opt[:switches].present?
+	  end.map do |opt| 
+	  	[opt[:name], opt[:description]] 
+	  end, 
+	  table_args('  ', 25)
+	).join("\n") %>
+<% end -%>
 <% unless @command.options.blank? or @command.options.all?{ |o| o[:hide] } -%>
 
 Options
