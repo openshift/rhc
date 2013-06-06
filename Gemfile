@@ -10,3 +10,8 @@ gem 'simplecov', :require => false, :group => :test
 if Gem::Specification.respond_to?(:find_all_by_name) and not Gem::Specification::find_all_by_name('bigdecimal').empty?
   gem 'bigdecimal', :require => false, :group => :test
 end
+
+# Fedora 19 splits psych out into its own gem.
+if Gem::Specification.respond_to?(:find_all_by_name) and not Gem::Specification::find_all_by_name('psych').empty?
+  gem 'psych'
+end
