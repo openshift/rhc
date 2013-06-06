@@ -8,7 +8,15 @@ rescue
   exit 1
 end
 
-$target_os = ENV['RHC_TARGET'] || (File.exist?("/etc/fedora-release") ? "Fedora" : "RHEL")
+$target_os = ENV['RHC_TARGET']
+if $target_os.nil?
+  if File.exist?("/etc/fedora-release")
+    version = File.open("/etc/fedora-release").read.match(/[\w ]*release ([\d]+) [.]*/)[1]
+    $target_os = "fedora-#{version}"
+  else
+    $target_os = "rhel"
+  end
+end
 
 require 'rhc/coverage_helper'
 SimpleCov.at_exit{ SimpleCov.result.format! } if defined? SimpleCov
@@ -82,7 +90,6 @@ if ENV['REGISTER_USER']
   command = $user_register_script_format % [$username,$password]
   if Object.const_defined?('Bundler')
     Bundler::with_clean_env do
-      system "gem install activeresource bundler parseconfig --no-ri --no-rdoc"
       system command
     end
   else
