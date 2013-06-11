@@ -575,14 +575,28 @@ describe RHC::Commands::App do
     end
   end
 
-  describe 'app ssh' do
+  describe 'app ssh without command' do
     let(:arguments) { ['app', 'ssh', 'app1'] }
 
     context 'when run' do
       before(:each) do
         @domain = rest_client.add_domain("mockdomain")
         @domain.add_application("app1", "mock_type")
-        Kernel.should_receive(:system).with("ssh fakeuuidfortestsapp1@127.0.0.1").and_return(0)
+        Kernel.should_receive(:exec).with("ssh", "fakeuuidfortestsapp1@127.0.0.1").and_return(0)
+      end
+      it { run_output.should match("Connecting to fakeuuidfortestsapp") }
+      it { expect { run }.to exit_with_code(0) }
+    end
+  end
+
+  describe 'app ssh with command' do
+    let(:arguments) { ['app', 'ssh', 'app1', 'ls', '/tmp'] }
+
+    context 'when run' do
+      before(:each) do
+        @domain = rest_client.add_domain("mockdomain")
+        @domain.add_application("app1", "mock_type")
+        Kernel.should_receive(:exec).with("ssh", "fakeuuidfortestsapp1@127.0.0.1", "ls", "/tmp").and_return(0)
       end
       it { run_output.should match("Connecting to fakeuuidfortestsapp") }
       it { expect { run }.to exit_with_code(0) }
@@ -603,7 +617,7 @@ describe RHC::Commands::App do
     end
   end
 
-  describe 'app ssh can use system exec' do
+  describe 'app ssh custom ssh' do
     let(:arguments) { ['app', 'ssh', 'app1', '--ssh', 'path_to_ssh'] }
 
     context 'when run' do
@@ -611,10 +625,10 @@ describe RHC::Commands::App do
         @domain = rest_client.add_domain("mockdomain")
         @domain.add_application("app1", "mock_type")
         @instance.should_not_receive(:has_ssh?)
-        Kernel.should_receive(:system).with("path_to_ssh fakeuuidfortestsapp1@127.0.0.1").and_return(1)
+        Kernel.should_receive(:exec).with("path_to_ssh", "fakeuuidfortestsapp1@127.0.0.1").and_return(0)
       end
       it { run_output.should match("Connecting to fakeuuidfortestsapp") }
-      it { expect { run }.to exit_with_code(1) }
+      it { expect { run }.to exit_with_code(0) }
     end
   end
 
