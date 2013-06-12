@@ -304,23 +304,23 @@ module RHC::Commands
     summary "SSH into the specified application"
     syntax "<app> [--ssh path_to_ssh_executable]"
     argument :app, "The name of the application you want to SSH into", ["-a", "--app NAME"], :context => :app_context
+    argument :command, "Command to run in the application's SSH session", [], :arg_type => :list, :required => false
     option ["--ssh PATH"], "Path to your SSH executable"
     option ["-n", "--namespace NAME"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
     alias_action 'ssh', :root_command => true
-    def ssh(app_name)
+    def ssh(app_name, command)
       raise ArgumentError, "No application specified" unless app_name.present?
       raise OptionParser::InvalidOption, "No system SSH available. Please use the --ssh option to specify the path to your SSH executable, or install SSH." unless options.ssh or has_ssh?
 
       rest_app = rest_client.find_application(options.namespace, app_name)
 
+      ssh = options.ssh || 'ssh'
+      debug "Using user specified SSH: #{options.ssh}" if options.ssh
+
+      command_line = [ssh, rest_app.ssh_string.to_s, command || nil].compact.flatten
+      debug "Invoking Kernel.exec with #{command_line}"
       say "Connecting to #{rest_app.ssh_string.to_s} ..."
-      if options.ssh
-        debug "Using user specified SSH: #{options.ssh}"
-        Kernel.send(:system, "#{options.ssh} #{rest_app.ssh_string.to_s}")
-      else
-        debug "Using system ssh"
-        Kernel.send(:system, "ssh #{rest_app.ssh_string.to_s}")
-      end
+      Kernel.send(:exec, *command_line)
     end
 
     summary "DEPRECATED use 'show <app> --state' instead"
