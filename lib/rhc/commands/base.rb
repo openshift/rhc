@@ -26,14 +26,21 @@ class RHC::Commands::Base
     # to the OpenShift API that transforms intent
     # and options, to remote calls, and then handle
     # the output (or failures) into exceptions and
-    # formatted object output.  Most interactions 
+    # formatted object output.  Most interactions
     # should be through this call pattern.
     def rest_client(opts={})
       @rest_client ||= begin
           auth = RHC::Auth::Basic.new(options)
           auth = RHC::Auth::Token.new(options, auth, token_store) if (options.use_authorization_tokens || options.token) && !(options.rhlogin && options.password)
+          debug "Authenticating with #{auth.class}"
           client_from_options(:auth => auth)
         end
+
+        if opts[:min_api] && opts[:min_api].to_f > @rest_client.api_version_negotiated.to_f
+          raise RHC::ServerAPINotSupportedException.new(opts[:min_api], @rest_client.api_version_negotiated)
+        end
+
+      @rest_client
     end
 
     def token_store
@@ -42,10 +49,6 @@ class RHC::Commands::Base
 
     def help(*args)
       raise ArgumentError, "Please specify an action to take"
-    end
-
-    def debug?
-      @options.debug
     end
 
     class InvalidCommand < StandardError ; end
@@ -111,10 +114,10 @@ class RHC::Commands::Base
     # be available in autocompletion and at execution time.
     #
     # Supported options:
-    # 
+    #
     #   :deprecated - if true, a warning will be displayed when the command is executed
     #   :root_command - if true, do not prepend the object name to the command
-    # 
+    #
     def self.alias_action(action, options={})
       options[:action] = action.is_a?(Array) ? action : action.to_s.split(' ')
       aliases << options
@@ -129,10 +132,8 @@ class RHC::Commands::Base
                           }
     end
 
-    def self.argument(name, description, switches, options={})
+    def self.argument(name, description, switches=[], options={})
       arg_type = options[:arg_type]
-      raise ArgumentError("Only the last argument descriptor for an action can be a list") if arg_type == :list and list_argument_defined?
-      list_argument_defined true if arg_type == :list
 
       option_symbol = Commander::Runner.switch_to_sym(switches.last)
       args_metadata << {:name => name,
@@ -140,6 +141,7 @@ class RHC::Commands::Base
                         :switches => switches,
                         :context_helper => options[:context],
                         :option_symbol => option_symbol,
+                        :optional => options[:optional],
                         :arg_type => arg_type}
     end
 
@@ -149,12 +151,6 @@ class RHC::Commands::Base
     end
 
     private
-      def self.list_argument_defined(bool)
-        options[:list_argument_defined] = bool
-      end
-      def self.list_argument_defined?
-        options[:list_argument_defined]
-      end
       def self.options_metadata
         options[:options] ||= []
       end

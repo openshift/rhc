@@ -17,7 +17,7 @@ module RHC
       end
 
       def rest_method(link_name, payload={}, options={})
-        link = links[link_name.to_s]
+        link = link(link_name)
         raise "No link defined for #{link_name}" unless link
         url = link['href']
         url = url.gsub(/:\w+/) { |s| options[:params][s] } if options[:params]
@@ -35,11 +35,21 @@ module RHC
       end
 
       def supports?(sym)
-        links.has_key?(sym.to_s) || links.has_key?(sym.to_s.upcase)
+        !!link(sym)
+      end
+
+      def has_param?(sym, name)
+        if l = link(sym)
+          (l['required_params'] || []).any?{ |p| p['name'] == name} or (l['optional_params'] || []).any?{ |p| p['name'] == name}
+        end
       end
 
       protected
         attr_reader :client
+
+        def link(sym)
+          (links[sym.to_s] || links[sym.to_s.upcase])
+        end
 
         def debug(msg, obj=nil)
           client.debug("#{msg}#{obj ? " #{obj}" : ''}") if client && client.debug?

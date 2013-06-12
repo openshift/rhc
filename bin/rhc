@@ -12,6 +12,8 @@ def get_args
 end
 
 begin
+  Signal.trap("PIPE", "EXIT") if Signal.list["PIPE"]
+  
   retcode = begin
     require 'rhc/cli'
     RHC::CLI.set_terminal

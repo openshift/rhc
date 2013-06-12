@@ -22,6 +22,15 @@ module RHC
       false
     end
 
+    def options_parse_debug
+      if @args.include?("-d") or @args.include?("--debug")
+        @args.delete "-d"
+        @args.delete "--debug"
+        return true
+      end
+      false
+    end
+
     def options_parse_version
       if @args.include? "--version"
         say version
@@ -43,18 +52,12 @@ module RHC
     def run!
       trace = false
       require_program :version, :description
-      #trap('INT') { abort program(:int_message) } if program(:int_message)
-      #trap('INT') { program(:int_block).call } if program(:int_block)
 
       global_option('-h', '--help', 'Help on any command', :hide => true)
       global_option('--version', 'Display version information', :hide => true)
 
-      # remove these because we monkey patch Commands to process all options
-      # at once, avoiding conflicts between the global and command options
-      # code left here just in case someone compares this with the original
-      # commander code
-      #parse_global_options
-      #remove_global_options options, @args
+      # special case --debug so all commands can output relevant info on it
+      $terminal.debug = options_parse_debug
 
       # special case --trace because we need to use it in the runner
       trace = options_parse_trace
@@ -101,7 +104,7 @@ module RHC
     end
 
     def provided_arguments
-      @args[0, @args.find_index { |arg| arg.start_with?('-') } || @args.length]
+      @args[0, @args.find_index { |arg| arg != '--' and arg.start_with?('-') } || @args.length]
     end
 
     def global_option(*args, &block)

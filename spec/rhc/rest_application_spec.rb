@@ -7,13 +7,14 @@ module RHC
     describe Application do
       let (:client) { RHC::Rest::Client.new('test.domain.com', 'test_user', 'test pass') }
       let (:app_links) { mock_response_links(mock_app_links('mock_domain','mock_app')) }
+      let (:app_aliases) { ['alias1','alias2'] }
       let (:app_obj) {
         args = {
           'domain_id'       => 'mock_domain',
           'name'            => 'mock_app',
           'creation_time'   => Time.now.to_s,
           'uuid'            => 1234,
-          'aliases'         => ['alias1','alias2'],
+          'aliases'         => app_aliases,
           'server_identity' => mock_uri,
           'links'           => app_links
         }
@@ -53,15 +54,79 @@ module RHC
       end
 
       context "#add_cartridge" do
-        before do
-          stub_api_request(:any, app_links['ADD_CARTRIDGE']['relative']).
-            to_return(mock_cartridge_response)
+        context "with a name" do
+          before{ stub_api_request(:any, app_links['ADD_CARTRIDGE']['relative']).with(:body => {:name => 'mock_cart_0'}.to_json).to_return(mock_cartridge_response) }
+          it "accepts a string" do
+            cart = app_obj.add_cartridge('mock_cart_0')
+            cart.should be_an_instance_of RHC::Rest::Cartridge
+            cart.name.should == 'mock_cart_0'
+          end
+          it "accepts an object" do
+            cart = app_obj.add_cartridge(stub(:name => 'mock_cart_0', :url => nil))
+            cart.should be_an_instance_of RHC::Rest::Cartridge
+            cart.name.should == 'mock_cart_0'
+          end
+          it "accepts a hash" do
+            cart = app_obj.add_cartridge(:name => 'mock_cart_0')
+            cart.should be_an_instance_of RHC::Rest::Cartridge
+            cart.name.should == 'mock_cart_0'
+          end          
+        end        
+
+        context "with a URL cart" do
+          before{ stub_api_request(:any, app_links['ADD_CARTRIDGE']['relative']).with(:body => {:url => 'http://foo.com'}.to_json).to_return(mock_cartridge_response(1, true)) }
+          it "raises without a param" do
+            app_obj.should_receive(:has_param?).with('ADD_CARTRIDGE','url').and_return(false)
+            expect{ app_obj.add_cartridge({:url => 'http://foo.com'}) }.to raise_error(RHC::Rest::DownloadingCartridgesNotSupported)
+          end
+          it "accepts a hash" do
+            app_obj.should_receive(:has_param?).with('ADD_CARTRIDGE','url').and_return(true)
+            cart = app_obj.add_cartridge({:url => 'http://foo.com'})
+            cart.should be_an_instance_of RHC::Rest::Cartridge
+            cart.name.should == 'mock_cart_0'
+            cart.url.should == 'http://a.url/0'
+            cart.short_name.should == 'mock_cart_0'
+            cart.display_name.should == 'mock_cart_0'
+            cart.only_in_new?.should be_true
+            cart.only_in_existing?.should be_false
+          end
+          it "accepts an object" do
+            app_obj.should_receive(:has_param?).with('ADD_CARTRIDGE','url').and_return(true)
+            cart = app_obj.add_cartridge(stub(:url => 'http://foo.com'))
+            cart.should be_an_instance_of RHC::Rest::Cartridge
+            cart.name.should == 'mock_cart_0'
+            cart.url.should == 'http://a.url/0'
+            cart.short_name.should == 'mock_cart_0'
+            cart.display_name.should == 'mock_cart_0'
+            cart.only_in_new?.should be_true
+            cart.only_in_existing?.should be_false
+          end          
         end
-        it "returns a new cartridge object" do
-          app  = app_obj
-          cart = app.add_cartridge('mock_cart_0')
-          cart.should be_an_instance_of RHC::Rest::Cartridge
-          cart.name.should == 'mock_cart_0'
+      end
+
+      context "#aliases" do
+        context "when the server returns an array of strings" do
+          it{ app_obj.aliases.first.should be_an_instance_of RHC::Rest::Alias }
+          it("converts to an object"){ app_obj.aliases.map(&:id).should == app_aliases }
+        end
+
+        context "when the server returns an object" do
+          let(:app_aliases){ [{'id' => 'alias1'}, {'id' => 'alias2'}] }
+          it{ app_obj.aliases.first.should be_an_instance_of RHC::Rest::Alias }
+          it{ app_obj.aliases.map(&:id).should == ['alias1', 'alias2'] }
+        end
+
+        context "when the server doesn't return aliases" do
+          let(:app_aliases){ nil }
+          context "when the client supports LIST_ALIASES" do
+            before{ stub_api_request(:any, app_links['LIST_ALIASES']['relative']).to_return(mock_alias_response(2)) }
+            it{ app_obj.aliases.first.should be_an_instance_of RHC::Rest::Alias }
+            it{ app_obj.aliases.map(&:id).should == ['www.alias0.com', 'www.alias1.com'] }
+          end
+          context "when the client doesn't support LIST_ALIASES" do
+            before{ app_links['LIST_ALIASES'] = nil }
+            it{ app_obj.aliases.should == [] }
+          end
         end
       end
 

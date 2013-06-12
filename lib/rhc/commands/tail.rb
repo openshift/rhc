@@ -12,17 +12,19 @@ module RHC::Commands
     option ["-n", "--namespace NAME"], "Namespace of your application", :context => :namespace_context, :required => true
     option ["-o", "--opts options"], "Options to pass to the server-side (linux based) tail command (applicable to tail command only) (-f is implicit.  See the linux tail man page full list of options.) (Ex: --opts '-n 100')"
     option ["-f", "--files files"], "File glob relative to app (default <application_name>/logs/*) (optional)"
+    option ["-g", "--gear ID"], "Tail only a specific gear"
     #option ["-c", "--cartridge name"], "Tail only a specific cartridge"
     alias_action :"app tail", :root_command => true, :deprecated => true
     def run(app_name)
       rest_app = rest_client.find_application(options.namespace, app_name, :include => :cartridges)
+      ssh_url = options.gear ? rest_app.gear_ssh_url(options.gear) : rest_app.ssh_url
 
-      tail('*', URI(rest_app.ssh_url), options)
+      tail('*', URI(ssh_url), options)
 
       0
     end
 
-    private 
+    private
       #Application log file tailing
       def tail(cartridge_name, ssh_url, options)
         debug "Tail in progress for cartridge #{cartridge_name}"
@@ -30,7 +32,7 @@ module RHC::Commands
         host = ssh_url.host
         uuid = ssh_url.user
 
-        file_glob = options.files ? options.files : "#{cartridge_name}/logs/*"
+        file_glob = options.files ? options.files : "#{cartridge_name}/log*/*"
         remote_cmd = "tail#{options.opts ? ' --opts ' + Base64::encode64(options.opts).chomp : ''} #{file_glob}"
         ssh_cmd = "ssh -t #{uuid}@#{host} '#{remote_cmd}'"
         begin

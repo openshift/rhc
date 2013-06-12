@@ -16,8 +16,10 @@ module RHC::Auth
 
     def to_request(request)
       if token
+        debug "Using token authentication"
         (request[:headers] ||= {})['authorization'] = "Bearer #{token}"
       elsif auth and (!@allows_tokens or @can_get_token == false)
+        debug "Bypassing token auth"
         auth.to_request(request)
       end
       request
@@ -56,6 +58,7 @@ module RHC::Auth
           if has_token
             raise RHC::Rest::TokenExpiredOrInvalid, "Your authorization token is expired or invalid."
           end
+          debug "Cannot authenticate via token or password, exiting"
           return false
         end
 
@@ -78,6 +81,7 @@ module RHC::Auth
 
         return auth.retry_auth?(response, client) unless @can_get_token
 
+        debug "Creating a new authorization token"
         if auth_token = client.new_session(:auth => auth)
           @fetch_once = true
           save(auth_token.token)

@@ -131,6 +131,21 @@ describe HighLineExtension do
     output = subject.read
     output.should == "Antidisestablishmentarianism\n"
   end
+  it "should terminate an open line if wrapping occurs" do
+    subject.wrap_at = 10
+    subject.say "Foo "
+    subject.say "Lorem ipsum"
+    output = subject.read
+    output.should match "Foo \nLorem\nipsum\n"
+  end
+
+  it "should handle an empty table" do
+    subject.table([]).to_a.should == []
+  end
+
+  it "should handle an empty table" do
+    subject.table([[]]).to_a.should == []
+  end
 
   it "should wrap a table based on a max width" do
     subject.table([["abcd efgh", "1234 6789 a"]], :width => 9, :heading => 'Test').to_a.should == [
@@ -164,6 +179,14 @@ describe HighLineExtension do
       '------ -----',
       "abcd   12345",
       "       67890",
+    ]
+  end
+
+  it "should give the header priority over width when color is involved" do
+    subject.table([["\e[31mabcd\e[0m", "1234567890"]], :header => ['abcdef', '123'], :width => 12).to_a.should == [
+      'abcdef 123',
+      '------ ----------',
+      "\e[31mabcd\e[0m   1234567890",
     ]
   end
 

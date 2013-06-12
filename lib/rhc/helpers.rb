@@ -140,16 +140,30 @@ module RHC
       s =~ %r(^http(?:s)?://) ? URI(s).host : s
     end
     def to_uri(s)
-      URI(s =~ %r(^http(?:s)?://) ? s : "https://#{s}")
+      begin
+        URI(s =~ %r(^http(?:s)?://) ? s : "https://#{s}")
+      rescue URI::InvalidURIError
+        raise RHC::InvalidURIException.new(s)
+      end
     end
+
+    def ssh_string(ssh_url)
+      return nil if ssh_url.nil?
+      uri = URI.parse(ssh_url)
+      "#{uri.user}@#{uri.host}"
+    rescue => e
+      RHC::Helpers.debug_error(e)
+      ssh_url
+    end
+
     def openshift_rest_endpoint
       uri = to_uri((options.server rescue nil) || ENV['LIBRA_SERVER'] || "openshift.redhat.com")
       uri.path = '/broker/rest/api' if uri.path.blank? || uri.path == '/'
       uri
     end
-    
+
     def token_for_user
-      options.token or (token_store.get(options.rhlogin, options.server) if options.rhlogin)
+      options.token or (token_store.get(options.rhlogin, options.server) if options.rhlogin && options.use_authorization_tokens)
     end
 
     def client_from_options(opts)
@@ -180,14 +194,18 @@ module RHC
     # Output helpers
     #
 
-    def debug(msg)
-      $stderr.puts "DEBUG: #{msg}" if debug?
+    def interactive?
+      $stdout.tty? and not options.noprompt
     end
-    def debug_error(e)
-      debug "#{e.message} (#{e.class})\n  #{e.backtrace.join("\n  ")}"
+
+    def debug(*args)
+      $terminal.debug(*args)
+    end
+    def debug_error(*args)
+      $terminal.debug_error(*args)
     end
     def debug?
-      false
+      $terminal.debug?
     end
 
     def disable_deprecated?
@@ -277,6 +295,7 @@ module RHC
         :connection_info => "Connection URL",
         :gear_profile   => "Gear Size",
         :visible_to_ssh? => 'Available',
+        :downloaded_cartridge_url => 'From',
       })
 
       headings[value]
@@ -334,7 +353,7 @@ module RHC
         end
       end
     end
-    
+
     def with_tolerant_encoding(&block)
       # :nocov:
       if RUBY_VERSION.to_f >= 1.9

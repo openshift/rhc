@@ -23,6 +23,23 @@ class Object
   end
 end
 
+class Array
+  # From rails
+  def split(value = nil)
+    using_block = block_given?
+
+    inject([[]]) do |results, element|
+      if (using_block && yield(element)) || (value == element)
+        results << []
+      else
+        results.last << element
+      end
+
+      results
+    end
+  end  
+end
+
 class File
   def chunk(chunk_size=1024)
     yield read(chunk_size) until eof?

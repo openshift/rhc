@@ -90,6 +90,7 @@ module RHC
       say format_table \
         format_cart_header(cart),
         get_properties(cart, *properties).
+          concat([[:downloaded_cartridge_url, cart.url]]).
           concat([[cart.scalable? ? :scaling : :gears, format_cart_gears(cart)]]).
           concat(cart.properties.map{ |p| ["#{table_heading(p['name'])}:", p['value']] }.sort{ |a,b| a[0] <=> b[0] }),
         :delete => true

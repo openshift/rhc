@@ -120,7 +120,7 @@ module RHC::Rest::Mock
         to_return(new_authorization(params))
     end
     def stub_no_keys
-      stub_api_request(:get, 'broker/rest/user/keys', mock_user_auth).to_return(no_keys)
+      stub_api_request(:get, 'broker/rest/user/keys', mock_user_auth).to_return(empty_keys)
     end
     def stub_mock_ssh_keys(name='test')
       stub_api_request(:get, 'broker/rest/user/keys', mock_user_auth).
@@ -159,16 +159,16 @@ module RHC::Rest::Mock
         })
     end
     def stub_no_domains
-      stub_api_request(:get, 'broker/rest/domains', mock_user_auth).to_return(no_domains)
+      stub_api_request(:get, 'broker/rest/domains', mock_user_auth).to_return(empty_domains)
     end
-    def stub_one_domain(name)
+    def stub_one_domain(name, optional_params=nil)
       stub_api_request(:get, 'broker/rest/domains', mock_user_auth).
         to_return({
           :body => {
             :type => 'domains',
             :data => [{:id => name, :links => mock_response_links([
               ['LIST_APPLICATIONS', "broker/rest/domains/#{name}/applications", 'get'],
-              ['ADD_APPLICATION', "broker/rest/domains/#{name}/applications", 'post'],
+              ['ADD_APPLICATION', "broker/rest/domains/#{name}/applications", 'post', ({:optional_params => optional_params} if optional_params)],
             ])}],
           }.to_json
         })
@@ -221,10 +221,10 @@ module RHC::Rest::Mock
       EOM
     end
 
-    def no_keys
+    def empty_keys
       empty_response_list('keys')
     end
-    def no_domains
+    def empty_domains
       empty_response_list('domains')
     end
 
@@ -313,16 +313,11 @@ module RHC::Rest::Mock
       "https://#{uri_string}/#{relative}"
     end
 
-    # This formats link lists for JSONification
     def mock_response_links(links)
       link_set = {}
       links.each do |link|
-        operation = link[0]
-        href      = link[1]
-        method    = link[2]
-        # Note that the 'relative' key/value pair below is a convenience for testing;
-        # this is not used by the API classes.
-        link_set[operation] = { 'href' => mock_href(href), 'method' => method, 'relative' => href }
+        options   = link[3] || {}
+        link_set[link[0]] = { 'href' => mock_href(link[1]), 'method' => link[2], 'relative' => link[1]}.merge(options)
       end
       link_set
     end
@@ -392,12 +387,13 @@ module RHC::Rest::Mock
        ['UPDATE',   "domains/#{domain_id}/apps/#{app_id}/aliases/#{alias_id}/update", 'post' ]]
     end
 
-    def mock_cartridge_response(cart_count=1)
+    def mock_cartridge_response(cart_count=1, url=false)
       carts = []
       while carts.length < cart_count
         carts << {
           :name  => "mock_cart_#{carts.length}",
-          :type  => "mock_cart_#{carts.length}_type",
+          :url   => url ? "http://a.url/#{carts.length}" : nil,
+          :type  => carts.empty? ? 'standalone' : 'embedded',
           :links => mock_response_links(mock_cart_links('mock_domain','mock_app',"mock_cart_#{carts.length}"))
         }
       end
@@ -409,6 +405,20 @@ module RHC::Rest::Mock
         :body   => {
           :type => type,
           :data => carts
+        }.to_json,
+        :status => 200
+      }
+    end
+
+    def mock_alias_response(count=1)
+      aliases = count.times.inject([]) do |arr, i|
+         arr << {:id  => "www.alias#{i}.com"}
+      end
+
+      return {
+        :body   => {
+          :type => count == 1 ? 'alias' : 'aliases',
+          :data => aliases
         }.to_json,
         :status => 200
       }
@@ -431,7 +441,7 @@ module RHC::Rest::Mock
   class MockRestClient < RHC::Rest::Client
     include Helpers
 
-    def initialize(config=RHC::Config)
+    def initialize(config=RHC::Config, version=1.0)
       obj = self
       if RHC::Rest::Client.respond_to?(:stub)
         RHC::Rest::Client.stub(:new) { obj }
@@ -446,6 +456,7 @@ module RHC::Rest::Mock
       @domains = []
       @user = MockRestUser.new(client, config.username)
       @api = MockRestApi.new(client, config)
+      @version = version
     end
 
     def api
@@ -458,6 +469,10 @@ module RHC::Rest::Mock
 
     def domains
       @domains
+    end
+
+    def api_version_negotiated
+      @version
     end
 
     def cartridges
@@ -589,7 +604,8 @@ module RHC::Rest::Mock
     def initialize(client=nil)
       super({}, client)
       @cartridges = [{'name' => 'fake_geargroup_cart-0.1'}]
-      @gears = [{'state' => 'started', 'id' => 'fakegearid'}]
+      @gears = [{'state' => 'started', 'id' => 'fakegearid', 'ssh_url' => 'ssh://fakegearid@fakesshurl.com'}]
+      @gear_profile = 'small'
     end
   end
 
@@ -621,7 +637,7 @@ module RHC::Rest::Mock
       end
     end
 
-    def destroy 
+    def destroy
       puts @application.inspect
       puts self.inspect
       @application.aliases.delete self
@@ -670,9 +686,22 @@ module RHC::Rest::Mock
       @domain.applications.delete self
     end
 
-    def add_cartridge(name, embedded=true)
+    def add_cartridge(cart, embedded=true)
+      name, url = 
+        if cart.is_a? String
+          [cart, nil]
+        elsif cart.respond_to? :[]
+          [cart[:name] || cart['name'], cart[:url] || cart['url']]
+        elsif RHC::Rest::Cartridge === cart
+          [cart.name, cart.url]
+        end
+
       type = embedded ? "embedded" : "standalone"
       c = MockRestCartridge.new(client, name, type, self)
+      if url 
+        c.url = url
+        c.name = c.url_basename
+      end
       c.properties << {'name' => 'prop1', 'value' => 'value1', 'description' => 'description1' }
       @cartridges << c
       c.messages << "Cartridge added with properties"

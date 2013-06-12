@@ -8,7 +8,7 @@ describe RHC::Commands::Base do
   let!(:config){ base_config }
 
   before{ c = RHC::Commands.instance_variable_get(:@commands); @saved_commands = c && c.dup || nil }
-  after do 
+  after do
     (Kernel.send(:remove_const, subject) if subject.is_a?(Class)) rescue nil
     RHC::Commands.instance_variable_set(:@commands, @saved_commands)
   end
@@ -19,7 +19,7 @@ describe RHC::Commands::Base do
 
     context 'when the class is at the root' do
       subject do
-        Kernel.module_eval do 
+        Kernel.module_eval do
           class StaticRootClass < RHC::Commands::Base; def run; 1; end; end
         end
         StaticRootClass
@@ -27,8 +27,8 @@ describe RHC::Commands::Base do
       its(:object_name) { should == 'static-root-class' }
     end
     context 'when the class is nested in a module' do
-      subject do 
-        Kernel.module_eval do 
+      subject do
+        Kernel.module_eval do
           module Nested; class StaticRootClass < RHC::Commands::Base; def run; 1; end; end; end
         end
         Nested::StaticRootClass
@@ -72,8 +72,8 @@ describe RHC::Commands::Base do
     end
 
     context 'when statically defined' do
-      subject do 
-        Kernel.module_eval do 
+      subject do
+        Kernel.module_eval do
           module Nested
             class Static < RHC::Commands::Base
               suppress_wizard
@@ -90,8 +90,8 @@ describe RHC::Commands::Base do
     end
 
     context 'when a command calls exit' do
-      subject do 
-        Kernel.module_eval do 
+      subject do
+        Kernel.module_eval do
           class Failing < RHC::Commands::Base
             def run
               exit 2
@@ -118,13 +118,23 @@ describe RHC::Commands::Base do
             alias_action :exe, :deprecated => true
             def execute(testarg); 1; end
 
-            argument :args, "Test arg list", ['--tests'], :arg_type => :list
+            argument :args, "Test arg list", ['--tests ARG'], :arg_type => :list
             summary "Test command execute-list"
             def execute_list(args); 1; end
+
+            argument :arg1, "Test arg", ['--test'], :optional => true
+            argument :arg2, "Test arg list", ['--test2'], :arg_type => :list, :optional => true
+            argument :arg3, "Test arg list", ['--test3'], :arg_type => :list, :optional => true
+            summary "Test command execute-vararg"
+            def execute_vararg(arg1, arg2, arg3); 1; end
 
             RHC::Helpers.global_option '--test-context', 'Test', :context => :context_var
             def execute_implicit
             end
+
+            argument :testarg, "Test arg", ["--testarg testarg"], :context => :context_var
+            summary "Test command execute"
+            def execute_context_arg(testarg); 1; end
 
             def raise_error
               raise StandardError.new("test exception")
@@ -142,7 +152,7 @@ describe RHC::Commands::Base do
         Static
       end
 
-      it("should register itself") { expect { subject }.to change(commands, :length).by(6) }
+      it("should register itself") { expect { subject }.to change(commands, :length).by(8) }
       it("should have an object name of the class") { subject.object_name.should == 'static' }
 
       context 'and when test is called' do
@@ -175,11 +185,25 @@ describe RHC::Commands::Base do
         it { expects_running('static-execute-list', '--trace').should call(:execute_list).on(instance).with([]) }
         it { expects_running('static-execute-list', '1', '2', '3').should call(:execute_list).on(instance).with(['1', '2', '3']) }
         it { expects_running('static-execute-list', '1', '2', '3').should call(:execute_list).on(instance).with(['1', '2', '3']) }
+        it('should make the option an array') { expects_running('static-execute-list', '--tests', '1').should call(:execute_list).on(instance).with(['1']) }
         it('should make the option available') { command_for('static-execute-list', '1', '2', '3').send(:options).tests.should == ['1','2','3'] }
       end
 
+      context 'and when execute_vararg is called' do
+        it{ expects_running('static-execute-vararg').should call(:execute_vararg).on(instance).with(nil, nil, nil) }
+        it{ expects_running('static-execute-vararg', '1', '2', '3').should call(:execute_vararg).on(instance).with('1', ['2', '3'], []) }
+        it("handles a list separator"){ expects_running('static-execute-vararg', '1', '2', '--', '3').should call(:execute_vararg).on(instance).with('1', ['2'], ['3']) }
+        it{ command_for('static-execute-vararg', '1', '2', '--', '3').send(:options).test.should == '1' }
+        it{ command_for('static-execute-vararg', '1', '2', '--', '3').send(:options).test2.should == ['2'] }
+        it{ command_for('static-execute-vararg', '1', '2', '--', '3').send(:options).test3.should == ['3'] }
+      end
       context 'and when execute is called with a contextual global option' do
         it("calls the helper") { command_for('static', 'execute-implicit').send(:options).test_context.should == 'contextual' }
+      end
+
+      context 'and when execute-context-arg is called with a contextual argument' do
+        it("calls the helper") { command_for('static', 'execute-context-arg').send(:options).test_context.should == 'contextual' }
+        it("takes the argument") { command_for('static', 'execute-context-arg', 'arg1').send(:options).testarg.should == 'arg1' }
       end
 
       context 'and when an error is raised in a call' do
@@ -211,6 +235,7 @@ describe RHC::Commands::Base do
 
   describe "rest_client" do
     let(:instance){ subject }
+    before{ RHC::Rest::Client.any_instance.stub(:api_version_negotiated).and_return(1.4) }
 
     context "when initializing the object" do
       let(:auth){ mock('auth') }
@@ -281,6 +306,7 @@ describe RHC::Commands::Base do
 
         context "when tokens are not allowed" do
           it("calls the server") { rest_client.send(:auth).is_a? RHC::Auth::Basic }
+          it("does not have a token set") { command_for(*arguments).send(:token_for_user).should be_nil }
         end
 
         context "when tokens are allowed" do
@@ -298,7 +324,7 @@ describe RHC::Commands::Base do
         let(:arguments){ ['test', '-l', username, '--server', mock_uri] }
         before{ instance.send(:token_store).should_receive(:get).with{ |user, server| user.should == username; server.should == instance.send(:openshift_server) }.and_return(nil) }
         before{ stub_api(false, true); stub_api_request(:get, 'broker/rest/user', false).to_return{ |request| request.headers['Authorization'] =~ /Bearer/ ? simple_user(username) : {:status => 401} } }
-        it("should attempt to create a new token") do 
+        it("should attempt to create a new token") do
           rest_client.should_receive(:new_session).ordered.and_return(auth_token)
           rest_client.user
         end
@@ -310,7 +336,7 @@ describe RHC::Commands::Base do
         let(:arguments){ ['test', '-l', username, '--server', mock_uri] }
         before{ instance.send(:token_store).should_receive(:get).with{ |user, server| user.should == username; server.should == instance.send(:openshift_server) }.and_return(nil) }
         before{ stub_api(false, false); stub_api_request(:get, 'broker/rest/user', false).to_return{ |request| request.headers['Authorization'] =~ /Basic/ ? simple_user(username) : {:status => 401} } }
-        it("should prompt for password") do 
+        it("should prompt for password") do
           basic_auth.should_receive(:ask).once.and_return('password')
           rest_client.user
         end

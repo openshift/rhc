@@ -11,7 +11,7 @@ describe RHC::Commands::Domain do
       let(:arguments) { ['domain', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
       it { expect { run }.to exit_with_code(1) }
-      it { run_output.should match(/In order to deploy applications.*rhc domain create/) }
+      it { run_output.should match(/In order to deploy applications.*rhc create-domain/) }
     end
     context 'when help is shown' do
       let(:arguments) { ['domain', '--noprompt', '--help'] }
@@ -26,7 +26,7 @@ describe RHC::Commands::Domain do
 
     context 'when run with no domains' do
       it { expect { run }.to exit_with_code(1) }
-      it { run_output.should match(/In order to deploy applications.*rhc domain create/) }
+      it { run_output.should match(/In order to deploy applications.*rhc create-domain/) }
     end
 
     context 'when run with one domain no apps' do
@@ -110,7 +110,7 @@ describe RHC::Commands::Domain do
         expect { run }.to exit_with_code(0)
         rest_client.domains[0].id.should == 'alterednamespace'
       end
-      it { run_output.should match(/Changing namespace 'olddomain' to 'alterednamespace'.*?RESULT:.*?Success/m) }
+      it { run_output.should match(/Changing namespace 'olddomain' to 'alterednamespace'.*success.*?Applications.*in their URL./m) }
     end
 
     context 'when there is no domain' do
@@ -132,7 +132,7 @@ describe RHC::Commands::Domain do
         expect { run }.to exit_with_code(0)
         rest_client.domains[0].id.should == 'alterednamespace'
       end
-      it { run_output.should match(/Changing namespace 'olddomain' to 'alterednamespace'.*?RESULT:.*?Success/m) }
+      it { run_output.should match(/Changing namespace 'olddomain' to 'alterednamespace'.*success.*?Applications.*in their URL./m) }
     end
   end
 
@@ -167,7 +167,7 @@ describe RHC::Commands::Domain do
         expect { run }.to exit_with_code(128)
         rest_client.domains[0].id.should == 'deleteme'
       end
-      it { run_output.should match("Domain contains applications.*?Delete applications first.") }
+      it { run_output.should match("Your domain contains applications.*?Delete applications first.") }
     end
   end
 

@@ -8,7 +8,15 @@ rescue
   exit 1
 end
 
-$target_os = ENV['RHC_TARGET'] || (File.exist?("/etc/fedora-release") ? "Fedora" : "RHEL")
+$target_os = ENV['RHC_TARGET']
+if $target_os.nil?
+  if File.exist?("/etc/fedora-release")
+    version = File.open("/etc/fedora-release").read.match(/[\w ]*release ([\d]+) [.]*/)[1]
+    $target_os = "fedora-#{version}"
+  else
+    $target_os = "rhel"
+  end
+end
 
 require 'rhc/coverage_helper'
 SimpleCov.at_exit{ SimpleCov.result.format! } if defined? SimpleCov
@@ -82,7 +90,6 @@ if ENV['REGISTER_USER']
   command = $user_register_script_format % [$username,$password]
   if Object.const_defined?('Bundler')
     Bundler::with_clean_env do
-      system "gem install activeresource bundler parseconfig --no-ri --no-rdoc"
       system command
     end
   else
@@ -105,9 +112,9 @@ _log "  Creating New Namespace: #{$namespace.nil?}"
 _log "--------------------------------------------------------------------------------------------------"
 _log "\n\n"
 
-def clean_applications(leave_domain = false)
+def clean_applications(user=$username,leave_domain=false)
   return if ENV['NO_CLEAN']
-  users = [$username,'user_with_multiple_gear_sizes@test.com','user_with_extra_storage@test.com']
+  users = Array(user)
 
   _log "  Cleaning up test applications..."
 
@@ -128,8 +135,8 @@ def clean_applications(leave_domain = false)
           app.delete
         end
       end
-      domain.delete unless leave_domain
     end
+    client.domains.each{ |domain| domain.delete } unless leave_domain
     client.sshkeys.each do |key|
       _log "\t\tKey: #{key.name}"
       key.delete

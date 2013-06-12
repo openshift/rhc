@@ -21,19 +21,35 @@ module RHC
         carts.delete_if{|x| scales_with.include?(x.name)}
       end
 
-      def add_cartridge(name, options={})
+      def add_cartridge(cart, options={})
         debug "Adding cartridge #{name}"
-        @cartridges = nil
-        attributes['cartridges'] = nil
-        rest_method "ADD_CARTRIDGE", {:name => name}, options
+        clear_attribute :cartridges
+        cart = 
+          if cart.is_a? String 
+            {:name => cart}
+          elsif cart.respond_to? :[]
+            cart
+          else
+            cart.url ? {:url => cart.url} : {:name => cart.name}
+          end
+
+        if cart.respond_to?(:[]) and cart[:url] and !has_param?('ADD_CARTRIDGE', 'url')
+          raise RHC::Rest::DownloadingCartridgesNotSupported, "The server does not support downloading cartridges."
+        end
+
+        rest_method(
+          "ADD_CARTRIDGE",
+          cart,
+          options
+        )
       end
 
       def cartridges
-        debug "Getting all cartridges for application #{name}"
         @cartridges ||=
           unless (carts = attributes['cartridges']).nil?
             carts.map{|x| Cartridge.new(x, client) }
           else
+            debug "Getting all cartridges for application #{name}"
             rest_method "LIST_CARTRIDGES"
           end
       end
@@ -45,6 +61,13 @@ module RHC
       def gear_groups
         debug "Getting all gear groups for application #{name}"
         rest_method "GET_GEAR_GROUPS"
+      end
+
+      def gear_ssh_url(gear_id)
+        gear = gear_groups.map { |group| group.gears }.flatten.find { |g| g['id'] == gear_id }
+
+        raise ArgumentError.new("Gear #{gear_id} not found") if gear.nil?
+        gear['ssh_url'] or raise OperationNotSupportedException.new("The server does not support per gear operations")
       end
 
       def tidy
@@ -106,10 +129,15 @@ module RHC
 
       def aliases
         debug "Getting all aliases for application #{name}"
-        if (client.api_version_negotiated >= 1.4)
-          rest_method "LIST_ALIASES"
-        else
-          attributes['aliases']
+        @aliases ||= begin
+          aliases = attributes['aliases']
+          if aliases.nil? or not aliases.is_a?(Array)
+            supports?('LIST_ALIASES') ? rest_method("LIST_ALIASES") : []
+          else
+            aliases.map do |a|
+              Alias.new(a.is_a?(String) ? {'id' => a} : a, client)
+            end
+          end
         end
       end
 
@@ -168,11 +196,7 @@ module RHC
       end
 
       def ssh_string
-        uri = URI.parse(ssh_url)
-        "#{uri.user}@#{uri.host}"
-      rescue => e
-        RHC::Helpers.debug_error(e)
-        ssh_url
+        RHC::Helpers.ssh_string(ssh_url)
       end
 
       def <=>(other)

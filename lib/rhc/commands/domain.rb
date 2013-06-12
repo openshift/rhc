@@ -26,7 +26,7 @@ module RHC::Commands
 
       results do
         say "Success!"
-        say "You may now create an application using the 'rhc app create' command"
+        say "You may now create an application using the 'rhc create-app' command"
       end
 
       0
@@ -40,14 +40,12 @@ module RHC::Commands
     def update(old_namespace, new_namespace)
       domain = rest_client.find_domain(old_namespace)
 
-      say "Changing namespace '#{domain.id}' to '#{new_namespace}'..."
+      say "Changing namespace '#{domain.id}' to '#{new_namespace}' ... "
 
       domain.update(new_namespace)
 
-      results do
-        say "Success!"
-        say "You can use 'rhc domain show' to view any url changes.  Be sure to update any links including the url in your local git config: <local_git_repo>/.git/config"
-      end
+      success "success"
+      info "Applications in this domain will use the new namespace in their URL."
 
       0
     end
@@ -56,7 +54,7 @@ module RHC::Commands
     def show
       domain = rest_client.domains.first
 
-      warn "In order to deploy applications, you must create a domain with 'rhc setup' or 'rhc domain create'." and return 1 unless domain
+      warn "In order to deploy applications, you must create a domain with 'rhc setup' or 'rhc create-domain'." and return 1 unless domain
 
       applications = domain.applications(:include => :cartridges)
 
@@ -68,7 +66,7 @@ module RHC::Commands
         end
         success "You have #{applications.length} applications in your domain."
       else
-        success "The domain #{domain.id} exists but has no applications. You can use 'rhc app create' to create a new application."
+        success "The domain #{domain.id} exists but has no applications. You can use 'rhc create-app' to create a new application."
       end
 
       0
@@ -89,15 +87,16 @@ module RHC::Commands
     def delete(namespace)
       domain = rest_client.find_domain namespace
 
-      say "Deleting domain '#{namespace}'"
+      say "Deleting domain '#{namespace}' ... "
 
       begin
         domain.destroy
       rescue RHC::Rest::ClientErrorException #FIXME: I am insufficiently specific
-        raise RHC::Exception.new("Domain contains applications. Delete applications first.", 128)
+        raise RHC::Exception.new("Your domain contains applications. Delete applications first.", 128)
       end
 
-      results { say "Success!" }
+      success "deleted"
+      
       0
     end
   end

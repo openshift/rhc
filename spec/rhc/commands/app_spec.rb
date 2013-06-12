@@ -6,10 +6,11 @@ require 'resolv'
 
 describe RHC::Commands::App do
   let!(:rest_client){ MockRestClient.new }
-  before(:each) do
+  let!(:config){ user_config }
+  before{ RHC::Config.stub(:home_dir).and_return('/home/mock_user') }
+  before do
     FakeFS.activate!
     FakeFS::FileSystem.clear
-    user_config
     RHC::Helpers.send(:remove_const, :MAX_RETRIES) rescue nil
     RHC::Helpers.const_set(:MAX_RETRIES, 3)
     @instance = RHC::Commands::App.new
@@ -38,7 +39,7 @@ describe RHC::Commands::App do
     end
 
     context 'app' do
-      let(:arguments) { ['app', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+      let(:arguments) { ['app'] }
       it { run_output.should match('Usage:') }
     end
   end
@@ -49,10 +50,43 @@ describe RHC::Commands::App do
     it("shows number of started"){ subject.send(:gear_group_state, ['started', 'idle']).should == '1/2 started' }
   end
 
-  describe 'app create' do
-    before(:each) do
-      domain = rest_client.add_domain("mockdomain")
+  describe '#check_domain!' do
+    let(:rest_client){ stub('RestClient') }
+    let(:domain){ stub('Domain', :id => 'test') }
+    before{ subject.stub(:rest_client).and_return(rest_client) }
+    let(:interactive){ false }
+    before{ subject.stub(:interactive?).and_return(interactive) }
+
+    context "when no options are provided and there is one domain" do
+      before{ rest_client.should_receive(:domains).twice.and_return([domain]) }
+      it("should load the first domain"){ subject.send(:check_domain!).should == domain }
+      after{ subject.send(:options).namespace.should == domain.id }
     end
+
+    context "when no options are provided and there are no domains" do
+      before{ rest_client.should_receive(:domains).and_return([]) }
+      it("should load the first domain"){ expect{ subject.send(:check_domain!) }.to raise_error(RHC::Rest::DomainNotFoundException) }
+      after{ subject.send(:options).namespace.should be_nil }
+    end
+
+    context "when valid namespace is provided" do
+      before{ subject.send(:options)[:namespace] = 'test' }
+      before{ rest_client.should_receive(:find_domain).with('test').and_return(domain) }
+      it("should load the requested domain"){ subject.send(:check_domain!).should == domain }
+      after{ subject.send(:options).namespace.should == 'test' }
+    end
+
+    context "when interactive and no domains" do
+      let(:interactive){ true }
+      before{ rest_client.should_receive(:domains).twice.and_return([]) }
+      before{ RHC::DomainWizard.should_receive(:new).and_return(stub(:run => true)) }
+      it("should raise if the wizard doesn't set the option"){ expect{ subject.send(:check_domain!) }.to raise_error(RHC::Rest::DomainNotFoundException) }
+      after{ subject.send(:options).namespace.should be_nil }
+    end
+  end
+
+  describe 'app create' do
+    before{ rest_client.add_domain("mockdomain") }
 
     context "when we ask for help with the alias" do
       before{ FakeFS.deactivate! }
@@ -64,6 +98,68 @@ describe RHC::Commands::App do
         let(:arguments) { ['create-app', '-h'] }
         it{ run_output.should match "Usage: rhc app-create <name>" }
       end
+    end
+
+    context "when run with no arguments" do
+      before{ FakeFS.deactivate! }
+      let(:arguments){ ['create-app'] }
+      it{ run_output.should match "Usage: rhc app-create <name>" }
+      it{ run_output.should match "When creating an application, you must provide a name and a cartridge from the list below:" }
+      it{ run_output.should match "mock_standalone_cart-1" }
+      it{ run_output.should match "Please specify the name of the application" }
+    end
+
+    context "when dealing with config" do
+      subject{ described_class.new(Commander::Command::Options.new(options)) }
+      let(:wizard){ s = stub('Wizard'); RHC::EmbeddedWizard.should_receive(:new).and_return(s); s }
+      let(:options){ nil }
+      let(:interactive){ true }
+      before{ subject.should_receive(:interactive?).at_least(1).times.and_return(interactive) }
+      before{ subject.stub(:check_sshkeys!) }
+
+      it("should run the wizard"){ expect{ subject.create('name', ['mock_standalone_cart-1']) }.to call(:run).on(wizard).and_stop }
+
+      context "when has config" do
+        let(:options){ {:server => 'test', :rhlogin => 'foo'} }
+        before{ subject.send(:config).should_receive(:has_local_config?).and_return(true) }
+        it("should not run the wizard"){ expect{ subject.create('name', ['mock_standalone_cart-1']) }.to not_call(:new).on(RHC::EmbeddedWizard) }
+      end
+
+      context "when has no config" do
+        before{ subject.send(:config).should_receive(:has_local_config?).and_return(false) }
+        it("should run the wizard"){ expect{ subject.create('name', ['mock_standalone_cart-1']) }.to call(:new).on(RHC::EmbeddedWizard).and_stop }
+      end
+
+      context "when not interactive" do
+        let(:interactive){ false }
+        it("should not run the wizard"){ expect{ subject.create('name', ['mock_standalone_cart-1']) }.to not_call(:new).on(RHC::EmbeddedWizard) }
+      end
+    end
+
+    context "when dealing with ssh keys" do
+      subject{ described_class.new(options) }
+      let(:wizard){ s = stub('Wizard'); RHC::SSHWizard.should_receive(:new).and_return(s); s }
+      let(:options){ Commander::Command::Options.new(:server => 'foo.com', :rhlogin => 'test') }
+      let(:interactive){ true }
+      before{ subject.should_receive(:interactive?).at_least(1).times.and_return(interactive) }
+      before{ subject.should_receive(:check_config!) }
+
+      it("should run the wizard"){ expect{ subject.create('name', ['mock_standalone_cart-1']) }.to call(:run).on(wizard).and_stop }
+
+      context "when not interactive" do
+        let(:interactive){ false }
+        it("should not run the wizard"){ expect{ subject.create('name', ['mock_standalone_cart-1']) }.to not_call(:new).on(RHC::SSHWizard) }
+      end
+    end
+
+    context "when in full interactive mode with no keys, domain, or config" do
+      let!(:config){ base_config }
+      before{ RHC::Config.any_instance.stub(:has_local_config?).and_return(false) }
+      before{ described_class.any_instance.stub(:interactive?).and_return(true) }
+      before{ rest_client.domains.clear }
+      let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart-1'] }
+      # skips login stage and insecure check because of mock rest client, doesn't check keys
+      it { run_output(['mydomain', 'y', 'mykey']).should match(/This wizard.*Checking your namespace.*Your domain name 'mydomain' has been successfully created.*Creating application.*Your public SSH key.*Uploading key 'mykey' .*Downloading the application.*Success/m) }
     end
 
     context 'when run without a cart' do
@@ -97,6 +193,14 @@ describe RHC::Commands::App do
       it { run_output.should match("Success") }
       it { run_output.should match("Cartridges: mock_standalone_cart-1, mock_cart-1\n") }
       after{ rest_client.domains.first.applications.first.cartridges.find{ |c| c.name == 'mock_cart-1' }.should be_true }
+    end
+
+    context 'when run with a cart URL' do
+      let(:arguments) { ['app', 'create', 'app1', 'http://foo.com', 'mock_cart-1', '--noprompt', '-p',  'password'] }
+      it { expect { run }.to exit_with_code(0) }
+      it { run_output.should match("Success") }
+      it { run_output.should match("Cartridges: http://foo.com, mock_cart-1\n") }
+      after{ rest_client.domains.first.applications.first.cartridges.find{ |c| c.url == 'http://foo.com' }.should be_true }
     end
 
     context 'when run with a git url' do
@@ -157,6 +261,16 @@ describe RHC::Commands::App do
       let(:arguments) { ['app', 'create', 'app1', 'unique_standalone', 'mock_standalone_cart', '--trace', '--noprompt'] }
       it { expect { run }.to raise_error(RHC::MultipleCartridgesException, /You must select only a single web cart/) }
     end
+    context 'when I pick a custom URL cart' do
+      let(:arguments) { ['app', 'create', 'app1', 'http://foo.com', '--trace', '--noprompt'] }
+      it('tells me about custom carts') { run_output.should match("The cartridge 'http://foo.com' will be downloaded") }
+      it('lists the cart using the short_name') { run_output.should match(%r(Cartridges:\s+http://foo.com$)) }
+    end    
+    context 'when I pick a custom URL cart and a web cart' do
+      let(:arguments) { ['app', 'create', 'app1', 'http://foo.com', 'unique_standalone', '--trace', '--noprompt'] }
+      it('tells me about custom carts') { run_output.should match("The cartridge 'http://foo.com' will be downloaded") }
+      it('lists the carts using the short_name') { run_output.should match(%r(Cartridges:\s+http://foo.com, mock_unique_standalone_cart-1$)) }
+    end    
   end
 
   describe 'app create enable-jenkins' do
@@ -273,7 +387,7 @@ describe RHC::Commands::App do
     before(:each) do
       @domain = rest_client.add_domain("mockdomain")
       @instance.stub(:git_clone_application) { raise RHC::GitException }
-      @instance.should_not_receive(:check_sshkeys!)
+      @instance.stub(:check_sshkeys!)
     end
 
     context 'when run with error in git clone' do
@@ -408,6 +522,20 @@ describe RHC::Commands::App do
       it { run_output.should match(/Gears:\s+Located with mock_type/) }
       it { run_output.should match(/Gears:\s+1 medium/) }
     end
+
+    context 'when run with custom app' do
+      before(:each) do
+        @domain = rest_client.add_domain("mockdomain")
+        app = @domain.add_application("app1", "mock_type", true)
+        cart1 = app.add_cartridge('mock_cart-1')
+        cart1.url = 'https://foo.bar.com'
+      end
+      it { run_output.should match("app1 @ https://app1-mockdomain.fake.foo/") }
+      it { run_output.should match(/Scaling:.*x2/) }
+      it { run_output.should match(/Gears:\s+Located with mock_type/) }
+      it { run_output.should match(/Gears:\s+1 small/) }
+      it { run_output.should match(%r(From:\s+ https://foo.bar.com)) }
+    end    
   end
 
   describe 'app show' do
@@ -443,7 +571,7 @@ describe RHC::Commands::App do
         @domain = rest_client.add_domain("mockdomain")
         @domain.add_application("app1", "mock_type")
       end
-      it { run_output.should match("fakegearid started fake_geargroup_cart-0.1") }
+      it { run_output.should match("fakegearid started fake_geargroup_cart-0.1 small fakegearid@fakesshurl.com") }
     end
   end
 

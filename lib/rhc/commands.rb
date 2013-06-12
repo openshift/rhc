@@ -34,7 +34,11 @@ module Commander
         opts
       end
 
-      remaining = opts.parse! args
+      # Separate option lists with '--'
+      remaining = args.split('--').map{ |a| opts.parse!(a) }.inject([]) do |arr, sub|
+        arr << '--' unless arr.empty?
+        arr.concat(sub)
+      end
 
       _, config_path = proxy_options.find{ |arg| arg[0] == :config }
       clean, _ = proxy_options.find{ |arg| arg[0] == :clean }
@@ -42,6 +46,7 @@ module Commander
       begin
         @config = RHC::Config.new
         @config.use_config(config_path) if config_path
+        $terminal.debug("Using config file #{@config.config_path}")
 
         unless clean
           @config.to_options.each_pair do |key, value|
@@ -147,7 +152,7 @@ module RHC
       instance = Commander::Runner.instance
       command_name = instance.command_name_from_args
       command = instance.active_command
-      
+
       if new_cmd = command.deprecated(command_name)
         new_cmd = "rhc #{command.name}" if new_cmd == true
         RHC::Helpers.deprecated_command new_cmd
@@ -266,32 +271,44 @@ module RHC
           end
           raise ArgumentError.new("Missing required option '#{arg}'.") if option_meta[:required] && options[arg].nil?
         end
-        # process args
-        arg_slots = [].fill(nil, 0, args_metadata.length)
-        fill_args = args.reverse
-        args_metadata.each_with_index do |arg_meta, i|
-          # check options
-          option = arg_meta[:option_symbol]
-          context_helper = arg_meta[:context_helper]
+
+        available = args.dup
+        slots = Array.new(args_metadata.length)
+        args_metadata.each_with_index do |arg, i|
+          option = arg[:option_symbol]
+          context_helper = arg[:context_helper]
 
           value = options.__hash__[option] if option
-          value = fill_args.pop if value.nil?
+
+          if value.nil?
+            value =
+              if arg[:arg_type] == :list
+                all = []
+                while available.first && available.first != '--'
+                  all << available.shift
+                end
+                available.shift if available.first == '--'
+                all
+              else
+                available.shift
+              end
+          end
+
           value = cmd.send(context_helper) if value.nil? and context_helper
 
-          if arg_meta[:arg_type] == :list
-            fill_args.push(value) unless value.nil?
-            value = fill_args.reverse
-            fill_args = []
-          elsif value.nil?
-            raise ArgumentError.new("Missing required argument '#{arg_meta[:name]}'.") if fill_args.empty?
+          if value.nil?
+            raise ArgumentError, "Missing required argument '#{arg[:name]}'." unless arg[:optional]
+            break if available.empty?
+          else
+            value = Array(value) if arg[:arg_type] == :list
+            slots[i] = value
+            options.__hash__[option] = value if option
           end
-          arg_slots[i] = value
-          options.__hash__[option] = value if option
         end
 
-        raise ArgumentError.new("Too many arguments passed in: #{fill_args.reverse.join(" ")}") unless fill_args.empty?
+        raise ArgumentError, "Too many arguments passed in: #{available.reverse.join(" ")}" unless available.empty?
 
-        arg_slots
+        slots
       end
 
       def self.commands

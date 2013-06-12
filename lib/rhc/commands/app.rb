@@ -6,9 +6,15 @@ require 'rhc/cartridge_helpers'
 module RHC::Commands
   class App < Base
     summary "Commands for creating and managing applications"
-    description "Creates and controls an OpenShift application.  To see the list of all applications use the rhc domain show command.  Note that delete is not reversible and will stop your application and then remove the application and repo from the remote server. No local changes are made."
+    description <<-DESC
+      Creates and controls an OpenShift application.  To see the list of all 
+      applications use the rhc domain show command.  Note that delete is not 
+      reversible and will stop your application and then remove the application 
+      and repo from the remote server. No local changes are made.
+      DESC
     syntax "<action>"
     default_action :help
+    suppress_wizard
 
     summary "Create an application"
     description <<-DESC
@@ -18,7 +24,11 @@ module RHC::Commands
       scheduled jobs, or continuous integration.
 
       You can see a list of all valid cartridge types by running
-      'rhc cartridge list'.
+      'rhc cartridge list'. OpenShift also supports downloading cartridges -
+      pass a URL in place of the cartridge name and we'll download 
+      and install that cartridge into your app.  Keep in mind that
+      these cartridges receive no security updates.  Note that not
+      all OpenShift servers allow downloaded cartridges.
 
       When your application is created, a domain name that is a combination
       of the name of your app and the namespace of your domain will be
@@ -37,20 +47,24 @@ module RHC::Commands
       may be specified to change the gears used.
 
       DESC
-    syntax "<name> <cartridge> [-n namespace]"
-    option ["-n", "--namespace NAME"], "Namespace for the application", :context => :namespace_context
-    option ["-g", "--gear-size size"], "Gear size controls how much memory and CPU your cartridges can use."
+    syntax "<name> <cartridge> [... <cartridge>] [-n namespace]"
+    option ["-n", "--namespace NAME"], "Namespace for the application"
+    option ["-g", "--gear-size SIZE"], "Gear size controls how much memory and CPU your cartridges can use."
     option ["-s", "--scaling"], "Enable scaling for the web cartridge."
-    option ["-r", "--repo dir"], "Path to the Git repository (defaults to ./$app_name)"
+    option ["-r", "--repo DIR"], "Path to the Git repository (defaults to ./$app_name)"
     option ["--from-code URL"], "URL to a Git repository that will become the initial contents of the application"
     option ["--[no-]git"], "Skip creating the local Git repository."
     option ["--nogit"], "DEPRECATED: Skip creating the local Git repository.", :deprecated => {:key => :git, :value => false}
     option ["--[no-]dns"], "Skip waiting for the application DNS name to resolve. Must be used in combination with --no-git"
-    option ["--enable-jenkins [server_name]"], "Enable Jenkins builds for this application (will create a Jenkins application if not already available). The default name will be 'jenkins' if not specified."
-    argument :name, "Name for your application", ["-a", "--app name"]
-    argument :cartridges, "The web framework this application should use", ["-t", "--type cartridge"], :arg_type => :list
-    #argument :additional_cartridges, "A list of other cartridges such as databases you wish to add. Cartridges can also be added later using 'rhc cartridge add'", [], :arg_type => :list
+    option ['--no-keys'], "Skip checking SSH keys during app creation", :hide => true
+    option ["--enable-jenkins [NAME]"], "Enable Jenkins builds for this application (will create a Jenkins application if not already available). The default name will be 'jenkins' if not specified."
+    argument :name, "Name for your application", ["-a", "--app NAME"], :optional => true
+    argument :cartridges, "The web framework this application should use", ["-t", "--type CARTRIDGE"], :optional => true, :arg_type => :list
     def create(name, cartridges)
+      check_config!
+
+      check_name!(name)
+
       cartridges = check_cartridges(cartridges, &require_one_web_cart)
 
       options.default \
@@ -59,12 +73,11 @@ module RHC::Commands
 
       raise ArgumentError, "You have named both your main application and your Jenkins application '#{name}'. In order to continue you'll need to specify a different name with --enable-jenkins or choose a different application name." if jenkins_app_name == name && enable_jenkins?
 
-      raise RHC::Rest::DomainNotFoundException.new("No domains found. Please create a domain with 'rhc domain create <namespace>' before creating applications.") if rest_client.domains.empty?
-      rest_domain = rest_client.find_domain(options.namespace)
+      rest_domain = check_domain!
       rest_app = nil
 
       cart_names = cartridges.collect do |c|
-        c.usage_rate? ? "#{c.name} (addtl. costs may apply)" : c.name
+        c.usage_rate? ? "#{c.short_name} (addtl. costs may apply)" : c.short_name
       end.join(', ')
 
       paragraph do
@@ -83,13 +96,9 @@ module RHC::Commands
       paragraph do
         say "Creating application '#{name}' ... "
 
-
         # create the main app
-        rest_app = create_app(name, cartridges.map(&:name), rest_domain,
-                              options.gear_size, options.scaling, options.from_code)
-
+        rest_app = create_app(name, cartridges, rest_domain, options.gear_size, options.scaling, options.from_code)
         messages.concat(rest_app.messages)
-
         success "done"
       end
 
@@ -110,8 +119,8 @@ module RHC::Commands
               warn "not complete"
               add_issue("Jenkins failed to install - #{e}",
                         "Installing jenkins and jenkins-client",
-                        "rhc app create jenkins",
-                        "rhc cartridge add jenkins-client -a #{rest_app.name}")
+                        "rhc create-app jenkins",
+                        "rhc add-cartridge jenkins-client -a #{rest_app.name}")
             end
           end
         end
@@ -120,6 +129,9 @@ module RHC::Commands
           add_jenkins_client_to(rest_app, messages)
         end if build_app_exists
       end
+
+      debug "Checking SSH keys through the wizard"
+      check_sshkeys! unless options.no_keys
 
       if options.dns
         paragraph do
@@ -139,9 +151,6 @@ module RHC::Commands
 
         if options.git
           paragraph do
-            debug "Checking SSH keys through the wizard"
-            check_sshkeys! unless options.noprompt
-
             say "Downloading the application Git repository ..."
             paragraph do
               begin
@@ -271,7 +280,19 @@ module RHC::Commands
           say "Cartridge #{gg.cartridges.collect { |c| c['name'] }.join(', ')} is #{gear_group_state(gg.gears.map{ |g| g['state'] })}"
         end
       elsif options.gears
-        say table(gear_groups_for_app(app_name).map{ |gg| gg.gears.map{ |g| [g['id'], g['state'], gg.cartridges.map{ |c| c['name'] }.join(", ")] } }.flatten(1))
+        gear_info = gear_groups_for_app(app_name).map do |group|
+          group.gears.map do |gear|
+            [
+              gear['id'],
+              gear['state'] == 'started' ? gear['state'] : color(gear['state'], :yellow),
+              group.cartridges.collect{ |c| c['name'] }.join(' '),
+              group.gear_profile,
+              ssh_string(gear['ssh_url'])
+            ]
+          end
+        end.flatten(1)
+
+        say table(gear_info, :header => ['ID', 'State', 'Cartridges', 'Size', 'SSH URL'])
       else
         app = rest_client.find_application(options.namespace, app_name, :include => :cartridges)
         display_app(app, app.cartridges)
@@ -320,8 +341,8 @@ module RHC::Commands
       def require_one_web_cart
         lambda{ |carts|
           match, ambiguous = carts.partition{ |c| not c.is_a?(Array) }
-          selected_web = match.any?(&:only_in_new?)
-          possible_web = ambiguous.flatten.any?(&:only_in_new?)
+          selected_web = match.any?{ |c| not c.only_in_existing? }
+          possible_web = ambiguous.flatten.any?{ |c| not c.only_in_existing? }
           if not (selected_web or possible_web)
             section(:bottom => 1){ list_cartridges(standalone_cartridges) }
             raise RHC::CartridgeNotFoundException, "Every application needs a web cartridge to handle incoming web requests. Please provide the short name of one of the carts listed above."
@@ -335,8 +356,39 @@ module RHC::Commands
       end
 
       def check_sshkeys!
+        return unless interactive?
         RHC::SSHWizard.new(rest_client, config, options).run
       end
+
+      def check_name!(name)
+        return unless name.blank?
+
+        paragraph{ say "When creating an application, you must provide a name and a cartridge from the list below:" }
+        paragraph{ list_cartridges(standalone_cartridges) }
+
+        raise ArgumentError, "Please specify the name of the application and the web cartridge to install"
+      end
+
+      def check_config!
+        return if not interactive? or (!options.clean && config.has_local_config?) or (options.server && (options.rhlogin || options.token))
+        RHC::EmbeddedWizard.new(config, options).run
+      end
+
+      def check_domain!
+        if options.namespace
+          rest_client.find_domain(options.namespace)
+        else
+          if rest_client.domains.empty?
+            raise RHC::Rest::DomainNotFoundException, "No domains found. Please create a domain with 'rhc create-domain <namespace>' before creating applications." unless interactive?
+            RHC::DomainWizard.new(config, options, rest_client).run
+          end
+          domain = rest_client.domains.first
+          raise RHC::Rest::DomainNotFoundException, "No domains found. Please create a domain with 'rhc create-domain <namespace>' before creating applications." unless domain
+          options.namespace = domain.id
+          domain
+        end
+      end
+
 
       def gear_groups_for_app(app_name)
         rest_client.find_application_gear_groups(options.namespace, app_name)
@@ -410,7 +462,7 @@ module RHC::Commands
           warn "not complete"
           add_issue("Jenkins client failed to install - #{exit_message}",
                     "Install the jenkins client",
-                    "rhc cartridge add jenkins-client -a #{rest_app.name}")
+                    "rhc add-cartridge jenkins-client -a #{rest_app.name}")
         end
       end
 
@@ -529,7 +581,7 @@ WARNING:  Your application was created successfully but had problems during
   If this doesn't work for you, let us know in the forums or in IRC and we'll
   make sure to get you up and running.
 
-    Forums - https://openshift.redhat.com/community/forums/openshift
+    Forums - https://www.openshift.com/forums/openshift
     IRC - #openshift (on Freenode)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

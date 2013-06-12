@@ -93,7 +93,7 @@ module RHCHelper
           args << arg0.first if arg0.first
       end
 
-      args.rstrip
+      args.rstrip.gsub(/([\\\$])/, "\\\\\\1")
     end
 
     # This looks for a callback method that is defined for the command.

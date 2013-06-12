@@ -4,6 +4,8 @@ require 'delegate'
 # Add specific improved functionality
 #
 class HighLineExtension < HighLine
+  attr_writer :debug
+
   [:ask, :agree].each do |sym|
     define_method(sym) do |*args, &block|
       separate_blocks
@@ -11,6 +13,16 @@ class HighLineExtension < HighLine
       @last_line_open = false
       r
     end
+  end
+
+  def debug(msg)
+    $stderr.puts "DEBUG: #{msg}" if debug?
+  end
+  def debug_error(e)
+    debug "#{e.message} (#{e.class})\n  #{e.backtrace.join("\n  ")}"
+  end
+  def debug?
+    @debug
   end
 
   # OVERRIDE
@@ -24,7 +36,14 @@ class HighLineExtension < HighLine
       template  = ERB.new(statement, nil, "%")
       statement = template.result(binding)
 
-      statement = statement.textwrap_ansi(@wrap_at, false).join("#{indentation}\n") unless @wrap_at.nil?
+      if @wrap_at
+        statement = statement.textwrap_ansi(@wrap_at, false)
+        if @last_line_open && statement.length > 1
+          @last_line_open = false
+          @output.puts
+        end
+        statement = statement.join("#{indentation}\n") 
+      end
       statement = send(:page_print, statement) unless @page_at.nil?
 
       @output.print(indentation) unless @last_line_open
@@ -33,7 +52,7 @@ class HighLineExtension < HighLine
         if statement[-1, 1] == " " or statement[-1, 1] == "\t"
           @output.print(statement)
           @output.flush
-          true
+          statement.strip_ansi.length + (@last_line_open || 0)
         else
           @output.puts(statement)
           false
@@ -236,7 +255,7 @@ class HighLine::Header < Struct.new(:text, :width, :indent, :color)
               if w > width
                 rows.concat(section.textwrap_ansi(width))
               else
-                rows << section
+                rows << section.dup
                 chars += w
               end
             else
@@ -257,7 +276,7 @@ class HighLine::Header < Struct.new(:text, :width, :indent, :color)
           text.textwrap_ansi(width)
         end
       end.tap do |rows|
-        rows << '-' * rows.map{ |s| s.strip_ansi.length }.max
+        rows << '-' * (rows.map{ |s| s.strip_ansi.length }.max || 0)
       end
     end
 end
@@ -309,7 +328,7 @@ class HighLine::Table
     end
 
     def columns
-      @columns ||= source_rows.map(&:length).max
+      @columns ||= source_rows.map(&:length).max || 0
     end
 
     def column_widths
@@ -385,19 +404,28 @@ class HighLine::Table
 
     def header_rows
       @header_rows ||= begin
-        headers << column_widths.map{ |w| '-' * (w.set > 0 ? w.set : w.max) } if headers.present?
+        headers << widths.map{ |w| '-' * w } if headers.present?
         headers
       end
     end
 
     def rows
       @rows ||= begin
-        fmt = "#{indent}#{widths.zip(align).map{ |w, al| "%#{al == :right ? '' : '-'}#{w}s" }.join(joiner)}"
-          
         body = (header_rows + source_rows).inject([]) do |a,row| 
           row = row.zip(widths).map{ |column,w| w && w > 0 ? column.textwrap_ansi(w, false) : [column] }
-          row.map(&:length).max.times do |i|
-            a << (fmt % row.map{ |r| r[i] }).rstrip
+          (row.map(&:length).max || 0).times do |i|
+            s = []
+            row.each_with_index do |lines, j|
+              cell = lines[i]
+              l = cell ? cell.strip_ansi.length : 0
+              s << 
+                  if align[j] == :right 
+                    "#{' '*(widths[j]-l) if l < widths[j]}#{cell}"
+                  else
+                    "#{cell}#{' '*(widths[j]-l) if l < widths[j]}"
+                  end
+            end
+            a << "#{indent}#{s.join(joiner).rstrip}"
           end
           a
         end

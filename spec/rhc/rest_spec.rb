@@ -2,16 +2,6 @@ require 'spec_helper'
 require 'rest_spec_helper'
 require 'rhc/rest'
 
-class RHCRest
-  include RHC::Rest
-  def debug?
-    false
-  end
-  def debug(*args)
-    raise "Unchecked debug"
-  end
-end
-
 module MockRestResponse
   attr_accessor :code, :read
 end
@@ -44,13 +34,14 @@ describe RHC::Rest::Domain do
     it{ domain.add_application('foo', :cartridges => ['bar']).should be_true }
     it{ expect{ domain.add_application('foo', :cartridges => ['bar', 'other']) }.to raise_error(RHC::Rest::MultipleCartridgeCreationNotSupported) }
     it{ expect{ domain.add_application('foo', :initial_git_url => 'a_url') }.to raise_error(RHC::Rest::InitialGitUrlNotSupported) }
+    it{ expect{ domain.add_application('foo', :cartridges => [{:url => 'a_url'}]) }.to raise_error(RHC::Rest::DownloadingCartridgesNotSupported) }
     it{ domain.add_application('foo', :cartridges => 'bar').should be_true }
     it{ domain.add_application('foo', :cartridge => 'bar').should be_true }
     it{ domain.add_application('foo', :cartridge => ['bar']).should be_true }
   end
-  context "against a server newer than 1.3" do
+  context "against a server that supports initial git urls and downloaded carts" do
     let(:cartridges){ ['bar'] }
-    before{ stub_api; stub_one_domain('bar') }
+    before{ stub_api; stub_one_domain('bar', [{:name => 'initial_git_url'},{:name => 'cartridges[][url]'}]) }
     before do 
       stub_api_request(:post, 'broker/rest/domains/bar/applications', false).
         with(:body => {:name => 'foo', :cartridges => cartridges}.to_json).
@@ -75,7 +66,18 @@ describe RHC::Rest::Domain do
           to_return(:status => 201, :body => {:type => 'application', :data => {:id => '1'}}.to_json)
       end
       it{ domain.add_application('foo', :initial_git_url => 'a_url').should be_true }
-    end    
+    end
+
+    context "with a cartridge url" do
+      before do
+        stub_api_request(:post, 'broker/rest/domains/bar/applications', false).
+          with(:body => {:name => 'foo', :cartridges => [{:url => 'a_url'}]}.to_json).
+          to_return(:status => 201, :body => {:type => 'application', :data => {:id => '1'}}.to_json)
+      end
+      it{ domain.add_application('foo', :cartridges => [{:url => 'a_url'}]).should be_true }
+      it{ domain.add_application('foo', :cartridge => RHC::Rest::Cartridge.for_url('a_url')).should be_true }
+      it{ domain.add_application('foo', :cartridge => [{'url' => 'a_url'}]).should be_true }
+    end      
   end
 end
 
@@ -83,17 +85,6 @@ module RHC
 
   describe Rest do
     subject{ RHC::Rest::Client.new }
-
-    # logger function
-    describe "#logger" do
-      it "establishes a logger" do
-        logger = Logger.new(STDOUT)
-        subject.send(:logger).should have_same_attributes_as(logger)
-      end
-      it "reuses a logger" do
-        subject.send(:logger).should equal(subject.send(:logger))
-      end
-    end
 
     describe "#default_verify_callback" do
       def invoked_with(is_ok, ctx)
@@ -400,6 +391,27 @@ module RHC
         before{ stub_request(:get, mock_href).to_timeout }
         it{ response.should raise_error(RHC::Rest::TimeoutException, /Connection to server timed out. It is possible/) }
       end
+
+      context "with a receive timeout" do
+        before{ stub_request(:get, mock_href).to_raise(HTTPClient::ReceiveTimeoutError) }
+        it{ response.should raise_error{ |e| e.on_receive?.should be_true } }
+      end
+
+      context "with a send timeout" do
+        before{ stub_request(:get, mock_href).to_raise(HTTPClient::SendTimeoutError) }
+        it{ response.should raise_error{ |e| e.on_send?.should be_true } }
+      end
+
+      context "with a connect timeout" do
+        before{ stub_request(:get, mock_href).to_raise(HTTPClient::ConnectTimeoutError) }
+        it{ response.should raise_error{ |e| e.on_connect?.should be_true } }
+      end
+
+      context "with a reset server connection" do
+        before{ stub_request(:get, mock_href).to_raise(Errno::ECONNRESET.new('Lost Server Connection')) }
+        it{ response.should raise_error(RHC::Rest::ConnectionException, /The server has closed the connection unexpectedly \(Connection reset by peer - Lost Server Connection\)/) }
+      end
+
 
       context "with a broken server connection" do
         before{ stub_request(:get, mock_href).to_raise(EOFError.new('Lost Server Connection')) }

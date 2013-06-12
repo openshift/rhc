@@ -3,15 +3,26 @@ module RHC
     class Cartridge < Base
       HIDDEN_TAGS = [:framework, :web_framework, :cartridge].map(&:to_s)
 
-      define_attr :type, :name, :display_name, :properties, :gear_profile, :status_messages, :scales_to, :scales_from, :scales_with, :current_scale, :supported_scales_to, :supported_scales_from, :tags, :description, :collocated_with, :base_gear_storage, :additional_gear_storage
+      define_attr :type, :name, :display_name, :properties, :gear_profile, :status_messages, :scales_to, :scales_from, :scales_with, 
+                  :current_scale, :supported_scales_to, :supported_scales_from, :tags, :description, :collocated_with, :base_gear_storage, 
+                  :additional_gear_storage, :url
 
       def scalable?
         supported_scales_to != supported_scales_from
       end
 
+      def custom?
+        url.present?
+      end
+
       def only_in_new?
         type == 'standalone'
       end
+
+      def only_in_existing?
+        type == 'embedded'
+      end
+
       def shares_gears?
         Array(collocated_with).present?
       end
@@ -28,7 +39,14 @@ module RHC
       end
 
       def display_name
-        attribute(:display_name) || name
+        attribute(:display_name) || name || url_basename
+      end
+
+      #
+      # Use this value when the user should interact with this cart via CLI arguments
+      #
+      def short_name
+        name || url
       end
 
       def usage_rate?
@@ -112,6 +130,20 @@ module RHC
         return -1 if other.type == 'standalone' && type != 'standalone'
         return 1  if type == 'standalone' && other.type != 'standalone'
         name <=> other.name
+      end
+
+      def url_basename
+        uri = URI.parse(url)
+        name = uri.fragment
+        name = Rack::Utils.parse_nested_query(uri.query)['name'] if name.blank? && uri.query
+        name = File.basename(uri.path) if name.blank? && uri.path.present? && uri.path != '/'
+        name.presence || url
+      rescue 
+        url
+      end
+
+      def self.for_url(url)
+        new 'url' => url
       end
     end
   end

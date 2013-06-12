@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.7.5
+Version: 1.10.1
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -100,6 +100,148 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu May 30 2013 Adam Miller <admiller@redhat.com> 1.10.1-1
+- bump_minor_versions for sprint 29 (admiller@redhat.com)
+
+* Wed May 29 2013 Adam Miller <admiller@redhat.com> 1.9.6-1
+- Merge pull request #393 from liggitt/bug_965923_trap_supported_signals
+  (dmcphers+openshiftbot@redhat.com)
+- Fix bug 965923 - only trap PIPE if supported (jordan@liggitt.net)
+- Merge pull request #392 from
+  liggitt/bug_967683_delete_domain_is_case_sensitive
+  (dmcphers+openshiftbot@redhat.com)
+- Fix bug 967683 - make domain id matching case-insensitive
+  (jliggitt@redhat.com)
+
+* Tue May 28 2013 Adam Miller <admiller@redhat.com> 1.9.5-1
+- Fix bug 965923 - only trap supported signals (jliggitt@redhat.com)
+
+* Thu May 23 2013 Adam Miller <admiller@redhat.com> 1.9.4-1
+- Handle empty http proxy (ccoleman@redhat.com)
+
+* Mon May 20 2013 Dan McPherson <dmcphers@redhat.com> 1.9.3-1
+- Check for ENV presence (ccoleman@redhat.com)
+- Support OPENSHIFT_CONFIG, which is the name of a file in the config directory
+  to load. Switch to using a centralized debug output mechanism vs. individual
+  classes caring. (ccoleman@redhat.com)
+- Merge pull request #387 from
+  smarterclayton/string_format_cant_align_ansi_sequences
+  (dmcphers+openshiftbot@redhat.com)
+- String ansi sequences aren't properly aligned by string format - revert to
+  doing it ourselves (ccoleman@redhat.com)
+- Add downloadable cart info to RHC (ccoleman@redhat.com)
+
+* Thu May 16 2013 Adam Miller <admiller@redhat.com> 1.9.2-1
+- Bug 963419 - Don't check API versions, check client links
+  (ccoleman@redhat.com)
+- Support for initial_git_url and downloadable cartridges should be tested
+  against the presence of an optional parameter on the link relation.
+  (ccoleman@redhat.com)
+- Merge pull request #383 from jtharris/bugs/BZ958683
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #380 from smarterclayton/bug_960926_handle_pipe_closure
+  (dmcphers+openshiftbot@redhat.com)
+- Use --exclude-remote when targeting a single gear. (jharris@redhat.com)
+- Bug 960926 - Handle EPIPE gracefully with exit (ccoleman@redhat.com)
+
+* Wed May 08 2013 Adam Miller <admiller@redhat.com> 1.9.1-1
+- bump_minor_versions for sprint 28 (admiller@redhat.com)
+
+* Wed May 08 2013 Adam Miller <admiller@redhat.com> 1.8.9-1
+- Merge pull request #382 from jtharris/bugs/BZ958675
+  (dmcphers+openshiftbot@redhat.com)
+- Wording change when no ports can be forwarded. (jharris@redhat.com)
+
+* Wed May 08 2013 Adam Miller <admiller@redhat.com> 1.8.8-1
+- Merge pull request #381 from smarterclayton/bug_960808_spelling_errors
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 960808 - Mispelling in command help (ccoleman@redhat.com)
+- Fix personal cart up to match latest (ccoleman@redhat.com)
+
+* Mon May 06 2013 Adam Miller <admiller@redhat.com> 1.8.7-1
+- Cannot add cart to app (missing tests) (ccoleman@redhat.com)
+- Merge pull request #376 from
+  smarterclayton/bug_959542_handle_empty_tables_better
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #375 from
+  smarterclayton/bug_959144_respect_disable_authorization_tokens_in_setup
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 959542 - Handle empty tables cleanly (ccoleman@redhat.com)
+- Bug 959144 - Respect use_authorization_tokens=false in rhc setup
+  (ccoleman@redhat.com)
+
+* Fri May 03 2013 Adam Miller <admiller@redhat.com> 1.8.6-1
+- Merge pull request #374 from jtharris/bugs/BZ958668
+  (dmcphers+openshiftbot@redhat.com)
+- Tail the correct log dir for db carts (jharris@redhat.com)
+
+* Thu May 02 2013 Adam Miller <admiller@redhat.com> 1.8.5-1
+- Merge pull request #370 from smarterclayton/support_external_cartridges
+  (dmcphers+openshiftbot@redhat.com)
+- Rename "external cartridge" to "downloaded cartridge".  UI should call them
+  "personal" cartridges (ccoleman@redhat.com)
+- Merge remote-tracking branch 'origin/master' into support_external_cartridges
+  (ccoleman@redhat.com)
+- Allow URLs to be passed to app creation and cartridge addition.  Clean up a
+  few minor visual bugs, use the <verb>-<noun> form when referring to other
+  commands (ccoleman@redhat.com)
+- Support custom cartridge URLs (ccoleman@redhat.com)
+
+* Wed May 01 2013 Adam Miller <admiller@redhat.com> 1.8.4-1
+- Merge pull request #371 from jtharris/features/Card39
+  (dmcphers+openshiftbot@redhat.com)
+- Expand gear ssh url to handle gear not found. (jharris@redhat.com)
+- --gear option for tail (jharris@redhat.com)
+- --gear option for port-forward (jharris@redhat.com)
+
+* Tue Apr 30 2013 Adam Miller <admiller@redhat.com> 1.8.3-1
+- Merge pull request #373 from smarterclayton/test_enterprise_server
+  (dmcphers+openshiftbot@redhat.com)
+- Support running test cases without certain users (ccoleman@redhat.com)
+
+* Mon Apr 29 2013 Adam Miller <admiller@redhat.com> 1.8.2-1
+- Bug 957105 - Should remove the useless info in the result message when domain
+  updated successfully (jforrest@redhat.com)
+
+* Thu Apr 25 2013 Adam Miller <admiller@redhat.com> 1.8.1-1
+- rhc show app --gear includes gear id and header (jharris@redhat.com)
+- Gear info shows profile, status, carts, ssh (jharris@redhat.com)
+- Merge pull request #367 from smarterclayton/bug_953802_change_community_url
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 953802 - Change community url to be correct (ccoleman@redhat.com)
+- Bug 953767 - Arguments that are arrays should set the options to an array
+  (ccoleman@redhat.com)
+- Nicer error message on invalid server URI. (jharris@redhat.com)
+- Merge pull request #362 from smarterclayton/bug_952985_contextual_args_broken
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 952985 - Context arguments broken due to optional list changes
+  (ccoleman@redhat.com)
+- bump_minor_versions for sprint 2.0.26 (tdawson@redhat.com)
+
+* Tue Apr 16 2013 Troy Dawson <tdawson@redhat.com> 1.7.7-1
+- Merge pull request #361 from jtharris/bugs/BZ928297
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #360 from smarterclayton/skip_nested_alias_load
+  (dmcphers@redhat.com)
+- Merge pull request #359 from smarterclayton/bug_952047_header_mutates_string
+  (dmcphers+openshiftbot@redhat.com)
+- API mismatch wording tweak (jharris@redhat.com)
+- min_api is specified in rest_client call (jharris@redhat.com)
+- Optional api version check for rest calls. (jharris@redhat.com)
+- Aliases are being lazily executed on app list view, even though they don't
+  have to be.  Clean up aliases retrieval to be based on capability, rather
+  than version. (ccoleman@redhat.com)
+- Bug 952047 - SSH key doesn't detect duplicate because name is changed
+  (ccoleman@redhat.com)
+
+* Mon Apr 15 2013 Adam Miller <admiller@redhat.com> 1.7.6-1
+- Merge remote-tracking branch 'origin/master' into better_app_create_flow
+  (ccoleman@redhat.com)
+- Fix tests, reorganize wizard slightly (ccoleman@redhat.com)
+- During app create, try more aggressively to set the user up.  Includes
+  setting up the base config, domain, and keys.  Changes behavior of argument
+  parsing for app to be optional. (ccoleman@redhat.com)
+
 * Sat Apr 13 2013 Krishna Raman <kraman@gmail.com> 1.7.5-1
 - Merge pull request #358 from
   smarterclayton/bug_951352_should_retry_key_on_bad_name

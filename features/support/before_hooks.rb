@@ -1,7 +1,3 @@
-Before('@clean') do
-  clean_applications(true)
-end
-
 Before('@sshkey') do
   Sshkey.remove "key1"
   Sshkey.remove "key2"
@@ -16,12 +12,22 @@ Before('@geared_user_required') do
   $old_username = $username
   $username = "user_with_multiple_gear_sizes@test.com"
   $namespace = nil
+
+  if !$cleaned_gears
+    clean_applications($username)
+    $cleaned_gears = true
+  end
 end
 
 Before('@certificates_capable_user_required') do
   $old_username = $username
   $username = "user_with_certificate_capabilities@test.com"
   $namespace = nil
+
+  if !$cleaned_certificates
+    clean_applications($username)
+    $cleaned_certificates = true
+  end
 end
 
 After do
@@ -37,6 +43,15 @@ Before('@cartridge_storage_user_required') do
   $old_username = $username
   $username = "user_with_extra_storage@test.com"
   $namespace = nil
+
+  if !$cleaned_storage
+    clean_applications($username, true)
+    $cleaned_storage = true
+  end
+end
+
+Before('@clean') do
+  clean_applications($username, true)
 end
 
 Before('@domain_required') do
