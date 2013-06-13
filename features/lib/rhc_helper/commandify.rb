@@ -124,34 +124,16 @@ module RHCHelper
     end
   end
 
+  # The regex to parse the UUID output from the create app results
+  UUID_OUTPUT_PATTERN = /UUID\s*(?:\:|=)\s*(.+)/i unless const_defined?(:UUID_OUTPUT_PATTERN)
+  # The regex to parse the Gear Profile output from the create app results
+  GEAR_PROFILE_OUTPUT_PATTERN = /Gear Size\s*(?:\:|=)\s*(\w+)/m unless const_defined?(:GEAR_PROFILE_OUTPUT_PATTERN)
+
   #
   # Begin Post Processing Callbacks
   #
   def app_create_callback(exitcode, stdout, stderr, arg)
-    match = stdout.match(UUID_OUTPUT_PATTERN)
-    @uid = match[1] if match
-    match = stdout.match(GEAR_PROFILE_OUTPUT_PATTERN)
-    @gear_profile = nil
-    @gear_profile = match[1] if match
-
-    def no_match(msg,expected,actual)
-      [ msg,
-        "-"*20,
-        ("Expected: %s" % expected),
-        ("Actual:\n%s" % actual),
-        "-"*20,
-      ].join("\n")
-    end
-
-    raise no_match(
-      "UID not parsed from app create output",
-      UUID_OUTPUT_PATTERN, stdout
-    ) unless @uid
-
-    raise no_match(
-      "Gear Profile not parsed from app create output",
-      GEAR_PROFILE_OUTPUT_PATTERN, stdout
-    ) unless @gear_profile
+    stdout.should =~ /Your application '([^']+)' is now available./
 
     persist
   end

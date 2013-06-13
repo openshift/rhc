@@ -167,24 +167,22 @@ module RHC::Commands
         end
       end
 
-      if issues?
-        output_issues(rest_app)
-      else
+      output_issues(rest_app) if issues?
+            
+      paragraph do
+        say "Your application '#{rest_app.name}' is now available."
         paragraph do
-          say "Your application '#{rest_app.name}' is now available."
-          paragraph do
-            indent do
-              say table [
-                  ['URL:', rest_app.app_url],
-                  ['SSH to:', rest_app.ssh_string],
-                  ['Git remote:', rest_app.git_url],
-                  (['Cloned to:', repo_dir] if repo_dir)
-                ].compact
-            end
+          indent do
+            say table [
+                ['URL:', rest_app.app_url],
+                ['SSH to:', rest_app.ssh_string],
+                ['Git remote:', rest_app.git_url],
+                (['Cloned to:', repo_dir] if repo_dir)
+              ].compact
           end
         end
-        paragraph{ say "Run 'rhc show-app #{name}' for more details about your app." }
       end
+      paragraph{ say "Run 'rhc show-app #{name}' for more details about your app." }
 
       0
     end
