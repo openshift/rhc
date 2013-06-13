@@ -22,6 +22,7 @@ describe RHC::Commands::App do
         $terminal.instance_variable_get(:@output).puts "Cloning into..."
         raise RHC::GitException, "Error in git clone" if repo_dir == "giterrorapp"
         Dir::mkdir(repo_dir)
+        File.expand_path(repo_dir)
       end
       @instance.stub(:host_exists?) do |host|
         host.match("dnserror") ? false : true

@@ -33,7 +33,7 @@ module RHC
       dir = git_clone_repo(app.git_url, repo_dir)
 
       debug "Configuring git repo"
-      Dir.chdir(repo_dir) do |dir|
+      Dir.chdir(repo_dir) do
         git_config_set "rhc.app-uuid", app.uuid
         git_config_set "rhc.app-name", app.name
         git_config_set "rhc.domain-name", app.domain_id
