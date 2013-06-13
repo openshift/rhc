@@ -13,27 +13,24 @@ module RHC
 
       it 'should set the proxy protocol if it is missing' do
         ENV['http_proxy'] = 'foo.bar.com:8081'
-        RHC::Rest::Client.new
-        ENV['http_proxy'].should == 'http://foo.bar.com:8081'
+        expect{ RHC::Rest::Client.new.send(:httpclient_for, {}) }.to raise_error(ArgumentError)
       end
 
       it 'should not alter the proxy protocol if it is present' do
         ENV['http_proxy'] = 'http://foo.bar.com:8081'
-        RHC::Rest::Client.new
-        ENV['http_proxy'].should == 'http://foo.bar.com:8081'
+        RHC::Rest::Client.new.send(:httpclient_for, {}).proxy.should == Addressable::URI.parse(ENV['http_proxy'])
       end
 
       it 'should not affect the proxy protocol if nil' do
         ENV['http_proxy'] = nil
-        RHC::Rest::Client.new
+        RHC::Rest::Client.new.send(:httpclient_for, {}).proxy.should be_nil
         ENV['http_proxy'].should be_nil
       end
 
       let(:endpoint){ mock_href }
-      let(:username){ nil }# mock_user }
-      let(:password){ nil }# mock_pass }
+      let(:username){ nil }
+      let(:password){ nil }
       let(:use_debug){ false }
-      #let(:spec_versions){ nil }
       let(:client) do
         respond_to?(:spec_versions) ?
           RHC::Rest::Client.new(endpoint, username, password, use_debug, spec_versions) :
