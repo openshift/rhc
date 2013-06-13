@@ -19,8 +19,10 @@ describe RHC::Commands::App do
       @instance.stub(:git_config_set) { "" }
       Kernel.stub(:sleep) { }
       @instance.stub(:git_clone_repo) do |git_url, repo_dir|
+        $terminal.instance_variable_get(:@output).puts "Cloning into..."
         raise RHC::GitException, "Error in git clone" if repo_dir == "giterrorapp"
         Dir::mkdir(repo_dir)
+        File.expand_path(repo_dir)
       end
       @instance.stub(:host_exists?) do |host|
         host.match("dnserror") ? false : true
@@ -159,7 +161,7 @@ describe RHC::Commands::App do
       before{ rest_client.domains.clear }
       let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart-1'] }
       # skips login stage and insecure check because of mock rest client, doesn't check keys
-      it { run_output(['mydomain', 'y', 'mykey']).should match(/This wizard.*Checking your namespace.*Your domain name 'mydomain' has been successfully created.*Creating application.*Your public SSH key.*Uploading key 'mykey' .*Downloading the application.*Success/m) }
+      it { run_output(['mydomain', 'y', 'mykey']).should match(/This wizard.*Checking your namespace.*Your domain name 'mydomain' has been successfully created.*Creating application.*Your public SSH key.*Uploading key 'mykey'.*Your application 'app1' is now available.*Cloned to/m) }
     end
 
     context 'when run without a cart' do
@@ -207,8 +209,8 @@ describe RHC::Commands::App do
       let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart-1', '--from', 'git://url', '--noprompt', '-p',  'password'] }
       it { expect { run }.to exit_with_code(0) }
       it { run_output.should match("Success") }
+      it { run_output.should match("Git remote: git:fake.foo/git/app1.git\n") }
       it { run_output.should match("Source Code: git://url\n") }
-      it { run_output.should match("Initial Git URL: git://url\n") }
       after{ rest_client.domains.first.applications.first.initial_git_url.should == 'git://url' }
     end
 

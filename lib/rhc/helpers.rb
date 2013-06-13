@@ -248,8 +248,12 @@ module RHC
     end
 
     # OVERRIDE: Replaces default commander behavior
-    def color(*args)
-      $terminal.color(*args)
+    def color(item, *args)
+      if item.is_a? Array
+        item.map{ |i| $terminal.color(i, *args) }
+      else
+        $terminal.color(item, *args)
+      end
     end
 
     [:pager, :indent, :paragraph, :section, :header, :table, :table_args].each do |sym|
