@@ -18,7 +18,7 @@ module RHC
 
       it 'should not alter the proxy protocol if it is present' do
         ENV['http_proxy'] = 'http://foo.bar.com:8081'
-        RHC::Rest::Client.new.send(:httpclient_for, {}).proxy.should == Addressable::URI.parse(ENV['http_proxy'])
+        RHC::Rest::Client.new.send(:httpclient_for, {}).proxy.to_s.should == URI.parse(ENV['http_proxy']).to_s
       end
 
       it 'should not affect the proxy protocol if nil' do
