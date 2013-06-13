@@ -75,6 +75,7 @@ module RHC::Commands
 
       rest_domain = check_domain!
       rest_app = nil
+      repo_dir = nil
 
       cart_names = cartridges.collect do |c|
         c.usage_rate? ? "#{c.short_name} (addtl. costs may apply)" : c.short_name
@@ -91,15 +92,14 @@ module RHC::Commands
              ).each { |s| say "  #{s}" }
       end
 
-      messages = []
-
       paragraph do
         say "Creating application '#{name}' ... "
 
         # create the main app
         rest_app = create_app(name, cartridges, rest_domain, options.gear_size, options.scaling, options.from_code)
-        messages.concat(rest_app.messages)
-        success "done"
+        success rest_app.app_url
+
+        paragraph{ indent{ success rest_app.messages.map(&:strip) } }
       end
 
       build_app_exists = rest_app.building_app
@@ -113,7 +113,7 @@ module RHC::Commands
               build_app_exists = add_jenkins_app(rest_domain)
 
               success "done"
-              messages.concat(build_app_exists.messages)
+              paragraph{ indent{ success build_app_exists.messages.map(&:strip) } }
 
             rescue Exception => e
               warn "not complete"
@@ -126,7 +126,9 @@ module RHC::Commands
         end
 
         paragraph do
+          messages = []
           add_jenkins_client_to(rest_app, messages)
+          paragraph{ indent{ success messages.map(&:strip) } }
         end if build_app_exists
       end
 
@@ -150,30 +152,38 @@ module RHC::Commands
         end
 
         if options.git
-          paragraph do
-            say "Downloading the application Git repository ..."
-            paragraph do
-              begin
-                git_clone_application(rest_app)
-              rescue RHC::GitException => e
-                warn "#{e}"
-                unless RHC::Helpers.windows? and windows_nslookup_bug?(rest_app)
-                  add_issue("We were unable to clone your application's git repo - #{e}",
-                            "Clone your git repo",
-                            "rhc git-clone #{rest_app.name}")
-                end
+          section(:now => true, :top => 1, :bottom => 1) do
+            begin
+              repo_dir = git_clone_application(rest_app)
+            rescue RHC::GitException => e
+              warn "#{e}"
+              unless RHC::Helpers.windows? and windows_nslookup_bug?(rest_app)
+                add_issue("We were unable to clone your application's git repo - #{e}",
+                          "Clone your git repo",
+                          "rhc git-clone #{rest_app.name}")
               end
             end
           end
         end
       end
 
-      display_app(rest_app, rest_app.cartridges)
-
       if issues?
         output_issues(rest_app)
       else
-        results{ messages.each { |msg| success msg } }.blank? and "Application created"
+        paragraph do
+          say "Your application '#{rest_app.name}' is now available."
+          paragraph do
+            indent do
+              say table [
+                  ['URL:', rest_app.app_url],
+                  ['SSH to:', rest_app.ssh_string],
+                  ['Git remote:', rest_app.git_url],
+                  (['Cloned to:', repo_dir] if repo_dir)
+                ].compact
+            end
+          end
+        end
+        paragraph{ say "Run 'rhc show-app #{name}' for more details about your app." }
       end
 
       0
@@ -573,20 +583,49 @@ WARNING:  Your application was created successfully but had problems during
 #{reasons}
   Steps to complete your configuration:
 #{steps}
-  If you can't get your application '#{rest_app.name}' running in the browser,
+  If your continue to experience problems after completing these steps,
   you can try destroying and recreating the application:
 
     $ rhc app delete #{rest_app.name} --confirm
 
-  If this doesn't work for you, let us know in the forums or in IRC and we'll
-  make sure to get you up and running.
+  Please contact us if you are unable to successfully create your 
+  application:
 
-    Forums - https://www.openshift.com/forums/openshift
-    IRC - #openshift (on Freenode)
+    Support - https://www.openshift.com/support
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 WARNING_OUTPUT
       end
+
+    # Issues collector collects a set of recoverable issues and steps to fix them
+    # for output at the end of a complex command
+    def add_issue(reason, commands_header, *commands)
+      @issues ||= []
+      issue = {:reason => reason,
+               :commands_header => commands_header,
+               :commands => commands}
+      @issues << issue
+    end
+
+    def format_issues(indent)
+      return nil unless issues?
+
+      indentation = " " * indent
+      reasons = ""
+      steps = ""
+
+      @issues.each_with_index do |issue, i|
+        reasons << "#{indentation}#{i+1}. #{issue[:reason].strip}\n"
+        steps << "#{indentation}#{i+1}. #{issue[:commands_header].strip}\n"
+        issue[:commands].each { |cmd| steps << "#{indentation}  $ #{cmd}\n" }
+      end
+
+      [reasons, steps]
+    end
+
+    def issues?
+      not @issues.nil?
+    end      
   end
 end

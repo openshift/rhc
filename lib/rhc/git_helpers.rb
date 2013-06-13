@@ -30,7 +30,7 @@ module RHC
       repo_dir = options.repo || app.name
 
       debug "Pulling new repo down"
-      git_clone_repo(app.git_url, repo_dir)
+      dir = git_clone_repo(app.git_url, repo_dir)
 
       debug "Configuring git repo"
       Dir.chdir(repo_dir) do |dir|
@@ -41,7 +41,7 @@ module RHC
 
       git_clone_deploy_hooks(repo_dir)
 
-      true
+      dir
     end
 
     # :nocov: These all call external binaries so test them in cucumber
@@ -86,8 +86,7 @@ module RHC
           raise RHC::GitException, "Unable to clone your repository. Called Git with: #{cmd}"
         end
       end
-
-      success "Your application code is now in '#{repo_dir}'"
+      File.expand_path(repo_dir)
     end
   end
 end

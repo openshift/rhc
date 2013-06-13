@@ -263,7 +263,7 @@ describe RHC::Helpers do
         true
       end
 
-      it { capture{ subject.git_clone_repo("url", "repo").should be_true } }
+      it { capture{ subject.git_clone_repo("url", "repo").should == File.expand_path('repo') } }
       it { capture_all{ subject.git_clone_repo("url", "repo") }.should match("fake git clone") }
 
       context "does not succeed" do
