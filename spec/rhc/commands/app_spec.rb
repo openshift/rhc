@@ -566,80 +566,52 @@ describe RHC::Commands::App do
   end
 
   describe 'app show --gears' do
-    let(:arguments) { ['app', 'show', 'app1', '--gears', '--noprompt'] }
+    let(:arguments) { ['app', 'show', 'app1', '--gears'] }
 
     context 'when run' do
       before(:each) do
         @domain = rest_client.add_domain("mockdomain")
         @domain.add_application("app1", "mock_type")
       end
-      it { run_output.should match("fakegearid started fake_geargroup_cart-0.1 small fakegearid@fakesshurl.com") }
+      it { run_output.should match("fakegearid0 started mock_type  small fakegearid0@fakesshurl.com") }
+      it { expect{ run }.to exit_with_code(0) }
     end
   end
 
-  describe 'app ssh without command' do
-    let(:arguments) { ['app', 'ssh', 'app1'] }
+  describe 'app show --gears quota' do
+    let(:arguments) { ['app', 'show', 'app1', '--gears', 'quota'] }
 
     context 'when run' do
-      before(:each) do
+      before do
         @domain = rest_client.add_domain("mockdomain")
-        @domain.add_application("app1", "mock_type")
-        Kernel.should_receive(:exec).with("ssh", "fakeuuidfortestsapp1@127.0.0.1").and_return(0)
+        @domain.add_application("app1", "mock_type", true)
+        expect_multi_ssh('echo "$(du -s 2>/dev/null | cut -f 1)"', 'fakegearid0@fakesshurl.com' => '1734934', 'fakegearid1@fakesshurl.com' => '1934234')
       end
-      it { run_output.should match("Connecting to fakeuuidfortestsapp") }
-      it { expect { run }.to exit_with_code(0) }
+      it { run_output.should match(/Gear.*Cartridges.*Used.*fakegearid0.*1\.7 MB.*1 GB.*fakegearid1.*1\.9 MB/m) }
+      it { expect{ run }.to exit_with_code(0) }
     end
   end
 
-  describe 'app ssh with command' do
-    let(:arguments) { ['app', 'ssh', 'app1', 'ls', '/tmp'] }
+  describe 'app show --gears ssh' do
+    let(:arguments) { ['app', 'show', 'app1', '--gears', 'ssh'] }
 
     context 'when run' do
-      before(:each) do
+      before do
         @domain = rest_client.add_domain("mockdomain")
-        @domain.add_application("app1", "mock_type")
-        Kernel.should_receive(:exec).with("ssh", "fakeuuidfortestsapp1@127.0.0.1", "ls", "/tmp").and_return(0)
+        @domain.add_application("app1", "mock_type", true)
       end
-      it { run_output.should match("Connecting to fakeuuidfortestsapp") }
-      it { expect { run }.to exit_with_code(0) }
+      it { run_output.should == "fakegearid0@fakesshurl.com\nfakegearid1@fakesshurl.com\n\n" }
+      it { expect{ run }.to exit_with_code(0) }
     end
   end
 
-  describe 'app ssh no system ssh' do
-    let(:arguments) { ['app', 'ssh', 'app1'] }
+  describe 'app show --gears badcommand' do
+    let(:arguments) { ['app', 'show', 'app1', '--gears', 'badcommand'] }
 
     context 'when run' do
-      before(:each) do
-        @domain = rest_client.add_domain("mockdomain")
-        @domain.add_application("app1", "mock_type")
-        @instance.should_receive(:has_ssh?).and_return(false)
-      end
-      it { run_output.should match("Please use the --ssh option to specify the path to your SSH executable, or install SSH.") }
-      it { expect { run }.to exit_with_code(1) }
-    end
-  end
-
-  describe 'app ssh custom ssh' do
-    let(:arguments) { ['app', 'ssh', 'app1', '--ssh', 'path_to_ssh'] }
-
-    context 'when run' do
-      before(:each) do
-        @domain = rest_client.add_domain("mockdomain")
-        @domain.add_application("app1", "mock_type")
-        @instance.should_not_receive(:has_ssh?)
-        Kernel.should_receive(:exec).with("path_to_ssh", "fakeuuidfortestsapp1@127.0.0.1").and_return(0)
-      end
-      it { run_output.should match("Connecting to fakeuuidfortestsapp") }
-      it { expect { run }.to exit_with_code(0) }
-    end
-  end
-
-  describe 'ssh tests' do
-    let(:arguments) { ['app', 'ssh', 'app1', '-s /bin/blah'] }
-
-    context 'has_ssh?' do
-      before{ @instance.stub(:ssh_version){ raise "Fake Exception" } }
-      its(:has_ssh?) { should be_false }
+      before{ rest_client.add_domain("mockdomain").add_application("app1", "mock_type", true) }
+      it { run_output.should match(/The operation badcommand is not supported/m) }
+      it { expect{ run }.to exit_with_code(1) }
     end
   end
 

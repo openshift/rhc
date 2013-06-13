@@ -2,6 +2,9 @@ source 'https://rubygems.org'
 
 gemspec
 
+# Not yet a build time dependency
+gem 'net-ssh-multi'
+
 gem 'pry' if ENV['PRY']
 
 gem 'simplecov', :require => false, :group => :test

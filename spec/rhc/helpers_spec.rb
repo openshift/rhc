@@ -5,11 +5,12 @@ require 'rhc/cartridge_helpers'
 require 'rhc/git_helpers'
 require 'rhc/core_ext'
 require 'rhc/config'
+require 'rhc/rest/mock'
 require 'date'
 require 'resolv'
 require 'ostruct'
 
-class MockHelpers
+class AllRhcHelpers
   include RHC::Helpers
   include RHC::SSHHelpers
   include RHC::CartridgeHelpers
@@ -22,13 +23,11 @@ class MockHelpers
   end
 end
 
-describe RHC::Helpers do
+describe AllRhcHelpers do
   before do
     mock_terminal
     user_config
   end
-
-  subject{ MockHelpers.new }
 
   its(:openshift_server) { should == 'openshift.redhat.com' }
   its(:openshift_url) { should == 'https://openshift.redhat.com' }
@@ -94,6 +93,17 @@ describe RHC::Helpers do
     d.day.should == 24
     d.month.should == 6
     d.year.should == 2012
+  end
+
+  describe "#human_size" do
+    it{ subject.human_size(nil).should == 'unknown' }
+    it{ subject.human_size(1).should == '1 B' }
+    it{ subject.human_size(500).should == '500 B' }
+    it{ subject.human_size(1000).should == '1 KB' }
+    it{ subject.human_size(500000).should == '500 KB' }
+    it{ subject.human_size(1000*1000).should == '1 MB' }
+    it{ subject.human_size(1000*1000*1000).should == '1 GB' }
+    it{ subject.human_size(1000*1000*1000*1000).should == '1 TB' }
   end
 
   describe "#distance_of_time_in_words" do
@@ -310,6 +320,26 @@ describe RHC::Helpers do
       Net::SSH::KeyFactory.should_receive(:load_public_key).with('1').and_raise(StandardError.new("An error"))
       subject.fingerprint_for_local_key('1').should be_nil
     end
+
+    it "should handle a block in multi_ssh calls" do
+      expect_multi_ssh('foo', 'fakegearid0@fakesshurl.com' => 'bar')
+      subject.run_on_gears('foo', [RHC::Rest::Mock::MockRestGearGroup.new], :as => :gear){ |gear, data, group| data.should == 'bar'; 'test' }.should == ['test']
+    end
+
+    it "should handle a run_on_gears error for unrecognized type" do
+      expect_multi_ssh('foo', {})
+      expect{ subject.run_on_gears('foo', RHC::Rest::Mock::MockRestGearGroup.new.gears) }.to raise_error(RuntimeError)
+    end
+
+    it "should handle an error for unrecognized type" do
+      expect_multi_ssh('foo', {'fakegearid0@fakesshurl.com' => 'bar'}, true)
+      subject.run_on_gears('foo', [RHC::Rest::Mock::MockRestGearGroup.new])
+    end
+
+    it "should rescue load errors from ssh-multi" do
+      RHC::SSHHelpers::MultipleGearTask.any_instance.should_receive(:require).and_raise(LoadError)
+      expect{ RHC::SSHHelpers::MultipleGearTask.new(nil,nil,nil).send(:requires_ssh_multi!) }.to raise_error RHC::OperationNotSupportedException, /must install Net::SSH::Multi/
+    end
   end
 
   describe "#wrap" do
@@ -381,6 +411,40 @@ describe RHC::Helpers do
       end
     end
   end
+
+  context "cartridge helpers" do
+    before{ mock_terminal }
+
+    describe '#check_cartridges' do
+      let(:cartridges){ [] }
+      let(:find_cartridges){ [] }
+      context "with a generic object" do
+        it { expect{ subject.send(:check_cartridges, 'foo', :from => cartridges) }.to raise_error(RHC::CartridgeNotFoundException, 'There are no cartridges that match \'foo\'.') }
+      end
+    end
+
+    describe '#web_carts_only' do
+      it { expect{ subject.send(:web_carts_only).call([]) }.to raise_error(RHC::MultipleCartridgesException, /You must select only a single web/) }
+    end
+
+    describe '#match_cart' do
+      context 'with a nil cart' do
+        let(:cart){ OpenStruct.new(:name => nil, :description => nil, :tags => nil) }
+        it{ subject.send(:match_cart, cart, 'foo').should be_false }
+      end
+      context 'with simple strings' do
+        let(:cart){ OpenStruct.new(:name => 'FOO-more_max any', :description => 'bar', :tags => [:baz]) }
+        it{ subject.send(:match_cart, cart, 'foo').should be_true }
+        it{ subject.send(:match_cart, cart, 'fo').should be_true }
+        it{ subject.send(:match_cart, cart, 'oo').should be_true }
+        it{ subject.send(:match_cart, cart, 'bar').should be_true }
+        it{ subject.send(:match_cart, cart, 'baz').should be_true }
+        it{ subject.send(:match_cart, cart, 'more max').should be_true }
+        it{ subject.send(:match_cart, cart, 'foo more max any').should be_true }
+        it{ subject.send(:match_cart, cart, 'foo_more max-any').should be_true }
+      end
+    end
+  end
 end
 
 describe RHC::Helpers::StringTee do
@@ -423,42 +487,5 @@ describe OpenURI do
   context 'redirectable?' do
     specify('http to https') { OpenURI.redirectable?(URI.parse('http://foo.com'), URI.parse('https://foo.com')).should be_true }
     specify('https to http') { OpenURI.redirectable?(URI.parse('https://foo.com'), URI.parse('http://foo.com')).should be_false }
-  end
-end
-
-describe RHC::CartridgeHelpers do
-  before(:each) do
-    mock_terminal
-  end
-
-  subject{ MockHelpers.new }
-
-  describe '#check_cartridges' do
-    let(:cartridges){ [] }
-    let(:find_cartridges){ [] }
-    context "with a generic object" do
-      it { expect{ subject.send(:check_cartridges, 'foo', :from => cartridges) }.to raise_error(RHC::CartridgeNotFoundException, 'There are no cartridges that match \'foo\'.') }
-    end
-  end
-  describe '#web_carts_only' do
-    it { expect{ subject.send(:web_carts_only).call([]) }.to raise_error(RHC::MultipleCartridgesException, /You must select only a single web/) }
-  end
-
-  describe '#match_cart' do
-    context 'with a nil cart' do
-      let(:cart){ OpenStruct.new(:name => nil, :description => nil, :tags => nil) }
-      it{ subject.send(:match_cart, cart, 'foo').should be_false }
-    end
-    context 'with simple strings' do
-      let(:cart){ OpenStruct.new(:name => 'FOO-more_max any', :description => 'bar', :tags => [:baz]) }
-      it{ subject.send(:match_cart, cart, 'foo').should be_true }
-      it{ subject.send(:match_cart, cart, 'fo').should be_true }
-      it{ subject.send(:match_cart, cart, 'oo').should be_true }
-      it{ subject.send(:match_cart, cart, 'bar').should be_true }
-      it{ subject.send(:match_cart, cart, 'baz').should be_true }
-      it{ subject.send(:match_cart, cart, 'more max').should be_true }
-      it{ subject.send(:match_cart, cart, 'foo more max any').should be_true }
-      it{ subject.send(:match_cart, cart, 'foo_more max-any').should be_true }
-    end
   end
 end

@@ -340,6 +340,43 @@ module ClassSpecHelpers
       opts[:server].should == server if server
     end
   end
+
+  def expect_multi_ssh(command, hosts, check_error=false)
+    require 'net/ssh/multi'
+
+    session = mock('Multi::SSH::Session')
+    described_class.any_instance.stub(:requires_ssh_multi!)
+    channels = hosts.inject({}) do |h, (k,v)| 
+      c = stub(:properties => {}, :connection => stub(:properties => {}))
+      h[k] = c
+      h
+    end
+    session.should_receive(:use).exactly(hosts.count).times.with do |host, opts|
+      opts[:properties].should_not be_nil
+      opts[:properties][:gear].should_not be_nil
+      hosts.should have_key(host)
+      channels[host].connection.properties.merge!(opts[:properties])
+      true
+    end
+    session.stub(:_command).and_return(command)
+    session.stub(:_hosts).and_return(hosts)
+    session.stub(:_channels).and_return(channels)
+    session.instance_eval do
+      def exec(arg1, *args, &block)
+        arg1.should == _command
+        _hosts.each_pair do |k,v|
+          block.call(_channels[k], :stdout, v)
+        end
+      end
+    end
+    session.should_receive(:loop) unless hosts.empty?
+    Net::SSH::Multi.should_receive(:start).and_yield(session).with do |opts|
+      opts.should have_key(:on_error)
+      capture_all{ opts[:on_error].call('test') }.should == "Unable to connect to gear test\n" if check_error
+      true
+    end
+    session
+  end  
 end
 
 module ExitCodeMatchers

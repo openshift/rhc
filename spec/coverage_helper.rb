@@ -1,6 +1,9 @@
 unless RUBY_VERSION < '1.9'
   require 'simplecov'
 
+  original_stderr = $stderr # in case helpers don't properly cleanup
+  original_stdout = $stdout
+
   # Patch to get correct coverage count, filed
   # https://github.com/colszowka/simplecov/issues/146 upstream.
   class SimpleCov::Result
@@ -16,13 +19,12 @@ unless RUBY_VERSION < '1.9'
     def print_missed_lines
       @files.each do |file|
         file.missed_lines.each do |line|
-          puts "MISSED #{file.filename}:#{line.number}"
+          original_stdout.puts "MISSED #{file.filename}:#{line.number}"
         end
       end
     end
   end
 
-  original_stderr = $stderr # in case helpers don't properly cleanup
   SimpleCov.at_exit do
     SimpleCov.result.format!
     if SimpleCov.result.covered_percent < 100.0

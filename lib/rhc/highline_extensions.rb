@@ -319,7 +319,13 @@ class HighLine::Table
     def source_rows
       @source_rows ||= begin
         (@mapper ? (items.map &@mapper) : items).each do |row|
-          row.map!{ |col| col.is_a?(String) ? col : col.to_s }
+          row.map! do |col| 
+            case col
+            when Array then col.join("\n")
+            when String then col
+            else col.to_s
+            end
+          end
         end
       end
     end
