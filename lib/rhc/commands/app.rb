@@ -97,7 +97,7 @@ module RHC::Commands
 
         # create the main app
         rest_app = create_app(name, cartridges, rest_domain, options.gear_size, options.scaling, options.from_code)
-        success rest_app.app_url
+        success "done"
 
         paragraph{ indent{ success rest_app.messages.map(&:strip) } }
       end
@@ -583,7 +583,7 @@ WARNING:  Your application was created successfully but had problems during
 #{reasons}
   Steps to complete your configuration:
 #{steps}
-  If your continue to experience problems after completing these steps,
+  If you continue to experience problems after completing these steps,
   you can try destroying and recreating the application:
 
     $ rhc app delete #{rest_app.name} --confirm
