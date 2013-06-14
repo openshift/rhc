@@ -110,14 +110,12 @@ module RHC::Commands
 
           if forwarding_specs.length == 0
             # check if the gears have been stopped
-            ggs = rest_app.gear_groups
-            if ggs.any? { |gg|
-              gears = gg.gears
-              true if gears.any? { |g| g["state"] == "stopped" }
-            }
-              warn "Application #{rest_app.name} is stopped. Please restart the application and try again."
+            if rest_app.gear_groups.all?{ |gg| gg.gears.all?{ |g| g["state"] == "stopped" } }
+              warn "none"
+              error "The application is stopped. Please restart the application and try again."
               return 1
             else
+              warn "none"
               raise RHC::NoPortsToForwardException.new "There are no available ports to forward for this application. Your application may be stopped or idled."
             end
           end
