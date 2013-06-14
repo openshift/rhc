@@ -147,7 +147,14 @@ class RHC::Commands::Base
 
     def self.default_action(action)
       options[:default] = action unless action == :help
-      define_method(:run) { |*args| send(action, *args) }
+      name = self.object_name
+      raise InvalidCommand, "object_name must be set" if name.empty?
+
+      RHC::Commands.add((@options || {}).merge({
+        :name => name,
+        :class => self,
+        :method => options[:default]
+      }));
     end
 
     private
