@@ -174,6 +174,7 @@ class HighLineExtension < HighLine
     top = 0 unless @margin
     @margin = [top, @margin || 0].max
 
+    separate_blocks if params[:now]
     value = block.call
 
     say "\n" if @last_line_open

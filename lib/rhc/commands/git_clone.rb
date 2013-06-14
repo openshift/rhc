@@ -18,7 +18,8 @@ module RHC::Commands
     # argument :directory, "The name of a new directory to clone into", [], :default => nil
     def run(app_name)
       rest_app = rest_client.find_application(options.namespace, app_name)
-      git_clone_application(rest_app)
+      dir = git_clone_application(rest_app)
+      success "Your application Git repository has been cloned to '#{system_path(dir)}'"
 
       0
     end
