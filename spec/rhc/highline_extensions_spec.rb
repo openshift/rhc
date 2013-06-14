@@ -157,6 +157,16 @@ describe HighLineExtension do
     ]
   end
 
+  # FIXME: Ragged edges
+  it "should handle when columns are evenly split" do
+    subject.table([["#{'a'*32} #{'b'*19}", "#{'c'*8} "*6+"d"*7]], :width => 104).to_a.should == [
+      "a"*32+" "+'b'*19+" "+Array.new(5, 'c'*8).join(' '),
+      ' '*53+"#{'c'*8} "+'d'*7
+    ]
+  end
+
+  # 104 total width, 1: 32/52, 2: 8/61, 113 total width
+
   it "should allocate columns fairly in a table" do
     subject.table([["abcd", "12345 67890"]], :width => 10).to_a.should == [
       "abcd 12345",

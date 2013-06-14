@@ -254,6 +254,7 @@ module ClassSpecHelpers
   def mock_terminal
     @input = StringIO.new
     @output = StringIO.new
+    $stdout = @output
     $stderr = (@error = StringIO.new)
     $terminal = MockHighLineTerminal.new @input, @output
   end
