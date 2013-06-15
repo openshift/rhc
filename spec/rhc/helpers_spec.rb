@@ -326,6 +326,11 @@ describe AllRhcHelpers do
       subject.run_on_gears('foo', [RHC::Rest::Mock::MockRestGearGroup.new], :as => :gear){ |gear, data, group| data.should == 'bar'; 'test' }.should == ['test']
     end
 
+    it "should handle a block in multi_ssh calls" do
+      expect_multi_ssh('foo', 'fakegearid0@fakesshurl.com' => 'bar')
+      capture{ subject.table_from_gears('foo', [RHC::Rest::Mock::MockRestGearGroup.new], :header => ['cart','col']) }.should match /cart.*col\n-+.*fakegearid0.*bar/m
+    end    
+
     it "should handle a run_on_gears error for unrecognized type" do
       expect_multi_ssh('foo', {})
       expect{ subject.run_on_gears('foo', RHC::Rest::Mock::MockRestGearGroup.new.gears) }.to raise_error(RuntimeError)

@@ -143,8 +143,19 @@ describe HighLineExtension do
     subject.table([]).to_a.should == []
   end
 
-  it "should handle an empty table" do
+  it "should handle a nested empty table" do
     subject.table([[]]).to_a.should == []
+  end
+
+  it "should normalize variables" do
+    subject.table([
+        ["a", 5],
+        [nil, ['a', 'b']],
+      ]).to_a.should == [
+        "a 5",
+        "  a",
+        "  b",
+      ]
   end
 
   it "should wrap a table based on a max width" do
