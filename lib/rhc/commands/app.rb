@@ -276,17 +276,52 @@ module RHC::Commands
     end
 
     summary "Show information about an application"
+    description <<-DESC
+      Display the properties of an application, including its URL, the SSH
+      connection string, and the Git remote URL.  Will also display any 
+      cartridges, their scale, and any values they expose.
+
+      The '--state' option will retrieve information from each cartridge in 
+      the application, which may include cartridge specific text.
+
+      To see information about the individual gears within an application,
+      use '--gears', including whether they are started or stopped and their
+      SSH host strings.  Passing '--gears quota' will show the free and maximum
+      storage on each gear.
+
+      If you want to run commands against individual gears, use:
+       
+        rhc ssh <app> --gears '<command>'
+
+      to run and display the output from each gear.
+      DESC
     syntax "<app> [--namespace NAME]"
     argument :app, "The name of the application you are getting information on", ["-a", "--app NAME"], :context => :app_context
     option ["-n", "--namespace NAME"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
     option ["--state"], "Get the current state of the cartridges in this application"
-    option ["--gears"], "Show the ID, state, and cartridges on each gear in this application"
+    option ["--gears [quota|ssh]"], "Show information about the cartridges on each gear in this application. Pass 'quota' to see per gear disk usage and limits. Pass 'ssh' to print only the SSH connection strings of each gear."
     def show(app_name)
 
       if options.state
         gear_groups_for_app(app_name).each do |gg|
           say "Cartridge #{gg.cartridges.collect { |c| c['name'] }.join(', ')} is #{gear_group_state(gg.gears.map{ |g| g['state'] })}"
         end
+
+      elsif options.gears && options.gears != true
+        groups = rest_client.find_application_gear_groups(options.namespace, app_name)
+
+        case options.gears
+        when 'quota'
+          opts = {:as => :gear, :split_cells_on => /\s*\t/, :header => ['Gear', 'Cartridges', 'Used', 'Limit'], :align => [nil, nil, :right, :right]}
+          table_from_gears('echo "$(du -s 2>/dev/null | cut -f 1)"', groups, opts) do |gear, data, group|
+            [gear['id'], group.cartridges.collect{ |c| c['name'] }.join(' '), (human_size(data.chomp) rescue 'error'), human_size(group.quota)]
+          end
+        when 'ssh'
+          groups.each{ |group| group.gears.each{ |g| say (ssh_string(g['ssh_url']) or raise NoPerGearOperations) } }
+        else 
+          run_on_gears(ssh_command_for_op(options.gears), groups)
+        end
+
       elsif options.gears
         gear_info = gear_groups_for_app(app_name).map do |group|
           group.gears.map do |gear|
@@ -309,28 +344,6 @@ module RHC::Commands
       0
     end
 
-    summary "SSH into the specified application"
-    syntax "<app> [--ssh path_to_ssh_executable]"
-    argument :app, "The name of the application you want to SSH into", ["-a", "--app NAME"], :context => :app_context
-    argument :command, "Command to run in the application's SSH session", [], :arg_type => :list, :required => false
-    option ["--ssh PATH"], "Path to your SSH executable"
-    option ["-n", "--namespace NAME"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
-    alias_action 'ssh', :root_command => true
-    def ssh(app_name, command)
-      raise ArgumentError, "No application specified" unless app_name.present?
-      raise OptionParser::InvalidOption, "No system SSH available. Please use the --ssh option to specify the path to your SSH executable, or install SSH." unless options.ssh or has_ssh?
-
-      rest_app = rest_client.find_application(options.namespace, app_name)
-
-      ssh = options.ssh || 'ssh'
-      debug "Using user specified SSH: #{options.ssh}" if options.ssh
-
-      command_line = [ssh, rest_app.ssh_string.to_s, command || nil].compact.flatten
-      debug "Invoking Kernel.exec with #{command_line}"
-      say "Connecting to #{rest_app.ssh_string.to_s} ..."
-      Kernel.send(:exec, *command_line)
-    end
-
     summary "DEPRECATED use 'show <app> --state' instead"
     syntax "<app> [--namespace NAME] [--app NAME]"
     argument :app, "The name of the application you are getting information on", ["-a", "--app NAME"], :context => :app_context
@@ -345,6 +358,7 @@ module RHC::Commands
     private
       include RHC::GitHelpers
       include RHC::CartridgeHelpers
+      include RHC::SSHHelpers
 
       def require_one_web_cart
         lambda{ |carts|
@@ -524,22 +538,6 @@ module RHC::Commands
         `ping #{host} -n 2`
         $?.exitstatus == 0
         # :nocov:
-      end
-
-      # check the version of SSH that is installed
-      def ssh_version
-        @ssh_version ||= `ssh -V 2>&1`.strip
-      end
-
-      # return whether or not SSH is installed
-      def has_ssh?
-        @has_ssh ||= begin
-          @ssh_version = nil
-          ssh_version
-          $?.success?
-        rescue
-          false
-        end
       end
 
       def windows_nslookup_bug?(rest_app)
