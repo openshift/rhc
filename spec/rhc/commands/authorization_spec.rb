@@ -52,6 +52,22 @@ describe RHC::Commands::Authorization do
     end
   end
 
+  describe '#list' do
+    let(:arguments) { ['authorization', 'list'] }
+    context "with authorizations" do
+      with_authorization
+      before{ stub_authorizations }
+      it('should display the note')           { run_output.should =~ /an_authorization/ }
+      it('should display the token')          { run_output.should =~ /Token:\s+a_token_value/ }
+      it('should display the expiration')     { run_output.should =~ /Expires In:\s+1 minute/ }
+      it('should display the creation date')  { run_output.should =~ /Created:\s+#{RHC::Helpers.date('2013-02-21T01:00:01Z')}/ }
+      it('should display the scopes')         { run_output.should =~ /Scopes:\s+session read/ }
+      it{ expect{ run }.to exit_with_code(0) }
+    end
+
+    expect_an_unsupported_message
+  end
+
   describe "#delete" do
     let(:arguments) { ['authorization', 'delete', 'foo', 'bar'] }
 
