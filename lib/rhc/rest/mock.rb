@@ -601,11 +601,14 @@ module RHC::Rest::Mock
 
   class MockRestGearGroup < RHC::Rest::GearGroup
     include Helpers
-    def initialize(client=nil)
+    def initialize(client=nil, carts=['name' => 'fake_geargroup_cart-0.1'], count=1)
       super({}, client)
-      @cartridges = [{'name' => 'fake_geargroup_cart-0.1'}]
-      @gears = [{'state' => 'started', 'id' => 'fakegearid', 'ssh_url' => 'ssh://fakegearid@fakesshurl.com'}]
+      @cartridges = carts
+      @gears = count.times.map do |i| 
+        {'state' => 'started', 'id' => "fakegearid#{i}", 'ssh_url' => "ssh://fakegearid#{i}@fakesshurl.com"}
+      end
       @gear_profile = 'small'
+      @base_gear_storage = 1
     end
   end
 
@@ -710,7 +713,13 @@ module RHC::Rest::Mock
 
     def gear_groups
       # we don't have heavy interaction with gear groups yet so keep this simple
-      @gear_groups ||= [MockRestGearGroup.new(client)]
+      @gear_groups ||= begin
+        if @scalable
+          cartridges.map{ |c| MockRestGearGroup.new(client, [c.name], c.current_scale) if c.name != 'haproxy-1.4' }.compact
+        else
+          [MockRestGearGroup.new(client, cartridges.map{ |c| {'name' => c.name} }, 1)]
+        end
+      end
     end
 
     def cartridges

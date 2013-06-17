@@ -38,6 +38,19 @@ module RHC
       path
     end
 
+    PREFIX = %W(TB GB MB KB B).freeze
+
+    def human_size( s )
+      return "unknown" unless s
+      s = s.to_f
+      i = PREFIX.length - 1
+      while s > 500 && i > 0
+        i -= 1
+        s /= 1000
+      end
+      ((s > 9 || s.modulo(1) < 0.1 ? '%d' : '%.1f') % s) + ' ' + PREFIX[i]
+    end    
+
     def date(s)
       now = Date.today
       d = datetime_rfc3339(s).to_time
@@ -100,6 +113,10 @@ module RHC
     global_option '--server NAME', String, 'An OpenShift server hostname (default: openshift.redhat.com)'
     global_option '-k', '--insecure', "Allow insecure SSL connections.  Potential security risk.", :hide => true
 
+    global_option '--limit INTEGER', Integer, "Maximum number of simultaneous operations to execute.", :hide => true
+    global_option '--raw', "Do not format the output from the requested operations.", :hide => true
+    global_option '--always-prefix', "Include the gear prefix on all output from the server.", :hide => true
+
     OptionParser.accept(SSLVersion = Class.new){ |s| OpenSSL::SSL::SSLContext::METHODS.find{ |m| m.to_s.downcase == s.downcase } or raise OptionParser::InvalidOption.new(nil, "The provided SSL version '#{s}' is not valid. Supported values: #{OpenSSL::SSL::SSLContext::METHODS.map(&:to_s).map(&:downcase).join(', ')}") }
     global_option '--ssl-version VERSION', SSLVersion, "The version of SSL to use", :hide => true do |value|
       raise RHC::Exception, "You are using an older version of the httpclient gem which prevents the use of --ssl-version.  Please run 'gem update httpclient' to install a newer version (2.2.6 or newer)." unless HTTPClient::SSLConfig.method_defined? :ssl_version
@@ -148,7 +165,7 @@ module RHC
     end
 
     def ssh_string(ssh_url)
-      return nil if ssh_url.nil?
+      return nil if ssh_url.blank?
       uri = URI.parse(ssh_url)
       "#{uri.user}@#{uri.host}"
     rescue => e

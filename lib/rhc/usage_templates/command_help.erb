@@ -3,7 +3,7 @@ Usage: <%= Array(program :name).first %> <%= @command.name %> <%= @command.synta
 <%= @command.description || @command.summary %>
 <% if @actions.blank? or @command.root? and @command.info[:method].present? -%>
 
-<% unless @command.info[:args].blank? -%>
+<% unless @command.info[:args].blank? or @command.options.all?{ |o| o[:hide] or o[:switches].present? } -%>
 
 Arguments
 <%= table(
