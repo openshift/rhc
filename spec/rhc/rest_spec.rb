@@ -278,6 +278,24 @@ module RHC
           subject.send(:parse_response, json_response).should have_same_attributes_as(user_obj)
         end
       end
+
+      context "with result messages" do
+        let(:object) {{
+            :login => 'test_user',
+            :links => { :foo => 'bar' }
+          }}
+        let (:messages) {[
+            {:field => nil,      :severity => 'info',   :text => 'Nil field'},
+            {:field => 'result', :severity => 'info',   :text => 'Result field'},    # <  1.5 API
+            {:field => 'base',   :severity => 'result', :text => 'Result severity'}, # >= 1.5 API
+            {:field => 'base',   :severity => 'info',   :text => 'Non-result message' }
+          ]}
+
+        it "copies result messages to the object" do
+          json_response = { :type => 'user', :data => object, :messages => messages }.to_json
+          subject.send(:parse_response, json_response).messages.should == ['Nil field', 'Result field', 'Result severity']
+        end
+      end
     end
 
     describe "#new_request" do
