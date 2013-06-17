@@ -281,12 +281,15 @@ module RHC::Commands
       connection string, and the Git remote URL.  Will also display any 
       cartridges, their scale, and any values they expose.
 
-      To see information about the individual gears within an application,
-      use '--gear'.  Passing '--gears quota' will show the free and maximum
-      storage on each gear.  Passing '--state' will show information from
-      each cartridge in the application.
+      The '--state' option will retrieve information from each cartridge in 
+      the application, which may include cartridge specific text.
 
-      To display more information about individual gears, use
+      To see information about the individual gears within an application,
+      use '--gears', including whether they are started or stopped and their
+      SSH host strings.  Passing '--gears quota' will show the free and maximum
+      storage on each gear.
+
+      If you want to run commands against individual gears, use:
        
         rhc ssh <app> --gears '<command>'
 
