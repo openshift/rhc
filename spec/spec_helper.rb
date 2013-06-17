@@ -364,7 +364,7 @@ module ClassSpecHelpers
     session.instance_eval do
       def exec(arg1, *args, &block)
         arg1.should == _command
-        _hosts.each_pair do |k,v|
+        _hosts.to_a.sort{ |a,b| a[0] <=> b[0] }.each do |(k,v)|
           block.call(_channels[k], :stdout, v)
         end
       end
