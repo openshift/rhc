@@ -28,7 +28,7 @@ describe RHC::Commands::PortForward do
       it "should error out and suggest restarting the application" do
         expect { run }.to exit_with_code(1)
       end
-      it { run_output.should match(/Application \S+ is stopped\..*restart/m) }
+      it { run_output.should match(/none.*The application is stopped\..*restart/m) }
     end
 
     context 'when port forwarding an app without ports to forward' do
