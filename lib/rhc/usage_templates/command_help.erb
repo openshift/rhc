@@ -1,7 +1,7 @@
 Usage: <%= Array(program :name).first %> <%= @command.name %> <%= @command.syntax %>
 
 <%= @command.description || @command.summary %>
-<% if @actions.blank? or @command.root? and !@command.info[:method].nil? -%>
+<% if @actions.blank? or @command.root? and @command.info[:method].present? -%>
 
 <% unless @command.info[:args].blank? -%>
 

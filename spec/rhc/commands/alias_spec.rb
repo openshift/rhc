@@ -295,4 +295,32 @@ describe RHC::Commands::Alias do
     end
   end
 
+  describe 'aliases' do
+    before do 
+      rest_client.stub(:api_version_negotiated).and_return(1.4)
+    end
+    context 'app with existing certificate' do
+      let(:arguments) { ['aliases', 'mock_app_0'] }
+      it { expect { run }.to exit_with_code(0) }
+      it { run_output.should =~ /Has Certificate?/m }
+      it { run_output.should =~ /Certificate Added/m }
+      it { run_output.should =~ /www.foo.bar/m }
+    end
+    context 'app without certificates' do
+      let(:arguments) { ['aliases', 'mock_app_1'] }
+      it { expect { run }.to exit_with_code(0) }
+      it { run_output.should =~ /No aliases associated with the application mock_app_1/m }
+    end
+    context 'simple list is server does not support ssl certs' do
+      let(:arguments) { ['aliases', 'mock_app_0'] }
+      before do 
+        rest_client.stub(:api_version_negotiated).and_return(1.3)
+      end
+      it { expect { run }.to exit_with_code(0) }
+      it { run_output.should =~ /no/m }
+      it { run_output.should =~ /-/m }
+      it { run_output.should =~ /www.foo.bar/m }
+    end
+  end
+
 end

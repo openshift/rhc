@@ -231,11 +231,8 @@ module RHC
             args = fill_arguments(cmd, options, args_metadata, options_metadata, args)
             needs_configuration!(cmd, options, config)
             
-            if opts[:method]
-              execute(cmd, opts[:method], args)
-            else
-              execute(cmd, :help, args)
-            end
+            return execute(cmd, :help, args) unless opts[:method]
+            execute(cmd, opts[:method], args)
           end
         end
       end

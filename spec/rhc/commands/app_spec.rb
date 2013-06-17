@@ -41,6 +41,8 @@ describe RHC::Commands::App do
     context 'app' do
       let(:arguments) { ['app'] }
       it { run_output.should match('Usage:') }
+      it { run_output.should match('List of Actions') }
+      it { run_output.should_not match('Options') }
     end
   end
 
