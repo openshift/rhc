@@ -16,6 +16,7 @@ module Commander
     def deprecated(as_alias=nil)
       return false unless info
       return info[:deprecated] if info[:deprecated]
+      return false unless info[:aliases]
       info[:aliases].select{ |a| ['-',' '].map{ |s| Array(a[:action]).join(s) }.include?(as_alias) }.map{ |a| a[:deprecated] }.first if as_alias
     end
 
@@ -220,15 +221,17 @@ module RHC
 
           c.when_called do |args, options|
             deprecated!
-
+            
             config = c.instance_variable_get(:@config)
-
+            
             cmd = opts[:class].new
             cmd.options = options
             cmd.config = config
-
+            
             args = fill_arguments(cmd, options, args_metadata, options_metadata, args)
             needs_configuration!(cmd, options, config)
+            
+            return execute(cmd, :help, args) unless opts[:method]
             execute(cmd, opts[:method], args)
           end
         end
