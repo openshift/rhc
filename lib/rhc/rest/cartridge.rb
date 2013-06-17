@@ -34,6 +34,10 @@ module RHC
         Array(attribute('tags'))
       end
 
+      def gear_storage
+        (base_gear_storage + additional_gear_storage) * 1024 * 1024 * 1024
+      end
+
       def additional_gear_storage
         attribute(:additional_gear_storage).to_i rescue 0
       end
