@@ -44,7 +44,7 @@ module RHC::Commands
       if options.verbose
         carts.each do |c|
           paragraph do
-            name = c.display_name != c.name && "#{color(c.display_name, :cyan)} [#{c.name}]" || c.name
+            name = c.display_name != c.name && "#{color(c.display_name, :cyan)} [#{c.name}#{'*' if c.usage_rate?}]" || "#{c.name}#{'*' if c.usage_rate?}"
             tags = c.tags - RHC::Rest::Cartridge::HIDDEN_TAGS
             say header([name, "(#{c.only_in_existing? ? 'addon' : 'web'})"])
             say c.description
