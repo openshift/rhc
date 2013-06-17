@@ -59,6 +59,7 @@ describe RHC::Commands::Cartridge do
         it{ run_output.should match "Mock2 description\n\n" }
         it{ run_output.should match "Tagged with: scheduled" }
         it{ run_output.should_not match("Tagged with: cartridge") }
+        it{ run_output.should match /Premium Cart.*\[premium_cart\-1\*\] \(web\)/ }
       end
     end
   end
