@@ -443,7 +443,7 @@ module RHC
 
           # Copy messages to each object
           messages = Array(result['messages']).map do |m|
-            m['text'] if m['field'].nil? or m['field'] == 'result'
+            m['text'] if m['field'].nil? or m['field'] == 'result' or m['severity'] == 'result'
           end.compact
           data.each{ |d| d['messages'] = messages } if data.is_a?(Array)
           data['messages'] = messages if data.is_a?(Hash)
