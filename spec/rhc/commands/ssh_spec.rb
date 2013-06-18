@@ -62,6 +62,11 @@ describe RHC::Commands::Ssh do
       before{ expect_multi_ssh('command', 'fakegearid0@fakesshurl.com' => 'foo', 'fakegearid1@fakesshurl.com' => 'bar') }
       it('should print the ssh output') { run_output.should == "foo\nbar\n\n" }
     end
+    context 'with --limit' do
+      let(:arguments) { ['app', 'ssh', 'app1', '--gears', 'command', '--limit', '1'] }
+      before{ expect_multi_ssh('command', 'fakegearid0@fakesshurl.com' => 'foo', 'fakegearid1@fakesshurl.com' => 'bar') }
+      it('should print the ssh output') { run_output.should == "[fakegearid0 ] foo\n[fakegearid1 ] bar\n\n" }
+    end
     context 'with multiline output and --always-prefix' do
       let(:arguments) { ['app', 'ssh', 'app1', '--gears', 'command', '--always-prefix'] }
       before{ expect_multi_ssh('command', 'fakegearid0@fakesshurl.com' => "foo\ntest", 'fakegearid1@fakesshurl.com' => "bar\ntest") }
