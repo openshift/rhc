@@ -22,7 +22,7 @@ module RHC::Commands
     option ["--ssh PATH"], "Path to your SSH executable or additional options"
     option ["-n", "--namespace NAME"], "Namespace of the application", :context => :namespace_context, :required => false
     option ["--gears"], "Execute this command on all gears in the app.  Requires a command."
-    option ["--limit INTEGER"], "Limit the number of simultaneous SSH connections opened with --gears (default: 5)."
+    option ["--limit INTEGER", Integer], "Limit the number of simultaneous SSH connections opened with --gears (default: 5)."
     option ["--raw"], "Output only the data returned by each host, no hostname prefix."
     alias_action 'app ssh', :root_command => true
     def run(app_name, command)
