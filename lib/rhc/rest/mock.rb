@@ -52,7 +52,7 @@ module RHC::Rest::Mock
         to_return({
           :body => {
             :data => mock_response_links(authorizations ? mock_api_with_authorizations : mock_real_client_links),
-            :supported_api_versions => [1.0, 1.1, 1.2, 1.3, 1.4],
+            :supported_api_versions => [1.0, 1.1, 1.2, 1.3, 1.4, 1.5],
           }.to_json
         })
     end
@@ -208,6 +208,21 @@ module RHC::Rest::Mock
         })
     end
 
+    def stub_application_cartridges(domain_name, app_name, cartridges, status = 200)
+      url = client_links['LIST_DOMAINS']['relative'] rescue "broker/rest/domains"
+      stub_api_request(:any, "#{url}/#{domain_name}/applications/#{app_name}/cartridges").
+        to_return({
+          :body   => {
+            :type => 'cartridges',
+            :data => cartridges.map{ |c| c.is_a?(String) ? {:name => c} : c }.map do |cart|
+              cart[:links] ||= mock_response_links(mock_cart_links(domain_name,app_name, cart[:name]))
+              cart
+            end
+          }.to_json,
+          :status => status
+        })
+    end
+
     def stub_simple_carts
       stub_api_request(:get, 'broker/rest/cartridges', mock_user_auth).to_return(simple_carts)
     end
@@ -324,7 +339,7 @@ module RHC::Rest::Mock
 
     def mock_app_links(domain_id='test_domain',app_id='test_app')
       [['ADD_CARTRIDGE',   "domains/#{domain_id}/apps/#{app_id}/carts/add", 'post'],
-       ['LIST_CARTRIDGES', "domains/#{domain_id}/apps/#{app_id}/carts/",    'get' ],
+       ['LIST_CARTRIDGES', "broker/rest/domains/#{domain_id}/applications/#{app_id}/cartridges",'get' ],
        ['GET_GEAR_GROUPS', "domains/#{domain_id}/apps/#{app_id}/gear_groups", 'get' ],
        ['START',           "domains/#{domain_id}/apps/#{app_id}/start",     'post'],
        ['STOP',            "domains/#{domain_id}/apps/#{app_id}/stop",      'post'],
@@ -333,14 +348,14 @@ module RHC::Rest::Mock
        ['ADD_ALIAS',       "domains/#{domain_id}/apps/#{app_id}/event",     'post'],
        ['REMOVE_ALIAS',    "domains/#{domain_id}/apps/#{app_id}/event",     'post'],
        ['LIST_ALIASES',    "domains/#{domain_id}/apps/#{app_id}/aliases",   'get'],
-       ['DELETE',          "domains/#{domain_id}/apps/#{app_id}/delete",    'post']]
+       ['DELETE',          "broker/rest/domains/#{domain_id}/applications/#{app_id}", 'DELETE']]
     end
 
     def mock_cart_links(domain_id='test_domain',app_id='test_app',cart_id='test_cart')
       [['START',   "domains/#{domain_id}/apps/#{app_id}/carts/#{cart_id}/start",   'post'],
        ['STOP',    "domains/#{domain_id}/apps/#{app_id}/carts/#{cart_id}/stop",    'post'],
        ['RESTART', "domains/#{domain_id}/apps/#{app_id}/carts/#{cart_id}/restart", 'post'],
-       ['DELETE',  "domains/#{domain_id}/apps/#{app_id}/carts/#{cart_id}/delete",  'post']]
+       ['DELETE',  "broker/rest/domains/#{domain_id}/applications/#{app_id}/cartridges/#{cart_id}",  'DELETE']]
     end
 
     def mock_client_links

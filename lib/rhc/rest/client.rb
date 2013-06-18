@@ -439,7 +439,7 @@ module RHC
         def parse_response(response)
           result = RHC::Json.decode(response)
           type = result['type']
-          data = result['data']
+          data = result['data'] || {}
 
           # Copy messages to each object
           messages = Array(result['messages']).map do |m|

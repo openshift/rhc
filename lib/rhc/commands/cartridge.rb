@@ -87,9 +87,8 @@ module RHC::Commands
       success "Success"
 
       paragraph{ display_cart(rest_cartridge) }
-
-      results{ rest_cartridge.messages.each { |msg| success msg } }
-
+      paragraph{ rest_cartridge.messages.each { |msg| success msg } }
+      
       0
     end
 
@@ -123,6 +122,8 @@ module RHC::Commands
       say "Removing #{rest_cartridge.name} from '#{rest_app.name}' ... "
       rest_cartridge.destroy
       success "removed"
+
+      paragraph{ rest_cartridge.messages.each { |msg| success msg } }
 
       0
     end
