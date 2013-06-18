@@ -30,7 +30,7 @@ unless RUBY_VERSION < '1.9'
         STDERR.puts "Coverage not 100%, build failed."
         exit 1
       end
-    rescue StandardError => e
+    rescue Exception => e
       STDERR.puts "Exception at exit, #{e.message}"
     end
   end
