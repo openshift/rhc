@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.10.3
+Version: 1.10.4
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -99,6 +99,14 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Jun 19 2013 Adam Miller <admiller@redhat.com> 1.10.4-1
+- Modify rhc ssh command to reject --limit values of < 1 (hripps@redhat.com)
+- Merge pull request #407 from
+  smarterclayton/bug_965804_display_results_from_remove_cart
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 965804 - Display results when a cartridge or application is removed
+  (ccoleman@redhat.com)
+
 * Tue Jun 18 2013 Adam Miller <admiller@redhat.com> 1.10.3-1
 - Bug 975410 - rhc ssh limit option failing (jforrest@redhat.com)
 
