@@ -28,7 +28,7 @@ describe RHC::Commands::PortForward do
       it "should error out and suggest restarting the application" do
         expect { run }.to exit_with_code(1)
       end
-      it { run_output.should match(/Application \S+ is stopped\..*restart/m) }
+      it { run_output.should match(/none.*The application is stopped\..*restart/m) }
     end
 
     context 'when port forwarding an app without ports to forward' do
@@ -174,11 +174,11 @@ describe RHC::Commands::PortForward do
 
     context 'when port forwarding a single gear on a scaled app' do
       let(:gear_host) { 'fakesshurl.com' }
-      let(:gear_user) { 'fakegearid' }
+      let(:gear_user) { 'fakegearid0' }
       let(:arguments) { ['port-forward', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p', 'password', '--app', 'mockapp', '--gear', @gear_id] }
 
       it 'should run successfully' do
-        @gear_id = 'fakegearid'
+        @gear_id = 'fakegearid0'
         Net::SSH.should_receive(:start).with(gear_host, gear_user).and_yield(@ssh).twice
 
         @ssh.should_receive(:exec!).with("rhc-list-ports --exclude-remote").
@@ -199,15 +199,15 @@ describe RHC::Commands::PortForward do
       end
 
       it 'should fail if the specified gear has no ssh info' do
-        @gear_id = 'fakegearid'
+        @gear_id = 'fakegearid0'
 
         # Given - gears in gear group should not have ssh info
         gg = MockRestGearGroup.new(rest_client)
         @app.stub(:gear_groups).and_return([gg])
-        gg.stub(:gears).and_return([{'state' => 'started', 'id' => 'fakegearid'}])
+        gg.stub(:gears).and_return([{'state' => 'started', 'id' => 'fakegearid0'}])
 
         expect { run }.to exit_with_code(1)
-        run_output.should include('The server does not support per gear operations')
+        run_output.should match('The server does not support operations on individual gears.')
       end
 
     end

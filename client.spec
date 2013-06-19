@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.10.1
+Version: 1.10.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -100,6 +100,63 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Jun 18 2013 Adam Miller <admiller@redhat.com> 1.10.3-1
+- Bug 975410 - rhc ssh limit option failing (jforrest@redhat.com)
+
+* Mon Jun 17 2013 Adam Miller <admiller@redhat.com> 1.10.2-1
+- Merge pull request #404 from smarterclayton/parallel_commands
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #401 from liggitt/bug_971328_results_messages
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #402 from jwforres/bug_974439_rhc_subcommand_with_dash
+  (dmcphers+openshiftbot@redhat.com)
+- Review comments (ccoleman@redhat.com)
+- Run in order on Ruby 1.8.7 (ccoleman@redhat.com)
+- Merge pull request #405 from
+  jwforres/bug_974381_cartlist_verbose_missing_asterisk
+  (dmcphers+openshiftbot@redhat.com)
+- Add spec test for various results messages formats (jliggitt@redhat.com)
+- Bug 974439 - add testcase (jforrest@redhat.com)
+- Bug 974381 - review feedback (jforrest@redhat.com)
+- Bug 974381 - cartridge list -v missing asterisk on carts with usage cost
+  (jforrest@redhat.com)
+- Bug 974439 - review feedback (jforrest@redhat.com)
+- Missing coverage, better output handling (ccoleman@redhat.com)
+- Bug 969390 - Only full stop triggers message (ccoleman@redhat.com)
+- Implement a parallel SSH command helper 'rhc ssh --gears' which executes a
+  command against all gears of an app. Implement a quota display for 'rhc show-
+  app --gears quota' (ccoleman@redhat.com)
+- When rounded, certain table cells can get extra whitespace
+  (ccoleman@redhat.com)
+- Bug 974439 - fix rhc help issues (jforrest@redhat.com)
+- Fix bug 971328 - new results message format (jliggitt@redhat.com)
+- Merge pull request #400 from
+  smarterclayton/bug_963985_overhaul_rhc_app_create_output
+  (dmcphers+openshiftbot@redhat.com)
+- Allow RHC extended to run. (ccoleman@redhat.com)
+- Review feedback (ccoleman@redhat.com)
+- Merge pull request #399 from smarterclayton/issue_390_handle_no_proxy
+  (dmcphers+openshiftbot@redhat.com)
+- Ensure the return value is correct in Ruby 1.8.7 (ccoleman@redhat.com)
+- Fix Ruby 1.8.7, test equality of strings (ccoleman@redhat.com)
+- Bug 963985 - Overhaul how RHC app-create generates output
+  (ccoleman@redhat.com)
+- Support NO_PROXY by defaulting to httpclient's support.  This means non-
+  qualified URIs are no longer supported. (ccoleman@redhat.com)
+- Added optional command argument to 'rhc app ssh' so you can run a command,
+  for example: (andy.goldstein@gmail.com)
+- Updating RHC tests to work with F19 cartridge versions. Add psych as optional
+  gem dependency used only on F19 systems (kraman@gmail.com)
+- Merge pull request #396 from smarterclayton/allow_direct_scale_value
+  (dmcphers+openshiftbot@redhat.com)
+- Allow users to specify a direct scale value with rhc scale-cartridge php 5
+  (sets min and max) (ccoleman@redhat.com)
+- Bug 970028 - Handle empty rows (ccoleman@redhat.com)
+- Give users a warning about scaling being a long running operation, and an
+  additional bit of info on receive timeouts from set scale Handle ECONNRESET
+  Suppress incorrect warning about downloaded cart on post-install operations
+  (ccoleman@redhat.com)
+
 * Thu May 30 2013 Adam Miller <admiller@redhat.com> 1.10.1-1
 - bump_minor_versions for sprint 29 (admiller@redhat.com)
 

@@ -49,9 +49,10 @@ describe RHC::Commands::Tail do
     end
 
     context 'succeeds when a gear is specified' do
-      before (:each) {Net::SSH.should_receive(:start).with('fakesshurl.com', 'fakegearid') }
-      let(:arguments) { ['tail', 'mock-app-0', '--gear', 'fakegearid' ] }
+      before (:each) {Net::SSH.should_receive(:start).with('fakesshurl.com', 'fakegearid0') }
+      let(:arguments) { ['tail', 'mock-app-0', '--gear', 'fakegearid0' ] }
 
+      it { run_output.should_not =~ /Connecting to fakesshurl.com/ }
       it { expect { run }.to exit_with_code(0) }
     end
 
@@ -73,7 +74,7 @@ describe RHC::Commands::Tail do
       end
 
       it { expect { run }.to exit_with_code(1) }
-      it { run_output.should =~ /The server does not support per gear operations/ }
+      it { run_output.should =~ /The server does not support operations on individual gears./ }
     end
 
   end

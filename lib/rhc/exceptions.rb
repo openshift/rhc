@@ -135,17 +135,22 @@ module RHC
     end
   end
 
-  class ServerAPINotSupportedException < Exception
-    def initialize(min_version, current_version)
-      super "The server does not support this command (requires #{min_version}, found #{current_version})."
-    end
-  end
-
-  class OperationNotSupportedException < Exception
+  class UnsupportedError < Exception
     def initialize(message="This operation is not supported by the server.")
       super message, 1
     end
   end
+  class NoPerGearOperations < UnsupportedError
+    def initialize
+      super "The server does not support operations on individual gears."
+    end
+  end  
+  class ServerAPINotSupportedException < UnsupportedError
+    def initialize(min_version, current_version)
+      super "The server does not support this command (requires #{min_version}, found #{current_version})."
+    end
+  end
+  class OperationNotSupportedException < UnsupportedError; end
 
   class InvalidURIException < Exception
     def initialize(uri)

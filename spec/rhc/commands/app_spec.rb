@@ -19,8 +19,10 @@ describe RHC::Commands::App do
       @instance.stub(:git_config_set) { "" }
       Kernel.stub(:sleep) { }
       @instance.stub(:git_clone_repo) do |git_url, repo_dir|
+        $terminal.instance_variable_get(:@output).puts "Cloning into..."
         raise RHC::GitException, "Error in git clone" if repo_dir == "giterrorapp"
         Dir::mkdir(repo_dir)
+        File.expand_path(repo_dir)
       end
       @instance.stub(:host_exists?) do |host|
         host.match("dnserror") ? false : true
@@ -41,6 +43,8 @@ describe RHC::Commands::App do
     context 'app' do
       let(:arguments) { ['app'] }
       it { run_output.should match('Usage:') }
+      it { run_output.should match('List of Actions') }
+      it { run_output.should_not match('Options') }
     end
   end
 
@@ -159,7 +163,7 @@ describe RHC::Commands::App do
       before{ rest_client.domains.clear }
       let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart-1'] }
       # skips login stage and insecure check because of mock rest client, doesn't check keys
-      it { run_output(['mydomain', 'y', 'mykey']).should match(/This wizard.*Checking your namespace.*Your domain name 'mydomain' has been successfully created.*Creating application.*Your public SSH key.*Uploading key 'mykey' .*Downloading the application.*Success/m) }
+      it { run_output(['mydomain', 'y', 'mykey']).should match(/This wizard.*Checking your namespace.*Your domain name 'mydomain' has been successfully created.*Creating application.*Your public SSH key.*Uploading key 'mykey'.*Your application 'app1' is now available.*Cloned to/m) }
     end
 
     context 'when run without a cart' do
@@ -207,8 +211,8 @@ describe RHC::Commands::App do
       let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart-1', '--from', 'git://url', '--noprompt', '-p',  'password'] }
       it { expect { run }.to exit_with_code(0) }
       it { run_output.should match("Success") }
+      it { run_output.should match("Git remote: git:fake.foo/git/app1.git\n") }
       it { run_output.should match("Source Code: git://url\n") }
-      it { run_output.should match("Initial Git URL: git://url\n") }
       after{ rest_client.domains.first.applications.first.initial_git_url.should == 'git://url' }
     end
 
@@ -494,6 +498,37 @@ describe RHC::Commands::App do
         end
       end
     end
+
+    context "against a 1.5 server" do
+      let!(:rest_client){ nil }
+      let(:username){ mock_user }
+      let(:password){ 'password' }
+      let(:server){ mock_uri }
+      let(:arguments){ ['delete-app', 'foo', '--confirm', '--trace'] }
+      before do 
+        stub_api(true)
+        stub_one_domain('test')
+        stub_one_application('test', 'foo')
+      end
+      before do 
+        stub_api_request(:delete, "broker/rest/domains/test/applications/foo").
+          to_return({
+            :body   => {
+              :type => nil,
+              :data => nil,
+              :messages => [
+                {:exit_code => 0, :field => nil, :severity => 'info', :text => 'Removed foo'},
+                {:exit_code => 0, :field => nil, :severity => 'result', :text => 'Job URL changed'},
+              ]
+            }.to_json,
+            :status => 200
+          })
+      end
+
+      it("should display info returned by the server"){ run_output.should match "Removed foo" }
+      it("should display results returned by the server"){ run_output.should match "Job URL changed" }
+      it('should exit successfully'){ expect{ run }.to exit_with_code(0) }
+    end
   end
 
   describe 'app show' do
@@ -564,66 +599,52 @@ describe RHC::Commands::App do
   end
 
   describe 'app show --gears' do
-    let(:arguments) { ['app', 'show', 'app1', '--gears', '--noprompt'] }
+    let(:arguments) { ['app', 'show', 'app1', '--gears'] }
 
     context 'when run' do
       before(:each) do
         @domain = rest_client.add_domain("mockdomain")
         @domain.add_application("app1", "mock_type")
       end
-      it { run_output.should match("fakegearid started fake_geargroup_cart-0.1 small fakegearid@fakesshurl.com") }
+      it { run_output.should match("fakegearid0 started mock_type  small fakegearid0@fakesshurl.com") }
+      it { expect{ run }.to exit_with_code(0) }
     end
   end
 
-  describe 'app ssh' do
-    let(:arguments) { ['app', 'ssh', 'app1'] }
+  describe 'app show --gears quota' do
+    let(:arguments) { ['app', 'show', 'app1', '--gears', 'quota'] }
 
     context 'when run' do
-      before(:each) do
+      before do
         @domain = rest_client.add_domain("mockdomain")
-        @domain.add_application("app1", "mock_type")
-        Kernel.should_receive(:system).with("ssh fakeuuidfortestsapp1@127.0.0.1").and_return(0)
+        @domain.add_application("app1", "mock_type", true)
+        expect_multi_ssh('echo "$(du -s 2>/dev/null | cut -f 1)"', 'fakegearid0@fakesshurl.com' => '1734934', 'fakegearid1@fakesshurl.com' => '1934234')
       end
-      it { run_output.should match("Connecting to fakeuuidfortestsapp") }
-      it { expect { run }.to exit_with_code(0) }
+      it { run_output.should match(/Gear.*Cartridges.*Used.*fakegearid0.*1\.7 MB.*1 GB.*fakegearid1.*1\.9 MB/m) }
+      it { expect{ run }.to exit_with_code(0) }
     end
   end
 
-  describe 'app ssh no system ssh' do
-    let(:arguments) { ['app', 'ssh', 'app1'] }
+  describe 'app show --gears ssh' do
+    let(:arguments) { ['app', 'show', 'app1', '--gears', 'ssh'] }
 
     context 'when run' do
-      before(:each) do
+      before do
         @domain = rest_client.add_domain("mockdomain")
-        @domain.add_application("app1", "mock_type")
-        @instance.should_receive(:has_ssh?).and_return(false)
+        @domain.add_application("app1", "mock_type", true)
       end
-      it { run_output.should match("Please use the --ssh option to specify the path to your SSH executable, or install SSH.") }
-      it { expect { run }.to exit_with_code(1) }
+      it { run_output.should == "fakegearid0@fakesshurl.com\nfakegearid1@fakesshurl.com\n\n" }
+      it { expect{ run }.to exit_with_code(0) }
     end
   end
 
-  describe 'app ssh can use system exec' do
-    let(:arguments) { ['app', 'ssh', 'app1', '--ssh', 'path_to_ssh'] }
+  describe 'app show --gears badcommand' do
+    let(:arguments) { ['app', 'show', 'app1', '--gears', 'badcommand'] }
 
     context 'when run' do
-      before(:each) do
-        @domain = rest_client.add_domain("mockdomain")
-        @domain.add_application("app1", "mock_type")
-        @instance.should_not_receive(:has_ssh?)
-        Kernel.should_receive(:system).with("path_to_ssh fakeuuidfortestsapp1@127.0.0.1").and_return(1)
-      end
-      it { run_output.should match("Connecting to fakeuuidfortestsapp") }
-      it { expect { run }.to exit_with_code(1) }
-    end
-  end
-
-  describe 'ssh tests' do
-    let(:arguments) { ['app', 'ssh', 'app1', '-s /bin/blah'] }
-
-    context 'has_ssh?' do
-      before{ @instance.stub(:ssh_version){ raise "Fake Exception" } }
-      its(:has_ssh?) { should be_false }
+      before{ rest_client.add_domain("mockdomain").add_application("app1", "mock_type", true) }
+      it { run_output.should match(/The operation badcommand is not supported/m) }
+      it { expect{ run }.to exit_with_code(1) }
     end
   end
 

@@ -174,6 +174,7 @@ class HighLineExtension < HighLine
     top = 0 unless @margin
     @margin = [top, @margin || 0].max
 
+    separate_blocks if params[:now]
     value = block.call
 
     say "\n" if @last_line_open
@@ -318,7 +319,13 @@ class HighLine::Table
     def source_rows
       @source_rows ||= begin
         (@mapper ? (items.map &@mapper) : items).each do |row|
-          row.map!{ |col| col.is_a?(String) ? col : col.to_s }
+          row.map! do |col| 
+            case col
+            when Array then col.join("\n")
+            when String then col
+            else col.to_s
+            end
+          end
         end
       end
     end
@@ -367,18 +374,36 @@ class HighLine::Table
           end
       end
 
-      remaining = column_widths.inject(0){ |sum, w| if w.set == 0; sum += w.max; available -= w.min; end; sum }
+      remaining = column_widths.inject(0) do |sum, w| 
+          if w.set == 0
+            sum += w.max
+            available -= w.min 
+          end
+          sum
+        end
       fair = available.to_f / remaining.to_f
 
       column_widths.
         each do |w| 
           if w.set == 0
-            available -= (alloc = (w.max * fair).to_i)
+            alloc = (w.max * fair).to_i
+            overflow = alloc + w.min - w.max
+            if overflow > 0
+              alloc -= overflow
+            end
+            available -= alloc
             w.set = alloc + w.min
           end
         end.
-        each{ |w| if available > 0 && w.set < w.max; w.set += 1; available -= 1; end }.
-        map(&:set)
+        each do |w|
+          next unless available > 0
+          gap = w.max - w.set
+          if gap > 0
+            left = [gap,available].min
+            available -= left
+            w.set += left
+          end
+        end.map(&:set)
     end
 
     def widths

@@ -1,9 +1,9 @@
 Usage: <%= Array(program :name).first %> <%= @command.name %> <%= @command.syntax %>
 
 <%= @command.description || @command.summary %>
-<% if @actions.blank? -%>
+<% if @actions.blank? or @command.root? and @command.info[:method].present? -%>
 
-<% unless @command.info[:args].blank? -%>
+<% unless @command.info[:args].blank? or @command.options.all?{ |o| o[:hide] or o[:switches].present? } -%>
 
 Arguments
 <%= table(
@@ -39,7 +39,8 @@ Global Options
 	).join("\n") %>
 
   See 'rhc help options' for a full list of global options.
-<% else -%>
+<% end -%>
+<% if @actions.present? -%>
 
 List of Actions
 <%= table(@actions.map{ |a| [a[:name], a[:summary]] }, table_args('  ', 13)).join("\n") %>

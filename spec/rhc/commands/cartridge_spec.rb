@@ -59,6 +59,7 @@ describe RHC::Commands::Cartridge do
         it{ run_output.should match "Mock2 description\n\n" }
         it{ run_output.should match "Tagged with: scheduled" }
         it{ run_output.should_not match("Tagged with: cartridge") }
+        it{ run_output.should match /Premium Cart.*\[premium_cart\-1\*\] \(web\)/ }
       end
     end
   end
@@ -207,6 +208,38 @@ describe RHC::Commands::Cartridge do
       it "should raise cartridge not found exception" do
         expect { run }.to raise_error RHC::CartridgeNotFoundException
       end
+    end
+
+    context "against a 1.5 server" do
+      let!(:rest_client){ nil }
+      let(:username){ mock_user }
+      let(:password){ 'password' }
+      let(:server){ mock_uri }
+      let(:arguments){ ['remove-cartridge', 'jenkins-1.4', '-a', 'foo', '--confirm', '--trace'] }
+      before do 
+        stub_api(true)
+        stub_one_domain('test')
+        stub_one_application('test', 'foo').with(:query => {:include => :cartridges})
+        stub_application_cartridges('test', 'foo', [{:name => 'php-5.3'}, {:name => 'jenkins-1.4'}])
+      end
+      before do 
+        stub_api_request(:delete, "broker/rest/domains/test/applications/foo/cartridges/jenkins-1.4").
+          to_return({
+            :body   => {
+              :type => nil,
+              :data => nil,
+              :messages => [
+                {:exit_code => 0, :field => nil, :severity => 'info', :text => 'Removed Jenkins'},
+                {:exit_code => 0, :field => nil, :severity => 'result', :text => 'Job URL changed'},
+              ]
+            }.to_json,
+            :status => 200
+          })
+      end
+
+      it("should display info returned by the server"){ run_output.should match "Removed Jenkins" }
+      it("should display results returned by the server"){ run_output.should match "Job URL changed" }
+      it('should exit successfully'){ expect{ run }.to exit_with_code(0) }
     end
   end
 

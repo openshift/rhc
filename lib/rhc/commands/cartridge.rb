@@ -44,7 +44,9 @@ module RHC::Commands
       if options.verbose
         carts.each do |c|
           paragraph do
-            name = c.display_name != c.name && "#{color(c.display_name, :cyan)} [#{c.name}]" || c.name
+            name = c.name
+            name += '*' if c.usage_rate?
+            name = c.display_name != c.name && "#{color(c.display_name, :cyan)} [#{name}]" || name
             tags = c.tags - RHC::Rest::Cartridge::HIDDEN_TAGS
             say header([name, "(#{c.only_in_existing? ? 'addon' : 'web'})"])
             say c.description
@@ -85,9 +87,8 @@ module RHC::Commands
       success "Success"
 
       paragraph{ display_cart(rest_cartridge) }
-
-      results{ rest_cartridge.messages.each { |msg| success msg } }
-
+      paragraph{ rest_cartridge.messages.each { |msg| success msg } }
+      
       0
     end
 
@@ -121,6 +122,8 @@ module RHC::Commands
       say "Removing #{rest_cartridge.name} from '#{rest_app.name}' ... "
       rest_cartridge.destroy
       success "removed"
+
+      paragraph{ rest_cartridge.messages.each { |msg| success msg } }
 
       0
     end

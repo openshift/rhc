@@ -75,6 +75,7 @@ module RHC::Commands
 
       rest_domain = check_domain!
       rest_app = nil
+      repo_dir = nil
 
       cart_names = cartridges.collect do |c|
         c.usage_rate? ? "#{c.short_name} (addtl. costs may apply)" : c.short_name
@@ -91,15 +92,14 @@ module RHC::Commands
              ).each { |s| say "  #{s}" }
       end
 
-      messages = []
-
       paragraph do
         say "Creating application '#{name}' ... "
 
         # create the main app
         rest_app = create_app(name, cartridges, rest_domain, options.gear_size, options.scaling, options.from_code)
-        messages.concat(rest_app.messages)
         success "done"
+
+        paragraph{ indent{ success rest_app.messages.map(&:strip) } }
       end
 
       build_app_exists = rest_app.building_app
@@ -113,7 +113,7 @@ module RHC::Commands
               build_app_exists = add_jenkins_app(rest_domain)
 
               success "done"
-              messages.concat(build_app_exists.messages)
+              paragraph{ indent{ success build_app_exists.messages.map(&:strip) } }
 
             rescue Exception => e
               warn "not complete"
@@ -126,7 +126,9 @@ module RHC::Commands
         end
 
         paragraph do
+          messages = []
           add_jenkins_client_to(rest_app, messages)
+          paragraph{ indent{ success messages.map(&:strip) } }
         end if build_app_exists
       end
 
@@ -150,31 +152,37 @@ module RHC::Commands
         end
 
         if options.git
-          paragraph do
-            say "Downloading the application Git repository ..."
-            paragraph do
-              begin
-                git_clone_application(rest_app)
-              rescue RHC::GitException => e
-                warn "#{e}"
-                unless RHC::Helpers.windows? and windows_nslookup_bug?(rest_app)
-                  add_issue("We were unable to clone your application's git repo - #{e}",
-                            "Clone your git repo",
-                            "rhc git-clone #{rest_app.name}")
-                end
+          section(:now => true, :top => 1, :bottom => 1) do
+            begin
+              repo_dir = git_clone_application(rest_app)
+            rescue RHC::GitException => e
+              warn "#{e}"
+              unless RHC::Helpers.windows? and windows_nslookup_bug?(rest_app)
+                add_issue("We were unable to clone your application's git repo - #{e}",
+                          "Clone your git repo",
+                          "rhc git-clone #{rest_app.name}")
               end
             end
           end
         end
       end
 
-      display_app(rest_app, rest_app.cartridges)
-
-      if issues?
-        output_issues(rest_app)
-      else
-        results{ messages.each { |msg| success msg } }.blank? and "Application created"
+      output_issues(rest_app) if issues?
+            
+      paragraph do
+        say "Your application '#{rest_app.name}' is now available."
+        paragraph do
+          indent do
+            say table [
+                ['URL:', rest_app.app_url],
+                ['SSH to:', rest_app.ssh_string],
+                ['Git remote:', rest_app.git_url],
+                (['Cloned to:', repo_dir] if repo_dir)
+              ].compact
+          end
+        end
       end
+      paragraph{ say "Run 'rhc show-app #{name}' for more details about your app." }
 
       0
     end
@@ -197,6 +205,8 @@ module RHC::Commands
       say "Deleting application '#{rest_app.name}' ... "
       rest_app.destroy
       success "deleted"
+
+      paragraph{ rest_app.messages.each{ |s| success s } }
 
       0
     end
@@ -268,17 +278,52 @@ module RHC::Commands
     end
 
     summary "Show information about an application"
+    description <<-DESC
+      Display the properties of an application, including its URL, the SSH
+      connection string, and the Git remote URL.  Will also display any 
+      cartridges, their scale, and any values they expose.
+
+      The '--state' option will retrieve information from each cartridge in 
+      the application, which may include cartridge specific text.
+
+      To see information about the individual gears within an application,
+      use '--gears', including whether they are started or stopped and their
+      SSH host strings.  Passing '--gears quota' will show the free and maximum
+      storage on each gear.
+
+      If you want to run commands against individual gears, use:
+       
+        rhc ssh <app> --gears '<command>'
+
+      to run and display the output from each gear.
+      DESC
     syntax "<app> [--namespace NAME]"
     argument :app, "The name of the application you are getting information on", ["-a", "--app NAME"], :context => :app_context
     option ["-n", "--namespace NAME"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
     option ["--state"], "Get the current state of the cartridges in this application"
-    option ["--gears"], "Show the ID, state, and cartridges on each gear in this application"
+    option ["--gears [quota|ssh]"], "Show information about the cartridges on each gear in this application. Pass 'quota' to see per gear disk usage and limits. Pass 'ssh' to print only the SSH connection strings of each gear."
     def show(app_name)
 
       if options.state
         gear_groups_for_app(app_name).each do |gg|
           say "Cartridge #{gg.cartridges.collect { |c| c['name'] }.join(', ')} is #{gear_group_state(gg.gears.map{ |g| g['state'] })}"
         end
+
+      elsif options.gears && options.gears != true
+        groups = rest_client.find_application_gear_groups(options.namespace, app_name)
+
+        case options.gears
+        when 'quota'
+          opts = {:as => :gear, :split_cells_on => /\s*\t/, :header => ['Gear', 'Cartridges', 'Used', 'Limit'], :align => [nil, nil, :right, :right]}
+          table_from_gears('echo "$(du -s 2>/dev/null | cut -f 1)"', groups, opts) do |gear, data, group|
+            [gear['id'], group.cartridges.collect{ |c| c['name'] }.join(' '), (human_size(data.chomp) rescue 'error'), human_size(group.quota)]
+          end
+        when 'ssh'
+          groups.each{ |group| group.gears.each{ |g| say (ssh_string(g['ssh_url']) or raise NoPerGearOperations) } }
+        else 
+          run_on_gears(ssh_command_for_op(options.gears), groups)
+        end
+
       elsif options.gears
         gear_info = gear_groups_for_app(app_name).map do |group|
           group.gears.map do |gear|
@@ -301,28 +346,6 @@ module RHC::Commands
       0
     end
 
-    summary "SSH into the specified application"
-    syntax "<app> [--ssh path_to_ssh_executable]"
-    argument :app, "The name of the application you want to SSH into", ["-a", "--app NAME"], :context => :app_context
-    option ["--ssh PATH"], "Path to your SSH executable"
-    option ["-n", "--namespace NAME"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
-    alias_action 'ssh', :root_command => true
-    def ssh(app_name)
-      raise ArgumentError, "No application specified" unless app_name.present?
-      raise OptionParser::InvalidOption, "No system SSH available. Please use the --ssh option to specify the path to your SSH executable, or install SSH." unless options.ssh or has_ssh?
-
-      rest_app = rest_client.find_application(options.namespace, app_name)
-
-      say "Connecting to #{rest_app.ssh_string.to_s} ..."
-      if options.ssh
-        debug "Using user specified SSH: #{options.ssh}"
-        Kernel.send(:system, "#{options.ssh} #{rest_app.ssh_string.to_s}")
-      else
-        debug "Using system ssh"
-        Kernel.send(:system, "ssh #{rest_app.ssh_string.to_s}")
-      end
-    end
-
     summary "DEPRECATED use 'show <app> --state' instead"
     syntax "<app> [--namespace NAME] [--app NAME]"
     argument :app, "The name of the application you are getting information on", ["-a", "--app NAME"], :context => :app_context
@@ -337,6 +360,7 @@ module RHC::Commands
     private
       include RHC::GitHelpers
       include RHC::CartridgeHelpers
+      include RHC::SSHHelpers
 
       def require_one_web_cart
         lambda{ |carts|
@@ -518,22 +542,6 @@ module RHC::Commands
         # :nocov:
       end
 
-      # check the version of SSH that is installed
-      def ssh_version
-        @ssh_version ||= `ssh -V 2>&1`.strip
-      end
-
-      # return whether or not SSH is installed
-      def has_ssh?
-        @has_ssh ||= begin
-          @ssh_version = nil
-          ssh_version
-          $?.success?
-        rescue
-          false
-        end
-      end
-
       def windows_nslookup_bug?(rest_app)
         windows_nslookup = run_nslookup(rest_app.host)
         windows_ping = run_ping(rest_app.host)
@@ -573,20 +581,49 @@ WARNING:  Your application was created successfully but had problems during
 #{reasons}
   Steps to complete your configuration:
 #{steps}
-  If you can't get your application '#{rest_app.name}' running in the browser,
+  If you continue to experience problems after completing these steps,
   you can try destroying and recreating the application:
 
     $ rhc app delete #{rest_app.name} --confirm
 
-  If this doesn't work for you, let us know in the forums or in IRC and we'll
-  make sure to get you up and running.
+  Please contact us if you are unable to successfully create your 
+  application:
 
-    Forums - https://www.openshift.com/forums/openshift
-    IRC - #openshift (on Freenode)
+    Support - https://www.openshift.com/support
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 WARNING_OUTPUT
       end
+
+    # Issues collector collects a set of recoverable issues and steps to fix them
+    # for output at the end of a complex command
+    def add_issue(reason, commands_header, *commands)
+      @issues ||= []
+      issue = {:reason => reason,
+               :commands_header => commands_header,
+               :commands => commands}
+      @issues << issue
+    end
+
+    def format_issues(indent)
+      return nil unless issues?
+
+      indentation = " " * indent
+      reasons = ""
+      steps = ""
+
+      @issues.each_with_index do |issue, i|
+        reasons << "#{indentation}#{i+1}. #{issue[:reason].strip}\n"
+        steps << "#{indentation}#{i+1}. #{issue[:commands_header].strip}\n"
+        issue[:commands].each { |cmd| steps << "#{indentation}  $ #{cmd}\n" }
+      end
+
+      [reasons, steps]
+    end
+
+    def issues?
+      not @issues.nil?
+    end      
   end
 end

@@ -109,6 +109,7 @@ module RHC::Commands
     syntax "<application>"
     argument :app, "Application name (required)", ["-a", "--app name"], :context => :app_context, :required => true
     option ["-n", "--namespace NAME"], "Namespace of your application", :context => :namespace_context, :required => true
+    alias_action "aliases", :root_command => true
     def list(app)
       rest_app = rest_client.find_application(options.namespace, app)
       items = rest_app.aliases.map do |a|

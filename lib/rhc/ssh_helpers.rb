@@ -20,6 +20,134 @@ require 'rhc/vendor/sshkey'
 
 module RHC
   module SSHHelpers
+
+    class MultipleGearTask
+      def initialize(command, over, opts={})
+        requires_ssh_multi!
+
+        @command = command
+        @over = over
+        @opts = opts
+      end
+
+      def run(&block)
+        out = nil
+
+        Net::SSH::Multi.start(
+          :concurrent_connections => @opts[:limit], 
+          :on_error => lambda{ |server| $stderr.puts "Unable to connect to gear #{server}" }
+        ) do |session|
+          
+          @over.each do |item| 
+            case item
+            when RHC::Rest::GearGroup
+              item.gears.each do |gear|
+                session.use ssh_host_for(gear), :properties => {:gear => gear, :group => item}
+              end
+            #when RHC::Rest::Gear
+            #  session.use ssh_host_for(item), :properties => {:gear => item}
+            #end
+            else 
+              raise "Cannot establish an SSH session to this type"
+            end
+          end
+          session.exec @command, &(
+            case
+            when @opts[:raw]
+              lambda { |ch, dest, data|
+                (dest == :stdout ? $stdout : $stderr).puts data
+              }
+            when @opts[:as] == :table
+              out = []
+              lambda { |ch, dest, data| 
+                label = label_for(ch)
+                data.chomp.each_line do |line|
+                  row = out.find{ |row| row[0] == label } || (out << [label, []])[-1]
+                  row[1] << line
+                end
+              }
+            when @opts[:as] == :gear
+              lambda { |ch, dest, data| (ch.connection.properties[:gear]['data'] ||= "") << data }              
+            else
+              width = 0
+              lambda { |ch, dest, data|
+                label = label_for(ch)
+                io = dest == :stdout ? $stdout : $stderr
+                data.chomp!
+
+                if data.each_line.to_a.count == 1
+                  io.puts "[#{label}] #{data}"
+                elsif @opts[:always_prefix]
+                  data.each_line do |line|
+                    io.puts "[#{label}] #{line}"
+                  end
+                else
+                  io.puts "=== #{label}"
+                  io.puts data
+                end
+              }
+            end)
+          session.loop
+        end
+
+        if block_given? && !@opts[:raw]
+          case
+          when @opts[:as] == :gear
+            out = []
+            @over.each do |item|
+              case item
+              when RHC::Rest::GearGroup then item.gears.each{ |gear| out << yield(gear, gear['data'], item) }
+              #when RHC::Rest::Gear      then out << yield(gear, gear['data'], nil)
+              end
+            end
+          end
+        end
+
+        out
+      end
+      protected
+        def ssh_host_for(gear)
+          RHC::Helpers.ssh_string(gear['ssh_url']) or raise NoPerGearOperations
+        end
+
+        def label_for(channel)
+          channel.properties[:label] ||= 
+            begin
+              group = channel.connection.properties[:group]
+              "#{key_for(channel)} #{group.cartridges.map{ |c| c['name'] }.join('+')}"
+            end
+        end
+
+        def key_for(channel)
+          channel.connection.properties[:gear]['id']
+        end
+
+        def requires_ssh_multi!
+          begin 
+            require 'net/ssh/multi' 
+          rescue LoadError
+            raise RHC::OperationNotSupportedException, "You must install Net::SSH::Multi to use the --gears option.  Most systems: 'gem install net-ssh-multi'"
+          end
+        end          
+    end
+
+    def run_on_gears(command, gears, opts={}, &block)
+      debug "Executing #{command} on each of #{gears.inspect}"
+      MultipleGearTask.new(command, gears, {:limit => options.limit, :always_prefix => options.always_prefix, :raw => options.raw}.merge(opts)).run(&block)
+    end
+
+    def table_from_gears(command, groups, opts={}, &block)
+      cells = run_on_gears(command, groups, {:as => :table}.merge(opts), &block)
+      cells.each{ |r| r.concat(r.pop.first.split(opts[:split_cells_on])) } if !block_given? && opts[:split_cells_on]
+      say table cells, opts unless options.raw
+    end
+
+    def ssh_command_for_op(operation)
+      #case operation
+      raise RHC::OperationNotSupportedException, "The operation #{operation} is not supported."
+      #end
+    end
+
     # Public: Run ssh command on remote host
     #
     # host - The String of the remote hostname to ssh to.
@@ -100,7 +228,6 @@ module RHC
       end
     end
 
-
     # For Net::SSH versions (< 2.0.11) that does not have
     # Net::SSH::KeyFactory.load_public_key, we drop to shell to get
     # the key's fingerprint
@@ -145,6 +272,22 @@ module RHC
     
     def ssh_key_triple_for_default_key
       ssh_key_triple_for(RHC::Config.ssh_pub_key_file_path)
+    end
+
+    # check the version of SSH that is installed
+    def ssh_version
+      @ssh_version ||= `ssh -V 2>&1`.strip
+    end
+
+    # return whether or not SSH is installed
+    def has_ssh?
+      @has_ssh ||= begin
+        @ssh_version = nil
+        ssh_version
+        $?.success?
+      rescue
+        false
+      end
     end
 
     private

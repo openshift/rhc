@@ -143,8 +143,19 @@ describe HighLineExtension do
     subject.table([]).to_a.should == []
   end
 
-  it "should handle an empty table" do
+  it "should handle a nested empty table" do
     subject.table([[]]).to_a.should == []
+  end
+
+  it "should normalize variables" do
+    subject.table([
+        ["a", 5],
+        [nil, ['a', 'b']],
+      ]).to_a.should == [
+        "a 5",
+        "  a",
+        "  b",
+      ]
   end
 
   it "should wrap a table based on a max width" do
@@ -154,6 +165,17 @@ describe HighLineExtension do
       "abcd 1234",
       "efgh 6789",
       "     a"
+    ]
+  end
+
+  # FIXME: Ragged edges still left by the algorithm
+  # 104 total width, 1: 32/52, 2: 8/61, 113 total width
+  it "should handle when columns are evenly split" do
+    subject.table([
+      ["#{'a'*32} #{'b'*19}", "#{'c'*8} "*6+"d"*7]
+    ], :width => 104).to_a.should == [
+      "a"*32+" "+'b'*19+" "+Array.new(5, 'c'*8).join(' '),
+      ' '*53+"#{'c'*8} "+'d'*7
     ]
   end
 

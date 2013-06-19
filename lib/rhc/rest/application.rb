@@ -63,11 +63,15 @@ module RHC
         rest_method "GET_GEAR_GROUPS"
       end
 
-      def gear_ssh_url(gear_id)
-        gear = gear_groups.map { |group| group.gears }.flatten.find { |g| g['id'] == gear_id }
+      def gears
+        gear_groups.map{ |group| group.gears }.flatten
+      end
 
-        raise ArgumentError.new("Gear #{gear_id} not found") if gear.nil?
-        gear['ssh_url'] or raise OperationNotSupportedException.new("The server does not support per gear operations")
+      def gear_ssh_url(gear_id)
+        gear = gears.find{ |g| g['id'] == gear_id }
+
+        raise ArgumentError, "Gear #{gear_id} not found" if gear.nil?
+        gear['ssh_url'] or raise NoPerGearOperations
       end
 
       def tidy

@@ -16,19 +16,22 @@ unless RUBY_VERSION < '1.9'
     def print_missed_lines
       @files.each do |file|
         file.missed_lines.each do |line|
-          puts "MISSED #{file.filename}:#{line.number}"
+          STDERR.puts "MISSED #{file.filename}:#{line.number}"
         end
       end
     end
   end
 
-  original_stderr = $stderr # in case helpers don't properly cleanup
   SimpleCov.at_exit do
-    SimpleCov.result.format!
-    if SimpleCov.result.covered_percent < 100.0
-      SimpleCov.result.print_missed_lines if SimpleCov.result.covered_percent > 98.0
-      original_stderr.puts "Coverage not 100%, build failed."
-      exit 1
+    begin
+      SimpleCov.result.format!
+      if SimpleCov.result.covered_percent < 100.0
+        SimpleCov.result.print_missed_lines if SimpleCov.result.covered_percent > 98.0
+        STDERR.puts "Coverage not 100%, build failed."
+        exit 1
+      end
+    rescue Exception => e
+      STDERR.puts "Exception at exit, #{e.message}"
     end
   end
 
