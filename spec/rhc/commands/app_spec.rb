@@ -498,6 +498,37 @@ describe RHC::Commands::App do
         end
       end
     end
+
+    context "against a 1.5 server" do
+      let!(:rest_client){ nil }
+      let(:username){ mock_user }
+      let(:password){ 'password' }
+      let(:server){ mock_uri }
+      let(:arguments){ ['delete-app', 'foo', '--confirm', '--trace'] }
+      before do 
+        stub_api(true)
+        stub_one_domain('test')
+        stub_one_application('test', 'foo')
+      end
+      before do 
+        stub_api_request(:delete, "broker/rest/domains/test/applications/foo").
+          to_return({
+            :body   => {
+              :type => nil,
+              :data => nil,
+              :messages => [
+                {:exit_code => 0, :field => nil, :severity => 'info', :text => 'Removed foo'},
+                {:exit_code => 0, :field => nil, :severity => 'result', :text => 'Job URL changed'},
+              ]
+            }.to_json,
+            :status => 200
+          })
+      end
+
+      it("should display info returned by the server"){ run_output.should match "Removed foo" }
+      it("should display results returned by the server"){ run_output.should match "Job URL changed" }
+      it('should exit successfully'){ expect{ run }.to exit_with_code(0) }
+    end
   end
 
   describe 'app show' do

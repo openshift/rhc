@@ -206,6 +206,8 @@ module RHC::Commands
       rest_app.destroy
       success "deleted"
 
+      paragraph{ rest_app.messages.each{ |s| success s } }
+
       0
     end
 

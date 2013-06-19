@@ -23,11 +23,16 @@ module RHC
         url = url.gsub(/:\w+/) { |s| options[:params][s] } if options[:params]
         method = options[:method] || link['method']
 
-        client.request(options.merge({
+        result = client.request(options.merge({
           :url => url,
           :method => method,
           :payload => payload,
         }))
+        if result.is_a?(Hash) && (result['messages'] || result['errors'])
+          attributes['messages'] = Array(result['messages'])
+          result = self
+        end
+        result
       end
 
       def links
