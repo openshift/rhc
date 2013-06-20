@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.10.4
+Version: 1.10.5
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -99,6 +99,12 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Jun 20 2013 Adam Miller <admiller@redhat.com> 1.10.5-1
+- Merge pull request #408 from anthonyfok/ask_password_chomp
+  (dmcphers+openshiftbot@redhat.com)
+- Prevent ask_password from stripping whitespace (Take 2)
+  (anthony.t.fok@gmail.com)
+
 * Wed Jun 19 2013 Adam Miller <admiller@redhat.com> 1.10.4-1
 - Modify rhc ssh command to reject --limit values of < 1 (hripps@redhat.com)
 - Merge pull request #407 from
