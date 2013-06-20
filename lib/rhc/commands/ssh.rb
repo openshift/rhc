@@ -28,6 +28,7 @@ module RHC::Commands
     def run(app_name, command)
       raise ArgumentError, "No application specified" unless app_name.present?
       raise ArgumentError, "--gears requires a command" if options.gears && command.blank?
+      raise ArgumentError, "--limit must be an integer greater than zero" if options.limit && options.limit < 1
       raise OptionParser::InvalidOption, "No system SSH available. Please use the --ssh option to specify the path to your SSH executable, or install SSH." unless options.ssh or has_ssh?
 
       if options.gears
