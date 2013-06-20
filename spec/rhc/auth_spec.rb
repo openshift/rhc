@@ -50,7 +50,7 @@ describe RHC::Auth::Basic do
       its(:ask_username){ should be_false }
       its(:ask_password){ should be_false }
       its(:username?){ should be_false }
-      it("should not retry") do 
+      it("should not retry") do
         subject.should_not_receive(:ask_username)
         subject.retry_auth?(mock(:status => 401), client).should be_false
       end
@@ -83,7 +83,7 @@ describe RHC::Auth::Basic do
   end
 
   describe "#ask_password" do
-    before{ subject.should_receive(:ask).with("Password: ").and_return(password) }
+    before{ subject.should_receive(:ask).with("\nPassword: ").and_return(password) }
     it do
       subject.send(:ask_password).should == password
       subject.send(:password).should == password
@@ -247,7 +247,7 @@ describe RHC::Auth::Token do
       let(:default_options){ {:noprompt => true} }
 
       its(:username){ should be_nil }
-      it("should not retry") do 
+      it("should not retry") do
       end
     end
   end
@@ -348,7 +348,7 @@ describe RHC::Auth::Token do
         let(:auth){ mock('nested_auth', :can_authenticate? => true) }
         subject{ described_class.new(options, auth) }
 
-        it("should not use token auth") do 
+        it("should not use token auth") do
           auth.should_receive(:retry_auth?).with(response, client).and_return true
           subject.retry_auth?(response, client).should be_true
         end
@@ -375,7 +375,7 @@ describe RHC::Auth::Token do
             let(:client){ mock('client', :supports_sessions? => true) }
             before{ client.should_receive(:new_session).with(:auth => auth).and_return(auth_token) }
 
-            it("should print a message") do 
+            it("should print a message") do
               subject.should_receive(:info).with("Please sign in to start a new session to #{subject.openshift_server}.")
               auth.should_receive(:retry_auth?).with(response, client).and_return true
               subject.retry_auth?(response, client).should be_true

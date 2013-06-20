@@ -49,7 +49,7 @@ module RHC::Auth
         @username = ask("Login to #{openshift_server}: ") unless @no_interactive
       end
       def ask_password
-        @password = ask("Password: ") { |q|
+        @password = ask("\nPassword: ") { |q|
           q.echo = '*'
           q.whitespace = :chomp
         } unless @no_interactive
