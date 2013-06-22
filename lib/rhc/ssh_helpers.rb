@@ -75,7 +75,7 @@ module RHC
                 io = dest == :stdout ? $stdout : $stderr
                 data.chomp!
 
-                if data.each_line.to_a.count == 1
+                if data.each_line.to_a.count < 2
                   io.puts "[#{label}] #{data}"
                 elsif @opts[:always_prefix]
                   data.each_line do |line|
