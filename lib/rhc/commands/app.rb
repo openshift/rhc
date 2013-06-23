@@ -373,7 +373,7 @@ module RHC::Commands
           end
           if selected_web
             carts.map! &other_carts_only
-          elsif possible_web
+          elsif possible_web && ambiguous.length == 1
             carts.map! &web_carts_only
           end
         }

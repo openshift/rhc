@@ -428,10 +428,6 @@ describe AllRhcHelpers do
       end
     end
 
-    describe '#web_carts_only' do
-      it { expect{ subject.send(:web_carts_only).call([]) }.to raise_error(RHC::MultipleCartridgesException, /You must select only a single web/) }
-    end
-
     describe '#match_cart' do
       context 'with a nil cart' do
         let(:cart){ OpenStruct.new(:name => nil, :description => nil, :tags => nil) }
