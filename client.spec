@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.10.5
+Version: 1.10.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -99,6 +99,13 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Jun 24 2013 Adam Miller <admiller@redhat.com> 1.10.6-1
+- Merge pull request #411 from
+  smarterclayton/bug_976682_overly_aggressive_check_in_rhc
+  (dmcphers+openshiftbot@redhat.com)
+- Display empty lines with prefix from ssh (ccoleman@redhat.com)
+- Bug 976682 - Check for web carts was too aggressive (ccoleman@redhat.com)
+
 * Thu Jun 20 2013 Adam Miller <admiller@redhat.com> 1.10.5-1
 - Merge pull request #408 from anthonyfok/ask_password_chomp
   (dmcphers+openshiftbot@redhat.com)
