@@ -57,9 +57,7 @@ module RHC
           next cart unless cart.is_a? Array
           name = cart.instance_variable_get(:@for)
           matching = cart.select{ |c| not c.only_in_existing? }
-          if matching.empty?
-            raise RHC::MultipleCartridgesException, "You must select only a single web cartridge. '#{name}' matches web cartridges."
-          elsif matching.size == 1
+          if matching.size == 1
             use_cart(matching.first, name)
           else
             matching.instance_variable_set(:@for, name)
@@ -73,9 +71,7 @@ module RHC
           next cart unless cart.is_a? Array
           name = cart.instance_variable_get(:@for)
           matching = cart.select{ |c| not c.only_in_new? }
-          if matching.empty?
-            raise RHC::MultipleCartridgesException, "You must select only a single web cartridge. '#{name}' matches web cartridges."
-          elsif matching.size == 1
+          if matching.size == 1
             use_cart(matching.first, name)
           else
             matching.instance_variable_set(:@for, name)

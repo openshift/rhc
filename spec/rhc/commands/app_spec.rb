@@ -233,9 +233,7 @@ describe RHC::Commands::App do
   end
 
   describe 'cart matching behavior' do
-    before(:each) do
-      domain = rest_client.add_domain("mockdomain")
-    end
+    before{ rest_client.add_domain("mockdomain") }
 
     context 'multiple web matches' do
       let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart', '--trace', '--noprompt'] }
@@ -250,8 +248,8 @@ describe RHC::Commands::App do
       it('picks the non web cart') { run_output.should match('Using unique_mock_cart-1') }
     end
     context 'when I pick very ambiguous carts' do
-      let(:arguments) { ['app', 'create', 'app1', 'mock', '--noprompt'] }
-      it('shows only web carts') { run_output.should_not match('unique_mock_cart-1') }
+      let(:arguments) { ['app', 'create', 'app1', 'mock', 'embcart-', '--noprompt'] }
+      it('shows only web carts') { run_output.should match("There are multiple cartridges matching 'mock'") }
     end
     context 'when I pick only embedded carts' do
       let(:arguments) { ['app', 'create', 'app1', 'mock_cart', '--trace', '--noprompt'] }
@@ -263,7 +261,7 @@ describe RHC::Commands::App do
     end
     context 'when I pick multiple standalone carts' do
       let(:arguments) { ['app', 'create', 'app1', 'unique_standalone', 'mock_standalone_cart', '--trace', '--noprompt'] }
-      it { expect { run }.to raise_error(RHC::MultipleCartridgesException, /You must select only a single web cart/) }
+      it { expect { run }.to raise_error(RHC::MultipleCartridgesException, /There are multiple cartridges matching 'mock_standalone_cart'/) }
     end
     context 'when I pick a custom URL cart' do
       let(:arguments) { ['app', 'create', 'app1', 'http://foo.com', '--trace', '--noprompt'] }
@@ -271,9 +269,9 @@ describe RHC::Commands::App do
       it('lists the cart using the short_name') { run_output.should match(%r(Cartridges:\s+http://foo.com$)) }
     end    
     context 'when I pick a custom URL cart and a web cart' do
-      let(:arguments) { ['app', 'create', 'app1', 'http://foo.com', 'unique_standalone', '--trace', '--noprompt'] }
+      let(:arguments) { ['app', 'create', 'app1', 'http://foo.com', 'embcart-1', '--trace', '--noprompt'] }
       it('tells me about custom carts') { run_output.should match("The cartridge 'http://foo.com' will be downloaded") }
-      it('lists the carts using the short_name') { run_output.should match(%r(Cartridges:\s+http://foo.com, mock_unique_standalone_cart-1$)) }
+      it('lists the carts using the short_name') { run_output.should match(%r(Cartridges:\s+http://foo.com, embcart-1$)) }
     end    
   end
 
