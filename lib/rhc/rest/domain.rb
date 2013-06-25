@@ -5,7 +5,7 @@ module RHC
 
       #Add Application to this domain
       # options
-      # cartrdige
+      # cartridge
       # template
       # scale
       # gear_profile

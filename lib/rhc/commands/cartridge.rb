@@ -131,7 +131,7 @@ module RHC::Commands
     summary "Start a cartridge"
     syntax "<cartridge> [--namespace NAME] [--app NAME]"
     argument :cart_type, "The name of the cartridge you are stopping", ["-c", "--cartridge cartridge"]
-    option ["-n", "--namespace NAME"], "Namespace of the application the cartrdige belongs to", :context => :namespace_context, :required => true
+    option ["-n", "--namespace NAME"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
     option ["-a", "--app NAME"], "Application the cartridge", :context => :app_context, :required => true
     alias_action :"app cartridge start", :root_command => true, :deprecated => true
     def start(cartridge)
