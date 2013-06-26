@@ -219,7 +219,7 @@ describe RHC::Commands::Cartridge do
       before do 
         stub_api(true)
         stub_one_domain('test')
-        stub_one_application('test', 'foo').with(:query => {:include => :cartridges})
+        stub_one_application('test', 'foo').with(:query => {:include => 'cartridges'})
         stub_application_cartridges('test', 'foo', [{:name => 'php-5.3'}, {:name => 'jenkins-1.4'}])
       end
       before do 

@@ -281,7 +281,7 @@ module RHC
           context "when several messages are present" do
             before do
               stub_api_request(:get, 'broker/rest/cartridge', true).
-                with(:query => {:include => :status_messages}).
+                with(:query => {:include => 'status_messages'}).
                 to_return(:body => {
                   :type => 'cartridge',
                   :data => {

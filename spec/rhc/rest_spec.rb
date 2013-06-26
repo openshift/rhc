@@ -390,8 +390,8 @@ module RHC
 
       context "with a GET request" do
         it "serializes payload as query parameters" do
-          stub_request(:get, mock_href).with(:query => {:test => 1, :bar => 2}).to_return(:status => 204)
-          subject.request(request.merge(:payload => {:test => '1', :bar => 2})).should be_nil
+          stub_request(:get, mock_href).with(:query => {:test => '1', :bar => '2'}).to_return(:status => 204)
+          subject.request(request.merge(:payload => {:test => '1', :bar => '2'})).should be_nil
         end
       end
       context "with a POST request" do
