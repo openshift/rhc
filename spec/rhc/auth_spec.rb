@@ -433,3 +433,52 @@ describe RHC::Auth::TokenStore do
     after{ Dir.entries(dir).length.should == 2 }
   end
 end
+
+describe RHC::Auth::Negotiate do
+  subject{ described_class.new(options) }
+
+  let(:user){ nil }
+  let(:password){ nil }
+  let(:options){ (o = Commander::Command::Options.new).default(default_options); o}
+  let(:default_options){ {} }
+  let(:client){ mock(:supports_sessions? => false)}
+
+  its(:username){ should be_nil }
+  its(:options){ should_not be_nil }
+  its(:can_authenticate?){ should be_true }
+  its(:openshift_server){ should == 'openshift.redhat.com' }
+
+  context "with user options" do
+    subject{ described_class.new(options) }
+
+    its(:username){ should be_nil }
+    its(:options){ should equal(options) }
+
+    context "that includes server" do
+      let(:default_options){ {:server => 'test.com'} }
+      its(:openshift_server){ should == 'test.com' }
+    end
+
+    context "with --noprompt" do
+      let(:default_options){ {:noprompt => true} }
+      its(:username){ should be_nil }
+      it("should not retry") do
+        subject.retry_auth?(mock(:status => 401), client).should be_false
+      end
+    end
+  end
+
+  describe "#to_request" do
+    let(:request){ {} }
+    subject{ described_class.new(nil)}
+    its(:username){ should be_nil }
+    its(:password){ should be_nil }
+  end
+
+  describe "#retry_auth?" do
+    context "when received any response" do
+      it{ subject.retry_auth?(mock(:status => 200),client).should be_false }
+      it{ subject.retry_auth?(mock(:status => 401),client).should be_false }
+    end
+  end
+end
