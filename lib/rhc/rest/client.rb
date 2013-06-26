@@ -309,6 +309,9 @@ module RHC
             raise ConnectionException.new(
               "Unable to connect to the server (#{e.message})."\
               "#{client.proxy.present? ? " Check that you have correctly specified your proxy server '#{client.proxy}' as well as your OpenShift server '#{args[1]}'." : " Check that you have correctly specified your OpenShift server '#{args[1]}'."}")
+          rescue GSSAPI::GssApiError => e
+            raise KerberosTicketExpiredOrInvalid.new(
+              e.message, "Your Kerberos ticket has expired. Re-login to your machine, or run 'kinit'.")
           rescue Errno::ECONNRESET => e
             raise ConnectionException.new(
               "The server has closed the connection unexpectedly (#{e.message}). Your last operation may still be running on the server; please check before retrying your last request.")
