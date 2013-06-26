@@ -107,6 +107,7 @@ module RHC
     global_option '-l', '--rhlogin LOGIN', "OpenShift login"
     global_option '-p', '--password PASSWORD', "OpenShift password"
     global_option '--token TOKEN', "An authorization token for accessing your account."
+    global_option '-G', '--gssapi', "Use Kerberos ticket/GSSAPI for authentication."
 
     global_option '-d', '--debug', "Turn on debugging", :hide => true
 
