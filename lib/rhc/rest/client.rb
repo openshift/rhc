@@ -225,6 +225,11 @@ module RHC
         current_api_version
       end
 
+      def modify_auth(new_auth)
+        @auth = new_auth
+        options[:authmodified] = 1
+      end
+
       def request(options, &block)
         (0..MAX_RETRIES).each do |i|
           begin
