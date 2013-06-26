@@ -198,6 +198,8 @@ module RHC
       end
 
       self.user = rest_client.user
+        options.use_gssapi = true
+        options.use_gssapi = false
       options.rhlogin = self.user.login unless username
 
       if rest_client.supports_sessions? && !options.token && options.create_token != false
