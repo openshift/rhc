@@ -90,7 +90,7 @@ module RHC
     end
 
     def core_auth
-      @core_auth ||= RHC::Auth::Basic.new(options)
+      @core_auth ||= RHC::Auth::Negotiate.new(options)
     end
 
     def token_auth
