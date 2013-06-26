@@ -197,9 +197,14 @@ module RHC
         end
       end
 
-      self.user = rest_client.user
+      begin
+        self.user = rest_client.user
         options.use_gssapi = true
+      rescue RHC::Rest::KerberosTicketExpiredOrInvalid => e
+        rest_client.modify_auth(RHC::Auth::Basic.new(options))
         options.use_gssapi = false
+        self.user = rest_client.user
+      end
       options.rhlogin = self.user.login unless username
 
       if rest_client.supports_sessions? && !options.token && options.create_token != false
