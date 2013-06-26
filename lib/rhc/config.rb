@@ -54,6 +54,7 @@ module RHC
       :password =>    nil,
       :use_authorization_tokens =>
                       [nil, :boolean, 'If true, the server will attempt to create and use authorization tokens to connect to the server'],
+      :use_gssapi =>  [nil, :boolean, 'Use Kerberos ticket/GSSAPI for authentication'],
       :timeout =>     [nil, :integer, 'The default timeout for network operations'],
       :insecure =>    [nil, :boolean, "If true, certificate errors will be ignored.\nWARNING: This may allow others to eavesdrop on your communication with OpenShift."],
       :ssl_version => [nil, nil, 'The SSL protocol version to use when connecting to this server'],
