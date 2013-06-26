@@ -26,7 +26,7 @@ module RHC::Auth
     end
 
     def retry_auth?(response, client)
-      if response.status == 401
+      if response == nil or response.status == 401
         token_rejected(response, client)
       else
         false
