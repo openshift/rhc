@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.10.6
+Version: 1.10.7
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -99,6 +99,11 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Jun 26 2013 Adam Miller <admiller@redhat.com> 1.10.7-1
+- Webmock 1.12 breaks query parameter compatibility, can't dupe Symbol/Fixnum
+  when it tries to match a request signature.  Lock to < 1.12 for now.
+  (ccoleman@redhat.com)
+
 * Mon Jun 24 2013 Adam Miller <admiller@redhat.com> 1.10.6-1
 - Merge pull request #411 from
   smarterclayton/bug_976682_overly_aggressive_check_in_rhc
