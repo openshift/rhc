@@ -1,8 +1,10 @@
 module RHC
   module Rest
 
-    autoload :Base,        'rhc/rest/base'
-    autoload :Attributes,  'rhc/rest/attributes'
+    autoload :Base,          'rhc/rest/base'
+    autoload :Attributes,    'rhc/rest/attributes'
+
+    autoload :HTTPClient,    'rhc/rest/httpclient'
 
     autoload :Api,           'rhc/rest/api'
     autoload :Application,   'rhc/rest/application'

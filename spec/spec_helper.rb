@@ -512,6 +512,7 @@ RSpec.configure do |config|
   config.include(ClassSpecHelpers)
   config.include(CommandHelpers)
   config.extend(CommandExampleHelpers)
+  config.backtrace_clean_patterns = []
 end
 
 module TestEnv

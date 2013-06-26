@@ -196,12 +196,6 @@ module RHC
         @preferred_api_versions ||= CLIENT_API_VERSIONS
         @debug ||= false
 
-        if options[:token]
-          self.headers[:authorization] = "Bearer #{options.delete(:token)}"
-          options.delete(:user)
-          options.delete(:password)
-        end
-
         @auth = options.delete(:auth)
 
         self.headers.merge!(options.delete(:headers)) if options[:headers]
@@ -311,7 +305,8 @@ module RHC
             raise
           rescue => e
             debug_error(e)
-            raise ConnectionException.new("An unexpected error occured: #{e.message}").tap{ |n| n.set_backtrace(e.backtrace) }
+            #binding.pry
+            raise ConnectionException, "An unexpected error occured: #{e.message}", e.backtrace
           end
         end
       end
@@ -336,22 +331,31 @@ module RHC
           }
         end
 
-        def httpclient_for(options)
-          return @httpclient if @last_options == options
-          @httpclient = HTTPClient.new(:agent_name => user_agent).tap do |http|
-            http.cookie_manager = nil
-            http.debug_dev = $stderr if ENV['HTTP_DEBUG']
+        def httpclient_for(options, auth=nil)
+          user, password, token = options.delete(:user), options.delete(:password), options.delete(:token)
 
-            options.select{ |sym, value| http.respond_to?("#{sym}=") }.map{ |sym, value| http.send("#{sym}=", value) }
-            http.set_auth(nil, options[:user], options[:password]) if options[:user]
+          if !@httpclient || @last_options != options
+            @httpclient = RHC::Rest::HTTPClient.new(:agent_name => user_agent).tap do |http|
+              http.cookie_manager = nil
+              http.debug_dev = $stderr if ENV['HTTP_DEBUG']
 
-            ssl = http.ssl_config
-            options.select{ |sym, value| ssl.respond_to?("#{sym}=") }.map{ |sym, value| ssl.send("#{sym}=", value) }
-            ssl.add_trust_ca(options[:ca_file]) if options[:ca_file]
-            ssl.verify_callback = default_verify_callback
+              options.select{ |sym, value| http.respond_to?("#{sym}=") }.map{ |sym, value| http.send("#{sym}=", value) }
 
-            @last_options = options
+              ssl = http.ssl_config
+              options.select{ |sym, value| ssl.respond_to?("#{sym}=") }.map{ |sym, value| ssl.send("#{sym}=", value) }
+              ssl.add_trust_ca(options[:ca_file]) if options[:ca_file]
+              ssl.verify_callback = default_verify_callback
+
+              @last_options = options
+            end
           end
+          if auth && auth.respond_to?(:to_httpclient)
+            auth.to_httpclient(@httpclient, options)
+          else
+            @httpclient.www_auth.basic_auth.set(@end_point, user, password) if user
+            @httpclient.www_auth.oauth2.set_token(@end_point, token) if token
+          end
+          @httpclient
         end
 
         def default_verify_callback
@@ -392,12 +396,6 @@ module RHC
             h
           end
 
-          user = options.delete(:user)
-          password = options.delete(:password)
-          if user
-            headers['Authorization'] ||= "Basic #{["#{user}:#{password}"].pack('m').tr("\n", '')}"
-          end
-
           modifiers = []
           version = options.delete(:api_version) || current_api_version
           modifiers << ";version=#{version}" if version
@@ -423,7 +421,7 @@ module RHC
           options.delete(:lazy_auth)
 
           args = [options.delete(:method), options.delete(:url), query, payload, headers, true]
-          [httpclient_for(options), args]
+          [httpclient_for(options, auth), args]
         end
 
         def retry_proxy(response, i, args, client)
