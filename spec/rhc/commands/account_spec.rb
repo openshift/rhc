@@ -12,8 +12,8 @@ describe RHC::Commands::Account do
     let(:server) { mock_uri }
     before{ user_config }
     before do
-      stub_api(true)
-      stub_user
+      stub_api
+      challenge{ stub_user }
     end
 
     it('should display the correct user') { run_output.should =~ /Login:\s*#{username}/ }

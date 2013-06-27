@@ -504,8 +504,8 @@ describe RHC::Commands::App do
       let(:server){ mock_uri }
       let(:arguments){ ['delete-app', 'foo', '--confirm', '--trace'] }
       before do 
-        stub_api(true)
-        stub_one_domain('test')
+        stub_api
+        challenge{ stub_one_domain('test') }
         stub_one_application('test', 'foo')
       end
       before do 

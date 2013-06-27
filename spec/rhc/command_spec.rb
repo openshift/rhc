@@ -275,7 +275,7 @@ describe RHC::Commands::Base do
         let(:username){ 'foo' }
         let(:password){ 'bar' }
         let(:arguments){ ['test', '-l', username, '--server', mock_uri] }
-        before{ stub_api(:user => username); stub_user(:user => username, :password => password) }
+        before{ stub_api; challenge{ stub_user(:user => username, :password => password) } }
         before{ basic_auth.should_receive(:ask).and_return(password) }
         it("asks for password") { rest_client.user }
       end
@@ -284,7 +284,7 @@ describe RHC::Commands::Base do
         let(:username){ 'foo' }
         let(:password){ 'bar' }
         let(:arguments){ ['test', '--server', mock_uri] }
-        before{ stub_api; stub_user(:user => username, :password => password) }
+        before{ stub_api; challenge{ stub_user(:user => username, :password => password) } }
         before{ basic_auth.should_receive(:ask).ordered.and_return(username) }
         before{ basic_auth.should_receive(:ask).ordered.and_return(password) }
         it("asks for password") { rest_client.user }
@@ -335,7 +335,11 @@ describe RHC::Commands::Base do
         let(:username){ 'foo' }
         let(:arguments){ ['test', '-l', username, '--server', mock_uri] }
         before{ instance.send(:token_store).should_receive(:get).with{ |user, server| user.should == username; server.should == instance.send(:openshift_server) }.and_return(nil) }
-        before{ stub_api(false, false); stub_api_request(:get, 'broker/rest/user', false).to_return{ |request| request.headers['Authorization'] =~ /Basic/ ? simple_user(username) : {:status => 401} } }
+        before do 
+          stub_api(false, false)
+          stub_api_request(:get, 'broker/rest/user', false).to_return{ |request| request.headers['Authorization'] =~ /Basic/ ? simple_user(username) : {:status => 401, :headers => {'WWW-Authenticate' => 'Basic realm="openshift broker"'} } }
+          stub_api_request(:get, 'broker/rest/user', {:user => username, :password => 'password'}).to_return{ simple_user(username) }
+        end
         it("should prompt for password") do
           basic_auth.should_receive(:ask).once.and_return('password')
           rest_client.user

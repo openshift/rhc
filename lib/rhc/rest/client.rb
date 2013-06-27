@@ -305,7 +305,6 @@ module RHC
             raise
           rescue => e
             debug_error(e)
-            #binding.pry
             raise ConnectionException, "An unexpected error occured: #{e.message}", e.backtrace
           end
         end

@@ -53,7 +53,7 @@ describe RHC::Commands::Cartridge do
       it{ expect{ run }.to exit_with_code(0) }
 
       context 'with verbose list' do
-        let(:arguments){ ['cartridge', 'list', '--verbose'] }
+        let(:arguments){ ['cartridge', 'list', '--verbose', '--trace'] }
         it{ run_output.should match /Mock1 Cart.*\[mock_standalone_cart\-1\] \(web\)/ }
         it{ run_output.should match /mock_standalone_cart\-2 \(web\)/ }
         it{ run_output.should match "Mock2 description\n\n" }
@@ -217,8 +217,8 @@ describe RHC::Commands::Cartridge do
       let(:server){ mock_uri }
       let(:arguments){ ['remove-cartridge', 'jenkins-1.4', '-a', 'foo', '--confirm', '--trace'] }
       before do 
-        stub_api(true)
-        stub_one_domain('test')
+        stub_api(false)
+        challenge{ stub_one_domain('test') }
         stub_one_application('test', 'foo').with(:query => {:include => 'cartridges'})
         stub_application_cartridges('test', 'foo', [{:name => 'php-5.3'}, {:name => 'jenkins-1.4'}])
       end
