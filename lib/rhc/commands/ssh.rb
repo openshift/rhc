@@ -30,6 +30,8 @@ module RHC::Commands
       raise ArgumentError, "--gears requires a command" if options.gears && command.blank?
       raise ArgumentError, "--limit must be an integer greater than zero" if options.limit && options.limit < 1
       raise OptionParser::InvalidOption, "No system SSH available. Please use the --ssh option to specify the path to your SSH executable, or install SSH." unless options.ssh or has_ssh?
+      raise OptionParser::InvalidOption, "SSH executable '#{options.ssh}' does not exist." if options.ssh and not File.exist?(options.ssh)
+      raise OptionParser::InvalidOption, "SSH executable '#{options.ssh}' is not executable." if options.ssh and not File.executable?(options.ssh)
 
       if options.gears
         groups = rest_client.find_application_gear_groups(options.namespace, app_name)
