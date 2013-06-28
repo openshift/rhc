@@ -22,6 +22,9 @@ Requires:      rubygem-archive-tar-minitar
 Requires:      rubygem-commander
 Requires:      rubygem-open4
 Requires:      git
+%if 0%{?fedora} >= 19 || 0%{?rhel} >= 7
+Requires:      rubygem-net-ssh-multi
+%endif
 Obsoletes:     rhc-rest
 Provides:      rubygem-rhc
 
