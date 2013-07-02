@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.11.1
+Version: 1.11.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -102,6 +102,15 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Jul 02 2013 Adam Miller <admiller@redhat.com> 1.11.2-1
+- Add net-ssh-multi as dependency on F19+ (kraman@gmail.com)
+- Bug 978837 - Don't show stack trace if --ssh executable not found
+  (andy.goldstein@redhat.com)
+- Webmock 1.12 breaks query parameter compatibility, can't dupe Symbol/Fixnum
+  when it tries to match a request signature.  Lock to < 1.12 for now.
+  (ccoleman@redhat.com)
+- fix typos (dmcphers@redhat.com)
+
 * Tue Jun 25 2013 Adam Miller <admiller@redhat.com> 1.11.1-1
 - bump_minor_versions for sprint 30 (admiller@redhat.com)
 
