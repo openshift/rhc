@@ -8,11 +8,11 @@ _rhc()
   cur="${COMP_WORDS[COMP_CWORD]}"
   if [ $COMP_CWORD -eq 1 ]; then
     if [[ "$cur" == -* ]]; then
-      opts="--clean --config --debug --insecure --mock --noprompt --password --rhlogin --server --ssl-ca-file --ssl-client-cert-file --ssl-version --timeout --token"
+      opts="--always-prefix --clean --config --debug --insecure --limit --mock --noprompt --password --raw --rhlogin --server --ssl-ca-file --ssl-client-cert-file --ssl-version --timeout --token"
     elif [ -z $cur ]; then
-      opts="account alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert app app-create app-delete app-force-stop app-reload app-restart app-show app-ssh app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all cartridge cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage domain domain-create domain-delete domain-show domain-update git-clone logout port-forward server setup snapshot snapshot-restore snapshot-save sshkey sshkey-add sshkey-list sshkey-remove sshkey-show tail threaddump"
+      opts="account alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert app app-create app-delete app-force-stop app-reload app-restart app-show app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all authorization-list cartridge cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage domain domain-create domain-delete domain-show domain-update git-clone logout port-forward server setup snapshot snapshot-restore snapshot-save ssh sshkey sshkey-add sshkey-list sshkey-remove sshkey-show tail threaddump"
     else
-      opts="account account-logout add-alias add-authorization add-cartridge add-sshkey alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert app app-create app-delete app-force-stop app-reload app-restart app-show app-snapshot app-ssh app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all authorizations cartridge cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage cartridges create-app create-domain delete-all-authorization delete-app delete-authorization delete-cert-alias delete-domain domain domain-create domain-delete domain-show domain-update force-stop-app git-clone list-alias list-cartridge list-sshkey logout port-forward reload-app reload-cartridge remove-alias remove-cartridge remove-sshkey restart-app restart-cartridge restore-snapshot save-snapshot scale-cartridge server setup show-app show-cartridge show-domain show-sshkey snapshot snapshot-restore snapshot-save ssh ssh-app sshkey sshkey-add sshkey-delete sshkey-list sshkey-remove sshkey-show start-app start-cartridge status-cartridge stop-app stop-cartridge storage-cartridge tail threaddump tidy-app update-cert-alias update-domain"
+      opts="account account-logout add-alias add-authorization add-cartridge add-sshkey alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert aliases app app-create app-delete app-force-stop app-reload app-restart app-show app-snapshot app-ssh app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all authorization-list authorizations cartridge cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage cartridges create-app create-domain delete-all-authorization delete-app delete-authorization delete-cert-alias delete-domain domain domain-create domain-delete domain-show domain-update force-stop-app git-clone list-alias list-authorization list-cartridge list-sshkey logout port-forward reload-app reload-cartridge remove-alias remove-cartridge remove-sshkey restart-app restart-cartridge restore-snapshot save-snapshot scale-cartridge server setup show-app show-cartridge show-domain show-sshkey snapshot snapshot-restore snapshot-save ssh sshkey sshkey-add sshkey-delete sshkey-list sshkey-remove sshkey-show start-app start-cartridge status-cartridge stop-app stop-cartridge storage-cartridge tail threaddump tidy-app update-cert-alias update-domain"
     fi
   else
     prev="${COMP_WORDS[@]:0:COMP_CWORD}"
@@ -164,11 +164,19 @@ _rhc()
         fi
         ;;
 
+      "rhc aliases")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
       "rhc app")
         if [[ "$cur" == -* ]]; then
           opts=""
         else
-          opts="create delete start stop force-stop restart reload tidy show ssh"
+          opts="snapshot create delete start stop force-stop restart reload tidy show"
         fi
         ;;
 
@@ -222,7 +230,7 @@ _rhc()
 
       "rhc app snapshot")
         if [[ "$cur" == -* ]]; then
-          opts=""
+          opts="--app --filepath --namespace"
         else
           opts=""
         fi
@@ -230,7 +238,7 @@ _rhc()
 
       "rhc app ssh")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace --ssh"
+          opts="--app --gears --limit --namespace --raw --ssh"
         else
           opts=""
         fi
@@ -310,7 +318,7 @@ _rhc()
 
       "rhc app-snapshot")
         if [[ "$cur" == -* ]]; then
-          opts=""
+          opts="--app --filepath --namespace"
         else
           opts=""
         fi
@@ -318,7 +326,7 @@ _rhc()
 
       "rhc app-ssh")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace --ssh"
+          opts="--app --gears --limit --namespace --raw --ssh"
         else
           opts=""
         fi
@@ -360,7 +368,7 @@ _rhc()
         if [[ "$cur" == -* ]]; then
           opts=""
         else
-          opts="add delete delete-all"
+          opts="list add delete delete-all"
         fi
         ;;
 
@@ -388,6 +396,14 @@ _rhc()
         fi
         ;;
 
+      "rhc authorization list")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts=""
+        fi
+        ;;
+
       "rhc authorization-add")
         if [[ "$cur" == -* ]]; then
           opts="--expires-in --note --scopes"
@@ -405,6 +421,14 @@ _rhc()
         ;;
 
       "rhc authorization-delete-all")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc authorization-list")
         if [[ "$cur" == -* ]]; then
           opts=""
         else
@@ -764,6 +788,14 @@ _rhc()
         fi
         ;;
 
+      "rhc list-authorization")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts=""
+        fi
+        ;;
+
       "rhc list-cartridge")
         if [[ "$cur" == -* ]]; then
           opts="--verbose"
@@ -790,7 +822,7 @@ _rhc()
 
       "rhc port-forward")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace"
+          opts="--app --gear --namespace"
         else
           opts=""
         fi
@@ -966,15 +998,7 @@ _rhc()
 
       "rhc ssh")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace --ssh"
-        else
-          opts=""
-        fi
-        ;;
-
-      "rhc ssh-app")
-        if [[ "$cur" == -* ]]; then
-          opts="--app --namespace --ssh"
+          opts="--app --gears --limit --namespace --raw --ssh"
         else
           opts=""
         fi
@@ -1118,7 +1142,7 @@ _rhc()
 
       "rhc tail")
         if [[ "$cur" == -* ]]; then
-          opts="--app --files --namespace --opts"
+          opts="--app --files --gear --namespace --opts"
         else
           opts=""
         fi
