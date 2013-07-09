@@ -84,7 +84,7 @@ module RHC::Commands
       rest_app = rest_client.find_application(options.namespace, options.app, :include => :cartridges)
       rest_cartridge = rest_app.add_cartridge(cart)
 
-      success "Success"
+      success "done"
 
       paragraph{ display_cart(rest_cartridge) }
       paragraph{ rest_cartridge.messages.each { |msg| success msg } }

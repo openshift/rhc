@@ -10,7 +10,7 @@ describe RHC::Commands::Cartridge do
     run_output.should match(message) if message
   end
 
-  def succeed_with_message(message = "Success")
+  def succeed_with_message(message = "done")
     exit_with_code_and_message(0,message)
   end
 
