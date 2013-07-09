@@ -212,7 +212,7 @@ module RHC
     #
 
     def interactive?
-      $stdout.tty? and not options.noprompt
+      $stdin.tty? and $stdout.tty? and not options.noprompt
     end
 
     def debug(*args)
@@ -242,9 +242,20 @@ module RHC
       warn "Warning: #{msg}\n" % ['a warning','an error',1]
     end
 
+    #
+    # By default, agree should take a single character in interactive
+    #
+    def agree(*args, &block)
+      #args.push(interactive?.presence) if args.length == 1
+      block = lambda do |q| 
+        q.validate = /\A(?:y|yes|n|no)\Z/i
+      end unless block_given?
+      super *args, &block
+    end
+
     def confirm_action(question)
       return if options.confirm
-      return if !options.noprompt && paragraph{ agree("#{question} (yes|no): ") }
+      return if !options.noprompt && paragraph{ agree "#{question} (yes|no): " }
       raise RHC::ConfirmationError
     end
 
