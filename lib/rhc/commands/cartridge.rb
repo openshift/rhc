@@ -135,7 +135,7 @@ module RHC::Commands
     option ["-a", "--app NAME"], "Application the cartridge", :context => :app_context, :required => true
     alias_action :"app cartridge start", :root_command => true, :deprecated => true
     def start(cartridge)
-      cartridge_action(cartridge, :start){ |_, c| results{ say "#{c.name} started" } }
+      cartridge_action(cartridge, :start, 'Starting %s ... ')
       0
     end
 
@@ -143,10 +143,10 @@ module RHC::Commands
     syntax "<cartridge> [--namespace NAME] [--app NAME]"
     argument :cart_type, "The name of the cartridge you are stopping", ["-c", "--cartridge cartridge"]
     option ["-n", "--namespace NAME"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
-    option ["-a", "--app NAME"], "Application you the cartridge belongs to", :context => :app_context, :required => true
+    option ["-a", "--app NAME"], "Application the cartridge belongs to", :context => :app_context, :required => true
     alias_action :"app cartridge stop", :root_command => true, :deprecated => true
     def stop(cartridge)
-      cartridge_action(cartridge, :stop){ |_, c| results{ say "#{c.name} stopped" } }
+      cartridge_action(cartridge, :stop, 'Stopping %s ... ')
       0
     end
 
@@ -157,7 +157,7 @@ module RHC::Commands
     option ["-a", "--app NAME"], "Application the cartridge belongs to", :context => :app_context, :required => true
     alias_action :"app cartridge restart", :root_command => true, :deprecated => true
     def restart(cartridge)
-      cartridge_action(cartridge, :restart){ |_, c| results{ say "#{c.name} restarted" } }
+      cartridge_action(cartridge, :restart, 'Restarting %s ... ')
       0
     end
 
@@ -181,7 +181,7 @@ module RHC::Commands
     option ["-a", "--app NAME"], "Application the cartridge belongs to", :context => :app_context, :required => true
     alias_action :"app cartridge reload", :root_command => true, :deprecated => true
     def reload(cartridge)
-      cartridge_action(cartridge, :reload){ |_, c| results{ say "#{c.name} reloaded" } }
+      cartridge_action(cartridge, :reload, 'Reloading %s ... ')
       0
     end
 
@@ -305,12 +305,16 @@ module RHC::Commands
     private
       include RHC::CartridgeHelpers
 
-      def cartridge_action(cartridge, action, &block)
+      def cartridge_action(cartridge, action, message=nil)
         rest_app = rest_client.find_application(options.namespace, options.app, :include => :cartridges)
         rest_cartridge = check_cartridges(cartridge, :from => rest_app.cartridges).first
-        result = rest_cartridge.send action
+        say message % [rest_cartridge.name] if message
+        result = rest_cartridge.send(action)
         resp = [result, rest_cartridge, rest_app]
-        yield resp if block_given?
+        if message
+          success "done"
+          result.messages.each{ |s| paragraph{ say s } }
+        end
         resp
       end
   end

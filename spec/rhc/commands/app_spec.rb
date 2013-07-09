@@ -523,7 +523,7 @@ describe RHC::Commands::App do
           })
       end
 
-      it("should display info returned by the server"){ run_output.should match "Removed foo" }
+      it("should display info returned by the server"){ run_output.should match "Deleting application 'foo'" }
       it("should display results returned by the server"){ run_output.should match "Job URL changed" }
       it('should exit successfully'){ expect{ run }.to exit_with_code(0) }
     end
