@@ -152,7 +152,7 @@ module RHC
           options = name
           name = options[:name]
         end
-        aliases.each { |a| return a if a.is_a?(String) || a.id == name }
+        aliases.each { |a| return a if a.is_a?(String) || a.id == name.downcase }
         raise RHC::AliasNotFoundException.new("Alias #{name} can't be found in application #{@name}.")
       end
 
