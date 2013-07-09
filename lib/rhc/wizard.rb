@@ -382,11 +382,11 @@ module RHC
           warn "none"
 
           paragraph do
-            say "Your namespace is unique to your account and is the suffix of the " \
-                "public URLs we assign to your applications. You may configure your " \
-                "namespace here or leave it blank and use 'rhc create-domain' to " \
-                "create a namespace later.  You will not be able to create " \
-                "applications without first creating a namespace."
+            say [
+              "Your namespace is unique to your account and is the suffix of the public URLs we assign to your applications.",
+              ("You may configure your namespace here or leave it blank and use 'rhc create-domain' to create a namespace later." if namespace_optional?),
+              "You will not be able to create applications without first creating a namespace.",
+            ].compact.join(' ')
           end
 
           ask_for_namespace
@@ -592,6 +592,11 @@ EOF
     def finalize_stage
       true
     end
+    
+    protected
+      def namespace_optional?
+        false
+      end    
   end
 
   class DomainWizard < Wizard
