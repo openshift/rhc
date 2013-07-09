@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.11.2
+Version: 1.11.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -102,6 +102,23 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Jul 09 2013 Adam Miller <admiller@redhat.com> 1.11.3-1
+- Merge pull request #421 from smarterclayton/bug_981780_better_responses
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #423 from
+  smarterclayton/bug_982135_fix_namespace_optional_message
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #424 from
+  smarterclayton/bug_981274_forgot_to_update_autocomplete
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 981274 - Update autocomplete script (ccoleman@redhat.com)
+- Bug 982135 - Namespace optional should affect the message displayed
+  (ccoleman@redhat.com)
+- Bug 980413 - Options that are nil should default to true
+  (ccoleman@redhat.com)
+- Bug 981780 - Filter broker results more effectively, and display results on
+  cartridge actions (ccoleman@redhat.com)
+
 * Tue Jul 02 2013 Adam Miller <admiller@redhat.com> 1.11.2-1
 - Add net-ssh-multi as dependency on F19+ (kraman@gmail.com)
 - Bug 978837 - Don't show stack trace if --ssh executable not found
