@@ -486,7 +486,11 @@ module RHC
       applications.take(1).each do |app|
         begin
           ssh = Net::SSH.start(app.host, app.uuid, :timeout => 60)
-        rescue => e
+        rescue Interrupt => e
+          debug_error(e)
+          raise "Connection attempt to #{app.host} was interrupted"
+        rescue ::Exception => e
+          debug_error(e)
           raise "An SSH connection could not be established to #{app.host}. Your SSH configuration may not be correct, or the application may not be responding. #{e.message} (#{e.class})"
         ensure
           ssh.close if ssh
