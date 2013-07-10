@@ -72,6 +72,7 @@ describe RHC::Wizard do
       ssh.should_receive(:close)
       ssh
     end
+    let(:interrupt){ Interrupt.new('interrupted') }
 
     it "should not attempt an SSH connection" do
       subject.should_receive(:ssh_key_uploaded?).and_return(true)
@@ -83,13 +84,20 @@ describe RHC::Wizard do
       subject.should_receive(:applications).and_return([app])
       Net::SSH.should_receive(:start).with(app.host, app.uuid, {:timeout => 60}).and_return(ssh)
       subject.send(:test_ssh_connectivity).should be_true
-    end
+    end    
     it "should handle a failed connection" do
       subject.should_receive(:ssh_key_uploaded?).and_return(true)
       subject.should_receive(:applications).and_return([app])
       Net::SSH.should_receive(:start).and_raise(StandardError.new('an_error'))
       expect{ subject.send(:test_ssh_connectivity) }.to raise_error(RuntimeError, /An SSH connection could not be established to foo.com/)
     end
+    it "should handle an interrupted connection" do
+      subject.should_receive(:ssh_key_uploaded?).and_return(true)
+      subject.should_receive(:applications).and_return([app])
+      subject.should_receive(:debug_error).with(interrupt)
+      Net::SSH.should_receive(:start).and_raise(interrupt)
+      expect{ subject.send(:test_ssh_connectivity) }.to raise_error(RuntimeError, /Connection attempt to foo.com was interrupted/)
+    end    
   end
 
   describe "#login_stage" do
