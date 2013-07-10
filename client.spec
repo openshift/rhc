@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.11.3
+Version: 1.11.4
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -102,6 +102,18 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Jul 10 2013 Adam Miller <admiller@redhat.com> 1.11.4-1
+- Bug 979963 - Log and trace errors for interrupts during rhc setup
+  (ccoleman@redhat.com)
+- Merge pull request #425 from
+  smarterclayton/bug_979992_fix_stty_handling_for_non_interactive
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #420 from pravisankar/dev/ravi/bug980804
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 979992 - Only respond to 'y', 'yes', 'n', and 'no' (ccoleman@redhat.com)
+- Bug 980804 - Alias name need to be in lower case while comparing with
+  existing app aliases (rpenta@redhat.com)
+
 * Tue Jul 09 2013 Adam Miller <admiller@redhat.com> 1.11.3-1
 - Merge pull request #421 from smarterclayton/bug_981780_better_responses
   (dmcphers+openshiftbot@redhat.com)
