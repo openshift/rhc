@@ -46,7 +46,6 @@ module RHC
         end
 
         def reset_challenge
-          @challengeable.clear
         end
 
         def set(uri, user, password)
