@@ -95,12 +95,12 @@ module RHC
       it{ expect{ invoked_with(false, nil) }.to raise_error(NoMethodError) }
 
       context "with a self signed cert" do
-        it{ invoked_with(false, stub(:current_cert => stub(:issuer => '1', :subject => stub(:cmp => 0)))).should be_false }
+        it{ invoked_with(false, double(:current_cert => double(:issuer => '1', :subject => double(:cmp => 0)))).should be_false }
         after{ subject.send(:self_signed?).should be_true }
       end
 
       context "with an intermediate signed cert" do
-        it{ invoked_with(false, stub(:current_cert => stub(:issuer => '2', :subject => stub(:cmp => 1)), :error => 1, :error_string => 'a')).should be_false }
+        it{ invoked_with(false, double(:current_cert => double(:issuer => '2', :subject => double(:cmp => 1)), :error => 1, :error_string => 'a')).should be_false }
         after{ subject.send(:self_signed?).should be_false }
       end
 
@@ -519,7 +519,7 @@ module RHC
       let(:url){ "http://fake.url" }
       let(:proxy){ nil }
       def response
-        mock(:status => code, :content => json ? RHC::Json.encode(json) : body)
+        double(:status => code, :content => json ? RHC::Json.encode(json) : body)
       end
       let(:method) { lambda{ subject.send(:handle_error!, response, url, client) } }
 

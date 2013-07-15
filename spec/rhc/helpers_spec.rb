@@ -70,7 +70,7 @@ describe AllRhcHelpers do
     it_should_behave_like "colorized output"
   end
 
-  it("should invoke debug from debug_error"){ expect{ subject.debug_error(mock(:class => "Mock", :message => 'msg', :backtrace => [])) }.to call(:debug).on($terminal).with("msg (Mock)\n  ") }
+  it("should invoke debug from debug_error"){ expect{ subject.debug_error(double(:class => "Mock", :message => 'msg', :backtrace => [])) }.to call(:debug).on($terminal).with("msg (Mock)\n  ") }
 
   it("should draw a table") do
     subject.table([[10,2], [3,40]]) do |i|
@@ -211,12 +211,12 @@ describe AllRhcHelpers do
     let(:arguments){ ['help', '--ssl-version=sslv3'] }
 
     context 'on an older version of HTTPClient' do
-      before{ HTTPClient::SSLConfig.should_receive(:method_defined?).any_number_of_times.with(:ssl_version).and_return(false) }
+      before{ HTTPClient::SSLConfig.stub(:method_defined?).with(:ssl_version).and_return(false) }
       it('should print an error') { run_output.should =~ /You are using an older version of the httpclient.*--ssl-version/ }
       it('should error out') { expect{ run }.to exit_with_code(1) }
     end
     context 'a newer version of HTTPClient' do
-      before{ HTTPClient::SSLConfig.should_receive(:method_defined?).any_number_of_times.with(:ssl_version).and_return(true) }
+      before{ HTTPClient::SSLConfig.stub(:method_defined?).with(:ssl_version).and_return(true) }
       it('should not print an error') { run_output.should_not =~ /You are using an older version of the httpclient.*--ssl-version/ }
       it('should error out') { expect{ run }.to exit_with_code(0) }
     end
@@ -248,9 +248,9 @@ describe AllRhcHelpers do
   end
 
   context "#get_properties" do
-    it{ subject.send(:get_properties, stub(:plan_id => 'free'), :plan_id).should == [[:plan_id, 'Free']] }
+    it{ subject.send(:get_properties, double(:plan_id => 'free'), :plan_id).should == [[:plan_id, 'Free']] }
     context "when an error is raised" do
-      let(:bar){ stub.tap{ |s| s.should_receive(:foo).and_raise(::Exception) } }
+      let(:bar){ double.tap{ |s| s.should_receive(:foo).and_raise(::Exception) } }
       it{ subject.send(:get_properties, bar, :foo).should == [[:foo, '<error>']] }
     end
   end
@@ -394,7 +394,7 @@ describe AllRhcHelpers do
     let(:existent_host) { 'real_host' }
     let(:nonexistent_host) { 'fake_host' }
     
-    before :all do
+    before do
       Resolv::Hosts.stub(:new) { resolver }
       resolver.stub(:getaddress).with(existent_host)   { existent_host }
       resolver.stub(:getaddress).with(nonexistent_host){ Resolv::ResolvError }

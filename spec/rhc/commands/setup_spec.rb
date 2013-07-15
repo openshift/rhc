@@ -17,9 +17,9 @@ describe RHC::Commands::Setup do
     let(:arguments) { ['setup', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     before(:each) do
-      @wizard = mock('wizard')
-      @wizard.stub!(:run).and_return(true)
-      RHC::RerunWizard.stub!(:new){ @wizard }
+      @wizard = double('wizard')
+      @wizard.stub(:run).and_return(true)
+      RHC::RerunWizard.stub(:new){ @wizard }
     end
 
     context 'when no issues' do
@@ -30,7 +30,7 @@ describe RHC::Commands::Setup do
 
     context 'when there is an issue' do
       it "should exit 1" do
-        @wizard.stub!(:run).and_return(false)
+        @wizard.stub(:run).and_return(false)
         expect { run }.to exit_with_code(1)
       end
     end
@@ -54,7 +54,7 @@ describe RHC::Commands::Setup do
   end
 
 =begin  context 'when libra_server is set' do
-    before{ ENV.should_receive(:[]).any_number_of_times.with('LIBRA_SERVER').and_return('bar.com') }
+    before{ ENV.stub(:[]).with('LIBRA_SERVER').and_return('bar.com') }
     it{ command_for('setup').config['libra_server'].should == 'bar.com' }
     it{ command_for('setup').options.server.should == 'bar.com' }
     it{ command_for('setup', '--server', 'foo.com').options.server.should == 'foo.com' }
@@ -95,7 +95,7 @@ describe RHC::Commands::Setup do
 
     context 'help is run' do
       it "should display help" do
-        @wizard.stub!(:run).and_return(true)
+        @wizard.stub(:run).and_return(true)
         expect { run }.to exit_with_code(0)
       end
       it('should output usage') { run_output.should match("Connects to an OpenShift server to get you started. Will") }

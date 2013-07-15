@@ -156,7 +156,7 @@ module CommandHelpers
     mock_terminal
     new_command_runner *args do
       instance #ensure instance is created before subject :new is mocked
-      subject.should_receive(:new).any_number_of_times.and_return(instance)
+      subject.stub(:new).and_return(instance)
       RHC::Commands.to_commander
     end
   end
@@ -344,10 +344,10 @@ module ClassSpecHelpers
   def expect_multi_ssh(command, hosts, check_error=false)
     require 'net/ssh/multi'
 
-    session = mock('Multi::SSH::Session')
+    session = double('Multi::SSH::Session')
     described_class.any_instance.stub(:requires_ssh_multi!)
     channels = hosts.inject({}) do |h, (k,v)| 
-      c = stub(:properties => {}, :connection => stub(:properties => {}))
+      c = double(:properties => {}, :connection => double(:properties => {}))
       h[k] = c
       h
     end
