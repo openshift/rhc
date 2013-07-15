@@ -84,10 +84,10 @@ module RHC
           @user, @password = user, password
         end
         def user
-          return @user.call if @user.respond_to?(:call) or @user
+          (@user.call if @user.respond_to?(:call)) or @user
         end
         def passwd
-          return @password.call if @password.respond_to?(:call) or @passwd
+          (@password.call if @password.respond_to?(:call)) or @password
         end
 
         #

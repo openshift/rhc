@@ -566,3 +566,36 @@ module RHC
     end
   end
 end
+
+module RHC
+  module Rest
+    describe HTTPClient do
+    end
+
+    describe WWWAuth::DeferredCredential do
+      subject{ described_class.new(nil, nil) }
+      its(:user){ should be_nil }
+      its(:passwd){ should be_nil }
+
+      context "with a username and password" do
+        subject{ described_class.new(username, password) }
+        let(:username){ 'a_user' }
+        let(:password){ 'a_password' }
+
+        its(:user){ should == username }
+        its(:passwd){ should == password }
+        its(:to_str){ should == ["#{username}:#{password}"].pack('m').tr("\n", '') }
+      end
+
+      context "with a deferred username and password" do
+        subject{ described_class.new(username, password) }
+        let(:username){ lambda{ 'a_user' } }
+        let(:password){ lambda{ 'a_password' } }
+
+        its(:user){ should == username.call }
+        its(:passwd){ should == password.call }
+        its(:to_str){ should == ["#{username.call}:#{password.call}"].pack('m').tr("\n", '') }
+      end      
+    end
+  end
+end
