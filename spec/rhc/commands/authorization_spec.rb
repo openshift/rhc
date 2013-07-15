@@ -46,8 +46,8 @@ describe RHC::Commands::Authorization do
   describe '#run' do
     let(:arguments) { ['authorization', '--h']}
     context 'given --h' do
-      it 'should not raise SystemStackError' do
-        expect{ run }.to_not raise_error(SystemStackError)
+      it 'should not raise' do
+        expect{ run }.to_not raise_error
       end
     end
   end
@@ -105,7 +105,7 @@ describe RHC::Commands::Authorization do
   end
 
   describe "#scope_help" do
-    let(:rest_client){ stub(:authorization_scope_list => [['scope_1', 'A description'], ['scope_2', 'Another description']]) }
+    let(:rest_client){ double(:authorization_scope_list => [['scope_1', 'A description'], ['scope_2', 'Another description']]) }
     before{ subject.should_receive(:rest_client).and_return(rest_client) }
     it{ capture{ subject.send(:scope_help) }.should =~ /scope_1.*A description/ }
     it{ capture{ subject.send(:scope_help) }.should =~ /scope_2.*Another description/ }

@@ -55,8 +55,8 @@ describe RHC::Commands::App do
   end
 
   describe '#check_domain!' do
-    let(:rest_client){ stub('RestClient') }
-    let(:domain){ stub('Domain', :id => 'test') }
+    let(:rest_client){ double('RestClient') }
+    let(:domain){ double('Domain', :id => 'test') }
     before{ subject.stub(:rest_client).and_return(rest_client) }
     let(:interactive){ false }
     before{ subject.stub(:interactive?).and_return(interactive) }
@@ -83,7 +83,7 @@ describe RHC::Commands::App do
     context "when interactive and no domains" do
       let(:interactive){ true }
       before{ rest_client.should_receive(:domains).twice.and_return([]) }
-      before{ RHC::DomainWizard.should_receive(:new).and_return(stub(:run => true)) }
+      before{ RHC::DomainWizard.should_receive(:new).and_return(double(:run => true)) }
       it("should raise if the wizard doesn't set the option"){ expect{ subject.send(:check_domain!) }.to raise_error(RHC::Rest::DomainNotFoundException) }
       after{ subject.send(:options).namespace.should be_nil }
     end
@@ -115,7 +115,7 @@ describe RHC::Commands::App do
 
     context "when dealing with config" do
       subject{ described_class.new(Commander::Command::Options.new(options)) }
-      let(:wizard){ s = stub('Wizard'); RHC::EmbeddedWizard.should_receive(:new).and_return(s); s }
+      let(:wizard){ s = double('Wizard'); RHC::EmbeddedWizard.should_receive(:new).and_return(s); s }
       let(:options){ nil }
       let(:interactive){ true }
       before{ subject.should_receive(:interactive?).at_least(1).times.and_return(interactive) }
@@ -142,7 +142,7 @@ describe RHC::Commands::App do
 
     context "when dealing with ssh keys" do
       subject{ described_class.new(options) }
-      let(:wizard){ s = stub('Wizard'); RHC::SSHWizard.should_receive(:new).and_return(s); s }
+      let(:wizard){ s = double('Wizard'); RHC::SSHWizard.should_receive(:new).and_return(s); s }
       let(:options){ Commander::Command::Options.new(:server => 'foo.com', :rhlogin => 'test') }
       let(:interactive){ true }
       before{ subject.should_receive(:interactive?).at_least(1).times.and_return(interactive) }
@@ -300,7 +300,7 @@ describe RHC::Commands::App do
       before(:each) do
         domain = rest_client.add_domain("mockdomain")
       end
-      it { expect { run }.to_not raise_error(ArgumentError, /The --no-dns option can't be used in conjunction with --enable-jenkins/) }
+      it { expect { run }.to_not raise_error }
     end
   end
 
@@ -703,7 +703,7 @@ describe RHC::Commands::App do
   describe "#create_app" do
     it("should list cartridges when a server error happens") do
       subject.should_receive(:list_cartridges)
-      domain = stub
+      domain = double
       domain.stub(:add_application).and_raise(RHC::Rest::ValidationException.new('Foo', :cartridges, 109))
       expect{ subject.send(:create_app, 'name', 'jenkins-1.4', domain) }.to raise_error(RHC::Rest::ValidationException)
     end

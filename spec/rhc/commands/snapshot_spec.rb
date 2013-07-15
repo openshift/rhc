@@ -51,7 +51,7 @@ describe RHC::Commands::Snapshot do
         RHC::Helpers.stub(:windows?) do ; true; end
         RHC::Helpers.stub(:jruby?) do ; false ; end
         RHC::Helpers.stub(:linux?) do ; false ; end
-        ssh = mock(Net::SSH)
+        ssh = double(Net::SSH)
         Net::SSH.should_receive(:start).with(@ssh_uri.host, @ssh_uri.user).and_yield(ssh)
         ssh.should_receive(:exec!).with("snapshot").and_yield(nil, :stdout, 'foo').and_yield(nil, :stderr, 'foo')
       end
@@ -64,7 +64,7 @@ describe RHC::Commands::Snapshot do
         RHC::Helpers.stub(:windows?) do ; true; end
         RHC::Helpers.stub(:jruby?) do ; false ; end
         RHC::Helpers.stub(:linux?) do ; false ; end
-        ssh = mock(Net::SSH)
+        ssh = double(Net::SSH)
         Net::SSH.should_receive(:start).with(@ssh_uri.host, @ssh_uri.user).and_raise(Timeout::Error)
       end
       it { expect { run }.to exit_with_code(130) }
@@ -77,8 +77,8 @@ describe RHC::Commands::Snapshot do
 
     context 'when restoring a snapshot' do
       before(:each) do
-        File.stub!(:exists?).and_return(true)
-        RHC::TarGz.stub!(:contains).and_return(true)
+        File.stub(:exists?).and_return(true)
+        RHC::TarGz.stub(:contains).and_return(true)
         `(exit 0)`
         Kernel.should_receive(:`).with("cat #{@app.name}.tar.gz | ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'restore INCLUDE_GIT'")
       end
@@ -87,8 +87,8 @@ describe RHC::Commands::Snapshot do
 
     context 'when restoring a snapshot and failing to ssh' do
       before(:each) do
-        File.stub!(:exists?).and_return(true)
-        RHC::TarGz.stub!(:contains).and_return(true)
+        File.stub(:exists?).and_return(true)
+        RHC::TarGz.stub(:contains).and_return(true)
         Kernel.should_receive(:`).with("cat #{@app.name}.tar.gz | ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'restore INCLUDE_GIT'")
         $?.stub(:exitstatus) { 1 }
       end
@@ -100,9 +100,9 @@ describe RHC::Commands::Snapshot do
         RHC::Helpers.stub(:windows?) do ; true; end
         RHC::Helpers.stub(:jruby?) do ; false ; end
         RHC::Helpers.stub(:linux?) do ; false ; end
-        ssh = mock(Net::SSH)
-        session = mock(Net::SSH::Connection::Session)
-        channel = mock(Net::SSH::Connection::Channel)
+        ssh = double(Net::SSH)
+        session = double(Net::SSH::Connection::Session)
+        channel = double(Net::SSH::Connection::Channel)
         Net::SSH.should_receive(:start).with(@ssh_uri.host, @ssh_uri.user).and_return(session)
         session.should_receive(:open_channel).and_yield(channel)
         channel.should_receive(:exec).with("restore INCLUDE_GIT").and_yield(nil, nil)
@@ -127,7 +127,7 @@ describe RHC::Commands::Snapshot do
         RHC::Helpers.stub(:windows?) do ; true; end
         RHC::Helpers.stub(:jruby?) do ; false ; end
         RHC::Helpers.stub(:linux?) do ; false ; end
-        ssh = mock(Net::SSH)
+        ssh = double(Net::SSH)
         Net::SSH.should_receive(:start).with(@ssh_uri.host, @ssh_uri.user).and_raise(Timeout::Error)
       end
       it { expect { run }.to exit_with_code(130) }
