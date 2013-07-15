@@ -103,9 +103,9 @@ describe RHC::Wizard do
   describe "#login_stage" do
     let(:user){ 'test_user' }
     let(:password){ 'test pass' }
-    let(:rest_client){ stub }
+    let(:rest_client){ double }
     let(:auth){ subject.send(:auth) }
-    let(:user_obj){ stub(:login => user) }
+    let(:user_obj){ double(:login => user) }
 
     subject{ described_class.new(config, options) }
 
@@ -185,8 +185,8 @@ describe RHC::Wizard do
 
       context "when the config has enabled tokens" do
         let(:default_options){ {:rhlogin => user, :password => password, :server => server, :use_authorization_tokens => true} }
-        let(:store){ mock }
-        before{ RHC::Auth::TokenStore.should_receive(:new).any_number_of_times.and_return(store) }
+        let(:store){ double }
+        before{ RHC::Auth::TokenStore.stub(:new).and_return(store) }
         before{ expect_client_test(true) }
 
         it "should check for an existing token" do
@@ -203,9 +203,9 @@ describe RHC::Wizard do
       context "with a server that supports tokens" do
         before{ expect_client_test(true) }
         let(:token){ 'a_test_value' }
-        let(:auth_token){ mock(:token => token, :expires_in_seconds => 100) }
-        let(:store){ mock }
-        before{ RHC::Auth::TokenStore.should_receive(:new).any_number_of_times.and_return(store) }
+        let(:auth_token){ double(:token => token, :expires_in_seconds => 100) }
+        let(:store){ double }
+        before{ RHC::Auth::TokenStore.stub(:new).and_return(store) }
 
         it "should not generate a token if the user does not request it" do
           store.should_not_receive(:get)
@@ -517,7 +517,7 @@ describe RHC::Wizard do
       it "should cause upload_ssh_key to catch NoMethodError and call the fallback to get the fingerprint" do
         Net::SSH::KeyFactory.should_receive(:load_public_key).exactly(5).times.and_raise(NoMethodError)
         wizard.stub(:ssh_keys).at_least(1).times.and_return(wizard.get_mock_key_data)
-        wizard.should_receive(:ssh_keygen_fallback).exactly(5).times.and_return(stub(:name => 'default', :fingerprint => 'AA:BB:CC:DD:EE:FF', :type => 'ssh-rsa' ))
+        wizard.should_receive(:ssh_keygen_fallback).exactly(5).times.and_return(double(:name => 'default', :fingerprint => 'AA:BB:CC:DD:EE:FF', :type => 'ssh-rsa' ))
 
         input_line 'y'
 
@@ -580,7 +580,7 @@ describe RHC::Wizard do
           wizard.ssh_keys = key_data
           wizard.stub(:ssh_key_triple_for_default_key) { pub_key.chomp.split }
           wizard.stub(:fingerprint_for_default_key) { "" } # this value is irrelevant
-          wizard.rest_client = stub('RestClient').tap{ |o| o.stub(:find_key) { key_data.detect { |k| k.name == key_name } } }
+          wizard.rest_client = double('RestClient').tap{ |o| o.stub(:find_key) { key_data.detect { |k| k.name == key_name } } }
 
           wizard.send(:upload_ssh_key, key_name)
           output = last_output
@@ -596,7 +596,7 @@ describe RHC::Wizard do
           wizard.ssh_keys = key_data
           wizard.stub(:ssh_key_triple_for_default_key) { pub_key.chomp.split }
           wizard.stub(:fingerprint_for_default_key) { "" } # this value is irrelevant
-          wizard.rest_client = stub('RestClient').tap{ |o| o.stub(:add_key) { true } }
+          wizard.rest_client = double('RestClient').tap{ |o| o.stub(:add_key) { true } }
 
           wizard.send(:upload_ssh_key, "other")
           output = last_output
@@ -748,7 +748,7 @@ end
 
 describe RHC::DomainWizard do
   context "with a rest client" do
-    let(:rest_client){ stub }
+    let(:rest_client){ double }
     it{ described_class.new(nil, nil, rest_client).rest_client.should == rest_client }
     it{ subject.stages == [:config_namespace_stage] }
     it{ expect{ described_class.new(nil, nil, rest_client).send(:config_namespace, '') }.to call(:add_domain).on(rest_client).and_stop }

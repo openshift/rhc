@@ -16,7 +16,7 @@ describe RHC::Commands::Logout do
     before do
       stub_api(mock_user_auth, supports_auth)
       stub_user
-      RHC::Auth::TokenStore.should_receive(:new).at_least(0).times.and_return(token_store)
+      RHC::Auth::TokenStore.stub(:new).and_return(token_store)
     end
 
     context "when calling from the alias" do

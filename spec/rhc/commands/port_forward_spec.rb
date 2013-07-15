@@ -14,7 +14,7 @@ describe RHC::Commands::PortForward do
       @domain = rest_client.add_domain("mockdomain")
       @app = @domain.add_application 'mockapp', 'mock-1.0'
       @uri = URI.parse @app.ssh_url
-      @ssh = mock(Net::SSH)
+      @ssh = double(Net::SSH)
     end
 
     context 'when port forwarding for a down appl' do
@@ -63,7 +63,7 @@ describe RHC::Commands::PortForward do
       before(:each) do
         Net::SSH.should_receive(:start).with(@uri.host, @uri.user).and_yield(@ssh).twice
         @ssh.should_receive(:exec!).with("rhc-list-ports").and_yield(nil, :stderr, 'mysql -> 127.0.0.1:3306')
-        forward = mock(Net::SSH::Service::Forward)
+        forward = double(Net::SSH::Service::Forward)
         @ssh.should_receive(:forward).and_return(forward)
         forward.should_receive(:local).with(3306, '127.0.0.1', 3306)
         @ssh.should_receive(:loop)
@@ -102,7 +102,7 @@ describe RHC::Commands::PortForward do
       before(:each) do
         Net::SSH.should_receive(:start).with(@uri.host, @uri.user).and_yield(@ssh).twice
         @ssh.should_receive(:exec!).with("rhc-list-ports").and_yield(nil, :stderr, 'mysql -> 127.0.0.1:3306')
-        forward = mock(Net::SSH::Service::Forward)
+        forward = double(Net::SSH::Service::Forward)
         @ssh.should_receive(:forward).and_return(forward)
         forward.should_receive(:local).with(3306, '127.0.0.1', 3306)
         @ssh.should_receive(:loop).and_raise(Interrupt.new)
@@ -120,7 +120,7 @@ describe RHC::Commands::PortForward do
       before(:each) do
         Net::SSH.should_receive(:start).with(@uri.host, @uri.user).and_yield(@ssh).twice
         @ssh.should_receive(:exec!).with("rhc-list-ports").and_yield(nil, :stderr, 'mysql -> 127.0.0.1:3306')
-        forward = mock(Net::SSH::Service::Forward)
+        forward = double(Net::SSH::Service::Forward)
         @ssh.should_receive(:forward).at_least(2).and_return(forward)
         forward.should_receive(:local).with(3306, '127.0.0.1', 3306).and_raise(Errno::EACCES)
         forward.should_receive(:local).with(3307, '127.0.0.1', 3306)
@@ -135,7 +135,7 @@ describe RHC::Commands::PortForward do
       before(:each) do
         Net::SSH.should_receive(:start).with(@uri.host, @uri.user).and_yield(@ssh).twice
         @ssh.should_receive(:exec!).with("rhc-list-ports").and_yield(nil, :stderr, 'mysql -> 127.0.0.1:3306')
-        forward = mock(Net::SSH::Service::Forward)
+        forward = double(Net::SSH::Service::Forward)
         @ssh.should_receive(:forward).and_raise(Errno::ECONNREFUSED)
       end
       it "should error out" do
@@ -154,7 +154,7 @@ describe RHC::Commands::PortForward do
         Net::SSH.should_receive(:start).with(@uri.host, @uri.user).and_yield(@ssh).twice
         @ssh.should_receive(:exec!).with("rhc-list-ports").
           and_yield(nil, :stderr, "httpd -> #{haproxy_host_1}:8080\nhttpd -> #{haproxy_host_2}:8080\nmongodb -> #{mongo_host}:35541\nmysqld -> #{ipv6_host}:3306")
-        forward = mock(Net::SSH::Service::Forward)
+        forward = double(Net::SSH::Service::Forward)
         @ssh.should_receive(:forward).at_least(3).times.and_return(forward)
         forward.should_receive(:local).with(8080, haproxy_host_1, 8080)
         forward.should_receive(:local).with(8080, haproxy_host_2, 8080).and_raise(Errno::EADDRINUSE)
@@ -183,7 +183,7 @@ describe RHC::Commands::PortForward do
 
         @ssh.should_receive(:exec!).with("rhc-list-ports --exclude-remote").
           and_yield(nil, :stderr, "mongodb -> #{gear_host}:35541")
-        forward = mock(Net::SSH::Service::Forward)
+        forward = double(Net::SSH::Service::Forward)
         @ssh.should_receive(:forward).and_return(forward)
         forward.should_receive(:local).with(35541, gear_host, 35541)
         @ssh.should_receive(:loop).and_raise(Interrupt.new)
