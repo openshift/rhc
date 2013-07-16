@@ -13,6 +13,19 @@ module Commander
       root.present?
     end
 
+    #
+    # Force proxy_option_struct to default to nil for values,
+    # backported for Commander 4.0.3 
+    #
+    def proxy_option_struct
+      proxy_options.inject Options.new do |options, (option, value)|
+        # options that are present will evaluate to true
+        value = true if value.nil?
+        options.__send__ :"#{option}=", value
+        options
+      end
+    end    
+
     def deprecated(as_alias=nil)
       return false unless info
       return info[:deprecated] if info[:deprecated]

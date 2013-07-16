@@ -102,11 +102,36 @@ describe RHC::Commands::Ssh do
   describe 'app ssh custom ssh' do
     let(:arguments) { ['app', 'ssh', 'app1', '--ssh', 'path_to_ssh'] }
 
-    context 'when run' do
+    context 'when custom ssh does not exist' do
       before(:each) do
         @domain = rest_client.add_domain("mockdomain")
         @domain.add_application("app1", "mock_type")
         RHC::Commands::Ssh.any_instance.should_not_receive(:has_ssh?)
+        File.should_receive(:exist?).with("path_to_ssh").once.and_return(false)
+      end
+      it { run_output.should match("SSH executable 'path_to_ssh' does not exist.") }
+      it { expect { run }.to exit_with_code(1) }
+    end
+
+    context 'when custom ssh is not executable' do
+      before(:each) do
+        @domain = rest_client.add_domain("mockdomain")
+        @domain.add_application("app1", "mock_type")
+        RHC::Commands::Ssh.any_instance.should_not_receive(:has_ssh?)
+        File.should_receive(:exist?).with("path_to_ssh").once.and_return(true)
+        File.should_receive(:executable?).with("path_to_ssh").once.and_return(false)
+      end
+      it { run_output.should match("SSH executable 'path_to_ssh' is not executable.") }
+      it { expect { run }.to exit_with_code(1) }
+    end
+
+    context 'when custom ssh exists' do
+      before(:each) do
+        @domain = rest_client.add_domain("mockdomain")
+        @domain.add_application("app1", "mock_type")
+        RHC::Commands::Ssh.any_instance.should_not_receive(:has_ssh?)
+        File.should_receive(:exist?).with("path_to_ssh").once.and_return(true)
+        File.should_receive(:executable?).with("path_to_ssh").once.and_return(true)
         Kernel.should_receive(:exec).with("path_to_ssh", "fakeuuidfortestsapp1@127.0.0.1").once.times.and_return(0)
       end
       it { run_output.should match("Connecting to fakeuuidfortestsapp") }

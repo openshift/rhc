@@ -15,6 +15,17 @@ class HighLineExtension < HighLine
     end
   end
 
+  if HighLine::CHARACTER_MODE == 'stty'
+    def raw_no_echo_mode
+      @state = `stty -g 2>/dev/null`
+      `stty raw -echo -icanon isig 2>&1`
+    end
+
+    def restore_mode
+      `stty #{@state} 2>&1`
+    end
+  end
+
   def debug(msg)
     $stderr.puts "DEBUG: #{msg}" if debug?
   end
@@ -37,7 +48,7 @@ class HighLineExtension < HighLine
       statement = template.result(binding)
 
       if @wrap_at
-        statement = statement.textwrap_ansi(@wrap_at, false)
+        statement = statement.chomp.textwrap_ansi(@wrap_at, false)
         if @last_line_open && statement.length > 1
           @last_line_open = false
           @output.puts
@@ -52,7 +63,8 @@ class HighLineExtension < HighLine
         if statement[-1, 1] == " " or statement[-1, 1] == "\t"
           @output.print(statement)
           @output.flush
-          statement.strip_ansi.length + (@last_line_open || 0)
+          #statement.strip_ansi.length + (@last_line_open || 0)
+          true
         else
           @output.puts(statement)
           false

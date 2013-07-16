@@ -8,7 +8,7 @@ describe RHC::Auth::Basic do
   let(:auth_hash){ {:user => user, :password => password} }
   let(:options){ (o = Commander::Command::Options.new).default(default_options); o }
   let(:default_options){ {} }
-  let(:client){ mock(:supports_sessions? => false) }
+  let(:client){ double(:supports_sessions? => false) }
 
   its(:username){ should be_nil }
   its(:username?){ should be_false }
@@ -59,7 +59,7 @@ describe RHC::Auth::Basic do
       its(:username?){ should be_false }
       it("should not retry") do 
         subject.should_not_receive(:ask_username)
-        subject.retry_auth?(mock(:status => 401), client).should be_false
+        subject.retry_auth?(double(:status => 401), client).should be_false
       end
     end
   end
@@ -176,16 +176,16 @@ describe RHC::Auth::Basic do
 
   describe "#retry_auth?" do
     context "when the response succeeds" do
-      let(:response){ mock(:cookies => {}, :status => 200) }
+      let(:response){ double(:cookies => {}, :status => 200) }
 
       it{ subject.retry_auth?(response, client).should be_false }
     end
     context "when the response succeeds with a cookie" do
-      let(:response){ mock(:cookies => [mock(:name => 'rh_sso', :value => '1')], :status => 200) }
+      let(:response){ double(:cookies => [double(:name => 'rh_sso', :value => '1')], :status => 200) }
       it{ subject.retry_auth?(response, client).should be_false }
     end
     context "when the response requires authentication" do
-      let(:response){ mock(:status => 401) }
+      let(:response){ double(:status => 401) }
 
       context "with no user and no password" do
         subject{ described_class.new(nil, nil) }
@@ -227,7 +227,7 @@ describe RHC::Auth::Token do
   let(:token){ 'a_token' }
   let(:options){ (o = Commander::Command::Options.new).default(default_options); o }
   let(:default_options){ {} }
-  let(:client){ mock(:supports_sessions? => false) }
+  let(:client){ double(:supports_sessions? => false) }
   let(:auth){ nil }
   let(:store){ nil }
 
@@ -271,13 +271,13 @@ describe RHC::Auth::Token do
 
   context "when initialized with an auth object" do
     subject{ described_class.new(nil, auth) }
-    let(:auth){ mock(:username => 'foo') }
+    let(:auth){ double(:username => 'foo') }
     its(:username){ should == 'foo' }
   end
 
   context "when initialized with a store" do
     subject{ described_class.new(nil, nil, store) }
-    let(:store){ mock }
+    let(:store){ double }
     before{ store.should_receive(:get).with(nil, 'openshift.redhat.com').and_return(token) }
     it("should read the token for the user") do
       subject.send(:token).should == token
@@ -287,7 +287,7 @@ describe RHC::Auth::Token do
   describe "#save" do
     subject{ described_class.new(nil, nil, store) }
     context "when store is set" do
-      let(:store){ mock(:get => nil) }
+      let(:store){ double(:get => nil) }
       it("should call put on store") do
         subject.should_receive(:username).and_return('foo')
         subject.should_receive(:openshift_server).and_return('bar')
@@ -322,7 +322,7 @@ describe RHC::Auth::Token do
 
     context "when a parent auth class is passed" do
       subject{ described_class.new(nil, auth) }
-      let(:auth){ mock }
+      let(:auth){ double }
       it("should invoke the parent") do
         auth.should_receive(:to_request).with(request).and_return(request)
         subject.to_request(request).should == request
@@ -334,12 +334,12 @@ describe RHC::Auth::Token do
     subject{ described_class.new(token, auth) }
 
     context "when the response succeeds" do
-      let(:response){ mock(:cookies => {}, :status => 200) }
+      let(:response){ double(:cookies => {}, :status => 200) }
       it{ subject.retry_auth?(response, client).should be_false }
     end
 
     context "when the response requires authentication" do
-      let(:response){ mock(:status => 401) }
+      let(:response){ double(:status => 401) }
 
       context "with no token" do
         subject{ described_class.new(nil, nil) }
@@ -347,12 +347,12 @@ describe RHC::Auth::Token do
       end
 
       context "when a nested auth object can't authenticate" do
-        let(:auth){ mock(:can_authenticate? => false) }
+        let(:auth){ double(:can_authenticate? => false) }
         it("should raise an error"){ expect{ subject.retry_auth?(response, client) }.to raise_error(RHC::Rest::TokenExpiredOrInvalid) }
       end
 
       context "with a nested auth object" do
-        let(:auth){ mock('nested_auth', :can_authenticate? => true) }
+        let(:auth){ double('nested_auth', :can_authenticate? => true) }
         subject{ described_class.new(options, auth) }
 
         it("should not use token auth") do 
@@ -370,7 +370,7 @@ describe RHC::Auth::Token do
 
           context "without session support" do
             let(:default_options){ {:use_authorization_tokens => true, :token => 'foo'} }
-            let(:client){ mock('client', :supports_sessions? => false) }
+            let(:client){ double('client', :supports_sessions? => false) }
 
             it("should invoke raise an error on retry because sessions are not supported") do
               expect{ subject.retry_auth?(response, client) }.to raise_error RHC::Rest::AuthorizationsNotSupported
@@ -379,7 +379,7 @@ describe RHC::Auth::Token do
 
           context "we expect a warning and a call to client" do
             let(:auth_token){ nil }
-            let(:client){ mock('client', :supports_sessions? => true) }
+            let(:client){ double('client', :supports_sessions? => true) }
             before{ client.should_receive(:new_session).with(:auth => auth).and_return(auth_token) }
 
             it("should print a message") do 
@@ -407,7 +407,7 @@ describe RHC::Auth::Token do
             end
 
             context "when the token request succeeds" do
-              let(:auth_token){ mock('auth_token', :token => 'bar') }
+              let(:auth_token){ double('auth_token', :token => 'bar') }
               before{ subject.should_receive(:info).with("Please sign in to start a new session to #{subject.openshift_server}.") }
               it("should save the token and return true") do
                 subject.should_receive(:save).with(auth_token.token).and_return true

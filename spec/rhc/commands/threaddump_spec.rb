@@ -52,7 +52,7 @@ describe RHC::Commands::Threaddump do
                              :server_identity => 'mock_server_identity',
                              :links           => mock_response_links(mock_app_links('mock_domain_1','mock_app_0')),
                            },
-                          :messages => [{:text => 'Application test thread dump complete.: Success'}]
+                          :messages => [{:text => 'Application test thread dump complete.: Success', :severity => 'result'}]
                         }.to_json,
                         :status => 200
                       })

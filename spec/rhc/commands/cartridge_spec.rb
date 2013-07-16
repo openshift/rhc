@@ -10,7 +10,7 @@ describe RHC::Commands::Cartridge do
     run_output.should match(message) if message
   end
 
-  def succeed_with_message(message = "Success")
+  def succeed_with_message(message = "done")
     exit_with_code_and_message(0,message)
   end
 
@@ -237,7 +237,8 @@ describe RHC::Commands::Cartridge do
           })
       end
 
-      it("should display info returned by the server"){ run_output.should match "Removed Jenkins" }
+      it("should not display info returned by the server"){ run_output.should_not match "Removed Jenkins" }
+      it("should display prefix returned by the server"){ run_output.should match "Removing jenkins-1.4" }
       it("should display results returned by the server"){ run_output.should match "Job URL changed" }
       it('should exit successfully'){ expect{ run }.to exit_with_code(0) }
     end
@@ -273,7 +274,7 @@ describe RHC::Commands::Cartridge do
         app = domain.add_application("app1", "mock_type")
         app.add_cartridge('mock_cart-1')
       end
-      it { run_output.should match('start') }
+      it { run_output.should match(/Starting mock_cart-1 .*done/) }
     end
   end
 
@@ -287,7 +288,7 @@ describe RHC::Commands::Cartridge do
         app = domain.add_application("app1", "mock_type")
         app.add_cartridge('mock_cart-1')
       end
-      it { run_output.should match('stop') }
+      it { run_output.should match(/Stopping mock_cart-1 .*done/) }
     end
   end
 
@@ -301,7 +302,7 @@ describe RHC::Commands::Cartridge do
         app = domain.add_application("app1", "mock_type")
         app.add_cartridge('mock_cart-1')
       end
-      it { run_output.should match('restart') }
+      it { run_output.should match(/Restarting mock_cart-1 .*done/) }
     end
   end
 
@@ -315,7 +316,7 @@ describe RHC::Commands::Cartridge do
         app = domain.add_application("app1", "mock_type")
         app.add_cartridge('mock_cart-1')
       end
-      it { run_output.should match('reload') }
+      it { run_output.should match(/Reloading mock_cart-1 .*done/) }
     end
   end
 

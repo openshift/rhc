@@ -382,11 +382,11 @@ module RHC
           warn "none"
 
           paragraph do
-            say "Your namespace is unique to your account and is the suffix of the " \
-                "public URLs we assign to your applications. You may configure your " \
-                "namespace here or leave it blank and use 'rhc create-domain' to " \
-                "create a namespace later.  You will not be able to create " \
-                "applications without first creating a namespace."
+            say [
+              "Your namespace is unique to your account and is the suffix of the public URLs we assign to your applications.",
+              ("You may configure your namespace here or leave it blank and use 'rhc create-domain' to create a namespace later." if namespace_optional?),
+              "You will not be able to create applications without first creating a namespace.",
+            ].compact.join(' ')
           end
 
           ask_for_namespace
@@ -486,7 +486,11 @@ module RHC
       applications.take(1).each do |app|
         begin
           ssh = Net::SSH.start(app.host, app.uuid, :timeout => 60)
-        rescue => e
+        rescue Interrupt => e
+          debug_error(e)
+          raise "Connection attempt to #{app.host} was interrupted"
+        rescue ::Exception => e
+          debug_error(e)
           raise "An SSH connection could not be established to #{app.host}. Your SSH configuration may not be correct, or the application may not be responding. #{e.message} (#{e.class})"
         ensure
           ssh.close if ssh
@@ -592,6 +596,11 @@ EOF
     def finalize_stage
       true
     end
+    
+    protected
+      def namespace_optional?
+        false
+      end    
   end
 
   class DomainWizard < Wizard

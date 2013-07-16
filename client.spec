@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.11.1
+Version: 1.12.1
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -22,6 +22,9 @@ Requires:      rubygem-archive-tar-minitar
 Requires:      rubygem-commander
 Requires:      rubygem-open4
 Requires:      git
+%if 0%{?fedora} >= 19 || 0%{?rhel} >= 7
+Requires:      rubygem-net-ssh-multi
+%endif
 Obsoletes:     rhc-rest
 Provides:      rubygem-rhc
 
@@ -99,6 +102,47 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Jul 12 2013 Adam Miller <admiller@redhat.com> 1.12.1-1
+- bump_minor_versions for sprint 31 (admiller@redhat.com)
+
+* Wed Jul 10 2013 Adam Miller <admiller@redhat.com> 1.11.4-1
+- Bug 979963 - Log and trace errors for interrupts during rhc setup
+  (ccoleman@redhat.com)
+- Merge pull request #425 from
+  smarterclayton/bug_979992_fix_stty_handling_for_non_interactive
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #420 from pravisankar/dev/ravi/bug980804
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 979992 - Only respond to 'y', 'yes', 'n', and 'no' (ccoleman@redhat.com)
+- Bug 980804 - Alias name need to be in lower case while comparing with
+  existing app aliases (rpenta@redhat.com)
+
+* Tue Jul 09 2013 Adam Miller <admiller@redhat.com> 1.11.3-1
+- Merge pull request #421 from smarterclayton/bug_981780_better_responses
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #423 from
+  smarterclayton/bug_982135_fix_namespace_optional_message
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #424 from
+  smarterclayton/bug_981274_forgot_to_update_autocomplete
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 981274 - Update autocomplete script (ccoleman@redhat.com)
+- Bug 982135 - Namespace optional should affect the message displayed
+  (ccoleman@redhat.com)
+- Bug 980413 - Options that are nil should default to true
+  (ccoleman@redhat.com)
+- Bug 981780 - Filter broker results more effectively, and display results on
+  cartridge actions (ccoleman@redhat.com)
+
+* Tue Jul 02 2013 Adam Miller <admiller@redhat.com> 1.11.2-1
+- Add net-ssh-multi as dependency on F19+ (kraman@gmail.com)
+- Bug 978837 - Don't show stack trace if --ssh executable not found
+  (andy.goldstein@redhat.com)
+- Webmock 1.12 breaks query parameter compatibility, can't dupe Symbol/Fixnum
+  when it tries to match a request signature.  Lock to < 1.12 for now.
+  (ccoleman@redhat.com)
+- fix typos (dmcphers@redhat.com)
+
 * Tue Jun 25 2013 Adam Miller <admiller@redhat.com> 1.11.1-1
 - bump_minor_versions for sprint 30 (admiller@redhat.com)
 

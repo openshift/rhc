@@ -538,7 +538,7 @@ module RHC
       end
 
       describe "#supports_sessions?" do
-        before{ subject.should_receive(:api).at_least(2).times.and_return(stub) }
+        before{ subject.should_receive(:api).at_least(2).times.and_return(double) }
         context "with ADD_AUTHORIZATION link" do
           before{ subject.api.should_receive(:supports?).with('ADD_AUTHORIZATION').and_return(true) }
           its(:supports_sessions?){ should be_true }
