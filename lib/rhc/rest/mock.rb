@@ -45,6 +45,18 @@ module RHC::Rest::Mock
       api.with(&lambda{ |r| request.headers['Authorization'] == "Bearer #{with_auth[:token]}" }) if with_auth.respond_to?(:[]) && with_auth[:token]
       api.with(&expect_authorization(with_auth))
       api.with(&user_agent_header)
+      if @challenge
+        stub_request(method, mock_href(uri, false)).to_return(:status => 401, :headers => {'www-authenticate' => 'basic realm="openshift broker"'})
+        @challenge = false
+      end
+      api
+    end
+
+    def challenge(&block)
+      @challenge = true
+      yield
+    ensure
+      @challenge = false
     end
 
     def stub_api(auth=false, authorizations=false)
@@ -158,11 +170,11 @@ module RHC::Rest::Mock
           }.to_json
         })
     end
-    def stub_no_domains
-      stub_api_request(:get, 'broker/rest/domains', mock_user_auth).to_return(empty_domains)
+    def stub_no_domains(with_auth=mock_user_auth)
+      stub_api_request(:get, 'broker/rest/domains', with_auth).to_return(empty_domains)
     end
-    def stub_one_domain(name, optional_params=nil)
-      stub_api_request(:get, 'broker/rest/domains', mock_user_auth).
+    def stub_one_domain(name, optional_params=nil, with_auth=mock_user_auth)
+      stub_api_request(:get, 'broker/rest/domains', with_auth).
         to_return({
           :body => {
             :type => 'domains',
@@ -223,8 +235,8 @@ module RHC::Rest::Mock
         })
     end
 
-    def stub_simple_carts
-      stub_api_request(:get, 'broker/rest/cartridges', mock_user_auth).to_return(simple_carts)
+    def stub_simple_carts(with_auth=mock_user_auth)
+      stub_api_request(:get, 'broker/rest/cartridges', with_auth).to_return(simple_carts)
     end
 
     def define_exceptional_test_on_wizard
@@ -324,7 +336,14 @@ module RHC::Rest::Mock
     # Creates consistent hrefs for testing
     def mock_href(relative="", with_auth=false)
       server = respond_to?(:server) ? self.server : mock_uri
-      uri_string = server
+      user, pass = credentials_for(with_auth)
+      uri_string =
+        if user
+          "#{user}:#{pass}@#{server}"
+        else
+          server
+        end
+
       "https://#{uri_string}/#{relative}"
     end
 

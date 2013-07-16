@@ -17,6 +17,13 @@ describe RHC::Auth::Basic do
   its(:can_authenticate?){ should be_false }
   its(:openshift_server){ should == 'openshift.redhat.com' }
 
+  def resolved(hash)
+    hash.each_pair do |k,v|
+      hash[k] = v.call if v.is_a? Proc
+    end
+    hash
+  end
+
   context "with user options" do
     subject{ described_class.new(options) }
 
@@ -113,7 +120,7 @@ describe RHC::Auth::Basic do
       subject{ described_class.new(user, password) }
 
       it { subject.to_request(request).should equal(request) }
-      it { subject.to_request(request).should == auth_hash }
+      it { resolved(subject.to_request(request)).should == auth_hash }
 
       context "when the request is lazy" do
         let(:request){ {:lazy_auth => true} }
@@ -128,12 +135,12 @@ describe RHC::Auth::Basic do
       its(:password){ should be_nil }
       it "should ask for the password" do
         subject.should_receive(:ask_password).and_return(password)
-        subject.to_request(request).should == auth_hash
+        resolved(subject.to_request(request)).should == auth_hash
       end
       it "should remember the password" do
         subject.should_receive(:ask_password).and_return(password)
         subject.to_request(request)
-        subject.to_request(request).should == auth_hash
+        resolved(subject.to_request(request)).should == auth_hash
       end
 
       context "when the request is lazy" do
@@ -150,12 +157,12 @@ describe RHC::Auth::Basic do
       its(:username){ should be_nil }
       it "should ask for the username" do
         subject.should_receive(:ask_username).and_return(user)
-        subject.to_request(request).should == auth_hash
+        resolved(subject.to_request(request)).should == auth_hash
       end
       it "should remember the username" do
         subject.should_receive(:ask_username).and_return(user)
         subject.to_request(request)
-        subject.to_request(request).should == auth_hash
+        resolved(subject.to_request(request)).should == auth_hash
       end
 
       context "when the request is lazy" do

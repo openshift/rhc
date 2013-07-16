@@ -13,8 +13,10 @@ module RHC::Auth
     end
 
     def to_request(request)
-      request[:user] ||= username || (request[:lazy_auth] != true && ask_username) || nil
-      request[:password] ||= password || (username? && request[:lazy_auth] != true && ask_password) || nil
+      request[:user] ||=
+        lambda{ username || (request[:lazy_auth] != true && ask_username) || nil }
+      request[:password] ||=
+        lambda{ password || (username? && request[:lazy_auth] != true && ask_password) || nil }
       request
     end
 
