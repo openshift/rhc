@@ -10,14 +10,14 @@ describe RHC::Commands::Authorization do
     let(:password) { 'pass' }
     let(:server) { mock_uri }
     before{ user_config }
-    before{ stub_api(true, true) }
+    before{ stub_api(false, true) }
   end
   def self.without_authorization
     let(:username) { 'foo' }
     let(:password) { 'pass' }
     let(:server) { mock_uri }
     before{ user_config }
-    before{ stub_api(true, false) }
+    before{ stub_api(false, false) }
   end
   def self.expect_an_unsupported_message
     context "without authorizations" do
@@ -31,7 +31,7 @@ describe RHC::Commands::Authorization do
     let(:arguments) { ['authorization'] }
     context "with authorizations" do
       with_authorization
-      before{ stub_authorizations }
+      before{ challenge{ stub_authorizations } }
       it('should display the note')           { run_output.should =~ /an_authorization/ }
       it('should display the token')          { run_output.should =~ /Token:\s+a_token_value/ }
       it('should display the expiration')     { run_output.should =~ /Expires In:\s+1 minute/ }
@@ -56,7 +56,7 @@ describe RHC::Commands::Authorization do
     let(:arguments) { ['authorization', 'list'] }
     context "with authorizations" do
       with_authorization
-      before{ stub_authorizations }
+      before{ challenge{ stub_authorizations } }
       it('should display the note')           { run_output.should =~ /an_authorization/ }
       it('should display the token')          { run_output.should =~ /Token:\s+a_token_value/ }
       it('should display the expiration')     { run_output.should =~ /Expires In:\s+1 minute/ }
@@ -73,8 +73,8 @@ describe RHC::Commands::Authorization do
 
     context "with authorizations" do
       with_authorization
-      before{ stub_delete_authorization('foo') }
-      before{ stub_delete_authorization('bar') }
+      before{ challenge{ stub_delete_authorization('foo') } }
+      before{ challenge{ stub_delete_authorization('bar') } }
       it('should display success') { run_output.should =~ /Deleting auth.*done/ }
       it{ expect{ run }.to exit_with_code(0) }
       after{ a_request(:delete, mock_href('broker/rest/user/authorizations/foo', true)).should have_been_made }
@@ -95,7 +95,7 @@ describe RHC::Commands::Authorization do
 
     context "with authorizations" do
       with_authorization
-      before{ stub_delete_authorizations }
+      before{ challenge{ stub_delete_authorizations } }
       it('should display success') { run_output.should =~ /Deleting all auth.*done/ }
       it{ expect{ run }.to exit_with_code(0) }
       after{ a_request(:delete, mock_href('broker/rest/user/authorizations', true)).should have_been_made }
@@ -129,7 +129,7 @@ describe RHC::Commands::Authorization do
     context "with options" do
       let(:arguments) { ['authorization', 'add', '--scope', 'foo,bar', '--note', 'a_note', '--expires-in', '300'] }
       with_authorization
-      before{ stub_add_authorization(:note => 'a_note', :scope => 'foo,bar', :expires_in => '300') }
+      before{ challenge{ stub_add_authorization(:note => 'a_note', :scope => 'foo,bar', :expires_in => '300') } }
 
       it('should display success') { run_output.should =~ /Adding authorization.*done/ }
       it('should display the note')           { run_output.should =~ /a_note/ }

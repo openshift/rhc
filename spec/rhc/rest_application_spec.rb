@@ -55,7 +55,7 @@ module RHC
 
       context "#add_cartridge" do
         context "with a name" do
-          before{ stub_api_request(:any, app_links['ADD_CARTRIDGE']['relative']).with(:body => {:name => 'mock_cart_0'}.to_json).to_return(mock_cartridge_response) }
+          before{ stub_api_request(:any, app_links['ADD_CARTRIDGE']['relative'], false).with(:body => {:name => 'mock_cart_0'}.to_json).to_return(mock_cartridge_response) }
           it "accepts a string" do
             cart = app_obj.add_cartridge('mock_cart_0')
             cart.should be_an_instance_of RHC::Rest::Cartridge
@@ -74,7 +74,7 @@ module RHC
         end        
 
         context "with a URL cart" do
-          before{ stub_api_request(:any, app_links['ADD_CARTRIDGE']['relative']).with(:body => {:url => 'http://foo.com'}.to_json).to_return(mock_cartridge_response(1, true)) }
+          before{ stub_api_request(:any, app_links['ADD_CARTRIDGE']['relative'], false).with(:body => {:url => 'http://foo.com'}.to_json).to_return(mock_cartridge_response(1, true)) }
           it "raises without a param" do
             app_obj.should_receive(:has_param?).with('ADD_CARTRIDGE','url').and_return(false)
             expect{ app_obj.add_cartridge({:url => 'http://foo.com'}) }.to raise_error(RHC::Rest::DownloadingCartridgesNotSupported)
@@ -119,7 +119,7 @@ module RHC
         context "when the server doesn't return aliases" do
           let(:app_aliases){ nil }
           context "when the client supports LIST_ALIASES" do
-            before{ stub_api_request(:any, app_links['LIST_ALIASES']['relative']).to_return(mock_alias_response(2)) }
+            before{ stub_api_request(:any, app_links['LIST_ALIASES']['relative'], false).to_return(mock_alias_response(2)) }
             it{ app_obj.aliases.first.should be_an_instance_of RHC::Rest::Alias }
             it{ app_obj.aliases.map(&:id).should == ['www.alias0.com', 'www.alias1.com'] }
           end
@@ -132,8 +132,8 @@ module RHC
 
       context "#cartridges" do
         let(:num_carts){ 0 }
-        before(:each) do
-          stub_api_request(:any, app_links['LIST_CARTRIDGES']['relative']).
+        before do
+          stub_api_request(:any, app_links['LIST_CARTRIDGES']['relative'], false).
             to_return(mock_cartridge_response(num_carts))
         end
         context "with carts" do
@@ -170,8 +170,8 @@ module RHC
       end
 
       context "#gear_groups" do
-        before(:each) do
-          stub_api_request(:any, app_links['GET_GEAR_GROUPS']['relative']).
+        before do
+          stub_api_request(:any, app_links['GET_GEAR_GROUPS']['relative'], false).
             to_return(mock_gear_groups_response())
         end
         it "returns a list of all gear groups the current application" do
@@ -197,11 +197,11 @@ module RHC
           @control_output = control_data.has_key?(:result)  ? control_data[:result]      : @control_event
           @with_payload   = control_data.has_key?(:payload) ? control_data[:payload]     : true
           if @with_payload
-            stub_api_request(:any, app_links[@control_link]['relative']).
+            stub_api_request(:any, app_links[@control_link]['relative'], false).
               with(:body => { 'event' => @control_event }). # This is the critical part
               to_return({ :body => { :data => @control_event }.to_json, :status => 200 })
           else
-            stub_api_request(:any, app_links[@control_link]['relative']).
+            stub_api_request(:any, app_links[@control_link]['relative'], false).
               to_return({ :body => { :data => @control_event }.to_json, :status => 200 })
           end
         end

@@ -14,8 +14,8 @@ describe RHC::Commands::Logout do
     let!(:token_store) { RHC::Auth::TokenStore.new(Dir.mktmpdir) }
     before{ user_config }
     before do
-      stub_api(mock_user_auth, supports_auth)
-      stub_user
+      stub_api(false, supports_auth)
+      challenge{ stub_user }
       RHC::Auth::TokenStore.stub(:new).and_return(token_store)
     end
 

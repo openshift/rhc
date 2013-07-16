@@ -273,11 +273,11 @@ describe RHC::Wizard do
 
     context "with no settings" do
       before do
-        stub_api
-        stub_user
+        stub_api(false)
+        challenge{ stub_user }
         stub_no_keys
-        stub_no_domains
-        stub_simple_carts
+        challenge{ stub_no_domains }
+        stub_simple_carts(false)
       end
 
       it "should execute the minimal path" do
@@ -415,8 +415,8 @@ describe RHC::Wizard do
       subject{ RHC::RerunWizard.new(config, options) }
 
       before do
-        stub_api(:user => username)
-        stub_user
+        stub_api false
+        challenge{ stub_user }
         stub_no_keys
         stub_add_key
         stub_api_request(:post, 'broker/rest/domains', user_auth).
@@ -427,7 +427,7 @@ describe RHC::Wizard do
               :messages => [{:field => 'id', :severity => 'ERROR', :text => 'Too long', :exit_code => 123}]
             }.to_json
           })
-        stub_one_domain('testnamespace')
+        challenge{ stub_one_domain('testnamespace') }
         stub_one_application('testnamespace', 'test1')
         stub_simple_carts
       end
@@ -464,8 +464,8 @@ describe RHC::Wizard do
       subject{ RHC::SSHWizard.new(rest_client, config, options) }
 
       before do
-        stub_api(user_auth)
-        stub_user
+        stub_api false
+        challenge{ stub_user }
       end
 
       context "with no server keys" do
