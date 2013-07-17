@@ -1,0 +1,7 @@
+FOO=123
+BAR=456
+MY_OPENSHIFT_ENV_VAR=mongodb://user:pass@host:port/
+MY_EMPTY_ENV_VAR=
+ZEE
+LOL
+MUST NOT BE INCLUDED

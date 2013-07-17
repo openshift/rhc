@@ -1,14 +1,15 @@
 module RHC
   module Rest
     class EnvironmentVariable < Base
-      define_attr :id
-      
-      def destroy
-        debug "Deleting alias #{self.id}"
-        rest_method "DELETE"
+      define_attr :name, :value
+
+      def to_hash
+        { :name => name, :value => value }
       end
-      alias :delete :destroy
-      
+
+      def <=>(other)
+        name <=> other.name
+      end
     end
   end
 end

@@ -84,9 +84,10 @@ module RHC
         get_properties(cart, *properties).
           concat([[:downloaded_cartridge_url, cart.url]]).
           concat([[cart.scalable? ? :scaling : :gears, format_cart_gears(cart)]]).
-          concat(cart.properties.map{ |p| ["#{table_heading(p['name'])}:", p['value']] }.sort{ |a,b| a[0] <=> b[0] }),
+          concat(cart.properties.map{ |p| ["#{table_heading(p['name'])}:", p['value']] }.sort{ |a,b| a[0] <=> b[0] }).
+          concat(cart.environment_variables.present? ? [[:environment_variables, cart.environment_variables.map{|item| "#{item[:name]}=#{item[:value]}" }.sort.join(', ')]] : []),
         :delete => true
-      
+
       say format_usage_message(cart) if cart.usage_rate?
     end
 
@@ -132,6 +133,22 @@ module RHC
 
     def format_usage_message(cart)
       "This gear costs an additional $#{cart.usage_rate} per gear after the first 3 gears."
+    end
+
+    def default_display_env_var(env_var_name, env_var_value=nil)
+      info "#{env_var_name}#{env_var_value.nil? ? '' : '=' + env_var_value}"
+    end
+
+    def display_env_var_list(env_vars, opts={})
+      if env_vars.present?
+        if opts[:table]
+          say table(env_vars.collect{ |item| [item.name, opts[:quotes] ? "\"#{item.value}\"" : item.value] }, :header => ['Name', 'Value'])
+        else
+          env_vars.sort.each do |env_var|
+            default_display_env_var(env_var.name, opts[:quotes] ? "\"#{env_var.value}\"" : env_var.value)
+          end
+        end
+      end
     end
 
     private

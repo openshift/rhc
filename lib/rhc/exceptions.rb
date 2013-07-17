@@ -30,10 +30,22 @@ module RHC
       super message, 155
     end
   end
-  
+
   class EnvironmentVariableNotFoundException < Exception
     def initialize(message="Environment variable not found")
       super message, 157
+    end
+  end
+
+  class EnvironmentVariablesNotSupportedException < Exception
+    def initialize(message="Server does not support environment variables")
+      super message, 158
+    end
+  end
+
+  class EnvironmentVariableNotProvidedException < Exception
+    def initialize(message="Environment variable not provided")
+      super message, 159
     end
   end
 
@@ -150,7 +162,7 @@ module RHC
     def initialize
       super "The server does not support operations on individual gears."
     end
-  end  
+  end
   class ServerAPINotSupportedException < UnsupportedError
     def initialize(min_version, current_version)
       super "The server does not support this command (requires #{min_version}, found #{current_version})."

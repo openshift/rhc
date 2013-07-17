@@ -64,7 +64,7 @@ module RHC::Rest::Mock
         to_return({
           :body => {
             :data => mock_response_links(authorizations ? mock_api_with_authorizations : mock_real_client_links),
-            :supported_api_versions => [1.0, 1.1, 1.2, 1.3, 1.4, 1.5],
+            :supported_api_versions => [1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6],
           }.to_json
         })
     end
@@ -357,17 +357,19 @@ module RHC::Rest::Mock
     end
 
     def mock_app_links(domain_id='test_domain',app_id='test_app')
-      [['ADD_CARTRIDGE',   "domains/#{domain_id}/apps/#{app_id}/carts/add", 'post'],
-       ['LIST_CARTRIDGES', "broker/rest/domains/#{domain_id}/applications/#{app_id}/cartridges",'get' ],
-       ['GET_GEAR_GROUPS', "domains/#{domain_id}/apps/#{app_id}/gear_groups", 'get' ],
-       ['START',           "domains/#{domain_id}/apps/#{app_id}/start",     'post'],
-       ['STOP',            "domains/#{domain_id}/apps/#{app_id}/stop",      'post'],
-       ['RESTART',         "domains/#{domain_id}/apps/#{app_id}/restart",   'post'],
-       ['THREAD_DUMP',     "domains/#{domain_id}/apps/#{app_id}/event",     'post'],
-       ['ADD_ALIAS',       "domains/#{domain_id}/apps/#{app_id}/event",     'post'],
-       ['REMOVE_ALIAS',    "domains/#{domain_id}/apps/#{app_id}/event",     'post'],
-       ['LIST_ALIASES',    "domains/#{domain_id}/apps/#{app_id}/aliases",   'get'],
-       ['DELETE',          "broker/rest/domains/#{domain_id}/applications/#{app_id}", 'DELETE']]
+      [['ADD_CARTRIDGE',                   "domains/#{domain_id}/apps/#{app_id}/carts/add",                      'post'],
+       ['LIST_CARTRIDGES',                 "broker/rest/domains/#{domain_id}/applications/#{app_id}/cartridges", 'get' ],
+       ['GET_GEAR_GROUPS',                 "domains/#{domain_id}/apps/#{app_id}/gear_groups",                    'get' ],
+       ['START',                           "domains/#{domain_id}/apps/#{app_id}/start",                          'post'],
+       ['STOP',                            "domains/#{domain_id}/apps/#{app_id}/stop",                           'post'],
+       ['RESTART',                         "domains/#{domain_id}/apps/#{app_id}/restart",                        'post'],
+       ['THREAD_DUMP',                     "domains/#{domain_id}/apps/#{app_id}/event",                          'post'],
+       ['ADD_ALIAS',                       "domains/#{domain_id}/apps/#{app_id}/event",                          'post'],
+       ['REMOVE_ALIAS',                    "domains/#{domain_id}/apps/#{app_id}/event",                          'post'],
+       ['LIST_ALIASES',                    "domains/#{domain_id}/apps/#{app_id}/aliases",                        'get'],
+       ['LIST_ENVIRONMENT_VARIABLES',      "domains/#{domain_id}/apps/#{app_id}/event",                          'post'],
+       ['SET_UNSET_ENVIRONMENT_VARIABLES', "domains/#{domain_id}/apps/#{app_id}/event",                          'post'],
+       ['DELETE',                          "broker/rest/domains/#{domain_id}/applications/#{app_id}",            'DELETE']]
     end
 
     def mock_cart_links(domain_id='test_domain',app_id='test_app',cart_id='test_cart')
@@ -383,6 +385,7 @@ module RHC::Rest::Mock
        ['LIST_DOMAINS',    'domains/',    'get' ],
        ['LIST_CARTRIDGES', 'cartridges/', 'get' ]]
     end
+
     def mock_real_client_links
       [['GET_USER',        "broker/rest/user",       'GET'],
        ['LIST_DOMAINS',    "broker/rest/domains",    'GET'],
@@ -390,6 +393,7 @@ module RHC::Rest::Mock
        ['LIST_CARTRIDGES', "broker/rest/cartridges", 'GET'],
       ]
     end
+
     def mock_api_with_authorizations
       mock_real_client_links.concat([
         ['LIST_AUTHORIZATIONS', "broker/rest/user/authorizations", 'GET'],
@@ -645,7 +649,7 @@ module RHC::Rest::Mock
     def initialize(client=nil, carts=['name' => 'fake_geargroup_cart-0.1'], count=1)
       super({}, client)
       @cartridges = carts
-      @gears = count.times.map do |i| 
+      @gears = count.times.map do |i|
         {'state' => 'started', 'id' => "fakegearid#{i}", 'ssh_url' => "ssh://fakegearid#{i}@fakesshurl.com"}
       end
       @gear_profile = 'small'
@@ -694,7 +698,7 @@ module RHC::Rest::Mock
       "fakeuuidfortests#{@name}"
     end
 
-    def initialize(client, name, type, domain, scale=nil, gear_profile='default', initial_git_url=nil)
+    def initialize(client, name, type, domain, scale=nil, gear_profile='default', initial_git_url=nil, environment_variables=nil)
       super({}, client)
       @name = name
       @domain = domain
@@ -706,6 +710,7 @@ module RHC::Rest::Mock
       @app_url = "https://#{@name}-#{@domain.id}.fake.foo/"
       @ssh_url = "ssh://#{@uuid}@127.0.0.1"
       @aliases = []
+      @environment_variables = environment_variables || []
       @gear_profile = gear_profile
       if scale
         @scalable = true
@@ -730,8 +735,8 @@ module RHC::Rest::Mock
       @domain.applications.delete self
     end
 
-    def add_cartridge(cart, embedded=true)
-      name, url = 
+    def add_cartridge(cart, embedded=true, environment_variables=nil)
+      name, url =
         if cart.is_a? String
           [cart, nil]
         elsif cart.respond_to? :[]
@@ -742,10 +747,11 @@ module RHC::Rest::Mock
 
       type = embedded ? "embedded" : "standalone"
       c = MockRestCartridge.new(client, name, type, self)
-      if url 
+      if url
         c.url = url
         c.name = c.url_basename
       end
+      #set_environment_variables(environment_variables)
       c.properties << {'name' => 'prop1', 'value' => 'value1', 'description' => 'description1' }
       @cartridges << c
       c.messages << "Cartridge added with properties"
@@ -798,6 +804,31 @@ module RHC::Rest::Mock
     def aliases
       @aliases
     end
+
+    def environment_variables
+      if supports? "LIST_ENVIRONMENT_VARIABLES"
+        @environment_variables || []
+      else
+        raise RHC::EnvironmentVariablesNotSupportedException.new
+      end
+    end
+
+    def set_environment_variables(env_vars=[])
+      if supports? "SET_UNSET_ENVIRONMENT_VARIABLES"
+        environment_variables.concat env_vars
+      else
+        raise RHC::EnvironmentVariablesNotSupportedException.new
+      end
+    end
+
+    def unset_environment_variables(env_vars=[])
+      if supports? "SET_UNSET_ENVIRONMENT_VARIABLES"
+        env_vars.each { |item| environment_variables.delete_if { |env_var| env_var.name == item } }
+      else
+        raise RHC::EnvironmentVariablesNotSupportedException.new
+      end
+    end
+
   end
 
   class MockRestCartridge < RHC::Rest::Cartridge

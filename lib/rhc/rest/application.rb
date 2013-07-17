@@ -24,13 +24,17 @@ module RHC
       def add_cartridge(cart, options={})
         debug "Adding cartridge #{name}"
         clear_attribute :cartridges
-        cart = 
-          if cart.is_a? String 
+        cart =
+          if cart.is_a? String
             {:name => cart}
           elsif cart.respond_to? :[]
             cart
           else
-            cart.url ? {:url => cart.url} : {:name => cart.name}
+            c = cart.url ? {:url => cart.url} : {:name => cart.name}
+            if cart.respond_to?(:environment_variables) && cart.environment_variables.present?
+              c[:environment_variables] = cart.environment_variables
+            end
+            cart = c
           end
 
         if cart.respond_to?(:[]) and cart[:url] and !has_param?('ADD_CARTRIDGE', 'url')
@@ -120,22 +124,46 @@ module RHC
         debug "Running thread dump for #{name}"
         rest_method "THREAD_DUMP", :event => "thread-dump"
       end
-      
-      def add_environment_variable(env_name, env_value)
-          debug "Adding environment variables #{name} for #{name}"        
-        if (client.api_version_negotiated >= 1.4)        
-          rest_method "ADD_ENVIRONMENT_VARIABLE", id: env_name, value: env_value
+
+      def environment_variables
+        debug "Getting all environment variables for application #{name}"
+        if supports? "LIST_ENVIRONMENT_VARIABLES"
+          rest_method "LIST_ENVIRONMENT_VARIABLES"
         else
-          debug "Application environment variables not supported in API"          
+          raise RHC::EnvironmentVariablesNotSupportedException.new
         end
       end
-      
-      def remove_environment_variable(env_name)
-        debug "Removing environment variables #{name} from #{name}"
-        if (client.api_version_negotiated >= 1.4)
-          find_environment_variable(env_name).destroy
+
+      def find_environment_variable(env_var_name)
+        find_environment_variables(env_var_name).first
+      end
+
+      def find_environment_variables(env_var_names=nil)
+        return environment_variables if env_var_names.nil?
+        env_var_names = [env_var_names].flatten
+        debug "Finding environment variable(s) #{env_var_names.inspect} in app #{@name}"
+        env_vars = environment_variables.select { |item| env_var_names.include? item.name }
+        raise RHC::EnvironmentVariableNotFoundException.new("Environment variable(s) #{env_var_names.join(', ')} can't be found in application #{name}.") if env_vars.empty?
+        env_vars
+      end
+
+      # @param [Array<RHC::Rest::EnvironmentVariable>] Array of RHC::Rest::EnvironmentVariable to be set
+      def set_environment_variables(env_vars=[])
+        debug "Adding environment variable(s) #{env_vars.inspect} for #{name}"
+        if supports? "SET_UNSET_ENVIRONMENT_VARIABLES"
+          rest_method "SET_UNSET_ENVIRONMENT_VARIABLES", :environment_variables => env_vars.map{|item| item.to_hash}
         else
-          debug "Application environment variables not supported in API"          
+          raise RHC::EnvironmentVariablesNotSupportedException.new
+        end
+      end
+
+      # @param [Array<String>] Array of env var names like ['FOO', 'BAR']
+      def unset_environment_variables(env_vars=[])
+        debug "Removing environment variable(s) #{env_vars.inspect} for #{name}"
+        if supports? "SET_UNSET_ENVIRONMENT_VARIABLES"
+          rest_method "SET_UNSET_ENVIRONMENT_VARIABLES", :environment_variables => env_vars.map{|item| {:name => item}}
+        else
+          raise RHC::EnvironmentVariablesNotSupportedException.new
         end
       end
 
@@ -176,28 +204,6 @@ module RHC
         end
         aliases.each { |a| return a if a.is_a?(String) || a.id == name.downcase }
         raise RHC::AliasNotFoundException.new("Alias #{name} can't be found in application #{@name}.")
-      end
-      
-      def environment_variables
-        debug "Getting all environment variables for application #{name}"
-        if (client.api_version_negotiated >= 1.4)
-          env_vars = rest_method "LIST_ENVIRONMENT_VARIABLES"
-          env_vars.map{ |e| EnvironmentVariable.new(e, client) }
-        else
-          debug "Application environment variables not supported in API"
-          []
-        end
-      end
-      
-      def find_environment_variable(name, options={})
-        debug "Finding environment variable #{name} in app #{@name}"
-
-        if name.is_a?(Hash)
-          options = name
-          name = options[:name]
-        end
-        environment_variables.each { |e| return e if e.id == name }
-        raise RHC::EnvironmentVariableNotFoundException.new("Environment variable #{name} can't be found in application #{@name}.")
       end
 
       #Find Cartridge by name

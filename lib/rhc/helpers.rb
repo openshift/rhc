@@ -49,7 +49,7 @@ module RHC
         s /= 1000
       end
       ((s > 9 || s.modulo(1) < 0.1 ? '%d' : '%.1f') % s) + ' ' + PREFIX[i]
-    end    
+    end
 
     def date(s)
       return nil unless s.present?
@@ -248,7 +248,7 @@ module RHC
     #
     def agree(*args, &block)
       #args.push(interactive?.presence) if args.length == 1
-      block = lambda do |q| 
+      block = lambda do |q|
         q.validate = /\A(?:y|yes|n|no)\Z/i
       end unless block_given?
       super *args, &block
@@ -424,5 +424,30 @@ module RHC
 
       [status, stdout, stderr]
     end
+
+    def collect_env_vars(item)
+      return nil if item.blank?
+
+      env_vars = []
+
+      if match = item.match(env_var_regex_pattern)
+        name, value = match.captures
+        env_vars << RHC::Rest::EnvironmentVariable.new({ :name => name, :value => value })
+
+      elsif File.file? item
+        File.readlines(item).each do |line|
+          if match = line.match(env_var_regex_pattern)
+            name, value = match.captures
+            env_vars << RHC::Rest::EnvironmentVariable.new({ :name => name, :value => value })
+          end
+        end
+      end
+      env_vars
+    end
+
+    def env_var_regex_pattern
+      /(^.+)=(.*)/i
+    end
+
   end
 end

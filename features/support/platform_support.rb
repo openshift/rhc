@@ -24,9 +24,9 @@ else
     "mysql"       => { type: "mysql-5.1", name: "MySQL Database 5.1" },
     "phpmyadmin"  => { type: "phpmyadmin-3", name: "phpMyAdmin 3" },
     "mongodb"     => { type: "mongodb-2.2", name: "MongoDB NoSQL Database 2.2" },
-    "postgresql"  => { type: "postgresql-8.4", name: "PostgreSQL Database 8.4" },    
+    "postgresql"  => { type: "postgresql-8.4", name: "PostgreSQL Database 8.4" },
     "cron"        => { type: "cron-1.4", name: "Cron 1.4" },
-    "haproxy"     => { type: "haproxy-1.4", name: "" }    
+    "haproxy"     => { type: "haproxy-1.4", name: "" }
   }
 end
 
