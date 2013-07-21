@@ -52,6 +52,7 @@ module RHC
     end    
 
     def date(s)
+      return nil unless s.present?
       now = Date.today
       d = datetime_rfc3339(s).to_time
       if now.year == d.year

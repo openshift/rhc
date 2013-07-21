@@ -1,6 +1,26 @@
 module RHC
   module OutputHelpers
 
+    def display_domain(domain, applications=nil)
+      paragraph do
+        header ["Domain #{domain.id}", ("(owned by #{domain.owner})" if domain.owner.present?)] do
+          section(:bottom => 1) do
+            say format_table \
+              nil,
+              get_properties(
+                domain,
+                :creation_time,
+                :allowed_gear_sizes,
+              ),
+              :delete => true
+          end
+          applications.each do |a|
+            display_app(a,a.cartridges)
+          end if applications.present?
+        end
+      end
+    end
+
     #---------------------------
     # Application information
     #---------------------------

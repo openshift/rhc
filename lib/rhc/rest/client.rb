@@ -39,9 +39,14 @@ module RHC
       #Find Domain by namesapce
       def find_domain(id)
         debug "Finding domain #{id}"
-        domains.each { |domain| return domain if domain.id.downcase == id.downcase }
-
-        raise DomainNotFoundException.new("Domain #{id} not found")
+        if link = api.link_href(:SHOW_DOMAIN, ':name' => id)
+          request({
+            :url => link,
+            :method => "GET",
+          })
+        else
+          domains.find{ |d| d.id.downcase == id.downcase }
+        end or raise DomainNotFoundException.new("Domain #{id} not found")
       end
 
       def find_application(domain, application, options={})
@@ -75,6 +80,10 @@ module RHC
           "applications",
           application,
         ].concat(args).map{ |s| URI.escape(s) }.join("/")
+      end
+
+      def link_show_domain_by_name(domain, *args)
+        api.link_href(:SHOW_DOMAIN, ':id' => domain)
       end
 
       #Find Cartridge by name or regex

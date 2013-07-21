@@ -13,9 +13,9 @@ module RHC::Commands
 
         http://<appname>-test.rhcloud.com
 
-      Today, each account may have a single domain.
+      Each account may have access to one or more domains shared by others.
       DESC
-    default_action :show
+    default_action :list
 
     summary "Define a namespace for your applications to share."
     syntax "<namespace>"
@@ -50,20 +50,17 @@ module RHC::Commands
       0
     end
 
-    summary "Display your domain and any applications"
-    def show
-      domain = rest_client.domains.first
+    summary "Display a domain and its applications"
+    argument :namespace, "Namespace of the domain", ["-n", "--namespace NAME"], :optional => true
+    def show(namespace)
+      domain = (rest_client.find_domain(namespace) if namespace) || rest_client.domains.first
 
       warn "In order to deploy applications, you must create a domain with 'rhc setup' or 'rhc create-domain'." and return 1 unless domain
 
       applications = domain.applications(:include => :cartridges)
+      display_domain(domain, applications)
 
       if applications.present?
-        header "Applications in #{domain.id} domain" do
-          applications.each do |a|
-            display_app(a,a.cartridges)
-          end
-        end
         success "You have #{applications.length} applications in your domain."
       else
         success "The domain #{domain.id} exists but has no applications. You can use 'rhc create-app' to create a new application."
@@ -71,6 +68,22 @@ module RHC::Commands
 
       0
     end
+
+    summary "Display all domains you have access to"
+    alias_action :domains, :root_command => true
+    def list
+      domains = rest_client.domains
+
+      warn "In order to deploy applications, you must create a domain with 'rhc setup' or 'rhc create-domain'." and return 1 unless domains.present?
+
+      domains.each do |d|
+        display_domain(d)
+      end
+
+      success "You have access to #{domains.length} domains."
+
+      0
+    end    
 
     summary "DEPRECATED use 'setup' instead"
     deprecated 'rhc setup'
