@@ -107,6 +107,20 @@ describe RHC::Commands::Domain do
       end
     end
 
+    context 'when run with one owned domain' do
+      let(:arguments) { ['domains', '--mine'] }
+      before{ d = rest_client.add_domain('mine', true); rest_client.stub(:owned_domains).and_return([d]) }
+
+      it { expect { run }.to exit_with_code(0) }
+      it "should match output" do
+        output = run_output
+        output.should match("You have access to 1 domains")
+        output.should match("mine")
+        output.should match("Created")
+        output.should match("Allowed Gear Sizes: small")
+      end
+    end
+
     context 'when run with multiple domains and extra domain info' do
       before(:each) do
         rest_client.add_domain("firstdomain")

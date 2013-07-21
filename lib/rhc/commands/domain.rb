@@ -70,9 +70,10 @@ module RHC::Commands
     end
 
     summary "Display all domains you have access to"
+    option ['--mine'], "Display only domains you own"
     alias_action :domains, :root_command => true
     def list
-      domains = rest_client.domains
+      domains = rest_client.send(options.mine ? :owned_domains : :domains)
 
       warn "In order to deploy applications, you must create a domain with 'rhc setup' or 'rhc create-domain'." and return 1 unless domains.present?
 

@@ -51,7 +51,8 @@ module RHC
 
       def link_href(sym, params=nil, &block)
         if (l = link(sym)) && (h = l['href'])
-          return h.gsub(/:\w+/) { |s| params[s] || s } if params
+          h = h.gsub(/:\w+/) { |s| params[s] || s } if params
+          return h
         end
         yield if block_given?
       end

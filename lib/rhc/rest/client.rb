@@ -26,6 +26,15 @@ module RHC
         @domains ||= api.rest_method "LIST_DOMAINS"
       end
 
+      def owned_domains
+        debug "Getting owned domains"
+        if link = api.link_href(:LIST_OWNED_DOMAINS)
+          @owned_domains ||= api.rest_method 'LIST_OWNED_DOMAINS'
+        else
+          domains
+        end
+      end
+
       def cartridges
         debug "Getting all cartridges"
         @cartridges ||= api.rest_method("LIST_CARTRIDGES", nil, :lazy_auth => true)
