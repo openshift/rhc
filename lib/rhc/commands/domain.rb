@@ -61,7 +61,7 @@ module RHC::Commands
       display_domain(domain, applications)
 
       if applications.present?
-        success "You have #{applications.length} applications in your domain."
+        success "You have #{pluralize(applications.length, 'application')} in your domain."
       else
         success "The domain #{domain.id} exists but has no applications. You can use 'rhc create-app' to create a new application."
       end
@@ -81,7 +81,7 @@ module RHC::Commands
         display_domain(d)
       end
 
-      success "You have access to #{domains.length} domains."
+      success "You have access to #{pluralize(domains.length, 'domain')}."
 
       0
     end    

@@ -240,6 +240,16 @@ module RHC
                             }.to_json,
                             :status => 200
                           })
+              stub_api_request(:any, api_links['SHOW_DOMAIN']['relative'].gsub(/:name/, 'mock_domain_%^&')).
+                to_return({ :body   => {
+                              :type => 'domain',
+                              :data =>
+                              { :id    => 'mock_domain_%^&',
+                                 :links => mock_response_links(mock_domain_links('mock_domain_0')),
+                               }
+                            }.to_json,
+                            :status => 200
+                          })                
               stub_api_request(:any, api_links['SHOW_DOMAIN']['relative'].gsub(/:name/, 'mock_domain_2')).
                 to_return({ :body => {:messages => [{:exit_code => 127}]}.to_json,
                             :status => 404
@@ -249,6 +259,12 @@ module RHC
               match = nil
               expect { match = client.find_domain('mock_domain_0') }.to_not raise_error
               match.id.should == 'mock_domain_0'
+              match.class.should == RHC::Rest::Domain
+            end
+            it "encodes special characters" do
+              match = nil
+              expect { match = client.find_domain('mock_domain_%^&') }.to_not raise_error
+              match.id.should == 'mock_domain_%^&'
               match.class.should == RHC::Rest::Domain
             end            
             it "raise an error when no matching domain IDs can be found" do

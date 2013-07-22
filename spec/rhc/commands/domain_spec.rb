@@ -102,7 +102,7 @@ describe RHC::Commands::Domain do
       it { expect { run }.to exit_with_code(0) }
       it "should match output" do
         output = run_output
-        output.should match("You have access to 1 domains")
+        output.should match("You have access to 1 domain\\.")
         output.should match("onedomain")
       end
     end
@@ -114,7 +114,7 @@ describe RHC::Commands::Domain do
       it { expect { run }.to exit_with_code(0) }
       it "should match output" do
         output = run_output
-        output.should match("You have access to 1 domains")
+        output.should match("You have access to 1 domain\\.")
         output.should match("mine")
         output.should match("Created")
         output.should match("Allowed Gear Sizes: small")

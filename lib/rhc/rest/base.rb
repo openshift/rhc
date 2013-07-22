@@ -1,3 +1,5 @@
+require 'cgi'
+
 module RHC
   module Rest
     class Base
@@ -20,7 +22,7 @@ module RHC
         link = link(link_name)
         raise "No link defined for #{link_name}" unless link
         url = link['href']
-        url = url.gsub(/:\w+/) { |s| options[:params][s] || s } if options[:params]
+        url = url.gsub(/:\w+/) { |s| CGI.escape(options[:params][s]) || s } if options[:params]
         method = options[:method] || link['method']
 
         result = client.request(options.merge({
@@ -51,7 +53,7 @@ module RHC
 
       def link_href(sym, params=nil, &block)
         if (l = link(sym)) && (h = l['href'])
-          h = h.gsub(/:\w+/) { |s| params[s] || s } if params
+          h = h.gsub(/:\w+/) { |s| CGI.escape(params[s]) || s } if params
           return h
         end
         yield if block_given?
