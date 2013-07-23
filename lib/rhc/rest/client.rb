@@ -28,8 +28,8 @@ module RHC
 
       def owned_domains
         debug "Getting owned domains"
-        if link = api.link_href(:LIST_OWNED_DOMAINS)
-          @owned_domains ||= api.rest_method 'LIST_OWNED_DOMAINS'
+        if link = api.link_href(:LIST_DOMAINS_BY_OWNER)
+          @owned_domains ||= api.rest_method 'LIST_DOMAINS_BY_OWNER', :owner => '@self'
         else
           domains
         end

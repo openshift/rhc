@@ -273,6 +273,29 @@ module RHC
           end
         end
 
+        context "when server supports LIST_DOMAINS_BY_OWNER" do
+          let(:api_links){ client_links.merge!(mock_response_links([['LIST_DOMAINS_BY_OWNER', 'domains', 'get']])) }
+          before do 
+            stub_api_request(:any, "#{api_links['LIST_DOMAINS_BY_OWNER']['relative']}?owner=@self").
+              to_return({ :body   => {
+                            :type => 'domains',
+                            :data => [{ 
+                              :id    => 'mock_domain_0',
+                              :links => mock_response_links(mock_domain_links('mock_domain_0')),
+                            }]
+                          }.to_json,
+                          :status => 200
+                        })
+          end
+          it "returns owned domains when called" do
+            match = nil
+            expect { match = client.owned_domains }.to_not raise_error
+            match.length.should == 1
+            match.first.id.should == 'mock_domain_0'
+            match.first.class.should == RHC::Rest::Domain
+          end
+        end
+
         context "find_application" do
           let(:mock_domain){ 'mock_domain_0' }
           let(:mock_app){ 'mock_app' }
