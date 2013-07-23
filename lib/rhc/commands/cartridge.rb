@@ -33,6 +33,7 @@ module RHC::Commands
     default_action :list
 
     summary "List available cartridges"
+    syntax ''
     option ["-v", "--verbose"], "Display more details about each cartridge"
     alias_action :"app cartridge list", :root_command => true, :deprecated => true
     alias_action :"cartridges", :root_command => true
