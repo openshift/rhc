@@ -8,4 +8,6 @@ RSpec::Core::RakeTask.new(:spec) do |t|
 end
 
 task :default => :spec
+
+desc "Run specs and features"
 task :test => [:spec, :features]

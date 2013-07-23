@@ -24,6 +24,7 @@ else
   end
 end
 
+desc "Output the current version"
 task :version, :version do |t, args|
   version = args[:version] || /(Version: )(.*)/.match(File.read("client.spec"))[2]
   raise "No version specified" unless version
@@ -33,6 +34,7 @@ end
 # Add the 'pkg' directory to the clean task
 CLEAN.include("pkg")
 
+desc "Build autocomplete script"
 task :autocomplete do
   require 'rhc'
   RHC::Commands.load.to_commander
