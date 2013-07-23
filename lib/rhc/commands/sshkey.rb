@@ -68,7 +68,7 @@ module RHC::Commands
 
     summary 'Remove SSH key from your account'
     syntax '<name>'
-    alias_action :delete
+    alias_action :delete, :deprecated => true
     argument :name, 'Name of SSH key to remove'
     def remove(name)
       say "Removing the key '#{name} ... "
