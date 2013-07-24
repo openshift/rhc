@@ -1,4 +1,3 @@
-require 'rhc/commands/base'
 require 'uri'
 
 module RHC::Commands
