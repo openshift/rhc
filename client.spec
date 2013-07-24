@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.12.1
+Version: 1.12.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -102,6 +102,22 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Jul 24 2013 Adam Miller <admiller@redhat.com> 1.12.2-1
+- Merge pull request #430 from liggitt/bug_987336_deprecate_sshkey_delete
+  (dmcphers+openshiftbot@redhat.com)
+- Fix bug 987336 - deprecate `sshkey delete` (jliggitt@redhat.com)
+- Fix bug 987219 - incorrect help for `rhc cartridge-list`
+  (jliggitt@redhat.com)
+- Merge remote-tracking branch 'origin/master' into use_http_client_auth
+  (ccoleman@redhat.com)
+- reset_challenge should do nothing (ccoleman@redhat.com)
+- Review comment test case and fix @passwd reference (ccoleman@redhat.com)
+- If the number of columns is zero, do not wrap. (jpazdziora@redhat.com)
+- RSpec 2.14 is a bit of a nazi about deprecations - make them disappear
+  (ccoleman@redhat.com)
+- Tests 100%% passing (ccoleman@redhat.com)
+- Use HTTPClient auth (ccoleman@redhat.com)
+
 * Fri Jul 12 2013 Adam Miller <admiller@redhat.com> 1.12.1-1
 - bump_minor_versions for sprint 31 (admiller@redhat.com)
 
