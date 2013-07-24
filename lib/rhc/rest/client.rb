@@ -35,6 +35,14 @@ module RHC
         end
       end
 
+      def applications(options={})
+        if link = api.link_href(:LIST_APPLICATIONS)
+          api.rest_method :LIST_APPLICATIONS, options
+        else
+          self.domains.map{ |d| d.applications(options) }.flatten
+        end
+      end
+
       def cartridges
         debug "Getting all cartridges"
         @cartridges ||= api.rest_method("LIST_CARTRIDGES", nil, :lazy_auth => true)

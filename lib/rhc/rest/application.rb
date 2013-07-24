@@ -54,6 +54,10 @@ module RHC
           end
       end
 
+      def domain
+        domain_id
+      end
+
       def gear_info
         { :gear_count => gear_count, :gear_profile => gear_profile } unless gear_count.nil?
       end

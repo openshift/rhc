@@ -32,6 +32,7 @@ module RHC
               nil,
               get_properties(
                 app,
+                :domain,
                 :creation_time,
                 :gear_info,
                 :git_url,

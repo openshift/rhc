@@ -53,7 +53,7 @@ module RHC
 
       def link_href(sym, params=nil, &block)
         if (l = link(sym)) && (h = l['href'])
-          h = h.gsub(/:\w+/) { |s| CGI.escape(params[s]) || s } if params
+          h = h.gsub(/:\w+/){ |s| params[s].nil? ? s : CGI.escape(params[s]) } if params
           return h
         end
         yield if block_given?
