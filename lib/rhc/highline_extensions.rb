@@ -257,9 +257,10 @@ class HighLine::Header < Struct.new(:text, :width, :indent, :color)
     def rows
       @rows ||= begin
         if !width || width == 0
-          [text.is_a?(Array) ? text.join(' ') : text]
+          [text.is_a?(Array) ? text.compact.join(' ') : text]
 
         elsif text.is_a? Array
+          text.compact!
           widths = text.map{ |s| s.strip_ansi.length }
           chars, join, indented = 0, 1, (indent || '').length
           narrow = width - indented

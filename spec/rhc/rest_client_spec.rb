@@ -43,6 +43,7 @@ module RHC
       let(:app_0_links)    { mock_response_links(mock_app_links('mock_domain_0', 'mock_app')) }
       let(:user_links)     { mock_response_links(mock_user_links) }
       let(:key_links)      { mock_response_links(mock_key_links) }
+      let(:api_links)      { client_links }
 
       context "#new" do
         before do
@@ -118,10 +119,10 @@ module RHC
       end
 
       context "with an instantiated client " do
-        before(:each) do
+        before do
           stub_api_request(:get, '').
             to_return({ :body   => {
-                          :data => client_links,
+                          :data => api_links,
                           :supported_api_versions => [1.0, 1.1]
                         }.to_json,
                         :status => 200
@@ -130,7 +131,7 @@ module RHC
 
         context "#add_domain" do
           before do
-            stub_api_request(:any, client_links['ADD_DOMAIN']['relative']).
+            stub_api_request(:any, api_links['ADD_DOMAIN']['relative']).
               to_return({ :body   => {
                             :type => 'domain',
                             :supported_api_versions => [1.0, 1.1],
@@ -153,7 +154,7 @@ module RHC
 
         context "#domains" do
           before(:each) do
-            stub_api_request(:any, client_links['LIST_DOMAINS']['relative']).
+            stub_api_request(:any, api_links['LIST_DOMAINS']['relative']).
               to_return({ :body   => {
                             :type => 'domains',
                             :data =>
@@ -193,35 +194,105 @@ module RHC
         end
 
         context "#find_domain" do
-          before(:each) do
-            stub_api_request(:any, client_links['LIST_DOMAINS']['relative']).
+          context "when server does not support SHOW_DOMAIN" do 
+            before do
+              stub_api_request(:any, api_links['LIST_DOMAINS']['relative']).
+                to_return({ :body   => {
+                              :type => 'domains',
+                              :data =>
+                              [{ :id    => 'mock_domain_0',
+                                 :links => mock_response_links(mock_domain_links('mock_domain_0')),
+                               },
+                               { :id    => 'mock_domain_1',
+                                 :links => mock_response_links(mock_domain_links('mock_domain_1')),
+                               }]
+                            }.to_json,
+                            :status => 200
+                          })
+            end
+            it "returns a domain object for matching domain IDs" do
+              match = nil
+              expect { match = client.find_domain('mock_domain_0') }.to_not raise_error
+              match.id.should == 'mock_domain_0'
+              match.class.should == RHC::Rest::Domain
+            end
+            it "returns a domain object for matching case-insensitive domain IDs" do
+              match = nil
+              expect { match = client.find_domain('MOCK_DOMAIN_0') }.to_not raise_error
+              match.id.should == 'mock_domain_0'
+              match.class.should == RHC::Rest::Domain
+            end
+            it "raise an error when no matching domain IDs can be found" do
+              expect { client.find_domain('mock_domain_2') }.to raise_error(RHC::Rest::DomainNotFoundException)
+            end
+          end
+
+          context "when server supports SHOW_DOMAIN" do
+            let(:api_links){ client_links.merge!(mock_response_links([['SHOW_DOMAIN', 'domains/:name', 'get']])) }
+            before do 
+              stub_api_request(:any, api_links['SHOW_DOMAIN']['relative'].gsub(/:name/, 'mock_domain_0')).
+                to_return({ :body   => {
+                              :type => 'domain',
+                              :data =>
+                              { :id    => 'mock_domain_0',
+                                 :links => mock_response_links(mock_domain_links('mock_domain_0')),
+                               }
+                            }.to_json,
+                            :status => 200
+                          })
+              stub_api_request(:any, api_links['SHOW_DOMAIN']['relative'].gsub(/:name/, 'mock_domain_%^&')).
+                to_return({ :body   => {
+                              :type => 'domain',
+                              :data =>
+                              { :id    => 'mock_domain_%^&',
+                                 :links => mock_response_links(mock_domain_links('mock_domain_0')),
+                               }
+                            }.to_json,
+                            :status => 200
+                          })                
+              stub_api_request(:any, api_links['SHOW_DOMAIN']['relative'].gsub(/:name/, 'mock_domain_2')).
+                to_return({ :body => {:messages => [{:exit_code => 127}]}.to_json,
+                            :status => 404
+                          })                
+            end
+            it "returns a domain object for matching domain IDs" do
+              match = nil
+              expect { match = client.find_domain('mock_domain_0') }.to_not raise_error
+              match.id.should == 'mock_domain_0'
+              match.class.should == RHC::Rest::Domain
+            end
+            it "encodes special characters" do
+              match = nil
+              expect { match = client.find_domain('mock_domain_%^&') }.to_not raise_error
+              match.id.should == 'mock_domain_%^&'
+              match.class.should == RHC::Rest::Domain
+            end            
+            it "raise an error when no matching domain IDs can be found" do
+              expect { client.find_domain('mock_domain_2') }.to raise_error(RHC::Rest::DomainNotFoundException)
+            end
+          end
+        end
+
+        context "when server supports LIST_DOMAINS_BY_OWNER" do
+          let(:api_links){ client_links.merge!(mock_response_links([['LIST_DOMAINS_BY_OWNER', 'domains', 'get']])) }
+          before do 
+            stub_api_request(:any, "#{api_links['LIST_DOMAINS_BY_OWNER']['relative']}?owner=@self").
               to_return({ :body   => {
                             :type => 'domains',
-                            :data =>
-                            [{ :id    => 'mock_domain_0',
-                               :links => mock_response_links(mock_domain_links('mock_domain_0')),
-                             },
-                             { :id    => 'mock_domain_1',
-                               :links => mock_response_links(mock_domain_links('mock_domain_1')),
-                             }]
+                            :data => [{ 
+                              :id    => 'mock_domain_0',
+                              :links => mock_response_links(mock_domain_links('mock_domain_0')),
+                            }]
                           }.to_json,
                           :status => 200
                         })
           end
-          it "returns a domain object for matching domain IDs" do
+          it "returns owned domains when called" do
             match = nil
-            expect { match = client.find_domain('mock_domain_0') }.to_not raise_error
-            match.id.should == 'mock_domain_0'
-            match.class.should == RHC::Rest::Domain
-          end
-          it "returns a domain object for matching case-insensitive domain IDs" do
-            match = nil
-            expect { match = client.find_domain('MOCK_DOMAIN_0') }.to_not raise_error
-            match.id.should == 'mock_domain_0'
-            match.class.should == RHC::Rest::Domain
-          end
-          it "raise an error when no matching domain IDs can be found" do
-            expect { client.find_domain('mock_domain_2') }.to raise_error(RHC::Rest::DomainNotFoundException)
+            expect { match = client.owned_domains }.to_not raise_error
+            match.length.should == 1
+            match.first.id.should == 'mock_domain_0'
+            match.first.class.should == RHC::Rest::Domain
           end
         end
 
@@ -295,7 +366,7 @@ module RHC
 
         context "#cartridges" do
           before(:each) do
-            stub_api_request(:any, client_links['LIST_CARTRIDGES']['relative']).
+            stub_api_request(:any, api_links['LIST_CARTRIDGES']['relative']).
               to_return({ :body   => {
                             :type => 'cartridges',
                             :data =>
@@ -339,7 +410,7 @@ module RHC
 
         context "#find_cartridges" do
           before(:each) do
-            stub_api_request(:any, client_links['LIST_CARTRIDGES']['relative']).
+            stub_api_request(:any, api_links['LIST_CARTRIDGES']['relative']).
               to_return({ :body   => {
                             :type => 'cartridges',
                             :data =>
@@ -381,7 +452,7 @@ module RHC
 
         context "#user" do
           before(:each) do
-            stub_api_request(:any, client_links['GET_USER']['relative']).
+            stub_api_request(:any, api_links['GET_USER']['relative']).
               to_return({ :body   => {
                             :type => 'user',
                             :data =>
@@ -402,7 +473,7 @@ module RHC
 
         context "#find_key" do
           before(:each) do
-            stub_api_request(:any, client_links['GET_USER']['relative']).
+            stub_api_request(:any, api_links['GET_USER']['relative']).
               to_return({ :body   => {
                             :type => 'user',
                             :data =>
@@ -448,7 +519,7 @@ module RHC
 
         context "#delete_key" do
           before(:each) do
-            stub_api_request(:any, client_links['GET_USER']['relative']).
+            stub_api_request(:any, api_links['GET_USER']['relative']).
               to_return({ :body   => {
                             :type => 'user',
                             :data =>
@@ -496,7 +567,7 @@ module RHC
         before :each do
           stub_api_request(:get, '').
             to_return({ :body   => {
-                          :data => client_links,
+                          :data => api_links,
                           :supported_api_versions => [1.0, 1.1]
                         }.to_json,
                         :status => 200

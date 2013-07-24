@@ -26,6 +26,23 @@ module RHC
         @domains ||= api.rest_method "LIST_DOMAINS"
       end
 
+      def owned_domains
+        debug "Getting owned domains"
+        if link = api.link_href(:LIST_DOMAINS_BY_OWNER)
+          @owned_domains ||= api.rest_method 'LIST_DOMAINS_BY_OWNER', :owner => '@self'
+        else
+          domains
+        end
+      end
+
+      def applications(options={})
+        if link = api.link_href(:LIST_APPLICATIONS)
+          api.rest_method :LIST_APPLICATIONS, options
+        else
+          self.domains.map{ |d| d.applications(options) }.flatten
+        end
+      end
+
       def cartridges
         debug "Getting all cartridges"
         @cartridges ||= api.rest_method("LIST_CARTRIDGES", nil, :lazy_auth => true)
@@ -39,9 +56,14 @@ module RHC
       #Find Domain by namesapce
       def find_domain(id)
         debug "Finding domain #{id}"
-        domains.each { |domain| return domain if domain.id.downcase == id.downcase }
-
-        raise DomainNotFoundException.new("Domain #{id} not found")
+        if link = api.link_href(:SHOW_DOMAIN, ':name' => id)
+          request({
+            :url => link,
+            :method => "GET",
+          })
+        else
+          domains.find{ |d| d.id.downcase == id.downcase }
+        end or raise DomainNotFoundException.new("Domain #{id} not found")
       end
 
       def find_application(domain, application, options={})
@@ -75,6 +97,10 @@ module RHC
           "applications",
           application,
         ].concat(args).map{ |s| URI.escape(s) }.join("/")
+      end
+
+      def link_show_domain_by_name(domain, *args)
+        api.link_href(:SHOW_DOMAIN, ':id' => domain)
       end
 
       #Find Cartridge by name or regex

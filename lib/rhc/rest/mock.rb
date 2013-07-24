@@ -527,8 +527,13 @@ module RHC::Rest::Mock
       ]
     end
 
-    def add_domain(id)
+    def add_domain(id, extra=false)
       d = MockRestDomain.new(self, id)
+      if extra
+        d.attributes['creation_time'] = '2013-07-21T15:00:44Z'
+        d.attributes['members'] = [{'owner' => true, 'name' => 'a_user_name'}]
+        d.attributes['allowed_gear_sizes'] = ['small']
+      end
       @domains << d
       d
     end

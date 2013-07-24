@@ -10,18 +10,21 @@ module RHC
         @server_api_versions = []
         debug "Client supports API versions #{preferred_api_versions.join(', ')}"
         @client_api_versions = preferred_api_versions
-        @server_api_versions, links = api_info({
+        @server_api_versions, @current_api_version, links = api_info({
           :url => client.url,
           :method => :get,
+          :accept => :json,
+          :api_version => preferred_api_versions.last,
           :lazy_auth => true,
         })
         debug "Server supports API versions #{@server_api_versions.join(', ')}"
 
         if api_version_negotiated
-          unless server_api_version_current?
+          debug "   Using API version #{api_version_negotiated}"
+          unless client_api_version_current?
             debug "Client API version #{api_version_negotiated} is not current. Refetching API"
             # need to re-fetch API
-            @server_api_versions, links = api_info({
+            @server_api_versions, @current_api_version, links = api_info({
               :url => client.url,
               :method => :get,
               :accept => :json,
@@ -54,15 +57,11 @@ module RHC
       end
 
       def client_api_version_current?
-        current_client_api_version == api_version_negotiated
+        current_api_version == api_version_negotiated
       end
 
-      def current_client_api_version
-        client_api_versions.last
-      end
-
-      def server_api_version_current?
-        @server_api_versions && @server_api_versions.max == api_version_negotiated
+      def current_api_version
+        @current_api_version
       end
 
       def warn_about_api_versions
@@ -81,7 +80,7 @@ server at #{URI.parse(client.url).host} supports #{@server_api_versions.join(', 
         def api_info(req)
           client.request(req) do |response|
             json_response = ::RHC::Json.decode(response.content)
-            [ json_response['supported_api_versions'], json_response['data'] ]
+            [ json_response['supported_api_versions'], json_response['api_version'] || json_response['version'].to_f, json_response['data'] ]
           end
         end
     end

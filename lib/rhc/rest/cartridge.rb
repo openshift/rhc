@@ -31,7 +31,7 @@ module RHC
       end
 
       def tags
-        Array(attribute('tags'))
+        Array(attribute(:tags))
       end
 
       def additional_gear_storage

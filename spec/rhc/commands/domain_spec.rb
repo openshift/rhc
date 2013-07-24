@@ -17,7 +17,7 @@ describe RHC::Commands::Domain do
       let(:arguments) { ['domain', '--noprompt', '--help'] }
 
       it { expect { run }.to exit_with_code(0) }
-      it { run_output.should match(/The default action for this resource is 'show'/) }
+      it { run_output.should match(/The default action for this resource is 'list'/) }
     end
   end
 
@@ -83,6 +83,56 @@ describe RHC::Commands::Domain do
         output = run_output
         output.should match("app_no_carts")
         output.should match(/127.0.0.1\s*$/m)
+      end
+    end
+  end
+
+
+  describe 'list' do
+    let(:arguments) { ['domain', 'list'] }
+
+    context 'when run with no domains' do
+      it { expect { run }.to exit_with_code(1) }
+      it { run_output.should match(/In order to deploy applications.*rhc create-domain/) }
+    end
+
+    context 'when run with one domain no apps' do
+      before{ rest_client.add_domain("onedomain") }
+
+      it { expect { run }.to exit_with_code(0) }
+      it "should match output" do
+        output = run_output
+        output.should match("You have access to 1 domain\\.")
+        output.should match("onedomain")
+      end
+    end
+
+    context 'when run with one owned domain' do
+      let(:arguments) { ['domains', '--mine'] }
+      before{ d = rest_client.add_domain('mine', true); rest_client.stub(:owned_domains).and_return([d]) }
+
+      it { expect { run }.to exit_with_code(0) }
+      it "should match output" do
+        output = run_output
+        output.should match("You have access to 1 domain\\.")
+        output.should match("mine")
+        output.should match("Created")
+        output.should match("Allowed Gear Sizes: small")
+      end
+    end
+
+    context 'when run with multiple domains and extra domain info' do
+      before(:each) do
+        rest_client.add_domain("firstdomain")
+        rest_client.add_domain("seconddomain", true)
+      end
+      it { expect { run }.to exit_with_code(0) }
+      it "should match output" do
+        output = run_output
+        output.should match("You have access to 2 domains")
+        output.should match("seconddomain \\(owned by a_user_name\\)")
+        output.should match("Created")
+        output.should match("Allowed Gear Sizes: small")
       end
     end
   end
