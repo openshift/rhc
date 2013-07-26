@@ -65,6 +65,8 @@ module RHCHelper
       case cmd
         when /app delete/
           args << "--confirm "
+        when /domain list/
+          # domain list doesn't take arguments
         when /domain show/
           # domain show doesn't take arguments
         when /domain update/
@@ -172,6 +174,10 @@ module RHCHelper
 
   def domain_callback(exitcode, stdout, stderr, arg)
     @domain_output = stdout
+  end
+
+  def domain_list_callback(exitcode, stdout, stderr, arg)
+    @domain_list_output = stdout
   end
 
   def domain_show_callback(exitcode, stdout, stderr, arg)

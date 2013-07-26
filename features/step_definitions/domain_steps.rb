@@ -27,16 +27,21 @@ When /^rhc domain (.*)is run$/ do |action|
   Domain.send(:"#{cmd}")
 end
 
-Then /^the default domain action output should equal the show action output$/ do
+Then /^the default domain action output should equal the list action output$/ do
   Domain.domain_output.should match($namespace)
 
   domain_output = Domain.domain_output.lines.sort
-  domain_show_output = Domain.domain_show_output.lines.sort
+  domain_list_output = Domain.domain_list_output.lines.sort
 
   # check line by line while ignoring debug output which is timestamped
-  domain_output.zip(domain_show_output) do |a, b|
+  domain_output.zip(domain_list_output) do |a, b|
     a.should == b unless a.match("DEBUG") 
   end
+end
+
+Then /^the domain show command output should show the domain$/ do
+  domain_show_output = Domain.domain_show_output.lines
+  domain_show_output.find {|line| line["Domain #{$namespace}"] }.should be_true, "Unable to find \"Domain #{$namespace}\" in #{domain_show_output.inspect}"
 end
 
 Then /^the domain should be reserved?$/ do
@@ -54,7 +59,7 @@ Then /^the domain should be reserved?$/ do
   resolved.should be_true, 'Not able to lookup DNS TXT record in time.'
 end
 
-Then /^the domain command should fail with an exitcode of (\d*)$/ do |exitcode|
+Then /^the domain command should exit with an exitcode of (\d*)$/ do |exitcode|
   exitcode = exitcode.to_i
   Domain.exitcode.should == exitcode
 end
