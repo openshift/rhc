@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.12.2
+Version: 1.12.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -102,6 +102,23 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Jul 26 2013 Adam Miller <admiller@redhat.com> 1.12.3-1
+- Fix rhc domain spec tests for default list action (jliggitt@redhat.com)
+- Merge pull request #428 from smarterclayton/support_rhc_domain_list
+  (dmcphers+openshiftbot@redhat.com)
+- Should not require things from commands (ccoleman@redhat.com)
+- Support LIST_APPLICATIONS in API 1.5 (ccoleman@redhat.com)
+- Merge remote-tracking branch 'origin/master' into support_rhc_domain_list
+  (ccoleman@redhat.com)
+- Include autocompletes (ccoleman@redhat.com)
+- Switch to LIST_DOMAINS_BY_OWNER (ccoleman@redhat.com)
+- Handle nil values in header array (ccoleman@redhat.com)
+- Fix review comments (ccoleman@redhat.com)
+- Dangling commas not allowed on Ruby 2.0 (ccoleman@redhat.com)
+- Support distinguishing between domains the user owns and all domains he has
+  acces to (ccoleman@redhat.com)
+- Support listing domains from RHC (ccoleman@redhat.com)
+
 * Wed Jul 24 2013 Adam Miller <admiller@redhat.com> 1.12.2-1
 - Merge pull request #430 from liggitt/bug_987336_deprecate_sshkey_delete
   (dmcphers+openshiftbot@redhat.com)
