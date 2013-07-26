@@ -10,14 +10,19 @@ Feature: Existing Domain Operations
     When domain is updated
     Then the domain should be reserved
 
-  Scenario: Domain Show
+  Scenario: Domain List
     When rhc domain is run
+    When rhc domain list is run
+    Then the default domain action output should equal the list action output
+
+  Scenario: Domain Show
     When rhc domain show is run
-    Then the default domain action output should equal the show action output
+    Then the domain show command output should show the domain
+    Then the domain command should exit with an exitcode of 0
 
   Scenario: Domain Create Fails
     When rhc domain create is called
-    Then the domain command should fail with an exitcode of 1
+    Then the domain command should exit with an exitcode of 1
 
   Scenario: Domain Delete
     When domain is deleted
