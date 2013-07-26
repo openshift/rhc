@@ -10,7 +10,7 @@ module RHCHelper
     extend API
 
     class << self
-      attr_reader :domain_output, :domain_show_output, :exitcode
+      attr_reader :domain_output, :domain_list_output, :domain_show_output, :exitcode
     end
 
     def self.unique_namespace(prefix)
