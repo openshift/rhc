@@ -95,7 +95,7 @@ module RHC
     #
 
     def user_agent
-      "rhc/#{RHC::VERSION::STRING} (ruby #{RUBY_VERSION}; #{RUBY_PLATFORM})#{" (API #{RHC::Rest::API_VERSION})" rescue ''}"
+      "rhc/#{RHC::VERSION::STRING} (ruby #{RUBY_VERSION}; #{RUBY_PLATFORM})#{" (API #{RHC::Rest::Client::CLIENT_API_VERSIONS})"}"
     end
 
     #
