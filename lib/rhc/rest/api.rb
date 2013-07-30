@@ -14,7 +14,6 @@ module RHC
           :url => client.url,
           :method => :get,
           :accept => :json,
-          :api_version => preferred_api_versions.last,
           :lazy_auth => true,
         })
         debug "Server supports API versions #{@server_api_versions.join(', ')}"

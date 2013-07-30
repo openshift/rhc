@@ -79,9 +79,17 @@ module RHC
         context "when server supports API versions [1.0, 1.1]" do
           before :each do
             stub_api_request(:get, '').
-              to_return({ :body   => { :data => client_links, :supported_api_versions => [1.0, 1.1] }.to_json,
-                          :status => 200
-                        })
+              with(:headers => {'Accept' => 'application/json'}).
+              to_return({ :status => 200, :body => { :data => client_links, :version => '1.0', :supported_api_versions => [1.0, 1.1] }.to_json })
+            stub_api_request(:get, '').
+              with(:headers => {'Accept' => 'application/json;version=1.0'}).
+              to_return({ :status => 200, :body => { :data => client_links, :version => '1.0', :supported_api_versions => [1.0, 1.1] }.to_json })
+            stub_api_request(:get, '').
+              with(:headers => {'Accept' => 'application/json;version=1.1'}).
+              to_return({ :status => 200, :body => { :data => client_links, :version => '1.1', :supported_api_versions => [1.0, 1.1] }.to_json })
+            stub_api_request(:get, '').
+              with(:headers => {'Accept' => /application\/json;version=(1.2|1.3)/}).
+              to_raise(StandardError.new('Bad Version'))
             stub_api_request(:get, 'api_error').
               to_raise(HTTPClient::BadResponseError.new('API Error'))
             stub_api_request(:get, 'other_error').
