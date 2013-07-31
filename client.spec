@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.12.3
+Version: 1.12.4
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -102,6 +102,11 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Jul 31 2013 Adam Miller <admiller@redhat.com> 1.12.4-1
+- Update spec test to check new client against old server (jliggitt@redhat.com)
+- Fix bug 989307 - remove version accept header on initial negotiation
+  (jliggitt@redhat.com)
+
 * Fri Jul 26 2013 Adam Miller <admiller@redhat.com> 1.12.3-1
 - Fix rhc domain spec tests for default list action (jliggitt@redhat.com)
 - Merge pull request #428 from smarterclayton/support_rhc_domain_list
