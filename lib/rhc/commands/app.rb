@@ -315,8 +315,8 @@ module RHC::Commands
         case options.gears
         when 'quota'
           opts = {:as => :gear, :split_cells_on => /\s*\t/, :header => ['Gear', 'Cartridges', 'Used', 'Limit'], :align => [nil, nil, :right, :right]}
-          table_from_gears('echo "$(du -s 2>/dev/null | cut -f 1)"', groups, opts) do |gear, data, group|
-            [gear['id'], group.cartridges.collect{ |c| c['name'] }.join(' '), (human_size(data.chomp) rescue 'error'), human_size(group.quota)]
+          table_from_gears('echo "$(du --block-size=1024 -s 2>/dev/null | cut -f 1)"', groups, opts) do |gear, data, group|
+            [gear['id'], group.cartridges.collect{ |c| c['name'] }.join(' '), (human_size(data.chomp.to_i*1024) rescue 'error'), human_size(group.quota)]
           end
         when 'ssh'
           groups.each{ |group| group.gears.each{ |g| say (ssh_string(g['ssh_url']) or raise NoPerGearOperations) } }
