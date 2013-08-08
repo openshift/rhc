@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.13.0
+Version: 1.13.1
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -102,6 +102,14 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Aug 08 2013 Adam Miller <admiller@redhat.com> 1.13.1-1
+- Review comments (ccoleman@redhat.com)
+- Merge pull request #434 from
+  smarterclayton/to_stage_bug_992942_rhc_misreporting_disk_usage
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 992942 - RHC is reporting block counts, not bytes (ccoleman@redhat.com)
+- bump_minor_versions for sprint 32 (admiller@redhat.com)
+
 * Wed Jul 31 2013 Adam Miller <admiller@redhat.com> 1.12.4-1
 - Update spec test to check new client against old server (jliggitt@redhat.com)
 - Fix bug 989307 - remove version accept header on initial negotiation
