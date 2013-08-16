@@ -286,9 +286,9 @@ describe RHC::Commands::App do
         #puts run_output
         expect { run }.to exit_with_code(0)
         jenkins_app = rest_client.find_application(@domain.id,"jenkins")
-        jenkins_app.cartridges[0].name.should == "jenkins-1.4"
+        jenkins_app.cartridges[0].name.should == "jenkins-1"
         app = rest_client.find_application(@domain.id,"app1")
-        app.find_cartridge("jenkins-client-1.4")
+        app.find_cartridge("jenkins-client-1")
       end
     end
   end
@@ -321,7 +321,7 @@ describe RHC::Commands::App do
     context 'when run' do
       before(:each) do
         @domain = rest_client.add_domain("mockdomain")
-        @domain.add_application("jenkins", "jenkins-1.4")
+        @domain.add_application("jenkins", "jenkins-1")
       end
       it "should use existing jenkins" do
         expect { run }.to exit_with_code(0)
@@ -705,7 +705,7 @@ describe RHC::Commands::App do
       subject.should_receive(:list_cartridges)
       domain = double
       domain.stub(:add_application).and_raise(RHC::Rest::ValidationException.new('Foo', :cartridges, 109))
-      expect{ subject.send(:create_app, 'name', 'jenkins-1.4', domain) }.to raise_error(RHC::Rest::ValidationException)
+      expect{ subject.send(:create_app, 'name', 'jenkins-1', domain) }.to raise_error(RHC::Rest::ValidationException)
     end
   end
 end
