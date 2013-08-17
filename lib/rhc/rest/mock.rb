@@ -517,10 +517,10 @@ module RHC::Rest::Mock
        MockRestCartridge.new(self, "mock_standalone_cart-1", "standalone"),
        MockRestCartridge.new(self, "mock_standalone_cart-2", "standalone"),
        MockRestCartridge.new(self, "mock_unique_standalone_cart-1", "standalone"),
-       MockRestCartridge.new(self, "jenkins-1.4", "standalone"),
+       MockRestCartridge.new(self, "jenkins-1", "standalone"),
        MockRestCartridge.new(self, "mock_cart-2", "embedded"),
        MockRestCartridge.new(self, "unique_mock_cart-1", "embedded"),
-       MockRestCartridge.new(self, "jenkins-client-1.4", "embedded"),
+       MockRestCartridge.new(self, "jenkins-client-1", "embedded"),
        MockRestCartridge.new(self, "embcart-1", "embedded"),
        MockRestCartridge.new(self, "embcart-2", "embedded"),
        premium_embedded

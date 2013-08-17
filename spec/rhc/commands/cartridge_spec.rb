@@ -215,15 +215,15 @@ describe RHC::Commands::Cartridge do
       let(:username){ mock_user }
       let(:password){ 'password' }
       let(:server){ mock_uri }
-      let(:arguments){ ['remove-cartridge', 'jenkins-1.4', '-a', 'foo', '--confirm', '--trace'] }
+      let(:arguments){ ['remove-cartridge', 'jenkins-1', '-a', 'foo', '--confirm', '--trace'] }
       before do 
         stub_api(false)
         challenge{ stub_one_domain('test') }
         stub_one_application('test', 'foo').with(:query => {:include => 'cartridges'})
-        stub_application_cartridges('test', 'foo', [{:name => 'php-5.3'}, {:name => 'jenkins-1.4'}])
+        stub_application_cartridges('test', 'foo', [{:name => 'php-5.3'}, {:name => 'jenkins-1'}])
       end
       before do 
-        stub_api_request(:delete, "broker/rest/domains/test/applications/foo/cartridges/jenkins-1.4").
+        stub_api_request(:delete, "broker/rest/domains/test/applications/foo/cartridges/jenkins-1").
           to_return({
             :body   => {
               :type => nil,
@@ -238,7 +238,7 @@ describe RHC::Commands::Cartridge do
       end
 
       it("should not display info returned by the server"){ run_output.should_not match "Removed Jenkins" }
-      it("should display prefix returned by the server"){ run_output.should match "Removing jenkins-1.4" }
+      it("should display prefix returned by the server"){ run_output.should match "Removing jenkins-1" }
       it("should display results returned by the server"){ run_output.should match "Job URL changed" }
       it('should exit successfully'){ expect{ run }.to exit_with_code(0) }
     end
