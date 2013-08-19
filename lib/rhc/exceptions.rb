@@ -30,6 +30,12 @@ module RHC
       super message, 155
     end
   end
+  
+  class EnvironmentVariableNotFoundException < Exception
+    def initialize(message="Environment variable not found")
+      super message, 157
+    end
+  end
 
   class KeyNotFoundException < Exception
     def initialize(message="SSHKey not found")
