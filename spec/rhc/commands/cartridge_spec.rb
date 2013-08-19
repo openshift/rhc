@@ -86,6 +86,9 @@ describe RHC::Commands::Cartridge do
       it { succeed_with_message /Connection URL:\s+http\:\/\/fake\.url/ }
       it { succeed_with_message /Prop1:\s+value1/ }
       it { succeed_with_message /Cartridge added with properties/ }
+        it "should not contain env var info" do
+          run_output.should_not match(/Environment Variables/)
+        end
     end
   end
 
@@ -216,13 +219,13 @@ describe RHC::Commands::Cartridge do
       let(:password){ 'password' }
       let(:server){ mock_uri }
       let(:arguments){ ['remove-cartridge', 'jenkins-1', '-a', 'foo', '--confirm', '--trace'] }
-      before do 
+      before do
         stub_api(false)
         challenge{ stub_one_domain('test') }
         stub_one_application('test', 'foo').with(:query => {:include => 'cartridges'})
         stub_application_cartridges('test', 'foo', [{:name => 'php-5.3'}, {:name => 'jenkins-1'}])
       end
-      before do 
+      before do
         stub_api_request(:delete, "broker/rest/domains/test/applications/foo/cartridges/jenkins-1").
           to_return({
             :body   => {
@@ -548,6 +551,40 @@ describe RHC::Commands::Cartridge do
         fail_with_message('The server does not support this command \(requires 1.3, found 1.2\).')
       end
 
+    end
+  end
+
+  describe 'cartridge add with env vars' do
+    let!(:rest_client){ MockRestClient.new }
+
+    [['app', 'cartridge', 'add', 'unique_mock_cart', '-e', 'FOO=BAR', '--app', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'],
+     ['app', 'cartridge', 'add', 'unique_mock_cart', '--env', 'FOO=BAR', '--app', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password']
+    ].each_with_index do |args, i|
+      context "when run with single env var #{i}" do
+        let(:arguments) { args }
+        before(:each) do
+          domain = rest_client.add_domain("mock_domain")
+          app = domain.add_application("app1", "mock_type")
+        end
+        it {
+          succeed_with_message(/Environment Variables:\s+FOO=BAR/)
+        }
+      end
+    end
+
+    [['app', 'cartridge', 'add', 'unique_mock_cart', '-e', File.expand_path('../../assets/env_vars.txt', __FILE__), '--app', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'],
+     ['app', 'cartridge', 'add', 'unique_mock_cart', '--env', File.expand_path('../../assets/env_vars.txt', __FILE__), '--app', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password']
+    ].each_with_index do |args, i|
+      context "when run with env vars from files #{i}" do
+        let(:arguments) { args }
+        before(:each) do
+          domain = rest_client.add_domain("mock_domain")
+          app = domain.add_application("app1", "mock_type")
+        end
+        it {
+          succeed_with_message(/Environment Variables:\s+BAR=456, FOO=123, MY_EMPTY_ENV_VAR=, MY_OPENSHIFT_ENV_VAR=mongodb:\/\/user:pass@host:port\/\n/)
+        }
+      end
     end
   end
 end
