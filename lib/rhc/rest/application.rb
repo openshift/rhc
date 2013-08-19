@@ -24,13 +24,17 @@ module RHC
       def add_cartridge(cart, options={})
         debug "Adding cartridge #{name}"
         clear_attribute :cartridges
-        cart = 
-          if cart.is_a? String 
+        cart =
+          if cart.is_a? String
             {:name => cart}
           elsif cart.respond_to? :[]
             cart
           else
-            cart.url ? {:url => cart.url} : {:name => cart.name}
+            c = cart.url ? {:url => cart.url} : {:name => cart.name}
+            if cart.respond_to?(:environment_variables) && cart.environment_variables.present?
+              c[:environment_variables] = cart.environment_variables
+            end
+            cart = c
           end
 
         if cart.respond_to?(:[]) and cart[:url] and !has_param?('ADD_CARTRIDGE', 'url')
@@ -119,6 +123,48 @@ module RHC
       def threaddump
         debug "Running thread dump for #{name}"
         rest_method "THREAD_DUMP", :event => "thread-dump"
+      end
+
+      def environment_variables
+        debug "Getting all environment variables for application #{name}"
+        if supports? "LIST_ENVIRONMENT_VARIABLES"
+          rest_method "LIST_ENVIRONMENT_VARIABLES"
+        else
+          raise RHC::EnvironmentVariablesNotSupportedException.new
+        end
+      end
+
+      def find_environment_variable(env_var_name)
+        find_environment_variables(env_var_name).first
+      end
+
+      def find_environment_variables(env_var_names=nil)
+        return environment_variables if env_var_names.nil?
+        env_var_names = [env_var_names].flatten
+        debug "Finding environment variable(s) #{env_var_names.inspect} in app #{@name}"
+        env_vars = environment_variables.select { |item| env_var_names.include? item.name }
+        raise RHC::EnvironmentVariableNotFoundException.new("Environment variable(s) #{env_var_names.join(', ')} can't be found in application #{name}.") if env_vars.empty?
+        env_vars
+      end
+
+      # @param [Array<RHC::Rest::EnvironmentVariable>] Array of RHC::Rest::EnvironmentVariable to be set
+      def set_environment_variables(env_vars=[])
+        debug "Adding environment variable(s) #{env_vars.inspect} for #{name}"
+        if supports? "SET_UNSET_ENVIRONMENT_VARIABLES"
+          rest_method "SET_UNSET_ENVIRONMENT_VARIABLES", :environment_variables => env_vars.map{|item| item.to_hash}
+        else
+          raise RHC::EnvironmentVariablesNotSupportedException.new
+        end
+      end
+
+      # @param [Array<String>] Array of env var names like ['FOO', 'BAR']
+      def unset_environment_variables(env_vars=[])
+        debug "Removing environment variable(s) #{env_vars.inspect} for #{name}"
+        if supports? "SET_UNSET_ENVIRONMENT_VARIABLES"
+          rest_method "SET_UNSET_ENVIRONMENT_VARIABLES", :environment_variables => env_vars.map{|item| {:name => item}}
+        else
+          raise RHC::EnvironmentVariablesNotSupportedException.new
+        end
       end
 
       def add_alias(app_alias)

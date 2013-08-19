@@ -1,21 +1,22 @@
 module RHC
   module Rest
 
-    autoload :Base,          'rhc/rest/base'
-    autoload :Attributes,    'rhc/rest/attributes'
+    autoload :Base,                 'rhc/rest/base'
+    autoload :Attributes,           'rhc/rest/attributes'
 
-    autoload :HTTPClient,    'rhc/rest/httpclient'
+    autoload :HTTPClient,           'rhc/rest/httpclient'
 
-    autoload :Api,           'rhc/rest/api'
-    autoload :Application,   'rhc/rest/application'
-    autoload :Authorization, 'rhc/rest/authorization'
-    autoload :Cartridge,     'rhc/rest/cartridge'
-    autoload :Client,        'rhc/rest/client'
-    autoload :Domain,        'rhc/rest/domain'
-    autoload :Key,           'rhc/rest/key'
-    autoload :User,          'rhc/rest/user'
-    autoload :GearGroup,     'rhc/rest/gear_group'
-    autoload :Alias,         'rhc/rest/alias'
+    autoload :Alias,                'rhc/rest/alias'
+    autoload :Api,                  'rhc/rest/api'
+    autoload :Application,          'rhc/rest/application'
+    autoload :Authorization,        'rhc/rest/authorization'
+    autoload :Cartridge,            'rhc/rest/cartridge'
+    autoload :Client,               'rhc/rest/client'
+    autoload :Domain,               'rhc/rest/domain'
+    autoload :EnvironmentVariable,  'rhc/rest/environment_variable'
+    autoload :GearGroup,            'rhc/rest/gear_group'
+    autoload :Key,                  'rhc/rest/key'
+    autoload :User,                 'rhc/rest/user'
 
     class Exception < RuntimeError
       attr_reader :code
@@ -32,17 +33,17 @@ module RHC
     #
     #503 Service Unavailable
     #
-    #The server is currently unable to handle the request due to a temporary 
-    #overloading or maintenance of the server. The implication is that this 
+    #The server is currently unable to handle the request due to a temporary
+    #overloading or maintenance of the server. The implication is that this
     #is a temporary condition which will be alleviated after some delay.
     class ServiceUnavailableException < ServerErrorException; end
 
-    #Exceptions thrown in case of an HTTP 4xx is received with the exception 
+    #Exceptions thrown in case of an HTTP 4xx is received with the exception
     #of 401, 403, 403 and 422 where a more sepcific exception is thrown
     #
     #HTTP Error Codes 4xx
     #
-    #The 4xx class of status code is intended for cases in which the client 
+    #The 4xx class of status code is intended for cases in which the client
     #seems to have errored.
     class ClientErrorException < Exception; end
 
@@ -81,16 +82,16 @@ module RHC
     #403 Forbidden
     #
     #The server understood the request, but is refusing to fulfill it.
-    #Authorization will not help and the request SHOULD NOT be repeated. 
+    #Authorization will not help and the request SHOULD NOT be repeated.
     class RequestDeniedException < ClientErrorException; end
 
     #Exceptions thrown in case of an HTTP 401 is received.
     #
     #401 Unauthorized
     #
-    #The request requires user authentication.  If the request already 
-    #included Authorization credentials, then the 401 response indicates 
-    #that authorization has been refused for those credentials. 
+    #The request requires user authentication.  If the request already
+    #included Authorization credentials, then the 401 response indicates
+    #that authorization has been refused for those credentials.
     class UnAuthorizedException < ClientErrorException; end
     class TokenExpiredOrInvalid < UnAuthorizedException; end
 

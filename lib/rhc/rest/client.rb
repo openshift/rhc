@@ -498,6 +498,8 @@ module RHC
             data.map{ |json| GearGroup.new(json, self) }
           when 'aliases'
             data.map{ |json| Alias.new(json, self) }
+          when 'environment-variables'
+            data.map{ |json| EnvironmentVariable.new(json, self) }
           else
             data
           end

@@ -7,9 +7,9 @@ module RHC::Commands
   class App < Base
     summary "Commands for creating and managing applications"
     description <<-DESC
-      Creates and controls an OpenShift application.  To see the list of all 
-      applications use the rhc domain show command.  Note that delete is not 
-      reversible and will stop your application and then remove the application 
+      Creates and controls an OpenShift application.  To see the list of all
+      applications use the rhc domain show command.  Note that delete is not
+      reversible and will stop your application and then remove the application
       and repo from the remote server. No local changes are made.
       DESC
     syntax "<action>"
@@ -25,7 +25,7 @@ module RHC::Commands
 
       You can see a list of all valid cartridge types by running
       'rhc cartridge list'. OpenShift also supports downloading cartridges -
-      pass a URL in place of the cartridge name and we'll download 
+      pass a URL in place of the cartridge name and we'll download
       and install that cartridge into your app.  Keep in mind that
       these cartridges receive no security updates.  Note that not
       all OpenShift servers allow downloaded cartridges.
@@ -52,6 +52,7 @@ module RHC::Commands
     option ["-g", "--gear-size SIZE"], "Gear size controls how much memory and CPU your cartridges can use."
     option ["-s", "--scaling"], "Enable scaling for the web cartridge."
     option ["-r", "--repo DIR"], "Path to the Git repository (defaults to ./$app_name)"
+    option ["-e", "--env VARIABLE=VALUE"], "Environment variable(s) to be set on this app, or path to a file containing environment variables"
     option ["--from-code URL"], "URL to a Git repository that will become the initial contents of the application"
     option ["--[no-]git"], "Skip creating the local Git repository."
     option ["--nogit"], "DEPRECATED: Skip creating the local Git repository.", :deprecated => {:key => :git, :value => false}
@@ -81,6 +82,8 @@ module RHC::Commands
         c.usage_rate? ? "#{c.short_name} (addtl. costs may apply)" : c.short_name
       end.join(', ')
 
+      environment_variables = collect_env_vars(options.env)
+
       paragraph do
         header "Application Options"
         table([["Namespace:", options.namespace],
@@ -88,6 +91,7 @@ module RHC::Commands
               (["Source Code:", options.from_code] if options.from_code),
                ["Gear Size:", options.gear_size || "default"],
                ["Scaling:", options.scaling ? "yes" : "no"],
+              (["Environment Variables:", environment_variables.map{|item| "#{item.name}=#{item.value}"}.join(', ')] if environment_variables.present?),
               ].compact
              ).each { |s| say "  #{s}" }
       end
@@ -96,7 +100,7 @@ module RHC::Commands
         say "Creating application '#{name}' ... "
 
         # create the main app
-        rest_app = create_app(name, cartridges, rest_domain, options.gear_size, options.scaling, options.from_code)
+        rest_app = create_app(name, cartridges, rest_domain, options.gear_size, options.scaling, options.from_code, environment_variables)
         success "done"
 
         paragraph{ indent{ success rest_app.messages.map(&:strip) } }
@@ -168,7 +172,7 @@ module RHC::Commands
       end
 
       output_issues(rest_app) if issues?
-            
+
       paragraph do
         say "Your application '#{rest_app.name}' is now available."
         paragraph do
@@ -177,7 +181,8 @@ module RHC::Commands
                 ['URL:', rest_app.app_url],
                 ['SSH to:', rest_app.ssh_string],
                 ['Git remote:', rest_app.git_url],
-                (['Cloned to:', repo_dir] if repo_dir)
+                (['Cloned to:', repo_dir] if repo_dir),
+                (['Environment variables:', environment_variables.map{|item| "#{item.name}=#{item.value}"}.sort.join(', ')] if environment_variables.present?)
               ].compact
           end
         end
@@ -280,10 +285,10 @@ module RHC::Commands
     summary "Show information about an application"
     description <<-DESC
       Display the properties of an application, including its URL, the SSH
-      connection string, and the Git remote URL.  Will also display any 
+      connection string, and the Git remote URL.  Will also display any
       cartridges, their scale, and any values they expose.
 
-      The '--state' option will retrieve information from each cartridge in 
+      The '--state' option will retrieve information from each cartridge in
       the application, which may include cartridge specific text.
 
       To see information about the individual gears within an application,
@@ -292,7 +297,7 @@ module RHC::Commands
       storage on each gear.
 
       If you want to run commands against individual gears, use:
-       
+
         rhc ssh <app> --gears '<command>'
 
       to run and display the output from each gear.
@@ -320,7 +325,7 @@ module RHC::Commands
           end
         when 'ssh'
           groups.each{ |group| group.gears.each{ |g| say (ssh_string(g['ssh_url']) or raise NoPerGearOperations) } }
-        else 
+        else
           run_on_gears(ssh_command_for_op(options.gears), groups)
         end
 
@@ -429,12 +434,13 @@ module RHC::Commands
         result
       end
 
-      def create_app(name, cartridges, rest_domain, gear_size=nil, scale=nil, from_code=nil)
+      def create_app(name, cartridges, rest_domain, gear_size=nil, scale=nil, from_code=nil, environment_variables=nil)
         app_options = {:cartridges => Array(cartridges)}
         app_options[:gear_profile] = gear_size if gear_size
         app_options[:scale] = scale if scale
         app_options[:initial_git_url] = from_code if from_code
         app_options[:debug] = true if @debug
+        app_options[:environment_variables] = environment_variables.map{ |item| item.to_hash } if environment_variables.present?
         debug "Creating application '#{name}' with these options - #{app_options.inspect}"
         rest_app = rest_domain.add_application(name, app_options)
         debug "'#{rest_app.name}' created"
@@ -586,7 +592,7 @@ WARNING:  Your application was created successfully but had problems during
 
     $ rhc app delete #{rest_app.name} --confirm
 
-  Please contact us if you are unable to successfully create your 
+  Please contact us if you are unable to successfully create your
   application:
 
     Support - https://www.openshift.com/support
@@ -624,6 +630,6 @@ WARNING_OUTPUT
 
     def issues?
       not @issues.nil?
-    end      
+    end
   end
 end

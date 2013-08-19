@@ -4,7 +4,7 @@ Usage: rhc [--help] [--version] [--debug] <command> [<args>]
 
 <%
 remaining = Hash[commands.dup.select{ |name, command| not command.summary.blank? }]
-basic = remaining.slice!('setup', 'create-app', 'apps', 'cartridges', 'add-cartridge', 'server', 'logout')
+basic = remaining.slice!('setup', 'create-app', 'apps', 'cartridges', 'add-cartridge', 'set-env', 'logout')
 remaining.delete_if{ |name, command| alias?(name) }
 begin -%>
 Getting started:
@@ -18,14 +18,14 @@ Working with apps:
 <%= table(debugging.map{ |arr| arr[1] = arr[1].summary || arr[1].description; arr }, table_args('  ', 18)).join("\n") %>
 <% end unless debugging.empty? %>
 Management commands:
-<%= table(remaining.sort.select{ |arr| arr[1].root? and arr[1].summary.present? }.map do |arr| 
+<%= table(remaining.sort.select{ |arr| arr[1].root? and arr[1].summary.present? }.map do |arr|
 		arr[1] = arr[1].summary || arr[1].description
-		arr 
+		arr
 	end, table_args('  ', 18)).join("\n") %>
 
   Some management commands have nested actions - run 'rhc help <command>' for more info.
 
-See '<%= Array(program :name).first %> help <command>' for more information on a specific command.  You can see a list of all commands with 'rhc help commands'. See 'rhc help options' for a list of global command-line options and information about the config file.  
+See '<%= Array(program :name).first %> help <command>' for more information on a specific command.  You can see a list of all commands with 'rhc help commands'. See 'rhc help options' for a list of global command-line options and information about the config file.
 <% if program :help -%>
   <% for title, body in program(:help) %>
   <%= $terminal.color title.to_s.upcase, :bold %>:

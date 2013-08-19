@@ -177,6 +177,7 @@ describe RHC::Commands::App do
       it { expect { run }.to exit_with_code(0) }
       it { run_output.should match("Success") }
       it { run_output.should match("Cartridges: mock_standalone_cart-1\n") }
+      it { run_output.should_not match(/Environment Variables:/) }
     end
 
     context 'when Hosts resolver raises an Exception' do
@@ -196,6 +197,7 @@ describe RHC::Commands::App do
       it { expect { run }.to exit_with_code(0) }
       it { run_output.should match("Success") }
       it { run_output.should match("Cartridges: mock_standalone_cart-1, mock_cart-1\n") }
+      it { run_output.should_not match(/Environment Variables:/) }
       after{ rest_client.domains.first.applications.first.cartridges.find{ |c| c.name == 'mock_cart-1' }.should be_true }
     end
 
@@ -204,6 +206,7 @@ describe RHC::Commands::App do
       it { expect { run }.to exit_with_code(0) }
       it { run_output.should match("Success") }
       it { run_output.should match("Cartridges: http://foo.com, mock_cart-1\n") }
+      it { run_output.should_not match(/Environment Variables:/) }
       after{ rest_client.domains.first.applications.first.cartridges.find{ |c| c.url == 'http://foo.com' }.should be_true }
     end
 
@@ -267,12 +270,12 @@ describe RHC::Commands::App do
       let(:arguments) { ['app', 'create', 'app1', 'http://foo.com', '--trace', '--noprompt'] }
       it('tells me about custom carts') { run_output.should match("The cartridge 'http://foo.com' will be downloaded") }
       it('lists the cart using the short_name') { run_output.should match(%r(Cartridges:\s+http://foo.com$)) }
-    end    
+    end
     context 'when I pick a custom URL cart and a web cart' do
       let(:arguments) { ['app', 'create', 'app1', 'http://foo.com', 'embcart-1', '--trace', '--noprompt'] }
       it('tells me about custom carts') { run_output.should match("The cartridge 'http://foo.com' will be downloaded") }
       it('lists the carts using the short_name') { run_output.should match(%r(Cartridges:\s+http://foo.com, embcart-1$)) }
-    end    
+    end
   end
 
   describe 'app create enable-jenkins' do
@@ -503,12 +506,12 @@ describe RHC::Commands::App do
       let(:password){ 'password' }
       let(:server){ mock_uri }
       let(:arguments){ ['delete-app', 'foo', '--confirm', '--trace'] }
-      before do 
+      before do
         stub_api
         challenge{ stub_one_domain('test') }
         stub_one_application('test', 'foo')
       end
-      before do 
+      before do
         stub_api_request(:delete, "broker/rest/domains/test/applications/foo").
           to_return({
             :body   => {
@@ -568,7 +571,7 @@ describe RHC::Commands::App do
       it { run_output.should match(/Gears:\s+Located with mock_type/) }
       it { run_output.should match(/Gears:\s+1 small/) }
       it { run_output.should match(%r(From:\s+ https://foo.bar.com)) }
-    end    
+    end
   end
 
   describe 'app show' do
@@ -707,5 +710,22 @@ describe RHC::Commands::App do
       domain.stub(:add_application).and_raise(RHC::Rest::ValidationException.new('Foo', :cartridges, 109))
       expect{ subject.send(:create_app, 'name', 'jenkins-1', domain) }.to raise_error(RHC::Rest::ValidationException)
     end
+  end
+
+  describe 'create app with env vars' do
+    before{ rest_client.add_domain("mockdomain") }
+
+    [['app', 'create', 'app1', 'mock_standalone_cart-1', '-e', 'FOO=BAR', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'],
+     ['app', 'create', 'app1', 'mock_standalone_cart-1', '--env', 'FOO=BAR', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password']
+    ].each_with_index do |args, i|
+      context "when run with single env var #{i}" do
+        let(:arguments) { args }
+        it { expect { run }.to exit_with_code(0) }
+        it { run_output.should match("Success") }
+        it { run_output.should match(/Cartridges:\s+mock_standalone_cart-1\n/) }
+        it { run_output.should match(/Environment Variables:\s+FOO=BAR\n/) }
+      end
+    end
+
   end
 end

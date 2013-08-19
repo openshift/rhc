@@ -3,9 +3,9 @@ module RHC
     class Cartridge < Base
       HIDDEN_TAGS = [:framework, :web_framework, :cartridge].map(&:to_s)
 
-      define_attr :type, :name, :display_name, :properties, :gear_profile, :status_messages, :scales_to, :scales_from, :scales_with, 
-                  :current_scale, :supported_scales_to, :supported_scales_from, :tags, :description, :collocated_with, :base_gear_storage, 
-                  :additional_gear_storage, :url
+      define_attr :type, :name, :display_name, :properties, :gear_profile, :status_messages, :scales_to, :scales_from, :scales_with,
+                  :current_scale, :supported_scales_to, :supported_scales_from, :tags, :description, :collocated_with, :base_gear_storage,
+                  :additional_gear_storage, :url, :environment_variables
 
       def scalable?
         supported_scales_to != supported_scales_from
@@ -138,7 +138,7 @@ module RHC
         name = Rack::Utils.parse_nested_query(uri.query)['name'] if name.blank? && uri.query
         name = File.basename(uri.path) if name.blank? && uri.path.present? && uri.path != '/'
         name.presence || url
-      rescue 
+      rescue
         url
       end
 
