@@ -53,11 +53,6 @@ class RHC::Commands::Base
 
     class InvalidCommand < StandardError ; end
 
-    def self.inherited(klass)
-      unless klass == RHC::Commands::Base
-      end
-    end
-
     def self.method_added(method)
       return if self == RHC::Commands::Base
       return if private_method_defined? method
