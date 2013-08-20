@@ -109,6 +109,7 @@ module RHC::Commands
       build_app_exists = rest_app.building_app
 
       if enable_jenkins?
+
         unless build_app_exists
           paragraph do
             say "Setting up a Jenkins application ... "
@@ -455,11 +456,11 @@ module RHC::Commands
       end
 
       def add_jenkins_app(rest_domain)
-        create_app(jenkins_app_name, "jenkins-1", rest_domain)
+        create_app(jenkins_app_name, jenkins_cartridge_name, rest_domain)
       end
 
       def add_jenkins_cartridge(rest_app)
-        rest_app.add_cartridge("jenkins-client-1")
+        rest_app.add_cartridge(jenkins_client_cartridge_name)
       end
 
       def add_jenkins_client_to(rest_app, messages)
@@ -532,6 +533,14 @@ module RHC::Commands
         if options.enable_jenkins.is_a? String
           options.enable_jenkins
         end || "jenkins"
+      end
+
+      def jenkins_cartridge_name
+        jenkins_cartridges.last.name
+      end
+
+      def jenkins_client_cartridge_name
+        jenkins_client_cartridges.last.name
       end
 
       def run_nslookup(host)

@@ -49,6 +49,12 @@ module RHC
     end
   end
 
+  class JenkinsNotInstalledOnServer < Exception
+    def initialize(message="There is no installed cartridge that exposes Jenkins")
+      super message, 160
+    end
+  end
+
   class KeyNotFoundException < Exception
     def initialize(message="SSHKey not found")
       super message, 118

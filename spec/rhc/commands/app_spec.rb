@@ -358,6 +358,15 @@ describe RHC::Commands::App do
         run_output.should match("Jenkins client failed to install")
       end
     end
+
+    context 'when run without jenkins cartridge available on server' do
+      before(:each) do
+        @instance.stub(:all_cartridges) { rest_client.cartridges.delete_if { |item| item.name =~ /\Ajenkins/i } }
+      end
+      it "should exit with jenkins error" do
+        run_output.should match("There is no installed cartridge that exposes Jenkins")
+      end
+    end
   end
 
   describe 'app create jenkins install with retries' do
