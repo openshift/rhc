@@ -29,8 +29,6 @@ module RHC::Commands
       Commands that affect a cartridge within an application will affect all
       gears the cartridge is installed to.
       DESC
-    alias_action :"app cartridge", :root_command => true, :deprecated => true
-    default_action :list
 
     summary "List available cartridges"
     syntax ''
