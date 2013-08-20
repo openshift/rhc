@@ -99,16 +99,18 @@ module RHC
         say table(carts)
       end
 
-      def filter_cartridges
-        all_cartridges.select{ |c| yield c }
+      def filter_jenkins_cartridges(tag)
+        cartridges = all_cartridges.select { |c| (c.tags || []).include?(tag) && c.name =~ /\Ajenkins/i }.sort
+        raise RHC::JenkinsNotInstalledOnServer if cartridges.empty?
+        cartridges
       end
 
       def jenkins_cartridges
-        filter_cartridges { |c| (c.tags || []).include?('ci') && c.name =~ /jenkins.*/ }.sort
+        @jenkins_cartridges ||= filter_jenkins_cartridges('ci')
       end
 
       def jenkins_client_cartridges
-        filter_cartridges { |c| (c.tags || []).include?('ci_builder') && c.name =~ /jenkins.*/ }.sort
+        @jenkins_client_cartridges ||= filter_jenkins_cartridges('ci_builder')
       end
   end
 end
