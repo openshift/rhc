@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.13.2
+Version: 1.13.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -102,6 +102,14 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Aug 20 2013 Adam Miller <admiller@redhat.com> 1.13.3-1
+- Merge pull request #436 from fabianofranz/dev/ffranz/env-vars
+  (dmcphers+openshiftbot@redhat.com)
+- Adds support to user-defined environment variables through 'rhc env'
+  (ffranz@redhat.com)
+- Added "rhc env-var [list|add|remove]" commands to handle user settable
+  environment variables (kraman@gmail.com)
+
 * Mon Aug 19 2013 Adam Miller <admiller@redhat.com> 1.13.2-1
 - <cartridge versions> origin_runtime_219, fix up references to renamed carts
   https://trello.com/c/evcTYKdn/219-3-adjust-out-of-date-cartridge-versions
