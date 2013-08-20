@@ -46,8 +46,8 @@ module RHC
       def match_cart(cart, search)
         search = search.to_s.downcase.gsub(/[_\-\s]/,' ')
         [
-           cart.name, 
-           cart.description, 
+           cart.name,
+           cart.description,
           (cart.tags || []).join(' '),
         ].compact.any?{ |s| s.present? && s.downcase.gsub(/[_\-\s]/,' ').include?(search) }
       end
@@ -83,9 +83,11 @@ module RHC
       def standalone_cartridges
         @standalone_cartridges ||= all_cartridges.select{ |c| c.type == 'standalone' }
       end
+
       def not_standalone_cartridges
         @not_standalone_cartridges ||= all_cartridges.select{ |c| c.type != 'standalone' }
       end
+
       def all_cartridges
         @all_cartridges = rest_client.cartridges
       end
@@ -95,6 +97,18 @@ module RHC
         carts.unshift ['==========', '=========']
         carts.unshift ['Short Name', 'Full name']
         say table(carts)
-      end    
+      end
+
+      def filter_cartridges
+        all_cartridges.select{ |c| yield c }
+      end
+
+      def jenkins_cartridges
+        filter_cartridges { |c| (c.tags || []).include?('ci') && c.name =~ /jenkins.*/ }.sort
+      end
+
+      def jenkins_client_cartridges
+        filter_cartridges { |c| (c.tags || []).include?('ci_builder') && c.name =~ /jenkins.*/ }.sort
+      end
   end
 end
