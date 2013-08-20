@@ -157,17 +157,17 @@ class RHC::Commands::Base
       }));
     end
 
-    private
-      def self.options_metadata
-        options[:options] ||= []
-      end
-      def self.args_metadata
-        options[:args] ||= []
-      end
-      def self.aliases
-        options[:aliases] ||= []
-      end
-      def self.options
-        @options ||= {}
-      end
+  private
+    def self.options_metadata
+      options[:options] ||= []
+    end
+    def self.args_metadata
+      options[:args] ||= []
+    end
+    def self.aliases
+      options[:aliases] ||= []
+    end
+    def self.options
+      @options ||= {}
+    end
 end
