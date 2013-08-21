@@ -464,12 +464,7 @@ module RHC
           type = result['type']
           data = result['data'] || {}
 
-          # Copy messages to each object
-          messages = Array(result['messages']).map do |m|
-            m['text'] if (m['field'] == 'result' || m['severity'] == 'result') && (m['severity'] != 'debug' || debug?)
-          end.compact.map!(&:chomp)
-          data.each{ |d| d['messages'] = messages } if data.is_a?(Array)
-          data['messages'] = messages if data.is_a?(Hash)
+          parse_messages result, data
 
           case type
           when 'domains'
@@ -503,6 +498,43 @@ module RHC
           else
             data
           end
+        end
+
+        def parse_messages(result, data)
+          warnings, messages = Array(result['messages']).inject([[],[]]) do |a, m|
+            severity, field, text = m.values_at('severity', 'field', 'text')
+            text = text.chomp
+            case severity
+            when 'warning'
+              a[0] << text
+            when 'debug'
+              a[1] << text if debug?
+            when 'info'
+              a[1] << text if debug? || field == 'result'
+            else
+              a[1] << text
+            end
+            a
+          end
+
+          if data.is_a?(Array)
+            data.each do |d|
+              d['messages'] = messages
+              d['warnings'] = warnings
+            end
+          elsif data.is_a?(Hash)
+            data['messages'] = messages
+            data['warnings'] = warnings  
+          end
+
+          warnings.each do |warning|
+            # Prevent repeated warnings during the same client session
+            if !defined?(@warning_map) || !@warning_map.include?(warning)
+              @warning_map ||= Set.new
+              @warning_map << warning
+              warn warning
+            end
+          end if respond_to? :warn
         end
 
         def raise_generic_error(url, client)

@@ -189,6 +189,7 @@ module RHC
           :url => openshift_rest_endpoint.to_s,
           :debug => options.debug,
           :timeout => options.timeout,
+          :warn => self.class.instance_method(:warn).bind(self),
         }.merge!(ssl_options).merge!(opts))
     end
 
