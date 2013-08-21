@@ -293,19 +293,20 @@ module RHC
             {:field => 'base',   :severity => 'result', :text => 'Result severity'}, # >= 1.5 API
             {:field => 'base',   :severity => 'info',   :text => 'Non-result message' },
             {:field => 'result', :severity => 'debug',  :text => 'Debug message' },
+            {:field => 'base', :severity => 'warning',  :text => 'Warning message' },
           ]
         end
         let(:response) do
           { :type => 'user', :data => object, :messages => messages }.to_json
         end
 
-        it "copies result messages to the object" do
+        it "copies all non-warning and non-info messages to the object" do
           subject.send(:parse_response, response).messages.should == ['Result field', 'Result severity']
         end
 
-        it "includes debug info when debug true" do
+        it "includes debug and info when debug true" do
           subject.stub(:debug?).and_return(true)
-          subject.send(:parse_response, response).messages.should == ['Result field', 'Result severity', 'Debug message']
+          subject.send(:parse_response, response).messages.should == ['Nil field', 'Result field', 'Result severity', 'Non-result message', 'Debug message']
         end
       end
     end
