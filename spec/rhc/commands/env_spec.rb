@@ -109,6 +109,13 @@ describe RHC::Commands::Env do
      ['set-env', 'TEST_ENV_VAR=1', '--app', 'mock_app_0', '--noprompt', '--confirm'],
      ['env', 'set', '-e', 'TEST_ENV_VAR=1', '--app', 'mock_app_0', '--noprompt', '--confirm' ],
      ['env', 'set', '--env', 'TEST_ENV_VAR=1', '--app', 'mock_app_0', '--noprompt', '--confirm' ],
+     ['env', 'set', 'FOO_BAR=1', '--app', 'mock_app_0', '--noprompt', '--confirm'],
+     ['env', 'set', 'F1=1', '--app', 'mock_app_0', '--noprompt', '--confirm'],
+     ['env', 'set', 'F_=1', '--app', 'mock_app_0', '--noprompt', '--confirm'],
+     ['env', 'set', '_FOO=1', '--app', 'mock_app_0', '--noprompt', '--confirm'],
+     ['env', 'set', 'FOO=BAR=BAZ', '--app', 'mock_app_0', '--noprompt', '--confirm'],
+     ['env', 'set', 'FOO==', '--app', 'mock_app_0', '--noprompt', '--confirm'],
+     ['env', 'set', 'FOO=Test 1 2 3', '--app', 'mock_app_0', '--noprompt', '--confirm'],
      #['env', 'set', '--env', 'TEST_ENV_VAR="1"', '--app', 'mock_app_0', '--noprompt', '--confirm' ],
      #['env', 'set', '--env', "TEST_ENV_VAR='1'", '--app', 'mock_app_0', '--noprompt', '--confirm' ]
     ].each_with_index do |args, i|
@@ -119,6 +126,7 @@ describe RHC::Commands::Env do
         it { succeed_without_message /TEST_ENV_VAR=1/ }
       end
     end
+
 
     [['env', 'set', 'TEST_ENV_VAR1=1', 'TEST_ENV_VAR2=2', 'TEST_ENV_VAR3=3', '--app', 'mock_app_0', '--noprompt', '--confirm' ],
      ['set-env', 'TEST_ENV_VAR1=1', 'TEST_ENV_VAR2=2', 'TEST_ENV_VAR3=3', '--app', 'mock_app_0', '--noprompt', '--confirm' ]
@@ -197,6 +205,26 @@ describe RHC::Commands::Env do
         run_output.should match(/Server does not support environment variables/)
       end
     end
+
+    [['env', 'set', 'FOO.Z=BAR', '--app', 'mock_app_0', '--noprompt', '--confirm'],
+     ['env', 'set', '2FOO=BAR', '--app', 'mock_app_0', '--noprompt', '--confirm'],
+     ['env', 'set', 'FO$O=BAR', '--app', 'mock_app_0', '--noprompt', '--confirm'],
+     ['env', 'set', 'FO%O=BAR', '--app', 'mock_app_0', '--noprompt', '--confirm'],
+     ['env', 'set', 'FO*O=BAR', '--app', 'mock_app_0', '--noprompt', '--confirm'],
+     ['env', 'set', 'FOO.=BAR', '--app', 'mock_app_0', '--noprompt', '--confirm'],
+     ['env', 'set', '=BAR', '--app', 'mock_app_0', '--noprompt', '--confirm'],
+     ['env', 'set', '==', '--app', 'mock_app_0', '--noprompt', '--confirm'],
+    ].each_with_index do |args, i|
+      context "when run with invalid env var names #{i}" do
+        let(:arguments) { args }
+        it "should raise env var not provided exception" do
+          expect{ run }.to exit_with_code(159)
+          run_output.should match(/Environment variable\(s\) not provided\./)
+          run_output.should match(/Please provide at least one environment variable using the syntax VARIABLE=VALUE\./)
+        end
+      end
+    end
+
   end
 
   describe 'unset env' do
