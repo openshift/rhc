@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.13.4
+Version: 1.13.5
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -102,6 +102,27 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Aug 21 2013 Adam Miller <admiller@redhat.com> 1.13.5-1
+- Merge pull request #444 from fabianofranz/master
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #443 from Miciah/bug-999602-RHC-CommandHelpBindings-sort-
+  commands (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #440 from Miciah/lib-rhc-commands-base.rb-whitespace
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #442 from
+  jwforres/bug_994174_rhc_client_messages_not_displayed
+  (dmcphers+openshiftbot@redhat.com)
+- Added spec tests for env vars with whitespaces (contact@fabianofranz.com)
+- RHC::CommandHelpBindings: Sort commands (miciah.masters@gmail.com)
+- More spec tests for env vars parser (contact@fabianofranz.com)
+- Bug 994174 - rhc not displaying CLIENT_MESSAGE returned by broker
+  (jforrest@redhat.com)
+- Improved error message for invalid env var names (contact@fabianofranz.com)
+- Added spec test cases for invalid env var names (contact@fabianofranz.com)
+- Validates env var names according to IEEE Std 1003.1-2001
+  (contact@fabianofranz.com)
+- rhc/commands/base.rb: Fix whitespace (miciah.masters@gmail.com)
+
 * Wed Aug 21 2013 Adam Miller <admiller@redhat.com> 1.13.4-1
 - Merge pull request #441 from
   smarterclayton/bug_994986_remove_old_cartridge_alias
