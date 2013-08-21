@@ -33,7 +33,7 @@ module RHC
 
     def initialize(command, instance_commands, runner)
       @command = command
-      @actions = 
+      @actions =
         if command.root?
           instance_commands.collect do |command_name, command_class|
             next if command_class.summary.nil?
