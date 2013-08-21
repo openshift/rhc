@@ -113,6 +113,8 @@ describe RHC::Commands::Env do
      ['env', 'set', 'F1=1', '--app', 'mock_app_0', '--noprompt', '--confirm'],
      ['env', 'set', 'F_=1', '--app', 'mock_app_0', '--noprompt', '--confirm'],
      ['env', 'set', '_FOO=1', '--app', 'mock_app_0', '--noprompt', '--confirm'],
+     ['env', 'set', 'FOO=BAR=BAZ', '--app', 'mock_app_0', '--noprompt', '--confirm'],
+     ['env', 'set', 'FOO==', '--app', 'mock_app_0', '--noprompt', '--confirm'],
      #['env', 'set', '--env', 'TEST_ENV_VAR="1"', '--app', 'mock_app_0', '--noprompt', '--confirm' ],
      #['env', 'set', '--env', "TEST_ENV_VAR='1'", '--app', 'mock_app_0', '--noprompt', '--confirm' ]
     ].each_with_index do |args, i|
@@ -123,6 +125,7 @@ describe RHC::Commands::Env do
         it { succeed_without_message /TEST_ENV_VAR=1/ }
       end
     end
+
 
     [['env', 'set', 'TEST_ENV_VAR1=1', 'TEST_ENV_VAR2=2', 'TEST_ENV_VAR3=3', '--app', 'mock_app_0', '--noprompt', '--confirm' ],
      ['set-env', 'TEST_ENV_VAR1=1', 'TEST_ENV_VAR2=2', 'TEST_ENV_VAR3=3', '--app', 'mock_app_0', '--noprompt', '--confirm' ]
@@ -209,6 +212,7 @@ describe RHC::Commands::Env do
      ['env', 'set', 'FO*O=BAR', '--app', 'mock_app_0', '--noprompt', '--confirm'],
      ['env', 'set', 'FOO.=BAR', '--app', 'mock_app_0', '--noprompt', '--confirm'],
      ['env', 'set', '=BAR', '--app', 'mock_app_0', '--noprompt', '--confirm'],
+     ['env', 'set', '==', '--app', 'mock_app_0', '--noprompt', '--confirm'],
     ].each_with_index do |args, i|
       context "when run with invalid env var names #{i}" do
         let(:arguments) { args }
