@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.13.3
+Version: 1.13.4
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -102,6 +102,22 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Aug 21 2013 Adam Miller <admiller@redhat.com> 1.13.4-1
+- Merge pull request #441 from
+  smarterclayton/bug_994986_remove_old_cartridge_alias
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #439 from Miciah/delete-RHC-Commands-Base-inherited
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 997763 - raise error if server does not provide a Jenkins cartridge
+  (contact@fabianofranz.com)
+- Bug 997763 - encapsulated fetch of jenkins cartridges names
+  (contact@fabianofranz.com)
+- Bug 997763 - find jenkins cartridges by tag and base name
+  (contact@fabianofranz.com)
+- Bug 994986 - Remove 'rhc cartridge' because it conflicts with other aliases
+  (ccoleman@redhat.com)
+- Delete RHC::Commands::Base::inherited (miciah.masters@gmail.com)
+
 * Tue Aug 20 2013 Adam Miller <admiller@redhat.com> 1.13.3-1
 - Merge pull request #436 from fabianofranz/dev/ffranz/env-vars
   (dmcphers+openshiftbot@redhat.com)
