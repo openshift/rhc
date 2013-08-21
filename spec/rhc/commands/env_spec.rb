@@ -115,6 +115,7 @@ describe RHC::Commands::Env do
      ['env', 'set', '_FOO=1', '--app', 'mock_app_0', '--noprompt', '--confirm'],
      ['env', 'set', 'FOO=BAR=BAZ', '--app', 'mock_app_0', '--noprompt', '--confirm'],
      ['env', 'set', 'FOO==', '--app', 'mock_app_0', '--noprompt', '--confirm'],
+     ['env', 'set', 'FOO=Test 1 2 3', '--app', 'mock_app_0', '--noprompt', '--confirm'],
      #['env', 'set', '--env', 'TEST_ENV_VAR="1"', '--app', 'mock_app_0', '--noprompt', '--confirm' ],
      #['env', 'set', '--env', "TEST_ENV_VAR='1'", '--app', 'mock_app_0', '--noprompt', '--confirm' ]
     ].each_with_index do |args, i|

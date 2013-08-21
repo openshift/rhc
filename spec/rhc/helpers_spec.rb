@@ -456,8 +456,15 @@ describe AllRhcHelpers do
     it { subject.collect_env_vars('FOO==').first.to_hash.should == { :name => 'FOO', :value => '=' } }
     it { subject.collect_env_vars('FOO=BAR=ZEE').first.to_hash.should == { :name => 'FOO', :value => 'BAR=ZEE' } }
     it { subject.collect_env_vars('foo25_=BAR=\][#%*').first.to_hash.should == { :name => 'foo25_', :value => 'BAR=\][#%*' } }
+    it { subject.collect_env_vars('FOO=Test 1 2 3').first.to_hash.should == { :name => 'FOO', :value => 'Test 1 2 3' } }
     it { subject.collect_env_vars('2FOO=BAR').empty?.should be_true }
     it { subject.collect_env_vars('FOO.2=BAR').empty?.should be_true }
+    it { subject.collect_env_vars('FOO BAR=ZEE').empty?.should be_true }
+    it { subject.collect_env_vars('FOO*BAR=ZEE').empty?.should be_true }
+    it { subject.collect_env_vars('FOO&BAR=ZEE').empty?.should be_true }
+    it { subject.collect_env_vars('FOO:BAR=ZEE').empty?.should be_true }
+    it { subject.collect_env_vars('FOO@BAR=ZEE').empty?.should be_true }
+    it { subject.collect_env_vars('FOO!BAR=ZEE').empty?.should be_true }
   end
 end
 
