@@ -329,7 +329,7 @@ describe AllRhcHelpers do
     it "should handle a block in multi_ssh calls" do
       expect_multi_ssh('foo', 'fakegearid0@fakesshurl.com' => 'bar')
       capture{ subject.table_from_gears('foo', [RHC::Rest::Mock::MockRestGearGroup.new], :header => ['cart','col']) }.should match /cart.*col\n-+.*fakegearid0.*bar/m
-    end    
+    end
 
     it "should handle a run_on_gears error for unrecognized type" do
       expect_multi_ssh('foo', {})
@@ -385,21 +385,21 @@ describe AllRhcHelpers do
 
   describe "#strip_ansi" do
     it{ "\e[1m \e[1m".strip_ansi.should == " " }
-    it{ "\eiei0".strip_ansi.should == "\eiei0" } 
-    it{ "\e[iei0]".strip_ansi.should == "\e[iei0]" } 
+    it{ "\eiei0".strip_ansi.should == "\eiei0" }
+    it{ "\e[iei0]".strip_ansi.should == "\e[iei0]" }
   end
 
   context "Resolv helper" do
     let(:resolver) { Object.new }
     let(:existent_host) { 'real_host' }
     let(:nonexistent_host) { 'fake_host' }
-    
+
     before do
       Resolv::Hosts.stub(:new) { resolver }
       resolver.stub(:getaddress).with(existent_host)   { existent_host }
       resolver.stub(:getaddress).with(nonexistent_host){ Resolv::ResolvError }
     end
-    
+
     context "when hosts file has the desired host" do
       it "does not raise error" do
         expect {
@@ -445,6 +445,26 @@ describe AllRhcHelpers do
         it{ subject.send(:match_cart, cart, 'foo_more max-any').should be_true }
       end
     end
+  end
+
+  describe "#collect_env_vars" do
+    it { subject.collect_env_vars('FOO=BAR').first.to_hash.should == { :name => 'FOO', :value => 'BAR' } }
+    it { subject.collect_env_vars('FOO2=BAR2').first.to_hash.should == { :name => 'FOO2', :value => 'BAR2' } }
+    it { subject.collect_env_vars('FOO_BAR=ZEE').first.to_hash.should == { :name => 'FOO_BAR', :value => 'ZEE' } }
+    it { subject.collect_env_vars('_FOO=BAR').first.to_hash.should == { :name => '_FOO', :value => 'BAR' } }
+    it { subject.collect_env_vars('FOO=').first.to_hash.should == { :name => 'FOO', :value => '' } }
+    it { subject.collect_env_vars('FOO==').first.to_hash.should == { :name => 'FOO', :value => '=' } }
+    it { subject.collect_env_vars('FOO=BAR=ZEE').first.to_hash.should == { :name => 'FOO', :value => 'BAR=ZEE' } }
+    it { subject.collect_env_vars('foo25_=BAR=\][#%*').first.to_hash.should == { :name => 'foo25_', :value => 'BAR=\][#%*' } }
+    it { subject.collect_env_vars('FOO=Test 1 2 3').first.to_hash.should == { :name => 'FOO', :value => 'Test 1 2 3' } }
+    it { subject.collect_env_vars('2FOO=BAR').empty?.should be_true }
+    it { subject.collect_env_vars('FOO.2=BAR').empty?.should be_true }
+    it { subject.collect_env_vars('FOO BAR=ZEE').empty?.should be_true }
+    it { subject.collect_env_vars('FOO*BAR=ZEE').empty?.should be_true }
+    it { subject.collect_env_vars('FOO&BAR=ZEE').empty?.should be_true }
+    it { subject.collect_env_vars('FOO:BAR=ZEE').empty?.should be_true }
+    it { subject.collect_env_vars('FOO@BAR=ZEE').empty?.should be_true }
+    it { subject.collect_env_vars('FOO!BAR=ZEE').empty?.should be_true }
   end
 end
 

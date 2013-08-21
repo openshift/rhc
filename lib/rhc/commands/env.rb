@@ -54,7 +54,7 @@ module RHC::Commands
         (with_file ?
           "Environment variable(s) not found in the provided file(s).\n" :
           "Environment variable(s) not provided.\n") <<
-          "Please provide at least one environment variable using the syntax VARIABLE=VALUE.") if env_vars.empty?
+          "Please provide at least one environment variable using the syntax VARIABLE=VALUE. VARIABLE can only contain letters, digits and underscore ('_') and can't begin with a digit.") if env_vars.empty?
 
       if with_file
         env_vars.each {|item| default_display_env_var(item.name, item.value)}
