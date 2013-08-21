@@ -446,7 +446,7 @@ module RHC
     end
 
     def env_var_regex_pattern
-      /(^.+)=(.*)/i
+      /\A([a-zA-Z_]+[a-zA-Z0-9_]*)=(.*)\z/
     end
 
   end
