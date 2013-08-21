@@ -35,7 +35,7 @@ module RHC
       @command = command
       @actions = 
         if command.root?
-          instance_commands.collect do |command_name, command_class|
+          instance_commands.sort_by{ |c| c[0] }.collect do |command_name, command_class|
             next if command_class.summary.nil?
             m = /^#{command.name}[\-]([^ ]+)/.match(command_name)
             # if we have a match and it is not an alias then we can use it
