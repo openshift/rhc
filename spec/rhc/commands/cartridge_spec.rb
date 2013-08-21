@@ -27,11 +27,11 @@ describe RHC::Commands::Cartridge do
   describe 'run' do
     let!(:rest_client){ MockRestClient.new }
     context "with all arguments" do
-      let(:arguments) { ['cartridge', '--trace', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+      let(:arguments) { ['cartridges', '--trace', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
       it { succeed_with_message /mock_cart-1.*mock_cart-2.*unique_mock_cart-1/m }
     end
     context "without password" do
-      let(:arguments) { ['cartridge', '--trace', '--noprompt', '--config', 'test.conf'] }
+      let(:arguments) { ['cartridges', '--trace', '--noprompt', '--config', 'test.conf'] }
       it { succeed_with_message /mock_cart-1.*mock_cart-2.*unique_mock_cart-1/m }
     end
   end
@@ -66,7 +66,7 @@ describe RHC::Commands::Cartridge do
 
   describe 'alias app cartridge' do
     let!(:rest_client){ MockRestClient.new }
-    let(:arguments) { ['app', 'cartridge', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+    let(:arguments) { ['app', 'cartridge', 'list', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     context 'when run' do
       it { succeed_with_message /mock_cart-1.*mock_cart-2.*unique_mock_cart-1/m }
