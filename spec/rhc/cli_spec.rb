@@ -149,14 +149,37 @@ describe RHC::CLI do
     end
   end
 
+  describe 'option provided twice' do
+    before{ user_config }
+    let!(:rest_client){ MockRestClient.new }
+    before(:each) do
+      domain = rest_client.add_domain("mock_domain")
+      @app = domain.add_application("app1", "mock_type")
+    end
+    context 'when run with -a provided twice, last being the valid one' do
+      let(:arguments) { ['cartridge', 'remove', 'mock_cart-1', '--confirm', '--trace','-a', 'app2', '-a', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+      it "should remove cartridge" do
+        @app.add_cartridge('mock_cart-1')
+        expect { run }.to exit_with_code(0)
+      end
+    end
+    context 'when run with -a provided twice, last not being the valid one' do
+      let(:arguments) { ['cartridge', 'remove', 'mock_cart-1', '--confirm', '--trace','-a', 'app1', '-a', 'app2', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+      it "should raise an application not found exception" do
+        expect{ run }.to raise_error(RHC::Rest::ApplicationNotFoundException)
+        #run_output.should match(/Application app2 does not exist/)
+      end
+    end
+  end
+
   describe '#set_terminal' do
     before(:each) { mock_terminal }
-    it('should update $terminal.wrap_at') do 
+    it('should update $terminal.wrap_at') do
       $stdin.should_receive(:tty?).once.and_return(true)
       HighLine::SystemExtensions.should_receive(:terminal_size).and_return([5])
       expect { RHC::CLI.set_terminal }.to change($terminal, :wrap_at)
     end
-    it('should not update $terminal.page_at') do 
+    it('should not update $terminal.page_at') do
       $stdin.should_receive(:tty?).once.and_return(true)
       $stdout.should_receive(:tty?).once.and_return(true)
       expect { RHC::CLI.set_terminal }.to_not change($terminal, :page_at)

@@ -426,12 +426,16 @@ module RHC
       [status, stdout, stderr]
     end
 
-    def collect_env_vars(item)
-      return nil if item.blank?
+    def env_var_regex_pattern
+      /^([a-zA-Z_][\w]*)=(.*)$/
+    end
+
+    def collect_env_vars(items)
+      return nil if items.blank?
 
       env_vars = []
 
-      [item].flatten.each do |item|
+      Array(items).each do |item|
         if match = item.match(env_var_regex_pattern)
           name, value = match.captures
           env_vars << RHC::Rest::EnvironmentVariable.new({ :name => name, :value => value })
@@ -445,10 +449,6 @@ module RHC
         end
       end
       env_vars
-    end
-
-    def env_var_regex_pattern
-      /^([a-zA-Z_][\w]*)=(.*)$/
     end
 
   end

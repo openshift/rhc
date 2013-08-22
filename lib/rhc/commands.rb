@@ -21,11 +21,15 @@ module Commander
       proxy_options.inject Options.new do |options, (option, value)|
         # options that are present will evaluate to true
         value = true if value.nil?
+        # if multiple values were specified for this option, collect it as an
+        # array. on 'fill_arguments' we will decide between stick with the array
+        # (if :option_type => :list) or just take the last value from array.
+        # not part of the backported method.
         if proxy_options.select{ |item| item[0] == option }.length > 1
           if options[option]
             options[option] << value
           else
-          options.__send__ :"#{option}=", [value]
+            options.__send__ :"#{option}=", [value]
           end
         else
           options.__send__ :"#{option}=", value
