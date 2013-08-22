@@ -15,16 +15,24 @@ module Commander
 
     #
     # Force proxy_option_struct to default to nil for values,
-    # backported for Commander 4.0.3 
+    # backported for Commander 4.0.3
     #
     def proxy_option_struct
       proxy_options.inject Options.new do |options, (option, value)|
         # options that are present will evaluate to true
         value = true if value.nil?
-        options.__send__ :"#{option}=", value
+        if proxy_options.select{ |item| item[0] == option }.length > 1
+          if options[option]
+            options[option] << value
+          else
+          options.__send__ :"#{option}=", [value]
+          end
+        else
+          options.__send__ :"#{option}=", value
+        end
         options
       end
-    end    
+    end
 
     def deprecated(as_alias=nil)
       return false unless info
@@ -234,16 +242,16 @@ module RHC
 
           c.when_called do |args, options|
             deprecated!
-            
+
             config = c.instance_variable_get(:@config)
-            
+
             cmd = opts[:class].new
             cmd.options = options
             cmd.config = config
-            
+
             args = fill_arguments(cmd, options, args_metadata, options_metadata, args)
             needs_configuration!(cmd, options, config)
-            
+
             return execute(cmd, :help, args) unless opts[:method]
             execute(cmd, opts[:method], args)
           end
@@ -268,6 +276,10 @@ module RHC
         # process options
         options_metadata.each do |option_meta|
           arg = option_meta[:arg]
+
+          if arg && option_meta[:option_type] != :list && options[arg].is_a?(Array)
+            options[arg] = options[arg].last
+          end
 
           # Check to see if we've provided a value for an option tagged as deprecated
           if (!(val = options.__hash__[arg]).nil? && dep_info = option_meta[:deprecated])

@@ -431,15 +431,16 @@ module RHC
 
       env_vars = []
 
-      if match = item.match(env_var_regex_pattern)
-        name, value = match.captures
-        env_vars << RHC::Rest::EnvironmentVariable.new({ :name => name, :value => value })
-
-      elsif File.file? item
-        File.readlines(item).each do |line|
-          if match = line.match(env_var_regex_pattern)
-            name, value = match.captures
-            env_vars << RHC::Rest::EnvironmentVariable.new({ :name => name, :value => value })
+      [item].flatten.each do |item|
+        if match = item.match(env_var_regex_pattern)
+          name, value = match.captures
+          env_vars << RHC::Rest::EnvironmentVariable.new({ :name => name, :value => value })
+        elsif File.file? item
+          File.readlines(item).each do |line|
+            if match = line.match(env_var_regex_pattern)
+              name, value = match.captures
+              env_vars << RHC::Rest::EnvironmentVariable.new({ :name => name, :value => value })
+            end
           end
         end
       end
