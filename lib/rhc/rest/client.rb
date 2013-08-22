@@ -4,6 +4,7 @@ require 'uri'
 require 'logger'
 require 'httpclient'
 require 'benchmark'
+require 'set'
 
 module RHC
   module Rest
