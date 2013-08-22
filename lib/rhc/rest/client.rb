@@ -8,8 +8,6 @@ require 'benchmark'
 module RHC
   module Rest
 
-    MAX_RETRIES = 5
-
     #
     # These are methods that belong to the API object but are
     # callable from the client for convenience.
@@ -202,6 +200,7 @@ module RHC
       # matching one supported by the server.
       # See #api_version_negotiated
       CLIENT_API_VERSIONS = [1.1, 1.2, 1.3, 1.4, 1.5]
+      MAX_RETRIES = 5
 
       def initialize(*args)
         options = args[0].is_a?(Hash) && args[0] || {}
