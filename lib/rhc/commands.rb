@@ -277,6 +277,10 @@ module RHC
         options_metadata.each do |option_meta|
           arg = option_meta[:arg]
 
+          if arg && option_meta[:option_type] != :list && options[arg].is_a?(Array)
+            options[arg] = options[arg].last
+          end
+
           # Check to see if we've provided a value for an option tagged as deprecated
           if (!(val = options.__hash__[arg]).nil? && dep_info = option_meta[:deprecated])
             # Get the arg for the correct option and what the value should be
