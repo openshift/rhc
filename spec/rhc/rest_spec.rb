@@ -301,6 +301,7 @@ module RHC
         end
 
         it "copies all non-warning and non-info messages to the object" do
+          subject.stub(:debug?).and_return(false)
           subject.send(:parse_response, response).messages.should == ['Result field', 'Result severity']
         end
 
