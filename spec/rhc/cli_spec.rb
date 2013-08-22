@@ -167,7 +167,6 @@ describe RHC::CLI do
       let(:arguments) { ['cartridge', 'remove', 'mock_cart-1', '--confirm', '--trace','-a', 'app1', '-a', 'app2', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
       it "should raise an application not found exception" do
         expect{ run }.to raise_error(RHC::Rest::ApplicationNotFoundException)
-        #run_output.should match(/Application app2 does not exist/)
       end
     end
   end
