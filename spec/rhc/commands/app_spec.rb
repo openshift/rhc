@@ -736,5 +736,17 @@ describe RHC::Commands::App do
       end
     end
 
+    [['app', 'create', 'app1', 'mock_standalone_cart-1', '-e', 'VAR1=VAL1', '-e', 'VAR2=VAL2', '-e', 'VAR3=VAL3', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'],
+     ['app', 'create', 'app1', 'mock_standalone_cart-1', '--env', 'VAR1=VAL1', '--env', 'VAR2=VAL2', '--env', 'VAR3=VAL3', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password']
+    ].each_with_index do |args, i|
+      context "when run with multiple env vars #{i}" do
+        let(:arguments) { args }
+        it { expect { run }.to exit_with_code(0) }
+        it { run_output.should match("Success") }
+        it { run_output.should match(/Cartridges:\s+mock_standalone_cart-1\n/) }
+        it { run_output.should match(/Environment Variables:\s+VAR1=VAL1, VAR2=VAL2, VAR3=VAL3\n/) }
+      end
+    end
+
   end
 end

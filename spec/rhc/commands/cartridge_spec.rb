@@ -572,6 +572,21 @@ describe RHC::Commands::Cartridge do
       end
     end
 
+    [['app', 'cartridge', 'add', 'unique_mock_cart', '-e', 'FOO1=BAR1', '-e', 'FOO2=BAR2', '--app', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'],
+     ['app', 'cartridge', 'add', 'unique_mock_cart', '--env', 'FOO1=BAR1', '--env', 'FOO2=BAR2', '--app', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password']
+    ].each_with_index do |args, i|
+      context "when run with multiple env vars #{i}" do
+        let(:arguments) { args }
+        before(:each) do
+          domain = rest_client.add_domain("mock_domain")
+          app = domain.add_application("app1", "mock_type")
+        end
+        it {
+          succeed_with_message(/Environment Variables:\s+FOO1=BAR1, FOO2=BAR2/)
+        }
+      end
+    end
+
     [['app', 'cartridge', 'add', 'unique_mock_cart', '-e', File.expand_path('../../assets/env_vars.txt', __FILE__), '--app', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'],
      ['app', 'cartridge', 'add', 'unique_mock_cart', '--env', File.expand_path('../../assets/env_vars.txt', __FILE__), '--app', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password']
     ].each_with_index do |args, i|
