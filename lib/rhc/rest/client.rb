@@ -504,7 +504,8 @@ module RHC
         def parse_messages(result, data)
           warnings, messages = Array(result['messages']).inject([[],[]]) do |a, m|
             severity, field, text = m.values_at('severity', 'field', 'text')
-            text = text.chomp
+            text.gsub!(/\A\n+/m, "")
+            text.rstrip!
             case severity
             when 'warning'
               a[0] << text
