@@ -47,7 +47,7 @@ module RHC::Commands
       may be specified to change the gears used.
 
       DESC
-    syntax "<name> <cartridge> [... <cartridge>] [-n namespace]"
+    syntax "<name> <cartridge> [... <cartridge>] [... VARIABLE=VALUE] [-n namespace]"
     option ["-n", "--namespace NAME"], "Namespace for the application"
     option ["-g", "--gear-size SIZE"], "Gear size controls how much memory and CPU your cartridges can use."
     option ["-s", "--scaling"], "Enable scaling for the web cartridge."
@@ -66,6 +66,8 @@ module RHC::Commands
 
       check_name!(name)
 
+      arg_envs, cartridges = cartridges.partition{|item| item.match(env_var_regex_pattern)}
+
       cartridges = check_cartridges(cartridges, &require_one_web_cart)
 
       options.default \
@@ -82,7 +84,7 @@ module RHC::Commands
         c.usage_rate? ? "#{c.short_name} (addtl. costs may apply)" : c.short_name
       end.join(', ')
 
-      environment_variables = collect_env_vars(options.env)
+      environment_variables = collect_env_vars(arg_envs.concat(Array(options.env)))
 
       paragraph do
         header "Application Options"
