@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.14.1
+Version: 1.14.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -102,6 +102,10 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Sep 05 2013 Adam Miller <admiller@redhat.com> 1.14.2-1
+- Bug 1002269 - trim leading newlines and trailing whitespace in client
+  messages (jforrest@redhat.com)
+
 * Thu Aug 29 2013 Adam Miller <admiller@redhat.com> 1.14.1-1
 - Update phpmyadmin-3 to phpmyadmin-4 (mfojtik@redhat.com)
 - Merge pull request #450 from jwforres/bug_999637_rhc_tests_fail_with_seed
