@@ -123,7 +123,8 @@ class RHC::Commands::Base
                            :description => description,
                            :context_helper => options[:context],
                            :required => options[:required],
-                           :deprecated => options[:deprecated]
+                           :deprecated => options[:deprecated],
+                           :option_type => options[:option_type]
                           }
     end
 

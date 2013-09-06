@@ -47,12 +47,12 @@ module RHC::Commands
       may be specified to change the gears used.
 
       DESC
-    syntax "<name> <cartridge> [... <cartridge>] [-n namespace]"
+    syntax "<name> <cartridge> [... <cartridge>] [... VARIABLE=VALUE] [-n namespace]"
     option ["-n", "--namespace NAME"], "Namespace for the application"
     option ["-g", "--gear-size SIZE"], "Gear size controls how much memory and CPU your cartridges can use."
     option ["-s", "--scaling"], "Enable scaling for the web cartridge."
     option ["-r", "--repo DIR"], "Path to the Git repository (defaults to ./$app_name)"
-    option ["-e", "--env VARIABLE=VALUE"], "Environment variable(s) to be set on this app, or path to a file containing environment variables"
+    option ["-e", "--env VARIABLE=VALUE"], "Environment variable(s) to be set on this app, or path to a file containing environment variables", :option_type => :list
     option ["--from-code URL"], "URL to a Git repository that will become the initial contents of the application"
     option ["--[no-]git"], "Skip creating the local Git repository."
     option ["--nogit"], "DEPRECATED: Skip creating the local Git repository.", :deprecated => {:key => :git, :value => false}
@@ -65,6 +65,8 @@ module RHC::Commands
       check_config!
 
       check_name!(name)
+
+      arg_envs, cartridges = cartridges.partition{|item| item.match(env_var_regex_pattern)}
 
       cartridges = check_cartridges(cartridges, &require_one_web_cart)
 
@@ -82,7 +84,7 @@ module RHC::Commands
         c.usage_rate? ? "#{c.short_name} (addtl. costs may apply)" : c.short_name
       end.join(', ')
 
-      environment_variables = collect_env_vars(options.env)
+      environment_variables = collect_env_vars(arg_envs.concat(Array(options.env)))
 
       paragraph do
         header "Application Options"
@@ -182,8 +184,7 @@ module RHC::Commands
                 ['URL:', rest_app.app_url],
                 ['SSH to:', rest_app.ssh_string],
                 ['Git remote:', rest_app.git_url],
-                (['Cloned to:', repo_dir] if repo_dir),
-                (['Environment variables:', environment_variables.map{|item| "#{item.name}=#{item.value}"}.sort.join(', ')] if environment_variables.present?)
+                (['Cloned to:', repo_dir] if repo_dir)
               ].compact
           end
         end

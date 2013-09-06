@@ -116,8 +116,6 @@ describe RHC::Commands::Env do
      ['env', 'set', 'FOO=BAR=BAZ', '--app', 'mock_app_0', '--noprompt', '--confirm'],
      ['env', 'set', 'FOO==', '--app', 'mock_app_0', '--noprompt', '--confirm'],
      ['env', 'set', 'FOO=Test 1 2 3', '--app', 'mock_app_0', '--noprompt', '--confirm'],
-     #['env', 'set', '--env', 'TEST_ENV_VAR="1"', '--app', 'mock_app_0', '--noprompt', '--confirm' ],
-     #['env', 'set', '--env', "TEST_ENV_VAR='1'", '--app', 'mock_app_0', '--noprompt', '--confirm' ]
     ].each_with_index do |args, i|
       context "when run with single env var #{i}" do
         let(:arguments) { args }
@@ -129,9 +127,9 @@ describe RHC::Commands::Env do
 
 
     [['env', 'set', 'TEST_ENV_VAR1=1', 'TEST_ENV_VAR2=2', 'TEST_ENV_VAR3=3', '--app', 'mock_app_0', '--noprompt', '--confirm' ],
-     ['set-env', 'TEST_ENV_VAR1=1', 'TEST_ENV_VAR2=2', 'TEST_ENV_VAR3=3', '--app', 'mock_app_0', '--noprompt', '--confirm' ]
-     #['set-env', '-e', 'TEST_ENV_VAR1=1', '-e', 'TEST_ENV_VAR2=2', '-e', 'TEST_ENV_VAR3=3', '--app', 'mock_app_0', '--noprompt', '--confirm' ]
-     #['set-env', '--env', 'TEST_ENV_VAR1=1', '--env', 'TEST_ENV_VAR2=2', '--env', 'TEST_ENV_VAR3=3', '--app', 'mock_app_0', '--noprompt', '--confirm' ]
+     ['set-env', 'TEST_ENV_VAR1=1', 'TEST_ENV_VAR2=2', 'TEST_ENV_VAR3=3', '--app', 'mock_app_0', '--noprompt', '--confirm' ],
+     ['set-env', '-e', 'TEST_ENV_VAR1=1', '-e', 'TEST_ENV_VAR2=2', '-e', 'TEST_ENV_VAR3=3', '--app', 'mock_app_0', '--noprompt', '--confirm' ],
+     ['set-env', '--env', 'TEST_ENV_VAR1=1', '--env', 'TEST_ENV_VAR2=2', '--env', 'TEST_ENV_VAR3=3', '--app', 'mock_app_0', '--noprompt', '--confirm' ]
     ].each_with_index do |args, i|
       context "when run with multiple env vars #{i}" do
         let(:arguments) { args }
@@ -147,8 +145,6 @@ describe RHC::Commands::Env do
      ['set-env', 'TEST_ENV_VAR', '--app', 'mock_app_0', '--noprompt', '--confirm'],
      ['env', 'set', '-e', 'TEST_ENV_VAR', '--app', 'mock_app_0', '--noprompt', '--confirm' ],
      ['env', 'set', '--env', 'TEST_ENV_VAR', '--app', 'mock_app_0', '--noprompt', '--confirm' ],
-     #['env', 'set', '--env', 'TEST_ENV_VAR', '--app', 'mock_app_0', '--noprompt', '--confirm' ],
-     #['env', 'set', '--env', "TEST_ENV_VAR", '--app', 'mock_app_0', '--noprompt', '--confirm' ]
     ].each_with_index do |args, i|
       context "when run with no env var provided #{i}" do
         let(:arguments) { args }
@@ -166,6 +162,18 @@ describe RHC::Commands::Env do
         it { succeed_with_message /BAR=456/ }
         it { succeed_with_message /MY_OPENSHIFT_ENV_VAR/ }
         it { succeed_with_message /MY_EMPTY_ENV_VAR/ }
+        it { succeed_without_message /ZEE/ }
+        it { succeed_without_message /LOL/ }
+        it { succeed_without_message /MUST NOT BE INCLUDED/ }
+    end
+
+    context 'when run with multiple env vars from multiple files' do
+      let(:arguments) {['env', 'set', '-e', File.expand_path('../../assets/env_vars.txt', __FILE__), '-e', File.expand_path('../../assets/env_vars_2.txt', __FILE__), '--app', 'mock_app_0', '--noprompt', '--confirm' ]}
+        it { succeed_with_message /FOO=123/ }
+        it { succeed_with_message /BAR=456/ }
+        it { succeed_with_message /MY_OPENSHIFT_ENV_VAR/ }
+        it { succeed_with_message /MY_EMPTY_ENV_VAR/ }
+        it { succeed_with_message /AND=123/ }
         it { succeed_without_message /ZEE/ }
         it { succeed_without_message /LOL/ }
         it { succeed_without_message /MUST NOT BE INCLUDED/ }

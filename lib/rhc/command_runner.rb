@@ -149,7 +149,7 @@ module RHC
 
           unless matches
             RHC::Helpers.error "The command '#{program :name} #{provided_arguments.join(' ')}' is not recognized.\n"
-            say "See '#{program :name} help' for a list of valid commands." 
+            say "See '#{program :name} help' for a list of valid commands."
             return 1
           end
 
