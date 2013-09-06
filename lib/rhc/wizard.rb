@@ -273,7 +273,7 @@ module RHC
           key_fingerprint = fingerprint_for_default_key
           unless key_fingerprint
             paragraph do
-              warn "Your ssh public key at #{system_path(RHC::Config.ssh_pub_key_file_path)} is invalid or unreadable. "\
+              warn "Your public SSH key at #{system_path(RHC::Config.ssh_pub_key_file_path)} is invalid or unreadable. "\
                   "Setup can not continue until you manually remove or fix your "\
                   "public and private keys id_rsa keys."
             end
@@ -288,7 +288,7 @@ module RHC
         end
       else
         paragraph do
-          info "You can upload your SSH key at a later time using the 'rhc sshkey' command"
+          info "You can upload your public SSH key at a later time using the 'rhc sshkey' command"
         end
       end
 
@@ -376,16 +376,16 @@ module RHC
 
     def config_namespace_stage
       paragraph do
-        say "Checking your namespace ... "
+        say "Checking for a domain ... "
         domains = rest_client.domains
         if domains.length == 0
           warn "none"
 
           paragraph do
             say [
-              "Your namespace is unique to your account and is the suffix of the public URLs we assign to your applications.",
-              ("You may configure your namespace here or leave it blank and use 'rhc create-domain' to create a namespace later." if namespace_optional?),
-              "You will not be able to create applications without first creating a namespace.",
+              "Applications are grouped into domains - each domain has a unique name (called a namespace) that becomes part of your public application URL.",
+              ("You may create your first domain here or leave it blank and use 'rhc create-domain' later." if namespace_optional?),
+              "You will not be able to create an application without completing this step.",
             ].compact.join(' ')
           end
 
@@ -513,7 +513,7 @@ module RHC
     def config_namespace(namespace)
       # skip if string is empty
       if namespace_optional? and (namespace.nil? or namespace.chomp.blank?)
-        paragraph{ info "You may create a namespace later through 'rhc create-domain'" }
+        paragraph{ info "You may create a domain later through 'rhc create-domain'" }
         return true
       end
 
@@ -521,9 +521,9 @@ module RHC
         domain = rest_client.add_domain(namespace)
         options.namespace = namespace
 
-        success "Your domain name '#{domain.id}' has been successfully created"
+        success "Your domain '#{domain.id}' has been successfully created"
       rescue RHC::Rest::ValidationException => e
-        error e.message || "Unknown error during namespace creation."
+        error e.message || "Unknown error during domain creation."
         return false
       end
       true
@@ -535,7 +535,7 @@ module RHC
       namespace = nil
       paragraph do
         begin
-          namespace = ask "Please enter a namespace (letters and numbers only)#{namespace_optional? ? " |<none>|" : ""}: " do |q|
+          namespace = ask "Please enter a domain name (letters and numbers only)#{namespace_optional? ? " |<none>|" : ""}: " do |q|
             q.responses[:ask_on_error] = ''
           end
         end while !config_namespace(namespace)

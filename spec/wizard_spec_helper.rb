@@ -74,7 +74,7 @@ module WizardStepsHelper
 
     next_stage.should_not be_nil
 
-    last_output.should match('You can upload your SSH key at a later time using ')
+    last_output.should match('You can upload your public SSH key at a later time using ')
   end
 
   def should_find_matching_server_key
@@ -158,7 +158,7 @@ module WizardStepsHelper
     next_stage.should_not be_nil
 
     last_output do |s|
-      s.should match(/Checking your namespace .*none/)
+      s.should match(/Checking for a domain .*none/)
       s.should match(/(?:Too long.*?){2}/m)
     end
     subject.send(:options).__hash__[:namespace].should == 'testnamespace'
@@ -170,9 +170,9 @@ module WizardStepsHelper
     next_stage.should_not be_nil
 
     last_output do |s|
-      s.should match(/Checking your namespace .*none/)
-      s.should match("You will not be able to create applications without first creating a namespace")
-      s.should match("You may create a namespace later through 'rhc create-domain'")
+      s.should match(/Checking for a domain .*none/)
+      s.should match("You will not be able to create an application without completing this step.")
+      s.should match("You may create a domain later through 'rhc create-domain'")
     end
     subject.send(:options).__hash__[:namespace].should be_nil
   end
@@ -180,7 +180,7 @@ module WizardStepsHelper
   def should_find_a_namespace(namespace)
     next_stage.should_not be_nil
 
-    last_output.should match(/Checking your namespace .*#{namespace}/)
+    last_output.should match(/Checking for a domain .*#{namespace}/)
     subject.send(:options).__hash__[:namespace].should be_nil
   end
 

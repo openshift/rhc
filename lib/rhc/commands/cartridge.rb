@@ -69,7 +69,7 @@ module RHC::Commands
 
     summary "Add a cartridge to your application"
     syntax "<cartridge_type> [--namespace NAME] [--app NAME]"
-    option ["-n", "--namespace NAME"], "Namespace of the application you are adding the cartridge to", :context => :namespace_context, :required => true
+    option ["-n", "--namespace NAME"], "Application's domain name", :context => :namespace_context, :required => true
     option ["-a", "--app NAME"], "Application you are adding the cartridge to", :context => :app_context, :required => true
     option ["-e", "--env VARIABLE=VALUE"], "Environment variable(s) to be set on this cartridge, or path to a file containing environment variables"
     argument :cart_type, "The type of the cartridge you are adding (run 'rhc cartridge list' to obtain a list of available cartridges)", ["-c", "--cartridge cart_type"]
@@ -92,7 +92,7 @@ module RHC::Commands
       rest_cartridge.environment_variables = cart.environment_variables if cart.environment_variables.present?
 
       paragraph{ display_cart(rest_cartridge) }
-      paragraph{ say "Use 'rhc env --help' to manage environment variable(s) on this cartridge and application." }
+      paragraph{ say "Use 'rhc env --help' to manage environment variable(s) on this cartridge and application." } if cart.environment_variables.present?
       paragraph{ rest_cartridge.messages.each { |msg| success msg } }
 
       0
@@ -100,8 +100,8 @@ module RHC::Commands
 
     summary "Show useful information about a cartridge"
     syntax "<cartridge> [--namespace NAME] [--app NAME]"
-    option ["-n", "--namespace NAME"], "Namespace of the application you are adding the cartridge to", :context => :namespace_context, :required => true
-    option ["-a", "--app NAME"], "Application you are adding the cartridge to", :context => :app_context, :required => true
+    option ["-n", "--namespace NAME"], "Application's domain name", :context => :namespace_context, :required => true
+    option ["-a", "--app NAME"], "Application name", :context => :app_context, :required => true
     argument :cartridge, "The name of the cartridge", ["-c", "--cartridge cart_type"]
     def show(cartridge)
       rest_app = rest_client.find_application(options.namespace, options.app, :include => :cartridges)
@@ -115,8 +115,8 @@ module RHC::Commands
     summary "Remove a cartridge from your application"
     syntax "<cartridge> [--namespace NAME] [--app NAME]"
     argument :cartridge, "The name of the cartridge you are removing", ["-c", "--cartridge cartridge"]
-    option ["-n", "--namespace NAME"], "Namespace of the application you are removing the cartridge from", :context => :namespace_context, :required => true
-    option ["-a", "--app NAME"], "Application you are removing the cartridge from", :context => :app_context, :required => true
+    option ["-n", "--namespace NAME"], "Application's domain name", :context => :namespace_context, :required => true
+    option ["-a", "--app NAME"], "Application name", :context => :app_context, :required => true
     option ["--confirm"], "Pass to confirm removing the cartridge"
     alias_action :"app cartridge remove", :root_command => true, :deprecated => true
     def remove(cartridge)
@@ -137,8 +137,8 @@ module RHC::Commands
     summary "Start a cartridge"
     syntax "<cartridge> [--namespace NAME] [--app NAME]"
     argument :cart_type, "The name of the cartridge you are stopping", ["-c", "--cartridge cartridge"]
-    option ["-n", "--namespace NAME"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
-    option ["-a", "--app NAME"], "Application the cartridge", :context => :app_context, :required => true
+    option ["-n", "--namespace NAME"], "Application's domain name", :context => :namespace_context, :required => true
+    option ["-a", "--app NAME"], "Application name", :context => :app_context, :required => true
     alias_action :"app cartridge start", :root_command => true, :deprecated => true
     def start(cartridge)
       cartridge_action(cartridge, :start, 'Starting %s ... ')
@@ -148,8 +148,8 @@ module RHC::Commands
     summary "Stop a cartridge"
     syntax "<cartridge> [--namespace NAME] [--app NAME]"
     argument :cart_type, "The name of the cartridge you are stopping", ["-c", "--cartridge cartridge"]
-    option ["-n", "--namespace NAME"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
-    option ["-a", "--app NAME"], "Application the cartridge belongs to", :context => :app_context, :required => true
+    option ["-n", "--namespace NAME"], "Application's domain name", :context => :namespace_context, :required => true
+    option ["-a", "--app NAME"], "Application name", :context => :app_context, :required => true
     alias_action :"app cartridge stop", :root_command => true, :deprecated => true
     def stop(cartridge)
       cartridge_action(cartridge, :stop, 'Stopping %s ... ')
@@ -159,8 +159,8 @@ module RHC::Commands
     summary "Restart a cartridge"
     syntax "<cartridge_type> [--namespace NAME] [--app NAME]"
     argument :cart_type, "The name of the cartridge you are restarting", ["-c", "--cartridge cartridge"]
-    option ["-n", "--namespace NAME"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
-    option ["-a", "--app NAME"], "Application the cartridge belongs to", :context => :app_context, :required => true
+    option ["-n", "--namespace NAME"], "Application's domain name", :context => :namespace_context, :required => true
+    option ["-a", "--app NAME"], "Application name", :context => :app_context, :required => true
     alias_action :"app cartridge restart", :root_command => true, :deprecated => true
     def restart(cartridge)
       cartridge_action(cartridge, :restart, 'Restarting %s ... ')
@@ -170,8 +170,8 @@ module RHC::Commands
     summary "Get current the status of a cartridge"
     syntax "<cartridge> [--namespace NAME] [--app NAME]"
     argument :cart_type, "The name of the cartridge you are getting the status of", ["-c", "--cartridge cartridge"]
-    option ["-n", "--namespace NAME"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
-    option ["-a", "--app NAME"], "Application the cartridge belongs to", :context => :app_context, :required => true
+    option ["-n", "--namespace NAME"], "Application's domain name", :context => :namespace_context, :required => true
+    option ["-a", "--app NAME"], "Application name", :context => :app_context, :required => true
     alias_action :"app cartridge status", :root_command => true, :deprecated => true
     def status(cartridge)
       rest_app = rest_client.find_application(options.namespace, options.app, :include => :cartridges)
@@ -183,8 +183,8 @@ module RHC::Commands
     summary "Reload the cartridge's configuration"
     syntax "<cartridge> [--namespace NAME] [--app NAME]"
     argument :cart_type, "The name of the cartridge you are reloading", ["-c", "--cartridge cartridge"]
-    option ["-n", "--namespace NAME"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
-    option ["-a", "--app NAME"], "Application the cartridge belongs to", :context => :app_context, :required => true
+    option ["-n", "--namespace NAME"], "Application's domain name", :context => :namespace_context, :required => true
+    option ["-a", "--app NAME"], "Application name", :context => :app_context, :required => true
     alias_action :"app cartridge reload", :root_command => true, :deprecated => true
     def reload(cartridge)
       cartridge_action(cartridge, :reload, 'Reloading %s ... ')
@@ -208,8 +208,8 @@ module RHC::Commands
     syntax "<cartridge> [multiplier] [--namespace NAME] [--app NAME] [--min min] [--max max]"
     argument :cartridge, "The name of the cartridge you are scaling", ["-c", "--cartridge cartridge"]
     argument :multiplier, "The number of instances of this cartridge you need", [], :optional => true, :hide => true
-    option ["-n", "--namespace NAME"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
-    option ["-a", "--app NAME"], "Application the cartridge belongs to", :context => :app_context, :required => true
+    option ["-n", "--namespace NAME"], "Application's domain name", :context => :namespace_context, :required => true
+    option ["-a", "--app NAME"], "Application name", :context => :app_context, :required => true
     option ["--min min", Integer], "Minimum scaling value"
     option ["--max max", Integer], "Maximum scaling value"
     def scale(cartridge, multiplier)
@@ -243,8 +243,8 @@ module RHC::Commands
     summary 'View/manipulate storage on a cartridge'
     syntax '<cartridge> -a app [--show] [--add|--remove|--set amount] [--namespace NAME]'
     argument :cart_type, "The name of the cartridge", ["-c", "--cartridge cart_type"], :arg_type => :list
-    option ["-n", "--namespace NAME"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
-    option ["-a", "--app NAME"], "Application the cartridge belongs to", :context => :app_context, :required => true
+    option ["-n", "--namespace NAME"], "Application's domain name", :context => :namespace_context, :required => true
+    option ["-a", "--app NAME"], "Application name", :context => :app_context, :required => true
     option ["--show"], "Show the current base and additional storage capacity"
     option ["--add amount"], "Add the indicated amount to the additional storage capacity"
     option ["--remove amount"], "Remove the indicated amount from the additional storage capacity"
