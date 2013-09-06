@@ -202,7 +202,7 @@ module RHC
         end
 
         context "#find_domain" do
-          context "when server does not support SHOW_DOMAIN" do 
+          context "when server does not support SHOW_DOMAIN" do
             before do
               stub_api_request(:any, api_links['LIST_DOMAINS']['relative']).
                 to_return({ :body   => {
@@ -237,7 +237,7 @@ module RHC
 
           context "when server supports SHOW_DOMAIN" do
             let(:api_links){ client_links.merge!(mock_response_links([['SHOW_DOMAIN', 'domains/:name', 'get']])) }
-            before do 
+            before do
               stub_api_request(:any, api_links['SHOW_DOMAIN']['relative'].gsub(/:name/, 'mock_domain_0')).
                 to_return({ :body   => {
                               :type => 'domain',
@@ -257,11 +257,11 @@ module RHC
                                }
                             }.to_json,
                             :status => 200
-                          })                
+                          })
               stub_api_request(:any, api_links['SHOW_DOMAIN']['relative'].gsub(/:name/, 'mock_domain_2')).
                 to_return({ :body => {:messages => [{:exit_code => 127}]}.to_json,
                             :status => 404
-                          })                
+                          })
             end
             it "returns a domain object for matching domain IDs" do
               match = nil
@@ -274,7 +274,7 @@ module RHC
               expect { match = client.find_domain('mock_domain_%^&') }.to_not raise_error
               match.id.should == 'mock_domain_%^&'
               match.class.should == RHC::Rest::Domain
-            end            
+            end
             it "raise an error when no matching domain IDs can be found" do
               expect { client.find_domain('mock_domain_2') }.to raise_error(RHC::Rest::DomainNotFoundException)
             end
@@ -283,11 +283,11 @@ module RHC
 
         context "when server supports LIST_DOMAINS_BY_OWNER" do
           let(:api_links){ client_links.merge!(mock_response_links([['LIST_DOMAINS_BY_OWNER', 'domains', 'get']])) }
-          before do 
+          before do
             stub_api_request(:any, "#{api_links['LIST_DOMAINS_BY_OWNER']['relative']}?owner=@self").
               to_return({ :body   => {
                             :type => 'domains',
-                            :data => [{ 
+                            :data => [{
                               :id    => 'mock_domain_0',
                               :links => mock_response_links(mock_domain_links('mock_domain_0')),
                             }]
@@ -674,7 +674,7 @@ module RHC
         its(:user){ should == username.call }
         its(:passwd){ should == password.call }
         its(:to_str){ should == ["#{username.call}:#{password.call}"].pack('m').tr("\n", '') }
-      end      
+      end
     end
   end
 end

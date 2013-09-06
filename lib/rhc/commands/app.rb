@@ -369,6 +369,9 @@ module RHC::Commands
       include RHC::CartridgeHelpers
       include RHC::SSHHelpers
 
+      MAX_RETRIES = 7
+      DEFAULT_DELAY_THROTTLE = 2.0
+
       def require_one_web_cart
         lambda{ |carts|
           match, ambiguous = carts.partition{ |c| not c.is_a?(Array) }

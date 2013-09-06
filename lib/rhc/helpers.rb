@@ -26,9 +26,6 @@ module RHC
 
     extend self
 
-    MAX_RETRIES = 7
-    DEFAULT_DELAY_THROTTLE = 2.0
-
     def decode_json(s)
       RHC::Vendor::OkJson.decode(s)
     end
