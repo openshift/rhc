@@ -9,8 +9,6 @@ require 'set'
 module RHC
   module Rest
 
-    MAX_RETRIES = 5
-
     #
     # These are methods that belong to the API object but are
     # callable from the client for convenience.
@@ -203,6 +201,7 @@ module RHC
       # matching one supported by the server.
       # See #api_version_negotiated
       CLIENT_API_VERSIONS = [1.1, 1.2, 1.3, 1.4, 1.5]
+      MAX_RETRIES = 5
 
       def initialize(*args)
         options = args[0].is_a?(Hash) && args[0] || {}
@@ -246,8 +245,15 @@ module RHC
         current_api_version
       end
 
+      def attempt(retries, &block)
+        (0..retries).each do |i|
+          yield i < (retries-1), i
+        end
+        raise "Too many retries, giving up."
+      end
+
       def request(options, &block)
-        (0..MAX_RETRIES).each do |i|
+        attempt(MAX_RETRIES) do |more, i|
           begin
             client, args = new_request(options.dup)
             auth = options[:auth] || self.auth
@@ -257,11 +263,11 @@ module RHC
             time = Benchmark.realtime{ response = client.request(*(args << true)) }
             debug "   code %s %4i ms" % [response.status, (time*1000).to_i] if response
 
-            next if retry_proxy(response, i, args, client)
-            auth.retry_auth?(response, self) and next if auth
+            next if more && retry_proxy(response, i, args, client)
+            auth.retry_auth?(response, self) and next if more && auth
             handle_error!(response, args[1], client) unless response.ok?
 
-            break (if block_given?
+            return (if block_given?
                 yield response
               else
                 parse_response(response.content) unless response.nil? or response.code == 204
@@ -270,8 +276,8 @@ module RHC
             if e.res
               debug "Response: #{e.res.status} #{e.res.headers.inspect}\n#{e.res.content}\n-------------" if debug?
 
-              next if retry_proxy(e.res, i, args, client)
-              auth.retry_auth?(e.res, self) and next if auth
+              next if more && retry_proxy(e.res, i, args, client)
+              auth.retry_auth?(e.res, self) and next if more && auth
               handle_error!(e.res, args[1], client)
             end
             raise ConnectionException.new(

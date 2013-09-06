@@ -499,7 +499,7 @@ module RHC
         it{ response.should raise_error(RHC::Rest::ConnectionException, "An unexpected error occured: Generic Error") }
       end
 
-      context "with a an unauthorized request" do
+      context "with an unauthorized request" do
         before do
           return_data = {
             :body    => nil,
@@ -509,6 +509,13 @@ module RHC
           stub_request(:get, mock_href).to_return(return_data)
         end
         it("raises not authenticated"){ response.should raise_error(RHC::Rest::UnAuthorizedException, 'Not authenticated') }
+
+        context "when auth will retry forever" do
+          let(:auth){ stub('auth', :to_request => nil) }
+          before{ subject.stub(:auth).and_return(auth); auth.should_receive(:retry_auth?).exactly(4).times.and_return(true) }
+          it("raises not authenticated"){ response.should raise_error(RHC::Rest::UnAuthorizedException, 'Not authenticated') }
+          after{ WebMock.should have_requested(:get, mock_href).times(RHC::Rest::Client::MAX_RETRIES) }
+        end
       end
     end
 
