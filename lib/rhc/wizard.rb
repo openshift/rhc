@@ -535,7 +535,7 @@ module RHC
       namespace = nil
       paragraph do
         begin
-          namespace = ask "Please enter a domain name (letters and numbers only)#{namespace_optional? ? " |<none>|" : ""}: " do |q|
+          namespace = ask "Please enter a namespace (letters and numbers only)#{namespace_optional? ? " |<none>|" : ""}: " do |q|
             q.responses[:ask_on_error] = ''
           end
         end while !config_namespace(namespace)
