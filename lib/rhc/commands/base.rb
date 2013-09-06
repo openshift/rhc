@@ -30,8 +30,7 @@ class RHC::Commands::Base
     # should be through this call pattern.
     def rest_client(opts={})
       @rest_client ||= begin
-          auth = RHC::Auth::Basic.new(options)
-          auth = RHC::Auth::Token.new(options, auth, token_store) if (options.use_authorization_tokens || options.token) && !(options.rhlogin && options.password)
+          auth = auth_config
           debug "Authenticating with #{auth.class}"
           client_from_options(:auth => auth)
         end
@@ -41,6 +40,21 @@ class RHC::Commands::Base
         end
 
       @rest_client
+    end
+
+    def auth_config
+      @auth ||= begin
+          if (options.use_authorization_tokens || options.token) && !((options.rhlogin && options.password) || options.gssapi)
+            base_auth = RHC::Auth::Basic.new(options)
+            base_auth = RHC::Auth::Negotiate.new(options) if options.use_gssapi
+            RHC::Auth::Token.new(options, base_auth, token_store)
+          elsif options.use_gssapi || options.gssapi
+            RHC::Auth::Negotiate.new(options)
+          else
+            RHC::Auth::Basic.new(options) 
+          end
+      end
+      @auth
     end
 
     def token_store

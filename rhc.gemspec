@@ -35,6 +35,8 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency      'commander',    '>= 4.0'
   s.add_runtime_dependency      'highline',     '~> 1.6.11'
   s.add_runtime_dependency      'httpclient',   '>= 2.2'
+  s.add_runtime_dependency      'gssapi',       '>= 1.1.2'
+  s.add_runtime_dependency      'ffi',          '>= 1.0.1'
   s.add_runtime_dependency      'open4'
   s.add_development_dependency  'rake',         '>= 0.8.7'
   s.add_development_dependency  'webmock',      '< 1.12'

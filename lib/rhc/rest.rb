@@ -117,6 +117,13 @@ module RHC
       end
     end
 
+    class KerberosTicketExpiredOrInvalid < ConnectionException
+      attr_reader :reason
+      def initialize(reason, message)
+        super message
+        @reason = reason
+      end
+    end
     class SSLConnectionFailed < ConnectionException
       attr_reader :reason
       def initialize(reason, message)
