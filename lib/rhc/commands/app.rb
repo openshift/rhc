@@ -30,13 +30,13 @@ module RHC::Commands
       these cartridges receive no security updates.  Note that not
       all OpenShift servers allow downloaded cartridges.
 
-      When your application is created, a domain name that is a combination
-      of the name of your app and the namespace of your domain will be
-      registered in DNS.  A copy of the code for your application
-      will be checked out locally into a folder with the same name as
-      your application.  Note that different types of applications may
-      require different structures - check the README provided with the
-      cartridge if you have questions.
+      When your application is created, a URL combining the name of 
+      your app and the name of your domain will be registered in DNS.  
+      A copy of the code for your application will be checked out locally 
+      into a folder with the same name as your application.  Note that 
+      different types of applications may require different folder 
+      structures - check the README provided with the cartridge if 
+      you have questions.
 
       OpenShift runs the components of your application on small virtual
       servers called "gears".  Each account or plan is limited to a number
@@ -221,7 +221,7 @@ module RHC::Commands
     summary "Start the application"
     syntax "<app> [--namespace NAME] [--app NAME]"
     argument :app, "The name of the application you are starting", ["-a", "--app NAME"], :context => :app_context
-    option ["-n", "--namespace NAME"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
+    option ["-n", "--namespace NAME"], "Application's domain name", :context => :namespace_context, :required => true
     def start(app)
       app_action app, :start
 
@@ -232,7 +232,7 @@ module RHC::Commands
     summary "Stop the application"
     syntax "<app> [--namespace NAME] [--app NAME]"
     argument :app, "The name of the application you are stopping", ["-a", "--app NAME"], :context => :app_context
-    option ["-n", "--namespace NAME"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
+    option ["-n", "--namespace NAME"], "Application's domain name", :context => :namespace_context, :required => true
     def stop(app)
       app_action app, :stop
 
@@ -243,7 +243,7 @@ module RHC::Commands
     summary "Stops all application processes"
     syntax "<app> [--namespace NAME] [--app NAME]"
     argument :app, "The name of the application you are stopping", ["-a", "--app NAME"], :context => :app_context
-    option ["-n", "--namespace NAME"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
+    option ["-n", "--namespace NAME"], "Application's domain name", :context => :namespace_context, :required => true
     def force_stop(app)
       app_action app, :stop, true
 
@@ -254,7 +254,7 @@ module RHC::Commands
     summary "Restart the application"
     syntax "<app> [--namespace NAME] [--app NAME]"
     argument :app, "The name of the application you are restarting", ["-a", "--app NAME"], :context => :app_context
-    option ["-n", "--namespace NAME"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
+    option ["-n", "--namespace NAME"], "Application's domain name", :context => :namespace_context, :required => true
     def restart(app)
       app_action app, :restart
 
@@ -265,7 +265,7 @@ module RHC::Commands
     summary "Reload the application's configuration"
     syntax "<app> [--namespace NAME] [--app NAME]"
     argument :app, "The name of the application you are reloading", ["-a", "--app NAME"], :context => :app_context
-    option ["-n", "--namespace NAME"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
+    option ["-n", "--namespace NAME"], "Application's domain name", :context => :namespace_context, :required => true
     def reload(app)
       app_action app, :reload
 
@@ -306,7 +306,7 @@ module RHC::Commands
       DESC
     syntax "<app> [--namespace NAME]"
     argument :app, "The name of the application you are getting information on", ["-a", "--app NAME"], :context => :app_context
-    option ["-n", "--namespace NAME"], "Namespace of the application the cartridge belongs to", :context => :namespace_context, :required => true
+    option ["-n", "--namespace NAME"], "Application's domain name", :context => :namespace_context, :required => true
     option ["--state"], "Get the current state of the cartridges in this application"
     option ["--gears [quota|ssh]"], "Show information about the cartridges on each gear in this application. Pass 'quota' to see per gear disk usage and limits. Pass 'ssh' to print only the SSH connection strings of each gear."
     def show(app_name)
