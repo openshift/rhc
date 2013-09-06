@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.14.2
+Version: 1.14.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -102,6 +102,21 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Sep 06 2013 Adam Miller <admiller@redhat.com> 1.14.3-1
+- Merge pull request #446 from fabianofranz/master
+  (dmcphers+openshiftbot@redhat.com)
+- Fixing RHC tests for Origin (kraman@gmail.com)
+- Added cucumber tests for rhc env (contact@fabianofranz.com)
+- Added cucumber tests for rhc env (contact@fabianofranz.com)
+- Create app with env vars as arguments (contact@fabianofranz.com)
+- Will not display env vars info on the end of create-app process
+  (contact@fabianofranz.com)
+- Added spec test for option being provided twice, other minor stuff
+  (contact@fabianofranz.com)
+- Introduces :option_type => :list (contact@fabianofranz.com)
+- Readded support to option as array on commander, rhc env spec tests for
+  multiple -e|--env items (contact@fabianofranz.com)
+
 * Thu Sep 05 2013 Adam Miller <admiller@redhat.com> 1.14.2-1
 - Bug 1002269 - trim leading newlines and trailing whitespace in client
   messages (jforrest@redhat.com)
