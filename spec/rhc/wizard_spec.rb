@@ -523,7 +523,7 @@ describe RHC::Wizard do
 
         wizard.send(:upload_ssh_key_stage).should be_false
 
-        last_output.should match("Your ssh public key at .* is invalid or unreadable\.")
+        last_output.should match("Your public SSH key at .* is invalid or unreadable\.")
       end
 
       it "should cause upload_ssh_key to catch NotImplementedError and return false" do
@@ -535,7 +535,7 @@ describe RHC::Wizard do
         wizard.send(:upload_ssh_key_stage).should be_false
 
         output = last_output
-        output.should match("Your ssh public key at .* is invalid or unreadable\.")
+        output.should match("Your public SSH key at .* is invalid or unreadable\.")
       end
 
       it "should find a unique name" do

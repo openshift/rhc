@@ -5,10 +5,10 @@ module RHC::Commands
     summary "Add or rename the container for your apps"
     syntax "<action>"
     description <<-DESC
-      OpenShift groups applications within a domain.  Each domain has a namespace value
-      that will be used as part of the public URL for an application.
+      OpenShift groups applications within a domain.  The name of the domain
+      will be used as part of the public URL for an application. 
 
-      For example, when creating a domain with the namespace "test", any applications 
+      For example, when creating a domain with the name "test", any applications 
       created in that domain will have the public URL:
 
         http://<appname>-test.rhcloud.com
@@ -17,11 +17,11 @@ module RHC::Commands
       DESC
     default_action :list
 
-    summary "Define a namespace for your applications to share."
+    summary "Create a new application grouping."
     syntax "<namespace>"
-    argument :namespace, "Namespace for your application(s) (alphanumeric)", ["-n", "--namespace NAME"]
+    argument :namespace, "Name for your application(s) (alphanumeric)", ["-n", "--namespace NAME"]
     def create(namespace)
-      paragraph { say "Creating domain with namespace '#{namespace}'" }
+      paragraph { say "Creating domain '#{namespace}'" }
       rest_client.add_domain(namespace)
 
       results do
@@ -32,26 +32,26 @@ module RHC::Commands
       0
     end
 
-    summary "Change current namespace (will change application urls)"
-    syntax "<old namespace> <new namespace>"
-    argument :old_namespace, "Old namespace to change", []
-    argument :new_namespace, "New namespace to change", ["-n", "--namespace NAME"]
+    summary "Rename a domain (will change application urls)"
+    syntax "<old name> <new name>"
+    argument :old_namespace, "Existing domain name", []
+    argument :new_namespace, "New domain name", ["-n", "--namespace NAME"]
     alias_action :alter, :deprecated => true
     def update(old_namespace, new_namespace)
       domain = rest_client.find_domain(old_namespace)
 
-      say "Changing namespace '#{domain.id}' to '#{new_namespace}' ... "
+      say "Renaming domain '#{domain.id}' to '#{new_namespace}' ... "
 
       domain.update(new_namespace)
 
-      success "success"
-      info "Applications in this domain will use the new namespace in their URL."
+      success "done"
+      info "Applications in this domain will use the new name in their URL."
 
       0
     end
 
     summary "Display a domain and its applications"
-    argument :namespace, "Namespace of the domain", ["-n", "--namespace NAME"], :optional => true
+    argument :namespace, "Name of the domain", ["-n", "--namespace NAME"], :optional => true
     def show(namespace)
       domain = (rest_client.find_domain(namespace) if namespace) || rest_client.domains.first
 
