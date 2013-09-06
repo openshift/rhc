@@ -93,6 +93,8 @@ module RHCHelper
           # in RHCHelper::Sshkey, we pass *args to method_missing here, so that
           # we _know_ that arg0 is an Array.
           args << arg0.first if arg0.first
+        when /env/
+          args << arg0.first if arg0.first
       end
 
       args.rstrip.gsub(/([\\\$])/, "\\\\\\1")
@@ -187,7 +189,7 @@ module RHCHelper
   def domain_create_callback(exitcode, stdout, stderr, arg)
     @exitcode = exitcode
   end
-  
+
   def domain_update_callback(exitcode, stdout, stderr, arg)
     @exitcode = exitcode
   end
@@ -200,7 +202,7 @@ module RHCHelper
     @sshkey_output = stdout
     @exitcode = exitcode
   end
-  
+
   def sshkey_add_callback(exitcode, stdout, stderr, arg)
     @sshkey_output = stdout
     @exitcode = exitcode
@@ -215,7 +217,7 @@ module RHCHelper
     @sshkey_output = stdout
     @exitcode = exitcode
   end
-  
+
   def sshkey_update_callback(exitcode, stdout, stderr, arg)
     @sshkey_output = stdout
     @exitcode = exitcode
@@ -223,6 +225,26 @@ module RHCHelper
 
   def sshkey_delete_callback(exitcode, stdout, stderr, arg)
     @sshkey_output = stdout
+    @exitcode = exitcode
+  end
+
+  def env_list_callback(exitcode, stdout, stderr, arg)
+    @env_output = stdout
+    @exitcode = exitcode
+  end
+
+  def env_show_callback(exitcode, stdout, stderr, arg)
+    @env_output = stdout
+    @exitcode = exitcode
+  end
+
+  def env_set_callback(exitcode, stdout, stderr, arg)
+    @env_output = stdout
+    @exitcode = exitcode
+  end
+
+  def env_unset_callback(exitcode, stdout, stderr, arg)
+    @env_output = stdout
     @exitcode = exitcode
   end
 
