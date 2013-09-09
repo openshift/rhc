@@ -1,17 +1,21 @@
 @env_var @domain_required
 Feature: Environment Variables Operations
 
-  @init
-  Scenario: Application Creation
-    When a php application is created
-    Then the application should be accessible
+#  @init
+#  Scenario: Application Creation
+#    When a php application is created
+#    Then the application should be accessible
 
   Scenario: Environment variable is set
+    Given a php application is created
+    And the application should be accessible
     When a new environment variable "FOO" is set as "BAR"
     And the existing environment variables are listed
     Then the output environment variables include "FOO=BAR"
 
   Scenario: Environment variables are set
+    Given a php application is created
+    And the application should be accessible
     When a new environment variable "FOO" is set as "BAR"
     And a new environment variable "FOO2" is set as "BAR2"
     And the existing environment variables are listed
@@ -19,6 +23,8 @@ Feature: Environment Variables Operations
     And the output environment variables include "FOO2=BAR2"
 
   Scenario: Environment variable is unset
+    Given a php application is created
+    And the application should be accessible
     When a new environment variable "FOO" is set as "BAR"
     And the existing environment variables are listed
     Then the output environment variables include "FOO=BAR"
