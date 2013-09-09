@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.14.3
+Version: 1.14.4
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -102,6 +102,18 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Sep 09 2013 Adam Miller <admiller@redhat.com> 1.14.4-1
+- Merge pull request #454 from smarterclayton/update_domain_text
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #445 from smarterclayton/bug_990484_too_many_attempts_fail
+  (dmcphers+openshiftbot@redhat.com)
+- Clarify namespace on create (ccoleman@redhat.com)
+- Update domain messages and text to be more domain centric (rather than
+  namespace) (ccoleman@redhat.com)
+- Add test case for retry to the max, also fix bad constant overrides
+  (ccoleman@redhat.com)
+- Bug 990484 - Error when hitting max retries (ccoleman@redhat.com)
+
 * Fri Sep 06 2013 Adam Miller <admiller@redhat.com> 1.14.3-1
 - Merge pull request #446 from fabianofranz/master
   (dmcphers+openshiftbot@redhat.com)
