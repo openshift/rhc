@@ -9,14 +9,17 @@ When /^'rhc env (\S+)( .*?)?'(?: command)? is run$/ do |subcommand, rest|
 end
 
 When /^a new environment variable "(.*?)" is set as "(.*)"$/ do |name, value|
+  pending "no application provided"  if @app == nil
   step "'rhc env set --env #{name}=#{value} --app #{@app.name}' is run"
 end
 
 When /^an existing environment variable with name "(.*?)" is unset$/ do |name|
+  pending "no application provided"  if @app == nil
   step "'rhc env unset --env #{name} --app #{@app.name}' is run"
 end
 
 Given "the existing environment variables are listed" do
+  pending "no application provided"  if @app == nil
   step "'rhc env list --app #{@app.name}' is run"
 end
 
