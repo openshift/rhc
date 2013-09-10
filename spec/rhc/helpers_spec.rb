@@ -434,11 +434,14 @@ describe AllRhcHelpers do
         it{ subject.send(:match_cart, cart, 'foo').should be_false }
       end
       context 'with simple strings' do
-        let(:cart){ OpenStruct.new(:name => 'FOO-more_max any', :description => 'bar', :tags => [:baz]) }
+        let(:cart){ OpenStruct.new(:name => 'FOO-more_max any', :description => 'bar word', :tags => [:baz]) }
         it{ subject.send(:match_cart, cart, 'foo').should be_true }
         it{ subject.send(:match_cart, cart, 'fo').should be_true }
         it{ subject.send(:match_cart, cart, 'oo').should be_true }
         it{ subject.send(:match_cart, cart, 'bar').should be_true }
+        it{ subject.send(:match_cart, cart, 'word').should be_true }
+        it{ subject.send(:match_cart, cart, 'bar word').should be_true }
+        it{ subject.send(:match_cart, cart, 'wor').should be_false }
         it{ subject.send(:match_cart, cart, 'baz').should be_true }
         it{ subject.send(:match_cart, cart, 'more max').should be_true }
         it{ subject.send(:match_cart, cart, 'foo more max any').should be_true }

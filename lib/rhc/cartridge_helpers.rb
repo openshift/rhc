@@ -47,9 +47,11 @@ module RHC
         search = search.to_s.downcase.gsub(/[_\-\s]/,' ')
         [
            cart.name,
-           cart.description,
           (cart.tags || []).join(' '),
-        ].compact.any?{ |s| s.present? && s.downcase.gsub(/[_\-\s]/,' ').include?(search) }
+        ].compact.any?{ |s| s.present? && s.downcase.gsub(/[_\-\s]/,' ').include?(search) } || 
+        search.length > 2 && [
+          cart.description
+        ].compact.any?{ |s| s.present? && !s.downcase.match(/\b#{search}\b/).nil? }
       end
 
       def web_carts_only
