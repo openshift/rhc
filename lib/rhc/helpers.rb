@@ -171,6 +171,11 @@ module RHC
       ssh_url
     end
 
+    def ssh_string_parts(ssh_url)
+      uri = URI.parse(ssh_url)
+      [uri.host, uri.user]
+    end
+
     def openshift_rest_endpoint
       uri = to_uri((options.server rescue nil) || ENV['LIBRA_SERVER'] || "openshift.redhat.com")
       uri.path = '/broker/rest/api' if uri.path.blank? || uri.path == '/'

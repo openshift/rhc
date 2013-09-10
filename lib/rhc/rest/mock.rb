@@ -194,6 +194,7 @@ module RHC::Rest::Mock
               :domain_id => domain_name,
               :id => 1,
               :name => name,
+              :ssh_url => "ssh://12345@#{name}-#{domain_name}.rhcloud.com",
               :app_url => "http://#{name}-#{domain_name}.rhcloud.com",
               :links => mock_response_links([
               ]),
