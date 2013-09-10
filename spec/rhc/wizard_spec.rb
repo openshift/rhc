@@ -63,8 +63,8 @@ describe RHC::Wizard do
     subject{ described_class.new(config, options) }
     let(:app) do
       app = Object.new
-      app.should_receive(:host).at_least(1).and_return('foo.com')
-      app.should_receive(:uuid).at_least(1).and_return('uuid')
+      app.should_receive(:ssh_url).at_least(1).and_return('ssh://uuid@foo.com')
+      app.stub(:host).and_return('foo.com')
       app
     end
     let(:ssh) do
@@ -82,7 +82,7 @@ describe RHC::Wizard do
     it "should attempt an SSH connection to the first app" do
       subject.should_receive(:ssh_key_uploaded?).and_return(true)
       subject.should_receive(:applications).and_return([app])
-      Net::SSH.should_receive(:start).with(app.host, app.uuid, {:timeout => 60}).and_return(ssh)
+      Net::SSH.should_receive(:start).with("foo.com", "uuid", {:timeout => 60}).and_return(ssh)
       subject.send(:test_ssh_connectivity).should be_true
     end    
     it "should handle a failed connection" do
