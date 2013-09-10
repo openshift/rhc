@@ -485,7 +485,8 @@ module RHC
 
       applications.take(1).each do |app|
         begin
-          ssh = Net::SSH.start(app.host, app.uuid, :timeout => 60)
+          host, user = RHC::Helpers.ssh_string_parts(app.ssh_url)
+          ssh = Net::SSH.start(host, user, :timeout => 60)
         rescue Interrupt => e
           debug_error(e)
           raise "Connection attempt to #{app.host} was interrupted"
