@@ -30,7 +30,7 @@ module RHC
       else
         # combining STDOUT and STDERR (i.e., 2>&1) does not suppress output
         # when the specs run via 'bundle exec rake spec'
-        system "#{TAR_BIN} --wildcards -tf #{filename} #{regex.source} 2>/dev/null >/dev/null"
+        system "#{TAR_BIN} --wildcards -tf '#{filename}' '#{regex.source}' 2>/dev/null >/dev/null"
       end
     end
 
