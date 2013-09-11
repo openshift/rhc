@@ -77,17 +77,14 @@ module RHC::Commands
     def add(cart_type)
       cart = check_cartridges(cart_type, :from => not_standalone_cartridges).first
 
-      rest_app = rest_client.find_application(options.namespace, options.app, :include => :cartridges)
-
-      if rest_app.supports_add_cartridge_with_env_vars?
-        cart.environment_variables = collect_env_vars(options.env).map { |item| item.to_hash } if options.env
-      else
-        warn "Server does not support environment variables."
-      end
-
       say "Adding #{cart.short_name} to application '#{options.app}' ... "
 
       say format_usage_message(cart) if cart.usage_rate?
+
+      rest_app = rest_client.find_application(options.namespace, options.app, :include => :cartridges)
+
+      supports_env_vars = rest_app.supports_add_cartridge_with_env_vars?
+      cart.environment_variables = collect_env_vars(options.env).map { |item| item.to_hash } if options.env && supports_env_vars
 
       rest_cartridge = rest_app.add_cartridge(cart)
 
@@ -97,6 +94,7 @@ module RHC::Commands
 
       paragraph{ display_cart(rest_cartridge) }
       paragraph{ say "Use 'rhc env --help' to manage environment variable(s) on this cartridge and application." } if cart.environment_variables.present?
+      paragraph{ warn "Server does not support environment variables." if options.env && !supports_env_vars  }
       paragraph{ rest_cartridge.messages.each { |msg| success msg } }
 
       0
