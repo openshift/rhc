@@ -1,4 +1,5 @@
 require 'rhc/commands/base'
+require 'rhc/ssh_helpers'
 
 module RHC::Commands
   class Snapshot < Base
@@ -18,17 +19,22 @@ module RHC::Commands
     default_action :help
 
     summary "Save a snapshot of your app to disk"
-    syntax "<application> [--filepath FILE]"
+    syntax "<application> [--filepath FILE] [--ssh path_to_ssh_executable]"
     option ["-n", "--namespace NAME"], "Namespace of the application you are saving a snapshot", :context => :namespace_context, :required => true
     option ["-f", "--filepath FILE"], "Local path to save tarball (default: ./$APPNAME.tar.gz)"
+    option ["--ssh PATH"], "Path to your SSH executable or additional options"
     argument :app, "Application you are saving a snapshot", ["-a", "--app NAME"]
     alias_action :"app snapshot save", :root_command => true, :deprecated => true
     def save(app)
+      raise OptionParser::InvalidOption, "No system SSH available. Please use the --ssh option to specify the path to your SSH executable, or install SSH." unless options.ssh or has_ssh?
+      raise OptionParser::InvalidOption, "SSH executable '#{options.ssh}' does not exist." if options.ssh and not File.exist?(options.ssh)
+      raise OptionParser::InvalidOption, "SSH executable '#{options.ssh}' is not executable." if options.ssh and not File.executable?(options.ssh)
       rest_app = rest_client.find_application(options.namespace, app)
       ssh_uri = URI.parse(rest_app.ssh_url)
       filename = options.filepath ? options.filepath : "#{app}.tar.gz"
 
-      ssh_cmd = "ssh #{ssh_uri.user}@#{ssh_uri.host} 'snapshot' > #{filename}"
+      ssh = options.ssh || 'ssh'
+      ssh_cmd = "#{ssh} #{ssh_uri.user}@#{ssh_uri.host} 'snapshot' > #{filename}"
       debug ssh_cmd
 
       say "Pulling down a snapshot to #{filename}..."
@@ -69,6 +75,9 @@ module RHC::Commands
     argument :app, "Application of which you are restoring a snapshot", ["-a", "--app NAME"]
     alias_action :"app snapshot restore", :root_command => true, :deprecated => true
     def restore(app)
+      raise OptionParser::InvalidOption, "No system SSH available. Please use the --ssh option to specify the path to your SSH executable, or install SSH." unless options.ssh or has_ssh?
+      raise OptionParser::InvalidOption, "SSH executable '#{options.ssh}' does not exist." if options.ssh and not File.exist?(options.ssh)
+      raise OptionParser::InvalidOption, "SSH executable '#{options.ssh}' is not executable." if options.ssh and not File.executable?(options.ssh)
 
       filename = options.filepath ? options.filepath : "#{app}.tar.gz"
 
@@ -78,7 +87,8 @@ module RHC::Commands
         rest_app = rest_client.find_application(options.namespace, app)
         ssh_uri = URI.parse(rest_app.ssh_url)
 
-        ssh_cmd = "cat #{filename} | ssh #{ssh_uri.user}@#{ssh_uri.host} 'restore#{include_git ? ' INCLUDE_GIT' : ''}'"
+        ssh = options.ssh || 'ssh'
+        ssh_cmd = "cat #{filename} | #{ssh} #{ssh_uri.user}@#{ssh_uri.host} 'restore#{include_git ? ' INCLUDE_GIT' : ''}'"
 
         say "Restoring from snapshot #{filename}..."
         debug ssh_cmd
@@ -125,5 +135,7 @@ module RHC::Commands
       0
     end
 
+    protected
+      include RHC::SSHHelpers
   end
 end
