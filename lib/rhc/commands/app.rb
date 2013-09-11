@@ -30,12 +30,12 @@ module RHC::Commands
       these cartridges receive no security updates.  Note that not
       all OpenShift servers allow downloaded cartridges.
 
-      When your application is created, a URL combining the name of 
-      your app and the name of your domain will be registered in DNS.  
-      A copy of the code for your application will be checked out locally 
-      into a folder with the same name as your application.  Note that 
-      different types of applications may require different folder 
-      structures - check the README provided with the cartridge if 
+      When your application is created, a URL combining the name of
+      your app and the name of your domain will be registered in DNS.
+      A copy of the code for your application will be checked out locally
+      into a folder with the same name as your application.  Note that
+      different types of applications may require different folder
+      structures - check the README provided with the cartridge if
       you have questions.
 
       OpenShift runs the components of your application on small virtual
@@ -84,7 +84,12 @@ module RHC::Commands
         c.usage_rate? ? "#{c.short_name} (addtl. costs may apply)" : c.short_name
       end.join(', ')
 
-      environment_variables = collect_env_vars(arg_envs.concat(Array(options.env)))
+      env_vars_supported = rest_domain.has_param?('ADD_APPLICATION', 'environment_variables')
+      if env_vars_supported
+        environment_variables = collect_env_vars(arg_envs.concat(Array(options.env)))
+      else
+        warn "Server does not support environment variables."
+      end
 
       paragraph do
         header "Application Options"
