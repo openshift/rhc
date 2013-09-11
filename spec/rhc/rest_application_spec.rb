@@ -70,8 +70,8 @@ module RHC
             cart = app_obj.add_cartridge(:name => 'mock_cart_0')
             cart.should be_an_instance_of RHC::Rest::Cartridge
             cart.name.should == 'mock_cart_0'
-          end          
-        end        
+          end
+        end
 
         context "with a URL cart" do
           before{ stub_api_request(:any, app_links['ADD_CARTRIDGE']['relative'], false).with(:body => {:url => 'http://foo.com'}.to_json).to_return(mock_cartridge_response(1, true)) }
@@ -100,7 +100,7 @@ module RHC
             cart.display_name.should == 'mock_cart_0'
             cart.only_in_new?.should be_true
             cart.only_in_existing?.should be_false
-          end          
+          end
         end
       end
 
