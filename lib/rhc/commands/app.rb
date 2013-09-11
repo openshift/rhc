@@ -84,8 +84,7 @@ module RHC::Commands
         c.usage_rate? ? "#{c.short_name} (addtl. costs may apply)" : c.short_name
       end.join(', ')
 
-      env_vars_supported = rest_domain.has_param?('ADD_APPLICATION', 'environment_variables')
-      if env_vars_supported
+      if rest_domain.has_param?('ADD_APPLICATION', 'environment_variables')
         environment_variables = collect_env_vars(arg_envs.concat(Array(options.env)))
       else
         warn "Server does not support environment variables."

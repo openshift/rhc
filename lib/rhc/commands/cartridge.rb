@@ -79,8 +79,7 @@ module RHC::Commands
 
       rest_app = rest_client.find_application(options.namespace, options.app, :include => :cartridges)
 
-      env_vars_supported = rest_app.has_param?('ADD_CARTRIDGE', 'environment_variables')
-      if env_vars_supported
+      if rest_app.has_param?('ADD_CARTRIDGE', 'environment_variables')
         cart.environment_variables = collect_env_vars(options.env).map { |item| item.to_hash } if options.env
       else
         warn "Server does not support environment variables."
