@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.14.5
+Version: 1.14.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -102,6 +102,19 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Sep 11 2013 Adam Miller <admiller@redhat.com> 1.14.6-1
+- Update testcase support info for phpmyadmin version (jforrest@redhat.com)
+- Merge pull request #457 from
+  jwforres/bug_1006255_match_cart_descrip_by_whole_word
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #458 from
+  smarterclayton/bug_1005763_use_ssh_url_to_check_login
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 1006255 - cartridges should only match description on whole words
+  (jforrest@redhat.com)
+- Bug 1005763 - Need to use the ssh_url (not uuid) to generate SSH
+  (ccoleman@redhat.com)
+
 * Tue Sep 10 2013 Adam Miller <admiller@redhat.com> 1.14.5-1
 - Merge pull request #456 from markllama/test/env_feature_init
   (dmcphers+openshiftbot@redhat.com)
