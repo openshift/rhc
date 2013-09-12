@@ -8,7 +8,8 @@ module RHC
       define_attr :domain_id, :name, :creation_time, :uuid,
                   :git_url, :app_url, :gear_profile, :framework,
                   :scalable, :health_check_path, :embedded, :gear_count,
-                  :ssh_url, :building_app, :cartridges, :initial_git_url
+                  :ssh_url, :building_app, :cartridges, :initial_git_url,
+                  :auto_deploy, :deployment_branch, :deployment_type, :keep_deployments
       alias_method :domain_name, :domain_id
 
       # Query helper to say consistent with cartridge
@@ -175,6 +176,40 @@ module RHC
 
       def supports_add_cartridge_with_env_vars?
         has_param?('ADD_CARTRIDGE', 'environment_variables')
+      end
+
+      def deployments
+        debug "Getting deployments for application #{name}"
+        if supports? "LIST_DEPLOYMENTS"
+          rest_method("LIST_DEPLOYMENTS").sort
+        else
+          raise RHC::DeploymentsNotSupportedException.new
+        end
+      end
+
+=begin
+      def deploy(ref)
+        debug "Deploy application #{name}"
+        if supports? "DEPLOY"
+          rest_method "DEPLOY", :ref => ref
+        else
+          raise RHC::DeploymentsNotSupportedException.new
+        end
+      end
+
+      def activate(deployment_id)
+        debug "Activate #{deployment_id} on application #{name}"
+        if supports? "ACTIVATE"
+          rest_method "ACTIVATE", :event => 'activate', :deployment_id => deployment_id
+        else
+          raise RHC::DeploymentsNotSupportedException.new
+        end
+      end
+=end
+
+      def configure(options={})
+        debug "Running update for #{name} with options #{options.inspect}"
+        rest_method "UPDATE", options
       end
 
       def add_alias(app_alias)

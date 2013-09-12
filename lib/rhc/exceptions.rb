@@ -120,6 +120,12 @@ module RHC
     end
   end
 
+  class DeploymentNotFoundException < Exception
+    def initialize(message="Deployment not found")
+      super message, 131
+    end
+  end
+
   class MissingScalingValueException < Exception
     def initialize(message="Must provide either a min or max value for scaling")
       super message

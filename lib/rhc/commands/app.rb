@@ -2,6 +2,7 @@ require 'rhc/commands/base'
 require 'resolv'
 require 'rhc/git_helpers'
 require 'rhc/cartridge_helpers'
+require 'rhc/deployment_helpers'
 
 module RHC::Commands
   class App < Base
@@ -105,7 +106,7 @@ module RHC::Commands
         say "Creating application '#{name}' ... "
 
         # create the main app
-        rest_app = create_app(name, cartridges, rest_domain, options.gear_size, options.scaling, options.from_code, env)
+        rest_app = create_app(name, cartridges, rest_domain, options.gear_size, options.scaling, options.from_code, env, options.auto_deploy, options.keep_deployments, options.deployment_branch)
         success "done"
 
         paragraph{ indent{ success rest_app.messages.map(&:strip) } }
@@ -288,6 +289,9 @@ module RHC::Commands
       The '--state' option will retrieve information from each cartridge in
       the application, which may include cartridge specific text.
 
+      The '--configuration' option will display configuration values set in
+      the application. Use 'rhc configure-app' to configure.
+
       To see information about the individual gears within an application,
       use '--gears', including whether they are started or stopped and their
       SSH host strings.  Passing '--gears quota' will show the free and maximum
@@ -298,10 +302,12 @@ module RHC::Commands
         rhc ssh <app> --gears '<command>'
 
       to run and display the output from each gear.
+
       DESC
     syntax "<app> [--namespace NAME]"
     takes_application :argument => true
     option ["--state"], "Get the current state of the cartridges in this application"
+    option ["--configuration"], "Get the current values configuration values set in this application"
     option ["--gears [quota|ssh]"], "Show information about the cartridges on each gear in this application. Pass 'quota' to see per gear disk usage and limits. Pass 'ssh' to print only the SSH connection strings of each gear."
     def show(app_name)
 
@@ -339,6 +345,11 @@ module RHC::Commands
         end.flatten(1)
 
         say table(gear_info, :header => ['ID', 'State', 'Cartridges', 'Size', 'SSH URL'])
+
+      elsif options.configuration
+        display_app_configurations(find_app)
+        paragraph { say "Use 'rhc configure-app' to change the configuration values of this application." }
+
       else
         app = find_app(:include => :cartridges)
         display_app(app, app.cartridges)
@@ -347,10 +358,71 @@ module RHC::Commands
       0
     end
 
+    summary "Deploy a git reference or binary file on an application"
+    syntax "<ref> --app NAME [--namespace NAME]"
+    description <<-DESC
+      By default OpenShift applications prepare, distribute and activate deployments
+      on every git push. Alternatively, an user may choose to disable automatic
+      deployments and use 'rhc deploy' and 'rhc deployment' commands to fully control the
+      deployment lifecycle.
+
+      Use this command to prepare, distribute and deploy manually from a git reference
+      (commit id, tag or branch) or from a binary file. Check also 'rhc configure-app'
+      to configure your application to deploy manually and set the number of deployments
+      to keep in history.
+
+      DESC
+    takes_application
+    argument :ref, "Git tag, branch or commit id or path to binary file to be deployed", ["--ref REF"], :optional => false
+    option "--[no-]hot-deploy", "Perform hot deployment according to the specified argument rather than checking for the presence of the hot_deploy marker in the application git repo"
+    option "--[no-]force-clean-build", "Perform a clean build according to the specified argument rather than checking for the presence of the force_clean_build marker in the application git repo"
+    alias_action :"deploy", :root_command => true
+    def deploy(ref)
+      rest_app = find_app
+
+      raise RHC::DeploymentsNotSupportedException.new if !rest_app.supports? "DEPLOY"
+
+      File.file?(ref) ?
+        deploy_file(rest_app, ref, options.hot_deploy, options.force_clean_build) :
+        deploy_git_ref(rest_app, ref, options.hot_deploy, options.force_clean_build)
+      0
+    end
+
+    summary "Configure several properties that applies to an application"
+    syntax "<app> [--[no-]auto-deploy] [--keep-deployments INTEGER] [--deployment-branch BRANCH] [--deployment-type TYPE] [--namespace NAME]"
+    takes_application :argument => true
+    option ["--[no-]auto-deploy"], "Build and deploy automatically when pushing to the git repo. Defaults to true."
+    option ["--keep-deployments INTEGER", Integer], "Number of deployments to preserve. Defaults to 1."
+    option ["--deployment-branch BRANCH"], "Which branch should trigger an automatic deployment, if automatic deployment is enabled with --auto-deploy. Defaults to master."
+    option ["--deployment-type git|binary"], "Type of deployment the application accepts ('git' or 'binary'). Defaults to git."
+    def configure(app_name)
+      rest_app = find_app
+
+      app_options = {}
+      app_options[:auto_deploy] = options.auto_deploy if !options.auto_deploy.nil?
+      app_options[:keep_deployments] = options.keep_deployments if options.keep_deployments
+      app_options[:deployment_branch] = options.deployment_branch if options.deployment_branch
+      app_options[:deployment_type] = options.deployment_type if options.deployment_type
+
+      paragraph do
+        say "Configuring application '#{app_name}' ... "
+        rest_app.configure(app_options)
+        success "done"
+      end
+
+      paragraph { display_app(find_app, nil, [:auto_deploy, :keep_deployments, :deployment_type, :deployment_branch]) }
+
+      paragraph { say "Your application '#{rest_app.name}' is now configured as listed above." }
+      paragraph { say "Use 'rhc show-app #{rest_app.name} --configuration' to check your configuration values any time." }
+
+      0
+    end
+
     private
       include RHC::GitHelpers
       include RHC::CartridgeHelpers
       include RHC::SSHHelpers
+      include RHC::DeploymentHelpers
 
       MAX_RETRIES = 7
       DEFAULT_DELAY_THROTTLE = 2.0
@@ -417,13 +489,17 @@ module RHC::Commands
         result
       end
 
-      def create_app(name, cartridges, rest_domain, gear_size=nil, scale=nil, from_code=nil, environment_variables=nil)
+      def create_app(name, cartridges, rest_domain, gear_size=nil, scale=nil, from_code=nil, environment_variables=nil, auto_deploy=nil, keep_deployments=nil, deployment_branch=nil)
         app_options = {:cartridges => Array(cartridges)}
         app_options[:gear_profile] = gear_size if gear_size
         app_options[:scale] = scale if scale
         app_options[:initial_git_url] = from_code if from_code
         app_options[:debug] = true if @debug
         app_options[:environment_variables] = environment_variables.map{ |item| item.to_hash } if environment_variables.present?
+        app_options[:auto_deploy] = auto_deploy if !auto_deploy.nil?
+        app_options[:keep_deployments] = keep_deployments if keep_deployments
+        app_options[:deployment_branch] = deployment_branch if deployment_branch
+        debug "Creating application '#{name}' with these options - #{app_options.inspect}"
         rest_app = rest_domain.add_application(name, app_options)
 
         rest_app
