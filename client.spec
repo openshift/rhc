@@ -18,6 +18,7 @@ Requires:      rubygem-parseconfig
 Requires:      rubygem-httpclient
 Requires:      rubygem-test-unit
 Requires:      rubygem-net-ssh
+Requires:      rubygem-net-ssh-multi
 Requires:      rubygem-archive-tar-minitar
 Requires:      rubygem-commander
 Requires:      rubygem-open4
