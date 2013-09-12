@@ -21,7 +21,7 @@ module RHC::Commands
     syntax "<application> [--filepath FILE] [--ssh path_to_ssh_executable]"
     option ["-n", "--namespace NAME"], "Namespace of the application you are saving a snapshot", :context => :namespace_context, :required => true
     option ["-f", "--filepath FILE"], "Local path to save tarball (default: ./$APPNAME.tar.gz)"
-    option ["--ssh PATH"], "Path to your SSH executable or additional options"
+    option ["--ssh PATH"], "Full path to your SSH executable with additional options"
     argument :app, "Application you are saving a snapshot", ["-a", "--app NAME"]
     alias_action :"app snapshot save", :root_command => true, :deprecated => true
     def save(app)
@@ -71,7 +71,7 @@ module RHC::Commands
     syntax "<application> [--filepath FILE] [--ssh path_to_ssh_executable]"
     option ["-n", "--namespace NAME"], "Namespace of the application you are restoring a snapshot", :context => :namespace_context, :required => true
     option ["-f", "--filepath FILE"], "Local path to restore tarball"
-    option ["--ssh PATH"], "Path to your SSH executable or additional options"
+    option ["--ssh PATH"], "Full path to your SSH executable with additional options"
     argument :app, "Application of which you are restoring a snapshot", ["-a", "--app NAME"]
     alias_action :"app snapshot restore", :root_command => true, :deprecated => true
     def restore(app)
