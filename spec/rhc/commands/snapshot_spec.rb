@@ -28,12 +28,12 @@ describe RHC::Commands::Snapshot do
   end
 
   describe 'snapshot save' do
-    let(:arguments) {['snapshot', 'save', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p', 'password', '--app', 'mockapp']}
+    let(:arguments) {['snapshot', 'save', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p', 'password', '--app', 'mockapp', '--ssh', '/usr/bin/ssh -oSomeOpt=1']}
 
     context 'when saving a snapshot' do
       before(:each) do
         `(exit 0)`
-        Kernel.should_receive(:`).with("ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'snapshot' > #{@app.name}.tar.gz")
+        Kernel.should_receive(:`).with("/usr/bin/ssh -oSomeOpt=1 #{@ssh_uri.user}@#{@ssh_uri.host} 'snapshot' > #{@app.name}.tar.gz")
       end
       it { expect { run }.to exit_with_code(0) }
     end
@@ -41,7 +41,7 @@ describe RHC::Commands::Snapshot do
     context 'when failing to save a snapshot' do
       before(:each) do
         `(exit 1)`
-        Kernel.should_receive(:`).with("ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'snapshot' > #{@app.name}.tar.gz")
+        Kernel.should_receive(:`).with("/usr/bin/ssh -oSomeOpt=1 #{@ssh_uri.user}@#{@ssh_uri.host} 'snapshot' > #{@app.name}.tar.gz")
       end
       it { expect { run }.to exit_with_code(130) }
     end
@@ -73,14 +73,14 @@ describe RHC::Commands::Snapshot do
   end
 
   describe 'snapshot restore' do
-    let(:arguments) {['snapshot', 'restore', '--noprompt', '-l', 'test@test.foo', '-p', 'password', '--app', 'mockapp']}
+    let(:arguments) {['snapshot', 'restore', '--noprompt', '-l', 'test@test.foo', '-p', 'password', '--app', 'mockapp', '--ssh', '/usr/bin/ssh -oSomeOpt=1']}
 
     context 'when restoring a snapshot' do
       before(:each) do
         File.stub(:exists?).and_return(true)
         RHC::TarGz.stub(:contains).and_return(true)
         `(exit 0)`
-        Kernel.should_receive(:`).with("cat '#{@app.name}.tar.gz' | ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'restore INCLUDE_GIT'")
+        Kernel.should_receive(:`).with("cat '#{@app.name}.tar.gz' | /usr/bin/ssh -oSomeOpt=1 #{@ssh_uri.user}@#{@ssh_uri.host} 'restore INCLUDE_GIT'")
       end
       it { expect { run }.to exit_with_code(0) }
     end
@@ -89,7 +89,7 @@ describe RHC::Commands::Snapshot do
       before(:each) do
         File.stub(:exists?).and_return(true)
         RHC::TarGz.stub(:contains).and_return(true)
-        Kernel.should_receive(:`).with("cat '#{@app.name}.tar.gz' | ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'restore INCLUDE_GIT'")
+        Kernel.should_receive(:`).with("cat '#{@app.name}.tar.gz' | /usr/bin/ssh -oSomeOpt=1 #{@ssh_uri.user}@#{@ssh_uri.host} 'restore INCLUDE_GIT'")
         $?.stub(:exitstatus) { 1 }
       end
       it { expect { run }.to exit_with_code(130) }
