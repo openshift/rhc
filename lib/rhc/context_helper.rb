@@ -8,6 +8,38 @@ module RHC
   module ContextHelpers
     include RHC::GitHelpers
 
+    def self.included(other)
+      other.module_eval do
+        def self.takes_application_or_domain(opts={})
+          option ["-n", "--namespace NAME"], "Name of a domain"
+          option ["-a", "--app NAME"], "Name of an application"
+          if opts[:argument]
+            argument :path, "The name of a domain, or an application name with domain (domain or domain/application)", ["-t", "--target NAME_OR_PATH"], :optional => true
+          end
+        end
+      end
+    end
+
+    def find_app_or_domain(path=options.to)
+      domain, app =
+        if path.present?
+          path.split(/\//)
+        elsif options.namespace || options.app
+          if options.app =~ /\//
+            options.app.split(/\//)
+          else
+            [options.namespace || namespace_context, options.app || app_context]
+          end
+        end
+      if app && domain
+        rest_client.find_application(domain, app)
+      elsif domain
+        rest_client.find_domain(domain)
+      else
+        raise ArgumentError, "You must specify a domain with -n, or an application with -n and -a.  You can also directly pass the name of a domain or application as the first argument."
+      end
+    end
+
     def server_context
       ENV['LIBRA_SERVER'] || (!options.clean && config['libra_server']) || "openshift.redhat.com"
     end

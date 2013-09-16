@@ -10,7 +10,8 @@ module RHC
               get_properties(
                 domain,
                 :creation_time,
-                :allowed_gear_sizes
+                :allowed_gear_sizes,
+                #:compact_members,
               ),
               :delete => true
           end

@@ -1,16 +1,12 @@
 module RHC
   module Rest
     class Domain < Base
+      include Membership
+
       define_attr :id, :allowed_gear_sizes, :creation_time
 
       def allowed_gear_sizes
         Array(attribute(:allowed_gear_sizes))
-      end
-
-      def owner
-        if o = Array(attribute(:members)).find{ |m| m['owner'] == true }
-          o['name']
-        end
       end
 
       #Add Application to this domain

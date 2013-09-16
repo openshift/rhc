@@ -141,6 +141,17 @@ module RHC
       #:nocov:
     end
 
+    ROLES = {'view' => 'viewer', 'edit' => 'editor', 'admin' => 'administrator'}
+    OptionParser.accept(Role = Class.new) do |s|
+      s.downcase!
+      (ROLES.has_key?(s) && s) or
+        raise OptionParser::InvalidOption.new(nil, "The provided role '#{s}' is not valid. Supported values: #{ROLES.keys.join(', ')}")
+    end
+
+    def role_name(s)
+      ROLES[s.downcase]
+    end
+
     def openshift_server
       to_host((options.server rescue nil) || ENV['LIBRA_SERVER'] || "openshift.redhat.com")
     end
@@ -210,6 +221,7 @@ module RHC
       debug e
       raise OptionParser::InvalidOption.new(nil, "The certificate '#{file}' cannot be loaded: #{e.message} (#{e.class})")
     end
+
 
     #
     # Output helpers
