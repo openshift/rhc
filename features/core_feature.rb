@@ -16,7 +16,7 @@ describe "rhc core scenarios" do
     r.stdout.should match "Usage: rhc"
     r.stdout.should match "Getting started"
     r.stdout.should match "See 'rhc help options' for a list"
-  end  
+  end
 
   context "with a clean configuration" do
     before{ use_clean_config }
@@ -44,7 +44,7 @@ describe "rhc core scenarios" do
   context "when creating an app" do
     when_running 'create-app', 'test1', a_web_cartridge
     before{ no_applications(/^test1/) }
-    it "returns the proper info and is in the rest api" do 
+    it "returns the proper info and is in the rest api" do
       status.should == 0
       output.should match "Your application 'test1' is now available"
       output.should match /Gear Size: .*default/
@@ -96,9 +96,9 @@ describe "rhc core scenarios" do
     end
 
     it "will ssh to the app and run a command" do
-      r = rhc 'ssh', app.name, 'echo $OPENSHIFT_APP_NAME'
+      r = rhc 'ssh', app.name, '--ssh', ENV['GIT_SSH'], 'echo $OPENSHIFT_APP_NAME'
       r.stdout.should match app.name
       r.status.should == 0
-    end    
+    end
   end
 end

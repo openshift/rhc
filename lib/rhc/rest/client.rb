@@ -191,6 +191,14 @@ module RHC
           h
         end
       end
+
+      def reset
+        (instance_variables - [
+          :@end_point, :@debug, :@preferred_api_versions, :@auth, :@options, :@headers,
+          :@last_options, :@httpclient, :@self_signed, :@current_api_version, :@api
+        ]).each{ |sym| instance_variable_set(sym, nil) }
+        self
+      end
     end
 
     class Client < Base
