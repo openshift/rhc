@@ -5,6 +5,12 @@ $source_bin_rhc = File.expand_path('bin/rhc')
 
 SimpleCov.minimum_coverage = 0 # No coverage testing for features
 
+#
+# RHC_DEBUG=true TEST_INSECURE=1 TEST_USERNAME=test1 TEST_PASSWORD=password \
+#  RHC_SERVER=hostname \
+#  bundle exec rspec features/*_feature.rb
+#
+
 module RhcExecutionHelper
   class Result < Struct.new(:args, :status, :stdout, :stderr)
     def to_s
@@ -30,8 +36,8 @@ module RhcExecutionHelper
     opts = args.pop if args.last.is_a? Hash
     opts ||= {}
     unless server_supports_sessions?
-      args.unshift ENV['TEST_PASSWORD']
-      args.unshift '--password'
+      args << '--password'
+      args << ENV['TEST_PASSWORD']
     end
     execute_command(args.unshift(rhc_executable), opts[:with])
   end
@@ -45,12 +51,11 @@ module RhcExecutionHelper
         [StringIO.new, StringIO.new]
       end
 
-    #[stdout,stdin].each{ |io| io.stub(:tty?).and_return(true) if io }
     args.map!(&:to_s)
     status = Open4.spawn(args, 'stdout' => stdout, 'stderr' => stderr, 'stdin' => stdin, 'quiet' => true)
     stdout, stderr = [stdout, stderr].map(&:string)
     Result.new(args, status, stdout, stderr).tap do |r|
-      STDERR.puts "[#{self.class.description}] #{r}" if debug?
+      STDERR.puts "\n[#{example_description}] #{r}" if debug?
     end
   end
 
@@ -59,7 +64,7 @@ module RhcExecutionHelper
   end
 
   def client
-    @environment[:client] ||= begin
+    @client ||= (@environment && @environment[:client]) || begin
       WebMock.allow_net_connect!
       opts = {:server => ENV['RHC_SERVER']}
       if token = RHC::Auth::TokenStore.new(File.expand_path("~/.openshift")).get(ENV['TEST_USERNAME'], ENV['RHC_SERVER'])
@@ -69,8 +74,18 @@ module RhcExecutionHelper
         opts[:password] = ENV['TEST_PASSWORD']
       end
       opts[:verify_mode] = OpenSSL::SSL::VERIFY_NONE if ENV['TEST_INSECURE'] == '1'
-      RHC::Rest::Client.new(opts)
+      env = RHC::Rest::Client.new(opts)
+      @environment[:client] = env if @environment
+      env
     end
+  end
+
+  def base_client(user, password)
+    opts = {:server => ENV['RHC_SERVER']}
+    opts[:user] = user
+    opts[:password] = password
+    opts[:verify_mode] = OpenSSL::SSL::VERIFY_NONE if ENV['TEST_INSECURE'] == '1'
+    RHC::Rest::Client.new(opts)
   end
 
   def no_applications(constraint=nil)
@@ -83,16 +98,35 @@ module RhcExecutionHelper
     end
   end
 
+  def other_users
+    $other_users ||= begin
+      (ENV['TEST_OTHER_USERS'] || "other1:a,other2:b,other3:c,other4:d").split(',').map{ |s| s.split(':') }.inject({}) do |h, (u, p)|
+        h[u] = base_client(u, p).user
+        h
+      end
+    end
+  end
+
+  def no_members(object)
+    object.delete_members
+    object.members.length.should == 1
+  end
+
   def has_an_application
     STDERR.puts "Creating or reusing an app" if debug?
     apps = client.applications
     apps.first or begin
-      domain = client.domains.first or begin
-        STDERR.puts "  creating a new domain" if debug?
-        client.add_domain("test#{random}")
-      end
+      domain = has_a_domain
       STDERR.puts "  creating a new application" if debug?
       client.domains.first.add_application("test#{random}", :cartridges => [a_web_cartridge])
+    end
+  end
+
+  def has_a_domain
+    STDERR.puts "Creating or reusing a domain" if debug?
+    domain = client.domains.first or begin
+      STDERR.puts "  creating a new domain" if debug?
+      client.add_domain("test#{random}")
     end
   end
 
@@ -105,10 +139,11 @@ module RhcExecutionHelper
     args << 'yes' # generate a key, temp dir will never have one
     args << ENV['TEST_USERNAME'] if (client.find_key('default').present? rescue false) # same key name as username
     args << "d#{random}" if (client.domains.empty? rescue true)
+    args
   end
 
   def use_clean_config
-    environment(:clean)
+    environment
     FileUtils.rm_rf(File.join(@environment[:dir], ".openshift"))
     client.reset
   end
@@ -134,15 +169,25 @@ module RhcExecutionHelper
   end
 
   private
-    def environment(id)
+    def example_description
+      if respond_to?(:example) && example
+        example.metadata[:full_description]
+      else
+        self.class.example.metadata[:full_description]
+      end
+    end
+
+    def environment(id=nil)
       unless @environment
         is_new = false
         e = Environments.get(id){ is_new = true}
         update_env(e)
+
         dir = Dir.mktmpdir('rhc_features_test')
-        Dir.chdir(dir)
         at_exit{ FileUtils.rm_rf(dir) }
-        @client = nil
+        Dir.chdir(dir)
+
+        @client = e[:client]
         @environment = e
         yield if block_given? && is_new
       end

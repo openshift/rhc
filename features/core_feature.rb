@@ -52,7 +52,7 @@ describe "rhc core scenarios" do
       output.should match %r(URL: .*http://test1-)
       output.should match "Cloned to"
 
-      apps = client.domains.map(&:applications).flatten
+      apps = client.applications
       apps.should_not be_empty
       apps.should include{ |app| app.name == 'test1' }
     end
@@ -61,44 +61,81 @@ describe "rhc core scenarios" do
   context "with an existing app" do
     before(:all) do
       standard_config
-      app = has_an_application
-      rhc('git-clone', app.name).status.should == 0
-      Dir.exists?(app.name).should be_true
-      Dir.chdir app.name
-      @app = app
+      @app = has_an_application
     end
 
     let(:app){ @app }
-    let(:git_config){ `git config --list` }
 
-    it "will set Git config values" do
-      git_config.should match "rhc.app-uuid=#{app.uuid}"
-      git_config.should match "rhc.app-name=#{app.name}"
-      git_config.should match "rhc.domain-name=#{app.domain_name}"
+    it "should show app state" do
+      r = rhc 'app-show', app.name, '--state'
+      r.status.should == 0
+      r.stdout.should match "Cartridge #{a_web_cartridge} is started"
     end
 
-    it "will infer the current app from the git repository" do
-      r = rhc 'show-app'
-      r.stdout.should match app.name
-      r.stdout.should match app.uuid
+    it "should stop and start the app" do
+      r = rhc 'stop-app', app.name
+      r.status.should == 0
+      r.stdout.should match "#{app.name} stopped"
+      r = rhc 'start-app', app.name
+      r.status.should == 0
+      r.stdout.should match "#{app.name} started"
+    end
+
+    it "should show gear status" do
+      r = rhc 'app-show', app.name, '--gears'
+      r.status.should == 0
+      r.stdout.lines.to_a.length.should == 3
       r.stdout.should match app.ssh_string
-      r.stdout.should match app.app_url
-      (app.cartridges.map(&:name) + app.cartridges.map(&:display_name)).each{ |n| r.stdout.should match n }
-      r.status.should == 0
+      app.cartridges.map(&:name).each do |c|
+        r.stdout.should match c
+      end
+      r.stdout.should match "started"
     end
 
-    it "will fetch the quotas from the app" do
-      r = rhc 'show-app', '--gears', 'quota'
-      r.stdout.chomp.lines.count.should == (app.gear_count + 2)
-      app.cartridges.map(&:name).each{ |n| r.stdout.should match n }
-      app.cartridges.map(&:gear_storage).each{ |n| r.stdout.should match(RHC::Helpers.human_size(n)) }
+    it "should show gear ssh strings" do
+      r = rhc 'app-show', app.name, '--gears', 'ssh'
       r.status.should == 0
+      r.stdout.lines.to_a.length.should == 1
+      r.stdout.chomp.should == app.ssh_string
     end
 
-    it "will ssh to the app and run a command" do
-      r = rhc 'ssh', app.name, '--ssh', ENV['GIT_SSH'], 'echo $OPENSHIFT_APP_NAME'
-      r.stdout.should match app.name
-      r.status.should == 0
+    context "when the app is cloned" do
+      before(:all) do
+        rhc('git-clone', @app.name).status.should == 0
+        Dir.exists?(@app.name).should be_true
+        Dir.chdir @app.name
+      end
+      let(:git_config){ `git config --list` }
+
+      it "will set Git config values" do
+        git_config.should match "rhc.app-uuid=#{app.uuid}"
+        git_config.should match "rhc.app-name=#{app.name}"
+        git_config.should match "rhc.domain-name=#{app.domain_name}"
+      end
+
+      it "will infer the current app from the git repository" do
+        r = rhc 'show-app'
+        r.stdout.should match app.name
+        r.stdout.should match app.uuid
+        r.stdout.should match app.ssh_string
+        r.stdout.should match app.app_url
+        (app.cartridges.map(&:name) + app.cartridges.map(&:display_name)).each{ |n| r.stdout.should match n }
+        r.status.should == 0
+      end
+
+      it "will fetch the quotas from the app" do
+        r = rhc 'show-app', '--gears', 'quota'
+        r.stdout.chomp.lines.count.should == (app.gear_count + 2)
+        app.cartridges.map(&:name).each{ |n| r.stdout.should match n }
+        app.cartridges.map(&:gear_storage).each{ |n| r.stdout.should match(RHC::Helpers.human_size(n)) }
+        r.status.should == 0
+      end
+
+      it "will ssh to the app and run a command" do
+        r = rhc 'ssh', '--ssh', ENV['GIT_SSH'], 'echo $OPENSHIFT_APP_NAME'
+        r.stdout.should match app.name
+        r.status.should == 0
+      end
     end
   end
 end

@@ -88,7 +88,7 @@ module RHC::Commands
 
       paragraph do
         header "Application Options"
-        table([["Namespace:", options.namespace],
+        table([["Domain:", options.namespace],
                ["Cartridges:", cart_names],
               (["Source Code:", options.from_code] if options.from_code),
                ["Gear Size:", options.gear_size || "default"],

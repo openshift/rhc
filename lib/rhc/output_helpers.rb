@@ -11,7 +11,7 @@ module RHC
                 domain,
                 :creation_time,
                 :allowed_gear_sizes,
-                #:compact_members,
+                :compact_members,
               ),
               :delete => true
           end
