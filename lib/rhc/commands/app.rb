@@ -30,12 +30,12 @@ module RHC::Commands
       these cartridges receive no security updates.  Note that not
       all OpenShift servers allow downloaded cartridges.
 
-      When your application is created, a URL combining the name of 
-      your app and the name of your domain will be registered in DNS.  
-      A copy of the code for your application will be checked out locally 
-      into a folder with the same name as your application.  Note that 
-      different types of applications may require different folder 
-      structures - check the README provided with the cartridge if 
+      When your application is created, a URL combining the name of
+      your app and the name of your domain will be registered in DNS.
+      A copy of the code for your application will be checked out locally
+      into a folder with the same name as your application.  Note that
+      different types of applications may require different folder
+      structures - check the README provided with the cartridge if
       you have questions.
 
       OpenShift runs the components of your application on small virtual
@@ -55,7 +55,6 @@ module RHC::Commands
     option ["-e", "--env VARIABLE=VALUE"], "Environment variable(s) to be set on this app, or path to a file containing environment variables", :option_type => :list
     option ["--from-code URL"], "URL to a Git repository that will become the initial contents of the application"
     option ["--[no-]git"], "Skip creating the local Git repository."
-    option ["--nogit"], "DEPRECATED: Skip creating the local Git repository.", :deprecated => {:key => :git, :value => false}
     option ["--[no-]dns"], "Skip waiting for the application DNS name to resolve. Must be used in combination with --no-git"
     option ['--no-keys'], "Skip checking SSH keys during app creation", :hide => true
     option ["--enable-jenkins [NAME]"], "Enable Jenkins builds for this application (will create a Jenkins application if not already available). The default name will be 'jenkins' if not specified."
@@ -200,12 +199,11 @@ module RHC::Commands
                 "Use with caution as this operation is permanent."
     syntax "<app> [--namespace NAME]"
     option ["-n", "--namespace NAME"], "Namespace your application belongs to", :context => :namespace_context, :required => true
-    option ["-b", "--bypass"], "DEPRECATED Please use '--confirm'", :deprecated => {:key => :confirm, :value => true}
     option ["--confirm"], "Pass to confirm deleting the application"
     argument :app, "The application you wish to delete", ["-a", "--app name"], :context => :app_context
     alias_action :destroy, :deprecated => true
     def delete(app)
-      rest_app = rest_client.find_application(options.namespace, app)
+      rest_app = find_app(app)
 
       confirm_action "#{color("This is a non-reversible action! Your application code and data will be permanently deleted if you continue!", :yellow)}\n\nAre you sure you want to delete the application '#{app}'?"
 
@@ -434,7 +432,7 @@ module RHC::Commands
       end
 
       def app_action(app, action, *args)
-        rest_app = rest_client.find_application(options.namespace, app)
+        rest_app = find_app(app)
         result = rest_app.send action, *args
         result
       end

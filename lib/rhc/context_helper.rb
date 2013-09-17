@@ -36,7 +36,29 @@ module RHC
       elsif domain
         rest_client.find_domain(domain)
       else
-        raise ArgumentError, "You must specify a domain with -n, or an application with -n and -a.  You can also directly pass the name of a domain or application as the first argument."
+        raise ArgumentError, "You must specify a domain with -n, or an application with -n and -a."
+      end
+    end
+
+    def find_app(path=options.to)
+      domain, app =
+        if path.present?
+          if (parts = path.split(/\//)).length > 1
+            parts
+          else
+            [options.namespace || namespace_context, path]
+          end
+        elsif options.namespace || options.app
+          if options.app =~ /\//
+            options.app.split(/\//)
+          else
+            [options.namespace || namespace_context, options.app || app_context]
+          end
+        end
+      if app && domain
+        rest_client.find_application(domain, app)
+      else
+        raise ArgumentError, "You must specify an application with -a."
       end
     end
 

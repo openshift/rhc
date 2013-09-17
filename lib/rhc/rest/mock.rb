@@ -643,6 +643,10 @@ module RHC::Rest::Mock
     def applications(*args)
       @applications
     end
+
+    def add_member(member)
+      (@members ||= []) << member
+    end
   end
 
   class MockRestGearGroup < RHC::Rest::GearGroup
@@ -759,6 +763,10 @@ module RHC::Rest::Mock
       c
     end
 
+    def id
+      @uuid
+    end
+
     def gear_groups
       # we don't have heavy interaction with gear groups yet so keep this simple
       @gear_groups ||= begin
@@ -830,6 +838,9 @@ module RHC::Rest::Mock
       end
     end
 
+    def add_member(member)
+      (@members ||= []) << member
+    end
   end
 
   class MockRestCartridge < RHC::Rest::Cartridge

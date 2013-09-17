@@ -51,7 +51,7 @@ module RHC::Rest
       @members ||=
         if (members = attributes['members']).nil?
           debug "Getting all members for #{id}"
-          raise MembersNotSupported unless supports_members?
+          raise RHC::MembersNotSupported unless supports_members?
           rest_method 'LIST_MEMBERS'
         else
           members.map{ |m| Member.new(m, client) }
@@ -77,13 +77,13 @@ module RHC::Rest
 
     def update_members(members, options={})
       raise "Members must be an array" unless members.is_a?(Array)
-      raise MembersNotSupported unless supports_members?
+      raise RHC::MembersNotSupported unless supports_members?
       raise RHC::ChangeMembersOnResourceNotSupported unless supports_update_members?
       rest_method 'UPDATE_MEMBERS', {:members => members}, options
     end
 
     def delete_members(options={})
-      raise MembersNotSupported unless supports_members?
+      raise RHC::MembersNotSupported unless supports_members?
       rest_method "LIST_MEMBERS", nil, {:method => :delete}.merge(options)
     ensure
       @members = attributes['members'] = nil

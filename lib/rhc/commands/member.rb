@@ -5,23 +5,81 @@ module RHC::Commands
     summary "Manage membership on domains"
     syntax "<action>"
     description <<-DESC
-      Adding someone as a member on your domain will allow you to collaborate
-      on applications.
+      Teams of developers can collaborate on applications by adding people to
+      domains as members: each member has a role (admin, editor, or viewer),
+      and those roles determine what the user can do with the domain and the
+      applications contained within.
 
+      Roles:
+
+        view  - able to see information about the domain and its apps, but not make any changes
+        edit  - create, update, and delete applications, and has Git and SSH access
+        admin - can update membership of a domain
+
+      The default role granted to members when added is 'edit' - use the '--role'
+      argument to use another.  When adding and removing members, you can use their
+      'login' value (typically their email or a short unique name for them) or their
+      'id'.  Both login and ID are visible via the 'rhc account' command.
+
+      To see existing members of a domain or application, use:
+
+        rhc members -n <domain_name> [-a <app_name>]
+
+      To change the role for a user, simply call the add-member command with the new role. You
+      cannot change the role of the owner.
       DESC
+    syntax "<action>"
+    default_action :help
 
     summary "List members of a domain or application"
-    syntax "<domain_or_app_path> [-n DOMAIN_NAME] [-a APP_NAME]"
+    syntax "<domain_or_app_name> [-n DOMAIN_NAME] [-a APP_NAME]"
+    description <<-DESC
+      Show the existing members of a domain or application - you can pass the name
+      of your domain with '-n', the name of your application with '-a', or combine
+      them in the first argument to the command like:
+
+        rhc members <domain_name>/[<app_name>]
+
+      The owner is always listed first.  To see the unique ID of members, pass
+      '--ids'.
+      DESC
+    option ['--ids'], "Display the IDs of each member", :optional => true
     takes_application_or_domain :argument => true
+    alias_action :members, :root_command => true
     def list(path)
       target = find_app_or_domain(path)
-      say table(target.members.map{ |m| [m.name, m.role, m.owner, m.id] }, :header => ['Name', 'Role', 'Owner?', 'ID'])
+      say table(target.members.sort_by{ |m| [m.owner? ? 0 : 1, m.role_weight, m.name] }.map{ |m| [m.name, m.owner? ? "#{m.role} (owner)" : m.role, (m.id if options.ids)].compact }, :header => ['Name', 'Role', ("ID" if options.ids)].compact)
 
       0
     end
 
-    summary "Add a collaborator to a domain"
-    syntax "[-n DOMAIN_NAME]"
+    summary "Add or update a member on a domain"
+    syntax "<login> [<login>...] [-n DOMAIN_NAME] [--role view|edit|admin] [--ids]"
+    description <<-DESC
+      Adds or updates members on a domain by passing one or more login
+      or ids for other people on OpenShift.  The login and ID values for each
+      account is displayed in 'rhc account'. To change the role for a user, simply
+      call the add-member command with the new role. You cannot change the role of
+      the owner.
+
+      Roles
+        view  - able to see information about the domain and its apps,
+                but not make any changes
+        edit  - create, update, and delete applications, and has Git
+                and SSH access
+        admin - can update membership of a domain
+
+      The default role granted to members when added is 'edit' - use the '--role'
+      argument for 'view' or 'admin'.
+
+      Examples
+        rhc add-member sally joe -n mydomain
+          Gives the accounts with logins 'sally' and 'joe' edit access on mydomain
+
+        rhc add-member bob@example.com --role admin -n mydomain
+          Gives the account with login 'bob@example.com' admin access on mydomain
+
+      DESC
     takes_application_or_domain
     option ['--ids'], "Treat the arguments as a list of IDs", :optional => true
     option ['-r', '--role ROLE'], "The role to give to each member - view, edit, or admin (default 'edit')", :option_type => Role, :optional => true

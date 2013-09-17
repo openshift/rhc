@@ -511,7 +511,7 @@ module RHC
         it("raises not authenticated"){ response.should raise_error(RHC::Rest::UnAuthorizedException, 'Not authenticated') }
 
         context "when auth will retry forever" do
-          let(:auth){ stub('auth', :to_request => nil) }
+          let(:auth){ double('auth', :to_request => nil) }
           before{ subject.stub(:auth).and_return(auth); auth.should_receive(:retry_auth?).exactly(4).times.and_return(true) }
           it("raises not authenticated"){ response.should raise_error(RHC::Rest::UnAuthorizedException, 'Not authenticated') }
           after{ WebMock.should have_requested(:get, mock_href).times(RHC::Rest::Client::MAX_RETRIES) }

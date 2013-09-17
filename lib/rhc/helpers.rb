@@ -249,10 +249,6 @@ module RHC
       deprecated("This command is deprecated. Please use '#{correct}' instead.", short)
     end
 
-    def deprecated_option(deprecated, other)
-      deprecated("The option '#{deprecated}' is deprecated. Please use '#{other}' instead")
-    end
-
     def deprecated(msg,short = false)
       raise DeprecatedError.new(msg % ['an error','a warning',0]) if disable_deprecated?
       warn "Warning: #{msg}\n" % ['a warning','an error',1]
@@ -329,13 +325,15 @@ module RHC
       headings.merge!({
         :creation_time  => "Created",
         :expires_in_seconds => "Expires In",
-        :uuid           => "UUID",
+        :uuid           => "ID",
+        :id             => 'ID',
         :current_scale  => "Current",
         :scales_from    => "Minimum",
         :scales_to      => "Maximum",
         :gear_sizes     => "Allowed Gear Sizes",
         :consumed_gears => "Gears Used",
         :max_gears      => "Gears Allowed",
+        :max_domains    => "Domains Allowed",
         :compact_members => "Members",
         :gear_info      => "Gears",
         :plan_id        => "Plan",
