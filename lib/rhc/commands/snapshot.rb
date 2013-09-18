@@ -25,7 +25,6 @@ module RHC::Commands
     argument :app, "Application you are saving a snapshot", ["-a", "--app NAME"]
     alias_action :"app snapshot save", :root_command => true, :deprecated => true
     def save(app)
-      raise OptionParser::InvalidOption, "No system SSH available. Please use the --ssh option to specify the path to your SSH executable, or install SSH." unless options.ssh or has_ssh?
       raise OptionParser::InvalidOption, "SSH executable '#{options.ssh}' does not exist." if options.ssh and not File.exist?(options.ssh.split(' ').first)
       raise OptionParser::InvalidOption, "SSH executable '#{options.ssh}' is not executable." if options.ssh and not File.executable?(options.ssh.split(' ').first)
       rest_app = rest_client.find_application(options.namespace, app)
@@ -75,7 +74,6 @@ module RHC::Commands
     argument :app, "Application of which you are restoring a snapshot", ["-a", "--app NAME"]
     alias_action :"app snapshot restore", :root_command => true, :deprecated => true
     def restore(app)
-      raise OptionParser::InvalidOption, "No system SSH available. Please use the --ssh option to specify the path to your SSH executable, or install SSH." unless options.ssh or has_ssh?
       raise OptionParser::InvalidOption, "SSH executable '#{options.ssh}' does not exist." if options.ssh and not File.exist?(options.ssh.split(' ').first)
       raise OptionParser::InvalidOption, "SSH executable '#{options.ssh}' is not executable." if options.ssh and not File.executable?(options.ssh.split(' ').first)
 
@@ -135,7 +133,5 @@ module RHC::Commands
       0
     end
 
-    protected
-      include RHC::SSHHelpers
   end
 end
