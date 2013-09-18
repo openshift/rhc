@@ -233,6 +233,52 @@ describe RHC::Commands::Base do
     end
   end
 
+  describe "find_app" do
+    let(:instance){ subject }
+    let(:rest_client){ subject.send(:rest_client) }
+    let(:options){ subject.send(:options) }
+    def expects_method(*args)
+      expect{ subject.send(:find_app, *args) }
+    end
+
+    it("should raise without params"){ expects_method(nil).to raise_error(ArgumentError, /You must specify an application with -a/) }
+
+    context "when looking for an app" do
+      before{ subject.stub(:namespace_context).and_return('domain_s') }
+      before{ subject.stub(:app_context).and_return('app_s') }
+      it("should handle direct")   { expects_method('app').to call(:find_application).on(rest_client).with('domain_s', 'app') }
+      it("should handle namespace param"){ options[:namespace] = 'domain_o'; expects_method('app').to call(:find_application).on(rest_client).with('domain_o', 'app') }
+      it("should ignore app param"){ options[:app] = 'app_o'; expects_method('app').to call(:find_application).on(rest_client).with('domain_s', 'app') }
+      it("should accept app param"){ options[:app] = 'app_o'; expects_method(nil).to call(:find_application).on(rest_client).with('domain_s', 'app_o') }
+      it("should split app param") { options[:app] = 'domain_o/app_o'; expects_method(nil).to call(:find_application).on(rest_client).with('domain_o', 'app_o') }
+      it("should accept split app"){ expects_method('domain/app').to call(:find_application).on(rest_client).with('domain', 'app') }
+    end
+  end
+
+  describe "find_domain_or_app" do
+    let(:instance){ subject }
+    let(:rest_client){ subject.send(:rest_client) }
+    let(:options){ subject.send(:options) }
+    before{ subject.stub(:namespace_context).and_return('domain_s') }
+    def expects_method(*args)
+      expect{ subject.send(:find_app_or_domain, *args) }
+    end
+
+    it("should not infer domain")             { expects_method(nil).to raise_error(ArgumentError, /You must specify a domain with -n, or an application with -a/) }
+    it("should assume domain without options"){ expects_method('domain').to call(:find_domain).on(rest_client).with('domain') }
+    it("should let arg assume domain")        { options[:namespace] = 'domain_o'; expects_method('domain').to call(:find_domain).on(rest_client).with('domain') }
+    it("should assume domain with -n")        { options[:namespace] = 'domain_o'; expects_method(nil).to call(:find_domain).on(rest_client).with('domain_o') }
+    it("should let arg override -a")          { options[:app] = 'app_o'; expects_method('domain').to call(:find_domain).on(rest_client).with('domain') }
+    it("should infer -n when -a is available"){ options[:app] = 'app_o'; expects_method(nil).to call(:find_application).on(rest_client).with('domain_s', 'app_o') }
+    it("should split -a param")               { options[:app] = 'domain_o/app_o'; expects_method(nil).to call(:find_application).on(rest_client).with('domain_o', 'app_o') }
+    it("should split a path as an app")       { expects_method('domain/app').to call(:find_application).on(rest_client).with('domain', 'app') }
+
+    context "when an app context is available" do
+      before{ subject.stub(:app_context).and_return('app_s') }
+      it("should assume app with -n and app context"){ options[:namespace] = 'domain_o'; expects_method(nil).to call(:find_application).on(rest_client).with('domain_o', 'app_s') }
+    end
+  end
+
   describe "rest_client" do
     let(:instance){ subject }
     before{ RHC::Rest::Client.any_instance.stub(:api_version_negotiated).and_return(1.4) }

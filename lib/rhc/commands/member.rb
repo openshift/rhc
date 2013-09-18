@@ -48,7 +48,17 @@ module RHC::Commands
     alias_action :members, :root_command => true
     def list(path)
       target = find_app_or_domain(path)
-      say table(target.members.sort_by{ |m| [m.owner? ? 0 : 1, m.role_weight, m.name] }.map{ |m| [m.name, m.owner? ? "#{m.role} (owner)" : m.role, (m.id if options.ids)].compact }, :header => ['Name', 'Role', ("ID" if options.ids)].compact)
+      members = target.members.sort_by{ |m| [m.owner? ? 0 : 1, m.role_weight, m.name] }
+      show_name = members.any?{ |m| m.name && m.name != m.login }
+      members.map! do |m|
+        [
+          ((m.name || "") if show_name),
+          m.login || "",
+          m.owner? ? "#{m.role} (owner)" : m.role,
+          (m.id if options.ids)
+        ].compact
+      end
+      say table(members, :header => [('Name' if show_name), 'Login', 'Role', ("ID" if options.ids)].compact)
 
       0
     end

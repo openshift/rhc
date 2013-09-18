@@ -33,6 +33,10 @@ module RHC::Rest::Mock
       end
     end
 
+    def example_allows_members?
+      respond_to?(:supports_members?) && supports_members?
+    end
+
     def expect_authorization(with_auth)
       username, password = credentials_for(with_auth)
       lambda{ |r|
@@ -47,7 +51,6 @@ module RHC::Rest::Mock
       api.with(&user_agent_header)
       if @challenge
         stub_request(method, mock_href(uri, false)).to_return(:status => 401, :headers => {'www-authenticate' => 'basic realm="openshift broker"'})
-        @challenge = false
       end
       api
     end
@@ -181,7 +184,9 @@ module RHC::Rest::Mock
             :data => [{:id => name, :links => mock_response_links([
               ['LIST_APPLICATIONS', "broker/rest/domains/#{name}/applications", 'get'],
               ['ADD_APPLICATION', "broker/rest/domains/#{name}/applications", 'post', ({:optional_params => optional_params} if optional_params)],
-            ])}],
+              (['LIST_MEMBERS', "broker/rest/domains/#{name}/members", 'get'] if example_allows_members?),
+              (['UPDATE_MEMBERS', "broker/rest/domains/#{name}/members", 'patch'] if example_allows_members?),
+            ].compact)}],
           }.to_json
         })
     end
@@ -370,7 +375,9 @@ module RHC::Rest::Mock
        ['LIST_ALIASES',                    "domains/#{domain_id}/apps/#{app_id}/aliases",                        'get'],
        ['LIST_ENVIRONMENT_VARIABLES',      "domains/#{domain_id}/apps/#{app_id}/event",                          'post'],
        ['SET_UNSET_ENVIRONMENT_VARIABLES', "domains/#{domain_id}/apps/#{app_id}/event",                          'post'],
-       ['DELETE',                          "broker/rest/domains/#{domain_id}/applications/#{app_id}",            'DELETE']]
+       ['DELETE',                          "broker/rest/domains/#{domain_id}/applications/#{app_id}",            'delete'],
+      (['LIST_MEMBERS',                    "domains/#{domain_id}/apps/#{app_id}/members",                        'get'] if example_allows_members?),
+      ].compact
     end
 
     def mock_cart_links(domain_id='test_domain',app_id='test_app',cart_id='test_cart')
@@ -646,6 +653,7 @@ module RHC::Rest::Mock
 
     def add_member(member)
       (@members ||= []) << member
+      self
     end
   end
 
@@ -840,6 +848,7 @@ module RHC::Rest::Mock
 
     def add_member(member)
       (@members ||= []) << member
+      self
     end
   end
 

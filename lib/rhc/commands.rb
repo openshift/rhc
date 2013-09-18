@@ -217,7 +217,7 @@ module RHC
           c.info = opts
 
           (options_metadata = Array(opts[:options])).each do |o|
-            option_data = [o[:switches], o[:description]].flatten(1)
+            option_data = [o[:switches], o[:option_type], o[:description]].compact.flatten(1)
             c.option *option_data
             o[:arg] = Commander::Runner.switch_to_sym(Array(o[:switches]).last)
           end

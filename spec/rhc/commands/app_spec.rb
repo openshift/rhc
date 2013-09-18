@@ -36,7 +36,7 @@ describe RHC::Commands::App do
   end
 
   describe 'app default' do
-    before(:each) do
+    before do
       FakeFS.deactivate!
     end
 
@@ -220,7 +220,7 @@ describe RHC::Commands::App do
     end
 
     context 'when no cartridges are returned' do
-      before(:each) do
+      before do
         domain = rest_client.domains.first
       end
       context 'without trace' do
@@ -282,7 +282,7 @@ describe RHC::Commands::App do
     let(:arguments) { ['app', 'create', 'app1', '--trace', 'mock_unique_standalone_cart', '--enable-jenkins', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     context 'when run' do
-      before(:each) do
+      before do
         @domain = rest_client.add_domain("mockdomain")
       end
       it "should create a jenkins app and a regular app with an embedded jenkins client" do
@@ -300,7 +300,7 @@ describe RHC::Commands::App do
     let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--trace', '--enable-jenkins', '--no-dns', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     context 'when run' do
-      before(:each) do
+      before do
         domain = rest_client.add_domain("mockdomain")
       end
       it { expect { run }.to_not raise_error }
@@ -311,7 +311,7 @@ describe RHC::Commands::App do
     let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--trace', '--enable-jenkins', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     context 'when run' do
-      before(:each) do
+      before do
         domain = rest_client.add_domain("mockdomain")
       end
       it { expect { run }.to raise_error(ArgumentError, /You have named both your main application and your Jenkins application/) }
@@ -322,7 +322,7 @@ describe RHC::Commands::App do
     let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--trace', '--enable-jenkins', 'jenkins2', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     context 'when run' do
-      before(:each) do
+      before do
         @domain = rest_client.add_domain("mockdomain")
         @domain.add_application("jenkins", "jenkins-1")
       end
@@ -337,12 +337,12 @@ describe RHC::Commands::App do
   describe 'app create jenkins fails to install warnings' do
     let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--enable-jenkins', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
-    before(:each) do
+    before do
       @domain = rest_client.add_domain("mockdomain")
     end
 
     context 'when run with error in jenkins setup' do
-      before(:each) do
+      before do
         @instance.stub(:add_jenkins_app) { raise Exception }
       end
       it "should print out jenkins warning" do
@@ -351,7 +351,7 @@ describe RHC::Commands::App do
     end
 
     context 'when run with error in jenkins-client setup' do
-      before(:each) do
+      before do
         @instance.stub(:add_jenkins_cartridge) { raise Exception }
       end
       it "should print out jenkins warning" do
@@ -360,7 +360,7 @@ describe RHC::Commands::App do
     end
 
     context 'when run without jenkins cartridge available on server' do
-      before(:each) do
+      before do
         @instance.stub(:all_cartridges) { rest_client.cartridges.delete_if { |item| item.name =~ /\Ajenkins/i } }
       end
       it "should exit with jenkins error" do
@@ -373,7 +373,7 @@ describe RHC::Commands::App do
     let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--enable-jenkins', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     context 'when run with server error in jenkins-client setup' do
-      before(:each) do
+      before do
         @domain = rest_client.add_domain("mockdomain")
         @instance.stub(:add_jenkins_cartridge) { raise RHC::Rest::ServerErrorException.new("Server error", 157) }
       end
@@ -388,7 +388,7 @@ describe RHC::Commands::App do
     let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     context 'when run' do
-      before(:each) do
+      before do
         @domain = rest_client.add_domain("dnserror")
       end
       it { run_output.should match("unable to lookup your hostname") }
@@ -398,7 +398,7 @@ describe RHC::Commands::App do
   describe 'app create git warnings' do
     let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
-    before(:each) do
+    before do
       @domain = rest_client.add_domain("mockdomain")
       @instance.stub(:git_clone_application) { raise RHC::GitException }
       @instance.stub(:check_sshkeys!)
@@ -411,7 +411,7 @@ describe RHC::Commands::App do
     end
 
     context 'when run with windows and no nslookup bug' do
-      before(:each) do
+      before do
         RHC::Helpers.stub(:windows?) { true }
         @instance.stub(:run_nslookup) { true }
         @instance.stub(:run_ping) { true }
@@ -422,7 +422,7 @@ describe RHC::Commands::App do
     end
 
     context 'when run with windows nslookup bug' do
-      before(:each) do
+      before do
         RHC::Helpers.stub(:windows?) { true }
         @instance.stub(:run_nslookup) { true }
         @instance.stub(:run_ping) { false }
@@ -533,7 +533,7 @@ describe RHC::Commands::App do
     let(:arguments) { ['app', 'show', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     context 'when run with the same case as created' do
-      before(:each) do
+      before do
         FakeFS.deactivate!
         @domain = rest_client.add_domain("mockdomain")
         @domain.add_application("app1", "mock_type")
@@ -543,7 +543,7 @@ describe RHC::Commands::App do
     end
 
     context 'when run with scaled app' do
-      before(:each) do
+      before do
         @domain = rest_client.add_domain("mockdomain")
         app = @domain.add_application("app1", "mock_type", true)
         cart1 = app.add_cartridge('mock_cart-1')
@@ -557,7 +557,7 @@ describe RHC::Commands::App do
     end
 
     context 'when run with custom app' do
-      before(:each) do
+      before do
         @domain = rest_client.add_domain("mockdomain")
         app = @domain.add_application("app1", "mock_type", true)
         cart1 = app.add_cartridge('mock_cart-1')
@@ -575,7 +575,7 @@ describe RHC::Commands::App do
     let(:arguments) { ['app', 'show', 'APP1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     context 'when run with the different case from created' do
-      before(:each) do
+      before do
         @rc = MockRestClient.new
         @domain = @rc.add_domain("mockdomain")
         @domain.add_application("app1", "mock_type")
@@ -588,7 +588,7 @@ describe RHC::Commands::App do
     let(:arguments) { ['app', 'show', 'app1', '--state', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     context 'when run' do
-      before(:each) do
+      before do
         @domain = rest_client.add_domain("mockdomain")
         @domain.add_application("app1", "mock_type")
       end
@@ -600,7 +600,7 @@ describe RHC::Commands::App do
     let(:arguments) { ['app', 'show', 'app1', '--gears'] }
 
     context 'when run' do
-      before(:each) do
+      before do
         @domain = rest_client.add_domain("mockdomain")
         @domain.add_application("app1", "mock_type")
       end
@@ -650,7 +650,7 @@ describe RHC::Commands::App do
     let(:arguments) { ['app', 'status', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
     context 'when run' do
-      before(:each) do
+      before do
         @domain = rest_client.add_domain("mockdomain")
         @domain.add_application("app1", "mock_type")
       end
@@ -661,7 +661,7 @@ describe RHC::Commands::App do
 
   describe 'app actions' do
 
-    before(:each) do
+    before do
       domain = rest_client.add_domain("mockdomain")
       app = domain.add_application("app1", "mock_type")
       app.add_cartridge('mock_cart-1')

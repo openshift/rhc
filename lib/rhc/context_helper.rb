@@ -20,7 +20,7 @@ module RHC
       end
     end
 
-    def find_app_or_domain(path=options.to)
+    def find_app_or_domain(path=options.target)
       domain, app =
         if path.present?
           path.split(/\//)
@@ -36,7 +36,7 @@ module RHC
       elsif domain
         rest_client.find_domain(domain)
       else
-        raise ArgumentError, "You must specify a domain with -n, or an application with -n and -a."
+        raise ArgumentError, "You must specify a domain with -n, or an application with -a."
       end
     end
 
