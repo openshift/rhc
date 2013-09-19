@@ -25,8 +25,8 @@ module RHC::Commands
     argument :app, "Application you are saving a snapshot", ["-a", "--app NAME"]
     alias_action :"app snapshot save", :root_command => true, :deprecated => true
     def save(app)
-      raise OptionParser::InvalidOption, "SSH executable '#{options.ssh}' does not exist." if options.ssh and not File.exist?(options.ssh.split(' ').first)
-      raise OptionParser::InvalidOption, "SSH executable '#{options.ssh}' is not executable." if options.ssh and not File.executable?(options.ssh.split(' ').first)
+      raise RHC::InvalidSSHExecutableException.new "SSH executable '#{options.ssh}' does not exist." if options.ssh and not File.exist?(options.ssh.split(' ').first)
+      raise RHC::InvalidSSHExecutableException.new "SSH executable '#{options.ssh}' is not executable." if options.ssh and not File.executable?(options.ssh.split(' ').first)
       rest_app = rest_client.find_application(options.namespace, app)
       ssh_uri = URI.parse(rest_app.ssh_url)
       filename = options.filepath ? options.filepath : "#{app}.tar.gz"
@@ -74,8 +74,8 @@ module RHC::Commands
     argument :app, "Application of which you are restoring a snapshot", ["-a", "--app NAME"]
     alias_action :"app snapshot restore", :root_command => true, :deprecated => true
     def restore(app)
-      raise OptionParser::InvalidOption, "SSH executable '#{options.ssh}' does not exist." if options.ssh and not File.exist?(options.ssh.split(' ').first)
-      raise OptionParser::InvalidOption, "SSH executable '#{options.ssh}' is not executable." if options.ssh and not File.executable?(options.ssh.split(' ').first)
+      raise RHC::InvalidSSHExecutableException.new "SSH executable '#{options.ssh}' does not exist." if options.ssh and not File.exist?(options.ssh.split(' ').first)
+      raise RHC::InvalidSSHExecutableException.new "SSH executable '#{options.ssh}' is not executable." if options.ssh and not File.executable?(options.ssh.split(' ').first)
 
       filename = options.filepath ? options.filepath : "#{app}.tar.gz"
 

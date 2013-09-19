@@ -181,4 +181,10 @@ module RHC
       super "Invalid URI specified: #{uri}"
     end
   end
+
+  class InvalidSSHExecutableException < Exception
+    def initialize(message="Invalid or missing SSH executable")
+      super message
+    end
+  end
 end
