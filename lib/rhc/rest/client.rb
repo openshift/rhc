@@ -17,6 +17,7 @@ module RHC
       def add_domain(id, payload={})
         debug "Adding domain #{id} with options #{payload.inspect}"
         @domains = nil
+        payload.delete_if{ |k,v| k.nil? or v.nil? }
         api.rest_method "ADD_DOMAIN", {:id => id}.merge(payload)
       end
 
