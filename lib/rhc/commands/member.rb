@@ -68,7 +68,7 @@ module RHC::Commands
     description <<-DESC
       Adds or updates members on a domain by passing one or more login
       or ids for other people on OpenShift.  The login and ID values for each
-      account is displayed in 'rhc account'. To change the role for a user, simply
+      account are displayed in 'rhc account'. To change the role for a user, simply
       call the add-member command with the new role. You cannot change the role of
       the owner.
 
@@ -90,12 +90,12 @@ module RHC::Commands
           Gives the account with login 'bob@example.com' admin access on mydomain
 
       DESC
-    takes_application_or_domain
+    takes_domain
     option ['--ids'], "Treat the arguments as a list of IDs", :optional => true
     option ['-r', '--role ROLE'], "The role to give to each member - view, edit, or admin (default 'edit')", :type => Role, :optional => true
     argument :members, "A list of members logins to add.  Pass --ids to treat this as a list of IDs.", [], :type => :list
     def add(members)
-      target = find_app_or_domain
+      target = find_domain
       role = options.role || 'edit'
       raise ArgumentError, 'You must pass one or more logins or ids to this command' unless members.present?
       say "Adding #{pluralize(members.length, role_name(role))} to #{target.class.model_name.downcase} ... "
@@ -106,16 +106,32 @@ module RHC::Commands
     end
 
     summary "Remove a member from a domain"
-    syntax "<domain_or_app_path> [-n DOMAIN_NAME]"
-    takes_application_or_domain
-    option ['--ids'], "Treat the arguments as a list of IDs", :optional => true
+    syntax "<login> [<login>...] [-n DOMAIN_NAME] [--ids]"
+    description <<-DESC
+      Remove members on a domain by passing one or more login or ids for each
+      member you wish to remove.  View the list of existing members with
+      'rhc members <domain_name>'.
+
+      Pass '--all' to remove all but the owner from the domain.
+      DESC
+    takes_domain
+    option ['--ids'], "Treat the arguments as a list of IDs"
+    option ['--all'], "Remove all members from this domain."
     argument :members, "Member logins to remove from the domain.  Pass --ids to treat this as a list of IDs.", [], :type => :list
     def remove(members)
-      target = find_app_or_domain
-      raise ArgumentError, 'You must pass one or more logins or ids to this command' unless members.present?
-      say "Removing #{pluralize(members.length, 'member')} from #{target.class.model_name.downcase} ... "
-      target.update_members(changes_for(members, 'none'))
-      success "done"
+      target = find_domain
+
+      if options.all
+        say "Removing all members from #{target.class.model_name.downcase} ... "
+        target.delete_members
+        success "done"
+
+      else
+        raise ArgumentError, 'You must pass one or more logins or ids to this command' unless members.present?
+        say "Removing #{pluralize(members.length, 'member')} from #{target.class.model_name.downcase} ... "
+        target.update_members(changes_for(members, 'none'))
+        success "done"
+      end
 
       0
     end

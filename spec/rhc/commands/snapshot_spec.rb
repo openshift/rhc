@@ -79,7 +79,7 @@ describe RHC::Commands::Snapshot do
       before do
         File.stub(:exists?).and_return(true)
         RHC::TarGz.stub(:contains).and_return(true)
-        subject.class.any_instance.should_receive(:exec).with("cat #{@app.name}.tar.gz | ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'restore INCLUDE_GIT'").and_return([0, 'some restore output'])
+        subject.class.any_instance.should_receive(:exec).with("cat '#{@app.name}.tar.gz' | ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'restore INCLUDE_GIT'").and_return([0, 'some restore output'])
       end
       it('should succeed') { expect { run }.to exit_with_code(0) }
       it { run_output.should_not match 'some restore output' }
@@ -89,7 +89,7 @@ describe RHC::Commands::Snapshot do
       before do
         File.stub(:exists?).and_return(true)
         RHC::TarGz.stub(:contains).and_return(true)
-        subject.class.any_instance.should_receive(:exec).with("cat #{@app.name}.tar.gz | ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'restore INCLUDE_GIT'").and_return([1, 'some restore failures'])
+        subject.class.any_instance.should_receive(:exec).with("cat '#{@app.name}.tar.gz' | ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'restore INCLUDE_GIT'").and_return([1, 'some restore failures'])
       end
       it { expect { run }.to exit_with_code(130) }
       it { run_output.should match 'some restore failures' }

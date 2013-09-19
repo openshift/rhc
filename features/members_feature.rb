@@ -56,6 +56,7 @@ describe "rhc member scenarios" do
         members.any?{ |m| m.id == other_users[user2].id && m.editor? }.should be_true
 
         r = rhc 'show-domain', domain.id
+        r.status.should == 0
         r.stdout.should match "Members:"
         r.stdout.should match "#{user1} \\(edit\\)"
         r.stdout.should match "#{user2} \\(edit\\)"
@@ -91,6 +92,23 @@ describe "rhc member scenarios" do
         r = rhc 'leave-domain', domain.id, :as => other_users[user2]
         r.status.should == 0
         r.stdout.should match "Leaving domain.*done"
+      end
+
+      it "should remove all non owners" do
+        user1, user2 = other_users.keys.take(2)
+        r = rhc 'add-member', user1, user2, '-n', domain.id
+        r.status.should == 0
+        r.stdout.should match "Adding 2 editors to domain"
+        r.stdout.should match "done"
+        members = client.find_domain(domain.id).members
+        members.any?{ |m| m.id == other_users[user1].id && m.editor? }.should be_true
+        members.any?{ |m| m.id == other_users[user2].id && m.editor? }.should be_true
+
+        r = rhc 'remove-member', domain.id, '--all'
+        r.status.should == 0
+        r.stdout.should match "Removing all members from domain.*done"
+        members = client.find_domain(domain.id).members
+        members.select(&:owner).should == members
       end
 
       it "should reject a non-existent user" do

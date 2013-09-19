@@ -160,6 +160,14 @@ module RHC
           end
         end
 
+        context "#update_members" do
+          subject{ RHC::Rest::Application.new }
+          it "raises when the update link is disabled" do
+            subject.should_receive(:supports_members?).and_return(true)
+            expect{ subject.update_members([]) }.to raise_error(RHC::ChangeMembersOnResourceNotSupported)
+          end
+        end
+
         context "#domains" do
           before(:each) do
             stub_api_request(:any, api_links['LIST_DOMAINS']['relative']).

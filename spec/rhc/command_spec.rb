@@ -233,6 +233,24 @@ describe RHC::Commands::Base do
     end
   end
 
+  describe "find_domain" do
+    let(:instance){ subject }
+    let(:rest_client){ subject.send(:rest_client) }
+    let(:options){ subject.send(:options) }
+    def expects_method(*args)
+      expect{ subject.send(:find_domain, *args) }
+    end
+    before{ subject.stub(:namespace_context).and_return(nil) }
+
+    it("should raise without params"){ expects_method(nil).to raise_error(ArgumentError, /You must specify a domain with -n/) }
+    it("should handle namespace param"){ options[:namespace] = 'domain_o'; expects_method.to call(:find_domain).on(rest_client).with('domain_o') }
+
+    context "with a context" do
+      before{ subject.stub(:namespace_context).and_return('domain_s') }
+      it("should handle namespace param"){ expects_method.to call(:find_domain).on(rest_client).with('domain_s') }
+    end
+  end
+
   describe "find_app" do
     let(:instance){ subject }
     let(:rest_client){ subject.send(:rest_client) }

@@ -162,12 +162,14 @@ describe RHC::Commands::Member do
         stub_api
         challenge{ stub_one_domain('test', nil, mock_user_auth) }
       end
+=begin Scenario removed
       context "when adjusting an app" do
         let(:arguments) { ['remove-member', 'testuser', '-n', 'test', '-a', 'app'] }
         before{ challenge{ stub_one_application('test', 'app') } }
         it { expect { run }.to exit_with_code(1) }
         it { run_output.should =~ /You can only add or remove members on a domain/ }
       end
+=end
       context 'with a valid member' do
         let(:arguments) { ['remove-member', 'testuser', '-n', 'test'] }
         before do
@@ -177,6 +179,16 @@ describe RHC::Commands::Member do
         end
         it { expect { run }.to exit_with_code(0) }
         it { run_output.should =~ /Removing 1 member from domain .*done/ }
+      end
+
+      context 'with --all' do
+        let(:arguments) { ['remove-member', '--all', '-n', 'test'] }
+        before do
+          stub_api_request(:delete, "broker/rest/domains/test/members").
+            to_return({:body => {:type => 'members', :data => [], :messages => [{:exit_code => 0, :field => 'login', :index => 0, :severity => 'info', :text => 'Removed everyone except owner.'},]}.to_json, :status => 200})
+        end
+        it { expect { run }.to exit_with_code(0) }
+        it { run_output.should =~ /Removing all members from domain .*done/ }
       end
 
       context 'with a missing user' do

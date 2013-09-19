@@ -10,6 +10,12 @@ module RHC
 
     def self.included(other)
       other.module_eval do
+        def self.takes_domain(opts={})
+          option ["-n", "--namespace NAME"], "Name of a domain"
+          #if opts[:argument]
+          #  argument :target, "The name of a domain", ["-t", "--target NAME_OR_PATH"], :allow_nil => true, :covered_by => [:namespace]
+          #end
+        end
         # Does not take defaults to avoid conflicts
         def self.takes_application_or_domain(opts={})
           option ["-n", "--namespace NAME"], "Name of a domain"
@@ -27,6 +33,15 @@ module RHC
           option ["-n", "--namespace NAME"], "Name of a domain", :default => :from_local_git
           option ["--application-id ID"], "ID of an application", :hide => true, :default => :from_local_git
         end
+      end
+    end
+
+    def find_domain(opts={})
+      domain = options.namespace || options.target || namespace_context
+      if domain
+        rest_client.find_domain(domain)
+      else
+        raise ArgumentError, "You must specify a domain with -n."
       end
     end
 

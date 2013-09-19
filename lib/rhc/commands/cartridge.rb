@@ -29,6 +29,7 @@ module RHC::Commands
       Commands that affect a cartridge within an application will affect all
       gears the cartridge is installed to.
       DESC
+    default_action :help
 
     summary "List available cartridges"
     syntax ''
