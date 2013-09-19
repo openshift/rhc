@@ -16,6 +16,14 @@ module RHC
         scalable
       end
 
+      def id
+        attributes['id'] || uuid
+      end
+
+      def domain
+        domain_id
+      end
+
       def scalable_carts
         return [] unless scalable?
         carts = cartridges.select(&:scalable?)
@@ -58,10 +66,6 @@ module RHC
             debug "Getting all cartridges for application #{name}"
             rest_method "LIST_CARTRIDGES"
           end
-      end
-
-      def domain
-        domain_id
       end
 
       def gear_info

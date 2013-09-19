@@ -118,13 +118,13 @@ describe RHC::Commands::Base do
             alias_action :exe, :deprecated => true
             def execute(testarg); 1; end
 
-            argument :args, "Test arg list", ['--tests ARG'], :arg_type => :list
+            argument :args, "Test arg list", ['--tests ARG'], :type => :list
             summary "Test command execute-list"
             def execute_list(args); 1; end
 
             argument :arg1, "Test arg", ['--test'], :optional => true
-            argument :arg2, "Test arg list", ['--test2'], :arg_type => :list, :optional => true
-            argument :arg3, "Test arg list", ['--test3'], :arg_type => :list, :optional => true
+            argument :arg2, "Test arg list", ['--test2'], :type => :list, :optional => true
+            argument :arg3, "Test arg list", ['--test3'], :type => :list, :optional => true
             summary "Test command execute-vararg"
             def execute_vararg(arg1, arg2, arg3); 1; end
 
@@ -240,18 +240,16 @@ describe RHC::Commands::Base do
     def expects_method(*args)
       expect{ subject.send(:find_app, *args) }
     end
+    before{ subject.stub(:namespace_context).and_return('domain_s') }
 
     it("should raise without params"){ expects_method(nil).to raise_error(ArgumentError, /You must specify an application with -a/) }
 
     context "when looking for an app" do
-      before{ subject.stub(:namespace_context).and_return('domain_s') }
-      before{ subject.stub(:app_context).and_return('app_s') }
-      it("should handle direct")   { expects_method('app').to call(:find_application).on(rest_client).with('domain_s', 'app') }
-      it("should handle namespace param"){ options[:namespace] = 'domain_o'; expects_method('app').to call(:find_application).on(rest_client).with('domain_o', 'app') }
-      it("should ignore app param"){ options[:app] = 'app_o'; expects_method('app').to call(:find_application).on(rest_client).with('domain_s', 'app') }
-      it("should accept app param"){ options[:app] = 'app_o'; expects_method(nil).to call(:find_application).on(rest_client).with('domain_s', 'app_o') }
-      it("should split app param") { options[:app] = 'domain_o/app_o'; expects_method(nil).to call(:find_application).on(rest_client).with('domain_o', 'app_o') }
-      it("should accept split app"){ expects_method('domain/app').to call(:find_application).on(rest_client).with('domain', 'app') }
+      it("should raise without app")     { expects_method.to raise_error(ArgumentError, /You must specify an application with -a, or run this command/) }
+      it("should handle namespace param"){ options[:namespace] = 'domain_o'; expects_method.to raise_error(ArgumentError, /You must specify an application with -a, or run this command/) }
+      it("should accept app param")      { options[:app] = 'app_o'; expects_method.to call(:find_application).on(rest_client).with('domain_s', 'app_o', {}) }
+      it("should split app param")       { options[:app] = 'domain_o/app_o'; expects_method.to call(:find_application).on(rest_client).with('domain_o', 'app_o', {}) }
+      it("should find gear groups")      { options[:app] = 'domain_o/app_o'; expects_method(:with_gear_groups => true, :include => :cartridges).to call(:find_application_gear_groups).on(rest_client).with('domain_o', 'app_o', {:include => :cartridges}) }
     end
   end
 
@@ -264,18 +262,14 @@ describe RHC::Commands::Base do
       expect{ subject.send(:find_app_or_domain, *args) }
     end
 
-    it("should not infer domain")             { expects_method(nil).to raise_error(ArgumentError, /You must specify a domain with -n, or an application with -a/) }
-    it("should assume domain without options"){ expects_method('domain').to call(:find_domain).on(rest_client).with('domain') }
-    it("should let arg assume domain")        { options[:namespace] = 'domain_o'; expects_method('domain').to call(:find_domain).on(rest_client).with('domain') }
-    it("should assume domain with -n")        { options[:namespace] = 'domain_o'; expects_method(nil).to call(:find_domain).on(rest_client).with('domain_o') }
-    it("should let arg override -a")          { options[:app] = 'app_o'; expects_method('domain').to call(:find_domain).on(rest_client).with('domain') }
-    it("should infer -n when -a is available"){ options[:app] = 'app_o'; expects_method(nil).to call(:find_application).on(rest_client).with('domain_s', 'app_o') }
-    it("should split -a param")               { options[:app] = 'domain_o/app_o'; expects_method(nil).to call(:find_application).on(rest_client).with('domain_o', 'app_o') }
-    it("should split a path as an app")       { expects_method('domain/app').to call(:find_application).on(rest_client).with('domain', 'app') }
+    it("should not infer domain")             { expects_method.to raise_error(ArgumentError, /You must specify a domain with -n, or an application with -a/) }
+    it("should assume domain with -n")        { options[:namespace] = 'domain_o'; expects_method.to call(:find_domain).on(rest_client).with('domain_o') }
+    it("should infer -n when -a is available"){ options[:app] = 'app_o'; expects_method.to call(:find_application).on(rest_client).with('domain_s', 'app_o') }
+    it("should split -a param")               { options[:app] = 'domain_o/app_o'; expects_method.to call(:find_application).on(rest_client).with('domain_o', 'app_o') }
 
     context "when an app context is available" do
-      before{ subject.stub(:app_context).and_return('app_s') }
-      it("should assume app with -n and app context"){ options[:namespace] = 'domain_o'; expects_method(nil).to call(:find_application).on(rest_client).with('domain_o', 'app_s') }
+      before{ subject.instance_variable_set(:@local_git_config, {:app => 'app_s'}) }
+      it("should ignore the app context"){ options[:namespace] = 'domain_o'; expects_method(nil).to call(:find_domain).on(rest_client).with('domain_o') }
     end
   end
 

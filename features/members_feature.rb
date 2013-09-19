@@ -20,6 +20,12 @@ describe "rhc member scenarios" do
         r.stdout.should match "owned by #{domain.owner}"
       end
 
+      it "should prevent leaving the domain for the owner" do
+        r = rhc 'leave-domain', domain.id
+        r.status.should_not == 1
+        r.stdout.should match "Leaving domain.*You are the owner of this domain and cannot leave"
+      end
+
       it "should add and remove a member" do
         user = other_users.keys.take(1).first
         r = rhc 'add-member', user, '-n', domain.id
@@ -29,6 +35,7 @@ describe "rhc member scenarios" do
         client.find_domain(domain.id).members.any?{ |m| m.id == other_users[user].id && m.editor? }.should be_true
 
         r = rhc 'show-domain', domain.id
+        r.status.should == 0
         r.stdout.should match "Members:"
         r.stdout.should match "#{user} \\(edit\\)"
 
@@ -60,7 +67,7 @@ describe "rhc member scenarios" do
         client.find_domain(domain.id).members.none?{ |m| m.id == other_users[user2].id }.should be_true
       end
 
-      it "should add a view and an admin member" do
+      it "should add a view and an admin member. and allow users to leave the domain" do
         user1, user2 = other_users.keys.take(2)
 
         r = rhc 'add-member', user1, '--role', 'admin', '-n', domain.id
@@ -76,9 +83,14 @@ describe "rhc member scenarios" do
         client.find_domain(domain.id).members.any?{ |m| m.id == other_users[user2].id && m.viewer? }.should be_true
 
         r = rhc 'show-domain', domain.id
+        r.status.should == 0
         r.stdout.should match "Members:"
         r.stdout.should match "#{user1} \\(admin\\)"
         r.stdout.should match "#{user2} \\(view\\)"
+
+        r = rhc 'leave-domain', domain.id, :as => other_users[user2]
+        r.status.should == 0
+        r.stdout.should match "Leaving domain.*done"
       end
 
       it "should reject a non-existent user" do

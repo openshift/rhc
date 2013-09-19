@@ -14,10 +14,10 @@ module RHC
     # callable from the client for convenience.
     #
     module ApiMethods
-      def add_domain(id)
-        debug "Adding domain #{id}"
+      def add_domain(id, payload={})
+        debug "Adding domain #{id} with options #{payload.inspect}"
         @domains = nil
-        api.rest_method "ADD_DOMAIN", :id => id
+        api.rest_method "ADD_DOMAIN", {:id => id}.merge(payload)
       end
 
       def domains
@@ -56,37 +56,38 @@ module RHC
       def find_domain(id)
         debug "Finding domain #{id}"
         if link = api.link_href(:SHOW_DOMAIN, ':name' => id)
-          request({
-            :url => link,
-            :method => "GET",
-          })
+          request(:url => link, :method => "GET")
         else
           domains.find{ |d| d.id.downcase == id.downcase }
         end or raise DomainNotFoundException.new("Domain #{id} not found")
       end
 
       def find_application(domain, application, options={})
-        response = request({
-          :url => link_show_application_by_domain_name(domain, application),
-          :method => "GET",
-          :payload => options
-        })
+        request(:url => link_show_application_by_domain_name(domain, application), :method => "GET", :payload => options)
       end
 
       def find_application_gear_groups(domain, application, options={})
-        response = request({
-          :url => link_show_application_by_domain_name(domain, application, "gear_groups"),
-          :method => "GET",
-          :payload => options
-        })
+        request(:url => link_show_application_by_domain_name(domain, application, "gear_groups"), :method => "GET", :payload => options)
       end
 
       def find_application_aliases(domain, application, options={})
-        response = request({
-          :url => link_show_application_by_domain_name(domain, application, "aliases"),
-          :method => "GET",
-          :payload => options
-        })
+        request(:url => link_show_application_by_domain_name(domain, application, "aliases"), :method => "GET", :payload => options)
+      end
+
+      def find_application_by_id(id, options={})
+        if api.supports? :show_application
+          request(:url => link_show_application_by_id(id), :method => "GET", :payload => options)
+        else
+          applications.find{ |a| a.id == id }
+        end or raise ApplicationNotFoundException.new("Application with id #{id} not found")
+      end
+
+      def find_application_by_id_gear_groups(id, options={})
+        if api.supports? :show_application
+          request(:url => link_show_application_by_id(id, 'gear_groups'), :method => "GET", :payload => options)
+        else
+          applications.find{ |a| return a.gear_groups if a.id == id }
+        end or raise ApplicationNotFoundException.new("Application with id #{id} not found")
       end
 
       def link_show_application_by_domain_name(domain, application, *args)
@@ -96,6 +97,10 @@ module RHC
           "applications",
           application,
         ].concat(args).map{ |s| URI.escape(s) }.join("/")
+      end
+
+      def link_show_application_by_id(id, *args)
+        api.link_href(:SHOW_APPLICATION, {':id' => id}, *args)
       end
 
       def link_show_domain_by_name(domain, *args)

@@ -157,7 +157,7 @@ module RHC
         values = values.to_a if values.is_a? Hash
         values.delete_if do |arr|
           arr[0] = "#{table_heading(arr.first)}:" if arr[0].is_a? Symbol
-          opts[:delete] and arr.last.blank?
+          opts[:delete] and arr.last.nil? || arr.last == ""
         end
 
         table(values, :heading => heading, :indent => heading ? '  ' : nil, :color => opts[:color])
@@ -207,7 +207,7 @@ module RHC
           distance_of_time_in_words(value)
         else
           case value
-          when Array then value.join(', ')
+          when Array then value.empty? ? '<none>' : value.join(', ')
           else            value
           end
         end

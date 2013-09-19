@@ -35,7 +35,17 @@ module RhcExecutionHelper
   def rhc(*args)
     opts = args.pop if args.last.is_a? Hash
     opts ||= {}
-    unless server_supports_sessions?
+    if user = opts[:as]
+      args << '--rhlogin'
+      args << user.login
+      if user.respond_to? :token
+        args << '--token'
+        args << user.token
+      elsif user.respond_to? :password
+        args << '--password'
+        args << user.password
+      end
+    elsif !server_supports_sessions?
       args << '--password'
       args << ENV['TEST_PASSWORD']
     end
@@ -102,6 +112,7 @@ module RhcExecutionHelper
     $other_users ||= begin
       (ENV['TEST_OTHER_USERS'] || "other1:a,other2:b,other3:c,other4:d").split(',').map{ |s| s.split(':') }.inject({}) do |h, (u, p)|
         h[u] = base_client(u, p).user
+        h[u].attributes[:password] = p
         h
       end
     end

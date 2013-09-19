@@ -3,7 +3,13 @@ module RHC
     class Domain < Base
       include Membership
 
-      define_attr :id, :allowed_gear_sizes, :creation_time
+      define_attr :id, :name, :allowed_gear_sizes, :creation_time
+
+      alias_method :id_attr, :id
+      alias_method :name_attr, :name
+      def id
+        name_attr || id_attr
+      end
 
       def allowed_gear_sizes
         Array(attribute(:allowed_gear_sizes))
@@ -53,12 +59,17 @@ module RHC
         rest_method "LIST_APPLICATIONS", options
       end
 
-      def update(new_id)
+      def rename(new_id)
         debug "Updating domain #{id} to #{new_id}"
         # 5 minute timeout as this may take time if there are a lot of apps
         rest_method "UPDATE", {:id => new_id}, {:timeout => 0}
       end
-      alias :save :update
+      alias :update :rename
+
+      def configure(payload, options={})
+        self.attributes = rest_method("UPDATE", payload, options).attributes
+        self
+      end
 
       def destroy(force=false)
         debug "Deleting domain #{id}"

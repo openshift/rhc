@@ -79,7 +79,7 @@ module RHC::Rest
       raise "Members must be an array" unless members.is_a?(Array)
       raise RHC::MembersNotSupported unless supports_members?
       raise RHC::ChangeMembersOnResourceNotSupported unless supports_update_members?
-      rest_method 'UPDATE_MEMBERS', {:members => members}, options
+      @members = attributes['members'] = rest_method 'UPDATE_MEMBERS', {:members => members}, options
     end
 
     def delete_members(options={})
@@ -89,9 +89,16 @@ module RHC::Rest
       @members = attributes['members'] = nil
     end
 
+    def leave(options={})
+      raise RHC::MembersNotSupported unless supports? 'LEAVE'
+      rest_method "LEAVE", nil, options
+    ensure
+      @members = attributes['members'] = nil
+    end
+
     def owner
       if o = Array(attribute(:members)).find{ |m| m['owner'] == true }
-        o['name']
+        o['name'] || o['login']
       end
     end
   end

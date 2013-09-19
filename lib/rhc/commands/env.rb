@@ -38,13 +38,12 @@ module RHC::Commands
 
       DESC
     syntax "<VARIABLE=VALUE> [... <VARIABLE=VALUE>] [--namespace NAME] [--app NAME]"
-    argument :env, "Environment variable name and value pair separated by an equal (=) sign, e.g. VARIABLE=VALUE", ["-e", "--env VARIABLE=VALUE"], :optional => false, :arg_type => :list
-    option ["-a", "--app NAME"], "Application name (required)", :context => :app_context, :required => true
-    option ["-n", "--namespace NAME"], "Namespace of your application", :context => :namespace_context, :required => true
+    argument :env, "Environment variable name and value pair separated by an equal (=) sign, e.g. VARIABLE=VALUE", ["-e", "--env VARIABLE=VALUE"], :optional => false, :type => :list
+    takes_application
     option ["--confirm"], "Pass to confirm setting the environment variable(s)"
     alias_action :add
     def set(env)
-      rest_app = rest_client.find_application(options.namespace, options.app)
+      rest_app = find_app
 
       with_file = env.index {|item| File.file? item}
 
@@ -78,13 +77,12 @@ module RHC::Commands
 
       DESC
     syntax "<VARIABLE> [... <VARIABLE>] [--namespace NAME] [--app NAME]"
-    argument :env, "Name of the environment variable(s), e.g. VARIABLE", ["-e", "--env VARIABLE"], :optional => false, :arg_type => :list
-    option ["-a", "--app NAME"], "Application name (required)", :context => :app_context, :required => true
-    option ["-n", "--namespace NAME"], "Namespace of your application", :context => :namespace_context, :required => true
+    argument :env, "Name of the environment variable(s), e.g. VARIABLE", ["-e", "--env VARIABLE"], :optional => false, :type => :list
+    takes_application
     option ["--confirm"], "Pass to confirm removing the environment variable"
     alias_action :remove
     def unset(env)
-      rest_app = rest_client.find_application(options.namespace, options.app)
+      rest_app = find_app
 
       warn 'Removing environment variables is a destructive operation that may result in loss of data.'
 
@@ -108,12 +106,11 @@ module RHC::Commands
 
       DESC
     syntax "<app> [--namespace NAME]"
-    argument :app, "Application name (required)", ["-a", "--app name"], :context => :app_context, :required => true
-    option ["-n", "--namespace NAME"], "Namespace of your application", :context => :namespace_context, :required => true
+    takes_application :argument => true
     option ["--table"], "Format the output list as a table"
     option ["--quotes"], "Format the output list with double quotes for env var values"
     def list(app)
-      rest_app = rest_client.find_application(options.namespace, app)
+      rest_app = find_app
       rest_env_vars = rest_app.environment_variables
 
       pager
@@ -125,13 +122,12 @@ module RHC::Commands
 
     summary "Show the value of one or more environment variable(s) currently set to your application"
     syntax "<VARIABLE> [... <VARIABLE>] [--namespace NAME] [--app NAME]"
-    argument :env, "Name of the environment variable(s), e.g. VARIABLE", ["-e", "--env VARIABLE"], :optional => false, :arg_type => :list
-    option ["-a", "--app NAME"], "Application name (required)", :context => :app_context, :required => true
-    option ["-n", "--namespace NAME"], "Namespace of your application", :context => :namespace_context, :required => true
+    argument :env, "Name of the environment variable(s), e.g. VARIABLE", ["-e", "--env VARIABLE"], :optional => false, :type => :list
+    takes_application
     option ["--table"], "Format the output list as a table"
     option ["--quotes"], "Format the output list with double quotes for env var values"
     def show(env)
-      rest_app = rest_client.find_application(options.namespace, options.app)
+      rest_app = find_app
       rest_env_vars = rest_app.find_environment_variables(env)
 
       pager

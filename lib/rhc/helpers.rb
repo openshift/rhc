@@ -241,6 +241,11 @@ module RHC
       $terminal.debug?
     end
 
+    def exec(cmd)
+      output = Kernel.send(:`, cmd)
+      [$?.exitstatus, output]
+    end
+
     def disable_deprecated?
       ENV['DISABLE_DEPRECATED'] == '1'
     end

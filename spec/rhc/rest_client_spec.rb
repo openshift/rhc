@@ -349,6 +349,66 @@ module RHC
           end
         end
 
+        context "#find_application_by_id" do
+          context "when server does not support SHOW_APPLICATION" do
+            let(:server){ mock_uri }
+            let(:endpoint){ "https://#{server}/broker/rest/api"}
+            before do
+              stub_api
+              stub_one_domain('test')
+              stub_one_application('test', 'app1')
+            end
+            it "returns an app object for matching IDs" do
+              match = nil
+              expect { match = client.find_application_by_id(1) }.to_not raise_error
+              match.id.should == 1
+              match.class.should == RHC::Rest::Application
+            end
+            it "raise an error when no matching app IDs can be found" do
+              expect { client.find_application_by_id('2') }.to raise_error(RHC::Rest::ApplicationNotFoundException)
+            end
+          end
+
+          context "when server supports SHOW_APPLICATION" do
+            let(:api_links){ mock_response_links([['SHOW_APPLICATION', 'application/:id', 'get']]) }
+            before do
+              stub_api_request(:any, api_links['SHOW_APPLICATION']['relative'].gsub(/:id/, 'app_0')).
+                to_return({ :body   => {
+                              :type => 'application',
+                              :data =>
+                              { :id    => 'app_0',
+                                :links => mock_response_links(mock_app_links('app_0')),
+                               }
+                            }.to_json,
+                            :status => 200
+                          })
+              stub_api_request(:any, api_links['SHOW_APPLICATION']['relative'].gsub(/:id/, 'app_1')).
+                to_return({ :body => {:messages => [{:exit_code => 101}]}.to_json,
+                            :status => 404
+                          })
+            end
+            it "returns an app object for matching IDs" do
+              match = nil
+              expect { match = client.find_application_by_id('app_0') }.to_not raise_error
+              match.id.should == 'app_0'
+              match.class.should == RHC::Rest::Application
+            end
+            it "raise an error when no matching IDs can be found" do
+              expect { client.find_application_by_id('app_1') }.to raise_error(RHC::Rest::ApplicationNotFoundException)
+            end
+            it "should fetch application ids" do
+              client.api
+              client.should_receive(:request).with(:url => "#{api_links['SHOW_APPLICATION']['href'].gsub(/:id/, 'app_2')}", :method => "GET", :payload => {}).and_return(1)
+              client.find_application_by_id('app_2').should == 1
+            end
+            it "should fetch application gear groups" do
+              client.api
+              client.should_receive(:request).with(:url => "#{api_links['SHOW_APPLICATION']['href'].gsub(/:id/, 'app_2')}/gear_groups", :method => "GET", :payload => {}).and_return(1)
+              client.find_application_by_id_gear_groups('app_2').should == 1
+            end
+          end
+        end
+
         describe RHC::Rest::Cartridge do
           subject do
             RHC::Rest::Cartridge.new({

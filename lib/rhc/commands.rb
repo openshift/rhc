@@ -13,6 +13,14 @@ module Commander
       root.present?
     end
 
+    alias_method :option_old, :option
+    def option(*args, &block)
+      opts = args.pop if Hash === args.last
+      option_old(*args, &block).tap do |options|
+        options.last.merge!(opts) if opts
+      end
+    end
+
     #
     # Force proxy_option_struct to default to nil for values,
     # backported for Commander 4.0.3
@@ -23,7 +31,7 @@ module Commander
         value = true if value.nil?
         # if multiple values were specified for this option, collect it as an
         # array. on 'fill_arguments' we will decide between stick with the array
-        # (if :option_type => :list) or just take the last value from array.
+        # (if :type => :list) or just take the last value from array.
         # not part of the backported method.
         if proxy_options.select{ |item| item[0] == option }.length > 1
           if options[option]
@@ -217,15 +225,17 @@ module RHC
           c.info = opts
 
           (options_metadata = Array(opts[:options])).each do |o|
-            option_data = [o[:switches], o[:option_type], o[:description]].compact.flatten(1)
+            option_data = [o[:switches], o[:type], o[:description], o.slice(:optional, :default, :hide)].compact.flatten(1)
             c.option *option_data
             o[:arg] = Commander::Runner.switch_to_sym(Array(o[:switches]).last)
           end
 
           (args_metadata = Array(opts[:args])).each do |meta|
             switches = meta[:switches]
-            unless switches.nil? or switches.empty?
+            unless switches.blank?
+              switches = switches.dup
               switches << meta[:description]
+              switches << meta.slice(:optional, :default, :hide, :covered_by, :allow_nil)
               c.option *switches
             end
           end
@@ -278,13 +288,25 @@ module RHC
         end
 
         # process options
-        options_metadata.each do |option_meta|
-          arg = option_meta[:arg]
-
-          if arg && option_meta[:option_type] != :list && options[arg].is_a?(Array)
+        defaults = {}
+        (options_metadata + args_metadata).each do |option_meta|
+          arg = option_meta[:arg] || option_meta[:name] or next
+          if arg && option_meta[:type] != :list && options[arg].is_a?(Array)
             options[arg] = options[arg].last
           end
-
+          case v = option_meta[:default]
+          when Symbol
+            cmd.send(v, defaults, arg)
+          #when Proc
+          #  v.call(defaults, arg)
+          when nil
+          else
+            defaults[arg] = v
+          end
+        end
+        options.default(defaults)
+        options_metadata.each do |option_meta|
+          arg = option_meta[:arg]
           if context_helper = option_meta[:context_helper]
             options[arg] = lambda{ cmd.send(context_helper) } if options.__hash__[arg].nil?
           end
@@ -294,6 +316,10 @@ module RHC
         available = args.dup
         slots = Array.new(args_metadata.length)
         args_metadata.each_with_index do |arg, i|
+          if Array(arg[:covered_by]).any?{ |k| !options.__hash__[k].nil? }
+            slots[i] = nil
+            next
+          end
           option = arg[:option_symbol]
           context_helper = arg[:context_helper]
 
@@ -301,7 +327,7 @@ module RHC
 
           if value.nil?
             value =
-              if arg[:arg_type] == :list
+              if arg[:type] == :list
                 all = []
                 while available.first && available.first != '--'
                   all << available.shift
@@ -315,11 +341,11 @@ module RHC
 
           value = cmd.send(context_helper) if value.nil? and context_helper
 
-          if value.nil?
+          if value.nil? && arg[:allow_nil] != true
             raise ArgumentError, "Missing required argument '#{arg[:name]}'." unless arg[:optional]
             break if available.empty?
           else
-            value = Array(value) if arg[:arg_type] == :list
+            value = Array(value) if arg[:type] == :list
             slots[i] = value
             options.__hash__[option] = value if option
           end

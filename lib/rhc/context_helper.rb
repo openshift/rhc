@@ -10,25 +10,35 @@ module RHC
 
     def self.included(other)
       other.module_eval do
+        # Does not take defaults to avoid conflicts
         def self.takes_application_or_domain(opts={})
           option ["-n", "--namespace NAME"], "Name of a domain"
           option ["-a", "--app NAME"], "Name of an application"
           if opts[:argument]
-            argument :path, "The name of a domain, or an application name with domain (domain or domain/application)", ["-t", "--target NAME_OR_PATH"], :optional => true
+            argument :target, "The name of a domain, or an application name with domain (domain or domain/application)", ["-t", "--target NAME_OR_PATH"], :allow_nil => true, :covered_by => [:application_id, :namespace, :app]
           end
+        end
+        def self.takes_application(opts={})
+          if opts[:argument]
+            argument :app, "Name of an application", ["-a", "--app NAME"], :allow_nil => true, :default => :from_local_git, :covered_by => :application_id
+          else
+            option ["-a", "--app NAME"], "Name of an application", :default => :from_local_git
+          end
+          option ["-n", "--namespace NAME"], "Name of a domain", :default => :from_local_git
+          option ["--application-id ID"], "ID of an application", :hide => true, :default => :from_local_git
         end
       end
     end
 
-    def find_app_or_domain(path=options.target)
+    def find_app_or_domain(opts={})
       domain, app =
-        if path.present?
-          path.split(/\//)
+        if options.target.present?
+          options.target.split(/\//)
         elsif options.namespace || options.app
           if options.app =~ /\//
             options.app.split(/\//)
           else
-            [options.namespace || namespace_context, options.app || app_context]
+            [options.namespace || namespace_context, options.app]
           end
         end
       if app && domain
@@ -40,25 +50,30 @@ module RHC
       end
     end
 
-    def find_app(path=options.to)
+    def find_app(opts={})
+      if id = options.application_id
+        if opts.delete(:with_gear_groups)
+          return rest_client.find_application_by_id_gear_groups(id, opts)
+        else
+          return rest_client.find_application_by_id(id, opts)
+        end
+      end
       domain, app =
-        if path.present?
-          if (parts = path.split(/\//)).length > 1
-            parts
-          else
-            [options.namespace || namespace_context, path]
-          end
-        elsif options.namespace || options.app
+        if options.app
           if options.app =~ /\//
             options.app.split(/\//)
           else
-            [options.namespace || namespace_context, options.app || app_context]
+            [options.namespace || namespace_context, options.app]
           end
         end
       if app && domain
-        rest_client.find_application(domain, app)
+        if opts.delete(:with_gear_groups)
+          rest_client.find_application_gear_groups(domain, app, opts)
+        else
+          rest_client.find_application(domain, app, opts)
+        end
       else
-        raise ArgumentError, "You must specify an application with -a."
+        raise ArgumentError, "You must specify an application with -a, or run this command from within Git directory cloned from OpenShift."
       end
     end
 
@@ -66,26 +81,15 @@ module RHC
       ENV['LIBRA_SERVER'] || (!options.clean && config['libra_server']) || "openshift.redhat.com"
     end
 
-    def app_context
-      debug "Getting app context"
-
-      name = git_config_get "rhc.app-name"
-      return name if name.present?
-
-      uuid = git_config_get "rhc.app-uuid"
-
-      if uuid.present?
-        # proof of concept - we shouldn't be traversing
-        # the broker should expose apis for getting the application via a uuid
-        rest_client.domains.each do |rest_domain|
-          rest_domain.applications.each do |rest_app|
-            return rest_app.name if rest_app.uuid == uuid
-          end
-        end
-
-        debug "Couldn't find app with UUID == #{uuid}"
-      end
-      nil
+    def from_local_git(defaults, arg)
+      debug "Getting context from Git"
+      @local_git_config ||= {
+        :application_id => git_config_get('rhc.app-id').presence,
+        :app => git_config_get('rhc.app-name').presence,
+        :namespace => git_config_get('rhc.domain-name').presence,
+      }
+      defaults[arg] ||= @local_git_config[arg] unless @local_git_config[arg].nil?
+      @local_git_config
     end
 
     def namespace_context

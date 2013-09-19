@@ -166,6 +166,13 @@ describe RHC::Commands::Alias do
     it { run_output.should =~ /Alias 'www.foo.bar' has been added/m }
   end
 
+  describe 'add alias with implicit context' do
+    before{ subject.class.any_instance.stub(:git_config_get){ |key| case key; when 'rhc.app-name' then 'mock_app_0'; when 'rhc.domain-name' then 'mock_domain_0'; end } }
+    let(:arguments) { ['alias', 'add', 'www.foo.bar' ] }
+    it { expect { run }.to exit_with_code(0) }
+    it { run_output.should =~ /Alias 'www.foo.bar' has been added/m }
+  end
+
   describe 'remove alias' do
     before do 
       rest_client.stub(:api_version_negotiated).and_return(1.4)

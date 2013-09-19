@@ -92,8 +92,8 @@ module RHC::Commands
       DESC
     takes_application_or_domain
     option ['--ids'], "Treat the arguments as a list of IDs", :optional => true
-    option ['-r', '--role ROLE'], "The role to give to each member - view, edit, or admin (default 'edit')", :option_type => Role, :optional => true
-    argument :members, "A list of members logins to add.  Pass --ids to treat this as a list of IDs.", [], :arg_type => :list
+    option ['-r', '--role ROLE'], "The role to give to each member - view, edit, or admin (default 'edit')", :type => Role, :optional => true
+    argument :members, "A list of members logins to add.  Pass --ids to treat this as a list of IDs.", [], :type => :list
     def add(members)
       target = find_app_or_domain
       role = options.role || 'edit'
@@ -109,7 +109,7 @@ module RHC::Commands
     syntax "<domain_or_app_path> [-n DOMAIN_NAME]"
     takes_application_or_domain
     option ['--ids'], "Treat the arguments as a list of IDs", :optional => true
-    argument :members, "Member logins to remove from the domain.  Pass --ids to treat this as a list of IDs.", [], :arg_type => :list
+    argument :members, "Member logins to remove from the domain.  Pass --ids to treat this as a list of IDs.", [], :type => :list
     def remove(members)
       target = find_app_or_domain
       raise ArgumentError, 'You must pass one or more logins or ids to this command' unless members.present?

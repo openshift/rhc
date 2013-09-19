@@ -30,7 +30,7 @@ describe "rhc core scenarios" do
       r.status.should == 0
 
       r = rhc :account
-      r.stdout.should match 'Server'
+      r.stdout.should match "on #{ENV['RHC_SERVER']}"
       r.stdout.should match 'Gears'
       r.stdout.should match 'Plan'
     end
@@ -108,7 +108,7 @@ describe "rhc core scenarios" do
       let(:git_config){ `git config --list` }
 
       it "will set Git config values" do
-        git_config.should match "rhc.app-uuid=#{app.uuid}"
+        git_config.should match "rhc.app-id=#{app.id}"
         git_config.should match "rhc.app-name=#{app.name}"
         git_config.should match "rhc.domain-name=#{app.domain_name}"
       end
