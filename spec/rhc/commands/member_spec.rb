@@ -117,7 +117,7 @@ describe RHC::Commands::Member do
       context 'with an invalid role' do
         let(:arguments) { ['add-member', 'testuser', '-n', 'test', '--role', 'missing'] }
         it { expect { run }.to exit_with_code(1) }
-        it { run_output.should =~ /The provided role 'missing' is not valid\. Supported values: view/ }
+        it { run_output.should =~ /The provided role 'missing' is not valid\. Supported values: .*admin/ }
       end
 
       context 'with a missing user' do

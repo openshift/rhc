@@ -79,7 +79,7 @@ module RHC::Rest
       raise "Members must be an array" unless members.is_a?(Array)
       raise RHC::MembersNotSupported unless supports_members?
       raise RHC::ChangeMembersOnResourceNotSupported unless supports_update_members?
-      @members = attributes['members'] = rest_method 'UPDATE_MEMBERS', {:members => members}, options
+      @members = (attributes['members'] = rest_method('UPDATE_MEMBERS', {:members => members}, options))
     end
 
     def delete_members(options={})
