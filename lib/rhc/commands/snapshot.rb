@@ -74,7 +74,7 @@ module RHC::Commands
         include_git = RHC::Helpers.windows? ? true : RHC::TarGz.contains(filename, './*/git')
         ssh_uri = URI.parse(rest_app.ssh_url)
 
-        ssh_cmd = "cat #{filename} | ssh #{ssh_uri.user}@#{ssh_uri.host} 'restore#{include_git ? ' INCLUDE_GIT' : ''}'"
+        ssh_cmd = "cat '#{filename}' | ssh #{ssh_uri.user}@#{ssh_uri.host} 'restore#{include_git ? ' INCLUDE_GIT' : ''}'"
 
         say "Restoring from snapshot #{filename}..."
         debug ssh_cmd

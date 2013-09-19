@@ -76,6 +76,10 @@ module RHC
         rest_method "DELETE", :force => force
       end
       alias :delete :destroy
+
+      def supports_add_application_with_env_vars?
+        has_param?('ADD_APPLICATION', 'environment_variables')
+      end
     end
   end
 end

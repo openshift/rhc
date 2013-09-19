@@ -1,3 +1,23 @@
+require 'httpclient'
+
+class HTTPClient
+  class SSPINegotiateAuth
+    def get_with_rescue(*args)
+      get_without_rescue(*args)
+    rescue
+      unless @warned
+        @warned = true
+        RHC::Helpers.warn "Could not enable Kerberos authentication"
+        RHC::Helpers.warn $!.message.sub('gss_init_sec_context did not return GSS_S_COMPLETE: Unspecified GSS failure.  Minor code may provide more information', '').strip rescue nil
+      end
+      nil
+    end
+
+    alias_method :get_without_rescue, :get if method_defined? :get
+    alias_method :get, :get_with_rescue
+  end
+end
+
 module RHC
   module Rest
     #

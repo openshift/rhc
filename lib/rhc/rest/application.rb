@@ -173,6 +173,10 @@ module RHC
         end
       end
 
+      def supports_add_cartridge_with_env_vars?
+        has_param?('ADD_CARTRIDGE', 'environment_variables')
+      end
+
       def add_alias(app_alias)
         debug "Running add_alias for #{name}"
         rest_method "ADD_ALIAS", :event => "add-alias", :alias => app_alias

@@ -366,7 +366,7 @@ module RHC::Rest::Mock
     end
 
     def mock_app_links(domain_id='test_domain',app_id='test_app')
-      [['ADD_CARTRIDGE',                   "domains/#{domain_id}/apps/#{app_id}/carts/add",                      'post'],
+      [['ADD_CARTRIDGE',                   "domains/#{domain_id}/apps/#{app_id}/carts/add",                      'post', {'optional_params' => [{'name' => 'environment_variables'}]} ],
        ['LIST_CARTRIDGES',                 "broker/rest/domains/#{domain_id}/applications/#{app_id}/cartridges", 'get' ],
        ['GET_GEAR_GROUPS',                 "domains/#{domain_id}/apps/#{app_id}/gear_groups",                    'get' ],
        ['START',                           "domains/#{domain_id}/apps/#{app_id}/start",                          'post'],
@@ -414,7 +414,7 @@ module RHC::Rest::Mock
     end
 
     def mock_domain_links(domain_id='test_domain')
-      [['ADD_APPLICATION',   "domains/#{domain_id}/apps/add", 'post'],
+      [['ADD_APPLICATION',   "domains/#{domain_id}/apps/add", 'post', {'optional_params' => [{'name' => 'environment_variables'}]} ],
        ['LIST_APPLICATIONS', "domains/#{domain_id}/apps/",    'get' ],
        ['UPDATE',            "domains/#{domain_id}/update",   'put'],
        ['DELETE',            "domains/#{domain_id}/delete",   'post']]

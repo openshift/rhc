@@ -558,19 +558,17 @@ describe RHC::Commands::Cartridge do
 
   describe 'cartridge add with env vars' do
     let!(:rest_client){ MockRestClient.new }
+    before do
+      domain = rest_client.add_domain("mock_domain")
+      @app = domain.add_application("app1", "mock_type")
+    end
 
     [['app', 'cartridge', 'add', 'unique_mock_cart', '-e', 'FOO=BAR', '--app', 'app1'],
      ['app', 'cartridge', 'add', 'unique_mock_cart', '--env', 'FOO=BAR', '--app', 'app1']
     ].each_with_index do |args, i|
       context "when run with single env var #{i}" do
         let(:arguments) { args }
-        before do
-          domain = rest_client.add_domain("mock_domain")
-          app = domain.add_application("app1", "mock_type")
-        end
-        it {
-          succeed_with_message(/Environment Variables:\s+FOO=BAR/)
-        }
+        it { succeed_with_message(/Environment Variables:\s+FOO=BAR/) }
       end
     end
 
@@ -579,13 +577,7 @@ describe RHC::Commands::Cartridge do
     ].each_with_index do |args, i|
       context "when run with multiple env vars #{i}" do
         let(:arguments) { args }
-        before do
-          domain = rest_client.add_domain("mock_domain")
-          app = domain.add_application("app1", "mock_type")
-        end
-        it {
-          succeed_with_message(/Environment Variables:\s+FOO1=BAR1, FOO2=BAR2/)
-        }
+        it { succeed_with_message(/Environment Variables:\s+FOO1=BAR1, FOO2=BAR2/) }
       end
     end
 
@@ -594,14 +586,21 @@ describe RHC::Commands::Cartridge do
     ].each_with_index do |args, i|
       context "when run with env vars from files #{i}" do
         let(:arguments) { args }
-        before do
-          domain = rest_client.add_domain("mock_domain")
-          app = domain.add_application("app1", "mock_type")
-        end
-        it {
-          succeed_with_message(/Environment Variables:\s+BAR=456, FOO=123, MY_EMPTY_ENV_VAR=, MY_OPENSHIFT_ENV_VAR=mongodb:\/\/user:pass@host:port\/\n/)
-        }
+        it { succeed_with_message(/Environment Variables:\s+BAR=456, FOO=123, MY_EMPTY_ENV_VAR=, MY_OPENSHIFT_ENV_VAR=mongodb:\/\/user:pass@host:port\/\n/) }
       end
     end
+
+    [['app', 'cartridge', 'add', 'unique_mock_cart', '-e', 'FOO=BAR', '--app', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'],
+     ['app', 'cartridge', 'add', 'unique_mock_cart', '--env', 'FOO=BAR', '--app', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password']
+    ].each_with_index do |args, i|
+      context "when run against a server without env vars support #{i}" do
+        let(:arguments) { args }
+        before{ @app.should_receive(:has_param?).with('ADD_CARTRIDGE','environment_variables').and_return(false) }
+        it { expect { run }.to exit_with_code(0) }
+        it { run_output.should match(/Server does not support environment variables/) }
+        it { run_output.should_not match(/Environment Variables:\s+FOO=BAR/) }
+      end
+    end
+
   end
 end

@@ -82,7 +82,8 @@ module RHC::Commands
 
       rest_app = find_app(:include => :cartridges)
 
-      cart.environment_variables = collect_env_vars(options.env).map { |item| item.to_hash } if options.env
+      supports_env_vars = rest_app.supports_add_cartridge_with_env_vars?
+      cart.environment_variables = collect_env_vars(options.env).map { |item| item.to_hash } if options.env && supports_env_vars
 
       rest_cartridge = rest_app.add_cartridge(cart)
 
@@ -92,6 +93,7 @@ module RHC::Commands
 
       paragraph{ display_cart(rest_cartridge) }
       paragraph{ say "Use 'rhc env --help' to manage environment variable(s) on this cartridge and application." } if cart.environment_variables.present?
+      paragraph{ warn "Server does not support environment variables." if options.env && !supports_env_vars  }
       paragraph{ rest_cartridge.messages.each { |msg| success msg } }
 
       0

@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.14.6
+Version: 1.15.0
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -102,6 +102,20 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Sep 12 2013 Adam Miller <admiller@redhat.com> 1.14.7-1
+- Bug 1006031 - rhc restore with spaces in filename (jdetiber@redhat.com)
+- Merge pull request #463 from liggitt/gssapi_failure
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #462 from fabianofranz/master
+  (dmcphers+openshiftbot@redhat.com)
+- Catch gssapi exception, fall back to basic (jliggitt@redhat.com)
+- Bug 999868 - improved order for messages (contact@fabianofranz.com)
+- Bug 999868 - encapsulated check for env vars support
+  (contact@fabianofranz.com)
+- Bug 999868 - cleanup (contact@fabianofranz.com)
+- Bug 999868 - warns when create-app and add-cartridge and server does not
+  support env vars (contact@fabianofranz.com)
+
 * Wed Sep 11 2013 Adam Miller <admiller@redhat.com> 1.14.6-1
 - Update testcase support info for phpmyadmin version (jforrest@redhat.com)
 - Merge pull request #457 from
