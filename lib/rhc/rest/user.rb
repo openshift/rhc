@@ -21,7 +21,7 @@ module RHC
       end
 
       def max_domains
-        attributes[:max_domains] || 1
+        attributes['max_domains'] || 1
       end
 
       def capabilities
