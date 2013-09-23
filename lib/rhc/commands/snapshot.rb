@@ -25,13 +25,11 @@ module RHC::Commands
     argument :app, "Application you are saving a snapshot", ["-a", "--app NAME"]
     alias_action :"app snapshot save", :root_command => true, :deprecated => true
     def save(app)
-      raise RHC::InvalidSSHExecutableException.new "SSH executable '#{options.ssh}' does not exist." if options.ssh and not File.exist?(options.ssh.split(' ').first)
-      raise RHC::InvalidSSHExecutableException.new "SSH executable '#{options.ssh}' is not executable." if options.ssh and not File.executable?(options.ssh.split(' ').first)
+      ssh = check_ssh_executable! options.ssh
       rest_app = rest_client.find_application(options.namespace, app)
       ssh_uri = URI.parse(rest_app.ssh_url)
       filename = options.filepath ? options.filepath : "#{app}.tar.gz"
 
-      ssh = options.ssh || 'ssh'
       ssh_cmd = "#{ssh} #{ssh_uri.user}@#{ssh_uri.host} 'snapshot' > #{filename}"
       debug ssh_cmd
 
@@ -74,9 +72,7 @@ module RHC::Commands
     argument :app, "Application of which you are restoring a snapshot", ["-a", "--app NAME"]
     alias_action :"app snapshot restore", :root_command => true, :deprecated => true
     def restore(app)
-      raise RHC::InvalidSSHExecutableException.new "SSH executable '#{options.ssh}' does not exist." if options.ssh and not File.exist?(options.ssh.split(' ').first)
-      raise RHC::InvalidSSHExecutableException.new "SSH executable '#{options.ssh}' is not executable." if options.ssh and not File.executable?(options.ssh.split(' ').first)
-
+      ssh = check_ssh_executable! options.ssh
       filename = options.filepath ? options.filepath : "#{app}.tar.gz"
 
       if File.exists? filename
@@ -85,7 +81,6 @@ module RHC::Commands
         rest_app = rest_client.find_application(options.namespace, app)
         ssh_uri = URI.parse(rest_app.ssh_url)
 
-        ssh = options.ssh || 'ssh'
         ssh_cmd = "cat '#{filename}' | #{ssh} #{ssh_uri.user}@#{ssh_uri.host} 'restore#{include_git ? ' INCLUDE_GIT' : ''}'"
 
         say "Restoring from snapshot #{filename}..."
@@ -132,6 +127,9 @@ module RHC::Commands
       results { say "Success" }
       0
     end
+
+    protected
+      include RHC::SSHHelpers
 
   end
 end
