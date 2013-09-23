@@ -12,3 +12,6 @@ notifications:
     #  - dev@lists.openshift.redhat.com
   irc:
     - "irc.freenode.org#openshift-dev"
+branches:
+  only:
+    - ssh-option
