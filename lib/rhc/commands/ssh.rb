@@ -29,9 +29,8 @@ module RHC::Commands
       raise ArgumentError, "No application specified" unless app_name.present?
       raise ArgumentError, "--gears requires a command" if options.gears && command.blank?
       raise ArgumentError, "--limit must be an integer greater than zero" if options.limit && options.limit < 1
-      raise OptionParser::InvalidOption, "No system SSH available. Please use the --ssh option to specify the path to your SSH executable, or install SSH." unless options.ssh or has_ssh?
-      raise OptionParser::InvalidOption, "SSH executable '#{options.ssh}' does not exist." if options.ssh and not File.exist?(options.ssh)
-      raise OptionParser::InvalidOption, "SSH executable '#{options.ssh}' is not executable." if options.ssh and not File.executable?(options.ssh)
+
+      ssh = check_ssh_executable! options.ssh
 
       if options.gears
         groups = rest_client.find_application_gear_groups(options.namespace, app_name)
@@ -41,10 +40,9 @@ module RHC::Commands
         rest_app = rest_client.find_application(options.namespace, app_name)
         $stderr.puts "Connecting to #{rest_app.ssh_string.to_s} ..." unless command.present?
 
-        ssh = options.ssh || 'ssh'
         debug "Using user specified SSH: #{options.ssh}" if options.ssh
 
-        command_line = [ssh, rest_app.ssh_string.to_s, command].compact.flatten
+        command_line = ssh.split + [rest_app.ssh_string.to_s, command].compact.flatten
         debug "Invoking Kernel.exec with #{command_line.inspect}"
         Kernel.send(:exec, *command_line)
       end
