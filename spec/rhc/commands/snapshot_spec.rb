@@ -41,6 +41,7 @@ describe RHC::Commands::Snapshot do
     context 'when failing to save a snapshot' do
       before(:each) do
         `(exit 1)`
+        subject.class.any_instance.should_receive(:has_ssh?).and_return(true)
         Kernel.should_receive(:`).with("ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'snapshot' > #{@app.name}.tar.gz")
       end
       it { expect { run }.to exit_with_code(130) }
@@ -99,6 +100,7 @@ describe RHC::Commands::Snapshot do
       before(:each) do
         File.stub(:exists?).and_return(true)
         RHC::TarGz.stub(:contains).and_return(true)
+        subject.class.any_instance.should_receive(:has_ssh?).and_return(true)
         Kernel.should_receive(:`).with("cat '#{@app.name}.tar.gz' | ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'restore INCLUDE_GIT'")
         $?.stub(:exitstatus) { 1 }
       end
