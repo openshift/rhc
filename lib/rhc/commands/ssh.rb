@@ -42,7 +42,7 @@ module RHC::Commands
 
         debug "Using user specified SSH: #{options.ssh}" if options.ssh
 
-        command_line = ssh.split + [rest_app.ssh_string.to_s, command].compact.flatten
+        command_line = [ ssh.split, rest_app.ssh_string.to_s, command].flatten.compact
         debug "Invoking Kernel.exec with #{command_line.inspect}"
         Kernel.send(:exec, *command_line)
       end
