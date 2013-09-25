@@ -13,13 +13,13 @@ describe RHC::Commands::Snapshot do
     user_config
     @app = rest_client.add_domain("mockdomain").add_application APP_NAME, 'mock-1.0'
     @ssh_uri = URI.parse @app.ssh_url
-    filename = APP_NAME + '.tar.gz'
-    FileUtils.cp(File.expand_path('../../assets/targz_sample.tar.gz', __FILE__), filename)
+    @targz_filename = APP_NAME + '.tar.gz'
+    FileUtils.cp(File.expand_path('../../assets/targz_sample.tar.gz', __FILE__), @targz_filename)
+    File.chmod 0644, @targz_filename unless File.executable? @targz_filename
   end
 
   after do
-    filename = APP_NAME + '.tar.gz'
-    File.delete filename if File.exist? filename
+    File.delete @targz_filename if File.exist? @targz_filename
   end
 
   describe 'snapshot without an action' do
@@ -41,6 +41,7 @@ describe RHC::Commands::Snapshot do
     context 'when failing to save a snapshot' do
       before(:each) do
         `(exit 1)`
+        subject.class.any_instance.should_receive(:has_ssh?).and_return(true)
         Kernel.should_receive(:`).with("ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'snapshot' > #{@app.name}.tar.gz")
       end
       it { expect { run }.to exit_with_code(130) }
@@ -72,6 +73,16 @@ describe RHC::Commands::Snapshot do
 
   end
 
+  describe 'snapshot save with invalid ssh executable' do
+    let(:arguments) {['snapshot', 'save', '--trace', '--noprompt', '-l', 'test@test.foo', '-p', 'password', '--app', 'mockapp', '--ssh', 'path_to_ssh']}
+    it('should raise') { expect{ run }.to raise_error(RHC::InvalidSSHExecutableException, /SSH executable 'path_to_ssh' does not exist./) }
+  end
+
+  describe 'snapshot save when ssh is not executable' do
+    let(:arguments) {['snapshot', 'save', '--trace', '--noprompt', '-l', 'test@test.foo', '-p', 'password', '--app', 'mockapp', '--ssh', @targz_filename]}
+    it('should raise') { expect{ run }.to raise_error(RHC::InvalidSSHExecutableException, /SSH executable '#{@targz_filename}' is not executable./) }
+  end
+
   describe 'snapshot restore' do
     let(:arguments) {['snapshot', 'restore', '--noprompt', '-l', 'test@test.foo', '-p', 'password', '--app', 'mockapp']}
 
@@ -89,6 +100,7 @@ describe RHC::Commands::Snapshot do
       before(:each) do
         File.stub(:exists?).and_return(true)
         RHC::TarGz.stub(:contains).and_return(true)
+        subject.class.any_instance.should_receive(:has_ssh?).and_return(true)
         Kernel.should_receive(:`).with("cat '#{@app.name}.tar.gz' | ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'restore INCLUDE_GIT'")
         $?.stub(:exitstatus) { 1 }
       end
@@ -142,5 +154,14 @@ describe RHC::Commands::Snapshot do
     end
   end
 
+  describe 'snapshot restore with invalid ssh executable' do
+    let(:arguments) {['snapshot', 'restore', '--trace', '--noprompt', '-l', 'test@test.foo', '-p', 'password', '--app', 'mockapp', '--ssh', 'path_to_ssh']}
+    it('should raise') { expect{ run }.to raise_error(RHC::InvalidSSHExecutableException, /SSH executable 'path_to_ssh' does not exist./) }
+  end
+
+  describe 'snapshot save when ssh is not executable' do
+    let(:arguments) {['snapshot', 'restore', '--trace', '--noprompt', '-l', 'test@test.foo', '-p', 'password', '--app', 'mockapp', '--ssh', @targz_filename]}
+    it('should raise') { expect{ run }.to raise_error(RHC::InvalidSSHExecutableException, /SSH executable '#{@targz_filename}' is not executable./) }
+  end
 end
 

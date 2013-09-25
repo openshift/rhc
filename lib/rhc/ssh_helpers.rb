@@ -290,6 +290,20 @@ module RHC
       end
     end
 
+    # return supplied ssh executable, if valid (executable, searches $PATH).
+    # if none was supplied, return installed ssh, if any.
+    def check_ssh_executable!(path)
+      if not path
+        raise RHC::InvalidSSHExecutableException.new("No system SSH available. Please use the --ssh option to specify the path to your SSH executable, or install SSH.") unless has_ssh?
+        'ssh'
+      else
+        bin_path = path.split(' ').first
+        raise RHC::InvalidSSHExecutableException.new("SSH executable '#{bin_path}' does not exist.") unless File.exist?(bin_path) or exe?(bin_path)
+        raise RHC::InvalidSSHExecutableException.new("SSH executable '#{bin_path}' is not executable.") unless File.executable?(bin_path) or exe?(bin_path)
+        path
+      end
+    end
+
     private
 
     def ssh_add
