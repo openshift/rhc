@@ -97,7 +97,6 @@ module RHC
     end
 
     def from_local_git(defaults, arg)
-      debug "Getting context from Git"
       @local_git_config ||= {
         :application_id => git_config_get('rhc.app-id').presence,
         :app => git_config_get('rhc.app-name').presence,

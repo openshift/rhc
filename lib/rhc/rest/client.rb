@@ -382,13 +382,14 @@ module RHC
 
           if !@httpclient || @last_options != options
             @httpclient = RHC::Rest::HTTPClient.new(:agent_name => user_agent).tap do |http|
+              debug "Created new httpclient"
               http.cookie_manager = nil
               http.debug_dev = $stderr if ENV['HTTP_DEBUG']
 
-              options.select{ |sym, value| http.respond_to?("#{sym}=") }.map{ |sym, value| http.send("#{sym}=", value) }
+              options.select{ |sym, value| http.respond_to?("#{sym}=") }.each{ |sym, value| http.send("#{sym}=", value) }
 
               ssl = http.ssl_config
-              options.select{ |sym, value| ssl.respond_to?("#{sym}=") }.map{ |sym, value| ssl.send("#{sym}=", value) }
+              options.select{ |sym, value| ssl.respond_to?("#{sym}=") }.each{ |sym, value| ssl.send("#{sym}=", value) }
               ssl.add_trust_ca(options[:ca_file]) if options[:ca_file]
               ssl.verify_callback = default_verify_callback
 
@@ -465,6 +466,7 @@ module RHC
 
           # remove all unnecessary options
           options.delete(:lazy_auth)
+          options.delete(:accept)
 
           args = [options.delete(:method), options.delete(:url), query, payload, headers, true]
           [httpclient_for(options, auth), args]

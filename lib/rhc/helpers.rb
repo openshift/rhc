@@ -202,7 +202,7 @@ module RHC
           :url => openshift_rest_endpoint.to_s,
           :debug => options.debug,
           :timeout => options.timeout,
-          :warn => self.class.instance_method(:warn).bind(self),
+          :warn => BOUND_WARNING,
         }.merge!(ssl_options).merge!(opts))
     end
 
@@ -469,5 +469,6 @@ module RHC
       env_vars
     end
 
+    BOUND_WARNING = self.method(:warn).to_proc
   end
 end
