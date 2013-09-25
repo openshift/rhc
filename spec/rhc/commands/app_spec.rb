@@ -705,12 +705,13 @@ describe RHC::Commands::App do
   describe 'create app with env vars' do
     before{ @domain = rest_client.add_domain("mockdomain") }
 
-    [['app', 'create', 'app1', 'mock_standalone_cart-1', '-e', 'FOO=BAR', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'],
-     ['app', 'create', 'app1', 'mock_standalone_cart-1', '--env', 'FOO=BAR', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'],
-     ['app', 'create', 'app1', 'mock_standalone_cart-1', 'FOO=BAR', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password']
+    [['app', 'create', 'app1', 'mock_standalone_cart-1', '-e', 'FOO=BAR'],
+     ['app', 'create', 'app1', 'mock_standalone_cart-1', '--env', 'FOO=BAR'],
+     ['app', 'create', 'app1', 'mock_standalone_cart-1', 'FOO=BAR']
     ].each_with_index do |args, i|
       context "when run with single env var #{i}" do
         let(:arguments) { args }
+        before { @domain.should_receive(:has_param?).with('ADD_APPLICATION','environment_variables').and_return(true) }
         it { expect { run }.to exit_with_code(0) }
         it { run_output.should match("Success") }
         it { run_output.should match(/Cartridges:\s+mock_standalone_cart-1\n/) }
@@ -718,14 +719,15 @@ describe RHC::Commands::App do
       end
     end
 
-    [['app', 'create', 'app1', 'mock_standalone_cart-1', '-e', 'VAR1=VAL1', '-e', 'VAR2=VAL2', '-e', 'VAR3=VAL3', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'],
-     ['app', 'create', 'app1', 'mock_standalone_cart-1', '--env', 'VAR1=VAL1', '--env', 'VAR2=VAL2', '--env', 'VAR3=VAL3', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'],
-     ['app', 'create', 'app1', 'mock_standalone_cart-1', 'VAR1=VAL1', 'VAR2=VAL2', 'VAR3=VAL3', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'],
-     ['app', 'create', 'app1', 'mock_standalone_cart-1', 'VAR1=VAL1', 'VAR2=VAL2', '-e', 'VAR3=VAL3', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'],
-     ['app', 'create', 'app1', 'mock_standalone_cart-1', 'VAR1=VAL1', '--env', 'VAR2=VAL2', '-e', 'VAR3=VAL3', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password']
+    [['app', 'create', 'app1', 'mock_standalone_cart-1', '-e', 'VAR1=VAL1', '-e', 'VAR2=VAL2', '-e', 'VAR3=VAL3'],
+     ['app', 'create', 'app1', 'mock_standalone_cart-1', '--env', 'VAR1=VAL1', '--env', 'VAR2=VAL2', '--env', 'VAR3=VAL3'],
+     ['app', 'create', 'app1', 'mock_standalone_cart-1', 'VAR1=VAL1', 'VAR2=VAL2', 'VAR3=VAL3'],
+     ['app', 'create', 'app1', 'mock_standalone_cart-1', 'VAR1=VAL1', 'VAR2=VAL2', '-e', 'VAR3=VAL3'],
+     ['app', 'create', 'app1', 'mock_standalone_cart-1', 'VAR1=VAL1', '--env', 'VAR2=VAL2', '-e', 'VAR3=VAL3']
     ].each_with_index do |args, i|
       context "when run with multiple env vars #{i}" do
         let(:arguments) { args }
+        before { @domain.should_receive(:has_param?).with('ADD_APPLICATION','environment_variables').and_return(true) }
         it { expect { run }.to exit_with_code(0) }
         it { run_output.should match("Success") }
         it { run_output.should match(/Cartridges:\s+mock_standalone_cart-1\n/) }
@@ -733,9 +735,9 @@ describe RHC::Commands::App do
       end
     end
 
-    [['app', 'create', 'app1', 'mock_standalone_cart-1', '-e', 'FOO=BAR', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'],
-     ['app', 'create', 'app1', 'mock_standalone_cart-1', '--env', 'FOO=BAR', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'],
-     ['app', 'create', 'app1', 'mock_standalone_cart-1', 'FOO=BAR', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password']
+    [['app', 'create', 'app1', 'mock_standalone_cart-1', '-e', 'FOO=BAR'],
+     ['app', 'create', 'app1', 'mock_standalone_cart-1', '--env', 'FOO=BAR'],
+     ['app', 'create', 'app1', 'mock_standalone_cart-1', 'FOO=BAR']
     ].each_with_index do |args, i|
       context "when run against a server without env vars support #{i}" do
         let(:arguments) { args }

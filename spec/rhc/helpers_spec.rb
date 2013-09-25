@@ -181,6 +181,11 @@ describe AllRhcHelpers do
       it{ expect{ run }.to exit_with_code(1) }
       it{ run_output.should match("invalid argument: --timeout=string") }
     end
+    context "that is a negative integer" do
+      let(:arguments){ ['help', '--timeout=0'] }
+      it{ expect{ run }.to exit_with_code(1) }
+      it{ run_output.should match("must be a positive integer") }
+    end
     context "via the config" do
       before{ base_config{ |c, d| d.add 'timeout', 'string' } }
       let(:arguments){ ['help'] }

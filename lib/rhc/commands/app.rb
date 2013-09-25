@@ -83,9 +83,9 @@ module RHC::Commands
         c.usage_rate? ? "#{c.short_name} (addtl. costs may apply)" : c.short_name
       end.join(', ')
 
-      if rest_domain.supports_add_application_with_env_vars?
-        environment_variables = collect_env_vars(arg_envs.concat(Array(options.env)))
-      else
+      env = collect_env_vars(arg_envs.concat(Array(options.env)))
+      if env.present? && !rest_domain.supports_add_application_with_env_vars?
+        env = []
         warn "Server does not support environment variables."
       end
 
@@ -96,7 +96,7 @@ module RHC::Commands
               (["Source Code:", options.from_code] if options.from_code),
                ["Gear Size:", options.gear_size || "default"],
                ["Scaling:", options.scaling ? "yes" : "no"],
-              (["Environment Variables:", environment_variables.map{|item| "#{item.name}=#{item.value}"}.join(', ')] if environment_variables.present?),
+              (["Environment Variables:", env.map{|item| "#{item.name}=#{item.value}"}.join(', ')] if env.present?),
               ].compact
              ).each { |s| say "  #{s}" }
       end
@@ -105,7 +105,7 @@ module RHC::Commands
         say "Creating application '#{name}' ... "
 
         # create the main app
-        rest_app = create_app(name, cartridges, rest_domain, options.gear_size, options.scaling, options.from_code, environment_variables)
+        rest_app = create_app(name, cartridges, rest_domain, options.gear_size, options.scaling, options.from_code, env)
         success "done"
 
         paragraph{ indent{ success rest_app.messages.map(&:strip) } }
@@ -424,9 +424,7 @@ module RHC::Commands
         app_options[:initial_git_url] = from_code if from_code
         app_options[:debug] = true if @debug
         app_options[:environment_variables] = environment_variables.map{ |item| item.to_hash } if environment_variables.present?
-        debug "Creating application '#{name}' with these options - #{app_options.inspect}"
         rest_app = rest_domain.add_application(name, app_options)
-        debug "'#{rest_app.name}' created"
 
         rest_app
       rescue RHC::Rest::Exception => e
