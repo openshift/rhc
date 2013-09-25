@@ -94,7 +94,7 @@ describe RHC::Commands::Ssh do
         @domain.add_application("app1", "mock_type")
         RHC::Commands::Ssh.any_instance.should_receive(:has_ssh?).and_return(false)
       end
-      it { run_output.should match("Please use the --ssh option to specify the path to your SSH executable, or install SSH.") }
+      it { run_output.should match("No system SSH available. Please use the --ssh option to specify the path to your SSH executable, or install SSH.") }
       it { expect { run }.to exit_with_code(1) }
     end
   end
@@ -119,7 +119,7 @@ describe RHC::Commands::Ssh do
         @domain.add_application("app1", "mock_type")
         RHC::Commands::Ssh.any_instance.should_not_receive(:has_ssh?)
         File.should_receive(:exist?).with("path_to_ssh").once.and_return(true)
-        File.should_receive(:executable?).with("path_to_ssh").once.and_return(false)
+        File.should_receive(:executable?).with(/.*path_to_ssh/).at_least(1).and_return(false)
       end
       it { run_output.should match("SSH executable 'path_to_ssh' is not executable.") }
       it { expect { run }.to exit_with_code(1) }
