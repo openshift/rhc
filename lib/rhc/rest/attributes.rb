@@ -29,4 +29,8 @@ module RHC::Rest::AttributesClass
       end
     end
   end
+
+  def model_name
+    name.split("::").last
+  end
 end

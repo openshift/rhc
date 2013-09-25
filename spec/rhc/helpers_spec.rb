@@ -255,6 +255,10 @@ describe AllRhcHelpers do
     end
   end
 
+  describe "#exec" do
+    it{ subject.send(:exec, 'echo foo').should == [0, "foo\n"] }
+  end
+
   context "Git Helpers" do
     subject{ Class.new(Object){ include RHC::Helpers; include RHC::GitHelpers; def debug?; false; end }.new }
     before{ subject.stub(:git_version){ raise "Fake Exception" } }

@@ -16,7 +16,8 @@ describe RHC::Commands::Account do
       challenge{ stub_user }
     end
 
-    it('should display the correct user') { run_output.should =~ /Login:\s*#{username}/ }
+    it('should display the correct user') { run_output.should =~ /Login #{username}/ }
+    it('should display the correct server') { run_output.should =~ /on #{server}/ }
     it('should not show') { run_output.should_not =~ /Plan:/ }
     it('should show the gear capabilities') { run_output.should =~ /Allowed Gear Sizes:\s*small/ }
     it('should show the consumed gears') { run_output.should =~ /Gears Used:\s*0/ }

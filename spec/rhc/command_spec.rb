@@ -118,13 +118,13 @@ describe RHC::Commands::Base do
             alias_action :exe, :deprecated => true
             def execute(testarg); 1; end
 
-            argument :args, "Test arg list", ['--tests ARG'], :arg_type => :list
+            argument :args, "Test arg list", ['--tests ARG'], :type => :list
             summary "Test command execute-list"
             def execute_list(args); 1; end
 
             argument :arg1, "Test arg", ['--test'], :optional => true
-            argument :arg2, "Test arg list", ['--test2'], :arg_type => :list, :optional => true
-            argument :arg3, "Test arg list", ['--test3'], :arg_type => :list, :optional => true
+            argument :arg2, "Test arg list", ['--test2'], :type => :list, :optional => true
+            argument :arg3, "Test arg list", ['--test3'], :type => :list, :optional => true
             summary "Test command execute-vararg"
             def execute_vararg(arg1, arg2, arg3); 1; end
 
@@ -230,6 +230,64 @@ describe RHC::Commands::Base do
         after { ENV['DISABLE_DEPRECATED'] = nil }
         it("raises an error") { expects_running('static', 'exe', 'arg', '--trace').should raise_error(RHC::DeprecatedError) }
       end
+    end
+  end
+
+  describe "find_domain" do
+    let(:instance){ subject }
+    let(:rest_client){ subject.send(:rest_client) }
+    let(:options){ subject.send(:options) }
+    def expects_method(*args)
+      expect{ subject.send(:find_domain, *args) }
+    end
+    before{ subject.stub(:namespace_context).and_return(nil) }
+
+    it("should raise without params"){ expects_method(nil).to raise_error(ArgumentError, /You must specify a domain with -n/) }
+    it("should handle namespace param"){ options[:namespace] = 'domain_o'; expects_method.to call(:find_domain).on(rest_client).with('domain_o') }
+
+    context "with a context" do
+      before{ subject.stub(:namespace_context).and_return('domain_s') }
+      it("should handle namespace param"){ expects_method.to call(:find_domain).on(rest_client).with('domain_s') }
+    end
+  end
+
+  describe "find_app" do
+    let(:instance){ subject }
+    let(:rest_client){ subject.send(:rest_client) }
+    let(:options){ subject.send(:options) }
+    def expects_method(*args)
+      expect{ subject.send(:find_app, *args) }
+    end
+    before{ subject.stub(:namespace_context).and_return('domain_s') }
+
+    it("should raise without params"){ expects_method(nil).to raise_error(ArgumentError, /You must specify an application with -a/) }
+
+    context "when looking for an app" do
+      it("should raise without app")     { expects_method.to raise_error(ArgumentError, /You must specify an application with -a, or run this command/) }
+      it("should handle namespace param"){ options[:namespace] = 'domain_o'; expects_method.to raise_error(ArgumentError, /You must specify an application with -a, or run this command/) }
+      it("should accept app param")      { options[:app] = 'app_o'; expects_method.to call(:find_application).on(rest_client).with('domain_s', 'app_o', {}) }
+      it("should split app param")       { options[:app] = 'domain_o/app_o'; expects_method.to call(:find_application).on(rest_client).with('domain_o', 'app_o', {}) }
+      it("should find gear groups")      { options[:app] = 'domain_o/app_o'; expects_method(:with_gear_groups => true, :include => :cartridges).to call(:find_application_gear_groups).on(rest_client).with('domain_o', 'app_o', {:include => :cartridges}) }
+    end
+  end
+
+  describe "find_domain_or_app" do
+    let(:instance){ subject }
+    let(:rest_client){ subject.send(:rest_client) }
+    let(:options){ subject.send(:options) }
+    before{ subject.stub(:namespace_context).and_return('domain_s') }
+    def expects_method(*args)
+      expect{ subject.send(:find_app_or_domain, *args) }
+    end
+
+    it("should not infer domain")             { expects_method.to raise_error(ArgumentError, /You must specify a domain with -n, or an application with -a/) }
+    it("should assume domain with -n")        { options[:namespace] = 'domain_o'; expects_method.to call(:find_domain).on(rest_client).with('domain_o') }
+    it("should infer -n when -a is available"){ options[:app] = 'app_o'; expects_method.to call(:find_application).on(rest_client).with('domain_s', 'app_o') }
+    it("should split -a param")               { options[:app] = 'domain_o/app_o'; expects_method.to call(:find_application).on(rest_client).with('domain_o', 'app_o') }
+
+    context "when an app context is available" do
+      before{ subject.instance_variable_set(:@local_git_config, {:app => 'app_s'}) }
+      it("should ignore the app context"){ options[:namespace] = 'domain_o'; expects_method(nil).to call(:find_domain).on(rest_client).with('domain_o') }
     end
   end
 

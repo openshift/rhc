@@ -189,6 +189,12 @@ class Hash
     end
     s
   end
+  def slice(*args)
+    args.inject({}) do |h, k|
+      h[k] = self[k] if has_key?(k)
+      h
+    end
+  end
   def reverse_merge!(other_hash)
     # right wins if there is no left
     merge!( other_hash ){|key,left,right| left }

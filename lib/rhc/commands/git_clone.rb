@@ -10,14 +10,13 @@ module RHC::Commands
                 "figures out the Git url from the application name so you don't",
                 "have to look it up."
     syntax "<app> [--namespace NAME]"
-    option ["-n", "--namespace NAME"], "Namespace of the application", :context => :namespace_context, :required => true
+    takes_application :argument => true
     option ["-r", "--repo dir"], "Path to the Git repository (defaults to ./$app_name)"
-    argument :app, "The application you wish to clone", ["-a", "--app name"]
     alias_action 'app git-clone', :deprecated => true, :root_command => true
     # TODO: Implement default values for arguments once ffranz has added context arguments
     # argument :directory, "The name of a new directory to clone into", [], :default => nil
     def run(app_name)
-      rest_app = rest_client.find_application(options.namespace, app_name)
+      rest_app = find_app
       dir = git_clone_application(rest_app)
       success "Your application Git repository has been cloned to '#{system_path(dir)}'"
 

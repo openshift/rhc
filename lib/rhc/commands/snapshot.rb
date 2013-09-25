@@ -19,14 +19,13 @@ module RHC::Commands
 
     summary "Save a snapshot of your app to disk"
     syntax "<application> [--filepath FILE]"
-    option ["-n", "--namespace NAME"], "Namespace of the application you are saving a snapshot", :context => :namespace_context, :required => true
+    takes_application :argument => true
     option ["-f", "--filepath FILE"], "Local path to save tarball (default: ./$APPNAME.tar.gz)"
-    argument :app, "Application you are saving a snapshot", ["-a", "--app NAME"]
     alias_action :"app snapshot save", :root_command => true, :deprecated => true
     def save(app)
-      rest_app = rest_client.find_application(options.namespace, app)
+      rest_app = find_app
       ssh_uri = URI.parse(rest_app.ssh_url)
-      filename = options.filepath ? options.filepath : "#{app}.tar.gz"
+      filename = options.filepath ? options.filepath : "#{rest_app.name}.tar.gz"
 
       ssh_cmd = "ssh #{ssh_uri.user}@#{ssh_uri.host} 'snapshot' > #{filename}"
       debug ssh_cmd
@@ -34,10 +33,9 @@ module RHC::Commands
       say "Pulling down a snapshot to #{filename}..."
 
       begin
-
-        if ! RHC::Helpers.windows?
-          output = Kernel.send(:`, ssh_cmd)
-          if $?.exitstatus != 0
+        if !RHC::Helpers.windows?
+          status, output = exec(ssh_cmd)
+          if status != 0
             debug output
             raise RHC::SnapshotSaveException.new "Error in trying to save snapshot. You can try to save manually by running:\n#{ssh_cmd}"
           end
@@ -64,18 +62,16 @@ module RHC::Commands
 
     summary "Restores a previously saved snapshot"
     syntax "<application> [--filepath FILE]"
-    option ["-n", "--namespace NAME"], "Namespace of the application you are restoring a snapshot", :context => :namespace_context, :required => true
+    takes_application :argument => true
     option ["-f", "--filepath FILE"], "Local path to restore tarball"
-    argument :app, "Application of which you are restoring a snapshot", ["-a", "--app NAME"]
     alias_action :"app snapshot restore", :root_command => true, :deprecated => true
     def restore(app)
-
-      filename = options.filepath ? options.filepath : "#{app}.tar.gz"
+      rest_app = find_app
+      filename = options.filepath ? options.filepath : "#{rest_app.name}.tar.gz"
 
       if File.exists? filename
 
         include_git = RHC::Helpers.windows? ? true : RHC::TarGz.contains(filename, './*/git')
-        rest_app = rest_client.find_application(options.namespace, app)
         ssh_uri = URI.parse(rest_app.ssh_url)
 
         ssh_cmd = "cat '#{filename}' | ssh #{ssh_uri.user}@#{ssh_uri.host} 'restore#{include_git ? ' INCLUDE_GIT' : ''}'"
@@ -84,9 +80,9 @@ module RHC::Commands
         debug ssh_cmd
 
         begin
-          if ! RHC::Helpers.windows?
-            output = Kernel.` ssh_cmd
-            if $?.exitstatus != 0
+          if !RHC::Helpers.windows?
+            status, output = exec(ssh_cmd)
+            if status != 0
               debug output
               raise RHC::SnapshotRestoreException.new "Error in trying to restore snapshot. You can try to restore manually by running:\n#{ssh_cmd}"
             end
