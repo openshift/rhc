@@ -312,10 +312,10 @@ describe RHC::Commands::Domain do
         domain.add_application 'testapp1', 'mock-1.0'
       end
       it "should error out" do
-        expect { run }.to exit_with_code(128)
+        expect { run }.to exit_with_code(1)
         rest_client.domains[0].id.should == 'deleteme'
       end
-      it { run_output.should match("Your domain contains applications.*?Delete applications first.") }
+      it { run_output.should match("Applications must be empty") }
     end
   end
 
