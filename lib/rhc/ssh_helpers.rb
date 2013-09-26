@@ -37,7 +37,7 @@ module RHC
           :concurrent_connections => @opts[:limit], 
           :on_error => lambda{ |server| $stderr.puts "Unable to connect to gear #{server}" }
         ) do |session|
-          
+
           @over.each do |item| 
             case item
             when RHC::Rest::GearGroup
@@ -67,7 +67,7 @@ module RHC
                 end
               }
             when @opts[:as] == :gear
-              lambda { |ch, dest, data| (ch.connection.properties[:gear]['data'] ||= "") << data }              
+              lambda { |ch, dest, data| (ch.connection.properties[:gear]['data'] ||= "") << data }
             else
               width = 0
               lambda { |ch, dest, data|
@@ -123,12 +123,12 @@ module RHC
         end
 
         def requires_ssh_multi!
-          begin 
-            require 'net/ssh/multi' 
+          begin
+            require 'net/ssh/multi'
           rescue LoadError
             raise RHC::OperationNotSupportedException, "You must install Net::SSH::Multi to use the --gears option.  Most systems: 'gem install net-ssh-multi'"
           end
-        end          
+        end
     end
 
     def run_on_gears(command, gears, opts={}, &block)
