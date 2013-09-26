@@ -3,6 +3,8 @@ require 'uri'
 module RHC
   module Rest
     class Application < Base
+      include Membership
+
       define_attr :domain_id, :name, :creation_time, :uuid,
                   :git_url, :app_url, :gear_profile, :framework,
                   :scalable, :health_check_path, :embedded, :gear_count,
@@ -12,6 +14,14 @@ module RHC
       # Query helper to say consistent with cartridge
       def scalable?
         scalable
+      end
+
+      def id
+        attributes['id'] || uuid
+      end
+
+      def domain
+        domain_id
       end
 
       def scalable_carts
@@ -56,10 +66,6 @@ module RHC
             debug "Getting all cartridges for application #{name}"
             rest_method "LIST_CARTRIDGES"
           end
-      end
-
-      def domain
-        domain_id
       end
 
       def gear_info

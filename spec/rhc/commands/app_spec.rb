@@ -36,7 +36,7 @@ describe RHC::Commands::App do
   end
 
   describe 'app default' do
-    before(:each) do
+    before do
       FakeFS.deactivate!
     end
 
@@ -141,6 +141,7 @@ describe RHC::Commands::App do
     end
 
     context "when dealing with ssh keys" do
+      before(:all){ mock_terminal }
       subject{ described_class.new(options) }
       let(:wizard){ s = double('Wizard'); RHC::SSHWizard.should_receive(:new).and_return(s); s }
       let(:options){ Commander::Command::Options.new(:server => 'foo.com', :rhlogin => 'test') }
@@ -168,12 +169,12 @@ describe RHC::Commands::App do
 
     context 'when run without a cart' do
       before{ FakeFS.deactivate! }
-      let(:arguments) { ['app', 'create', 'app1', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+      let(:arguments) { ['app', 'create', 'app1'] }
       it { run_output.should match(/mock_standalone_cart-1.*Every application needs a web cartridge/m) }
     end
 
     context 'when run with a valid cart' do
-      let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart-1', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+      let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart-1'] }
       it { expect { run }.to exit_with_code(0) }
       it { run_output.should match("Success") }
       it { run_output.should match("Cartridges: mock_standalone_cart-1\n") }
@@ -181,7 +182,7 @@ describe RHC::Commands::App do
     end
 
     context 'when Hosts resolver raises an Exception' do
-      let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart-1', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+      let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart-1'] }
       before :each do
         resolver = Object.new
         Resolv::Hosts.should_receive(:new).and_return(resolver)
@@ -193,7 +194,7 @@ describe RHC::Commands::App do
     end
 
     context 'when run with multiple carts' do
-      let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart-1', 'mock_cart-1', '--noprompt', '-p',  'password'] }
+      let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart-1', 'mock_cart-1'] }
       it { expect { run }.to exit_with_code(0) }
       it { run_output.should match("Success") }
       it { run_output.should match("Cartridges: mock_standalone_cart-1, mock_cart-1\n") }
@@ -202,7 +203,7 @@ describe RHC::Commands::App do
     end
 
     context 'when run with a cart URL' do
-      let(:arguments) { ['app', 'create', 'app1', 'http://foo.com', 'mock_cart-1', '--noprompt', '-p',  'password'] }
+      let(:arguments) { ['app', 'create', 'app1', 'http://foo.com', 'mock_cart-1'] }
       it { expect { run }.to exit_with_code(0) }
       it { run_output.should match("Success") }
       it { run_output.should match("Cartridges: http://foo.com, mock_cart-1\n") }
@@ -211,7 +212,7 @@ describe RHC::Commands::App do
     end
 
     context 'when run with a git url' do
-      let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart-1', '--from', 'git://url', '--noprompt', '-p',  'password'] }
+      let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart-1', '--from', 'git://url'] }
       it { expect { run }.to exit_with_code(0) }
       it { run_output.should match("Success") }
       it { run_output.should match("Git remote: git:fake.foo/git/app1.git\n") }
@@ -220,15 +221,15 @@ describe RHC::Commands::App do
     end
 
     context 'when no cartridges are returned' do
-      before(:each) do
+      before do
         domain = rest_client.domains.first
       end
       context 'without trace' do
-        let(:arguments) { ['app', 'create', 'app1', 'nomatch_cart', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+        let(:arguments) { ['app', 'create', 'app1', 'nomatch_cart'] }
         it("should display the list of cartridges") { run_output.should match(/Short Name.*mock_standalone_cart-2/m) }
       end
       context 'with trace' do
-        let(:arguments) { ['app', 'create', 'app1', 'nomatch_cart', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password', '--trace'] }
+        let(:arguments) { ['app', 'create', 'app1', 'nomatch_cart', '--trace'] }
         it { expect { run }.to raise_error(RHC::CartridgeNotFoundException, "There are no cartridges that match 'nomatch_cart'.") }
       end
     end
@@ -279,10 +280,10 @@ describe RHC::Commands::App do
   end
 
   describe 'app create enable-jenkins' do
-    let(:arguments) { ['app', 'create', 'app1', '--trace', 'mock_unique_standalone_cart', '--enable-jenkins', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+    let(:arguments) { ['app', 'create', 'app1', '--trace', 'mock_unique_standalone_cart', '--enable-jenkins'] }
 
     context 'when run' do
-      before(:each) do
+      before do
         @domain = rest_client.add_domain("mockdomain")
       end
       it "should create a jenkins app and a regular app with an embedded jenkins client" do
@@ -297,10 +298,10 @@ describe RHC::Commands::App do
   end
 
   describe 'app create enable-jenkins with --no-dns' do
-    let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--trace', '--enable-jenkins', '--no-dns', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+    let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--trace', '--enable-jenkins', '--no-dns'] }
 
     context 'when run' do
-      before(:each) do
+      before do
         domain = rest_client.add_domain("mockdomain")
       end
       it { expect { run }.to_not raise_error }
@@ -308,10 +309,10 @@ describe RHC::Commands::App do
   end
 
   describe 'app create enable-jenkins with same name as app' do
-    let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--trace', '--enable-jenkins', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+    let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--trace', '--enable-jenkins', 'app1'] }
 
     context 'when run' do
-      before(:each) do
+      before do
         domain = rest_client.add_domain("mockdomain")
       end
       it { expect { run }.to raise_error(ArgumentError, /You have named both your main application and your Jenkins application/) }
@@ -319,10 +320,10 @@ describe RHC::Commands::App do
   end
 
   describe 'app create enable-jenkins with existing jenkins' do
-    let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--trace', '--enable-jenkins', 'jenkins2', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+    let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--trace', '--enable-jenkins', 'jenkins2'] }
 
     context 'when run' do
-      before(:each) do
+      before do
         @domain = rest_client.add_domain("mockdomain")
         @domain.add_application("jenkins", "jenkins-1")
       end
@@ -335,14 +336,14 @@ describe RHC::Commands::App do
   end
 
   describe 'app create jenkins fails to install warnings' do
-    let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--enable-jenkins', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+    let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--enable-jenkins'] }
 
-    before(:each) do
+    before do
       @domain = rest_client.add_domain("mockdomain")
     end
 
     context 'when run with error in jenkins setup' do
-      before(:each) do
+      before do
         @instance.stub(:add_jenkins_app) { raise Exception }
       end
       it "should print out jenkins warning" do
@@ -351,7 +352,7 @@ describe RHC::Commands::App do
     end
 
     context 'when run with error in jenkins-client setup' do
-      before(:each) do
+      before do
         @instance.stub(:add_jenkins_cartridge) { raise Exception }
       end
       it "should print out jenkins warning" do
@@ -360,7 +361,7 @@ describe RHC::Commands::App do
     end
 
     context 'when run without jenkins cartridge available on server' do
-      before(:each) do
+      before do
         @instance.stub(:all_cartridges) { rest_client.cartridges.delete_if { |item| item.name =~ /\Ajenkins/i } }
       end
       it "should exit with jenkins error" do
@@ -370,10 +371,10 @@ describe RHC::Commands::App do
   end
 
   describe 'app create jenkins install with retries' do
-    let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--enable-jenkins', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+    let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--enable-jenkins'] }
 
     context 'when run with server error in jenkins-client setup' do
-      before(:each) do
+      before do
         @domain = rest_client.add_domain("mockdomain")
         @instance.stub(:add_jenkins_cartridge) { raise RHC::Rest::ServerErrorException.new("Server error", 157) }
       end
@@ -385,10 +386,10 @@ describe RHC::Commands::App do
   end
 
   describe 'dns app create warnings' do
-    let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+    let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart'] }
 
     context 'when run' do
-      before(:each) do
+      before do
         @domain = rest_client.add_domain("dnserror")
       end
       it { run_output.should match("unable to lookup your hostname") }
@@ -396,9 +397,9 @@ describe RHC::Commands::App do
   end
 
   describe 'app create git warnings' do
-    let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+    let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart'] }
 
-    before(:each) do
+    before do
       @domain = rest_client.add_domain("mockdomain")
       @instance.stub(:git_clone_application) { raise RHC::GitException }
       @instance.stub(:check_sshkeys!)
@@ -411,7 +412,7 @@ describe RHC::Commands::App do
     end
 
     context 'when run with windows and no nslookup bug' do
-      before(:each) do
+      before do
         RHC::Helpers.stub(:windows?) { true }
         @instance.stub(:run_nslookup) { true }
         @instance.stub(:run_ping) { true }
@@ -422,7 +423,7 @@ describe RHC::Commands::App do
     end
 
     context 'when run with windows nslookup bug' do
-      before(:each) do
+      before do
         RHC::Helpers.stub(:windows?) { true }
         @instance.stub(:run_nslookup) { true }
         @instance.stub(:run_ping) { false }
@@ -430,18 +431,6 @@ describe RHC::Commands::App do
       it "should print out windows warning" do
         run_output.should match("This may also be related to an issue with Winsock on Windows")
       end
-    end
-  end
-
-  describe 'app create --nogit deprecated' do
-    let(:arguments) { ['app', 'create', 'app1', 'mock_unique_standalone_cart', '--noprompt', '--nogit', '--config', '/tmp/test.conf', '-l', 'test@test.foo', '-p',  'password'] }
-
-    before (:each) do
-      @domain = rest_client.add_domain("mockdomain")
-    end
-
-    context 'when run' do
-      it { run_output.should match("The option '--nogit' is deprecated. Please use '--\\[no-\\]git' instead") }
     end
   end
 
@@ -542,10 +531,10 @@ describe RHC::Commands::App do
   end
 
   describe 'app show' do
-    let(:arguments) { ['app', 'show', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+    let(:arguments) { ['app', 'show', 'app1'] }
 
     context 'when run with the same case as created' do
-      before(:each) do
+      before do
         FakeFS.deactivate!
         @domain = rest_client.add_domain("mockdomain")
         @domain.add_application("app1", "mock_type")
@@ -555,7 +544,7 @@ describe RHC::Commands::App do
     end
 
     context 'when run with scaled app' do
-      before(:each) do
+      before do
         @domain = rest_client.add_domain("mockdomain")
         app = @domain.add_application("app1", "mock_type", true)
         cart1 = app.add_cartridge('mock_cart-1')
@@ -569,7 +558,7 @@ describe RHC::Commands::App do
     end
 
     context 'when run with custom app' do
-      before(:each) do
+      before do
         @domain = rest_client.add_domain("mockdomain")
         app = @domain.add_application("app1", "mock_type", true)
         cart1 = app.add_cartridge('mock_cart-1')
@@ -584,10 +573,10 @@ describe RHC::Commands::App do
   end
 
   describe 'app show' do
-    let(:arguments) { ['app', 'show', 'APP1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+    let(:arguments) { ['app', 'show', 'APP1'] }
 
     context 'when run with the different case from created' do
-      before(:each) do
+      before do
         @rc = MockRestClient.new
         @domain = @rc.add_domain("mockdomain")
         @domain.add_application("app1", "mock_type")
@@ -597,10 +586,10 @@ describe RHC::Commands::App do
   end
 
   describe 'app show --state' do
-    let(:arguments) { ['app', 'show', 'app1', '--state', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+    let(:arguments) { ['app', 'show', 'app1', '--state'] }
 
     context 'when run' do
-      before(:each) do
+      before do
         @domain = rest_client.add_domain("mockdomain")
         @domain.add_application("app1", "mock_type")
       end
@@ -612,7 +601,7 @@ describe RHC::Commands::App do
     let(:arguments) { ['app', 'show', 'app1', '--gears'] }
 
     context 'when run' do
-      before(:each) do
+      before do
         @domain = rest_client.add_domain("mockdomain")
         @domain.add_application("app1", "mock_type")
       end
@@ -658,57 +647,49 @@ describe RHC::Commands::App do
     end
   end
 
-  describe 'app status' do
-    let(:arguments) { ['app', 'status', 'app1', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
-
-    context 'when run' do
-      before(:each) do
-        @domain = rest_client.add_domain("mockdomain")
-        @domain.add_application("app1", "mock_type")
-      end
-      it { run_output.should match("started") }
-      it("should warn about deprecation") { run_output.should match("deprecated") }
-    end
-  end
-
   describe 'app actions' do
-
-    before(:each) do
+    before do
       domain = rest_client.add_domain("mockdomain")
       app = domain.add_application("app1", "mock_type")
       app.add_cartridge('mock_cart-1')
     end
 
     context 'app start' do
-      let(:arguments) { ['app', 'start', '-a', 'app1','--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+      let(:arguments) { ['app', 'start', '-a', 'app1'] }
       it { run_output.should match('start') }
+      it { expect{ run }.to exit_with_code(0) }
     end
 
     context 'app stop' do
-      let(:arguments) { ['app', 'stop', 'app1','--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+      let(:arguments) { ['app', 'stop', 'app1'] }
 
       it { run_output.should match('stop') }
+      it { expect{ run }.to exit_with_code(0) }
     end
 
     context 'app force stop' do
-      let(:arguments) { ['app', 'force-stop', 'app1','--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+      let(:arguments) { ['app', 'force-stop', 'app1'] }
 
       it { run_output.should match('force') }
+      it { expect{ run }.to exit_with_code(0) }
     end
 
     context 'app restart' do
-      let(:arguments) { ['app', 'restart', 'app1','--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+      let(:arguments) { ['app', 'restart', 'app1'] }
       it { run_output.should match('restart') }
+      it { expect{ run }.to exit_with_code(0) }
     end
 
     context 'app reload' do
-      let(:arguments) { ['app', 'reload', 'app1','--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+      let(:arguments) { ['app', 'reload', 'app1'] }
       it { run_output.should match('reload') }
+      it { expect{ run }.to exit_with_code(0) }
     end
 
     context 'app tidy' do
-      let(:arguments) { ['app', 'tidy', 'app1','--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
+      let(:arguments) { ['app', 'tidy', 'app1'] }
       it { run_output.should match('cleaned') }
+      it { expect{ run }.to exit_with_code(0) }
     end
   end
 
@@ -724,12 +705,13 @@ describe RHC::Commands::App do
   describe 'create app with env vars' do
     before{ @domain = rest_client.add_domain("mockdomain") }
 
-    [['app', 'create', 'app1', 'mock_standalone_cart-1', '-e', 'FOO=BAR', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'],
-     ['app', 'create', 'app1', 'mock_standalone_cart-1', '--env', 'FOO=BAR', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'],
-     ['app', 'create', 'app1', 'mock_standalone_cart-1', 'FOO=BAR', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password']
+    [['app', 'create', 'app1', 'mock_standalone_cart-1', '-e', 'FOO=BAR'],
+     ['app', 'create', 'app1', 'mock_standalone_cart-1', '--env', 'FOO=BAR'],
+     ['app', 'create', 'app1', 'mock_standalone_cart-1', 'FOO=BAR']
     ].each_with_index do |args, i|
       context "when run with single env var #{i}" do
         let(:arguments) { args }
+        before { @domain.should_receive(:has_param?).with('ADD_APPLICATION','environment_variables').and_return(true) }
         it { expect { run }.to exit_with_code(0) }
         it { run_output.should match("Success") }
         it { run_output.should match(/Cartridges:\s+mock_standalone_cart-1\n/) }
@@ -737,14 +719,15 @@ describe RHC::Commands::App do
       end
     end
 
-    [['app', 'create', 'app1', 'mock_standalone_cart-1', '-e', 'VAR1=VAL1', '-e', 'VAR2=VAL2', '-e', 'VAR3=VAL3', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'],
-     ['app', 'create', 'app1', 'mock_standalone_cart-1', '--env', 'VAR1=VAL1', '--env', 'VAR2=VAL2', '--env', 'VAR3=VAL3', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'],
-     ['app', 'create', 'app1', 'mock_standalone_cart-1', 'VAR1=VAL1', 'VAR2=VAL2', 'VAR3=VAL3', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'],
-     ['app', 'create', 'app1', 'mock_standalone_cart-1', 'VAR1=VAL1', 'VAR2=VAL2', '-e', 'VAR3=VAL3', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'],
-     ['app', 'create', 'app1', 'mock_standalone_cart-1', 'VAR1=VAL1', '--env', 'VAR2=VAL2', '-e', 'VAR3=VAL3', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password']
+    [['app', 'create', 'app1', 'mock_standalone_cart-1', '-e', 'VAR1=VAL1', '-e', 'VAR2=VAL2', '-e', 'VAR3=VAL3'],
+     ['app', 'create', 'app1', 'mock_standalone_cart-1', '--env', 'VAR1=VAL1', '--env', 'VAR2=VAL2', '--env', 'VAR3=VAL3'],
+     ['app', 'create', 'app1', 'mock_standalone_cart-1', 'VAR1=VAL1', 'VAR2=VAL2', 'VAR3=VAL3'],
+     ['app', 'create', 'app1', 'mock_standalone_cart-1', 'VAR1=VAL1', 'VAR2=VAL2', '-e', 'VAR3=VAL3'],
+     ['app', 'create', 'app1', 'mock_standalone_cart-1', 'VAR1=VAL1', '--env', 'VAR2=VAL2', '-e', 'VAR3=VAL3']
     ].each_with_index do |args, i|
       context "when run with multiple env vars #{i}" do
         let(:arguments) { args }
+        before { @domain.should_receive(:has_param?).with('ADD_APPLICATION','environment_variables').and_return(true) }
         it { expect { run }.to exit_with_code(0) }
         it { run_output.should match("Success") }
         it { run_output.should match(/Cartridges:\s+mock_standalone_cart-1\n/) }
@@ -752,9 +735,9 @@ describe RHC::Commands::App do
       end
     end
 
-    [['app', 'create', 'app1', 'mock_standalone_cart-1', '-e', 'FOO=BAR', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'],
-     ['app', 'create', 'app1', 'mock_standalone_cart-1', '--env', 'FOO=BAR', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'],
-     ['app', 'create', 'app1', 'mock_standalone_cart-1', 'FOO=BAR', '--noprompt', '--timeout', '10', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password']
+    [['app', 'create', 'app1', 'mock_standalone_cart-1', '-e', 'FOO=BAR'],
+     ['app', 'create', 'app1', 'mock_standalone_cart-1', '--env', 'FOO=BAR'],
+     ['app', 'create', 'app1', 'mock_standalone_cart-1', 'FOO=BAR']
     ].each_with_index do |args, i|
       context "when run against a server without env vars support #{i}" do
         let(:arguments) { args }

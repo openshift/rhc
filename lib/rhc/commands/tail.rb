@@ -8,15 +8,14 @@ module RHC::Commands
 
     summary "Tail the logs of an application"
     syntax "<application>"
-    argument :app, "Name of application you wish to view the logs of", ["-a", "--app NAME"]
-    option ["-n", "--namespace NAME"], "Namespace of your application", :context => :namespace_context, :required => true
+    takes_application :argument => true
     option ["-o", "--opts options"], "Options to pass to the server-side (linux based) tail command (applicable to tail command only) (-f is implicit.  See the linux tail man page full list of options.) (Ex: --opts '-n 100')"
     option ["-f", "--files files"], "File glob relative to app (default <application_name>/logs/*) (optional)"
     option ["-g", "--gear ID"], "Tail only a specific gear"
     #option ["-c", "--cartridge name"], "Tail only a specific cartridge"
     alias_action :"app tail", :root_command => true, :deprecated => true
     def run(app_name)
-      rest_app = rest_client.find_application(options.namespace, app_name, :include => :cartridges)
+      rest_app = find_app(:include => :cartridges)
       ssh_url = options.gear ? rest_app.gear_ssh_url(options.gear) : rest_app.ssh_url
 
       tail('*', URI(ssh_url), options)

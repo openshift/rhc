@@ -14,10 +14,11 @@ module RHC
     # callable from the client for convenience.
     #
     module ApiMethods
-      def add_domain(id)
-        debug "Adding domain #{id}"
+      def add_domain(id, payload={})
+        debug "Adding domain #{id} with options #{payload.inspect}"
         @domains = nil
-        api.rest_method "ADD_DOMAIN", :id => id
+        payload.delete_if{ |k,v| k.nil? or v.nil? }
+        api.rest_method "ADD_DOMAIN", {:id => id}.merge(payload)
       end
 
       def domains
@@ -56,37 +57,38 @@ module RHC
       def find_domain(id)
         debug "Finding domain #{id}"
         if link = api.link_href(:SHOW_DOMAIN, ':name' => id)
-          request({
-            :url => link,
-            :method => "GET",
-          })
+          request(:url => link, :method => "GET")
         else
           domains.find{ |d| d.id.downcase == id.downcase }
         end or raise DomainNotFoundException.new("Domain #{id} not found")
       end
 
       def find_application(domain, application, options={})
-        response = request({
-          :url => link_show_application_by_domain_name(domain, application),
-          :method => "GET",
-          :payload => options
-        })
+        request(:url => link_show_application_by_domain_name(domain, application), :method => "GET", :payload => options)
       end
 
       def find_application_gear_groups(domain, application, options={})
-        response = request({
-          :url => link_show_application_by_domain_name(domain, application, "gear_groups"),
-          :method => "GET",
-          :payload => options
-        })
+        request(:url => link_show_application_by_domain_name(domain, application, "gear_groups"), :method => "GET", :payload => options)
       end
 
       def find_application_aliases(domain, application, options={})
-        response = request({
-          :url => link_show_application_by_domain_name(domain, application, "aliases"),
-          :method => "GET",
-          :payload => options
-        })
+        request(:url => link_show_application_by_domain_name(domain, application, "aliases"), :method => "GET", :payload => options)
+      end
+
+      def find_application_by_id(id, options={})
+        if api.supports? :show_application
+          request(:url => link_show_application_by_id(id), :method => "GET", :payload => options)
+        else
+          applications.find{ |a| a.id == id }
+        end or raise ApplicationNotFoundException.new("Application with id #{id} not found")
+      end
+
+      def find_application_by_id_gear_groups(id, options={})
+        if api.supports? :show_application
+          request(:url => link_show_application_by_id(id, 'gear_groups'), :method => "GET", :payload => options)
+        else
+          applications.find{ |a| return a.gear_groups if a.id == id }
+        end or raise ApplicationNotFoundException.new("Application with id #{id} not found")
       end
 
       def link_show_application_by_domain_name(domain, application, *args)
@@ -96,6 +98,10 @@ module RHC
           "applications",
           application,
         ].concat(args).map{ |s| URI.escape(s) }.join("/")
+      end
+
+      def link_show_application_by_id(id, *args)
+        api.link_href(:SHOW_APPLICATION, {':id' => id}, *args)
       end
 
       def link_show_domain_by_name(domain, *args)
@@ -190,6 +196,14 @@ module RHC
           h << [a.strip, b.strip] if a.present? && b.present?
           h
         end
+      end
+
+      def reset
+        (instance_variables - [
+          :@end_point, :@debug, :@preferred_api_versions, :@auth, :@options, :@headers,
+          :@last_options, :@httpclient, :@self_signed, :@current_api_version, :@api
+        ]).each{ |sym| instance_variable_set(sym, nil) }
+        self
       end
     end
 
@@ -368,13 +382,14 @@ module RHC
 
           if !@httpclient || @last_options != options
             @httpclient = RHC::Rest::HTTPClient.new(:agent_name => user_agent).tap do |http|
+              debug "Created new httpclient"
               http.cookie_manager = nil
               http.debug_dev = $stderr if ENV['HTTP_DEBUG']
 
-              options.select{ |sym, value| http.respond_to?("#{sym}=") }.map{ |sym, value| http.send("#{sym}=", value) }
+              options.select{ |sym, value| http.respond_to?("#{sym}=") }.each{ |sym, value| http.send("#{sym}=", value) }
 
               ssl = http.ssl_config
-              options.select{ |sym, value| ssl.respond_to?("#{sym}=") }.map{ |sym, value| ssl.send("#{sym}=", value) }
+              options.select{ |sym, value| ssl.respond_to?("#{sym}=") }.each{ |sym, value| ssl.send("#{sym}=", value) }
               ssl.add_trust_ca(options[:ca_file]) if options[:ca_file]
               ssl.verify_callback = default_verify_callback
 
@@ -451,6 +466,7 @@ module RHC
 
           # remove all unnecessary options
           options.delete(:lazy_auth)
+          options.delete(:accept)
 
           args = [options.delete(:method), options.delete(:url), query, payload, headers, true]
           [httpclient_for(options, auth), args]

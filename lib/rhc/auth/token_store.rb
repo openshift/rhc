@@ -1,3 +1,5 @@
+require 'base64'
+
 module RHC::Auth
   class TokenStore
     def initialize(dir)

@@ -42,7 +42,7 @@ describe RHC::Commands::PortForward do
         rest_client.domains[0].applications.size.should == 1
         rest_client.domains[0].applications[0].name.should == 'mockapp'
       end
-      it { run_output.should match("no available ports to forward.") }
+      it("should report no ports") { run_output.should match("no available ports to forward.") }
     end
 
     context 'when port forwarding an app with permission denied ports' do
