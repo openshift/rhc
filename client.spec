@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.15.0
+Version: 1.15.1
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -102,6 +102,12 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Sep 26 2013 Troy Dawson <tdawson@redhat.com> 1.15.1-1
+- flatten than compact ssh cmd (mateus@caruccio.com)
+- stub has_ssh? (mateus@caruccio.com)
+- add --ssh to snapshot (mateus@caruccio.com)
+- bump_minor_versions for sprint 34 (admiller@redhat.com)
+
 * Thu Sep 12 2013 Adam Miller <admiller@redhat.com> 1.14.7-1
 - Bug 1006031 - rhc restore with spaces in filename (jdetiber@redhat.com)
 - Merge pull request #463 from liggitt/gssapi_failure
