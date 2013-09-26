@@ -52,15 +52,14 @@ module RHC::Commands
     option ["-g", "--gear-size SIZE"], "Gear size controls how much memory and CPU your cartridges can use."
     option ["-s", "--scaling"], "Enable scaling for the web cartridge."
     option ["-r", "--repo DIR"], "Path to the Git repository (defaults to ./$app_name)"
-    option ["-e", "--env VARIABLE=VALUE"], "Environment variable(s) to be set on this app, or path to a file containing environment variables", :option_type => :list
+    option ["-e", "--env VARIABLE=VALUE"], "Environment variable(s) to be set on this app, or path to a file containing environment variables", :type => :list
     option ["--from-code URL"], "URL to a Git repository that will become the initial contents of the application"
     option ["--[no-]git"], "Skip creating the local Git repository."
-    option ["--nogit"], "DEPRECATED: Skip creating the local Git repository.", :deprecated => {:key => :git, :value => false}
     option ["--[no-]dns"], "Skip waiting for the application DNS name to resolve. Must be used in combination with --no-git"
     option ['--no-keys'], "Skip checking SSH keys during app creation", :hide => true
     option ["--enable-jenkins [NAME]"], "Enable Jenkins builds for this application (will create a Jenkins application if not already available). The default name will be 'jenkins' if not specified."
     argument :name, "Name for your application", ["-a", "--app NAME"], :optional => true
-    argument :cartridges, "The web framework this application should use", ["-t", "--type CARTRIDGE"], :optional => true, :arg_type => :list
+    argument :cartridges, "The web framework this application should use", ["-t", "--type CARTRIDGE"], :optional => true, :type => :list
     def create(name, cartridges)
       check_config!
 
@@ -84,20 +83,20 @@ module RHC::Commands
         c.usage_rate? ? "#{c.short_name} (addtl. costs may apply)" : c.short_name
       end.join(', ')
 
-      if rest_domain.supports_add_application_with_env_vars?
-        environment_variables = collect_env_vars(arg_envs.concat(Array(options.env)))
-      else
+      env = collect_env_vars(arg_envs.concat(Array(options.env)))
+      if env.present? && !rest_domain.supports_add_application_with_env_vars?
+        env = []
         warn "Server does not support environment variables."
       end
 
       paragraph do
         header "Application Options"
-        table([["Namespace:", options.namespace],
+        table([["Domain:", options.namespace],
                ["Cartridges:", cart_names],
               (["Source Code:", options.from_code] if options.from_code),
                ["Gear Size:", options.gear_size || "default"],
                ["Scaling:", options.scaling ? "yes" : "no"],
-              (["Environment Variables:", environment_variables.map{|item| "#{item.name}=#{item.value}"}.join(', ')] if environment_variables.present?),
+              (["Environment Variables:", env.map{|item| "#{item.name}=#{item.value}"}.join(', ')] if env.present?),
               ].compact
              ).each { |s| say "  #{s}" }
       end
@@ -106,7 +105,7 @@ module RHC::Commands
         say "Creating application '#{name}' ... "
 
         # create the main app
-        rest_app = create_app(name, cartridges, rest_domain, options.gear_size, options.scaling, options.from_code, environment_variables)
+        rest_app = create_app(name, cartridges, rest_domain, options.gear_size, options.scaling, options.from_code, env)
         success "done"
 
         paragraph{ indent{ success rest_app.messages.map(&:strip) } }
@@ -203,13 +202,11 @@ module RHC::Commands
     description "Deletes your application and all of its data from the server.",
                 "Use with caution as this operation is permanent."
     syntax "<app> [--namespace NAME]"
-    option ["-n", "--namespace NAME"], "Namespace your application belongs to", :context => :namespace_context, :required => true
-    option ["-b", "--bypass"], "DEPRECATED Please use '--confirm'", :deprecated => {:key => :confirm, :value => true}
+    takes_application :argument => true
     option ["--confirm"], "Pass to confirm deleting the application"
-    argument :app, "The application you wish to delete", ["-a", "--app name"], :context => :app_context
     alias_action :destroy, :deprecated => true
     def delete(app)
-      rest_app = rest_client.find_application(options.namespace, app)
+      rest_app = find_app
 
       confirm_action "#{color("This is a non-reversible action! Your application code and data will be permanently deleted if you continue!", :yellow)}\n\nAre you sure you want to delete the application '#{app}'?"
 
@@ -223,66 +220,60 @@ module RHC::Commands
     end
 
     summary "Start the application"
-    syntax "<app> [--namespace NAME] [--app NAME]"
-    argument :app, "The name of the application you are starting", ["-a", "--app NAME"], :context => :app_context
-    option ["-n", "--namespace NAME"], "Application's domain name", :context => :namespace_context, :required => true
+    syntax "<app> [--namespace NAME]"
+    takes_application :argument => true
     def start(app)
-      app_action app, :start
+      app_action :start
 
       results { say "#{app} started" }
       0
     end
 
     summary "Stop the application"
-    syntax "<app> [--namespace NAME] [--app NAME]"
-    argument :app, "The name of the application you are stopping", ["-a", "--app NAME"], :context => :app_context
-    option ["-n", "--namespace NAME"], "Application's domain name", :context => :namespace_context, :required => true
+    syntax "<app> [--namespace NAME]"
+    takes_application :argument => true
     def stop(app)
-      app_action app, :stop
+      app_action :stop
 
       results { say "#{app} stopped" }
       0
     end
 
     summary "Stops all application processes"
-    syntax "<app> [--namespace NAME] [--app NAME]"
-    argument :app, "The name of the application you are stopping", ["-a", "--app NAME"], :context => :app_context
-    option ["-n", "--namespace NAME"], "Application's domain name", :context => :namespace_context, :required => true
+    syntax "<app> [--namespace NAME]"
+    takes_application :argument => true
     def force_stop(app)
-      app_action app, :stop, true
+      app_action :stop, true
 
       results { say "#{app} force stopped" }
       0
     end
 
     summary "Restart the application"
-    syntax "<app> [--namespace NAME] [--app NAME]"
-    argument :app, "The name of the application you are restarting", ["-a", "--app NAME"], :context => :app_context
-    option ["-n", "--namespace NAME"], "Application's domain name", :context => :namespace_context, :required => true
+    syntax "<app> [--namespace NAME]"
+    takes_application :argument => true
     def restart(app)
-      app_action app, :restart
+      app_action :restart
 
       results { say "#{app} restarted" }
       0
     end
 
     summary "Reload the application's configuration"
-    syntax "<app> [--namespace NAME] [--app NAME]"
-    argument :app, "The name of the application you are reloading", ["-a", "--app NAME"], :context => :app_context
-    option ["-n", "--namespace NAME"], "Application's domain name", :context => :namespace_context, :required => true
+    syntax "<app> [--namespace NAME]"
+    takes_application :argument => true
     def reload(app)
-      app_action app, :reload
+      app_action :reload
 
       results { say "#{app} config reloaded" }
       0
     end
 
     summary "Clean out the application's logs and tmp directories and tidy up the git repo on the server"
-    syntax "<app> [--namespace NAME] [--app NAME]"
-    argument :app, "The name of the application you are tidying", ["-a", "--app NAME"], :context => :app_context
-    option ["-n", "--namespace NAME"], "Namespace of the application belongs to", :context => :namespace_context, :required => true
+    syntax "<app> [--namespace NAME]"
+    takes_application :argument => true
     def tidy(app)
-      app_action app, :tidy
+      app_action :tidy
 
       results { say "#{app} cleaned up" }
       0
@@ -309,19 +300,18 @@ module RHC::Commands
       to run and display the output from each gear.
       DESC
     syntax "<app> [--namespace NAME]"
-    argument :app, "The name of the application you are getting information on", ["-a", "--app NAME"], :context => :app_context
-    option ["-n", "--namespace NAME"], "Application's domain name", :context => :namespace_context, :required => true
+    takes_application :argument => true
     option ["--state"], "Get the current state of the cartridges in this application"
     option ["--gears [quota|ssh]"], "Show information about the cartridges on each gear in this application. Pass 'quota' to see per gear disk usage and limits. Pass 'ssh' to print only the SSH connection strings of each gear."
     def show(app_name)
 
       if options.state
-        gear_groups_for_app(app_name).each do |gg|
+        find_app(:with_gear_groups => true).each do |gg|
           say "Cartridge #{gg.cartridges.collect { |c| c['name'] }.join(', ')} is #{gear_group_state(gg.gears.map{ |g| g['state'] })}"
         end
 
       elsif options.gears && options.gears != true
-        groups = rest_client.find_application_gear_groups(options.namespace, app_name)
+        groups = find_app(:with_gear_groups => true)
 
         case options.gears
         when 'quota'
@@ -336,7 +326,7 @@ module RHC::Commands
         end
 
       elsif options.gears
-        gear_info = gear_groups_for_app(app_name).map do |group|
+        gear_info = find_app(:with_gear_groups => true).map do |group|
           group.gears.map do |gear|
             [
               gear['id'],
@@ -350,22 +340,11 @@ module RHC::Commands
 
         say table(gear_info, :header => ['ID', 'State', 'Cartridges', 'Size', 'SSH URL'])
       else
-        app = rest_client.find_application(options.namespace, app_name, :include => :cartridges)
+        app = find_app(:include => :cartridges)
         display_app(app, app.cartridges)
       end
 
       0
-    end
-
-    summary "DEPRECATED use 'show <app> --state' instead"
-    syntax "<app> [--namespace NAME] [--app NAME]"
-    argument :app, "The name of the application you are getting information on", ["-a", "--app NAME"], :context => :app_context
-    option ["-n", "--namespace NAME"], "Namespace of the application belongs to", :context => :namespace_context, :required => true
-    deprecated "rhc app show --state"
-    def status(app)
-      # TODO: add a way to deprecate this and alias to show --apache
-      options.state = true
-      show(app)
     end
 
     private
@@ -427,18 +406,13 @@ module RHC::Commands
         end
       end
 
-
-      def gear_groups_for_app(app_name)
-        rest_client.find_application_gear_groups(options.namespace, app_name)
-      end
-
       def gear_group_state(states)
         return states[0] if states.length == 1 || states.uniq.length == 1
         "#{states.select{ |s| s == 'started' }.count}/#{states.length} started"
       end
 
-      def app_action(app, action, *args)
-        rest_app = rest_client.find_application(options.namespace, app)
+      def app_action(action, *args)
+        rest_app = find_app
         result = rest_app.send action, *args
         result
       end
@@ -450,9 +424,7 @@ module RHC::Commands
         app_options[:initial_git_url] = from_code if from_code
         app_options[:debug] = true if @debug
         app_options[:environment_variables] = environment_variables.map{ |item| item.to_hash } if environment_variables.present?
-        debug "Creating application '#{name}' with these options - #{app_options.inspect}"
         rest_app = rest_domain.add_application(name, app_options)
-        debug "'#{rest_app.name}' created"
 
         rest_app
       rescue RHC::Rest::Exception => e

@@ -64,7 +64,7 @@ module RHC::Commands
       your account. After deletion, any clients using the token will
       no longer have access to OpenShift and will need to reauthenticate.
       DESC
-    argument :auth_token, "The token you wish to delete", ['--auth-token TOKEN'], :arg_type => :list
+    argument :auth_token, "The token you wish to delete", ['--auth-token TOKEN'], :type => :list
     def delete(tokens)
       raise ArgumentError, "You must specify one or more tokens to delete" if tokens.blank?
       say "Deleting authorization ... "

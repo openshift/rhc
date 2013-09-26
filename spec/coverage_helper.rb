@@ -22,18 +22,40 @@ unless RUBY_VERSION < '1.9'
     end
   end
 
-  SimpleCov.at_exit do
-    begin
-      SimpleCov.result.format!
-      if SimpleCov.result.covered_percent < 100.0
-        SimpleCov.result.print_missed_lines if SimpleCov.result.covered_percent > 98.0
-        STDERR.puts "Coverage not 100%, build failed."
-        exit 1
+  unless SimpleCov.respond_to? :minimum_coverage=
+    module SimpleCov
+      def self.minimum_coverage=(value)
+        @minimum_coverage = value
       end
-    rescue Exception => e
-      STDERR.puts "Exception at exit, #{e.message}"
+      def self.minimum_coverage
+        @minimum_coverage || -1
+      end
+    end
+
+    SimpleCov.at_exit do
+      begin
+        SimpleCov.result.format!
+        SimpleCov.result.print_missed_lines if SimpleCov.result.covered_percent.between?(98.0,99.9999999)
+        if SimpleCov.result.covered_percent < SimpleCov.minimum_coverage 
+          STDERR.puts "Coverage not above #{SimpleCov.minimum_coverage}, build failed."
+          exit 1
+        end
+      rescue Exception => e
+        STDERR.puts "Exception at exit, #{e.message}"
+      end
+    end
+  else
+    SimpleCov.at_exit do
+      begin
+        SimpleCov.result.format!
+        SimpleCov.result.print_missed_lines if SimpleCov.result.covered_percent.between?(98.0,99.9999999)
+      rescue Exception => e
+        STDERR.puts "Exception at exit, #{e.message}"
+      end
     end
   end
+
+  SimpleCov.minimum_coverage = 100
 
   SimpleCov.start do
     coverage_dir 'coverage/spec/'

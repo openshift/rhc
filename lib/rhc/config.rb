@@ -126,6 +126,7 @@ module RHC
 
       @defaults.add('libra_server', 'openshift.redhat.com')
       @env_config.add('libra_server', ENV['LIBRA_SERVER']) if ENV['LIBRA_SERVER']
+      @env_config.add('libra_server', ENV['RHC_SERVER']) if ENV['RHC_SERVER']
 
       @opts_config_path = nil
     end

@@ -34,7 +34,7 @@ module RHC
 
       debug "Configuring git repo"
       Dir.chdir(repo_dir) do
-        git_config_set "rhc.app-uuid", app.uuid
+        git_config_set "rhc.app-id", app.uuid
         git_config_set "rhc.app-name", app.name
         git_config_set "rhc.domain-name", app.domain_id
       end
@@ -47,12 +47,11 @@ module RHC
     # :nocov: These all call external binaries so test them in cucumber
     def git_config_get(key)
       config_get_cmd = "git config --get #{key}"
-      debug "Running #{config_get_cmd}"
-      uuid = %x[#{config_get_cmd}].strip
-      debug "UUID = '#{uuid}'"
-      uuid = nil if $?.exitstatus != 0 or uuid.empty?
+      value = %x[#{config_get_cmd}].strip
+      debug "Git config '#{config_get_cmd}' returned '#{value}'"
+      value = nil if $?.exitstatus != 0 or value.empty?
 
-      uuid
+      value
     end
 
     def git_config_set(key, value)

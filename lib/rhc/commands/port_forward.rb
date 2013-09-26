@@ -69,11 +69,10 @@ module RHC::Commands
 
     summary "Forward remote ports to the workstation"
     syntax "<application>"
-    option ["-n", "--namespace NAME"], "Namespace of the application you are port forwarding to", :context => :namespace_context, :required => true
-    argument :app, "Application you are port forwarding to (required)", ["-a", "--app NAME"]
+    takes_application :argument => true
     option ["-g", "--gear ID"], "Gear ID you are port forwarding to (optional)"
     def run(app)
-      rest_app = rest_client.find_application(options.namespace, app)
+      rest_app = find_app
       ssh_uri = URI.parse(options.gear ? rest_app.gear_ssh_url(options.gear) : rest_app.ssh_url)
 
       say "Using #{ssh_uri}..." if options.debug

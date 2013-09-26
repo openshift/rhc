@@ -28,27 +28,27 @@ describe RHC::Commands::Snapshot do
   end
 
   describe 'snapshot save' do
-    let(:arguments) {['snapshot', 'save', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p', 'password', '--app', 'mockapp']}
+    let(:arguments) {['snapshot', 'save', '--app', 'mockapp', '-d']}
 
     context 'when saving a snapshot' do
-      before(:each) do
-        `(exit 0)`
-        Kernel.should_receive(:`).with("ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'snapshot' > #{@app.name}.tar.gz")
+      before do
+        subject.class.any_instance.should_receive(:exec).with("ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'snapshot' > #{@app.name}.tar.gz").and_return([0, 'some save output'])
       end
       it { expect { run }.to exit_with_code(0) }
+      it { run_output.should_not match 'some save output' }
     end
 
     context 'when failing to save a snapshot' do
-      before(:each) do
-        `(exit 1)`
+      before do
         subject.class.any_instance.should_receive(:has_ssh?).and_return(true)
-        Kernel.should_receive(:`).with("ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'snapshot' > #{@app.name}.tar.gz")
+        subject.class.any_instance.should_receive(:exec).with("ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'snapshot' > #{@app.name}.tar.gz").and_return([1, 'some save failures'])
       end
       it { expect { run }.to exit_with_code(130) }
+      it { run_output.should match 'some save failures' }
     end
 
     context 'when saving a snapshot on windows' do
-      before(:each) do
+      before do
         RHC::Helpers.stub(:windows?) do ; true; end
         RHC::Helpers.stub(:jruby?) do ; false ; end
         RHC::Helpers.stub(:linux?) do ; false ; end
@@ -61,7 +61,7 @@ describe RHC::Commands::Snapshot do
     end
 
     context 'when timing out on windows' do
-      before(:each) do
+      before do
         RHC::Helpers.stub(:windows?) do ; true; end
         RHC::Helpers.stub(:jruby?) do ; false ; end
         RHC::Helpers.stub(:linux?) do ; false ; end
@@ -84,31 +84,31 @@ describe RHC::Commands::Snapshot do
   end
 
   describe 'snapshot restore' do
-    let(:arguments) {['snapshot', 'restore', '--noprompt', '-l', 'test@test.foo', '-p', 'password', '--app', 'mockapp']}
+    let(:arguments) {['snapshot', 'restore', '--app', 'mockapp', '-d']}
 
     context 'when restoring a snapshot' do
-      before(:each) do
+      before do
         File.stub(:exists?).and_return(true)
         RHC::TarGz.stub(:contains).and_return(true)
-        `(exit 0)`
-        Kernel.should_receive(:`).with("cat '#{@app.name}.tar.gz' | ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'restore INCLUDE_GIT'")
+        subject.class.any_instance.should_receive(:exec).with("cat '#{@app.name}.tar.gz' | ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'restore INCLUDE_GIT'").and_return([0, 'some restore output'])
       end
-      it { expect { run }.to exit_with_code(0) }
+      it('should succeed') { expect { run }.to exit_with_code(0) }
+      it { run_output.should_not match 'some restore output' }
     end
 
     context 'when restoring a snapshot and failing to ssh' do
-      before(:each) do
+      before do
         File.stub(:exists?).and_return(true)
         RHC::TarGz.stub(:contains).and_return(true)
         subject.class.any_instance.should_receive(:has_ssh?).and_return(true)
-        Kernel.should_receive(:`).with("cat '#{@app.name}.tar.gz' | ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'restore INCLUDE_GIT'")
-        $?.stub(:exitstatus) { 1 }
+        subject.class.any_instance.should_receive(:exec).with("cat '#{@app.name}.tar.gz' | ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'restore INCLUDE_GIT'").and_return([1, 'some restore failures'])
       end
       it { expect { run }.to exit_with_code(130) }
+      it { run_output.should match 'some restore failures' }
     end
 
     context 'when restoring a snapshot on windows' do
-      before(:each) do
+      before do
         RHC::Helpers.stub(:windows?) do ; true; end
         RHC::Helpers.stub(:jruby?) do ; false ; end
         RHC::Helpers.stub(:linux?) do ; false ; end
@@ -135,7 +135,7 @@ describe RHC::Commands::Snapshot do
     end
 
     context 'when timing out on windows' do
-      before(:each) do
+      before do
         RHC::Helpers.stub(:windows?) do ; true; end
         RHC::Helpers.stub(:jruby?) do ; false ; end
         RHC::Helpers.stub(:linux?) do ; false ; end
@@ -148,7 +148,7 @@ describe RHC::Commands::Snapshot do
   end
 
   describe 'snapshot restore file not found' do
-    let(:arguments) {['snapshot', 'restore', '--noprompt', '-l', 'test@test.foo', '-p', 'password', '--app', 'mockapp', '-f', 'foo.tar.gz']}
+    let(:arguments) {['snapshot', 'restore', 'mockapp', '-f', 'foo.tar.gz']}
     context 'when restoring a snapshot' do
       it { expect { run }.to exit_with_code(130) }
     end
