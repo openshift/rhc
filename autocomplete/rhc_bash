@@ -10,9 +10,9 @@ _rhc()
     if [[ "$cur" == -* ]]; then
       opts="--always-prefix --clean --config --debug --insecure --limit --mock --noprompt --password --raw --rhlogin --server --ssl-ca-file --ssl-client-cert-file --ssl-version --timeout --token"
     elif [ -z $cur ]; then
-      opts="account alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert app app-create app-delete app-force-stop app-reload app-restart app-show app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all authorization-list cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage domain domain-create domain-delete domain-list domain-show domain-update env env-list env-set env-show env-unset git-clone logout port-forward server setup snapshot snapshot-restore snapshot-save ssh sshkey sshkey-add sshkey-list sshkey-remove sshkey-show tail threaddump"
+      opts="account alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert app app-create app-delete app-force-stop app-reload app-restart app-show app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all authorization-list cartridge cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage domain domain-configure domain-create domain-delete domain-leave domain-list domain-rename domain-show env env-list env-set env-show env-unset git-clone logout member member-add member-list member-remove port-forward server setup snapshot snapshot-restore snapshot-save ssh sshkey sshkey-add sshkey-list sshkey-remove sshkey-show tail threaddump"
     else
-      opts="account account-logout add-alias add-authorization add-cartridge add-sshkey alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert aliases app app-create app-delete app-env app-force-stop app-reload app-restart app-show app-snapshot app-ssh app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all authorization-list authorizations cartridge cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage cartridges create-app create-domain delete-all-authorization delete-app delete-authorization delete-cert-alias delete-domain domain domain-create domain-delete domain-list domain-show domain-update domains env env-add env-list env-remove env-set env-show env-unset force-stop-app git-clone list-alias list-authorization list-cartridge list-domain list-env list-sshkey logout port-forward reload-app reload-cartridge remove-alias remove-cartridge remove-sshkey restart-app restart-cartridge restore-snapshot save-snapshot scale-cartridge server set-env setup show-app show-cartridge show-domain show-env show-sshkey snapshot snapshot-restore snapshot-save ssh sshkey sshkey-add sshkey-list sshkey-remove sshkey-show start-app start-cartridge status-cartridge stop-app stop-cartridge storage-cartridge tail threaddump tidy-app unset-env update-cert-alias update-domain"
+      opts="account account-logout add-alias add-authorization add-cartridge add-member add-sshkey alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert aliases app app-create app-delete app-env app-force-stop app-reload app-restart app-show app-snapshot app-ssh app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all authorization-list authorizations cartridge cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage cartridges configure-domain create-app create-domain delete-all-authorization delete-app delete-authorization delete-cert-alias delete-domain domain domain-configure domain-create domain-delete domain-leave domain-list domain-rename domain-show domains env env-add env-list env-remove env-set env-show env-unset force-stop-app git-clone leave-domain list-alias list-authorization list-cartridge list-domain list-env list-member list-sshkey logout member member-add member-list member-remove members port-forward reload-app reload-cartridge remove-alias remove-cartridge remove-member remove-sshkey rename-domain restart-app restart-cartridge restore-snapshot save-snapshot scale-cartridge server set-env setup show-app show-cartridge show-domain show-env show-sshkey snapshot snapshot-restore snapshot-save ssh sshkey sshkey-add sshkey-list sshkey-remove sshkey-show start-app start-cartridge status-cartridge stop-app stop-cartridge storage-cartridge tail threaddump tidy-app unset-env update-cert-alias"
     fi
   else
     prev="${COMP_WORDS[@]:0:COMP_CWORD}"
@@ -46,7 +46,7 @@ _rhc()
 
       "rhc add-alias")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace"
+          opts="--app --application-id --namespace"
         else
           opts=""
         fi
@@ -62,7 +62,15 @@ _rhc()
 
       "rhc add-cartridge")
         if [[ "$cur" == -* ]]; then
-          opts="--app --cartridge --env --namespace"
+          opts="--app --application-id --cartridge --env --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc add-member")
+        if [[ "$cur" == -* ]]; then
+          opts="--ids --namespace --role"
         else
           opts=""
         fi
@@ -86,7 +94,7 @@ _rhc()
 
       "rhc alias add")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace"
+          opts="--app --application-id --namespace"
         else
           opts=""
         fi
@@ -94,7 +102,7 @@ _rhc()
 
       "rhc alias delete-cert")
         if [[ "$cur" == -* ]]; then
-          opts="--app --confirm --namespace"
+          opts="--app --application-id --confirm --namespace"
         else
           opts=""
         fi
@@ -102,7 +110,7 @@ _rhc()
 
       "rhc alias list")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace"
+          opts="--app --application-id --namespace"
         else
           opts=""
         fi
@@ -110,7 +118,7 @@ _rhc()
 
       "rhc alias remove")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace"
+          opts="--app --application-id --namespace"
         else
           opts=""
         fi
@@ -118,7 +126,7 @@ _rhc()
 
       "rhc alias update-cert")
         if [[ "$cur" == -* ]]; then
-          opts="--app --certificate --namespace --passphrase --private-key"
+          opts="--app --application-id --certificate --namespace --passphrase --private-key"
         else
           opts=""
         fi
@@ -126,7 +134,7 @@ _rhc()
 
       "rhc alias-add")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace"
+          opts="--app --application-id --namespace"
         else
           opts=""
         fi
@@ -134,7 +142,7 @@ _rhc()
 
       "rhc alias-delete-cert")
         if [[ "$cur" == -* ]]; then
-          opts="--app --confirm --namespace"
+          opts="--app --application-id --confirm --namespace"
         else
           opts=""
         fi
@@ -142,7 +150,7 @@ _rhc()
 
       "rhc alias-list")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace"
+          opts="--app --application-id --namespace"
         else
           opts=""
         fi
@@ -150,7 +158,7 @@ _rhc()
 
       "rhc alias-remove")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace"
+          opts="--app --application-id --namespace"
         else
           opts=""
         fi
@@ -158,7 +166,7 @@ _rhc()
 
       "rhc alias-update-cert")
         if [[ "$cur" == -* ]]; then
-          opts="--app --certificate --namespace --passphrase --private-key"
+          opts="--app --application-id --certificate --namespace --passphrase --private-key"
         else
           opts=""
         fi
@@ -166,7 +174,7 @@ _rhc()
 
       "rhc aliases")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace"
+          opts="--app --application-id --namespace"
         else
           opts=""
         fi
@@ -182,7 +190,7 @@ _rhc()
 
       "rhc app create")
         if [[ "$cur" == -* ]]; then
-          opts="--app --dns --enable-jenkins --env --from-code --gear-size --git --namespace --no-dns --no-git --no-keys --nogit --repo --scaling --type"
+          opts="--app --dns --enable-jenkins --env --from-code --gear-size --git --namespace --no-dns --no-git --no-keys --repo --scaling --type"
         else
           opts=""
         fi
@@ -190,7 +198,7 @@ _rhc()
 
       "rhc app delete")
         if [[ "$cur" == -* ]]; then
-          opts="--app --bypass --confirm --namespace"
+          opts="--app --application-id --confirm --namespace"
         else
           opts=""
         fi
@@ -198,7 +206,7 @@ _rhc()
 
       "rhc app env")
         if [[ "$cur" == -* ]]; then
-          opts="--app --confirm --env --namespace"
+          opts="--app --application-id --confirm --env --namespace"
         else
           opts=""
         fi
@@ -206,7 +214,7 @@ _rhc()
 
       "rhc app force-stop")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace"
+          opts="--app --application-id --namespace"
         else
           opts=""
         fi
@@ -214,7 +222,7 @@ _rhc()
 
       "rhc app reload")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace"
+          opts="--app --application-id --namespace"
         else
           opts=""
         fi
@@ -222,7 +230,7 @@ _rhc()
 
       "rhc app restart")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace"
+          opts="--app --application-id --namespace"
         else
           opts=""
         fi
@@ -230,7 +238,7 @@ _rhc()
 
       "rhc app show")
         if [[ "$cur" == -* ]]; then
-          opts="--app --gears --namespace --state"
+          opts="--app --application-id --gears --namespace --state"
         else
           opts=""
         fi
@@ -238,7 +246,7 @@ _rhc()
 
       "rhc app snapshot")
         if [[ "$cur" == -* ]]; then
-          opts="--app --filepath --namespace"
+          opts="--app --application-id --filepath --namespace"
         else
           opts=""
         fi
@@ -246,7 +254,7 @@ _rhc()
 
       "rhc app ssh")
         if [[ "$cur" == -* ]]; then
-          opts="--app --gears --limit --namespace --raw --ssh"
+          opts="--app --application-id --gears --limit --namespace --raw --ssh"
         else
           opts=""
         fi
@@ -254,7 +262,7 @@ _rhc()
 
       "rhc app start")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace"
+          opts="--app --application-id --namespace"
         else
           opts=""
         fi
@@ -262,7 +270,7 @@ _rhc()
 
       "rhc app stop")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace"
+          opts="--app --application-id --namespace"
         else
           opts=""
         fi
@@ -270,7 +278,7 @@ _rhc()
 
       "rhc app tidy")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace"
+          opts="--app --application-id --namespace"
         else
           opts=""
         fi
@@ -278,7 +286,7 @@ _rhc()
 
       "rhc app-create")
         if [[ "$cur" == -* ]]; then
-          opts="--app --dns --enable-jenkins --env --from-code --gear-size --git --namespace --no-dns --no-git --no-keys --nogit --repo --scaling --type"
+          opts="--app --dns --enable-jenkins --env --from-code --gear-size --git --namespace --no-dns --no-git --no-keys --repo --scaling --type"
         else
           opts=""
         fi
@@ -286,7 +294,7 @@ _rhc()
 
       "rhc app-delete")
         if [[ "$cur" == -* ]]; then
-          opts="--app --bypass --confirm --namespace"
+          opts="--app --application-id --confirm --namespace"
         else
           opts=""
         fi
@@ -294,7 +302,7 @@ _rhc()
 
       "rhc app-env")
         if [[ "$cur" == -* ]]; then
-          opts="--app --confirm --env --namespace"
+          opts="--app --application-id --confirm --env --namespace"
         else
           opts=""
         fi
@@ -302,7 +310,7 @@ _rhc()
 
       "rhc app-force-stop")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace"
+          opts="--app --application-id --namespace"
         else
           opts=""
         fi
@@ -310,7 +318,7 @@ _rhc()
 
       "rhc app-reload")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace"
+          opts="--app --application-id --namespace"
         else
           opts=""
         fi
@@ -318,7 +326,7 @@ _rhc()
 
       "rhc app-restart")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace"
+          opts="--app --application-id --namespace"
         else
           opts=""
         fi
@@ -326,7 +334,7 @@ _rhc()
 
       "rhc app-show")
         if [[ "$cur" == -* ]]; then
-          opts="--app --gears --namespace --state"
+          opts="--app --application-id --gears --namespace --state"
         else
           opts=""
         fi
@@ -334,7 +342,7 @@ _rhc()
 
       "rhc app-snapshot")
         if [[ "$cur" == -* ]]; then
-          opts="--app --filepath --namespace"
+          opts="--app --application-id --filepath --namespace"
         else
           opts=""
         fi
@@ -342,7 +350,7 @@ _rhc()
 
       "rhc app-ssh")
         if [[ "$cur" == -* ]]; then
-          opts="--app --gears --limit --namespace --raw --ssh"
+          opts="--app --application-id --gears --limit --namespace --raw --ssh"
         else
           opts=""
         fi
@@ -350,7 +358,7 @@ _rhc()
 
       "rhc app-start")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace"
+          opts="--app --application-id --namespace"
         else
           opts=""
         fi
@@ -358,7 +366,7 @@ _rhc()
 
       "rhc app-stop")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace"
+          opts="--app --application-id --namespace"
         else
           opts=""
         fi
@@ -366,7 +374,7 @@ _rhc()
 
       "rhc app-tidy")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace"
+          opts="--app --application-id --namespace"
         else
           opts=""
         fi
@@ -470,7 +478,7 @@ _rhc()
 
       "rhc cartridge add")
         if [[ "$cur" == -* ]]; then
-          opts="--app --cartridge --env --namespace"
+          opts="--app --application-id --cartridge --env --namespace"
         else
           opts=""
         fi
@@ -486,7 +494,7 @@ _rhc()
 
       "rhc cartridge reload")
         if [[ "$cur" == -* ]]; then
-          opts="--app --cartridge --namespace"
+          opts="--app --application-id --cartridge --namespace"
         else
           opts=""
         fi
@@ -494,7 +502,7 @@ _rhc()
 
       "rhc cartridge remove")
         if [[ "$cur" == -* ]]; then
-          opts="--app --cartridge --confirm --namespace"
+          opts="--app --application-id --cartridge --confirm --namespace"
         else
           opts=""
         fi
@@ -502,7 +510,7 @@ _rhc()
 
       "rhc cartridge restart")
         if [[ "$cur" == -* ]]; then
-          opts="--app --cartridge --namespace"
+          opts="--app --application-id --cartridge --namespace"
         else
           opts=""
         fi
@@ -510,7 +518,7 @@ _rhc()
 
       "rhc cartridge scale")
         if [[ "$cur" == -* ]]; then
-          opts="--app --cartridge --max --min --namespace"
+          opts="--app --application-id --cartridge --max --min --namespace"
         else
           opts=""
         fi
@@ -518,7 +526,7 @@ _rhc()
 
       "rhc cartridge show")
         if [[ "$cur" == -* ]]; then
-          opts="--app --cartridge --namespace"
+          opts="--app --application-id --cartridge --namespace"
         else
           opts=""
         fi
@@ -526,7 +534,7 @@ _rhc()
 
       "rhc cartridge start")
         if [[ "$cur" == -* ]]; then
-          opts="--app --cartridge --namespace"
+          opts="--app --application-id --cartridge --namespace"
         else
           opts=""
         fi
@@ -534,7 +542,7 @@ _rhc()
 
       "rhc cartridge status")
         if [[ "$cur" == -* ]]; then
-          opts="--app --cartridge --namespace"
+          opts="--app --application-id --cartridge --namespace"
         else
           opts=""
         fi
@@ -542,7 +550,7 @@ _rhc()
 
       "rhc cartridge stop")
         if [[ "$cur" == -* ]]; then
-          opts="--app --cartridge --namespace"
+          opts="--app --application-id --cartridge --namespace"
         else
           opts=""
         fi
@@ -550,7 +558,7 @@ _rhc()
 
       "rhc cartridge storage")
         if [[ "$cur" == -* ]]; then
-          opts="--add --app --cartridge --force --namespace --remove --set --show"
+          opts="--add --app --application-id --cartridge --force --namespace --remove --set --show"
         else
           opts=""
         fi
@@ -558,7 +566,7 @@ _rhc()
 
       "rhc cartridge-add")
         if [[ "$cur" == -* ]]; then
-          opts="--app --cartridge --env --namespace"
+          opts="--app --application-id --cartridge --env --namespace"
         else
           opts=""
         fi
@@ -574,7 +582,7 @@ _rhc()
 
       "rhc cartridge-reload")
         if [[ "$cur" == -* ]]; then
-          opts="--app --cartridge --namespace"
+          opts="--app --application-id --cartridge --namespace"
         else
           opts=""
         fi
@@ -582,7 +590,7 @@ _rhc()
 
       "rhc cartridge-remove")
         if [[ "$cur" == -* ]]; then
-          opts="--app --cartridge --confirm --namespace"
+          opts="--app --application-id --cartridge --confirm --namespace"
         else
           opts=""
         fi
@@ -590,7 +598,7 @@ _rhc()
 
       "rhc cartridge-restart")
         if [[ "$cur" == -* ]]; then
-          opts="--app --cartridge --namespace"
+          opts="--app --application-id --cartridge --namespace"
         else
           opts=""
         fi
@@ -598,7 +606,7 @@ _rhc()
 
       "rhc cartridge-scale")
         if [[ "$cur" == -* ]]; then
-          opts="--app --cartridge --max --min --namespace"
+          opts="--app --application-id --cartridge --max --min --namespace"
         else
           opts=""
         fi
@@ -606,7 +614,7 @@ _rhc()
 
       "rhc cartridge-show")
         if [[ "$cur" == -* ]]; then
-          opts="--app --cartridge --namespace"
+          opts="--app --application-id --cartridge --namespace"
         else
           opts=""
         fi
@@ -614,7 +622,7 @@ _rhc()
 
       "rhc cartridge-start")
         if [[ "$cur" == -* ]]; then
-          opts="--app --cartridge --namespace"
+          opts="--app --application-id --cartridge --namespace"
         else
           opts=""
         fi
@@ -622,7 +630,7 @@ _rhc()
 
       "rhc cartridge-status")
         if [[ "$cur" == -* ]]; then
-          opts="--app --cartridge --namespace"
+          opts="--app --application-id --cartridge --namespace"
         else
           opts=""
         fi
@@ -630,7 +638,7 @@ _rhc()
 
       "rhc cartridge-stop")
         if [[ "$cur" == -* ]]; then
-          opts="--app --cartridge --namespace"
+          opts="--app --application-id --cartridge --namespace"
         else
           opts=""
         fi
@@ -638,7 +646,7 @@ _rhc()
 
       "rhc cartridge-storage")
         if [[ "$cur" == -* ]]; then
-          opts="--add --app --cartridge --force --namespace --remove --set --show"
+          opts="--add --app --application-id --cartridge --force --namespace --remove --set --show"
         else
           opts=""
         fi
@@ -652,9 +660,17 @@ _rhc()
         fi
         ;;
 
+      "rhc configure-domain")
+        if [[ "$cur" == -* ]]; then
+          opts="--allowed-gear-sizes --namespace --no-allowed-gear-sizes"
+        else
+          opts=""
+        fi
+        ;;
+
       "rhc create-app")
         if [[ "$cur" == -* ]]; then
-          opts="--app --dns --enable-jenkins --env --from-code --gear-size --git --namespace --no-dns --no-git --no-keys --nogit --repo --scaling --type"
+          opts="--app --dns --enable-jenkins --env --from-code --gear-size --git --namespace --no-dns --no-git --no-keys --repo --scaling --type"
         else
           opts=""
         fi
@@ -662,7 +678,7 @@ _rhc()
 
       "rhc create-domain")
         if [[ "$cur" == -* ]]; then
-          opts="--namespace"
+          opts="--allowed-gear-sizes --namespace --no-allowed-gear-sizes"
         else
           opts=""
         fi
@@ -678,7 +694,7 @@ _rhc()
 
       "rhc delete-app")
         if [[ "$cur" == -* ]]; then
-          opts="--app --bypass --confirm --namespace"
+          opts="--app --application-id --confirm --namespace"
         else
           opts=""
         fi
@@ -694,7 +710,7 @@ _rhc()
 
       "rhc delete-cert-alias")
         if [[ "$cur" == -* ]]; then
-          opts="--app --confirm --namespace"
+          opts="--app --application-id --confirm --namespace"
         else
           opts=""
         fi
@@ -712,11 +728,27 @@ _rhc()
         if [[ "$cur" == -* ]]; then
           opts=""
         else
-          opts="create update show list delete"
+          opts="create rename configure show list delete leave"
+        fi
+        ;;
+
+      "rhc domain configure")
+        if [[ "$cur" == -* ]]; then
+          opts="--allowed-gear-sizes --namespace --no-allowed-gear-sizes"
+        else
+          opts=""
         fi
         ;;
 
       "rhc domain create")
+        if [[ "$cur" == -* ]]; then
+          opts="--allowed-gear-sizes --namespace --no-allowed-gear-sizes"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc domain delete")
         if [[ "$cur" == -* ]]; then
           opts="--namespace"
         else
@@ -724,7 +756,7 @@ _rhc()
         fi
         ;;
 
-      "rhc domain delete")
+      "rhc domain leave")
         if [[ "$cur" == -* ]]; then
           opts="--namespace"
         else
@@ -740,6 +772,14 @@ _rhc()
         fi
         ;;
 
+      "rhc domain rename")
+        if [[ "$cur" == -* ]]; then
+          opts="--namespace"
+        else
+          opts=""
+        fi
+        ;;
+
       "rhc domain show")
         if [[ "$cur" == -* ]]; then
           opts="--namespace"
@@ -748,9 +788,9 @@ _rhc()
         fi
         ;;
 
-      "rhc domain update")
+      "rhc domain-configure")
         if [[ "$cur" == -* ]]; then
-          opts="--namespace"
+          opts="--allowed-gear-sizes --namespace --no-allowed-gear-sizes"
         else
           opts=""
         fi
@@ -758,13 +798,21 @@ _rhc()
 
       "rhc domain-create")
         if [[ "$cur" == -* ]]; then
-          opts="--namespace"
+          opts="--allowed-gear-sizes --namespace --no-allowed-gear-sizes"
         else
           opts=""
         fi
         ;;
 
       "rhc domain-delete")
+        if [[ "$cur" == -* ]]; then
+          opts="--namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc domain-leave")
         if [[ "$cur" == -* ]]; then
           opts="--namespace"
         else
@@ -780,7 +828,7 @@ _rhc()
         fi
         ;;
 
-      "rhc domain-show")
+      "rhc domain-rename")
         if [[ "$cur" == -* ]]; then
           opts="--namespace"
         else
@@ -788,7 +836,7 @@ _rhc()
         fi
         ;;
 
-      "rhc domain-update")
+      "rhc domain-show")
         if [[ "$cur" == -* ]]; then
           opts="--namespace"
         else
@@ -814,7 +862,7 @@ _rhc()
 
       "rhc env add")
         if [[ "$cur" == -* ]]; then
-          opts="--app --confirm --env --namespace"
+          opts="--app --application-id --confirm --env --namespace"
         else
           opts=""
         fi
@@ -822,7 +870,7 @@ _rhc()
 
       "rhc env list")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace --quotes --table"
+          opts="--app --application-id --namespace --quotes --table"
         else
           opts=""
         fi
@@ -830,7 +878,7 @@ _rhc()
 
       "rhc env remove")
         if [[ "$cur" == -* ]]; then
-          opts="--app --confirm --env --namespace"
+          opts="--app --application-id --confirm --env --namespace"
         else
           opts=""
         fi
@@ -838,7 +886,7 @@ _rhc()
 
       "rhc env set")
         if [[ "$cur" == -* ]]; then
-          opts="--app --confirm --env --namespace"
+          opts="--app --application-id --confirm --env --namespace"
         else
           opts=""
         fi
@@ -846,7 +894,7 @@ _rhc()
 
       "rhc env show")
         if [[ "$cur" == -* ]]; then
-          opts="--app --env --namespace --quotes --table"
+          opts="--app --application-id --env --namespace --quotes --table"
         else
           opts=""
         fi
@@ -854,7 +902,7 @@ _rhc()
 
       "rhc env unset")
         if [[ "$cur" == -* ]]; then
-          opts="--app --confirm --env --namespace"
+          opts="--app --application-id --confirm --env --namespace"
         else
           opts=""
         fi
@@ -862,7 +910,7 @@ _rhc()
 
       "rhc env-add")
         if [[ "$cur" == -* ]]; then
-          opts="--app --confirm --env --namespace"
+          opts="--app --application-id --confirm --env --namespace"
         else
           opts=""
         fi
@@ -870,7 +918,7 @@ _rhc()
 
       "rhc env-list")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace --quotes --table"
+          opts="--app --application-id --namespace --quotes --table"
         else
           opts=""
         fi
@@ -878,7 +926,7 @@ _rhc()
 
       "rhc env-remove")
         if [[ "$cur" == -* ]]; then
-          opts="--app --confirm --env --namespace"
+          opts="--app --application-id --confirm --env --namespace"
         else
           opts=""
         fi
@@ -886,7 +934,7 @@ _rhc()
 
       "rhc env-set")
         if [[ "$cur" == -* ]]; then
-          opts="--app --confirm --env --namespace"
+          opts="--app --application-id --confirm --env --namespace"
         else
           opts=""
         fi
@@ -894,7 +942,7 @@ _rhc()
 
       "rhc env-show")
         if [[ "$cur" == -* ]]; then
-          opts="--app --env --namespace --quotes --table"
+          opts="--app --application-id --env --namespace --quotes --table"
         else
           opts=""
         fi
@@ -902,7 +950,7 @@ _rhc()
 
       "rhc env-unset")
         if [[ "$cur" == -* ]]; then
-          opts="--app --confirm --env --namespace"
+          opts="--app --application-id --confirm --env --namespace"
         else
           opts=""
         fi
@@ -910,7 +958,7 @@ _rhc()
 
       "rhc force-stop-app")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace"
+          opts="--app --application-id --namespace"
         else
           opts=""
         fi
@@ -918,7 +966,15 @@ _rhc()
 
       "rhc git-clone")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace --repo"
+          opts="--app --application-id --namespace --repo"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc leave-domain")
+        if [[ "$cur" == -* ]]; then
+          opts="--namespace"
         else
           opts=""
         fi
@@ -926,7 +982,7 @@ _rhc()
 
       "rhc list-alias")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace"
+          opts="--app --application-id --namespace"
         else
           opts=""
         fi
@@ -958,7 +1014,15 @@ _rhc()
 
       "rhc list-env")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace --quotes --table"
+          opts="--app --application-id --namespace --quotes --table"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc list-member")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --ids --namespace --target"
         else
           opts=""
         fi
@@ -980,9 +1044,73 @@ _rhc()
         fi
         ;;
 
+      "rhc member")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts="list add remove"
+        fi
+        ;;
+
+      "rhc member add")
+        if [[ "$cur" == -* ]]; then
+          opts="--ids --namespace --role"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc member list")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --ids --namespace --target"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc member remove")
+        if [[ "$cur" == -* ]]; then
+          opts="--all --ids --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc member-add")
+        if [[ "$cur" == -* ]]; then
+          opts="--ids --namespace --role"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc member-list")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --ids --namespace --target"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc member-remove")
+        if [[ "$cur" == -* ]]; then
+          opts="--all --ids --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc members")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --ids --namespace --target"
+        else
+          opts=""
+        fi
+        ;;
+
       "rhc port-forward")
         if [[ "$cur" == -* ]]; then
-          opts="--app --gear --namespace"
+          opts="--app --application-id --gear --namespace"
         else
           opts=""
         fi
@@ -990,7 +1118,7 @@ _rhc()
 
       "rhc reload-app")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace"
+          opts="--app --application-id --namespace"
         else
           opts=""
         fi
@@ -998,7 +1126,7 @@ _rhc()
 
       "rhc reload-cartridge")
         if [[ "$cur" == -* ]]; then
-          opts="--app --cartridge --namespace"
+          opts="--app --application-id --cartridge --namespace"
         else
           opts=""
         fi
@@ -1006,7 +1134,7 @@ _rhc()
 
       "rhc remove-alias")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace"
+          opts="--app --application-id --namespace"
         else
           opts=""
         fi
@@ -1014,7 +1142,15 @@ _rhc()
 
       "rhc remove-cartridge")
         if [[ "$cur" == -* ]]; then
-          opts="--app --cartridge --confirm --namespace"
+          opts="--app --application-id --cartridge --confirm --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc remove-member")
+        if [[ "$cur" == -* ]]; then
+          opts="--all --ids --namespace"
         else
           opts=""
         fi
@@ -1028,9 +1164,17 @@ _rhc()
         fi
         ;;
 
+      "rhc rename-domain")
+        if [[ "$cur" == -* ]]; then
+          opts="--namespace"
+        else
+          opts=""
+        fi
+        ;;
+
       "rhc restart-app")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace"
+          opts="--app --application-id --namespace"
         else
           opts=""
         fi
@@ -1038,7 +1182,7 @@ _rhc()
 
       "rhc restart-cartridge")
         if [[ "$cur" == -* ]]; then
-          opts="--app --cartridge --namespace"
+          opts="--app --application-id --cartridge --namespace"
         else
           opts=""
         fi
@@ -1046,7 +1190,7 @@ _rhc()
 
       "rhc restore-snapshot")
         if [[ "$cur" == -* ]]; then
-          opts="--app --filepath --namespace"
+          opts="--app --application-id --filepath --namespace"
         else
           opts=""
         fi
@@ -1054,7 +1198,7 @@ _rhc()
 
       "rhc save-snapshot")
         if [[ "$cur" == -* ]]; then
-          opts="--app --filepath --namespace"
+          opts="--app --application-id --filepath --namespace"
         else
           opts=""
         fi
@@ -1062,7 +1206,7 @@ _rhc()
 
       "rhc scale-cartridge")
         if [[ "$cur" == -* ]]; then
-          opts="--app --cartridge --max --min --namespace"
+          opts="--app --application-id --cartridge --max --min --namespace"
         else
           opts=""
         fi
@@ -1078,7 +1222,7 @@ _rhc()
 
       "rhc set-env")
         if [[ "$cur" == -* ]]; then
-          opts="--app --confirm --env --namespace"
+          opts="--app --application-id --confirm --env --namespace"
         else
           opts=""
         fi
@@ -1094,7 +1238,7 @@ _rhc()
 
       "rhc show-app")
         if [[ "$cur" == -* ]]; then
-          opts="--app --gears --namespace --state"
+          opts="--app --application-id --gears --namespace --state"
         else
           opts=""
         fi
@@ -1102,7 +1246,7 @@ _rhc()
 
       "rhc show-cartridge")
         if [[ "$cur" == -* ]]; then
-          opts="--app --cartridge --namespace"
+          opts="--app --application-id --cartridge --namespace"
         else
           opts=""
         fi
@@ -1118,7 +1262,7 @@ _rhc()
 
       "rhc show-env")
         if [[ "$cur" == -* ]]; then
-          opts="--app --env --namespace --quotes --table"
+          opts="--app --application-id --env --namespace --quotes --table"
         else
           opts=""
         fi
@@ -1142,7 +1286,7 @@ _rhc()
 
       "rhc snapshot restore")
         if [[ "$cur" == -* ]]; then
-          opts="--app --filepath --namespace"
+          opts="--app --application-id --filepath --namespace"
         else
           opts=""
         fi
@@ -1150,7 +1294,7 @@ _rhc()
 
       "rhc snapshot save")
         if [[ "$cur" == -* ]]; then
-          opts="--app --filepath --namespace"
+          opts="--app --application-id --filepath --namespace"
         else
           opts=""
         fi
@@ -1158,7 +1302,7 @@ _rhc()
 
       "rhc snapshot-restore")
         if [[ "$cur" == -* ]]; then
-          opts="--app --filepath --namespace"
+          opts="--app --application-id --filepath --namespace"
         else
           opts=""
         fi
@@ -1166,7 +1310,7 @@ _rhc()
 
       "rhc snapshot-save")
         if [[ "$cur" == -* ]]; then
-          opts="--app --filepath --namespace"
+          opts="--app --application-id --filepath --namespace"
         else
           opts=""
         fi
@@ -1174,7 +1318,7 @@ _rhc()
 
       "rhc ssh")
         if [[ "$cur" == -* ]]; then
-          opts="--app --gears --limit --namespace --raw --ssh"
+          opts="--app --application-id --gears --limit --namespace --raw --ssh"
         else
           opts=""
         fi
@@ -1254,7 +1398,7 @@ _rhc()
 
       "rhc start-app")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace"
+          opts="--app --application-id --namespace"
         else
           opts=""
         fi
@@ -1262,7 +1406,7 @@ _rhc()
 
       "rhc start-cartridge")
         if [[ "$cur" == -* ]]; then
-          opts="--app --cartridge --namespace"
+          opts="--app --application-id --cartridge --namespace"
         else
           opts=""
         fi
@@ -1270,7 +1414,7 @@ _rhc()
 
       "rhc status-cartridge")
         if [[ "$cur" == -* ]]; then
-          opts="--app --cartridge --namespace"
+          opts="--app --application-id --cartridge --namespace"
         else
           opts=""
         fi
@@ -1278,7 +1422,7 @@ _rhc()
 
       "rhc stop-app")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace"
+          opts="--app --application-id --namespace"
         else
           opts=""
         fi
@@ -1286,7 +1430,7 @@ _rhc()
 
       "rhc stop-cartridge")
         if [[ "$cur" == -* ]]; then
-          opts="--app --cartridge --namespace"
+          opts="--app --application-id --cartridge --namespace"
         else
           opts=""
         fi
@@ -1294,7 +1438,7 @@ _rhc()
 
       "rhc storage-cartridge")
         if [[ "$cur" == -* ]]; then
-          opts="--add --app --cartridge --force --namespace --remove --set --show"
+          opts="--add --app --application-id --cartridge --force --namespace --remove --set --show"
         else
           opts=""
         fi
@@ -1302,7 +1446,7 @@ _rhc()
 
       "rhc tail")
         if [[ "$cur" == -* ]]; then
-          opts="--app --files --gear --namespace --opts"
+          opts="--app --application-id --files --gear --namespace --opts"
         else
           opts=""
         fi
@@ -1310,7 +1454,7 @@ _rhc()
 
       "rhc threaddump")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace"
+          opts="--app --application-id --namespace"
         else
           opts=""
         fi
@@ -1318,7 +1462,7 @@ _rhc()
 
       "rhc tidy-app")
         if [[ "$cur" == -* ]]; then
-          opts="--app --namespace"
+          opts="--app --application-id --namespace"
         else
           opts=""
         fi
@@ -1326,7 +1470,7 @@ _rhc()
 
       "rhc unset-env")
         if [[ "$cur" == -* ]]; then
-          opts="--app --confirm --env --namespace"
+          opts="--app --application-id --confirm --env --namespace"
         else
           opts=""
         fi
@@ -1334,15 +1478,7 @@ _rhc()
 
       "rhc update-cert-alias")
         if [[ "$cur" == -* ]]; then
-          opts="--app --certificate --namespace --passphrase --private-key"
-        else
-          opts=""
-        fi
-        ;;
-
-      "rhc update-domain")
-        if [[ "$cur" == -* ]]; then
-          opts="--namespace"
+          opts="--app --application-id --certificate --namespace --passphrase --private-key"
         else
           opts=""
         fi

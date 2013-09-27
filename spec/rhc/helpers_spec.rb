@@ -181,6 +181,11 @@ describe AllRhcHelpers do
       it{ expect{ run }.to exit_with_code(1) }
       it{ run_output.should match("invalid argument: --timeout=string") }
     end
+    context "that is a negative integer" do
+      let(:arguments){ ['help', '--timeout=0'] }
+      it{ expect{ run }.to exit_with_code(1) }
+      it{ run_output.should match("must be a positive integer") }
+    end
     context "via the config" do
       before{ base_config{ |c, d| d.add 'timeout', 'string' } }
       let(:arguments){ ['help'] }
@@ -253,6 +258,10 @@ describe AllRhcHelpers do
       let(:bar){ double.tap{ |s| s.should_receive(:foo).and_raise(::Exception) } }
       it{ subject.send(:get_properties, bar, :foo).should == [[:foo, '<error>']] }
     end
+  end
+
+  describe "#exec" do
+    it{ subject.send(:exec, 'echo foo').should == [0, "foo\n"] }
   end
 
   context "Git Helpers" do

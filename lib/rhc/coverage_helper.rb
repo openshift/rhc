@@ -6,7 +6,7 @@ if RUBY_VERSION >= '1.9' and ENV['RHC_FEATURE_COVERAGE']
   require 'simplecov'
   SimpleCov.start do
     coverage_dir 'coverage/features/'
-    command_name 'Cucumber Features'
+    command_name 'Integration Tests'
 
     # Filters - these files will be ignored.
     add_filter 'lib/rhc/vendor/'   # vendored files should be taken directly and only

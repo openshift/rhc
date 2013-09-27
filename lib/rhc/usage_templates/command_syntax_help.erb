@@ -4,6 +4,8 @@ Pass '--help' to see the full list of options
 <% end -%>
 <% unless @actions.nil? or @actions.empty? -%>
 
+<%= @command.description || @command.summary %>
+
 List of Actions
 <%= table(@actions.map{ |a| [a[:name], a[:summary]] }, table_args('  ', 18)).join("\n") %>
 <% end -%>

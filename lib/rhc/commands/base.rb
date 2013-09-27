@@ -93,9 +93,9 @@ class RHC::Commands::Base
     def self.syntax(value)
       options[:syntax] = value
     end
-    def self.deprecated(msg)
-      options[:deprecated] = msg
-    end
+    #def self.deprecated(msg)
+    #  options[:deprecated] = msg
+    #end
     def self.suppress_wizard
       @suppress_wizard = true
     end
@@ -124,12 +124,14 @@ class RHC::Commands::Base
                            :context_helper => options[:context],
                            :required => options[:required],
                            :deprecated => options[:deprecated],
-                           :option_type => options[:option_type]
+                           :type => options[:type],
+                           :hide => options[:hide],
+                           :default => options[:default],
                           }
     end
 
     def self.argument(name, description, switches=[], options={})
-      arg_type = options[:arg_type]
+      arg_type = options[:type]
 
       option_symbol = Commander::Runner.switch_to_sym(switches.last)
       args_metadata << {:name => name,
@@ -137,8 +139,11 @@ class RHC::Commands::Base
                         :switches => switches,
                         :context_helper => options[:context],
                         :option_symbol => option_symbol,
+                        :covered_by => options[:covered_by],
                         :optional => options[:optional],
-                        :arg_type => arg_type}
+                        :default => options[:default],
+                        :hide => options[:hide],
+                        :type => arg_type}
     end
 
     def self.default_action(action)

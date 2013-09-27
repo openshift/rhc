@@ -33,6 +33,13 @@ module RHC::Rest::Mock
       end
     end
 
+    def example_allows_members?
+      respond_to?(:supports_members?) && supports_members?
+    end
+    def example_allows_gear_sizes?
+      respond_to?(:supports_allowed_gear_sizes?) && supports_allowed_gear_sizes?
+    end
+
     def expect_authorization(with_auth)
       username, password = credentials_for(with_auth)
       lambda{ |r|
@@ -47,7 +54,6 @@ module RHC::Rest::Mock
       api.with(&user_agent_header)
       if @challenge
         stub_request(method, mock_href(uri, false)).to_return(:status => 401, :headers => {'www-authenticate' => 'basic realm="openshift broker"'})
-        @challenge = false
       end
       api
     end
@@ -178,10 +184,12 @@ module RHC::Rest::Mock
         to_return({
           :body => {
             :type => 'domains',
-            :data => [{:id => name, :links => mock_response_links([
+            :data => [{:id => name, :links => mock_response_links(mock_domain_links(name).concat([
               ['LIST_APPLICATIONS', "broker/rest/domains/#{name}/applications", 'get'],
               ['ADD_APPLICATION', "broker/rest/domains/#{name}/applications", 'post', ({:optional_params => optional_params} if optional_params)],
-            ])}],
+              (['LIST_MEMBERS', "broker/rest/domains/#{name}/members", 'get'] if example_allows_members?),
+              (['UPDATE_MEMBERS', "broker/rest/domains/#{name}/members", 'patch'] if example_allows_members?),
+            ].compact))}],
           }.to_json
         })
     end
@@ -370,7 +378,9 @@ module RHC::Rest::Mock
        ['LIST_ALIASES',                    "domains/#{domain_id}/apps/#{app_id}/aliases",                        'get'],
        ['LIST_ENVIRONMENT_VARIABLES',      "domains/#{domain_id}/apps/#{app_id}/event",                          'post'],
        ['SET_UNSET_ENVIRONMENT_VARIABLES', "domains/#{domain_id}/apps/#{app_id}/event",                          'post'],
-       ['DELETE',                          "broker/rest/domains/#{domain_id}/applications/#{app_id}",            'DELETE']]
+       ['DELETE',                          "broker/rest/domains/#{domain_id}/applications/#{app_id}",            'delete'],
+      (['LIST_MEMBERS',                    "domains/#{domain_id}/apps/#{app_id}/members",                        'get'] if example_allows_members?),
+      ].compact
     end
 
     def mock_cart_links(domain_id='test_domain',app_id='test_app',cart_id='test_cart')
@@ -390,7 +400,7 @@ module RHC::Rest::Mock
     def mock_real_client_links
       [['GET_USER',        "broker/rest/user",       'GET'],
        ['LIST_DOMAINS',    "broker/rest/domains",    'GET'],
-       ['ADD_DOMAIN',      "broker/rest/domains",    'POST'],
+       ['ADD_DOMAIN',      "broker/rest/domains",    'POST', ({'optional_params' => [{'name' => 'allowed_gear_sizes'}]} if example_allows_gear_sizes?)].compact,
        ['LIST_CARTRIDGES', "broker/rest/cartridges", 'GET'],
       ]
     end
@@ -406,7 +416,7 @@ module RHC::Rest::Mock
     def mock_domain_links(domain_id='test_domain')
       [['ADD_APPLICATION',   "domains/#{domain_id}/apps/add", 'post', {'optional_params' => [{'name' => 'environment_variables'}]} ],
        ['LIST_APPLICATIONS', "domains/#{domain_id}/apps/",    'get' ],
-       ['UPDATE',            "domains/#{domain_id}/update",   'post'],
+       ['UPDATE',            "domains/#{domain_id}/update",   'put'],
        ['DELETE',            "domains/#{domain_id}/delete",   'post']]
     end
 
@@ -571,6 +581,16 @@ module RHC::Rest::Mock
 
       raise RHC::Rest::ApplicationNotFoundException.new("Application #{name} does not exist")
     end
+
+    def find_application_by_id(id, options={})
+      @domains.each{ |d| d.applications.each{ |a| return a if a.id == id } }
+      raise RHC::Rest::ApplicationNotFoundException.new("Application with id #{id} does not exist")
+    end
+
+    def find_application_by_id_gear_groups(id, options={})
+      @domains.each{ |d| d.applications.each{ |a| return a.gear_groups if a.id == id } }
+      raise RHC::Rest::ApplicationNotFoundException.new("Application with id #{id} does not exist")
+    end
   end
 
   class MockRestApi < RHC::Rest::Api
@@ -613,7 +633,7 @@ module RHC::Rest::Mock
       self.attributes = {:links => mock_response_links(mock_domain_links('mock_domain_0'))}
     end
 
-    def update(id)
+    def rename(id)
       @id = id
       self
     end
@@ -642,6 +662,11 @@ module RHC::Rest::Mock
 
     def applications(*args)
       @applications
+    end
+
+    def add_member(member)
+      (@members ||= []) << member
+      self
     end
   end
 
@@ -759,6 +784,10 @@ module RHC::Rest::Mock
       c
     end
 
+    def id
+      @uuid || attributes['uuid'] || attributes['id']
+    end
+
     def gear_groups
       # we don't have heavy interaction with gear groups yet so keep this simple
       @gear_groups ||= begin
@@ -830,6 +859,10 @@ module RHC::Rest::Mock
       end
     end
 
+    def add_member(member)
+      (@members ||= []) << member
+      self
+    end
   end
 
   class MockRestCartridge < RHC::Rest::Cartridge

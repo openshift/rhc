@@ -1,3 +1,7 @@
+DEPRECATED
+=========
+Cucumber is being phased out - please add RSpec style features to the features/* directory
+
 Overview
 ==============
 
@@ -14,7 +18,7 @@ Usage
 Run from the base directory with
 
 ```
-<env variables> bundle exec rake features
+<env variables> bundle exec rake cucummber
 ```
 
 At the very least, you will probably want to specify `RHC_SERVER` (or
@@ -46,7 +50,7 @@ proxy. For instance:
 
 GIT_SSH
 -------
-This is automatically set in `features/support/env.rb` but can be
+This is automatically set in `cucumber/support/env.rb` but can be
 overridden if desired.
 
 This environment variable will be used by any `git` or `ssh` commands.
@@ -110,7 +114,7 @@ reporting.
   To run the test, simply run
 
     ```
-    <env variables> bundle exec rake features
+    <env variables> bundle exec rake cucumber
     ```
 
 1. Running the tests directly via `cucumber` gives you some more
@@ -122,9 +126,9 @@ here](https://github.com/cucumber/cucumber/wiki/Running-Features).
     ```
     # This runs all scenarios with the @application tag that also do not
     #   have the @init tag
-    cucumber features -t @application -t ~@init
+    cucumber cucumber -t @application -t ~@init
     # This runs the scenario starting at a specific line in the file
-    cucumber features/application.feature:42
+    cucumber cucumber/application.feature:42
     ```
 
 Developing tests

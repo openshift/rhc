@@ -13,11 +13,10 @@ module RHC::Commands
       user = rest_client.user
 
       say format_table \
-            nil, 
-            get_properties(user, :login, :plan_id, :consumed_gears, :max_gears).
+            ["Login #{user.login} on #{openshift_server}"],
+            get_properties(user, :id, :plan_id, :consumed_gears, :max_gears, :max_domains).
               concat(get_properties(user.capabilities, :gear_sizes)).
-              unshift(['Server:', openshift_server]).
-              push(['SSL Certificates Supported:', user.capabilities.private_ssl_certificates ? 'yes' : 'no']), 
+              push(['SSL Certificates:', user.capabilities.private_ssl_certificates ? 'yes' : 'no']), 
             :delete => true
 
       0

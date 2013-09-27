@@ -29,6 +29,7 @@ module RHC::Commands
       Commands that affect a cartridge within an application will affect all
       gears the cartridge is installed to.
       DESC
+    default_action :help
 
     summary "List available cartridges"
     syntax ''
@@ -69,9 +70,8 @@ module RHC::Commands
 
     summary "Add a cartridge to your application"
     syntax "<cartridge_type> [--namespace NAME] [--app NAME]"
-    option ["-n", "--namespace NAME"], "Application's domain name", :context => :namespace_context, :required => true
-    option ["-a", "--app NAME"], "Application you are adding the cartridge to", :context => :app_context, :required => true
-    option ["-e", "--env VARIABLE=VALUE"], "Environment variable(s) to be set on this cartridge, or path to a file containing environment variables", :option_type => :list
+    takes_application
+    option ["-e", "--env VARIABLE=VALUE"], "Environment variable(s) to be set on this cartridge, or path to a file containing environment variables", :type => :list
     argument :cart_type, "The type of the cartridge you are adding (run 'rhc cartridge list' to obtain a list of available cartridges)", ["-c", "--cartridge cart_type"]
     alias_action :"app cartridge add", :root_command => true, :deprecated => true
     def add(cart_type)
@@ -81,7 +81,7 @@ module RHC::Commands
 
       say format_usage_message(cart) if cart.usage_rate?
 
-      rest_app = rest_client.find_application(options.namespace, options.app, :include => :cartridges)
+      rest_app = find_app(:include => :cartridges)
 
       supports_env_vars = rest_app.supports_add_cartridge_with_env_vars?
       cart.environment_variables = collect_env_vars(options.env).map { |item| item.to_hash } if options.env && supports_env_vars
@@ -102,11 +102,10 @@ module RHC::Commands
 
     summary "Show useful information about a cartridge"
     syntax "<cartridge> [--namespace NAME] [--app NAME]"
-    option ["-n", "--namespace NAME"], "Application's domain name", :context => :namespace_context, :required => true
-    option ["-a", "--app NAME"], "Application name", :context => :app_context, :required => true
+    takes_application
     argument :cartridge, "The name of the cartridge", ["-c", "--cartridge cart_type"]
     def show(cartridge)
-      rest_app = rest_client.find_application(options.namespace, options.app, :include => :cartridges)
+      rest_app = find_app(:include => :cartridges)
       rest_cartridge = check_cartridges(cartridge, :from => rest_app.cartridges).first
 
       display_cart(rest_cartridge)
@@ -117,12 +116,11 @@ module RHC::Commands
     summary "Remove a cartridge from your application"
     syntax "<cartridge> [--namespace NAME] [--app NAME]"
     argument :cartridge, "The name of the cartridge you are removing", ["-c", "--cartridge cartridge"]
-    option ["-n", "--namespace NAME"], "Application's domain name", :context => :namespace_context, :required => true
-    option ["-a", "--app NAME"], "Application name", :context => :app_context, :required => true
+    takes_application
     option ["--confirm"], "Pass to confirm removing the cartridge"
     alias_action :"app cartridge remove", :root_command => true, :deprecated => true
     def remove(cartridge)
-      rest_app = rest_client.find_application(options.namespace, options.app, :include => :cartridges)
+      rest_app = find_app(:include => :cartridges)
       rest_cartridge = check_cartridges(cartridge, :from => rest_app.cartridges).first
 
       confirm_action "Removing a cartridge is a destructive operation that may result in loss of data associated with the cartridge.\n\nAre you sure you wish to remove #{rest_cartridge.name} from '#{rest_app.name}'?"
@@ -139,8 +137,7 @@ module RHC::Commands
     summary "Start a cartridge"
     syntax "<cartridge> [--namespace NAME] [--app NAME]"
     argument :cart_type, "The name of the cartridge you are stopping", ["-c", "--cartridge cartridge"]
-    option ["-n", "--namespace NAME"], "Application's domain name", :context => :namespace_context, :required => true
-    option ["-a", "--app NAME"], "Application name", :context => :app_context, :required => true
+    takes_application
     alias_action :"app cartridge start", :root_command => true, :deprecated => true
     def start(cartridge)
       cartridge_action(cartridge, :start, 'Starting %s ... ')
@@ -150,8 +147,7 @@ module RHC::Commands
     summary "Stop a cartridge"
     syntax "<cartridge> [--namespace NAME] [--app NAME]"
     argument :cart_type, "The name of the cartridge you are stopping", ["-c", "--cartridge cartridge"]
-    option ["-n", "--namespace NAME"], "Application's domain name", :context => :namespace_context, :required => true
-    option ["-a", "--app NAME"], "Application name", :context => :app_context, :required => true
+    takes_application
     alias_action :"app cartridge stop", :root_command => true, :deprecated => true
     def stop(cartridge)
       cartridge_action(cartridge, :stop, 'Stopping %s ... ')
@@ -161,8 +157,7 @@ module RHC::Commands
     summary "Restart a cartridge"
     syntax "<cartridge_type> [--namespace NAME] [--app NAME]"
     argument :cart_type, "The name of the cartridge you are restarting", ["-c", "--cartridge cartridge"]
-    option ["-n", "--namespace NAME"], "Application's domain name", :context => :namespace_context, :required => true
-    option ["-a", "--app NAME"], "Application name", :context => :app_context, :required => true
+    takes_application
     alias_action :"app cartridge restart", :root_command => true, :deprecated => true
     def restart(cartridge)
       cartridge_action(cartridge, :restart, 'Restarting %s ... ')
@@ -172,11 +167,10 @@ module RHC::Commands
     summary "Get current the status of a cartridge"
     syntax "<cartridge> [--namespace NAME] [--app NAME]"
     argument :cart_type, "The name of the cartridge you are getting the status of", ["-c", "--cartridge cartridge"]
-    option ["-n", "--namespace NAME"], "Application's domain name", :context => :namespace_context, :required => true
-    option ["-a", "--app NAME"], "Application name", :context => :app_context, :required => true
+    takes_application
     alias_action :"app cartridge status", :root_command => true, :deprecated => true
     def status(cartridge)
-      rest_app = rest_client.find_application(options.namespace, options.app, :include => :cartridges)
+      rest_app = find_app(:include => :cartridges)
       rest_cartridge = check_cartridges(cartridge, :from => rest_app.cartridges).first
       results { rest_cartridge.status.each{ |msg| say msg['message'] } }
       0
@@ -185,8 +179,7 @@ module RHC::Commands
     summary "Reload the cartridge's configuration"
     syntax "<cartridge> [--namespace NAME] [--app NAME]"
     argument :cart_type, "The name of the cartridge you are reloading", ["-c", "--cartridge cartridge"]
-    option ["-n", "--namespace NAME"], "Application's domain name", :context => :namespace_context, :required => true
-    option ["-a", "--app NAME"], "Application name", :context => :app_context, :required => true
+    takes_application
     alias_action :"app cartridge reload", :root_command => true, :deprecated => true
     def reload(cartridge)
       cartridge_action(cartridge, :reload, 'Reloading %s ... ')
@@ -210,8 +203,7 @@ module RHC::Commands
     syntax "<cartridge> [multiplier] [--namespace NAME] [--app NAME] [--min min] [--max max]"
     argument :cartridge, "The name of the cartridge you are scaling", ["-c", "--cartridge cartridge"]
     argument :multiplier, "The number of instances of this cartridge you need", [], :optional => true, :hide => true
-    option ["-n", "--namespace NAME"], "Application's domain name", :context => :namespace_context, :required => true
-    option ["-a", "--app NAME"], "Application name", :context => :app_context, :required => true
+    takes_application
     option ["--min min", Integer], "Minimum scaling value"
     option ["--max max", Integer], "Maximum scaling value"
     def scale(cartridge, multiplier)
@@ -219,7 +211,7 @@ module RHC::Commands
 
       raise RHC::MissingScalingValueException unless options.min || options.max
 
-      rest_app = rest_client.find_application(options.namespace, options.app, :include => :cartridges)
+      rest_app = find_app(:include => :cartridges)
       rest_cartridge = check_cartridges(cartridge, :from => rest_app.cartridges).first
 
       raise RHC::CartridgeNotScalableException unless rest_cartridge.scalable?
@@ -244,9 +236,8 @@ module RHC::Commands
 
     summary 'View/manipulate storage on a cartridge'
     syntax '<cartridge> -a app [--show] [--add|--remove|--set amount] [--namespace NAME]'
-    argument :cart_type, "The name of the cartridge", ["-c", "--cartridge cart_type"], :arg_type => :list
-    option ["-n", "--namespace NAME"], "Application's domain name", :context => :namespace_context, :required => true
-    option ["-a", "--app NAME"], "Application name", :context => :app_context, :required => true
+    argument :cart_type, "The name of the cartridge", ["-c", "--cartridge cart_type"], :type => :list
+    takes_application
     option ["--show"], "Show the current base and additional storage capacity"
     option ["--add amount"], "Add the indicated amount to the additional storage capacity"
     option ["--remove amount"], "Remove the indicated amount from the additional storage capacity"
@@ -254,7 +245,8 @@ module RHC::Commands
     option ["-f", "--force"], "Force the action"
     def storage(cartridge)
       cartridges = Array(cartridge)
-      rest_app = rest_client(:min_api => 1.3).find_application(options.namespace, options.app, :include => :cartridges)
+      rest_client(:min_api => 1.3).api
+      rest_app = find_app(:include => :cartridges)
 
       # Pull the desired action
       #
@@ -314,7 +306,7 @@ module RHC::Commands
       include RHC::CartridgeHelpers
 
       def cartridge_action(cartridge, action, message=nil)
-        rest_app = rest_client.find_application(options.namespace, options.app, :include => :cartridges)
+        rest_app = find_app(:include => :cartridges)
         rest_cartridge = check_cartridges(cartridge, :from => rest_app.cartridges).first
         say message % [rest_cartridge.name] if message
         result = rest_cartridge.send(action)

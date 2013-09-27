@@ -141,6 +141,17 @@ module RHC
       #:nocov:
     end
 
+    ROLES = {'view' => 'viewer', 'edit' => 'editor', 'admin' => 'administrator'}
+    OptionParser.accept(Role = Class.new) do |s|
+      s.downcase!
+      (ROLES.has_key?(s) && s) or
+        raise OptionParser::InvalidOption.new(nil, "The provided role '#{s}' is not valid. Supported values: #{ROLES.keys.join(', ')}")
+    end
+
+    def role_name(s)
+      ROLES[s.downcase]
+    end
+
     def openshift_server
       to_host((options.server rescue nil) || ENV['LIBRA_SERVER'] || "openshift.redhat.com")
     end
@@ -191,7 +202,7 @@ module RHC
           :url => openshift_rest_endpoint.to_s,
           :debug => options.debug,
           :timeout => options.timeout,
-          :warn => self.class.instance_method(:warn).bind(self),
+          :warn => BOUND_WARNING,
         }.merge!(ssl_options).merge!(opts))
     end
 
@@ -211,6 +222,7 @@ module RHC
       raise OptionParser::InvalidOption.new(nil, "The certificate '#{file}' cannot be loaded: #{e.message} (#{e.class})")
     end
 
+
     #
     # Output helpers
     #
@@ -229,16 +241,17 @@ module RHC
       $terminal.debug?
     end
 
+    def exec(cmd)
+      output = Kernel.send(:`, cmd)
+      [$?.exitstatus, output]
+    end
+
     def disable_deprecated?
       ENV['DISABLE_DEPRECATED'] == '1'
     end
 
     def deprecated_command(correct, short=false)
       deprecated("This command is deprecated. Please use '#{correct}' instead.", short)
-    end
-
-    def deprecated_option(deprecated, other)
-      deprecated("The option '#{deprecated}' is deprecated. Please use '#{other}' instead")
     end
 
     def deprecated(msg,short = false)
@@ -317,13 +330,16 @@ module RHC
       headings.merge!({
         :creation_time  => "Created",
         :expires_in_seconds => "Expires In",
-        :uuid           => "UUID",
+        :uuid           => "ID",
+        :id             => 'ID',
         :current_scale  => "Current",
         :scales_from    => "Minimum",
         :scales_to      => "Maximum",
         :gear_sizes     => "Allowed Gear Sizes",
         :consumed_gears => "Gears Used",
         :max_gears      => "Gears Allowed",
+        :max_domains    => "Domains Allowed",
+        :compact_members => "Members",
         :gear_info      => "Gears",
         :plan_id        => "Plan",
         :url            => "URL",
@@ -453,5 +469,6 @@ module RHC
       env_vars
     end
 
+    BOUND_WARNING = self.method(:warn).to_proc
   end
 end

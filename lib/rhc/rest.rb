@@ -16,6 +16,7 @@ module RHC
     autoload :EnvironmentVariable,  'rhc/rest/environment_variable'
     autoload :GearGroup,            'rhc/rest/gear_group'
     autoload :Key,                  'rhc/rest/key'
+    autoload :Membership,           'rhc/rest/membership'
     autoload :User,                 'rhc/rest/user'
 
     class Exception < RuntimeError
