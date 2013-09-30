@@ -25,7 +25,7 @@ module RHCHelper
         client = new_client
         domain = client.domains.first
         if domain
-          $namespace = domain.id
+          $namespace = domain.name
         else
           $namespace = unique_namespace(prefix)
           # Create the domain

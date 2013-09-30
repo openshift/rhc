@@ -34,7 +34,7 @@ module RHC
 
       debug "Configuring git repo"
       Dir.chdir(repo_dir) do
-        git_config_set "rhc.app-id", app.uuid
+        git_config_set "rhc.app-id", app.id
         git_config_set "rhc.app-name", app.name
         git_config_set "rhc.domain-name", app.domain_id
       end

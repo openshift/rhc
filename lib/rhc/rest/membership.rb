@@ -59,7 +59,7 @@ module RHC::Rest
     end
 
     def compact_members
-      arr = members.reject(&:owner?)
+      arr = members.reject(&:owner?) rescue []
       if arr.length > 5
         arr.sort_by!(&:name)
         admin, arr = arr.partition(&:admin?)

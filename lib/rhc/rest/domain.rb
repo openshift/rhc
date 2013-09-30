@@ -3,16 +3,29 @@ module RHC
     class Domain < Base
       include Membership
 
-      define_attr :id, :name, :allowed_gear_sizes, :creation_time
+      define_attr :id,                  # Domain name for API version < 1.6, domain unique id otherwise
+                  :name,                # Available from API version 1.6 onwards
+                  :allowed_gear_sizes,  # Available from API version 1.3 onwards on compatible servers
+                  :creation_time        # Available from API version 1.3 onwards on compatible servers
 
-      alias_method :id_attr, :id
-      alias_method :name_attr, :name
       def id
-        name_attr || id_attr
+        id_and_name.first
       end
-
-      def allowed_gear_sizes
-        Array(attribute(:allowed_gear_sizes))
+      def name
+        id_and_name.last
+      end
+      def id_and_name
+        id = @id || attributes['id']
+        name = @name || attributes['name']
+        if name.present?
+          if id == name
+            [nil, name]
+          else
+            [id, name]
+          end
+        else
+          [nil, id]
+        end
       end
 
       #Add Application to this domain

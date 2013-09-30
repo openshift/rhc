@@ -5,7 +5,7 @@ module RHC::Commands
     summary "Add or rename the container for your apps"
     syntax "<action>"
     description <<-DESC
-      OpenShift groups applications within a domain.  The name of the domain
+      All OpenShift applications must belong to a domain.  The name of the domain
       will be used as part of the public URL for an application.
 
       For example, when creating a domain with the name "test", any applications
@@ -15,8 +15,10 @@ module RHC::Commands
 
       Each account may have access to one or more domains shared by others.  Depending
       on your plan or configuration, you may be able to create more than one domain.
+
+      To create your first domain, run 'rhc setup' or 'rhc create-domain'.
       DESC
-    default_action :list
+    default_action :help
 
     summary "Create a new container for applications."
     syntax "<namespace>"
@@ -55,7 +57,7 @@ module RHC::Commands
     def rename(old_namespace, new_namespace)
       domain = rest_client.find_domain(old_namespace)
 
-      say "Renaming domain '#{domain.id}' to '#{new_namespace}' ... "
+      say "Renaming domain '#{domain.name}' to '#{new_namespace}' ... "
       domain.rename(new_namespace)
       success "done"
 
@@ -99,7 +101,7 @@ module RHC::Commands
       if applications.present?
         success "You have #{pluralize(applications.length, 'application')} in your domain."
       else
-        success "The domain #{domain.id} exists but has no applications. You can use 'rhc create-app' to create a new application."
+        success "The domain #{domain.name} exists but has no applications. You can use 'rhc create-app' to create a new application."
       end
 
       0
@@ -107,6 +109,7 @@ module RHC::Commands
 
     summary "Display all domains you have access to"
     option ['--mine'], "Display only domains you own"
+    option ['--ids'], "Display the unique id of the domain (not supported by all servers)"
     alias_action :domains, :root_command => true
     def list
       domains = rest_client.send(options.mine ? :owned_domains : :domains)
@@ -114,7 +117,7 @@ module RHC::Commands
       warn "In order to deploy applications, you must create a domain with 'rhc setup' or 'rhc create-domain'." and return 1 unless domains.present?
 
       domains.each do |d|
-        display_domain(d)
+        display_domain(d, nil, options.ids)
       end
 
       success "You have access to #{pluralize(domains.length, 'domain')}."
