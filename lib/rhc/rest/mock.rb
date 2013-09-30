@@ -628,19 +628,19 @@ module RHC::Rest::Mock
     include Helpers
     def initialize(client, id)
       super({}, client)
-      @id = id
+      @name = id
       @applications = []
-      self.attributes = {:links => mock_response_links(mock_domain_links('mock_domain_0'))}
+      self.attributes = {:links => mock_response_links(mock_domain_links(id))}
     end
 
     def rename(id)
-      @id = id
+      @name = id
       self
     end
 
     def destroy
       raise RHC::Rest::ClientErrorException.new("Applications must be empty.") unless @applications.empty?
-      client.domains.delete_if { |d| d.id == @id }
+      client.domains.delete_if { |d| d.name == @name }
 
       @applications = nil
     end
@@ -733,7 +733,7 @@ module RHC::Rest::Mock
       @uuid = fakeuuid
       @initial_git_url = initial_git_url
       @git_url = "git:fake.foo/git/#{@name}.git"
-      @app_url = "https://#{@name}-#{@domain.id}.fake.foo/"
+      @app_url = "https://#{@name}-#{@domain.name}.fake.foo/"
       @ssh_url = "ssh://#{@uuid}@127.0.0.1"
       @aliases = []
       @environment_variables = environment_variables || []

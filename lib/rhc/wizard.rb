@@ -351,7 +351,7 @@ module RHC
       end
 
       true
-    end    
+    end
 
 
     ##
@@ -391,7 +391,7 @@ module RHC
 
           ask_for_namespace
         else
-          success domains.map(&:id).join(', ')
+          success domains.map(&:name).join(', ')
         end
       end
 
@@ -522,7 +522,7 @@ module RHC
         domain = rest_client.add_domain(namespace)
         options.namespace = namespace
 
-        success "Your domain '#{domain.id}' has been successfully created"
+        success "Your domain '#{domain.name}' has been successfully created"
       rescue RHC::Rest::ValidationException => e
         error e.message || "Unknown error during domain creation."
         return false

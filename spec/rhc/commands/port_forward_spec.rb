@@ -38,7 +38,7 @@ describe RHC::Commands::PortForward do
       end
       it "should error out as no ports to forward" do
         expect { run }.to exit_with_code(102)
-        rest_client.domains[0].id.should == 'mockdomain'
+        rest_client.domains[0].name.should == 'mockdomain'
         rest_client.domains[0].applications.size.should == 1
         rest_client.domains[0].applications[0].name.should == 'mockapp'
       end
@@ -52,7 +52,7 @@ describe RHC::Commands::PortForward do
       end
       it "should error out as permission denied" do
         expect { run }.to exit_with_code(129)
-        rest_client.domains[0].id.should == 'mockdomain'
+        rest_client.domains[0].name.should == 'mockdomain'
         rest_client.domains[0].applications.size.should == 1
         rest_client.domains[0].applications[0].name.should == 'mockapp'
       end
@@ -70,7 +70,7 @@ describe RHC::Commands::PortForward do
       end
       it "should run successfully" do
         expect { run }.to exit_with_code(0)
-        rest_client.domains[0].id.should == 'mockdomain'
+        rest_client.domains[0].name.should == 'mockdomain'
         rest_client.domains[0].applications.size.should == 1
         rest_client.domains[0].applications[0].name.should == 'mockapp'
       end
@@ -83,7 +83,7 @@ describe RHC::Commands::PortForward do
       end
       it "should error out" do
         expect { run }.to exit_with_code(1)
-        rest_client.domains[0].id.should == 'mockdomain'
+        rest_client.domains[0].name.should == 'mockdomain'
         rest_client.domains[0].applications.size.should == 1
         rest_client.domains[0].applications[0].name.should == 'mockapp'
       end
@@ -109,7 +109,7 @@ describe RHC::Commands::PortForward do
       end
       it "should exit when user interrupts" do
         expect { run }.to exit_with_code(0)
-        rest_client.domains[0].id.should == 'mockdomain'
+        rest_client.domains[0].name.should == 'mockdomain'
         rest_client.domains[0].applications.size.should == 1
         rest_client.domains[0].applications[0].name.should == 'mockapp'
       end
@@ -165,7 +165,7 @@ describe RHC::Commands::PortForward do
       end
       it "should exit when user interrupts" do
         expect { run }.to exit_with_code(0)
-        rest_client.domains[0].id.should == 'mockdomain'
+        rest_client.domains[0].name.should == 'mockdomain'
         rest_client.domains[0].applications.size.should == 1
         rest_client.domains[0].applications[0].name.should == 'mockapp'
       end
