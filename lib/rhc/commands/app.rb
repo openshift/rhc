@@ -401,7 +401,7 @@ module RHC::Commands
           end
           domain = rest_client.domains.first
           raise RHC::Rest::DomainNotFoundException, "No domains found. Please create a domain with 'rhc create-domain <namespace>' before creating applications." unless domain
-          options.namespace = domain.id
+          options.namespace = domain.name
           domain
         end
       end

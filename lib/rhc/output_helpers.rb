@@ -1,16 +1,17 @@
 module RHC
   module OutputHelpers
 
-    def display_domain(domain, applications=nil)
+    def display_domain(domain, applications=nil, ids=false)
       paragraph do
-        header ["Domain #{domain.id}", ("(owned by #{domain.owner})" if domain.owner.present?)] do
+        header ["Domain #{domain.name}", ("(owned by #{domain.owner})" if domain.owner.present?)] do
           section(:bottom => 1) do
             say format_table \
               nil,
               get_properties(
                 domain,
                 :creation_time,
-                :allowed_gear_sizes,
+                (:id if ids),
+                (:allowed_gear_sizes unless domain.allowed_gear_sizes.nil?),
                 :compact_members
               ),
               :delete => true
@@ -172,6 +173,7 @@ module RHC
       def get_properties(object,*properties)
         properties.map do |prop|
           # Either send the property to the object or yield it
+          next if prop.nil?
           value = begin
                     block_given? ? yield(prop) : object.send(prop)
                   rescue ::Exception => e
@@ -179,7 +181,7 @@ module RHC
                     "<error>"
                   end
           [prop, format_value(prop,value)]
-        end
+        end.compact
       end
 
       # Format some special values

@@ -12,13 +12,13 @@ describe RHC::Commands::Domain do
       let(:arguments) { ['domain'] }
 
       it { expect { run }.to exit_with_code(1) }
-      it { run_output.should match(/In order to deploy applications.*rhc create-domain/) }
+      it { run_output.should match(/To create your first domain.*rhc create-domain/m) }
     end
     context 'when help is shown' do
       let(:arguments) { ['domain', '--noprompt', '--help'] }
 
       it { expect { run }.to exit_with_code(0) }
-      it { run_output.should match(/The default action for this resource is 'list'/) }
+      it { run_output.should match(/configure.*delete.*leave.*list.*rename/m) }
     end
   end
 
@@ -28,7 +28,7 @@ describe RHC::Commands::Domain do
 
     context 'when run with no domains' do
       it { expect { run }.to exit_with_code(1) }
-      it { run_output.should match(/In order to deploy applications.*rhc create-domain/) }
+      it { run_output.should match(/In order to deploy applications, you must create a domain/m) }
     end
 
     context 'when run with one domain no apps' do
@@ -108,6 +108,47 @@ describe RHC::Commands::Domain do
         output.should match("You have access to 1 domain\\.")
         output.should match("onedomain")
       end
+
+      context 'when has no creation date, members, or allowed_gear_sizes' do
+        before{ rest_client.domains.first.attributes.merge(:creation_date => nil, :allowed_gear_sizes => nil, :members => nil, :id => '123') }
+        it { expect { run }.to exit_with_code(0) }
+        it "should match output" do
+          output = run_output
+          output.should match("onedomain")
+          output.should_not match ("Allowed Gear Sizes:")
+          output.should_not match ("Created:")
+          output.should_not match ("Members:")
+          output.should_not match ("ID:.*")
+        end
+      end
+      context 'when an ID is present and differs from name' do
+        let(:arguments) { ['domain', 'list', '--ids'] }
+        before{ rest_client.domains.first.attributes['id'] = '123' }
+        it { expect { run }.to exit_with_code(0) }
+        it "should match output" do
+          output = run_output
+          output.should match("onedomain")
+          output.should match ("ID:.*123")
+        end
+      end
+      context 'when an ID is present and identical to name' do
+        let(:arguments) { ['domain', 'list', '--ids'] }
+        before{ rest_client.domains.first.attributes['id'] = 'onedomain' }
+        it { expect { run }.to exit_with_code(0) }
+        it "should not match output" do
+          run_output.should_not match ("ID:.*123")
+        end
+      end
+      context 'when an ID is present and name is not' do
+        let(:arguments) { ['domain', 'list', '--ids'] }
+        before{ rest_client.domains.first.attributes['id'] = 'onedomain' }
+        before{ rest_client.domains.first.instance_variable_set(:@name, nil) }
+        it { expect { run }.to exit_with_code(0) }
+        it "should match output" do
+          run_output.should match ("onedomain")
+          run_output.should_not match ("ID:.*")
+        end
+      end
     end
 
     context 'when run with one owned domain' do
@@ -148,7 +189,7 @@ describe RHC::Commands::Domain do
 
       it "should create a domain" do
         expect { run }.to exit_with_code(0)
-        rest_client.domains[0].id.should == 'testnamespace'
+        rest_client.domains[0].name.should == 'testnamespace'
       end
       it { run_output.should match(/Creating.*'testnamespace'.*done/m) }
     end
@@ -163,7 +204,7 @@ describe RHC::Commands::Domain do
 
       it "should update a domain" do
         expect { run }.to exit_with_code(0)
-        rest_client.domains[0].id.should == 'alterednamespace'
+        rest_client.domains[0].name.should == 'alterednamespace'
       end
       it { run_output.should match(/Renaming domain 'olddomain' to 'alterednamespace'.*done.*?Applications in this domain will use the new name in their URL./m) }
     end
@@ -184,7 +225,7 @@ describe RHC::Commands::Domain do
     before{ rest_client.add_domain("olddomain") }
     it "should update a domain" do
       expect { run }.to exit_with_code(0)
-      rest_client.domains[0].id.should == 'alterednamespace'
+      rest_client.domains[0].name.should == 'alterednamespace'
     end
     it { run_output.should match(/This command is deprecated.*Renaming domain 'olddomain' to 'alterednamespace'.*done.*?Applications in this domain will use the new name in their URL./m) }
   end
@@ -199,7 +240,17 @@ describe RHC::Commands::Domain do
       before{ rest_client.add_domain("domain1") }
       let(:arguments) { ['domain', 'configure', '-n', 'domain1'] }
       it("should succeed"){ expect { run }.to exit_with_code(0) }
-      it("should display the domain config"){ run_output.should match(/Domain domain1 configuration.*Allowed Gear Sizes:\s+<none>/m) }
+      it("should display the domain config"){ run_output.should match(/Domain domain1 configuration/m) }
+      it("should not display the domain config without gear sizes"){ run_output.should_not match(/Allowed Gear Sizes/) }
+
+      context "server supports allowed gear sizes" do
+        before{ rest_client.domains.first.should_receive(:allowed_gear_sizes).and_return([]) }
+        it("should display the domain config"){ run_output.should match(/Domain domain1 configuration.*Allowed Gear Sizes:\s+<none>/m) }
+      end
+      context "server supports allowed gear sizes" do
+        before{ rest_client.domains.first.should_receive(:allowed_gear_sizes).and_return(['small', 'medium']) }
+        it("should display the domain config"){ run_output.should match(/Domain domain1 configuration.*Allowed Gear Sizes:\s+small, medium/m) }
+      end
     end
 
     context "when server does not support allowed-gear-sizes" do
@@ -301,7 +352,7 @@ describe RHC::Commands::Domain do
 
       it "should error out" do
         expect { run }.to exit_with_code(127)
-        rest_client.domains[0].id.should == 'dontdelete'
+        rest_client.domains[0].name.should == 'dontdelete'
       end
       it { run_output.should match("Domain deleteme not found") }
     end
@@ -313,7 +364,7 @@ describe RHC::Commands::Domain do
       end
       it "should error out" do
         expect { run }.to exit_with_code(1)
-        rest_client.domains[0].id.should == 'deleteme'
+        rest_client.domains[0].name.should == 'deleteme'
       end
       it { run_output.should match("Applications must be empty") }
     end

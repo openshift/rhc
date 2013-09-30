@@ -154,7 +154,7 @@ module RHC
           it "returns a domain object" do
             domain = client.add_domain('mock_domain')
             domain.class.should == RHC::Rest::Domain
-            domain.id.should == 'mock_domain'
+            domain.name.should == 'mock_domain'
             domain.send(:links).should ==
               mock_response_links(mock_domain_links('mock_domain'))
           end
@@ -195,7 +195,7 @@ module RHC
             domains.length.should equal(2)
             (0..1).each do |idx|
               domains[idx].class.should == RHC::Rest::Domain
-              domains[idx].id.should    == "mock_domain_#{idx}"
+              domains[idx].name.should    == "mock_domain_#{idx}"
               domains[idx].send(:links).should ==
                 mock_response_links(mock_domain_links("mock_domain_#{idx}"))
             end
@@ -229,13 +229,13 @@ module RHC
             it "returns a domain object for matching domain IDs" do
               match = nil
               expect { match = client.find_domain('mock_domain_0') }.to_not raise_error
-              match.id.should == 'mock_domain_0'
+              match.name.should == 'mock_domain_0'
               match.class.should == RHC::Rest::Domain
             end
             it "returns a domain object for matching case-insensitive domain IDs" do
               match = nil
               expect { match = client.find_domain('MOCK_DOMAIN_0') }.to_not raise_error
-              match.id.should == 'mock_domain_0'
+              match.name.should == 'mock_domain_0'
               match.class.should == RHC::Rest::Domain
             end
             it "raise an error when no matching domain IDs can be found" do
@@ -274,13 +274,13 @@ module RHC
             it "returns a domain object for matching domain IDs" do
               match = nil
               expect { match = client.find_domain('mock_domain_0') }.to_not raise_error
-              match.id.should == 'mock_domain_0'
+              match.name.should == 'mock_domain_0'
               match.class.should == RHC::Rest::Domain
             end
             it "encodes special characters" do
               match = nil
               expect { match = client.find_domain('mock_domain_%^&') }.to_not raise_error
-              match.id.should == 'mock_domain_%^&'
+              match.name.should == 'mock_domain_%^&'
               match.class.should == RHC::Rest::Domain
             end
             it "raise an error when no matching domain IDs can be found" do
@@ -307,7 +307,7 @@ module RHC
             match = nil
             expect { match = client.owned_domains }.to_not raise_error
             match.length.should == 1
-            match.first.id.should == 'mock_domain_0'
+            match.first.name.should == 'mock_domain_0'
             match.first.class.should == RHC::Rest::Domain
           end
         end

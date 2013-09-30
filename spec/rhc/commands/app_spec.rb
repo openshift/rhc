@@ -56,7 +56,7 @@ describe RHC::Commands::App do
 
   describe '#check_domain!' do
     let(:rest_client){ double('RestClient') }
-    let(:domain){ double('Domain', :id => 'test') }
+    let(:domain){ double('Domain', :name => 'test') }
     before{ subject.stub(:rest_client).and_return(rest_client) }
     let(:interactive){ false }
     before{ subject.stub(:interactive?).and_return(interactive) }
@@ -64,7 +64,7 @@ describe RHC::Commands::App do
     context "when no options are provided and there is one domain" do
       before{ rest_client.should_receive(:domains).twice.and_return([domain]) }
       it("should load the first domain"){ subject.send(:check_domain!).should == domain }
-      after{ subject.send(:options).namespace.should == domain.id }
+      after{ subject.send(:options).namespace.should == domain.name }
     end
 
     context "when no options are provided and there are no domains" do
@@ -289,9 +289,9 @@ describe RHC::Commands::App do
       it "should create a jenkins app and a regular app with an embedded jenkins client" do
         #puts run_output
         expect { run }.to exit_with_code(0)
-        jenkins_app = rest_client.find_application(@domain.id,"jenkins")
+        jenkins_app = rest_client.find_application(@domain.name,"jenkins")
         jenkins_app.cartridges[0].name.should == "jenkins-1"
-        app = rest_client.find_application(@domain.id,"app1")
+        app = rest_client.find_application(@domain.name,"app1")
         app.find_cartridge("jenkins-client-1")
       end
     end
@@ -329,8 +329,8 @@ describe RHC::Commands::App do
       end
       it "should use existing jenkins" do
         expect { run }.to exit_with_code(0)
-        expect { rest_client.find_application(@domain.id,"jenkins") }.to_not raise_error
-        expect { rest_client.find_application(@domain.id,"jenkins2") }.to raise_error(RHC::Rest::ApplicationNotFoundException)
+        expect { rest_client.find_application(@domain.name,"jenkins") }.to_not raise_error
+        expect { rest_client.find_application(@domain.name,"jenkins2") }.to raise_error(RHC::Rest::ApplicationNotFoundException)
       end
     end
   end

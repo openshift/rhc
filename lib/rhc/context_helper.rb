@@ -112,7 +112,7 @@ module RHC
       domain = rest_client.domains.first
       raise RHC::Rest::DomainNotFoundException, "No domains configured for this user.  You may create one using 'rhc create-domain'." if domain.nil?
 
-      domain.id
+      domain.name
     end
   end
 end

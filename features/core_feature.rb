@@ -31,8 +31,10 @@ describe "rhc core scenarios" do
 
       r = rhc :account
       r.stdout.should match "on #{ENV['RHC_SERVER']}"
-      r.stdout.should match 'Gears'
-      r.stdout.should match 'Plan'
+      r.stdout.should match 'Gears Allowed'
+      r.stdout.should match 'Allowed Gear Sizes'
+      r.stdout.should match 'Gears Used'
+      r.stdout.should match 'SSL Certificates'
     end
 
     it "starts the wizard on default invocation" do
@@ -116,7 +118,7 @@ describe "rhc core scenarios" do
       it "will infer the current app from the git repository" do
         r = rhc 'show-app'
         r.stdout.should match app.name
-        r.stdout.should match app.uuid
+        r.stdout.should match app.id
         r.stdout.should match app.ssh_string
         r.stdout.should match app.app_url
         (app.cartridges.map(&:name) + app.cartridges.map(&:display_name)).each{ |n| r.stdout.should match n }

@@ -128,7 +128,7 @@ def clean_applications(user=$username,leave_domain=false)
     _log "\tUser: #{user}"
     client = RHC::Rest::Client.new(:url => $end_point, :user => user, :password => $password, :verify_mode => OpenSSL::SSL::VERIFY_NONE)
     client.domains.each do |domain|
-      _log "\t\tDomain: #{domain.id}"
+      _log "\t\tDomain: #{domain.name}"
       domain.applications.each do |app|
         if app.name.start_with?("test")
           _log "\t\t\tApplication: #{app.name}"
