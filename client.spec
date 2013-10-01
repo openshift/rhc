@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.15.3
+Version: 1.15.4
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -102,6 +102,12 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Oct 01 2013 Adam Miller <admiller@redhat.com> 1.15.4-1
+- Merge pull request #469 from smarterclayton/mongo_rhc_test_fails
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 1013292 - Tolerate OSE1.2 attributes (ccoleman@redhat.com)
+- Names of carts changed (ccoleman@redhat.com)
+
 * Fri Sep 27 2013 Troy Dawson <tdawson@redhat.com> 1.15.3-1
 - Merge pull request #468 from smarterclayton/origin_ui_72_membership
   (dmcphers+openshiftbot@redhat.com)
