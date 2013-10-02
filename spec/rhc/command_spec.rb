@@ -118,15 +118,20 @@ describe RHC::Commands::Base do
             alias_action :exe, :deprecated => true
             def execute(testarg); 1; end
 
-            argument :args, "Test arg list", ['--tests ARG'], :type => :list
+            argument :args, "Test arg list", ['--tests ARG'], :type => :list, :default => lambda{ |d,a| d[a] = 'a1' }
             summary "Test command execute-list"
             def execute_list(args); 1; end
 
-            argument :arg1, "Test arg", ['--test'], :optional => true
+            argument :arg1, "Test arg", ['--test'], :optional => true, :default => 1
             argument :arg2, "Test arg list", ['--test2'], :type => :list, :optional => true
             argument :arg3, "Test arg list", ['--test3'], :type => :list, :optional => true
             summary "Test command execute-vararg"
             def execute_vararg(arg1, arg2, arg3); 1; end
+
+            argument :arg1, "Test arg", ['--test'], :allow_nil => true, :default => 'def'
+            argument :arg2, "Test arg list", ['--test2'], :type => :list, :optional => true
+            summary "Test command execute-vararg-2"
+            def execute_vararg_2(arg1, arg2, arg3); 1; end
 
 =begin
             # Replace me with a default test case
@@ -155,7 +160,7 @@ describe RHC::Commands::Base do
         Static
       end
 
-      it("should register itself") { expect { subject }.to change(commands, :length).by(6) }
+      it("should register itself") { expect { subject }.to change(commands, :length).by(7) }
       it("should have an object name of the class") { subject.object_name.should == 'static' }
 
       context 'and when test is called' do
@@ -185,33 +190,35 @@ describe RHC::Commands::Base do
       end
 
       context 'and when execute_list is called' do
-        it { expects_running('static-execute-list', '--trace').should call(:execute_list).on(instance).with([]) }
+        it('should expose a default') { expects_running('static-execute-list', '--trace').should call(:execute_list).on(instance).with(['a1']) }
+        it('should handle a default') { expects_running('static-execute-list').should call(:execute_list).on(instance).with(['a1']) }
         it { expects_running('static-execute-list', '1', '2', '3').should call(:execute_list).on(instance).with(['1', '2', '3']) }
         it { expects_running('static-execute-list', '1', '2', '3').should call(:execute_list).on(instance).with(['1', '2', '3']) }
-        it { expects_running('static-execute-list', '--', '1', '2', '3').should call(:execute_list).on(instance).with(['1', '2', '3']) }
         it('should raise an error') { expects_running('static-execute-list', '--trace', '1', '--', '2', '3').should raise_error(ArgumentError) }
         it('should make the option an array') { expects_running('static-execute-list', '--tests', '1').should call(:execute_list).on(instance).with(['1']) }
         it('should make the option available') { command_for('static-execute-list', '1', '2', '3').send(:options).tests.should == ['1','2','3'] }
       end
 
       context 'and when execute_vararg is called' do
-        it{ expects_running('static-execute-vararg').should call(:execute_vararg).on(instance).with(nil, [], []) }
+        it{ expects_running('static-execute-vararg').should call(:execute_vararg).on(instance).with(1, [], []) }
         it{ expects_running('static-execute-vararg', '1', '2', '3').should call(:execute_vararg).on(instance).with('1', ['2', '3'], []) }
         it("handles a list separator"){ expects_running('static-execute-vararg', '1', '2', '--', '3').should call(:execute_vararg).on(instance).with('1', ['2'], ['3']) }
         it{ command_for('static-execute-vararg', '1', '2', '--', '3').send(:options).test.should == '1' }
         it{ command_for('static-execute-vararg', '1', '2', '--', '3').send(:options).test2.should == ['2'] }
         it{ command_for('static-execute-vararg', '1', '2', '--', '3').send(:options).test3.should == ['3'] }
+        it{ command_for('static-execute-vararg', '--', '2', '3').send(:options).test.should == 1 }
+        it{ command_for('static-execute-vararg', '--', '2', '3').send(:options).test2.should == ['2', '3'] }
+        it{ command_for('static-execute-vararg', '--', '2', '3').send(:options).test3.should == [] }
+        it{ command_for('static-execute-vararg', '--', '--', '3').send(:options).test.should == 1 }
+        it('should exclude the right'){ command_for('static-execute-vararg', '--', '--', '3').send(:options).test2.should == [] }
+        it{ command_for('static-execute-vararg', '--', '--', '3').send(:options).test3.should == ['3'] }
       end
-=begin
-      context 'and when execute is called with a contextual global option' do
-        it("calls the helper") { command_for('static', 'execute-implicit').send(:options).test_context.should == 'contextual' }
+      context 'and when execute_vararg_2 is called' do
+        it('should get 2 arguments'){ expects_running('static-execute-vararg-2', '1', '2', '3').should call(:execute_vararg_2).on(instance).with('1', ['2', '3']) }
+        it('should have default argument'){ expects_running('static-execute-vararg-2', '--', '2', '3').should call(:execute_vararg_2).on(instance).with('def', ['2', '3']) }
+        it{ command_for('static-execute-vararg-2', '1', '2', '3').send(:options).test.should == '1' }
+        it{ command_for('static-execute-vararg-2', '1', '2', '3').send(:options).test2.should == ['2', '3'] }
       end
-
-      context 'and when execute-context-arg is called with a contextual argument' do
-        it("calls the helper") { command_for('static', 'execute-context-arg').send(:options).test_context.should == 'contextual' }
-        it("takes the argument") { command_for('static', 'execute-context-arg', 'arg1').send(:options).testarg.should == 'arg1' }
-      end
-=end
       context 'and when an error is raised in a call' do
         it { expects_running('static-raise-error').should raise_error(StandardError, "test exception") }
       end

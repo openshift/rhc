@@ -290,7 +290,7 @@ module RHC
         defaults = {}
         covers = {}
         (opts + args).each do |option_meta|
-          arg = option_meta[:arg] || option_meta[:name] or next
+          arg = option_meta[:option_symbol] || option_meta[:name] || option_meta[:arg] or next
           if arg && option_meta[:type] != :list && options[arg].is_a?(Array)
             options[arg] = options[arg].last
           end
@@ -299,8 +299,8 @@ module RHC
           case v = option_meta[:default]
           when Symbol
             cmd.send(v, defaults, arg)
-          #when Proc
-          #  v.call(defaults, arg)
+          when Proc
+            v.call(defaults, arg)
           when nil
           else
             defaults[arg] = v
@@ -324,9 +324,7 @@ module RHC
               raise ArgumentError, "Missing required argument '#{arg[:name]}'."
             end
           end
-          if arg[:type] == :list
-            value = Array(value)
-          end
+
           slots[i] = value
         end
 
@@ -355,21 +353,32 @@ module RHC
         if value.nil?
           value =
             if arg[:type] == :list
-              available.shift if available.first == '--'
               take_leading_list(available)
             else
               v = available.shift
-              v = nil if v == '--'
+              if v == '--'
+                v = nil
+              else
+                available.shift if available.first == '--'
+              end
               v
             end
         end
+
+        value = options[option] if option && (value.nil? || (value.is_a?(Array) && value.blank?))
+        if arg[:type] == :list
+          value = Array(value)
+        end
         options[option] = value if option && !value.nil?
+
         value
       end
 
       def self.take_leading_list(available)
         if i = available.index('--')
-          available.shift(i)
+          left = available.shift(i)
+          available.shift
+          left
         else
           left = available.dup
           available.clear
