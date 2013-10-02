@@ -85,7 +85,7 @@ class HighLineExtension < HighLine
       end
 
       @output.print HighLine::CLEAR if color
-      @output.flush      
+      @output.flush
     end
 
     msg
@@ -211,7 +211,8 @@ class HighLineExtension < HighLine
 
     read, write = IO.pipe
 
-    unless Kernel.fork # Child process
+    unless Kernel.fork
+      # Child process
       STDOUT.reopen(write)
       STDERR.reopen(write) if STDERR.tty?
       read.close
