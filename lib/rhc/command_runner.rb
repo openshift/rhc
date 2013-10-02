@@ -133,7 +133,7 @@ module RHC
       args.delete_if{ |a| a.start_with? '-' }
       unless args[0] == 'commands'
         variations = (1..args.length).reverse_each.map{ |n| args[0,n].join('-') }
-        cmd = variations.first(1).find{ |cmd| command_exists?(cmd) }
+        cmd = variations.find{ |cmd| command_exists?(cmd) }
       end
 
       if args.empty?
@@ -142,9 +142,11 @@ module RHC
       else
         if cmd.nil?
           matches = (variations || ['']).inject(nil) do |candidates, term|
-            prefix = commands.keys.select{ |n| n.downcase.start_with? term.downcase }
-            inline = commands.keys.select{ |n| n.downcase.include? term.downcase }
-            break [term, prefix, inline - prefix] unless prefix.empty? && inline.empty?
+            term = term.downcase
+            keys = commands.keys.map(&:downcase)
+            prefix, keys = keys.partition{ |n| n.start_with? term }
+            inline, keys = keys.partition{ |n| n.include? term }
+            break [term, prefix, inline] unless prefix.empty? && inline.empty?
           end
 
           unless matches
@@ -153,7 +155,7 @@ module RHC
             return 1
           end
 
-          candidates = (matches[1] + matches[2]).map{ |n| commands[n] }.uniq.sort_by{ |c| c.name }.reverse
+          candidates = (matches[1] + matches[2]).map{ |n| commands[n] }.uniq.sort_by{ |c| c.name }
           if candidates.length == 1
             cmd = candidates.first.name
           else
