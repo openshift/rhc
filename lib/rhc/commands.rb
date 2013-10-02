@@ -69,10 +69,11 @@ module Commander
       end
 
       # Separate option lists with '--'
-      remaining = args.split('--').map{ |a| opts.parse!(a) }.inject([]) do |arr, sub|
-        arr << '--' unless arr.empty?
-        arr.concat(sub)
+      remaining = args.split('--').map{ |a| opts.parse!(a) }.inject([]) do |arr, h|
+        arr << '--'
+        arr.concat(h)
       end
+      remaining.shift
 
       _, config_path = proxy_options.find{ |arg| arg[0] == :config }
       clean, _ = proxy_options.find{ |arg| arg[0] == :clean }
@@ -115,6 +116,7 @@ module Commander
     remove_const(:Options)
     class Options
       def initialize(init=nil)
+        @defaults = {}
         @table = {}
         default(init) if init
       end
@@ -126,7 +128,7 @@ module Commander
           raise ArgumentError, "Options does not support #{meth} without a single argument" if args.length != 1
           self[meth.to_s.chop] = args.first
         elsif meth.to_s =~ /^\w+$/
-          if !@table.has_key?(meth)
+          if !@table.has_key?(meth) && !@defaults.has_key?(meth)
             begin; return super; rescue NoMethodError; nil; end
           end
           raise ArgumentError, "Options does not support #{meth} with arguments" if args.length != 0
@@ -138,25 +140,29 @@ module Commander
       def respond_to_missing?(meth, private_method = false)
         meth.to_s =~ /^\w+(=)?$/
       end
-      def ==(other)
-        __hash__ == other.__hash__
-      end
       def []=(meth, value)
         @table[meth.to_sym] = value
       end
       def [](meth)
-        value = @table[meth.to_sym]
+        k = meth.to_sym
+        value = @table.has_key?(k) ? @table[k] : @defaults[k]
         value = value.call if value.is_a? Proc
         value
       end
+      def __explicit__
+        @table
+      end
+      def ==(other)
+        @table == other.instance_variable_get(:@table)
+      end
       def default defaults = {}
-        @table = @table.reverse_merge!(__to_hash__(defaults))
+        @defaults.merge!(__to_hash__(defaults))
       end
       def __replace__(options)
-        @table = __to_hash__(options).dup
+        @table = __to_hash__(options)
       end
       def __hash__
-        @table
+        @defaults.merge(@table)
       end
       def __to_hash__(obj)
         Options === obj ? obj.__hash__ : obj
@@ -225,7 +231,7 @@ module RHC
           c.info = opts
 
           (options_metadata = Array(opts[:options])).each do |o|
-            option_data = [o[:switches], o[:type], o[:description], o.slice(:optional, :default, :hide)].compact.flatten(1)
+            option_data = [o[:switches], o[:type], o[:description], o.slice(:optional, :default, :hide, :covered_by)].compact.flatten(1)
             c.option *option_data
             o[:arg] = Commander::Runner.switch_to_sym(Array(o[:switches]).last)
           end
@@ -279,81 +285,105 @@ module RHC
         cmd.send(method, *args)
       end
 
-      def self.fill_arguments(cmd, options, args_metadata, options_metadata, args)
-        Commander::Runner.instance.options.each do |opt|
-          if opt[:context]
-            arg = Commander::Runner.switch_to_sym(opt[:switches].last)
-            options.__hash__[arg] ||= lambda{ cmd.send(opt[:context]) }
-          end
-        end
-
-        # process options
+      def self.fill_arguments(cmd, options, args, opts, arguments)
+        # process defaults
         defaults = {}
-        (options_metadata + args_metadata).each do |option_meta|
-          arg = option_meta[:arg] || option_meta[:name] or next
+        covers = {}
+        (opts + args).each do |option_meta|
+          arg = option_meta[:option_symbol] || option_meta[:name] || option_meta[:arg] or next
           if arg && option_meta[:type] != :list && options[arg].is_a?(Array)
             options[arg] = options[arg].last
           end
+          Array(option_meta[:covered_by]).each{ |sym| (covers[sym] ||= []) << arg }
+
           case v = option_meta[:default]
           when Symbol
             cmd.send(v, defaults, arg)
-          #when Proc
-          #  v.call(defaults, arg)
+          when Proc
+            v.call(defaults, arg)
           when nil
           else
             defaults[arg] = v
           end
         end
         options.default(defaults)
-        options_metadata.each do |option_meta|
-          arg = option_meta[:arg]
-          if context_helper = option_meta[:context_helper]
-            options[arg] = lambda{ cmd.send(context_helper) } if options.__hash__[arg].nil?
-          end
-          raise ArgumentError.new("Missing required option '#{arg}'.") if option_meta[:required] && options[arg].nil?
+
+        # process required options
+        opts.each do |option_meta|
+          raise ArgumentError.new("Missing required option '#{option_meta[:arg]}'.") if option_meta[:required] && options[option_meta[:arg]].nil?
         end
 
-        available = args.dup
-        slots = Array.new(args_metadata.length)
-        args_metadata.each_with_index do |arg, i|
-          if Array(arg[:covered_by]).any?{ |k| !options.__hash__[k].nil? }
-            slots[i] = nil
-            next
-          end
-          option = arg[:option_symbol]
-          context_helper = arg[:context_helper]
+        slots = Array.new(args.count)
+        available = arguments.dup
 
-          value = options.__hash__[option] if option
+        args.each_with_index do |arg, i|
+          value = argument_to_slot(options, available, arg)
 
           if value.nil?
-            value =
-              if arg[:type] == :list
-                all = []
-                while available.first && available.first != '--'
-                  all << available.shift
-                end
-                available.shift if available.first == '--'
-                all
-              else
-                available.shift
-              end
+            if arg[:allow_nil] != true && !arg[:optional]
+              raise ArgumentError, "Missing required argument '#{arg[:name]}'."
+            end
           end
 
-          value = cmd.send(context_helper) if value.nil? and context_helper
-
-          if value.nil? && arg[:allow_nil] != true
-            raise ArgumentError, "Missing required argument '#{arg[:name]}'." unless arg[:optional]
-            break if available.empty?
-          else
-            value = Array(value) if arg[:type] == :list
-            slots[i] = value
-            options.__hash__[option] = value if option
-          end
+          slots[i] = value
         end
 
         raise ArgumentError, "Too many arguments passed in: #{available.reverse.join(" ")}" unless available.empty?
 
+        # reset covered arguments
+        options.__explicit__.keys.each do |k|
+          if covered = covers[k]
+            covered.each do |sym|
+              raise ArgumentError, "The options '#{sym}' and '#{k}' cannot both be provided" unless options.__explicit__[sym].nil?
+              options[sym] = nil
+            end
+          end
+        end
+
         slots
+      end
+
+      def self.argument_to_slot(options, available, arg)
+        if Array(arg[:covered_by]).any?{ |k| !options.__explicit__[k].nil? }
+          return nil
+        end
+
+        option = arg[:option_symbol]
+        value = options.__explicit__[option] if option
+        if value.nil?
+          value =
+            if arg[:type] == :list
+              take_leading_list(available)
+            else
+              v = available.shift
+              if v == '--'
+                v = nil
+              else
+                available.shift if available.first == '--'
+              end
+              v
+            end
+        end
+
+        value = options[option] if option && (value.nil? || (value.is_a?(Array) && value.blank?))
+        if arg[:type] == :list
+          value = Array(value)
+        end
+        options[option] = value if option && !value.nil?
+
+        value
+      end
+
+      def self.take_leading_list(available)
+        if i = available.index('--')
+          left = available.shift(i)
+          available.shift
+          left
+        else
+          left = available.dup
+          available.clear
+          left
+        end
       end
 
       def self.commands

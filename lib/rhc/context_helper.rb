@@ -11,10 +11,11 @@ module RHC
     def self.included(other)
       other.module_eval do
         def self.takes_domain(opts={})
-          option ["-n", "--namespace NAME"], "Name of a domain"
-          #if opts[:argument]
-          #  argument :target, "The name of a domain", ["-t", "--target NAME_OR_PATH"], :allow_nil => true, :covered_by => [:namespace]
-          #end
+          if opts[:argument]
+            argument :namespace, "Name of a domain", ["-n", "--namespace NAME"], :allow_nil => true, :default => :from_local_git
+          else
+            option ["-n", "--namespace NAME"], "Name of a domain", :default => :from_local_git
+          end
         end
         # Does not take defaults to avoid conflicts
         def self.takes_application_or_domain(opts={})
@@ -28,10 +29,10 @@ module RHC
           if opts[:argument]
             argument :app, "Name of an application", ["-a", "--app NAME"], :allow_nil => true, :default => :from_local_git, :covered_by => :application_id
           else
-            option ["-a", "--app NAME"], "Name of an application", :default => :from_local_git
+            option ["-a", "--app NAME"], "Name of an application", :default => :from_local_git, :covered_by => :application_id
           end
           option ["-n", "--namespace NAME"], "Name of a domain", :default => :from_local_git
-          option ["--application-id ID"], "ID of an application", :hide => true, :default => :from_local_git
+          option ["--application-id ID"], "ID of an application", :hide => true, :default => :from_local_git, :covered_by => :app
         end
       end
     end
@@ -92,8 +93,10 @@ module RHC
       end
     end
 
-    def server_context
-      ENV['LIBRA_SERVER'] || (!options.clean && config['libra_server']) || "openshift.redhat.com"
+    def server_context(defaults=nil, arg=nil)
+      value = ENV['LIBRA_SERVER'] || (!options.clean && config['libra_server']) || "openshift.redhat.com"
+      defaults[arg] = value if defaults && arg
+      value
     end
 
     def from_local_git(defaults, arg)
@@ -110,7 +113,7 @@ module RHC
       # right now we don't have any logic since we only support one domain
       # TODO: add domain lookup based on uuid
       domain = rest_client.domains.first
-      raise RHC::Rest::DomainNotFoundException, "No domains configured for this user.  You may create one using 'rhc create-domain'." if domain.nil?
+      raise RHC::NoDomainsForUser if domain.nil?
 
       domain.name
     end

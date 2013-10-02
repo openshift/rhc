@@ -16,9 +16,9 @@ module RHC::Commands
       You may run a specific SSH command by passing one or more arguments, or use a
       different SSH executable or pass options to SSH with the '--ssh' option.
       DESC
-    syntax "<app> [--ssh path_to_ssh_executable]"
+    syntax "[--ssh path_to_ssh_executable] [--gears] [<app> --] <command>"
     takes_application :argument => true
-    argument :command, "Command to run in the application's SSH session", [], :type => :list, :optional => true
+    argument :command, "Command to run in the application's SSH session", ['--command COMMAND'], :type => :list, :optional => true
     option ["--ssh PATH"], "Path to your SSH executable or additional options"
     option ["--gears"], "Execute this command on all gears in the app.  Requires a command."
     option ["--limit INTEGER"], "Limit the number of simultaneous SSH connections opened with --gears (default: 5).", :type => Integer, :default => 5

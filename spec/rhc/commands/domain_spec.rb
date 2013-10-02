@@ -277,7 +277,7 @@ describe RHC::Commands::Domain do
         before do
           stub_api_request(:put, "domains/domain1/update", nil).
             with(:body => {:allowed_gear_sizes => ['valid']}).
-            to_return({:body => {:type => 'domain', :data => {:allowed_gear_sizes => ['valid']}, :messages => [{:severity => 'info', :text => 'Updated allowed gear sizes'},]}.to_json, :status => 200})
+            to_return({:body => {:type => 'domain', :data => {:name => 'domain1', :allowed_gear_sizes => ['valid']}, :messages => [{:severity => 'info', :text => 'Updated allowed gear sizes'},]}.to_json, :status => 200})
         end
         let(:arguments) { ['domain', 'configure', '--trace', '--allowed-gear-sizes', 'valid'] }
       it("should succeed"){ expect { run }.to exit_with_code(0) }
@@ -288,7 +288,7 @@ describe RHC::Commands::Domain do
         before do
           stub_api_request(:put, "domains/domain1/update", nil).
             with(:body => {:allowed_gear_sizes => ['one', 'two']}).
-            to_return({:body => {:type => 'domain', :data => {:allowed_gear_sizes => ['one', 'two']}, :messages => [{:severity => 'info', :text => 'Updated allowed gear sizes'},]}.to_json, :status => 200})
+            to_return({:body => {:type => 'domain', :data => {:name => 'domain1', :allowed_gear_sizes => ['one', 'two']}, :messages => [{:severity => 'info', :text => 'Updated allowed gear sizes'},]}.to_json, :status => 200})
         end
         let(:arguments) { ['domain', 'configure', '--trace', '--allowed-gear-sizes', 'one,two'] }
         it("should succeed"){ expect { run }.to exit_with_code(0) }
@@ -315,7 +315,7 @@ describe RHC::Commands::Domain do
         before do
           stub_api_request(:put, "domains/domain1/update", nil).
             with(:body => {:allowed_gear_sizes => []}).
-            to_return({:body => {:type => 'domain', :data => {:allowed_gear_sizes => []}, :messages => [{:severity => 'info', :text => 'Updated allowed gear sizes'},]}.to_json, :status => 200})
+            to_return({:body => {:type => 'domain', :data => {:name => 'domain1', :allowed_gear_sizes => []}, :messages => [{:severity => 'info', :text => 'Updated allowed gear sizes'},]}.to_json, :status => 200})
         end
         let(:arguments) { ['domain', 'configure', '--no-allowed-gear-sizes'] }
         it("should succeed"){ expect { run }.to exit_with_code(0) }

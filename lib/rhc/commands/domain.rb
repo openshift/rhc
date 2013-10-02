@@ -69,9 +69,9 @@ module RHC::Commands
     summary "Change one or more configuration settings on the domain"
     syntax "<namespace>"
     option ['--[no-]allowed-gear-sizes [SIZES]'], 'A comma-delimited list of the gear sizes that will be allowed in this domain.', :optional => true
-    argument :namespace, "Name of the domain", ["-n", "--namespace NAME"], :context => :namespace_context
-    def configure(namespace)
-      domain = rest_client.find_domain(namespace)
+    takes_domain :argument => true
+    def configure(_)
+      domain = find_domain
       payload = {}
       payload[:allowed_gear_sizes] = check_allowed_gear_sizes unless options.allowed_gear_sizes.nil?
 
@@ -82,16 +82,16 @@ module RHC::Commands
       end
 
       paragraph do
-        say format_table("Domain #{namespace} configuration", get_properties(domain, :allowed_gear_sizes), :delete => true)
+        say format_table("Domain #{domain.name} configuration", get_properties(domain, :allowed_gear_sizes), :delete => true)
       end
 
       0
     end
 
     summary "Display a domain and its applications"
-    argument :namespace, "Name of the domain", ["-n", "--namespace NAME"], :optional => true
-    def show(namespace)
-      domain = (rest_client.find_domain(namespace) if namespace) || rest_client.domains.first
+    takes_domain :argument => true
+    def show(_)
+      domain = find_domain
 
       warn "In order to deploy applications, you must create a domain with 'rhc setup' or 'rhc create-domain'." and return 1 unless domain
 
@@ -127,11 +127,11 @@ module RHC::Commands
 
     summary "Delete a domain"
     syntax "<namespace>"
-    argument :namespace, "Name of the domain", ["-n", "--namespace NAME"]
-    def delete(namespace)
-      domain = rest_client.find_domain namespace
+    takes_domain :argument => true
+    def delete(_)
+      domain = find_domain
 
-      say "Deleting domain '#{namespace}' ... "
+      say "Deleting domain '#{domain.name}' ... "
       domain.destroy
       success "deleted"
 

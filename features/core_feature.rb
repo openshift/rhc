@@ -134,7 +134,7 @@ describe "rhc core scenarios" do
       end
 
       it "will ssh to the app and run a command" do
-        r = rhc 'ssh', '--ssh', ENV['GIT_SSH'], 'echo $OPENSHIFT_APP_NAME'
+        r = rhc 'ssh', '--', '--ssh', ENV['GIT_SSH'], 'echo $OPENSHIFT_APP_NAME'
         r.stdout.should match app.name
         r.status.should == 0
       end
