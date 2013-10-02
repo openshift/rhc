@@ -11,7 +11,6 @@ Feature: Existing Domain Operations
     Then the domain should be reserved
 
   Scenario: Domain List
-    When rhc domain is run
     When rhc domain list is run
     Then the default domain action output should equal the list action output
 
