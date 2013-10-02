@@ -2,6 +2,8 @@ require 'spec_helper'
 require 'rhc/commands/base'
 require 'rhc/exceptions'
 
+=begin
+# Replace meth with default tests
 describe RHC::Commands::Base do
   before{ base_config }
 
@@ -48,6 +50,4 @@ describe RHC::Commands::Base do
     end
   end
 end
-
-
-
+=end

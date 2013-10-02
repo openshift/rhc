@@ -128,6 +128,8 @@ describe RHC::Commands::Base do
             summary "Test command execute-vararg"
             def execute_vararg(arg1, arg2, arg3); 1; end
 
+=begin
+            # Replace me with a default test case
             RHC::Helpers.global_option '--test-context', 'Test', :context => :context_var
             def execute_implicit
             end
@@ -135,6 +137,7 @@ describe RHC::Commands::Base do
             argument :testarg, "Test arg", ["--testarg testarg"], :context => :context_var
             summary "Test command execute"
             def execute_context_arg(testarg); 1; end
+=end
 
             def raise_error
               raise StandardError.new("test exception")
@@ -152,7 +155,7 @@ describe RHC::Commands::Base do
         Static
       end
 
-      it("should register itself") { expect { subject }.to change(commands, :length).by(8) }
+      it("should register itself") { expect { subject }.to change(commands, :length).by(6) }
       it("should have an object name of the class") { subject.object_name.should == 'static' }
 
       context 'and when test is called' do
@@ -185,18 +188,21 @@ describe RHC::Commands::Base do
         it { expects_running('static-execute-list', '--trace').should call(:execute_list).on(instance).with([]) }
         it { expects_running('static-execute-list', '1', '2', '3').should call(:execute_list).on(instance).with(['1', '2', '3']) }
         it { expects_running('static-execute-list', '1', '2', '3').should call(:execute_list).on(instance).with(['1', '2', '3']) }
+        it { expects_running('static-execute-list', '--', '1', '2', '3').should call(:execute_list).on(instance).with(['1', '2', '3']) }
+        it('should raise an error') { expects_running('static-execute-list', '--trace', '1', '--', '2', '3').should raise_error(ArgumentError) }
         it('should make the option an array') { expects_running('static-execute-list', '--tests', '1').should call(:execute_list).on(instance).with(['1']) }
         it('should make the option available') { command_for('static-execute-list', '1', '2', '3').send(:options).tests.should == ['1','2','3'] }
       end
 
       context 'and when execute_vararg is called' do
-        it{ expects_running('static-execute-vararg').should call(:execute_vararg).on(instance).with(nil, nil, nil) }
+        it{ expects_running('static-execute-vararg').should call(:execute_vararg).on(instance).with(nil, [], []) }
         it{ expects_running('static-execute-vararg', '1', '2', '3').should call(:execute_vararg).on(instance).with('1', ['2', '3'], []) }
         it("handles a list separator"){ expects_running('static-execute-vararg', '1', '2', '--', '3').should call(:execute_vararg).on(instance).with('1', ['2'], ['3']) }
         it{ command_for('static-execute-vararg', '1', '2', '--', '3').send(:options).test.should == '1' }
         it{ command_for('static-execute-vararg', '1', '2', '--', '3').send(:options).test2.should == ['2'] }
         it{ command_for('static-execute-vararg', '1', '2', '--', '3').send(:options).test3.should == ['3'] }
       end
+=begin
       context 'and when execute is called with a contextual global option' do
         it("calls the helper") { command_for('static', 'execute-implicit').send(:options).test_context.should == 'contextual' }
       end
@@ -205,7 +211,7 @@ describe RHC::Commands::Base do
         it("calls the helper") { command_for('static', 'execute-context-arg').send(:options).test_context.should == 'contextual' }
         it("takes the argument") { command_for('static', 'execute-context-arg', 'arg1').send(:options).testarg.should == 'arg1' }
       end
-
+=end
       context 'and when an error is raised in a call' do
         it { expects_running('static-raise-error').should raise_error(StandardError, "test exception") }
       end
