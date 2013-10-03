@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.15.4
+Version: 1.15.5
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -102,6 +102,17 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Oct 03 2013 Adam Miller <admiller@redhat.com> 1.15.5-1
+- Merge pull request #471 from
+  smarterclayton/bug_1013321_handle_implicit_arguments_correctly
+  (dmcphers+openshiftbot@redhat.com)
+- Review comments, add more tests and fix a few edge cases
+  (ccoleman@redhat.com)
+- Bug 1014692 - rhc authorization -h should display help page
+  (ccoleman@redhat.com)
+- domain.feature fails because rhc domain changes (ccoleman@redhat.com)
+- Bug 1013321 - Handle implicit arguments more accurately (ccoleman@redhat.com)
+
 * Tue Oct 01 2013 Adam Miller <admiller@redhat.com> 1.15.4-1
 - Merge pull request #469 from smarterclayton/mongo_rhc_test_fails
   (dmcphers+openshiftbot@redhat.com)
