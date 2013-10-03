@@ -56,7 +56,7 @@ module RhcExecutionHelper
     stdin = stdin.join("\n") if stdin.is_a? Array
     stdout, stderr =
       if debug?
-        [STDOUT, STDERR].map{ |t| RHC::Helpers::StringTee.new(t) } 
+        [debug, debug].map{ |t| RHC::Helpers::StringTee.new(t) } 
       else
         [StringIO.new, StringIO.new]
       end
@@ -65,7 +65,7 @@ module RhcExecutionHelper
     status = Open4.spawn(args, 'stdout' => stdout, 'stderr' => stderr, 'stdin' => stdin, 'quiet' => true)
     stdout, stderr = [stdout, stderr].map(&:string)
     Result.new(args, status, stdout, stderr).tap do |r|
-      STDERR.puts "\n[#{example_description}] #{r}" if debug?
+      debug.puts "\n[#{example_description}] #{r}" if debug?
     end
   end
 
@@ -99,11 +99,11 @@ module RhcExecutionHelper
   end
 
   def no_applications(constraint=nil)
-    STDERR.puts "Removing applications that match #{constraint}" if debug?
+    debug.puts "Removing applications that match #{constraint}" if debug?
     apps = client.reset.applications
     apps.each do |app|
       next if constraint && !(app.name =~ constraint)
-      STDERR.puts "  removing #{app.name}" if debug?
+      debug.puts "  removing #{app.name}" if debug?
       app.destroy
     end
   end
@@ -124,19 +124,19 @@ module RhcExecutionHelper
   end
 
   def has_an_application
-    STDERR.puts "Creating or reusing an app" if debug?
+    debug.puts "Creating or reusing an app" if debug?
     apps = client.applications
     apps.first or begin
       domain = has_a_domain
-      STDERR.puts "  creating a new application" if debug?
+      debug.puts "  creating a new application" if debug?
       client.domains.first.add_application("test#{random}", :cartridges => [a_web_cartridge])
     end
   end
 
   def has_a_domain
-    STDERR.puts "Creating or reusing a domain" if debug?
+    debug.puts "Creating or reusing a domain" if debug?
     domain = client.domains.first or begin
-      STDERR.puts "  creating a new domain" if debug?
+      debug.puts "  creating a new domain" if debug?
       client.add_domain("test#{random}")
     end
   end
@@ -169,6 +169,20 @@ module RhcExecutionHelper
 
   def debug?
     @debug ||= !!ENV['RHC_DEBUG']
+  end
+
+  def debug (*args)
+    @debug_stream ||= begin
+      if debug?
+        if ENV['RHC_DEBUG'] == 'true'
+          STDERR
+        else
+          File.open(ENV['RHC_DEBUG'], 'w')
+        end
+      else
+        StringIO.new
+      end
+    end
   end
 
   def random

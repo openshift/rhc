@@ -8,12 +8,12 @@ module RHC::Commands
 
     summary "Connects to OpenShift and sets up your keys and domain"
     description <<-DESC
-      Connects to an OpenShift server to get you started. Will help you 
-      configure your SSH keys, set up a domain, and check for any potential 
+      Connects to an OpenShift server to get you started. Will help you
+      configure your SSH keys, set up a domain, and check for any potential
       problems with Git or SSH.
 
       Any options you pass to the setup command will be stored in a
-      .openshift/express.conf file in your home directory. If you run 
+      .openshift/express.conf file in your home directory. If you run
       setup at a later time, any previous configuration will be reused.
 
       Pass the --clean option to ignore your saved configuration and only
@@ -21,13 +21,13 @@ module RHC::Commands
       default values from another config (the values will still be written
       to .openshift/express.conf).
 
-      If the server supports authorization tokens, you may pass the 
+      If the server supports authorization tokens, you may pass the
       --create-token option to instruct the wizard to generate a key for you.
 
-      If you would like to enable tab-completion in Bash shells, pass 
+      If you would like to enable tab-completion in Bash shells, pass
       --autocomplete for more information.
       DESC
-    option ["--server NAME"], "Hostname of an OpenShift server", :context => :server_context, :required => true
+    option ["--server NAME"], "Hostname of an OpenShift server", :default => :server_context, :required => true
     option ['--clean'], "Ignore any saved configuration options"
     option ['--[no-]create-token'], "Create an authorization token for this server"
     option ['--autocomplete'], "Instructions for enabling tab-completion"
@@ -35,7 +35,7 @@ module RHC::Commands
       if options.autocomplete
         src = File.join(File.join(Gem.loaded_specs['rhc'].full_gem_path, "autocomplete"), "rhc_bash")
         dest = File.join(RHC::Config.home_conf_dir, "bash_autocomplete")
-        
+
         FileUtils.mkdir_p(RHC::Config.home_conf_dir)
         FileUtils.cp(src, dest)
 
@@ -45,7 +45,7 @@ module RHC::Commands
 
             . #{dest}
 
-          Save your shell and then restart. Type "rhc" and then hit the TAB key twice to 
+          Save your shell and then restart. Type "rhc" and then hit the TAB key twice to
           trigger completion of your command.
 
           Tab-completion is not available in the Windows terminal.

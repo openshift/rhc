@@ -121,8 +121,8 @@ class RHC::Commands::Base
     def self.option(switches, description, options={})
       options_metadata << {:switches => switches,
                            :description => description,
-                           :context_helper => options[:context],
                            :required => options[:required],
+                           :covered_by => options[:covered_by],
                            :deprecated => options[:deprecated],
                            :type => options[:type],
                            :hide => options[:hide],
@@ -137,11 +137,11 @@ class RHC::Commands::Base
       args_metadata << {:name => name,
                         :description => description,
                         :switches => switches,
-                        :context_helper => options[:context],
                         :option_symbol => option_symbol,
                         :covered_by => options[:covered_by],
                         :optional => options[:optional],
                         :default => options[:default],
+                        :allow_nil => options[:allow_nil],
                         :hide => options[:hide],
                         :type => arg_type}
     end

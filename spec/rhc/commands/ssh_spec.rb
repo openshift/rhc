@@ -52,14 +52,14 @@ describe RHC::Commands::Ssh do
       it { expect { run }.to exit_with_code(1) }
     end
     context 'with a command' do
-      let(:arguments) { ['app', 'ssh', 'app1', '--gears', 'command', '--trace'] }
+      let(:arguments) { ['app', 'ssh', 'app1', '--gears', '--', 'command', '--trace'] }
       before{ expect_multi_ssh('command', 'fakegearid0@fakesshurl.com' => 'foo', 'fakegearid1@fakesshurl.com' => 'bar') }
       it('should print the ssh output') { run_output.should == "[fakegearid0 ] foo\n[fakegearid1 ] bar\n\n" }
       it('should return successfully') { expect{ run }.to exit_with_code(0) }
     end
     context 'with an implicit app name' do
       before{ subject.class.any_instance.stub(:git_config_get){ |key| 'app1' if key == "rhc.app-name" } }
-      let(:arguments) { ['app', 'ssh', '--gears', 'command', '--trace'] }
+      let(:arguments) { ['app', 'ssh', '--gears', '--', 'command', '--trace'] }
       before{ expect_multi_ssh('command', 'fakegearid0@fakesshurl.com' => 'foo', 'fakegearid1@fakesshurl.com' => 'bar') }
       it('should print the ssh output') { run_output.should == "[fakegearid0 ] foo\n[fakegearid1 ] bar\n\n" }
       it('should return successfully') { expect{ run }.to exit_with_code(0) }

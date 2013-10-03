@@ -199,4 +199,10 @@ module RHC
       super message
     end
   end
+
+  class NoDomainsForUser < Exception
+    def initialize(message="In order to deploy applications, you must create a domain with 'rhc setup' or 'rhc create-domain'.")
+      super message, 1
+    end
+  end
 end
