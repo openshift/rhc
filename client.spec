@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.15.5
+Version: 1.15.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -103,6 +103,11 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Oct 04 2013 Adam Miller <admiller@redhat.com> 1.15.6-1
+- Merge pull request #473 from smarterclayton/depend_on_net_ssh_multi
+  (dmcphers+openshiftbot@redhat.com)
+- Depend on net-ssh-multi (ccoleman@redhat.com)
+
 * Thu Oct 03 2013 Adam Miller <admiller@redhat.com> 1.15.5-1
 - Merge pull request #471 from
   smarterclayton/bug_1013321_handle_implicit_arguments_correctly
