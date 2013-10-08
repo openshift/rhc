@@ -127,5 +127,34 @@ describe "rhc member scenarios" do
         client.find_domain(domain.name).members.any?{ |m| m.id == user.id && m.editor? }.should be_true
       end
     end
+
+    context "with an application" do
+      let(:other_user){ other_users.values.first }
+      before{ has_an_application }
+      before{ has_local_ssh_key(other_user) }
+
+      it "should allow SSH only for admin and edit roles" do
+        user = other_user.login
+        name = @domain.applications.first.name
+
+        r = rhc 'add-member', user, '--role', 'admin', '-n', domain.name
+        r.status.should == 0
+
+        r = rhc 'ssh', name, '-n', domain.name, :as => other_user
+        r.status.should == 0
+
+        r = rhc 'add-member', user, '--role', 'view', '-n', domain.name
+        r.status.should == 0
+
+        r = rhc 'ssh', name, :as => other_user
+        r.status.should != 0
+
+        r = rhc 'add-member', user, '--role', 'edit', '-n', domain.name
+        r.status.should == 0
+
+        r = rhc 'ssh', name, :as => other_user
+        r.status.should == 0
+      end
+    end
   end
 end
