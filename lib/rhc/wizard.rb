@@ -597,11 +597,11 @@ EOF
     def finalize_stage
       true
     end
-    
+
     protected
       def namespace_optional?
         false
-      end    
+      end
   end
 
   class DomainWizard < Wizard
