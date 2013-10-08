@@ -68,6 +68,12 @@ describe "rhc core scenarios" do
 
     let(:app){ @app }
 
+    it "should display domain list" do
+      r = rhc 'domains'
+      r.status.should == 0
+      r.stdout.should match "Domain #{app.domain_id}"
+    end
+
     it "should show app state" do
       r = rhc 'app-show', app.name, '--state'
       r.status.should == 0
