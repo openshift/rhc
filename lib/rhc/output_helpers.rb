@@ -97,7 +97,7 @@ module RHC
     end
 
     def display_key(key, *properties)
-      properties = [:fingerprint, :visible_to_ssh?] if properties.empty?
+      properties = [:fingerprint, :principal, :visible_to_ssh?] if properties.empty?
       say format_table(
         properties.include?(:name) ? nil : format_key_header(key),
         get_properties(key, *properties),
