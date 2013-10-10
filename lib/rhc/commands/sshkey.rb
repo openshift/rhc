@@ -48,15 +48,19 @@ module RHC::Commands
     def add(name, key)
       type, content, comment = ssh_key_triple_for(key)
 
-      # validate the user input before sending it to the server
-      begin
-        Net::SSH::KeyFactory.load_data_public_key "#{type} #{content}"
-      rescue NotImplementedError, OpenSSL::PKey::PKeyError, Net::SSH::Exception => e
-        debug e.inspect
-        if options.confirm
-          warn 'The key you are uploading is not recognized.  You may not be able to authenticate to your application through Git or SSH.'
-        else
-          raise ::RHC::KeyDataInvalidException.new("File '#{key}' does not appear to be a recognizable key file (#{e}). You may specify the '--confirm' flag to add the key anyway.")
+      if type == 'krb5-principal'
+        # TODO: validate krb5?
+      else
+        # validate the user input before sending it to the server
+        begin
+          Net::SSH::KeyFactory.load_data_public_key "#{type} #{content}"
+        rescue NotImplementedError, OpenSSL::PKey::PKeyError, Net::SSH::Exception => e
+          debug e.inspect
+          if options.confirm
+            warn 'The key you are uploading is not recognized.  You may not be able to authenticate to your application through Git or SSH.'
+          else
+            raise ::RHC::KeyDataInvalidException.new("File '#{key}' does not appear to be a recognizable key file (#{e}). You may specify the '--confirm' flag to add the key anyway.")
+          end
         end
       end
 
