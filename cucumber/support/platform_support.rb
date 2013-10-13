@@ -2,7 +2,7 @@ if $target_os == 'fedora-19'
   CARTRIDGE_MAP = {
       "php"         => { type: "php-5.5", name: "PHP 5.5" },
       "mysql"       => { type: "mariadb-5.5", name: "MariaDB 5.5" },
-      "phpmyadmin"  => { type: "phpmyadmin-4", name: "phpMyAdmin 4.0" },
+      "phpmyadmin"  => { type: "phpmyadmin-3", name: "phpMyAdmin 3.5" },
       "mongodb"     => { type: "mongodb-2.2", name: "MongoDB 2.2" },
       "postgresql"  => { type: "postgresql-9.2", name: "PostgreSQL 9.2" },
       "cron"        => { type: "cron-1.4", name: "Cron 1.4" },
