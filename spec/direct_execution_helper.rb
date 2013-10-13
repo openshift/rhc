@@ -29,7 +29,7 @@ module RhcExecutionHelper
   end
 
   def a_web_cartridge
-    'php-5.3'
+    File.exist?('/etc/fedora-release') ? 'php-5.5' : 'php-5.3'
   end
 
   def rhc(*args)
@@ -38,12 +38,12 @@ module RhcExecutionHelper
     if user = opts[:as]
       args << '--rhlogin'
       args << user.login
-      if user.respond_to? :token
+      if user.attributes.has_key? :token
         args << '--token'
-        args << user.token
-      elsif user.respond_to? :password
+        args << user.attributes[:token]
+      elsif user.attributes.has_key? :password
         args << '--password'
-        args << user.password
+        args << user.attributes[:password]
       end
     elsif !server_supports_sessions?
       args << '--password'
@@ -111,6 +111,7 @@ module RhcExecutionHelper
   def other_users
     $other_users ||= begin
       (ENV['TEST_OTHER_USERS'] || "other1:a,other2:b,other3:c,other4:d").split(',').map{ |s| s.split(':') }.inject({}) do |h, (u, p)|
+        register_user(u,p) unless ENV['REGISTER_USER'].nil?
         h[u] = base_client(u, p).user
         h[u].attributes[:password] = p
         h
@@ -231,7 +232,29 @@ module RhcExecutionHelper
         ENV['TEST_USERNAME'] or raise "No TEST_USERNAME set"
         ENV['TEST_PASSWORD'] or raise "No TEST_PASSWORD set"
       end
+
+      register_user(ENV['TEST_USERNAME'],ENV['TEST_PASSWORD']) unless ENV['REGISTER_USER'].nil?
       ENV['GIT_SSH'] = config[:ssh_exec]
+    end
+
+    def register_user(user,password)
+      if File.exists?("/etc/openshift/plugins.d/openshift-origin-auth-mongo.conf")
+        command = "oo-register-user -l admin -p admin --username #{user} --userpass #{password}"
+        if Object.const_defined?('Bundler')
+          Bundler::with_clean_env do
+            system command
+          end
+        else
+          system command
+        end
+      elsif File.exists?("/etc/openshift/plugins.d/openshift-origin-auth-remote-user.conf")
+        system "/usr/bin/htpasswd -b /etc/openshift/htpasswd #{user} #{password}"
+      else
+        #ignore
+        print "Unknown auth plugin. Not registering user #{user}/#{password}."
+        print "Modify #{__FILE__}:239 if user registration is required."
+        cmd = nil
+      end
     end
 end
 
