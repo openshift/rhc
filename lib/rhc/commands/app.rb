@@ -382,9 +382,8 @@ module RHC::Commands
 
       raise RHC::DeploymentsNotSupportedException.new if !rest_app.supports? "DEPLOY"
 
-      File.file?(ref) ?
-        deploy_file(rest_app, ref, options.hot_deploy, options.force_clean_build) :
-        deploy_git_ref(rest_app, ref, options.hot_deploy, options.force_clean_build)
+      deploy_artifact(rest_app, ref, options.hot_deploy, options.force_clean_build)
+
       0
     end
 

@@ -153,6 +153,9 @@ module RHC
     # host - The String of the remote hostname to ssh to.
     # username - The String username of the remote user to ssh as.
     # command - The String command to run on the remote host.
+    # compression - Use compression in ssh, set to false if sending files.
+    # request_pty - Request for pty, set to false when pipe a file.
+    # block - Will yield this block and send the channel if provided.
     #
     # Examples
     #
@@ -162,19 +165,33 @@ module RHC
     #  # => true
     #
     # Returns true on success
-    def ssh_ruby(host, username, command)
+    def ssh_ruby(host, username, command, compression=true, request_pty=true, &block)
       debug "Opening Net::SSH connection to #{host}, #{username}, #{command}"
-      Net::SSH.start(host, username) do |session|
+      Net::SSH.start(host, username, compression ? {} : {:compression => false}) do |session|
         #:nocov:
         session.open_channel do |channel|
-          channel.request_pty do |ch, success|
-            say "pty could not be obtained" unless success
+          if request_pty
+            channel.request_pty do |ch, success|
+              say "pty could not be obtained" unless success
+            end
           end
-
-          channel.on_data do |ch, data|
-            puts data
+          channel.exec(command) do |ch, success|
+            channel.on_data do |ch, data|
+              say data
+            end
+            channel.on_extended_data do |ch, type, data|
+              debug data
+            end
+            channel.on_close do |ch|
+              debug "Terminating ... "
+            end
+            channel.on_process do |ch|
+              #print "\rSending file ... #{(channel[:bytes_sent].to_f/filesize.to_f*100).round}%"
+              #channel[:bytes_sent] = channel[:bytes_sent] + channel[:chunk_size]
+            end
+            yield channel if block_given?
+            channel.eof!
           end
-          channel.exec command
         end
         session.loop
         #:nocov:
@@ -184,6 +201,7 @@ module RHC
     rescue SocketError => e
       raise RHC::ConnectionFailed, "The connection to #{host} failed: #{e.message}"
     end
+
 
     # Public: Run ssh command on remote host and pipe the specified
     # file contents to the command input
@@ -195,38 +213,34 @@ module RHC
     #
     def ssh_send_file_ruby(host, username, command, filename)
       filename = File.expand_path(filename)
-      debug "Opening Net::SSH connection to #{host}, #{username}, #{command}"
-      session = Net::SSH.start(host, username, :compression => false)
-      #:nocov:
-      session.open_channel do |channel|
-        channel.exec(command) do |ch, success|
-          channel.on_data do |ch, data|
-            debug data
+      ssh_ruby(host, username, command, false, false) do |channel|
+        File.open(filename, 'rb') do |file|
+          file.chunk(1024) do |chunk|
+            channel.send_data chunk
           end
-          channel.on_extended_data do |ch, type, data|
-            debug data
-          end
-          channel.on_close do |ch|
-            debug "Terminating ... "
-          end
-          channel.on_process do |ch|
-            #print "\rSending file ... #{(channel[:bytes_sent].to_f/filesize.to_f*100).round}%"
-            #channel[:bytes_sent] = channel[:bytes_sent] + channel[:chunk_size]
-          end
-          File.open(filename, 'rb') do |file|
-            file.chunk(1024) do |chunk|
+        end
+      end
+    end
+
+    # Public: Run ssh command on remote host and pipe the specified
+    # url contents to the command input
+    #
+    # host - The String of the remote hostname to ssh to.
+    # username - The String username of the remote user to ssh as.
+    # command - The String command to run on the remote host.
+    # content_url - The url with the content to pipe to command.
+    #
+    def ssh_send_url_ruby(host, username, command, content_url)
+      content_url = URI.parse(URI.encode(content_url.to_s))
+      ssh_ruby(host, username, command, false, false) do |channel|
+        Net::HTTP.start(content_url.host) do |http|
+          http.request_get(content_url.path) do |response|
+            response.read_body do |chunk|
               channel.send_data chunk
             end
           end
-          channel.eof!
         end
       end
-      session.loop
-      #:nocov:
-    rescue Errno::ECONNREFUSED => e
-      raise RHC::SSHConnectionRefused.new(host, username)
-    rescue SocketError => e
-      raise RHC::ConnectionFailed, "The connection to #{host} failed: #{e.message}"
     end
 
     # Public: Generate an SSH key and store it in ~/.ssh/id_rsa

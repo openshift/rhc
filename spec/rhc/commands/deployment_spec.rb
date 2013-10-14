@@ -15,6 +15,7 @@ describe RHC::Commands::Deployment do
     @targz_filename = File.dirname(__FILE__) + '/' + DEPLOYMENT_APP_NAME + '.tar.gz'
     FileUtils.cp(File.expand_path('../../assets/targz_sample.tar.gz', __FILE__), @targz_filename)
     File.chmod 0644, @targz_filename unless File.executable? @targz_filename
+    @targz_url = 'http://foo.com/path/to/file/' + DEPLOYMENT_APP_NAME + '.tar.gz'
   end
 
   after do
@@ -36,7 +37,7 @@ describe RHC::Commands::Deployment do
 
   describe "deploy" do
     context "git ref successfully" do
-      before { Net::SSH.should_receive(:start).exactly(3).times.with('test.domain.com', 'user') }
+      before { Net::SSH.should_receive(:start).exactly(3).times.with('test.domain.com', 'user', {:compression=>false}) }
       let(:arguments) {['app', 'deploy', 'master', '--app', DEPLOYMENT_APP_NAME]}
       it "should succeed" do
         expect{ run }.to exit_with_code(0)
@@ -49,7 +50,7 @@ describe RHC::Commands::Deployment do
         ssh = double(Net::SSH)
         session = double(Net::SSH::Connection::Session)
         channel = double(Net::SSH::Connection::Channel)
-        Net::SSH.should_receive(:start).exactly(3).times.with('test.domain.com', 'user', {:compression=>false}).and_return(session)
+        Net::SSH.should_receive(:start).exactly(3).times.with('test.domain.com', 'user', {:compression=>false}).and_yield(session)
         session.should_receive(:open_channel).exactly(3).times.and_yield(channel)
         channel.should_receive(:exec).exactly(3).times.with("oo-binary-deploy").and_yield(nil, nil)
         channel.should_receive(:on_data).exactly(3).times.and_yield(nil, 'foo')
@@ -70,6 +71,40 @@ describe RHC::Commands::Deployment do
       it "should succeed" do
         expect{ run }.to exit_with_code(0)
         run_output.should match(/Deployment of file '#{@targz_filename}' in progress for application #{DEPLOYMENT_APP_NAME} .../)
+        run_output.should match(/Success/)
+      end
+    end
+    context "url file successfully" do
+      before do
+        ssh = double(Net::SSH)
+        session = double(Net::SSH::Connection::Session)
+        channel = double(Net::SSH::Connection::Channel)
+        Net::SSH.should_receive(:start).exactly(3).times.with('test.domain.com', 'user', {:compression=>false}).and_yield(session)
+        session.should_receive(:open_channel).exactly(3).times.and_yield(channel)
+        channel.should_receive(:exec).exactly(3).times.with("oo-binary-deploy").and_yield(nil, nil)
+        channel.should_receive(:on_data).exactly(3).times.and_yield(nil, 'foo')
+        channel.should_receive(:on_extended_data).exactly(3).times.and_yield(nil, nil, 'foo')
+        channel.should_receive(:on_close).exactly(3).times.and_yield(nil)
+        channel.should_receive(:on_process).exactly(3).times.and_yield(nil)
+        http = double(Net::HTTP)
+        response = double(Net::HTTPResponse)
+        Net::HTTP.should_receive(:start).exactly(3).times.with(URI(@targz_url).host).and_yield(http)
+        http.should_receive(:request_get).exactly(3).times.with(URI(@targz_url).path).and_yield(response)
+        lines = ''
+        File.open(@targz_filename, 'rb') do |file|
+          file.chunk(1024) do |chunk|
+            lines << chunk
+          end
+        end
+        response.should_receive(:read_body).exactly(3).times.and_yield(lines)
+        channel.should_receive(:send_data).exactly(3).times.with(lines)
+        channel.should_receive(:eof!).exactly(3).times
+        session.should_receive(:loop).exactly(3).times
+      end
+      let(:arguments) {['app', 'deploy', @targz_url, '--app', DEPLOYMENT_APP_NAME]}
+      it "should succeed" do
+        expect{ run }.to exit_with_code(0)
+        run_output.should match(/Deployment of file '#{@targz_url}' in progress for application #{DEPLOYMENT_APP_NAME} .../)
         run_output.should match(/Success/)
       end
     end
@@ -94,11 +129,25 @@ describe RHC::Commands::Deployment do
         expect{ run }.to exit_with_code(1)
       end
     end
+    context "fails when deploying url file" do
+      before (:each) { Net::SSH.should_receive(:start).and_raise(Errno::ECONNREFUSED) }
+      let(:arguments) {['app', 'deploy', @targz_url, '--app', DEPLOYMENT_APP_NAME]}
+      it "should exit with error" do
+        expect{ run }.to exit_with_code(1)
+      end
+    end
+    context "fails when deploying url file" do
+      before (:each) { Net::SSH.should_receive(:start).and_raise(SocketError) }
+      let(:arguments) {['app', 'deploy', @targz_url, '--app', DEPLOYMENT_APP_NAME]}
+      it "should exit with error" do
+        expect{ run }.to exit_with_code(1)
+      end
+    end
   end
 
   describe "activate deployment" do
     context "activates 123456" do
-      before { Net::SSH.should_receive(:start).exactly(3).times.with('test.domain.com', 'user') }
+      before { Net::SSH.should_receive(:start).exactly(3).times.with('test.domain.com', 'user', {}) }
       let(:arguments) {['deployment', 'activate', '123456', '--app', DEPLOYMENT_APP_NAME]}
       it "should succeed" do
         expect{ run }.to exit_with_code(0)
