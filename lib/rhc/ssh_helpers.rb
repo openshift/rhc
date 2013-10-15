@@ -181,7 +181,7 @@ module RHC
               say data
             end
             channel.on_extended_data do |ch, type, data|
-              errors << data
+              errors << data if !data.nil? && !data.empty?
             end
             channel.on_close do |ch|
               debug "Terminating ... "

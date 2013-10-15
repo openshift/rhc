@@ -54,7 +54,7 @@ describe RHC::Commands::Deployment do
         session.should_receive(:open_channel).exactly(3).times.and_yield(channel)
         channel.should_receive(:exec).exactly(3).times.with("oo-binary-deploy").and_yield(nil, nil)
         channel.should_receive(:on_data).exactly(3).times.and_yield(nil, 'foo')
-        channel.should_receive(:on_extended_data).exactly(3).times.and_yield(nil, nil, 'foo')
+        channel.should_receive(:on_extended_data).exactly(3).times.and_yield(nil, nil, '')
         channel.should_receive(:on_close).exactly(3).times.and_yield(nil)
         channel.should_receive(:on_process).exactly(3).times.and_yield(nil)
         lines = ''
@@ -83,7 +83,7 @@ describe RHC::Commands::Deployment do
         session.should_receive(:open_channel).exactly(3).times.and_yield(channel)
         channel.should_receive(:exec).exactly(3).times.with("oo-binary-deploy").and_yield(nil, nil)
         channel.should_receive(:on_data).exactly(3).times.and_yield(nil, 'foo')
-        channel.should_receive(:on_extended_data).exactly(3).times.and_yield(nil, nil, 'foo')
+        channel.should_receive(:on_extended_data).exactly(3).times.and_yield(nil, nil, '')
         channel.should_receive(:on_close).exactly(3).times.and_yield(nil)
         channel.should_receive(:on_process).exactly(3).times.and_yield(nil)
         http = double(Net::HTTP)
@@ -106,6 +106,35 @@ describe RHC::Commands::Deployment do
         expect{ run }.to exit_with_code(0)
         run_output.should match(/Deployment of file '#{@targz_url}' in progress for application #{DEPLOYMENT_APP_NAME} .../)
         run_output.should match(/Success/)
+      end
+    end
+    context "binary file with corrupted file" do
+      before do
+        ssh = double(Net::SSH)
+        session = double(Net::SSH::Connection::Session)
+        channel = double(Net::SSH::Connection::Channel)
+        Net::SSH.should_receive(:start).exactly(3).times.with('test.domain.com', 'user', {:compression=>false}).and_yield(session)
+        session.should_receive(:open_channel).exactly(3).times.and_yield(channel)
+        channel.should_receive(:exec).exactly(3).times.with("oo-binary-deploy").and_yield(nil, nil)
+        channel.should_receive(:on_data).exactly(3).times.and_yield(nil, 'foo')
+        channel.should_receive(:on_extended_data).exactly(3).times.and_yield(nil, nil, 'Invalid file')
+        channel.should_receive(:on_close).exactly(3).times.and_yield(nil)
+        channel.should_receive(:on_process).exactly(3).times.and_yield(nil)
+        lines = ''
+        File.open(@targz_filename, 'rb') do |file|
+          file.chunk(1024) do |chunk|
+            lines << chunk
+          end
+        end
+        channel.should_receive(:send_data).exactly(3).times.with(lines)
+        channel.should_receive(:eof!).exactly(3).times
+        session.should_receive(:loop).exactly(3).times
+      end
+      let(:arguments) {['app', 'deploy', @targz_filename, '--app', DEPLOYMENT_APP_NAME]}
+      it "should succeed" do
+        expect{ run }.to exit_with_code(133)
+        run_output.should match(/Deployment of file '#{@targz_filename}' in progress for application #{DEPLOYMENT_APP_NAME} .../)
+        run_output.should match(/Invalid file/)
       end
     end
     context "fails when deploying git ref" do
