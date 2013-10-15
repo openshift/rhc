@@ -307,7 +307,7 @@ module RHC::Commands
     syntax "<app> [--namespace NAME]"
     takes_application :argument => true
     option ["--state"], "Get the current state of the cartridges in this application"
-    option ["--configuration"], "Get the current values configuration values set in this application"
+    option ["--configuration"], "Get the current configuration values set in this application"
     option ["--gears [quota|ssh]"], "Show information about the cartridges on each gear in this application. Pass 'quota' to see per gear disk usage and limits. Pass 'ssh' to print only the SSH connection strings of each gear."
     def show(app_name)
 
@@ -358,11 +358,11 @@ module RHC::Commands
       0
     end
 
-    summary "Deploy a git reference or binary file on an application"
+    summary "Deploy a git reference or binary file of an application"
     syntax "<ref> --app NAME [--namespace NAME]"
     description <<-DESC
-      By default OpenShift applications prepare, distribute and activate deployments
-      on every git push. Alternatively, an user may choose to disable automatic
+      By default OpenShift applications prepare, distribute, and activate deployments
+      on every git push. Alternatively, a user may choose to disable automatic
       deployments and use 'rhc deploy' and 'rhc deployment' commands to fully control the
       deployment lifecycle.
 
@@ -387,7 +387,7 @@ module RHC::Commands
       0
     end
 
-    summary "Configure several properties that applies to an application"
+    summary "Configure several properties that apply to an application"
     syntax "<app> [--[no-]auto-deploy] [--keep-deployments INTEGER] [--deployment-branch BRANCH] [--deployment-type TYPE] [--namespace NAME]"
     takes_application :argument => true
     option ["--[no-]auto-deploy"], "Build and deploy automatically when pushing to the git repo. Defaults to true."

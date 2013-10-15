@@ -7,8 +7,8 @@ module RHC::Commands
 
     summary "Commands for deploying and managing deployments of an application"
     description <<-DESC
-      By default OpenShift applications prepare, distribute and activate deployments
-      on every git push. Alternatively, an user may choose to disable automatic
+      By default OpenShift applications prepare, distribute, and activate deployments
+      on every git push. Alternatively, a user may choose to disable automatic
       deployments and use this 'rhc deployment' set of commands to fully control the
       deployment lifecycle. Use these commands to deploy manually from a git reference
       or from a binary file, list and display deployments and also activate existing

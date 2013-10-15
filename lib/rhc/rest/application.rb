@@ -187,26 +187,6 @@ module RHC
         end
       end
 
-=begin
-      def deploy(ref)
-        debug "Deploy application #{name}"
-        if supports? "DEPLOY"
-          rest_method "DEPLOY", :ref => ref
-        else
-          raise RHC::DeploymentsNotSupportedException.new
-        end
-      end
-
-      def activate(deployment_id)
-        debug "Activate #{deployment_id} on application #{name}"
-        if supports? "ACTIVATE"
-          rest_method "ACTIVATE", :event => 'activate', :deployment_id => deployment_id
-        else
-          raise RHC::DeploymentsNotSupportedException.new
-        end
-      end
-=end
-
       def configure(options={})
         debug "Running update for #{name} with options #{options.inspect}"
         rest_method "UPDATE", options
