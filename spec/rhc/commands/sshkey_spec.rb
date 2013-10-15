@@ -14,7 +14,13 @@ describe RHC::Commands::Sshkey do
       let(:arguments) { %w[sshkey list --noprompt --config test.conf -l test@test.foo -p  password --trace] }
 
       it { expect { run }.to exit_with_code(0) }
+      
       it { run_output.should match(/mockkey1 \(type: ssh-rsa\)/) }
+      it { run_output.should match(/Fingerprint:.*0f:ce:86:80:df:a0:81:ca:db:f1:a7:0c:70:85:ce:00/) }
+      
+      it { run_output.should match(/mockkey3 \(type: krb5-principal\)/) }
+      it { run_output.should match(/Principal:.* mockuser@mockdomain/) }
+      it { run_output.should_not match(/Fingerprint:.*Invalid key/) }
     end
   end
 
@@ -41,6 +47,17 @@ describe RHC::Commands::Sshkey do
           expect { run }.to exit_with_code(0)
           rest_client.sshkeys.length.should == num_keys + 1
         end
+      end
+    end
+
+    context "when adding a valid key via command line arguments" do
+      let(:arguments) { %w[sshkey add --noprompt --config test.conf -l test@test.foo -p password foobar --type ssh-rsa --content AAAAB3NzaC1yc2EAAAADAQABAAABAQCnCOqK7/mmvZ9AtCAerxjAasJ1rSpfuWT4vNm1+O/Fh0Di3chTWjY9a0M2hEnqkqnVG589L9CqCUeT0kdc3Vgw3JEcacSUr1z7tLr9kO+p/D5lSdQYzDGGRFOZ0H6lc/y8iNxWV1VO/sJvKx6cr5zvKIn8Q6GvhVNOxlai0IOb9FJxLGK95GLpZ+elzh8Tc9giy7KfwheAwhV2JoF9uRltE5JP/CNs7w/E29i1Z+jlueuu8RVotLmhSVNJm91Ey7OCtoI1iBE0Wv/SucFe32Qi08RWTM/MaGGz93KQNOVRGjNkosJjPmP1qU6WGBfliDkJAZXB0b6sEcnx1fbVikwZ] }
+
+      it 'adds the key' do
+        keys = rest_client.sshkeys
+        num_keys = keys.length
+        expect { run }.to exit_with_code(0)
+        rest_client.sshkeys.length.should == num_keys + 1
       end
     end
 
@@ -76,6 +93,18 @@ describe RHC::Commands::Sshkey do
       it "exits with status code Errno::EACCES::Errno" do
         IO.should_receive(:read).and_return("ssh_foo bar")
         expect { run }.to exit_with_code(128)
+      end
+    end
+
+    context "when adding an invalid key via command line arguments" do
+      let(:arguments) { %w[sshkey add --noprompt --config test.conf -l test@test.foo -p password foobar --type ssh-rsa --content abcdef] }
+
+      it "fails to add the key" do
+        keys = rest_client.sshkeys
+        num_keys = keys.length
+        expect { run }.to exit_with_code(128)
+        expect { run_output.should match(/Name:.* mockkey/) }
+        rest_client.sshkeys.length.should == num_keys
       end
     end
 
@@ -122,6 +151,14 @@ describe RHC::Commands::Sshkey do
         expect { run }.to exit_with_code(128)
       end
 
+    end
+
+    context "when adding a key without correct arguments" do
+      let(:arguments) { %w[sshkey add --noprompt --config test.conf -l test@test.foo -p password foobar] }
+  
+      it "exits with argument error" do
+        expect { run }.to exit_with_code(1)
+      end
     end
   end
 
