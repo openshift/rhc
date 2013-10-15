@@ -152,7 +152,7 @@ describe RHC::Commands::Deployment do
       it "should succeed" do
         expect{ run }.to exit_with_code(0)
         run_output.should match(/Activating deployment '123456' on application #{DEPLOYMENT_APP_NAME} .../)
-        run_output.should match(/done/)
+        run_output.should match(/Success/)
       end
     end
     context "fails with ssh error" do

@@ -167,6 +167,7 @@ module RHC
     # Returns true on success
     def ssh_ruby(host, username, command, compression=true, request_pty=true, &block)
       debug "Opening Net::SSH connection to #{host}, #{username}, #{command}"
+      errors = []
       Net::SSH.start(host, username, compression ? {} : {:compression => false}) do |session|
         #:nocov:
         session.open_channel do |channel|
@@ -180,7 +181,7 @@ module RHC
               say data
             end
             channel.on_extended_data do |ch, type, data|
-              debug data
+              errors << data
             end
             channel.on_close do |ch|
               debug "Terminating ... "
@@ -196,6 +197,7 @@ module RHC
         session.loop
         #:nocov:
       end
+      raise RHC::SSHCommandErrors, errors.join("\n") if !errors.empty?
     rescue Errno::ECONNREFUSED => e
       raise RHC::SSHConnectionRefused.new(host, username)
     rescue SocketError => e

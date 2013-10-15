@@ -28,7 +28,7 @@ module RHC
           ssh_ruby(ssh_url.host, ssh_url.user, remote_cmd, false)
           success "Success"
         rescue
-          warn "You can ssh to your application and try to deploy manually with:\n#{remote_cmd}"
+          warn "Error trying to deploy git ref. You can ssh to your application and try to deploy manually with:\n#{remote_cmd}"
           raise
         end
       end
@@ -44,7 +44,7 @@ module RHC
           ssh_send_file_ruby(ssh_url.host, ssh_url.user, remote_cmd, filename)
           success "Success"
         rescue
-          warn "You can ssh to your application and try to deploy manually with:\n#{remote_cmd}"
+          warn "Error trying to deploy local file. You can ssh to your application and try to deploy manually with:\n#{remote_cmd}"
           raise
         end
       end
@@ -61,22 +61,22 @@ module RHC
           ssh_send_url_ruby(ssh_url.host, ssh_url.user, remote_cmd, file_url)
           success "Success"
         rescue
-          warn "You can ssh to your application and try to deploy manually with:\n#{remote_cmd}"
+          warn "Error trying to deploy file from url. You can ssh to your application and try to deploy manually with:\n#{remote_cmd}"
           raise
         end
       end
 
       def activate_deployment(rest_app, deployment_id)
-        say "Activating deployment '#{deployment_id}' on application #{rest_app.name} ... "
+        say "Activating deployment '#{deployment_id}' on application #{rest_app.name} ..."
 
         ssh_url = URI(rest_app.ssh_url)
         remote_cmd = "gear activate #{deployment_id}"
 
         begin
           ssh_ruby(ssh_url.host, ssh_url.user, remote_cmd)
-          success "done"
+          success "Success"
         rescue
-          warn "You can ssh to your application and try to activate manually with:\n#{remote_cmd}"
+          warn "Error trying to activate deployment. You can ssh to your application and try to activate manually with:\n#{remote_cmd}"
           raise
         end
       end

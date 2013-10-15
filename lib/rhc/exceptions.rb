@@ -147,6 +147,12 @@ module RHC
     end
   end
 
+  class SSHCommandErrors < Exception
+    def initialize(message="SHH command returned content in stderr.")
+      super message, 133
+    end
+  end
+
   class AdditionalStorageArgumentsException < Exception
     def initialize(message="Only one storage action can be performed at a time.")
       super message, 1
