@@ -234,8 +234,14 @@ module RHC
     #
     def ssh_send_url_ruby(host, username, command, content_url)
       content_url = URI.parse(URI.encode(content_url.to_s))
+      proxy = ENV['http_proxy'] ? URI.parse(ENV['http_proxy']) : OpenStruct.new
       ssh_ruby(host, username, command, false, false) do |channel|
-        Net::HTTP.start(content_url.host) do |http|
+        http = Net::HTTP.new(content_url.host, content_url.port, proxy.host, proxy.port)
+        if (content_url.scheme == "https")
+          http.use_ssl = true
+          http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+        end
+        http.start do |http|
           http.request_get(content_url.path) do |response|
             response.read_body do |chunk|
               channel.send_data chunk
