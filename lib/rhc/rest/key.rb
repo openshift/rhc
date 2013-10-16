@@ -36,7 +36,7 @@ module RHC
       end
 
       def visible_to_ssh?
-        Net::SSH::Authentication::Agent.connect.identities.
+        is_ssh? and Net::SSH::Authentication::Agent.connect.identities.
           find{ |i| fingerprint == i.fingerprint }.present? rescue false
       end
     end
