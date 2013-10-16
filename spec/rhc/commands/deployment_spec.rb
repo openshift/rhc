@@ -31,6 +31,16 @@ describe RHC::Commands::Deployment do
         run_output.should match(/done/)
         @rest_app.auto_deploy.should == false
         @rest_app.keep_deployments.should == 10
+        run_output.should match(/Your application '#{DEPLOYMENT_APP_NAME}' is now configured as listed above/)
+      end
+    end
+    context "with no configuration options" do
+      let(:arguments) {['app', 'configure', '--app', DEPLOYMENT_APP_NAME]}
+      it "should display the current configuration" do
+        expect{ run }.to exit_with_code(0)
+        run_output.should_not match(/Configuring application '#{DEPLOYMENT_APP_NAME}' .../)
+        run_output.should_not match(/done/)
+        run_output.should match(/Your application '#{DEPLOYMENT_APP_NAME}' is configured as listed above/)
       end
     end
   end

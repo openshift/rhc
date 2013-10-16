@@ -32,17 +32,15 @@ module RHC
           section(:bottom => 1) do
             say format_table \
               nil,
-              properties.nil? ?
-                get_properties(app,
-                  :domain,
-                  :creation_time,
-                  :gear_info,
-                  :git_url,
-                  :initial_git_url,
-                  :ssh_string,
-                  :auto_deploy,
-                  :aliases) :
-                get_properties(app, properties),
+              get_properties(app, properties ||
+                [:domain,
+                :creation_time,
+                :gear_info,
+                :git_url,
+                :initial_git_url,
+                :ssh_string,
+                :auto_deploy,
+                :aliases]),
               :delete => true
           end
           cartridges.each{ |c| section(:bottom => 1){ display_cart(c) } } if cartridges

@@ -183,7 +183,7 @@ module RHC
         if supports? "LIST_DEPLOYMENTS"
           rest_method("LIST_DEPLOYMENTS").sort
         else
-          raise RHC::DeploymentsNotSupportedException.new
+          raise RHC::DeploymentsNotSupportedException
         end
       end
 

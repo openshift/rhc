@@ -403,16 +403,18 @@ module RHC::Commands
       app_options[:deployment_branch] = options.deployment_branch if options.deployment_branch
       app_options[:deployment_type] = options.deployment_type if options.deployment_type
 
-      paragraph do
-        say "Configuring application '#{app_name}' ... "
-        rest_app.configure(app_options)
-        success "done"
+      if app_options.present?
+        paragraph do
+          say "Configuring application '#{app_name}' ... "
+          rest_app.configure(app_options)
+          success "done"
+        end
       end
 
       paragraph { display_app(find_app, nil, [:auto_deploy, :keep_deployments, :deployment_type, :deployment_branch]) }
 
-      paragraph { say "Your application '#{rest_app.name}' is now configured as listed above." }
-      paragraph { say "Use 'rhc show-app #{rest_app.name} --configuration' to check your configuration values any time." }
+      paragraph { say "Your application '#{rest_app.name}' is #{app_options.empty? ? '' : 'now '}configured as listed above." }
+      paragraph { say "Use 'rhc show-app #{rest_app.name} --configuration' to check your configuration values any time." } if app_options.present?
 
       0
     end
