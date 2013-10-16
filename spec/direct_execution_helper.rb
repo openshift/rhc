@@ -49,14 +49,21 @@ module RhcExecutionHelper
       args << '--password'
       args << ENV['TEST_PASSWORD']
     end
+    oldenv = if opts[:env]
+      old = ENV.to_hash
+      ENV.update(opts[:env])
+      old
+    end
     execute_command(args.unshift(rhc_executable), opts[:with])
+  ensure
+    ENV.replace(oldenv) if oldenv
   end
 
   def execute_command(args, stdin="", tty=true)
     stdin = stdin.join("\n") if stdin.is_a? Array
     stdout, stderr =
       if debug?
-        [debug, debug].map{ |t| RHC::Helpers::StringTee.new(t) } 
+        [debug, debug].map{ |t| RHC::Helpers::StringTee.new(t) }
       else
         [StringIO.new, StringIO.new]
       end
@@ -124,34 +131,49 @@ module RhcExecutionHelper
     object.members.length.should == 1
   end
 
-  def has_an_application
+  def has_an_application(for_user=nil)
+    c = for_user ? for_user.client : client
     debug.puts "Creating or reusing an app" if debug?
-    apps = client.applications
+    apps = c.applications
     apps.first or begin
-      domain = has_a_domain
+      domain = has_a_domain(for_user)
       debug.puts "  creating a new application" if debug?
-      client.domains.first.add_application("test#{random}", :cartridges => [a_web_cartridge])
+      c.domains.first.add_application("test#{random}", :cartridges => [a_web_cartridge])
     end
   end
 
-  def has_a_domain
+  def has_a_domain(for_user=nil)
+    c = for_user ? for_user.client : client
     debug.puts "Creating or reusing a domain" if debug?
-    domain = client.domains.first or begin
+    domain = c.domains.first or begin
       debug.puts "  creating a new domain" if debug?
-      client.add_domain("test#{random}")
+      c.add_domain("test#{random}")
     end
   end
 
   def setup_args(opts={})
+    c = opts[:client] || client
     args = []
     args << 'yes' if (ENV['TEST_INSECURE'] == '1' || false)
-    args << ENV['TEST_USERNAME']
-    args << ENV['TEST_PASSWORD']
-    args << 'yes' if server_supports_sessions?
+    args << (opts[:login] || ENV['TEST_USERNAME'])
+    args << (opts[:password] || ENV['TEST_PASSWORD'])
+    args << 'yes' if server_supports_sessions?(c)
     args << 'yes' # generate a key, temp dir will never have one
-    args << ENV['TEST_USERNAME'] if (client.find_key('default').present? rescue false) # same key name as username
-    args << "d#{random}" if (client.domains.empty? rescue true)
+    args << (opts[:login] || ENV['TEST_USERNAME']) if (c.find_key('default').present? rescue false) # same key name as username
+    args << (opts[:domain_name] || "d#{random}") if (c.domains.empty? rescue true)
     args
+  end
+
+  def has_local_ssh_key(user)
+    with_environment(user) do
+      r = rhc :setup, :with => setup_args(:login => user.login, :password => user.attributes[:password], :domain_name => "")
+      r.status.should == 0
+      user
+    end
+  end
+
+  def ssh_exec_for_env
+    @environment[:ssh_exec]
   end
 
   def use_clean_config
@@ -190,8 +212,22 @@ module RhcExecutionHelper
     @environment[:id]
   end
 
-  def server_supports_sessions?
-    @environment && client.supports_sessions?
+  def server_supports_sessions?(c=client)
+    @environment && c.supports_sessions?
+  end
+
+  def with_environment(user, &block)
+    previous = @environment
+    @environment, @client = nil
+    env = ENV.to_hash
+    ENV['TEST_RANDOM_USER'] = nil
+    ENV['TEST_USERNAME'] = user.login
+    ENV['TEST_PASSWORD'] = user.attributes[:password]
+    environment("custom_#{user.login}")
+    yield
+  ensure
+    @environment = previous
+    ENV.replace(env)
   end
 
   private
@@ -210,7 +246,7 @@ module RhcExecutionHelper
         update_env(e)
 
         dir = Dir.mktmpdir('rhc_features_test')
-        at_exit{ FileUtils.rm_rf(dir) }
+        at_exit{ FileUtils.rm_rf(dir) } unless ENV['RHC_DEBUG_DIRS']
         Dir.chdir(dir)
 
         @client = e[:client]
@@ -262,14 +298,18 @@ module Environments
   def self.get(id, &block)
     (@environments ||= {})[id] ||= begin
       dir = Dir.mktmpdir('rhc_features')
-      at_exit{ FileUtils.rm_rf(dir) }
+      at_exit{ FileUtils.rm_rf(dir) } unless ENV['RHC_DEBUG_DIRS']
       id = Random.rand(1000000)
-      ssh_exec = File.join(dir, "ssh_exec")
-      IO.write(ssh_exec, "#!/bin/sh\nssh -o StrictHostKeyChecking=no -i #{dir}/.ssh/id_rsa \"$@\"")
-      FileUtils.chmod("u+x", ssh_exec)
+      ssh_exec = create_ssh_exec(dir)
       yield if block_given?
       {:dir => dir, :id => id, :ssh_exec => ssh_exec}
     end
+  end
+  def self.create_ssh_exec(dir, for_user=nil)
+    ssh_exec = File.join(dir, "ssh_exec#{for_user ? "_#{for_user}" : ""}")
+    IO.write(ssh_exec, "#!/bin/sh\nssh -o StrictHostKeyChecking=no -i #{dir}/.ssh/id_rsa \"$@\"")
+    FileUtils.chmod("u+x", ssh_exec)
+    ssh_exec
   end
 end
 
