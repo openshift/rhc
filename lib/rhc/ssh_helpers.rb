@@ -34,11 +34,11 @@ module RHC
         out = nil
 
         Net::SSH::Multi.start(
-          :concurrent_connections => @opts[:limit], 
+          :concurrent_connections => @opts[:limit],
           :on_error => lambda{ |server| $stderr.puts "Unable to connect to gear #{server}" }
         ) do |session|
-          
-          @over.each do |item| 
+
+          @over.each do |item|
             case item
             when RHC::Rest::GearGroup
               item.gears.each do |gear|
@@ -47,7 +47,7 @@ module RHC
             #when RHC::Rest::Gear
             #  session.use ssh_host_for(item), :properties => {:gear => item}
             #end
-            else 
+            else
               raise "Cannot establish an SSH session to this type"
             end
           end
@@ -59,7 +59,7 @@ module RHC
               }
             when @opts[:as] == :table
               out = []
-              lambda { |ch, dest, data| 
+              lambda { |ch, dest, data|
                 label = label_for(ch)
                 data.chomp.each_line do |line|
                   row = out.find{ |row| row[0] == label } || (out << [label, []])[-1]
@@ -67,7 +67,7 @@ module RHC
                 end
               }
             when @opts[:as] == :gear
-              lambda { |ch, dest, data| (ch.connection.properties[:gear]['data'] ||= "") << data }              
+              lambda { |ch, dest, data| (ch.connection.properties[:gear]['data'] ||= "") << data }
             else
               width = 0
               lambda { |ch, dest, data|
@@ -111,7 +111,7 @@ module RHC
         end
 
         def label_for(channel)
-          channel.properties[:label] ||= 
+          channel.properties[:label] ||=
             begin
               group = channel.connection.properties[:group]
               "#{key_for(channel)} #{group.cartridges.map{ |c| c['name'] }.join('+')}"
@@ -123,12 +123,12 @@ module RHC
         end
 
         def requires_ssh_multi!
-          begin 
-            require 'net/ssh/multi' 
+          begin
+            require 'net/ssh/multi'
           rescue LoadError
             raise RHC::OperationNotSupportedException, "You must install Net::SSH::Multi to use the --gears option.  Most systems: 'gem install net-ssh-multi'"
           end
-        end          
+        end
     end
 
     def run_on_gears(command, gears, opts={}, &block)
@@ -153,6 +153,9 @@ module RHC
     # host - The String of the remote hostname to ssh to.
     # username - The String username of the remote user to ssh as.
     # command - The String command to run on the remote host.
+    # compression - Use compression in ssh, set to false if sending files.
+    # request_pty - Request for pty, set to false when pipe a file.
+    # block - Will yield this block and send the channel if provided.
     #
     # Examples
     #
@@ -162,27 +165,84 @@ module RHC
     #  # => true
     #
     # Returns true on success
-    def ssh_ruby(host, username, command)
+    def ssh_ruby(host, username, command, compression=true, request_pty=true, &block)
       debug "Opening Net::SSH connection to #{host}, #{username}, #{command}"
-      Net::SSH.start(host, username) do |session|
+      errors = []
+      Net::SSH.start(host, username, compression ? {} : {:compression => false}) do |session|
         #:nocov:
         session.open_channel do |channel|
-          channel.request_pty do |ch, success|
-            say "pty could not be obtained" unless success
+          if request_pty
+            channel.request_pty do |ch, success|
+              say "pty could not be obtained" unless success
+            end
           end
-
-          channel.on_data do |ch, data|
-            puts data
+          channel.exec(command) do |ch, success|
+            channel.on_data do |ch, data|
+              say data
+            end
+            channel.on_extended_data do |ch, type, data|
+              errors << data if !data.nil? && !data.empty?
+            end
+            channel.on_close do |ch|
+              debug "Terminating ... "
+            end
+            channel.on_process do |ch|
+              #print "\rSending file ... #{(channel[:bytes_sent].to_f/filesize.to_f*100).round}%"
+              #channel[:bytes_sent] = channel[:bytes_sent] + channel[:chunk_size]
+            end
+            yield channel if block_given?
+            channel.eof!
           end
-          channel.exec command
         end
         session.loop
         #:nocov:
       end
+      raise RHC::SSHCommandErrors, errors.join("\n") if !errors.empty?
     rescue Errno::ECONNREFUSED => e
       raise RHC::SSHConnectionRefused.new(host, username)
     rescue SocketError => e
       raise RHC::ConnectionFailed, "The connection to #{host} failed: #{e.message}"
+    end
+
+
+    # Public: Run ssh command on remote host and pipe the specified
+    # file contents to the command input
+    #
+    # host - The String of the remote hostname to ssh to.
+    # username - The String username of the remote user to ssh as.
+    # command - The String command to run on the remote host.
+    # filename - The String path to file to send.
+    #
+    def ssh_send_file_ruby(host, username, command, filename)
+      filename = File.expand_path(filename)
+      ssh_ruby(host, username, command, false, false) do |channel|
+        File.open(filename, 'rb') do |file|
+          file.chunk(1024) do |chunk|
+            channel.send_data chunk
+          end
+        end
+      end
+    end
+
+    # Public: Run ssh command on remote host and pipe the specified
+    # url contents to the command input
+    #
+    # host - The String of the remote hostname to ssh to.
+    # username - The String username of the remote user to ssh as.
+    # command - The String command to run on the remote host.
+    # content_url - The url with the content to pipe to command.
+    #
+    def ssh_send_url_ruby(host, username, command, content_url)
+      content_url = URI.parse(URI.encode(content_url.to_s))
+      ssh_ruby(host, username, command, false, false) do |channel|
+        Net::HTTP.start(content_url.host) do |http|
+          http.request_get(content_url.path) do |response|
+            response.read_body do |chunk|
+              channel.send_data chunk
+            end
+          end
+        end
+      end
     end
 
     # Public: Generate an SSH key and store it in ~/.ssh/id_rsa
@@ -269,7 +329,7 @@ module RHC
         raise ::RHC::KeyFileAccessDeniedException.new("Access denied to '#{key}'.")
       end
     end
-    
+
     def ssh_key_triple_for_default_key
       ssh_key_triple_for(RHC::Config.ssh_pub_key_file_path)
     end

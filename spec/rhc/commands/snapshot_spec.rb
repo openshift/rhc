@@ -71,6 +71,18 @@ describe RHC::Commands::Snapshot do
       it { expect { run }.to exit_with_code(130) }
     end
 
+    describe 'snapshot save deployment' do
+      let(:arguments) {['snapshot', 'save', '--app', 'mockapp', '--deployment', '-d']}
+
+      context 'when saving a deployment snapshot' do
+        before do
+          subject.class.any_instance.should_receive(:exec).with("ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'gear archive-deployment' > #{@app.name}.tar.gz").and_return([0, 'some save output'])
+        end
+        it { expect { run }.to exit_with_code(0) }
+        it { run_output.should_not match 'some save output' }
+      end
+    end
+
   end
 
   describe 'snapshot save with invalid ssh executable' do

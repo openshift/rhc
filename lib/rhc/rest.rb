@@ -12,6 +12,7 @@ module RHC
     autoload :Authorization,        'rhc/rest/authorization'
     autoload :Cartridge,            'rhc/rest/cartridge'
     autoload :Client,               'rhc/rest/client'
+    autoload :Deployment,           'rhc/rest/deployment'
     autoload :Domain,               'rhc/rest/domain'
     autoload :EnvironmentVariable,  'rhc/rest/environment_variable'
     autoload :GearGroup,            'rhc/rest/gear_group'

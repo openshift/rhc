@@ -120,6 +120,12 @@ module RHC
     end
   end
 
+  class DeploymentNotFoundException < Exception
+    def initialize(message="Deployment not found")
+      super message, 131
+    end
+  end
+
   class MissingScalingValueException < Exception
     def initialize(message="Must provide either a min or max value for scaling")
       super message
@@ -138,6 +144,12 @@ module RHC
   class SSHConnectionRefused < ConnectionFailed
     def initialize(host, user)
       super "The server #{host} refused a connection with user #{user}.  The application may be unavailable.", 1
+    end
+  end
+
+  class SSHCommandErrors < Exception
+    def initialize(message="SHH command returned content in stderr.")
+      super message, 133
     end
   end
 
