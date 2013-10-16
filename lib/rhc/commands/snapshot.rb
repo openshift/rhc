@@ -21,6 +21,7 @@ module RHC::Commands
     syntax "<application> [--filepath FILE] [--ssh path_to_ssh_executable]"
     takes_application :argument => true
     option ["-f", "--filepath FILE"], "Local path to save tarball (default: ./$APPNAME.tar.gz)"
+    option ["--deployment"], "Snapshot as a deployable file which can be deployed with 'rhc deploy'"
     option ["--ssh PATH"], "Full path to your SSH executable with additional options"
     alias_action :"app snapshot save", :root_command => true, :deprecated => true
     def save(app)
@@ -29,7 +30,8 @@ module RHC::Commands
       ssh_uri = URI.parse(rest_app.ssh_url)
       filename = options.filepath ? options.filepath : "#{rest_app.name}.tar.gz"
 
-      ssh_cmd = "#{ssh} #{ssh_uri.user}@#{ssh_uri.host} 'snapshot' > #{filename}"
+      snapshot_cmd = options.deployment ? 'gear archive-deployment' : 'snapshot'
+      ssh_cmd = "#{ssh} #{ssh_uri.user}@#{ssh_uri.host} '#{snapshot_cmd}' > #{filename}"
       debug ssh_cmd
 
       say "Pulling down a snapshot to #{filename}..."

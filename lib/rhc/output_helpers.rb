@@ -26,27 +26,30 @@ module RHC
     #---------------------------
     # Application information
     #---------------------------
-    def display_app(app,cartridges = nil)
+    def display_app(app, cartridges=nil, properties=nil)
       paragraph do
         header [app.name, "@ #{app.app_url}", "(uuid: #{app.uuid})"] do
           section(:bottom => 1) do
             say format_table \
               nil,
-              get_properties(
-                app,
-                :domain,
+              get_properties(app, properties ||
+                [:domain,
                 :creation_time,
                 :gear_info,
                 :git_url,
                 :initial_git_url,
                 :ssh_string,
-                :aliases
-              ),
+                :auto_deploy,
+                :aliases]),
               :delete => true
           end
           cartridges.each{ |c| section(:bottom => 1){ display_cart(c) } } if cartridges
         end
       end
+    end
+
+    def display_app_configurations(rest_app)
+      display_app(rest_app, nil, [:auto_deploy, :keep_deployments, :deployment_type, :deployment_branch])
     end
 
     def format_cart_header(cart)
@@ -153,6 +156,44 @@ module RHC
       end
     end
 
+    def display_deployment(deployment)
+      display_deployment_list([deployment], false)
+    end
+
+    def display_deployment_list(deployment_list, highlight_active=true)
+      if deployment_list.present?
+
+        active_deployment_id = nil
+        if highlight_active
+          active_activation_date = nil
+          deployment_list.each do |deployment|
+            deployment.activations.each do |activation|
+              active_deployment_id, active_activation_date = deployment.id, datetime_rfc3339(activation) if active_deployment_id.nil? || datetime_rfc3339(activation) > active_activation_date
+            end
+          end
+        end
+
+        deployment_list.each do |deployment|
+          active = active_deployment_id == deployment.id
+          paragraph do
+            say format_table(
+              "Deployment ID #{deployment.id}#{highlight_active ? active ? ' (active)' : ' (inactive)' : ''}",
+              get_properties(deployment, :ref, :sha1, :created_at, :artifact_url, :hot_deploy, :force_clean_build, :activations),
+              {
+                :delete => true,
+                :color => (:green if active)
+              }
+            )
+          end
+        end
+
+        #items = deployment_list.map do |item|
+        #  [active_id == item.id ? 'ACTIVE' : '', item.id, item.ref, item.sha1, item.hot_deploy, date(item.created_at), item.artifact_url, item.force_clean_build, item.activations.collect{|item| date(item)}.join(', ')]
+        #end
+        #say table(items, :header => ['', "ID", "Ref", "SHA1", "Hot Deploy?", "Created At\u25BE", "Artifact", "Force Clean?", "Activations"])
+      end
+    end
+
     private
       def format_table(heading,values,opts = {})
         values = values.to_a if values.is_a? Hash
@@ -171,7 +212,7 @@ module RHC
 
       # This uses the array of properties to retrieve them from an object
       def get_properties(object,*properties)
-        properties.map do |prop|
+        properties.flatten.map do |prop|
           # Either send the property to the object or yield it
           next if prop.nil?
           value = begin
@@ -195,7 +236,7 @@ module RHC
           end
         when :visible_to_ssh?
           value || nil
-        when :creation_time
+        when :creation_time, :created_at
           date(value)
         when :scales_from,:scales_to
           (value == -1 ? "available" : value)
@@ -207,6 +248,10 @@ module RHC
           value.kind_of?(Array) ? value.join(', ') : value
         when :expires_in_seconds
           distance_of_time_in_words(value)
+        when :activations
+          value.sort{|a, b| datetime_rfc3339(b) <=> datetime_rfc3339(a)}.collect{|item| date(item)}.join("\n")
+        when :auto_deploy
+          value ? 'auto (on git push)' : "manual (use 'rhc deploy')"
         else
           case value
           when Array then value.empty? ? '<none>' : value.join(', ')

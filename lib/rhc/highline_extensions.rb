@@ -53,13 +53,13 @@ class HighLineExtension < HighLine
           @last_line_open = false
           @output.puts
         end
-        statement = statement.join("#{indentation}\n") 
+        statement = statement.join("#{indentation}\n")
       end
       statement = send(:page_print, statement) unless @page_at.nil?
 
       @output.print(indentation) unless @last_line_open
 
-      @last_line_open = 
+      @last_line_open =
         if statement[-1, 1] == " " or statement[-1, 1] == "\t"
           @output.print(statement)
           @output.flush
@@ -147,7 +147,7 @@ class HighLineExtension < HighLine
       @multi_indent = multi
       @indent_level -= increase
     end
-  end 
+  end
   #:nocov:
 
   ##
@@ -170,7 +170,7 @@ class HighLineExtension < HighLine
   #
   # > Hello
   # >
-  # > World 
+  # > World
   #
   # with only one newline between the two.  Biggest margin wins.
   #
@@ -298,7 +298,7 @@ end
 
 #
 # Represent a columnar layout of items with wrapping and flexible layout.
-# 
+#
 class HighLine::Table
   include RowBased
 
@@ -310,7 +310,7 @@ class HighLine::Table
     opts[:color]
   end
 
-  protected 
+  protected
     attr_reader :items
 
     def opts
@@ -333,7 +333,7 @@ class HighLine::Table
     def source_rows
       @source_rows ||= begin
         (@mapper ? (items.map &@mapper) : items).each do |row|
-          row.map! do |col| 
+          row.map! do |col|
             case col
             when Array then col.join("\n")
             when String then col
@@ -388,17 +388,17 @@ class HighLine::Table
           end
       end
 
-      remaining = column_widths.inject(0) do |sum, w| 
+      remaining = column_widths.inject(0) do |sum, w|
           if w.set == 0
             sum += w.max
-            available -= w.min 
+            available -= w.min
           end
           sum
         end
       fair = available.to_f / remaining.to_f
 
       column_widths.
-        each do |w| 
+        each do |w|
           if w.set == 0
             alloc = (w.max * fair).to_i
             overflow = alloc + w.min - w.max
@@ -424,7 +424,7 @@ class HighLine::Table
       @widths ||= begin
         case w = opts[:width]
         when Array
-          column_widths.zip(w[1..-1]).each do |width, col| 
+          column_widths.zip(w[1..-1]).each do |width, col|
             width.set = col || 0
             width.max = width.set if width.set > width.max
           end
@@ -450,15 +450,15 @@ class HighLine::Table
 
     def rows
       @rows ||= begin
-        body = (header_rows + source_rows).inject([]) do |a,row| 
+        body = (header_rows + source_rows).inject([]) do |a,row|
           row = row.zip(widths).map{ |column,w| w && w > 0 ? column.textwrap_ansi(w, false) : [column] }
           (row.map(&:length).max || 0).times do |i|
             s = []
             row.each_with_index do |lines, j|
               cell = lines[i]
               l = cell ? cell.strip_ansi.length : 0
-              s << 
-                  if align[j] == :right 
+              s <<
+                  if align[j] == :right
                     "#{' '*(widths[j]-l) if l < widths[j]}#{cell}"
                   else
                     "#{cell}#{' '*(widths[j]-l) if l < widths[j]}"
@@ -468,7 +468,7 @@ class HighLine::Table
           end
           a
         end
-        
+
         body = heading.to_a.concat(body) if heading
         body
       end

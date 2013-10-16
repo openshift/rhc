@@ -518,6 +518,8 @@ module RHC
             data.map{ |json| Alias.new(json, self) }
           when 'environment-variables'
             data.map{ |json| EnvironmentVariable.new(json, self) }
+          when 'deployments'
+            data.map{ |json| Deployment.new(json, self) }
           else
             data
           end
@@ -548,7 +550,7 @@ module RHC
             end
           elsif data.is_a?(Hash)
             data['messages'] = messages
-            data['warnings'] = warnings  
+            data['warnings'] = warnings
           end
 
           warnings.each do |warning|

@@ -10,9 +10,9 @@ _rhc()
     if [[ "$cur" == -* ]]; then
       opts="--always-prefix --clean --config --debug --insecure --limit --mock --noprompt --password --raw --rhlogin --server --ssl-ca-file --ssl-client-cert-file --ssl-version --timeout --token"
     elif [ -z $cur ]; then
-      opts="account alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert app app-create app-delete app-force-stop app-reload app-restart app-show app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all authorization-list cartridge cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage domain domain-configure domain-create domain-delete domain-leave domain-list domain-rename domain-show env env-list env-set env-show env-unset git-clone logout member member-add member-list member-remove port-forward server setup snapshot snapshot-restore snapshot-save ssh sshkey sshkey-add sshkey-list sshkey-remove sshkey-show tail threaddump"
+      opts="account alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert app app-configure app-create app-delete app-deploy app-force-stop app-reload app-restart app-show app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all authorization-list cartridge cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage deployment-activate deployment-list deployment-show domain domain-configure domain-create domain-delete domain-leave domain-list domain-rename domain-show env env-list env-set env-show env-unset git-clone logout member member-add member-list member-remove port-forward server setup snapshot snapshot-restore snapshot-save ssh sshkey sshkey-add sshkey-list sshkey-remove sshkey-show tail threaddump"
     else
-      opts="account account-logout add-alias add-authorization add-cartridge add-member add-sshkey alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert aliases app app-create app-delete app-env app-force-stop app-reload app-restart app-show app-snapshot app-ssh app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all authorization-list authorizations cartridge cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage cartridges configure-domain create-app create-domain delete-all-authorization delete-app delete-authorization delete-cert-alias delete-domain domain domain-configure domain-create domain-delete domain-leave domain-list domain-rename domain-show domains env env-add env-list env-remove env-set env-show env-unset force-stop-app git-clone leave-domain list-alias list-authorization list-cartridge list-domain list-env list-member list-sshkey logout member member-add member-list member-remove members port-forward reload-app reload-cartridge remove-alias remove-cartridge remove-member remove-sshkey rename-domain restart-app restart-cartridge restore-snapshot save-snapshot scale-cartridge server set-env setup show-app show-cartridge show-domain show-env show-sshkey snapshot snapshot-restore snapshot-save ssh sshkey sshkey-add sshkey-list sshkey-remove sshkey-show start-app start-cartridge status-cartridge stop-app stop-cartridge storage-cartridge tail threaddump tidy-app unset-env update-cert-alias"
+      opts="account account-logout activate-deployment add-alias add-authorization add-cartridge add-member add-sshkey alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert aliases app app-configure app-create app-delete app-deploy app-env app-force-stop app-reload app-restart app-show app-snapshot app-ssh app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all authorization-list authorizations cartridge cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage cartridges configure-app configure-domain create-app create-domain delete-all-authorization delete-app delete-authorization delete-cert-alias delete-domain deploy deploy-app deployment deployment-activate deployment-list deployment-show deployments domain domain-configure domain-create domain-delete domain-leave domain-list domain-rename domain-show domains env env-add env-list env-remove env-set env-show env-unset force-stop-app git-clone leave-domain list-alias list-authorization list-cartridge list-deployment list-domain list-env list-member list-sshkey logout member member-add member-list member-remove members port-forward reload-app reload-cartridge remove-alias remove-cartridge remove-member remove-sshkey rename-domain restart-app restart-cartridge restore-snapshot save-snapshot scale-cartridge server set-env setup show-app show-cartridge show-deployment show-domain show-env show-sshkey snapshot snapshot-restore snapshot-save ssh sshkey sshkey-add sshkey-list sshkey-remove sshkey-show start-app start-cartridge status-cartridge stop-app stop-cartridge storage-cartridge tail threaddump tidy-app unset-env update-cert-alias"
     fi
   else
     prev="${COMP_WORDS[@]:0:COMP_CWORD}"
@@ -39,6 +39,14 @@ _rhc()
       "rhc account-logout")
         if [[ "$cur" == -* ]]; then
           opts="--all"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc activate-deployment")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --application-id --id --namespace"
         else
           opts=""
         fi
@@ -184,13 +192,21 @@ _rhc()
         if [[ "$cur" == -* ]]; then
           opts=""
         else
-          opts="snapshot env create delete start stop force-stop restart reload tidy show"
+          opts="create delete start stop force-stop restart reload tidy show deploy configure env snapshot"
+        fi
+        ;;
+
+      "rhc app configure")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --application-id --auto-deploy --deployment-branch --deployment-type --keep-deployments --namespace --no-auto-deploy"
+        else
+          opts=""
         fi
         ;;
 
       "rhc app create")
         if [[ "$cur" == -* ]]; then
-          opts="--app --dns --enable-jenkins --env --from-code --gear-size --git --namespace --no-dns --no-git --no-keys --repo --scaling --type"
+          opts="--app --auto-deploy --deployment-branch --dns --enable-jenkins --env --from-code --gear-size --git --keep-deployments --namespace --no-auto-deploy --no-dns --no-git --no-keys --repo --scaling --type"
         else
           opts=""
         fi
@@ -199,6 +215,14 @@ _rhc()
       "rhc app delete")
         if [[ "$cur" == -* ]]; then
           opts="--app --application-id --confirm --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc app deploy")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --application-id --force-clean-build --hot-deploy --namespace --no-force-clean-build --no-hot-deploy --ref"
         else
           opts=""
         fi
@@ -238,7 +262,7 @@ _rhc()
 
       "rhc app show")
         if [[ "$cur" == -* ]]; then
-          opts="--app --application-id --gears --namespace --state"
+          opts="--app --application-id --configuration --gears --namespace --state"
         else
           opts=""
         fi
@@ -246,7 +270,7 @@ _rhc()
 
       "rhc app snapshot")
         if [[ "$cur" == -* ]]; then
-          opts="--app --application-id --filepath --namespace"
+          opts="--app --application-id --deployment --filepath --namespace --ssh"
         else
           opts=""
         fi
@@ -254,7 +278,7 @@ _rhc()
 
       "rhc app ssh")
         if [[ "$cur" == -* ]]; then
-          opts="--app --application-id --gears --limit --namespace --raw --ssh"
+          opts="--app --application-id --command --gears --limit --namespace --raw --ssh"
         else
           opts=""
         fi
@@ -284,9 +308,17 @@ _rhc()
         fi
         ;;
 
+      "rhc app-configure")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --application-id --auto-deploy --deployment-branch --deployment-type --keep-deployments --namespace --no-auto-deploy"
+        else
+          opts=""
+        fi
+        ;;
+
       "rhc app-create")
         if [[ "$cur" == -* ]]; then
-          opts="--app --dns --enable-jenkins --env --from-code --gear-size --git --namespace --no-dns --no-git --no-keys --repo --scaling --type"
+          opts="--app --auto-deploy --deployment-branch --dns --enable-jenkins --env --from-code --gear-size --git --keep-deployments --namespace --no-auto-deploy --no-dns --no-git --no-keys --repo --scaling --type"
         else
           opts=""
         fi
@@ -295,6 +327,14 @@ _rhc()
       "rhc app-delete")
         if [[ "$cur" == -* ]]; then
           opts="--app --application-id --confirm --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc app-deploy")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --application-id --force-clean-build --hot-deploy --namespace --no-force-clean-build --no-hot-deploy --ref"
         else
           opts=""
         fi
@@ -334,7 +374,7 @@ _rhc()
 
       "rhc app-show")
         if [[ "$cur" == -* ]]; then
-          opts="--app --application-id --gears --namespace --state"
+          opts="--app --application-id --configuration --gears --namespace --state"
         else
           opts=""
         fi
@@ -342,7 +382,7 @@ _rhc()
 
       "rhc app-snapshot")
         if [[ "$cur" == -* ]]; then
-          opts="--app --application-id --filepath --namespace"
+          opts="--app --application-id --deployment --filepath --namespace --ssh"
         else
           opts=""
         fi
@@ -350,7 +390,7 @@ _rhc()
 
       "rhc app-ssh")
         if [[ "$cur" == -* ]]; then
-          opts="--app --application-id --gears --limit --namespace --raw --ssh"
+          opts="--app --application-id --command --gears --limit --namespace --raw --ssh"
         else
           opts=""
         fi
@@ -660,6 +700,14 @@ _rhc()
         fi
         ;;
 
+      "rhc configure-app")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --application-id --auto-deploy --deployment-branch --deployment-type --keep-deployments --namespace --no-auto-deploy"
+        else
+          opts=""
+        fi
+        ;;
+
       "rhc configure-domain")
         if [[ "$cur" == -* ]]; then
           opts="--allowed-gear-sizes --namespace --no-allowed-gear-sizes"
@@ -670,7 +718,7 @@ _rhc()
 
       "rhc create-app")
         if [[ "$cur" == -* ]]; then
-          opts="--app --dns --enable-jenkins --env --from-code --gear-size --git --namespace --no-dns --no-git --no-keys --repo --scaling --type"
+          opts="--app --auto-deploy --deployment-branch --dns --enable-jenkins --env --from-code --gear-size --git --keep-deployments --namespace --no-auto-deploy --no-dns --no-git --no-keys --repo --scaling --type"
         else
           opts=""
         fi
@@ -724,6 +772,86 @@ _rhc()
         fi
         ;;
 
+      "rhc deploy")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --application-id --force-clean-build --hot-deploy --namespace --no-force-clean-build --no-hot-deploy --ref"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc deploy-app")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --application-id --force-clean-build --hot-deploy --namespace --no-force-clean-build --no-hot-deploy --ref"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc deployment")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts="list show activate"
+        fi
+        ;;
+
+      "rhc deployment activate")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --application-id --id --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc deployment list")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --application-id --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc deployment show")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --application-id --id --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc deployment-activate")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --application-id --id --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc deployment-list")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --application-id --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc deployment-show")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --application-id --id --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc deployments")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --application-id --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
       "rhc domain")
         if [[ "$cur" == -* ]]; then
           opts=""
@@ -766,7 +894,7 @@ _rhc()
 
       "rhc domain list")
         if [[ "$cur" == -* ]]; then
-          opts="--mine"
+          opts="--ids --mine"
         else
           opts=""
         fi
@@ -822,7 +950,7 @@ _rhc()
 
       "rhc domain-list")
         if [[ "$cur" == -* ]]; then
-          opts="--mine"
+          opts="--ids --mine"
         else
           opts=""
         fi
@@ -846,7 +974,7 @@ _rhc()
 
       "rhc domains")
         if [[ "$cur" == -* ]]; then
-          opts="--mine"
+          opts="--ids --mine"
         else
           opts=""
         fi
@@ -1004,9 +1132,17 @@ _rhc()
         fi
         ;;
 
+      "rhc list-deployment")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --application-id --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
       "rhc list-domain")
         if [[ "$cur" == -* ]]; then
-          opts="--mine"
+          opts="--ids --mine"
         else
           opts=""
         fi
@@ -1190,7 +1326,7 @@ _rhc()
 
       "rhc restore-snapshot")
         if [[ "$cur" == -* ]]; then
-          opts="--app --application-id --filepath --namespace"
+          opts="--app --application-id --filepath --namespace --ssh"
         else
           opts=""
         fi
@@ -1198,7 +1334,7 @@ _rhc()
 
       "rhc save-snapshot")
         if [[ "$cur" == -* ]]; then
-          opts="--app --application-id --filepath --namespace"
+          opts="--app --application-id --deployment --filepath --namespace --ssh"
         else
           opts=""
         fi
@@ -1238,7 +1374,7 @@ _rhc()
 
       "rhc show-app")
         if [[ "$cur" == -* ]]; then
-          opts="--app --application-id --gears --namespace --state"
+          opts="--app --application-id --configuration --gears --namespace --state"
         else
           opts=""
         fi
@@ -1247,6 +1383,14 @@ _rhc()
       "rhc show-cartridge")
         if [[ "$cur" == -* ]]; then
           opts="--app --application-id --cartridge --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc show-deployment")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --application-id --id --namespace"
         else
           opts=""
         fi
@@ -1286,7 +1430,7 @@ _rhc()
 
       "rhc snapshot restore")
         if [[ "$cur" == -* ]]; then
-          opts="--app --application-id --filepath --namespace"
+          opts="--app --application-id --filepath --namespace --ssh"
         else
           opts=""
         fi
@@ -1294,7 +1438,7 @@ _rhc()
 
       "rhc snapshot save")
         if [[ "$cur" == -* ]]; then
-          opts="--app --application-id --filepath --namespace"
+          opts="--app --application-id --deployment --filepath --namespace --ssh"
         else
           opts=""
         fi
@@ -1302,7 +1446,7 @@ _rhc()
 
       "rhc snapshot-restore")
         if [[ "$cur" == -* ]]; then
-          opts="--app --application-id --filepath --namespace"
+          opts="--app --application-id --filepath --namespace --ssh"
         else
           opts=""
         fi
@@ -1310,7 +1454,7 @@ _rhc()
 
       "rhc snapshot-save")
         if [[ "$cur" == -* ]]; then
-          opts="--app --application-id --filepath --namespace"
+          opts="--app --application-id --deployment --filepath --namespace --ssh"
         else
           opts=""
         fi
@@ -1318,7 +1462,7 @@ _rhc()
 
       "rhc ssh")
         if [[ "$cur" == -* ]]; then
-          opts="--app --application-id --gears --limit --namespace --raw --ssh"
+          opts="--app --application-id --command --gears --limit --namespace --raw --ssh"
         else
           opts=""
         fi

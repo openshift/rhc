@@ -380,6 +380,11 @@ module RHC::Rest::Mock
        ['SET_UNSET_ENVIRONMENT_VARIABLES', "domains/#{domain_id}/apps/#{app_id}/event",                          'post'],
        ['DELETE',                          "broker/rest/domains/#{domain_id}/applications/#{app_id}",            'delete'],
       (['LIST_MEMBERS',                    "domains/#{domain_id}/apps/#{app_id}/members",                        'get'] if example_allows_members?),
+       ['UPDATE',                          "broker/rest/domain/#{domain_id}/application/#{app_id}",              'put'],
+       ['LIST_DEPLOYMENTS',                "broker/rest/domain/#{domain_id}/application/#{app_id}/deployments",  'get' ],
+       ['UPDATE_DEPLOYMENTS',              "broker/rest/domain/#{domain_id}/application/#{app_id}/deployments",  'post' ],
+       ['ACTIVATE',                        "broker/rest/domain/#{domain_id}/application/#{app_id}/events",       'post'],
+       ['DEPLOY',                          "broker/rest/domain/#{domain_id}/application/#{app_id}/deployments",  'post']
       ].compact
     end
 
@@ -738,6 +743,8 @@ module RHC::Rest::Mock
       @aliases = []
       @environment_variables = environment_variables || []
       @gear_profile = gear_profile
+      @auto_deploy = true
+      @keep_deployments = 1
       if scale
         @scalable = true
       end
@@ -863,6 +870,25 @@ module RHC::Rest::Mock
       (@members ||= []) << member
       self
     end
+
+    def configure(options={})
+      options.each {|key,value| self.instance_variable_set("@#{key.to_s}", value)}
+    end
+
+    def auto_deploy
+      @auto_deploy || false
+    end
+
+    def keep_deployments
+      @keep_deployments
+    end
+
+    def deployments
+      [
+        MockRestDeployment.new(self, '1', 'master', '123456', nil, false, '2013-01-01T00:09:00+00:00', false, ['2013-01-01T00:09:00+00:00']),
+        MockRestDeployment.new(self, '2', 'master', '789012', nil, false, '2013-01-01T00:09:00+00:00', false, ['2013-01-01T00:09:00+00:00'])
+      ]
+    end
   end
 
   class MockRestCartridge < RHC::Rest::Cartridge
@@ -935,5 +961,20 @@ module RHC::Rest::Mock
       @content = content
     end
   end
+
+  class MockRestDeployment < RHC::Rest::Deployment
+    def initialize(client, id, ref, sha1, artifact_url, hot_deploy, created_at, force_clean_build, activations)
+      super({}, client)
+      @id = id
+      @ref = ref
+      @sha1 = sha1
+      @artifact_url = artifact_url
+      @hot_deploy = hot_deploy
+      @created_at = created_at
+      @force_clean_build = force_clean_build
+      @activations = activations
+    end
+  end
+
 end
 

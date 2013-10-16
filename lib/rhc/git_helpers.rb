@@ -1,4 +1,4 @@
-  require 'open4'
+require 'open4'
 require 'fileutils'
 
 module RHC
