@@ -166,7 +166,7 @@ module RhcExecutionHelper
 
   def has_local_ssh_key(user)
     with_environment(user) do
-      r = rhc :setup, :with => setup_args(:login => user.login, :password => user.attributes[:password], :domain_name => "")
+      r = rhc :setup, :with => setup_args(:login => user.login, :password => user.attributes[:password], :domain_name => "\n")
       r.status.should == 0
       user
     end
