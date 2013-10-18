@@ -214,6 +214,20 @@ describe AllRhcHelpers do
     end
   end
 
+  context "with a missing client key file" do
+    context "on the command line" do
+      let(:arguments){ ['help', '--ssl-client-key-file=not_a_file'] }
+      it{ expect{ run }.to exit_with_code(1) }
+      it{ run_output.should match("The key 'not_a_file' cannot be loaded: No such") }
+    end
+    context "via the config" do
+      before{ base_config{ |c, d| d.add 'ssl_client_key_file', 'not_a_file' } }
+      let(:arguments){ ['help'] }
+      it{ expect{ run }.to exit_with_code(1) }
+      it{ run_output.should match("The key 'not_a_file' cannot be loaded: No such") }
+    end
+  end
+
   context 'with a valid --ssl-version' do
     let(:arguments){ ['help', '--ssl-version=sslv3'] }
 

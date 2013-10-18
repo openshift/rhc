@@ -61,6 +61,7 @@ module RHC
       :insecure                 => [nil,               :boolean,      "If true, certificate errors will be ignored.\nWARNING: This may allow others to eavesdrop on your communication with OpenShift."],
       :ssl_version              => [nil,               nil,           'The SSL protocol version to use when connecting to this server'],
       :ssl_client_cert_file     => [nil,               :path_to_file, 'A client certificate file for use with your server'],
+      :ssl_client_key_file      => [nil, :path_to_file, 'The corresponding key for the client certificate'],
       :ssl_ca_file              => [nil,               :path_to_file, 'A file containing CA one or more certificates'],
     }
 

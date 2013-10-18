@@ -15,18 +15,27 @@ module RHC::Auth
     end
 
     def to_request(request)
-      if token
-        debug "Using token authentication"
-        (request[:headers] ||= {})['authorization'] = "Bearer #{token}"
-      elsif auth and (!@allows_tokens or @can_get_token == false)
+      if auth and !token and (!@allows_tokens or @can_get_token == false)
         debug "Bypassing token auth"
         auth.to_request(request)
+      else
+        # If no token is available an empty one will be submitted at this
+        # point.  This is actually required in order for the retry logic to be
+        # triggered in all cases.
+        #
+        # Previously a request with no authentication was submitted to trigger
+        # this behavior but it was found not to work in certain scenarios where
+        # Broker authentication is handled by Apache.  In those cases a 403 is
+        # returned and not secondary authentication attempt is made.
+        debug "Using token authentication"
+        (request[:headers] ||= {})['authorization'] = "Bearer #{token}"
       end
       request
     end
 
     def retry_auth?(response, client)
-      if response.status == 401
+      case response.status
+      when 401
         token_rejected(response, client)
       else
         false
@@ -74,9 +83,9 @@ module RHC::Auth
         @can_get_token = client.supports_sessions? && @allows_tokens
 
         if has_token
-          warn "Your authorization token has expired. Please sign in now to continue on #{openshift_server}."
+          warn auth.expired_token_message
         elsif @can_get_token
-          info "Please sign in to start a new session to #{openshift_server}."
+          info auth.get_token_message
         end
 
         return auth.retry_auth?(response, client) unless @can_get_token

@@ -97,7 +97,13 @@ module RHC
     end
 
     def core_auth
-      @core_auth ||= RHC::Auth::Basic.new(options)
+      @core_auth ||= begin
+          if options.ssl_client_cert_file && options.ssl_client_key_file
+            RHC::Auth::X509.new(options)
+          else
+            RHC::Auth::Basic.new(options)
+          end
+        end
     end
 
     def token_auth

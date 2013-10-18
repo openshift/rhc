@@ -103,6 +103,17 @@ describe RHC::Wizard do
     end    
   end
 
+  describe "#core_auth" do
+    subject{ described_class.new(config, options) }
+
+    it "should use x509 if certificates are present" do
+      options.should_receive(:ssl_client_cert_file).and_return("a cert")
+      options.should_receive(:ssl_client_key_file).and_return("a key")
+      RHC::Auth::X509.should_receive(:new).exactly(1).times.with(options)
+      subject.send(:core_auth)
+    end
+  end
+
   describe "#login_stage" do
     let(:user){ 'test_user' }
     let(:password){ 'test pass' }

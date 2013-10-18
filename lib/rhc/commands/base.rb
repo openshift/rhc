@@ -29,8 +29,22 @@ class RHC::Commands::Base
     # should be through this call pattern.
     def rest_client(opts={})
       @rest_client ||= begin
-          auth = RHC::Auth::Basic.new(options)
-          auth = RHC::Auth::Token.new(options, auth, token_store) if (options.use_authorization_tokens || options.token) && !(options.rhlogin && options.password)
+          core_auth = if (options.ssl_client_cert_file && options.ssl_client_key_file)
+            RHC::Auth::X509.new(options)
+          else
+            RHC::Auth::Basic.new(options)
+          end
+
+          # Specifying a username and password on the CLI trumps token
+          # authentication.
+          auth = if options.rhlogin && options.password
+            RHC::Auth::Basic.new(options)
+          elsif (options.use_authorization_tokens || options.token)
+            RHC::Auth::Token.new(options, core_auth, token_store)
+          else
+            core_auth
+          end
+
           debug "Authenticating with #{auth.class}"
           client_from_options(:auth => auth)
         end
