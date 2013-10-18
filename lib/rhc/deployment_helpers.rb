@@ -25,7 +25,7 @@ module RHC
         remote_cmd = "gear deploy #{ref}#{hot_deploy ? ' --hot-deploy' : ''}#{force_clean_build ? ' --force-clean-build' : ''}"
 
         begin
-          ssh_ruby(ssh_url.host, ssh_url.user, remote_cmd, false)
+          ssh_ruby(ssh_url.host, ssh_url.user, remote_cmd)
           success "Success"
         rescue
           warn "Error trying to deploy git ref. You can ssh to your application and try to deploy manually with:\n#{remote_cmd}"

@@ -47,7 +47,7 @@ describe RHC::Commands::Deployment do
 
   describe "deploy" do
     context "git ref successfully" do
-      before { Net::SSH.should_receive(:start).exactly(3).times.with('test.domain.com', 'user', {:compression=>false}) }
+      before { Net::SSH.should_receive(:start).exactly(3).times.with('test.domain.com', 'user', :compression=>false) }
       let(:arguments) {['app', 'deploy', 'master', '--app', DEPLOYMENT_APP_NAME]}
       it "should succeed" do
         expect{ run }.to exit_with_code(0)
@@ -61,13 +61,15 @@ describe RHC::Commands::Deployment do
         ssh = double(Net::SSH)
         session = double(Net::SSH::Connection::Session)
         channel = double(Net::SSH::Connection::Channel)
-        Net::SSH.should_receive(:start).exactly(3).times.with('test.domain.com', 'user', {:compression=>false}).and_yield(session)
+        exit_status = double(Net::SSH::Buffer)
+        exit_status.stub(:read_long).and_return(0)
+        Net::SSH.should_receive(:start).exactly(3).times.with('test.domain.com', 'user', :compression=>false).and_yield(session)
         session.should_receive(:open_channel).exactly(3).times.and_yield(channel)
         channel.should_receive(:exec).exactly(3).times.with("oo-binary-deploy").and_yield(nil, nil)
         channel.should_receive(:on_data).exactly(3).times.and_yield(nil, 'foo')
         channel.should_receive(:on_extended_data).exactly(3).times.and_yield(nil, nil, '')
         channel.should_receive(:on_close).exactly(3).times.and_yield(nil)
-        channel.should_receive(:on_process).exactly(3).times.and_yield(nil)
+        channel.should_receive(:on_request).exactly(3).times.with("exit-status").and_yield(nil, exit_status)
         lines = ''
         File.open(@targz_filename, 'rb') do |file|
           file.chunk(1024) do |chunk|
@@ -93,13 +95,15 @@ describe RHC::Commands::Deployment do
           ssh = double(Net::SSH)
           session = double(Net::SSH::Connection::Session)
           channel = double(Net::SSH::Connection::Channel)
-          Net::SSH.should_receive(:start).exactly(3).times.with('test.domain.com', 'user', {:compression=>false}).and_yield(session)
+          exit_status = double(Net::SSH::Buffer)
+          exit_status.stub(:read_long).and_return(0)
+          Net::SSH.should_receive(:start).exactly(3).times.with('test.domain.com', 'user', :compression=>false).and_yield(session)
           session.should_receive(:open_channel).exactly(3).times.and_yield(channel)
           channel.should_receive(:exec).exactly(3).times.with("oo-binary-deploy").and_yield(nil, nil)
           channel.should_receive(:on_data).exactly(3).times.and_yield(nil, 'foo')
           channel.should_receive(:on_extended_data).exactly(3).times.and_yield(nil, nil, '')
           channel.should_receive(:on_close).exactly(3).times.and_yield(nil)
-          channel.should_receive(:on_process).exactly(3).times.and_yield(nil)
+          channel.should_receive(:on_request).exactly(3).times.with("exit-status").and_yield(nil, exit_status)
           http = double(Net::HTTP)
           response = double(Net::HTTPResponse)
           Net::HTTP.should_receive(:new).exactly(3).times.with(uri.host, uri.port, nil, nil).and_return(http)
@@ -134,13 +138,15 @@ describe RHC::Commands::Deployment do
         ssh = double(Net::SSH)
         session = double(Net::SSH::Connection::Session)
         channel = double(Net::SSH::Connection::Channel)
-        Net::SSH.should_receive(:start).exactly(3).times.with('test.domain.com', 'user', {:compression=>false}).and_yield(session)
+        exit_status = double(Net::SSH::Buffer)
+        exit_status.stub(:read_long).and_return(255)
+        Net::SSH.should_receive(:start).exactly(3).times.with('test.domain.com', 'user', :compression=>false).and_yield(session)
         session.should_receive(:open_channel).exactly(3).times.and_yield(channel)
         channel.should_receive(:exec).exactly(3).times.with("oo-binary-deploy").and_yield(nil, nil)
         channel.should_receive(:on_data).exactly(3).times.and_yield(nil, 'foo')
         channel.should_receive(:on_extended_data).exactly(3).times.and_yield(nil, nil, 'Invalid file')
         channel.should_receive(:on_close).exactly(3).times.and_yield(nil)
-        channel.should_receive(:on_process).exactly(3).times.and_yield(nil)
+        channel.should_receive(:on_request).exactly(3).times.with("exit-status").and_yield(nil, exit_status)
         lines = ''
         File.open(@targz_filename, 'rb') do |file|
           file.chunk(1024) do |chunk|
@@ -152,7 +158,7 @@ describe RHC::Commands::Deployment do
         session.should_receive(:loop).exactly(3).times
       end
       let(:arguments) {['app', 'deploy', @targz_filename, '--app', DEPLOYMENT_APP_NAME]}
-      it "should succeed" do
+      it "should not succeed" do
         expect{ run }.to exit_with_code(133)
         run_output.should match(/Deployment of file '#{@targz_filename}' in progress for application #{DEPLOYMENT_APP_NAME} .../)
         run_output.should match(/Invalid file/)
@@ -202,7 +208,7 @@ describe RHC::Commands::Deployment do
 
   describe "activate deployment" do
     context "activates 123456" do
-      before { Net::SSH.should_receive(:start).exactly(3).times.with('test.domain.com', 'user', {}) }
+      before { Net::SSH.should_receive(:start).exactly(3).times.with('test.domain.com', 'user', :compression => false) }
       let(:arguments) {['deployment', 'activate', '123456', '--app', DEPLOYMENT_APP_NAME]}
       it "should succeed" do
         expect{ run }.to exit_with_code(0)

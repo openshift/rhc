@@ -27,7 +27,7 @@ describe RHC::Commands::Tail do
     let(:arguments) { ['tail', 'mock-app-0'] }
 
     context 'when ssh connects' do
-      before (:each) {Net::SSH.should_receive(:start).with('test.domain.com', 'user', {}) }
+      before (:each) {Net::SSH.should_receive(:start).with('test.domain.com', 'user', :compression => false) }
       it { expect { run }.to exit_with_code(0) }
     end
 
@@ -49,7 +49,7 @@ describe RHC::Commands::Tail do
     end
 
     context 'succeeds when a gear is specified' do
-      before (:each) {Net::SSH.should_receive(:start).with('fakesshurl.com', 'fakegearid0', {}) }
+      before (:each) {Net::SSH.should_receive(:start).with('fakesshurl.com', 'fakegearid0', :compression => false) }
       let(:arguments) { ['tail', 'mock-app-0', '--gear', 'fakegearid0' ] }
 
       it { run_output.should_not =~ /Connecting to fakesshurl.com/ }

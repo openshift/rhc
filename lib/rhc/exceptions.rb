@@ -147,9 +147,9 @@ module RHC
     end
   end
 
-  class SSHCommandErrors < Exception
-    def initialize(message="SHH command returned content in stderr.")
-      super message, 133
+  class SSHCommandFailed < Exception
+    def initialize(exit_status, message=nil)
+      super message || "SSH command finished with exit status = #{exit_status}", 133
     end
   end
 
