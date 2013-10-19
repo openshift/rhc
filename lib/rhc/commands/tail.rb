@@ -37,7 +37,7 @@ module RHC::Commands
         begin
           #Use ssh -t to tail the logs
           debug ssh_cmd
-          ssh_ruby(host, uuid, remote_cmd)
+          ssh_ruby(host, uuid, remote_cmd, false, true)
         rescue
           warn "You can tail this application directly with:\n#{ssh_cmd}"
           raise

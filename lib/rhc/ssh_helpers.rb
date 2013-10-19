@@ -165,12 +165,12 @@ module RHC
     #  # => true
     #
     # Returns true on success
-    def ssh_ruby(host, username, command, compression=true, request_pty=true, &block)
+    def ssh_ruby(host, username, command, compression=false, request_pty=false, &block)
       debug "Opening Net::SSH connection to #{host}, #{username}, #{command}"
-      errors = []
-      Net::SSH.start(host, username, compression ? {} : {:compression => false}) do |session|
+      exit_status = 0
+      Net::SSH.start(host, username, :compression => compression) do |session|
         #:nocov:
-        session.open_channel do |channel|
+        channel = session.open_channel do |channel|
           if request_pty
             channel.request_pty do |ch, success|
               say "pty could not be obtained" unless success
@@ -178,17 +178,18 @@ module RHC
           end
           channel.exec(command) do |ch, success|
             channel.on_data do |ch, data|
-              say data
+              debug "stdout: "
+              print data
             end
             channel.on_extended_data do |ch, type, data|
-              errors << data if !data.nil? && !data.empty?
+              debug "stderr: "
+              print data
             end
             channel.on_close do |ch|
               debug "Terminating ... "
             end
-            channel.on_process do |ch|
-              #print "\rSending file ... #{(channel[:bytes_sent].to_f/filesize.to_f*100).round}%"
-              #channel[:bytes_sent] = channel[:bytes_sent] + channel[:chunk_size]
+            channel.on_request("exit-status") do |ch, data|
+              exit_status = data.read_long
             end
             yield channel if block_given?
             channel.eof!
@@ -197,8 +198,8 @@ module RHC
         session.loop
         #:nocov:
       end
-      raise RHC::SSHCommandErrors, errors.join("\n") if !errors.empty?
-    rescue Errno::ECONNREFUSED => e
+      raise RHC::SSHCommandFailed.new(exit_status) if exit_status != 0
+    rescue Errno::ECONNREFUSED
       raise RHC::SSHConnectionRefused.new(host, username)
     rescue SocketError => e
       raise RHC::ConnectionFailed, "The connection to #{host} failed: #{e.message}"
@@ -215,7 +216,7 @@ module RHC
     #
     def ssh_send_file_ruby(host, username, command, filename)
       filename = File.expand_path(filename)
-      ssh_ruby(host, username, command, false, false) do |channel|
+      ssh_ruby(host, username, command) do |channel|
         File.open(filename, 'rb') do |file|
           file.chunk(1024) do |chunk|
             channel.send_data chunk
@@ -234,8 +235,14 @@ module RHC
     #
     def ssh_send_url_ruby(host, username, command, content_url)
       content_url = URI.parse(URI.encode(content_url.to_s))
-      ssh_ruby(host, username, command, false, false) do |channel|
-        Net::HTTP.start(content_url.host) do |http|
+      proxy = ENV['http_proxy'] ? URI.parse(ENV['http_proxy']) : OpenStruct.new
+      ssh_ruby(host, username, command) do |channel|
+        http = Net::HTTP.new(content_url.host, content_url.port, proxy.host, proxy.port)
+        if (content_url.scheme == "https")
+          http.use_ssl = true
+          http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+        end
+        http.start do |http|
           http.request_get(content_url.path) do |response|
             response.read_body do |chunk|
               channel.send_data chunk
