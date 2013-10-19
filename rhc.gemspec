@@ -31,6 +31,7 @@ Gem::Specification.new do |s|
   ].join("\n")
 
   s.add_dependency              'net-ssh',      '>= 2.0.11'
+  s.add_dependency              'net-scp',      '>= 1.1.2'
   s.add_dependency              'net-ssh-multi','>= 1.2.0'
   s.add_dependency              'archive-tar-minitar'
   s.add_runtime_dependency      'commander',    '>= 4.0'

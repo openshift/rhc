@@ -1,6 +1,7 @@
 require 'spec_helper'
 require 'rhc'
 require 'rhc/ssh_helpers'
+require 'rhc/scp_helpers'
 require 'rhc/cartridge_helpers'
 require 'rhc/git_helpers'
 require 'rhc/core_ext'
@@ -13,6 +14,7 @@ require 'ostruct'
 class AllRhcHelpers
   include RHC::Helpers
   include RHC::SSHHelpers
+  include RHC::SCPHelpers
   include RHC::CartridgeHelpers
 
   def config
