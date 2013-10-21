@@ -204,6 +204,19 @@ describe RHC::Commands::Deployment do
         expect{ run }.to exit_with_code(1)
       end
     end
+
+    context 'when run against an unsupported server' do
+      before {
+        @rest_app.links.delete 'UPDATE'
+        @rest_app.links.delete 'DEPLOY'
+      }
+      let(:arguments) {['app', 'deploy', 'master', '--app', DEPLOYMENT_APP_NAME]}
+      it "should raise not supported exception" do
+        expect{ run }.to exit_with_code(132)
+        run_output.should match(/The server does not support deployments/)
+      end
+    end
+
   end
 
   describe "activate deployment" do
