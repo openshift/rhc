@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.16.0
+Version: 1.16.1
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,31 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Oct 21 2013 Adam Miller <admiller@redhat.com> 1.16.1-1
+- Fixes Bug 1019646 and Bug 1020473 (contact@fabianofranz.com)
+- Respect proxy config when deploying from binary file url
+  (contact@fabianofranz.com)
+- Fix ssh key test (jliggitt@redhat.com)
+- Merge pull request #482 from
+  smarterclayton/bug_1019980_test_cases_for_key_distribution
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 1019980 - Add test cases for SSH access across multiple users
+  (ccoleman@redhat.com)
+- Deploy - display when configure-app provided with no options, other minor
+  improvements (contact@fabianofranz.com)
+- Deploy - better handling of errors form stderr (contact@fabianofranz.com)
+- Deploy - grammar fixes (contact@fabianofranz.com)
+- Deploy - better handling of errors form stderr (contact@fabianofranz.com)
+- Bug 1018729 - fixed deploy binary from url (contact@fabianofranz.com)
+- Deploy (contact@fabianofranz.com)
+- Fix test cases to run on F19/Origin (kraman@gmail.com)
+- Merge pull request #475 from brenton/spec_fixes1
+  (dmcphers+openshiftbot@redhat.com)
+- Remove old unnecessary test case for domains (ccoleman@redhat.com)
+- Adding BuildRequires (bleanhar@redhat.com)
+- Adding ose-2.0 releaser (jdetiber@redhat.com)
+- bump_minor_versions for sprint 35 (admiller@redhat.com)
+
 * Fri Oct 04 2013 Adam Miller <admiller@redhat.com> 1.15.6-1
 - Merge pull request #473 from smarterclayton/depend_on_net_ssh_multi
   (dmcphers+openshiftbot@redhat.com)
