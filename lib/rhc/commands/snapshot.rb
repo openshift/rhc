@@ -27,6 +27,9 @@ module RHC::Commands
     def save(app)
       ssh = check_ssh_executable! options.ssh
       rest_app = find_app
+
+      raise RHC::DeploymentsNotSupportedException.new if options.deployment && !rest_app.supports?("DEPLOY")
+
       ssh_uri = URI.parse(rest_app.ssh_url)
       filename = options.filepath ? options.filepath : "#{rest_app.name}.tar.gz"
 

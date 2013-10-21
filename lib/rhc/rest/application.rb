@@ -189,7 +189,11 @@ module RHC
 
       def configure(options={})
         debug "Running update for #{name} with options #{options.inspect}"
-        rest_method "UPDATE", options
+        if supports? "UPDATE"
+          rest_method "UPDATE", options
+        else
+          raise RHC::DeploymentsNotSupportedException
+        end
       end
 
       def add_alias(app_alias)

@@ -126,6 +126,12 @@ module RHC
     end
   end
 
+  class DeploymentsNotSupportedException < Exception
+    def initialize(message="The server does not support deployments")
+      super message, 132
+    end
+  end
+
   class MissingScalingValueException < Exception
     def initialize(message="Must provide either a min or max value for scaling")
       super message
