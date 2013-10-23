@@ -217,6 +217,15 @@ describe RHC::Commands::Deployment do
       end
     end
 
+    context "ssh authentication failure" do
+      before (:each) { Net::SSH.should_receive(:start).exactly(2).times.and_raise(Net::SSH::AuthenticationFailed) }
+      let(:arguments) {['app', 'deploy', 'master', '--app', DEPLOYMENT_APP_NAME]}
+      it "should exit with error" do
+        expect{ run }.to exit_with_code(1)
+        run_output.should match(/Authentication to server test.domain.com with user user failed/)
+      end
+    end
+
   end
 
   describe "activate deployment" do

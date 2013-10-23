@@ -199,9 +199,14 @@ module RHC
         #:nocov:
       end
       raise RHC::SSHCommandFailed.new(exit_status) if exit_status != 0
-    rescue Errno::ECONNREFUSED
+    rescue Errno::ECONNREFUSED => e
+      debug_error e
       raise RHC::SSHConnectionRefused.new(host, username)
+    rescue Net::SSH::AuthenticationFailed => e
+      debug_error e
+      raise RHC::SSHAuthenticationFailed.new(host, username)
     rescue SocketError => e
+      debug_error e
       raise RHC::ConnectionFailed, "The connection to #{host} failed: #{e.message}"
     end
 
