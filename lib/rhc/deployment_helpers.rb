@@ -28,7 +28,8 @@ module RHC
           ssh_ruby(ssh_url.host, ssh_url.user, remote_cmd)
           success "Success"
         rescue
-          warn "Error trying to deploy git ref. You can ssh to your application and try to deploy manually with:\n#{remote_cmd}"
+          ssh_cmd = "ssh -t #{ssh_url.user}@#{ssh_url.host} '#{remote_cmd}'"
+          warn "Error deploying git ref. You can try to deploy manually with:\n#{ssh_cmd}"
           raise
         end
       end
@@ -44,7 +45,8 @@ module RHC
           ssh_send_file_ruby(ssh_url.host, ssh_url.user, remote_cmd, filename)
           success "Success"
         rescue
-          warn "Error trying to deploy local file. You can ssh to your application and try to deploy manually with:\n#{remote_cmd}"
+          ssh_cmd = "ssh -t #{ssh_url.user}@#{ssh_url.host} '#{remote_cmd}'"
+          warn "Error deploying local file. You can try to deploy manually with:\n#{ssh_cmd}"
           raise
         end
       end
@@ -61,7 +63,8 @@ module RHC
           ssh_send_url_ruby(ssh_url.host, ssh_url.user, remote_cmd, file_url)
           success "Success"
         rescue
-          warn "Error trying to deploy file from url. You can ssh to your application and try to deploy manually with:\n#{remote_cmd}"
+          ssh_cmd = "ssh -t #{ssh_url.user}@#{ssh_url.host} '#{remote_cmd}'"
+          warn "Error deploying file from url. You can try to deploy manually with:\n#{ssh_cmd}"
           raise
         end
       end
@@ -76,7 +79,8 @@ module RHC
           ssh_ruby(ssh_url.host, ssh_url.user, remote_cmd)
           success "Success"
         rescue
-          warn "Error trying to activate deployment. You can ssh to your application and try to activate manually with:\n#{remote_cmd}"
+          ssh_cmd = "ssh -t #{ssh_url.user}@#{ssh_url.host} '#{remote_cmd}'"
+          warn "Error activating deployment. You can try to activate manually with:\n#{ssh_cmd}"
           raise
         end
       end

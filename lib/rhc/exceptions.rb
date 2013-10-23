@@ -147,6 +147,12 @@ module RHC
   class ConnectionFailed < Exception
   end
 
+  class SSHAuthenticationFailed < Exception
+    def initialize(host, user)
+      super "Authentication to server #{host} with user #{user} failed"
+    end
+  end
+
   class SSHConnectionRefused < ConnectionFailed
     def initialize(host, user)
       super "The server #{host} refused a connection with user #{user}.  The application may be unavailable.", 1
