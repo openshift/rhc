@@ -29,7 +29,11 @@ module RhcExecutionHelper
   end
 
   def a_web_cartridge
-    File.exist?('/etc/fedora-release') ? 'php-5.5' : 'php-5.3'
+    if ENV['RHC_TARGET'] == 'rhel' || !File.exist?("/etc/fedora-release")
+      'php-5.3'
+    else
+      'php-5.5'
+    end
   end
 
   def rhc(*args)
