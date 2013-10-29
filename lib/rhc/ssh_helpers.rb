@@ -35,7 +35,7 @@ module RHC
 
         Net::SSH::Multi.start(
           :concurrent_connections => @opts[:limit],
-          :on_error => lambda{ |server| $stderr.puts "Unable to connect to gear #{server}" }
+          :on_error => lambda{ |server| $stderr.puts RHC::Helpers.color("Unable to connect to gear #{server}", :red) }
         ) do |session|
 
           @over.each do |item|

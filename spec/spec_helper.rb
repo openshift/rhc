@@ -420,7 +420,7 @@ module ClassSpecHelpers
     session.should_receive(:loop) unless hosts.empty?
     Net::SSH::Multi.should_receive(:start).and_yield(session).with do |opts|
       opts.should have_key(:on_error)
-      capture_all{ opts[:on_error].call('test') }.should == "Unable to connect to gear test\n" if check_error
+      capture_all{ opts[:on_error].call('test') }.should =~ /Unable to connect to gear test/ if check_error
       true
     end
     session
