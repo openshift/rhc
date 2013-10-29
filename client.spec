@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.16.4
+Version: 1.16.5
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,10 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Oct 29 2013 Adam Miller <admiller@redhat.com> 1.16.5-1
+- Bug 1022444 - Should also print warnings when an error occurs
+  (ccoleman@redhat.com)
+
 * Fri Oct 25 2013 Adam Miller <admiller@redhat.com> 1.16.4-1
 - Merge pull request #491 from liggitt/krb5 (dmcphers+openshiftbot@redhat.com)
 - Add feature test for kerberos key add (jliggitt@redhat.com)
