@@ -279,7 +279,7 @@ module RhcExecutionHelper
 
     def register_user(user,password)
       if File.exists?("/etc/openshift/plugins.d/openshift-origin-auth-mongo.conf")
-        command = "oo-register-user -l admin -p admin --username #{user} --userpass #{password}"
+        command = "bash -c 'unset GEM_HOME; unset GEM_PATH; oo-register-user -l admin -p admin --username #{user} --userpass #{password}'"
         if Object.const_defined?('Bundler')
           Bundler::with_clean_env do
             system command
