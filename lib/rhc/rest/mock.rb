@@ -2,12 +2,31 @@ module RHC::Rest::Mock
 
   def self.start
     RHC::Helpers.warn "Running in mock mode"
+    require 'webmock'
+    WebMock.disable_net_connect!
+    MockRestClient.class_eval do
+      include WebMock::API
+      include Helpers
+      def user_agent_header
+      end
+      def user_auth
+        {:user => nil, :password => nil}
+      end
+    end
+    MockRestUser.class_eval do
+      def add_key(*args)
+        attributes['links'] ||= {}
+        links['ADD_KEY'] = {'href' => 'https://test.domain.com/broker/rest/user/keys', 'method' => 'POST'}
+        super
+      end
+    end
     MockRestClient.new.tap do |c|
       d = c.add_domain("test1")
       app = d.add_application('app1', 'carttype1')
       app.cartridges[0].display_name = "A display name"
       app.add_cartridge('mockcart2')
       app2 = d.add_application('app2', 'carttype2', true)
+      c.stub_add_key_error('test', 'this failed')
     end
   end
 
@@ -98,8 +117,12 @@ module RHC::Rest::Mock
     end
     def stub_add_key_error(name, message, code=422)
       stub_api_request(:post, "broker/rest/user/keys", mock_user_auth).
-        with(:body => hash_including({:type => 'ssh-rsa'})).
-        to_return({:status => code, :body => {:messages => [{:text => message, :field => 'name', :severity => 'error'}]}.to_json})
+        with(:body => hash_including({:name => name, :type => 'ssh-rsa'})).
+        to_return({:status => code, :body => {:messages => [
+          {:text => message, :field => 'name', :severity => 'error'},
+          {:text => "A warning from the server", :field => nil, :severity => 'warning'},
+        ]
+        }.to_json})
     end
     def stub_create_domain(name)
       stub_api_request(:post, 'broker/rest/domains', mock_user_auth).
@@ -508,8 +531,8 @@ module RHC::Rest::Mock
         end
       end
       @domains = []
-      @user = MockRestUser.new(client, config.username)
-      @api = MockRestApi.new(client, config)
+      @user = MockRestUser.new(self, config.username)
+      @api = MockRestApi.new(self, config)
       @version = version
     end
 

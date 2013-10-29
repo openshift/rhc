@@ -526,18 +526,25 @@ module RHC
         end
 
         def parse_messages(result, data)
-          warnings, messages = Array(result['messages']).inject([[],[]]) do |a, m|
+          raw = (result || {})['messages'] || []
+          raw.delete_if do |m|
+            m.delete_if{ |k,v| k.nil? || v.blank? } if m.is_a? Hash
+            m.blank?
+          end
+          warnings, messages, raw = Array(raw).inject([[],[],[]]) do |a, m|
             severity, field, text = m.values_at('severity', 'field', 'text')
-            text.gsub!(/\A\n+/m, "")
-            text.rstrip!
+            text = (text || "").gsub(/\A\n+/m, "").rstrip
             case severity
             when 'warning'
               a[0] << text
             when 'debug'
+              a[2] << m
               a[1] << text if debug?
             when 'info'
+              a[2] << m
               a[1] << text if debug? || field == 'result'
             else
+              a[2] << m
               a[1] << text
             end
             a
@@ -554,13 +561,12 @@ module RHC
           end
 
           warnings.each do |warning|
-            # Prevent repeated warnings during the same client session
-            if !defined?(@warning_map) || !@warning_map.include?(warning)
-              @warning_map ||= Set.new
+            unless (@warning_map ||= Set.new).include?(warning)
               @warning_map << warning
               warn warning
             end
           end if respond_to? :warn
+          raw
         end
 
         def raise_generic_error(url, client)
@@ -578,11 +584,7 @@ module RHC
           parse_error = nil
           begin
             result = RHC::Json.decode(response.content)
-            messages = Array(result['messages'])
-            messages.delete_if do |m|
-              m.delete_if{ |k,v| k.nil? || v.blank? } if m.is_a? Hash
-              m.blank?
-            end
+            messages = parse_messages(result, {})
           rescue => e
             debug "Response did not include a message from server: #{e.message}"
           end

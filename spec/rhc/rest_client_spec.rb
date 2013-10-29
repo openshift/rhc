@@ -267,7 +267,7 @@ module RHC
                             :status => 200
                           })
               stub_api_request(:any, api_links['SHOW_DOMAIN']['relative'].gsub(/:name/, 'mock_domain_2')).
-                to_return({ :body => {:messages => [{:exit_code => 127}]}.to_json,
+                to_return({ :body => {:messages => [{:exit_code => 127}, {:severity => 'warning', :text => 'A warning'}]}.to_json,
                             :status => 404
                           })
             end
@@ -284,7 +284,11 @@ module RHC
               match.class.should == RHC::Rest::Domain
             end
             it "raise an error when no matching domain IDs can be found" do
-              expect { client.find_domain('mock_domain_2') }.to raise_error(RHC::Rest::DomainNotFoundException)
+              expect{ client.find_domain('mock_domain_2') }.to raise_error(RHC::Rest::DomainNotFoundException)
+            end
+            it "prints a warning when an error is returned" do
+              client.should_receive(:warn).with('A warning')
+              expect{ client.find_domain('mock_domain_2') }.to raise_error(RHC::Rest::DomainNotFoundException)
             end
           end
         end
