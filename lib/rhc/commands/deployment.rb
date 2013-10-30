@@ -37,7 +37,6 @@ module RHC::Commands
       pager
 
       display_deployment_list(deployment_activations)
-      #paragraph { say "Use 'rhc show-app #{rest_app.name} --configuration' to check your deployment configurations." }
       0
     end
 
@@ -51,7 +50,7 @@ module RHC::Commands
     argument :id, "The deployment ID to show", ["--id ID"], :optional => false
     def show(id)
       rest_app = find_app
-      item = rest_app.deployment_activations.select{|item| item[:deployment].id == id}.last
+      item = rest_app.deployment_activations.reverse_each.detect{|item| item[:deployment].id == id}
 
       raise RHC::DeploymentNotFoundException, "Deployment ID '#{id}' not found for application #{rest_app.name}." if !item.present?
 

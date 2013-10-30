@@ -255,9 +255,11 @@ describe RHC::Commands::Deployment do
         expect{ run }.to exit_with_code(0)
         run_output.should match(/Jan 01\, 2000  1\:00 AM\, deployment 0000001/)
         run_output.should match(/Jan 01\, 2000  2\:00 AM\, deployment 0000002/)
-        run_output.should match(/Jan 01\, 2000  3\:00 AM\, deployment 0000003/)
+        run_output.should match(/Jan 01\, 2000  3\:00 AM\, deployment 0000003 \(rolled back\)/)
         run_output.should match(/Jan 01\, 2000  4\:00 AM\, deployment 0000004 \(rolled back\)/)
-        run_output.should match(/Jan 01\, 2000  5\:00 AM\, deployment 0000003 \(rollback to Jan 01\, 2000  3\:00 AM\)/)
+        run_output.should match(/Jan 01\, 2000  5\:00 AM\, deployment 0000003 \(rollback to Jan 01\, 2000  3\:00 AM\, rolled back\)/)
+        run_output.should match(/Jan 01\, 2000  5\:00 AM\, deployment 0000005 \(rolled back\)/)
+        run_output.should match(/Jan 01\, 2000  6\:00 AM\, deployment 0000002 \(rollback to Jan 01\, 2000  2\:00 AM\)/)
       end
     end
   end

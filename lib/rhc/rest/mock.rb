@@ -913,11 +913,13 @@ module RHC::Rest::Mock
       base_time3 = Time.local(2000,1,1,3,0,0).strftime('%Y-%m-%dT%H:%M:%S%z')
       base_time4 = Time.local(2000,1,1,4,0,0).strftime('%Y-%m-%dT%H:%M:%S%z')
       base_time5 = Time.local(2000,1,1,5,0,0).strftime('%Y-%m-%dT%H:%M:%S%z')
+      base_time6 = Time.local(2000,1,1,6,0,0).strftime('%Y-%m-%dT%H:%M:%S%z')
       [
         MockRestDeployment.new(self, '0000001', 'master', '0000001', nil, false, base_time1, false, [base_time1]),
-        MockRestDeployment.new(self, '0000002', 'master', '0000002', nil, false, base_time2, false, [base_time2]),
+        MockRestDeployment.new(self, '0000002', 'master', '0000002', nil, false, base_time2, false, [base_time2, base_time6]),
         MockRestDeployment.new(self, '0000003', 'master', '0000003', nil, false, base_time3, false, [base_time3, base_time5]),
         MockRestDeployment.new(self, '0000004', 'master', '0000004', nil, false, base_time4, false, [base_time4]),
+        MockRestDeployment.new(self, '0000005', 'master', '0000005', nil, false, base_time5, false, [base_time5]),
       ]
     end
   end

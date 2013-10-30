@@ -189,14 +189,14 @@ module RHC
 
         # building an array of activations with their deployments
         deployments.each do |deployment|
-          `echo '#{deployment.activations.first.created_at.class.inspect}' >> /tmp/test1`
-          `echo '#{deployment.activations.first.created_at.inspect}' >> /tmp/test1`
           deployment.activations.each do |activation|
             items << {:activation => activation, :deployment => deployment}
           end
         end
 
         items.sort! {|a,b| a[:activation].created_at <=> b[:activation].created_at }
+
+        first_activation = {}
 
         items.each do |item|
           deployment = item[:deployment]
@@ -206,14 +206,15 @@ module RHC
           item[:active] = item == items.last
 
           # mark rollbacks (activations whose deployment had previous activations)
-          first_activation = items.select{|i| i[:deployment].id == deployment.id}.first[:activation] rescue nil
-          item[:rollback] = first_activation.created_at < activation.created_at rescue false
-          item[:rollback_to] = first_activation.created_at if first_activation
-
-          # mark rolled back (all in between a rollback and its original deployment)
-          if item[:rollback]
-            items.select{|i| i[:activation].created_at > item[:rollback_to] && i[:activation].created_at < activation.created_at }.each{|i| i[:rolled_back] = true}
+          if rollback_to = first_activation[deployment.id]
+            item[:rollback] = true
+            item[:rollback_to] = rollback_to
+            # mark rolled back (all in between a rollback and its original deployment)
+            items.each {|i| i[:rolled_back] = true if i[:activation].created_at > rollback_to && i[:activation].created_at < activation.created_at }
+          else
+            first_activation[deployment.id] = activation.created_at
           end
+
         end
 
         items

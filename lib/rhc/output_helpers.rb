@@ -184,8 +184,7 @@ module RHC
             say color(
               date(activation.created_at.to_s) +
               ', deployment ' + deployment.id +
-              (rolled_back ? ' (rolled back)' : '') +
-              (rollback ? ' (rollback to ' + date(rollback_to.to_s) + ')' : ''),
+              (rollback ? " (rollback to #{date(rollback_to.to_s)}#{rolled_back ? ', rolled back' : ''})" : rolled_back ? ' (rolled back)' : ''),
                 active ? :green : rolled_back ? :yellow : nil)
           end
         end
