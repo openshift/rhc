@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.16.5
+Version: 1.16.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,12 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Oct 30 2013 Adam Miller <admiller@redhat.com> 1.16.6-1
+- Fix oo-register-user invocation for Origin on RHEL. (kraman@gmail.com)
+- Merge pull request #493 from smarterclayton/color_error_message
+  (dmcphers+openshiftbot@redhat.com)
+- Color error message from SSH (ccoleman@redhat.com)
+
 * Tue Oct 29 2013 Adam Miller <admiller@redhat.com> 1.16.5-1
 - Bug 1022444 - Should also print warnings when an error occurs
   (ccoleman@redhat.com)
