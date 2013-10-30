@@ -9,7 +9,7 @@ module RHC
                   :git_url, :app_url, :gear_profile, :framework,
                   :scalable, :health_check_path, :embedded, :gear_count,
                   :ssh_url, :building_app, :cartridges, :initial_git_url,
-                  :auto_deploy, :deployment_branch, :deployment_type, :keep_deployments
+                  :auto_deploy, :deployment_branch, :deployment_type, :keep_deployments, :deployments
       alias_method :domain_name, :domain_id
 
       # Query helper to say consistent with cartridge
@@ -179,12 +179,45 @@ module RHC
       end
 
       def deployments
-        debug "Getting deployments for application #{name}"
-        if supports? "LIST_DEPLOYMENTS"
-          rest_method("LIST_DEPLOYMENTS").sort
-        else
-          raise RHC::DeploymentsNotSupportedException
+        debug "Listing deployments for application #{name}"
+        raise RHC::DeploymentsNotSupportedException if !supports? "LIST_DEPLOYMENTS"
+        rest_method("LIST_DEPLOYMENTS").sort
+      end
+
+      def deployment_activations
+        items = []
+
+        # building an array of activations with their deployments
+        deployments.each do |deployment|
+          deployment.activations.each do |activation|
+            items << {:activation => activation, :deployment => deployment}
+          end
         end
+
+        items.sort! {|a,b| a[:activation].created_at <=> b[:activation].created_at }
+
+        first_activation = {}
+
+        items.each do |item|
+          deployment = item[:deployment]
+          activation = item[:activation]
+
+          # set the currently active (last activation by date)
+          item[:active] = item == items.last
+
+          # mark rollbacks (activations whose deployment had previous activations)
+          if rollback_to = first_activation[deployment.id]
+            item[:rollback] = true
+            item[:rollback_to] = rollback_to
+            # mark rolled back (all in between a rollback and its original deployment)
+            items.each {|i| i[:rolled_back] = true if i[:activation].created_at > rollback_to && i[:activation].created_at < activation.created_at }
+          else
+            first_activation[deployment.id] = activation.created_at
+          end
+
+        end
+
+        items
       end
 
       def configure(options={})

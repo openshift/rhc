@@ -30,14 +30,13 @@ module RHC::Commands
     alias_action :"deployments", :root_command => true
     def list(app)
       rest_app = find_app
-      deployments = rest_app.deployments
+      deployment_activations = rest_app.deployment_activations
 
-      raise RHC::DeploymentNotFoundException, "No deployments found for application #{app}." if !deployments.present?
+      raise RHC::DeploymentNotFoundException, "No deployments found for application #{app}." if !deployment_activations.present?
 
       pager
 
-      display_deployment_list(deployments)
-      paragraph { say "Use 'rhc show-app #{rest_app.name} --configuration' to check your deployment configurations." }
+      display_deployment_list(deployment_activations)
       0
     end
 
@@ -51,11 +50,11 @@ module RHC::Commands
     argument :id, "The deployment ID to show", ["--id ID"], :optional => false
     def show(id)
       rest_app = find_app
-      deployment = rest_app.deployments.select{|item| item.id == id}.first
+      item = rest_app.deployment_activations.reverse_each.detect{|item| item[:deployment].id == id}
 
-      raise RHC::DeploymentNotFoundException, "Deployment ID '#{id}' not found for application #{rest_app.name}." if !deployment.present?
+      raise RHC::DeploymentNotFoundException, "Deployment ID '#{id}' not found for application #{rest_app.name}." if !item.present?
 
-      display_deployment(deployment)
+      display_deployment(item)
       paragraph { say "Use 'rhc show-app #{rest_app.name} --configuration' to check your deployment configurations." }
       0
     end

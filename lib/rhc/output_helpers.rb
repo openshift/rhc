@@ -156,41 +156,38 @@ module RHC
       end
     end
 
-    def display_deployment(deployment)
-      display_deployment_list([deployment], false)
+    def display_deployment(item, highlight_active=true)
+      deployment = item[:deployment]
+      active = item[:active]
+      paragraph do
+        say format_table(
+          "Deployment ID #{deployment.id} #{active ? '(active)' : '(inactive)'}",
+          get_properties(deployment, :ref, :sha1, :created_at, :artifact_url, :hot_deploy, :force_clean_build, :activations),
+          {
+            :delete => true,
+            :color => (:green if active && highlight_active)
+          }
+        )
+      end
     end
 
-    def display_deployment_list(deployment_list, highlight_active=true)
-      if deployment_list.present?
-
-        active_deployment_id = nil
-        if highlight_active
-          active_activation_date = nil
-          deployment_list.each do |deployment|
-            deployment.activations.each do |activation|
-              active_deployment_id, active_activation_date = deployment.id, datetime_rfc3339(activation) if active_deployment_id.nil? || datetime_rfc3339(activation) > active_activation_date
-            end
+    def display_deployment_list(deployment_activations, highlight_active=true)
+      if deployment_activations.present?
+        paragraph do
+          deployment_activations.each do |item|
+            activation = item[:activation]
+            deployment = item[:deployment]
+            rollback = item[:rollback]
+            rollback_to = item[:rollback_to]
+            rolled_back = item[:rolled_back]
+            active = item[:active]
+            say color(
+              date(activation.created_at.to_s) +
+              ', deployment ' + deployment.id +
+              (rollback ? " (rollback to #{date(rollback_to.to_s)}#{rolled_back ? ', rolled back' : ''})" : rolled_back ? ' (rolled back)' : ''),
+                active ? :green : rolled_back ? :yellow : nil)
           end
         end
-
-        deployment_list.each do |deployment|
-          active = active_deployment_id == deployment.id
-          paragraph do
-            say format_table(
-              "Deployment ID #{deployment.id}#{highlight_active ? active ? ' (active)' : ' (inactive)' : ''}",
-              get_properties(deployment, :ref, :sha1, :created_at, :artifact_url, :hot_deploy, :force_clean_build, :activations),
-              {
-                :delete => true,
-                :color => (:green if active)
-              }
-            )
-          end
-        end
-
-        #items = deployment_list.map do |item|
-        #  [active_id == item.id ? 'ACTIVE' : '', item.id, item.ref, item.sha1, item.hot_deploy, date(item.created_at), item.artifact_url, item.force_clean_build, item.activations.collect{|item| date(item)}.join(', ')]
-        #end
-        #say table(items, :header => ['', "ID", "Ref", "SHA1", "Hot Deploy?", "Created At\u25BE", "Artifact", "Force Clean?", "Activations"])
       end
     end
 
@@ -249,7 +246,7 @@ module RHC
         when :expires_in_seconds
           distance_of_time_in_words(value)
         when :activations
-          value.sort{|a, b| datetime_rfc3339(b) <=> datetime_rfc3339(a)}.collect{|item| date(item)}.join("\n")
+          value.collect{|item| date(item.created_at.to_s)}.join("\n")
         when :auto_deploy
           value ? 'auto (on git push)' : "manual (use 'rhc deploy')"
         else

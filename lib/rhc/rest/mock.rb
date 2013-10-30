@@ -908,9 +908,18 @@ module RHC::Rest::Mock
     end
 
     def deployments
+      base_time1 = Time.local(2000,1,1,1,0,0).strftime('%Y-%m-%dT%H:%M:%S%z')
+      base_time2 = Time.local(2000,1,1,2,0,0).strftime('%Y-%m-%dT%H:%M:%S%z')
+      base_time3 = Time.local(2000,1,1,3,0,0).strftime('%Y-%m-%dT%H:%M:%S%z')
+      base_time4 = Time.local(2000,1,1,4,0,0).strftime('%Y-%m-%dT%H:%M:%S%z')
+      base_time5 = Time.local(2000,1,1,5,0,0).strftime('%Y-%m-%dT%H:%M:%S%z')
+      base_time6 = Time.local(2000,1,1,6,0,0).strftime('%Y-%m-%dT%H:%M:%S%z')
       [
-        MockRestDeployment.new(self, '1', 'master', '123456', nil, false, '2013-01-01T00:09:00+00:00', false, ['2013-01-01T00:09:00+00:00']),
-        MockRestDeployment.new(self, '2', 'master', '789012', nil, false, '2013-01-01T00:09:00+00:00', false, ['2013-01-01T00:09:00+00:00'])
+        MockRestDeployment.new(self, '0000001', 'master', '0000001', nil, false, base_time1, false, [base_time1]),
+        MockRestDeployment.new(self, '0000002', 'master', '0000002', nil, false, base_time2, false, [base_time2, base_time6]),
+        MockRestDeployment.new(self, '0000003', 'master', '0000003', nil, false, base_time3, false, [base_time3, base_time5]),
+        MockRestDeployment.new(self, '0000004', 'master', '0000004', nil, false, base_time4, false, [base_time4]),
+        MockRestDeployment.new(self, '0000005', 'master', '0000005', nil, false, base_time5, false, [base_time5]),
       ]
     end
   end
@@ -998,7 +1007,18 @@ module RHC::Rest::Mock
       @force_clean_build = force_clean_build
       @activations = activations
     end
+
+    def activations
+      @activations.map{|activation| MockRestActivation.new(client, RHC::Helpers.datetime_rfc3339(activation))}.sort
+    end
   end
 
+
+  class MockRestActivation < RHC::Rest::Activation
+    def initialize(client, created_at)
+      super({}, client)
+      @created_at = created_at
+    end
+  end
 end
 

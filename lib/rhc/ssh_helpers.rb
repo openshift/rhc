@@ -17,6 +17,7 @@
 
 require 'net/ssh'
 require 'rhc/vendor/sshkey'
+require 'ostruct'
 
 module RHC
   module SSHHelpers

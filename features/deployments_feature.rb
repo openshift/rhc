@@ -3,6 +3,8 @@ require 'direct_execution_helper'
 require 'httpclient'
 require 'fileutils'
 
+DEPLOYMENT_LIST_ITEM = /([0-2]?[0-9]:[0-5][0-9] (AM|PM), deployment [a-f0-9]{8})/
+
 describe "rhc deployment scenarios" do
   context "with an existing app" do
     before(:all) do
@@ -14,10 +16,7 @@ describe "rhc deployment scenarios" do
 
     it "should display deployment list" do
       r = list_deployments
-      r.stdout.should match /Deployment ID .*\(active\)/
-      r.stdout.should match /Git Reference:\s+master/
-      r.stdout.should match /Hot Deploy:\s+false/
-      r.stdout.should match /Force Clean Build:\s+false/
+      r.stdout.should match DEPLOYMENT_LIST_ITEM
     end
 
     it "should configure the app for a git ref deployment" do
@@ -42,8 +41,8 @@ describe "rhc deployment scenarios" do
       r.stdout.should match /Deployment of git ref 'master' in progress for application #{app.name}/
       r.stdout.should match /Success/
       r = list_deployments
-      r.stdout.should match /Deployment ID .*\(active\)/
-      r.stdout.should match /Deployment ID .*\(inactive\)/
+      r.stdout.should match DEPLOYMENT_LIST_ITEM
+      r.stdout.scan(DEPLOYMENT_LIST_ITEM).length.should > 1
     end
 
     it "should perform a complete deploy workflow" do
@@ -116,7 +115,7 @@ describe "rhc deployment scenarios" do
 
       def find_inactive_deployment
         r = list_deployments
-        r.stdout.match(/Deployment ID (\w*) \(inactive\)/)[1]
+        r.stdout.match(/deployment ([a-f0-9]{8})/)[1]
       end
 
       def ensure_command(*args)
