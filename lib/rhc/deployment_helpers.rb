@@ -1,5 +1,4 @@
 require 'rhc/ssh_helpers'
-require 'net/http'
 
 module RHC
   module DeploymentHelpers
