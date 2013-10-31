@@ -17,7 +17,7 @@
 
 require 'net/ssh'
 require 'rhc/vendor/sshkey'
-require 'ostruct'
+require 'httpclient'
 
 module RHC
   module SSHHelpers
@@ -179,11 +179,9 @@ module RHC
           end
           channel.exec(command) do |ch, success|
             channel.on_data do |ch, data|
-              debug "stdout: "
               print data
             end
             channel.on_extended_data do |ch, type, data|
-              debug "stderr: "
               print data
             end
             channel.on_close do |ch|
@@ -243,17 +241,8 @@ module RHC
       content_url = URI.parse(URI.encode(content_url.to_s))
       proxy = ENV['http_proxy'] ? URI.parse(ENV['http_proxy']) : OpenStruct.new
       ssh_ruby(host, username, command) do |channel|
-        http = Net::HTTP.new(content_url.host, content_url.port, proxy.host, proxy.port)
-        if (content_url.scheme == "https")
-          http.use_ssl = true
-          http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-        end
-        http.start do |http|
-          http.request_get(content_url.path) do |response|
-            response.read_body do |chunk|
-              channel.send_data chunk
-            end
-          end
+        HTTPClient.new.get_content(content_url) do |chunk|
+          channel.send_data chunk
         end
       end
     end

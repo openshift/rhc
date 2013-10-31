@@ -104,22 +104,13 @@ describe RHC::Commands::Deployment do
           channel.should_receive(:on_extended_data).exactly(3).times.and_yield(nil, nil, '')
           channel.should_receive(:on_close).exactly(3).times.and_yield(nil)
           channel.should_receive(:on_request).exactly(3).times.with("exit-status").and_yield(nil, exit_status)
-          http = double(Net::HTTP)
-          response = double(Net::HTTPResponse)
-          Net::HTTP.should_receive(:new).exactly(3).times.with(uri.host, uri.port, nil, nil).and_return(http)
-          if (uri.scheme == 'https')
-            http.should_receive(:use_ssl=).exactly(3).times.with(true)
-            http.should_receive(:verify_mode=).exactly(3).times.with(OpenSSL::SSL::VERIFY_NONE)
-          end
-          http.should_receive(:start).exactly(3).times.and_yield(http)
-          http.should_receive(:request_get).exactly(3).times.with(uri.path).and_yield(response)
           lines = ''
           File.open(@targz_filename, 'rb') do |file|
             file.chunk(1024) do |chunk|
               lines << chunk
             end
           end
-          response.should_receive(:read_body).exactly(3).times.and_yield(lines)
+          stub_request(:get, uri.to_s).to_return(:status => 200, :body => lines, :headers => {})
           channel.should_receive(:send_data).exactly(3).times.with(lines)
           channel.should_receive(:eof!).exactly(3).times
           session.should_receive(:loop).exactly(3).times
