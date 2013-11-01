@@ -239,7 +239,6 @@ module RHC
     #
     def ssh_send_url_ruby(host, username, command, content_url)
       content_url = URI.parse(URI.encode(content_url.to_s))
-      proxy = ENV['http_proxy'] ? URI.parse(ENV['http_proxy']) : OpenStruct.new
       ssh_ruby(host, username, command) do |channel|
         HTTPClient.new.get_content(content_url) do |chunk|
           channel.send_data chunk
