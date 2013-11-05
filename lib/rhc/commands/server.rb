@@ -2,7 +2,7 @@ module RHC::Commands
   class Server < Base
     suppress_wizard
 
-    summary "Display information about the status of the OpenShift service."
+    summary "Display information about the status of the OpenShift service"
     description <<-DESC
       Retrieves any open issues or notices about the operation of the
       OpenShift service and displays them in the order they were opened.
