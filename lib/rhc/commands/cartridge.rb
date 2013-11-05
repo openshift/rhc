@@ -72,6 +72,7 @@ module RHC::Commands
     syntax "<cartridge_type> [--namespace NAME] [--app NAME]"
     takes_application
     option ["-e", "--env VARIABLE=VALUE"], "Environment variable(s) to be set on this cartridge, or path to a file containing environment variables", :type => :list
+    option ["-g", "--gear-size SIZE"], "Gear size controls how much memory and CPU your cartridge can use"
     argument :cart_type, "The type of the cartridge you are adding (run 'rhc cartridge list' to obtain a list of available cartridges)", ["-c", "--cartridge cart_type"]
     alias_action :"app cartridge add", :root_command => true, :deprecated => true
     def add(cart_type)
@@ -84,7 +85,10 @@ module RHC::Commands
       rest_app = find_app(:include => :cartridges)
 
       supports_env_vars = rest_app.supports_add_cartridge_with_env_vars?
+      supports_gear_size = rest_app.supports_add_cartridge_with_gear_size?
+
       cart.environment_variables = collect_env_vars(options.env).map { |item| item.to_hash } if options.env && supports_env_vars
+      cart.gear_size = options.gear_size if options.gear_size && supports_gear_size
 
       rest_cartridge = rest_app.add_cartridge(cart)
 
@@ -95,6 +99,7 @@ module RHC::Commands
       paragraph{ display_cart(rest_cartridge) }
       paragraph{ say "Use 'rhc env --help' to manage environment variable(s) on this cartridge and application." } if cart.environment_variables.present?
       paragraph{ warn "Server does not support environment variables." if options.env && !supports_env_vars  }
+      paragraph{ warn "Server does not support gear sizes for cartridges." if options.gear_size && !supports_gear_size  }
       paragraph{ rest_cartridge.messages.each { |msg| success msg } }
 
       0

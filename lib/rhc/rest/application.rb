@@ -45,6 +45,9 @@ module RHC
             if cart.respond_to?(:environment_variables) && cart.environment_variables.present?
               c[:environment_variables] = cart.environment_variables
             end
+            if cart.respond_to?(:gear_size) && cart.gear_size.present?
+              c[:gear_size] = cart.gear_size
+            end
             cart = c
           end
 
@@ -176,6 +179,10 @@ module RHC
 
       def supports_add_cartridge_with_env_vars?
         has_param?('ADD_CARTRIDGE', 'environment_variables')
+      end
+
+      def supports_add_cartridge_with_gear_size?
+        has_param?('ADD_CARTRIDGE', 'gear_size')
       end
 
       def deployments
