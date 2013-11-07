@@ -94,6 +94,38 @@ describe RHC::Commands::Cartridge do
 
   describe 'cartridge add' do
     let!(:rest_client){ MockRestClient.new }
+    let(:arguments) { ['cartridge', 'add', 'mock_cart-1', '--app', 'app1', '--gear-size', 'small'] }
+
+    context 'with gear size' do
+      before do
+        domain = rest_client.add_domain("mock_domain")
+        app = domain.add_application("app1", "mock_type", true)
+      end
+      it { succeed_with_message /Adding mock_cart-1 to application 'app1' \.\.\. / }
+      it { succeed_with_message /Connection URL:\s+http\:\/\/fake\.url/ }
+      it { succeed_with_message /Prop1:\s+value1/ }
+      it { succeed_with_message /Cartridge added with properties/ }
+      it "should not contain env var info" do
+        run_output.should_not match(/Environment Variables/)
+      end
+      it { succeed_with_message /Gears:\s+1 small/ }
+    end
+
+    context 'with gear size on unsupported server' do
+      let(:arguments) { ['cartridge', 'add', 'mock_cart-1', '--app', 'app1', '--gear-size', 'small']  }
+      before do
+        domain = rest_client.add_domain("mock_domain")
+        app = domain.add_application("app1", "mock_type", true)
+        @app.stub(:has_param?).with('ADD_CARTRIDGE','environment_variables').and_return(true)
+        @app.stub(:has_param?).with('ADD_CARTRIDGE','gear_size').and_return(false)
+      end
+      it { expect { run }.to exit_with_code(0) }
+      it { run_output.should match(/Server does not support gear sizes for cartridges/) }
+    end
+  end
+
+  describe 'cartridge add' do
+    let!(:rest_client){ MockRestClient.new }
     let(:instance) do
       domain = rest_client.add_domain("mock_domain")
       @app = domain.add_application("app1", "mock_type")
@@ -595,7 +627,10 @@ describe RHC::Commands::Cartridge do
     ].each_with_index do |args, i|
       context "when run against a server without env vars support #{i}" do
         let(:arguments) { args }
-        before{ @app.should_receive(:has_param?).with('ADD_CARTRIDGE','environment_variables').and_return(false) }
+        before do
+          @app.stub(:has_param?).with('ADD_CARTRIDGE','environment_variables').and_return(false)
+          @app.stub(:has_param?).with('ADD_CARTRIDGE','gear_size').and_return(true)
+        end
         it { expect { run }.to exit_with_code(0) }
         it { run_output.should match(/Server does not support environment variables/) }
         it { run_output.should_not match(/Environment Variables:\s+FOO=BAR/) }

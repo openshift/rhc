@@ -36,6 +36,10 @@ module RhcExecutionHelper
     end
   end
 
+  def an_addon_cartridge
+    'mysql-5'
+  end
+
   def rhc(*args)
     opts = args.pop if args.last.is_a? Hash
     opts ||= {}
@@ -139,10 +143,21 @@ module RhcExecutionHelper
     c = for_user ? for_user.client : client
     debug.puts "Creating or reusing an app" if debug?
     apps = c.applications
-    apps.first or begin
+    apps.find{|app| !app.scalable?} or begin
       domain = has_a_domain(for_user)
       debug.puts "  creating a new application" if debug?
       c.domains.first.add_application("test#{random}", :cartridges => [a_web_cartridge])
+    end
+  end
+
+  def has_a_scalable_application(for_user=nil)
+    c = for_user ? for_user.client : client
+    debug.puts "Creating or reusing a scalable app" if debug?
+    apps = c.applications
+    apps.find(&:scalable?) or begin
+      domain = has_a_domain(for_user)
+      debug.puts "  creating a new scalable application" if debug?
+      c.domains.first.add_application("scalable#{random}", :cartridges => [a_web_cartridge], :scale => true)
     end
   end
 
