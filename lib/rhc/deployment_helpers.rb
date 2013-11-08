@@ -10,11 +10,34 @@ module RHC
     protected
 
       def deploy_artifact(rest_app, artifact, hot_deploy, force_clean_build)
-        File.file?(artifact) ?
-          deploy_local_file(rest_app, artifact, hot_deploy, force_clean_build) :
-        artifact =~ /^#{URI::regexp}$/ ?
-          deploy_file_from_url(rest_app, artifact, hot_deploy, force_clean_build) :
-        deploy_git_ref(rest_app, artifact, hot_deploy, force_clean_build)
+        is_file = File.file?(artifact)
+        is_url = URI::ABS_URI.match(artifact).present?
+
+        if rest_app.deployment_type == 'binary'
+          if is_file
+            deploy_local_file(rest_app, artifact, hot_deploy, force_clean_build)
+          elsif is_url
+            deploy_file_from_url(rest_app, artifact, hot_deploy, force_clean_build)
+          else
+            paragraph do
+              warn "The application '#{rest_app.name}' is configured for binary deployments but the artifact "\
+                "provided ('#{artifact}') is not a binary file. Please provide the path to a deployable file on "\
+                "your local filesystem or a url, or configure your app to deploy from a git reference with 'rhc "\
+                "configure-app #{rest_app.name} --deployment-type git'."
+            end
+            raise IncompatibleDeploymentTypeException
+          end
+        elsif is_file || is_url
+          paragraph do
+            warn "The application '#{rest_app.name}' is configured for git "\
+              "reference deployments but the artifact provided ('#{artifact}') is #{is_file ? 'a file' : 'a url'}. Please "\
+              "provide a git reference to deploy (branch, tag or commit SHA1) or configure your app to deploy from binaries "\
+              "with 'rhc configure-app #{rest_app.name} --deployment-type binary'."
+          end
+          raise IncompatibleDeploymentTypeException
+        else
+          deploy_git_ref(rest_app, artifact, hot_deploy, force_clean_build)
+        end
       end
 
       def deploy_git_ref(rest_app, ref, hot_deploy, force_clean_build)

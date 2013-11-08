@@ -132,6 +132,12 @@ module RHC
     end
   end
 
+  class IncompatibleDeploymentTypeException < Exception
+    def initialize(message="The artifact provided is not compatible with the app deployment type.")
+      super message, 133
+    end
+  end
+
   class MissingScalingValueException < Exception
     def initialize(message="Must provide either a min or max value for scaling")
       super message
