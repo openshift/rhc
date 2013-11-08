@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.17.1
+Version: 1.17.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,11 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Nov 08 2013 Adam Miller <admiller@redhat.com> 1.17.2-1
+- Merge pull request #502 from liggitt/fix_scalable_test
+  (dmcphers+openshiftbot@redhat.com)
+- Fix scalable test (jliggitt@redhat.com)
+
 * Thu Nov 07 2013 Adam Miller <admiller@redhat.com> 1.17.1-1
 - Merge pull request #501 from fabianofranz/master
   (dmcphers+openshiftbot@redhat.com)
