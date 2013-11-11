@@ -58,6 +58,7 @@ describe RHC::Commands::Deployment do
 
     context "binary file successfully" do
       before do
+        @rest_app.stub(:deployment_type).and_return('binary')
         ssh = double(Net::SSH)
         session = double(Net::SSH::Connection::Session)
         channel = double(Net::SSH::Connection::Channel)
@@ -92,6 +93,7 @@ describe RHC::Commands::Deployment do
      URI('https://foo.com/path/to/file/' + DEPLOYMENT_APP_NAME + '.tar.gz')].each do |uri|
       context "url file successfully" do
         before do
+        @rest_app.stub(:deployment_type).and_return('binary')
           ssh = double(Net::SSH)
           session = double(Net::SSH::Connection::Session)
           channel = double(Net::SSH::Connection::Channel)
@@ -126,6 +128,7 @@ describe RHC::Commands::Deployment do
 
     context "binary file with corrupted file" do
       before do
+        @rest_app.stub(:deployment_type).and_return('binary')
         ssh = double(Net::SSH)
         session = double(Net::SSH::Connection::Session)
         channel = double(Net::SSH::Connection::Channel)
@@ -165,7 +168,10 @@ describe RHC::Commands::Deployment do
     end
 
     context "fails when deploying binary file" do
-      before (:each) { Net::SSH.should_receive(:start).and_raise(Errno::ECONNREFUSED) }
+      before (:each) do
+        @rest_app.stub(:deployment_type).and_return('binary')
+        Net::SSH.should_receive(:start).and_raise(Errno::ECONNREFUSED)
+      end
       let(:arguments) {['app', 'deploy', @targz_filename, '--app', DEPLOYMENT_APP_NAME]}
       it "should exit with error" do
         expect{ run }.to exit_with_code(1)
@@ -173,7 +179,10 @@ describe RHC::Commands::Deployment do
     end
 
     context "fails when deploying binary file" do
-      before (:each) { Net::SSH.should_receive(:start).and_raise(SocketError) }
+      before (:each) do
+        @rest_app.stub(:deployment_type).and_return('binary')
+        Net::SSH.should_receive(:start).and_raise(SocketError)
+      end
       let(:arguments) {['app', 'deploy', @targz_filename, '--app', DEPLOYMENT_APP_NAME]}
       it "should exit with error" do
         expect{ run }.to exit_with_code(1)
@@ -181,7 +190,10 @@ describe RHC::Commands::Deployment do
     end
 
     context "fails when deploying url file" do
-      before (:each) { Net::SSH.should_receive(:start).and_raise(Errno::ECONNREFUSED) }
+      before (:each) do
+        @rest_app.stub(:deployment_type).and_return('binary')
+        Net::SSH.should_receive(:start).and_raise(Errno::ECONNREFUSED)
+      end
       let(:arguments) {['app', 'deploy', 'http://foo.com/deploy.tar.gz', '--app', DEPLOYMENT_APP_NAME]}
       it "should exit with error" do
         expect{ run }.to exit_with_code(1)
@@ -189,7 +201,10 @@ describe RHC::Commands::Deployment do
     end
 
     context "fails when deploying url file" do
-      before (:each) { Net::SSH.should_receive(:start).and_raise(SocketError) }
+      before (:each) do
+        @rest_app.stub(:deployment_type).and_return('binary')
+        Net::SSH.should_receive(:start).and_raise(SocketError)
+      end
       let(:arguments) {['app', 'deploy', 'http://foo.com/deploy.tar.gz', '--app', DEPLOYMENT_APP_NAME]}
       it "should exit with error" do
         expect{ run }.to exit_with_code(1)
@@ -217,6 +232,32 @@ describe RHC::Commands::Deployment do
       end
     end
 
+    context "fails when deploying git reference on an app configured to deployment_type = binary" do
+      before { @rest_app.stub(:deployment_type).and_return('binary') }
+      let(:arguments) {['app', 'deploy', 'master', '--app', DEPLOYMENT_APP_NAME]}
+      it "should exit with error" do
+        expect{ run }.to exit_with_code(133)
+      end
+    end
+
+    context "fails when deploying file on an app configured to deployment_type = git" do
+      before { @rest_app.stub(:deployment_type).and_return('git') }
+      let(:arguments) {['app', 'deploy', @targz_filename, '--app', DEPLOYMENT_APP_NAME]}
+      it "should exit with error" do
+        expect{ run }.to exit_with_code(133)
+      end
+    end
+
+    [URI('http://foo.com/path/to/file/' + DEPLOYMENT_APP_NAME + '.tar.gz'),
+     URI('https://foo.com/path/to/file/' + DEPLOYMENT_APP_NAME + '.tar.gz')].each do |uri|
+      context "fails when deploying url on an app configured to deployment_type = git" do
+        before { @rest_app.stub(:deployment_type).and_return('git') }
+        let(:arguments) {['app', 'deploy', uri.to_s, '--app', DEPLOYMENT_APP_NAME]}
+        it "should exit with error" do
+          expect{ run }.to exit_with_code(133)
+        end
+      end
+    end
   end
 
   describe "activate deployment" do
