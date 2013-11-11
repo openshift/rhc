@@ -368,6 +368,19 @@ describe RHC::Commands::Domain do
       end
       it { run_output.should match("Applications must be empty") }
     end
+
+    context 'when delete is forced' do
+      let(:arguments) { ['domain', 'delete', 'deleteme', '--force'] }
+      before do
+        domain = rest_client.add_domain("deleteme")
+        domain.add_application 'testapp1', 'mock-1.0'
+      end
+      it "should delete successfully" do
+        expect { run }.to exit_with_code(0)
+        rest_client.domains.empty?.should be_true
+      end
+    end
+    
   end
 
   describe 'help' do
