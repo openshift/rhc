@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.17.2
+Version: 1.17.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,14 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Nov 11 2013 Adam Miller <admiller@redhat.com> 1.17.3-1
+- Merge pull request #504 from liggitt/bug_1028963_force_delete_domain
+  (dmcphers+openshiftbot@redhat.com)
+- Update spec test (jliggitt@redhat.com)
+- Bug 1026275 - will fail in the client when trying to deploy an artifact
+  incompatible with the app deployment type (contact@fabianofranz.com)
+- Bug 1028963: Add --force option to delete-domain (jliggitt@redhat.com)
+
 * Fri Nov 08 2013 Adam Miller <admiller@redhat.com> 1.17.2-1
 - Merge pull request #502 from liggitt/fix_scalable_test
   (dmcphers+openshiftbot@redhat.com)
