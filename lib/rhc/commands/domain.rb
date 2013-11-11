@@ -68,7 +68,7 @@ module RHC::Commands
 
     summary "Change one or more configuration settings on the domain"
     syntax "<namespace>"
-    option ['--[no-]allowed-gear-sizes [SIZES]'], 'A comma-delimited list of the gear sizes that will be allowed in this domain.', :optional => true
+    option ['--[no-]allowed-gear-sizes [SIZES]'], "A comma-delimited list of gear sizes allowed in this domain. To see available sizes, run 'rhc account'.", :optional => true
     takes_domain :argument => true
     def configure(_)
       domain = find_domain
