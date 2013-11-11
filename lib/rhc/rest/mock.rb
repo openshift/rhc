@@ -667,8 +667,8 @@ module RHC::Rest::Mock
       self
     end
 
-    def destroy
-      raise RHC::Rest::ClientErrorException.new("Applications must be empty.") unless @applications.empty?
+    def destroy(force=false)
+      raise RHC::Rest::ClientErrorException.new("Applications must be empty.") unless @applications.empty? or force.present?
       client.domains.delete_if { |d| d.name == @name }
 
       @applications = nil
