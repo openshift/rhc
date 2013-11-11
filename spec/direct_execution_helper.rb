@@ -37,7 +37,7 @@ module RhcExecutionHelper
   end
 
   def an_addon_cartridge
-    'mysql-5'
+    'postgresql-9'
   end
 
   def rhc(*args)
