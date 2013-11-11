@@ -128,11 +128,12 @@ module RHC::Commands
     summary "Delete a domain"
     syntax "<namespace>"
     takes_domain :argument => true
+    option ["-f", "--force"], "Force the action"
     def delete(_)
       domain = find_domain
 
       say "Deleting domain '#{domain.name}' ... "
-      domain.destroy
+      domain.destroy(options.force.present?)
       success "deleted"
 
       0
