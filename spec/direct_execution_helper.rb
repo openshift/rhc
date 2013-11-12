@@ -36,8 +36,9 @@ module RhcExecutionHelper
     end
   end
 
-  def an_addon_cartridge
-    'mysql-5'
+  def a_random_cartridge(with_tags=nil, for_user=nil)
+    c = for_user ? for_user.client : client
+    c.cartridges.select{|cartridge| with_tags.nil? || (with_tags - cartridge.tags).empty?}.shuffle.first.name
   end
 
   def rhc(*args)

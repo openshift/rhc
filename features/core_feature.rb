@@ -161,14 +161,16 @@ describe "rhc core scenarios" do
       let(:app){ @app }
 
       it "should add a cartridge with small gear size" do
-        r = rhc 'add-cartridge', an_addon_cartridge, '-a', app.name, '--gear-size', 'small'
-        r.stdout.should match /#{an_addon_cartridge}/
+        cartridge = a_random_cartridge(['embedded', 'service', 'database'])
+        r = rhc 'add-cartridge', cartridge, '-a', app.name, '--gear-size', 'small'
+        r.stdout.should match /#{cartridge}/
         r.stdout.should match /Gears:\s+1 small/
         r.status.should == 0
       end
 
       it "should fail for a cartridge with not allowed gear size" do
-        r = rhc 'add-cartridge', an_addon_cartridge, '-a', app.name, '--gear-size', 'medium'
+        cartridge = a_random_cartridge(['embedded', 'service', 'database'])
+        r = rhc 'add-cartridge', cartridge, '-a', app.name, '--gear-size', 'medium'
         r.stdout.should match "The gear size 'medium' is not valid for this domain. Allowed sizes: small."
         r.status.should_not == 0
       end
