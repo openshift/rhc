@@ -34,11 +34,20 @@ describe "rhc domain scenarios" do
 
     it "should reject invalid gear size configuration changes" do
       all_sizes = client.user.capabilities.gear_sizes
+      valid_sizes = client.api.links['ADD_DOMAIN']['optional_params'].inject([]) {|sizes, p| sizes += p['valid_options'] if p['name'] == 'allowed_gear_sizes' } rescue []
+      disallowed_sizes = valid_sizes - all_sizes
 
       r = rhc 'configure-domain', domain.name, '--allowed-gear-sizes', '_not_a_size_'
       r.status.should_not == 1
       r.stdout.should match "Updating domain configuration.*The following gear sizes are invalid: _not_a_size_"
       client.reset.find_domain(domain.name).allowed_gear_sizes.should == all_sizes
+
+      if disallowed_sizes.first
+        r = rhc 'configure-domain', domain.name, '--allowed-gear-sizes', disallowed_sizes.first
+        r.status.should_not == 1
+        r.stdout.should match "Updating domain configuration.*The following gear sizes are not available.*: #{disallowed_sizes.first}"
+        client.reset.find_domain(domain.name).allowed_gear_sizes.should == all_sizes
+      end
 
       r = rhc 'configure-domain', domain.name, '--allowed-gear-sizes'
       r.status.should_not == 1
