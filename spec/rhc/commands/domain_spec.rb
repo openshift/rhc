@@ -321,6 +321,11 @@ describe RHC::Commands::Domain do
         it("should succeed"){ expect { run }.to exit_with_code(0) }
         it("should display the domain config"){ run_output.should match(/Domain domain1 configuration.*Allowed Gear Sizes:\s+<none>/m) }
       end
+
+      context "with --allowed-gear-sizes and --no-allowed-gear-sizes" do
+        let(:arguments) { ['domain', 'configure', 'domain1', '--trace', '--no-allowed-gear-sizes', '--allowed-gear-sizes', 'small'] }
+        it("raise an invalid option"){ expect{ run }.to raise_error(OptionParser::InvalidOption, /--allowed-gear-sizes.*--no-allowed-gear-sizes/) }
+      end
     end
   end
 

@@ -37,7 +37,8 @@ module RHC::Commands
       '--allowed-gear-sizes' option.  If '--no-allowed-gear-sizes' is set, no applications
       can be created in the domain.  Older servers may not support this option.
       DESC
-    option ['--[no-]allowed-gear-sizes [SIZES]'], 'A comma-delimited list of the gear sizes that will be allowed in this domain.', :optional => true
+    option ['--no-allowed-gear-sizes'], 'Do not allow any gear sizes in this domain.', :optional => true
+    option ['--allowed-gear-sizes [SIZES]'], 'A comma-delimited list of the gear sizes that will be allowed in this domain.', :optional => true
     argument :namespace, "New domain name (letters and numbers, max 16 chars)", ["-n", "--namespace NAME"]
     def create(namespace)
       say "Creating domain '#{namespace}' ... "
@@ -68,12 +69,13 @@ module RHC::Commands
 
     summary "Change one or more configuration settings on the domain"
     syntax "<namespace>"
-    option ['--[no-]allowed-gear-sizes [SIZES]'], "A comma-delimited list of gear sizes allowed in this domain. To see available sizes, run 'rhc account'.", :optional => true
+    option ['--no-allowed-gear-sizes'], 'Do not allow any gear sizes in this domain.', :optional => true
+    option ['--allowed-gear-sizes [SIZES]'], "A comma-delimited list of gear sizes allowed in this domain. To see available sizes, run 'rhc account'.", :optional => true
     takes_domain :argument => true
     def configure(_)
       domain = find_domain
       payload = {}
-      payload[:allowed_gear_sizes] = check_allowed_gear_sizes unless options.allowed_gear_sizes.nil?
+      payload[:allowed_gear_sizes] = check_allowed_gear_sizes unless options.allowed_gear_sizes.nil? and options.no_allowed_gear_sizes.nil?
 
       if payload.present?
         say "Updating domain configuration ... "
@@ -154,7 +156,8 @@ module RHC::Commands
 
     protected
       def check_allowed_gear_sizes
-        sizes = options.allowed_gear_sizes
+        raise OptionParser::InvalidOption, "--allowed-gear-sizes and --no-allowed-gear-sizes cannot both be specified" unless options.allowed_gear_sizes.nil? or options.no_allowed_gear_sizes.nil?
+        sizes = options.no_allowed_gear_sizes.nil? ? options.allowed_gear_sizes : false
         raise OptionParser::InvalidOption, "The server does not support --allowed-gear-sizes" unless sizes.nil? || rest_client.api.has_param?(:add_domain, 'allowed_gear_sizes')
         if sizes.is_a? String
           sizes.split(',').map(&:strip).map(&:presence)
