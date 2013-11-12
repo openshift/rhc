@@ -199,7 +199,7 @@ module RHC::Commands
       cartridges such as databases may require specific increments of scaling (1, 3, 5) in order to
       properly function.  Please consult the cartridge documentation for more on specifics of scaling.
 
-      Set both values the same to guarantee a scale value.  You may pecify both values with the argument
+      Set both values the same to guarantee a scale value.  You may specify both values with the argument
       'multiplier' or use '--min' and '--max' independently.
 
       Scaling may take several minutes or more if the server must provision multiple gears. Your operation
