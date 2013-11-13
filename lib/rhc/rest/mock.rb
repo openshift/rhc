@@ -929,9 +929,10 @@ module RHC::Rest::Mock
 
     attr_accessor :usage_rate
 
-    def initialize(client, name, type, app=nil, tags=[], properties=[{'type' => 'cart_data', 'name' => 'connection_url', 'value' => "http://fake.url" }])
+    def initialize(client, name, type, app=nil, tags=[], properties=[{'type' => 'cart_data', 'name' => 'connection_url', 'value' => "http://fake.url" }], description=nil)
       super({}, client)
       @name = name
+      @description = description || "Description of #{name}"
       @type = type
       @app = app
       @tags = tags
