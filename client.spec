@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.17.4
+Version: 1.17.5
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,16 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Nov 13 2013 Adam Miller <admiller@redhat.com> 1.17.5-1
+- Fix bug 1018077: Regex-breaking cartridge name search (jliggitt@redhat.com)
+- Merge pull request #510 from liggitt/bug_1025241_typo
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #509 from
+  liggitt/bug_1010939_improve_no_allowed_gear_sizes
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 1025241: Fix typo (jliggitt@redhat.com)
+- Bug 1010939: Improve no allowed gear sizes (jliggitt@redhat.com)
+
 * Tue Nov 12 2013 Adam Miller <admiller@redhat.com> 1.17.4-1
 - Merge pull request #508 from fabianofranz/master
   (dmcphers+openshiftbot@redhat.com)
