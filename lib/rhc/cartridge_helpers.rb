@@ -51,7 +51,7 @@ module RHC
         ].compact.any?{ |s| s.present? && s.downcase.gsub(/[_\-\s]/,' ').include?(search) } || 
         search.length > 2 && [
           cart.description
-        ].compact.any?{ |s| s.present? && !s.downcase.match(/\b#{search}\b/).nil? }
+        ].compact.any?{ |s| s.present? && !s.downcase.match(/\b#{Regexp.escape(search)}\b/).nil? }
       end
 
       def web_carts_only

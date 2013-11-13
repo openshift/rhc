@@ -184,6 +184,15 @@ describe RHC::Commands::Cartridge do
       }
     end
 
+    context 'when cartridge with regex breaking name does not exist' do
+      let(:arguments) { ['cartridge', 'add', '*##', '--app', 'app1'] }
+      before do
+        domain = rest_client.add_domain("mock_domain")
+        app = domain.add_application("app1", "mock_type")
+      end
+      it{ fail_with_code 154 }
+    end
+
     context 'when cartridge does not exist' do
       let(:arguments) { ['cartridge', 'add', 'nomatch_cart', '--app', 'app1'] }
       before do
