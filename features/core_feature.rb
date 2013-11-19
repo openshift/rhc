@@ -155,7 +155,8 @@ describe "rhc core scenarios" do
       end
 
       after(:all) do
-        rhc 'app-delete', @app.name
+        debug.puts "cleaning up scalable app" if debug?
+        @app.destroy
       end
 
       let(:app){ @app }
