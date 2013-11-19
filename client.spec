@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.17.5
+Version: 1.17.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Nov 19 2013 Adam Miller <admiller@redhat.com> 1.17.6-1
+- Correctly clean up scalable test (jliggitt@redhat.com)
+
 * Wed Nov 13 2013 Adam Miller <admiller@redhat.com> 1.17.5-1
 - Fix bug 1018077: Regex-breaking cartridge name search (jliggitt@redhat.com)
 - Merge pull request #510 from liggitt/bug_1025241_typo
