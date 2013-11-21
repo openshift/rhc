@@ -92,14 +92,14 @@ module RHC::Commands
 
       paragraph do
         header "Application Options"
-        table([["Domain:", options.namespace],
+        say table([["Domain:", options.namespace],
                ["Cartridges:", cart_names],
               (["Source Code:", options.from_code] if options.from_code),
                ["Gear Size:", options.gear_size || "default"],
                ["Scaling:", options.scaling ? "yes" : "no"],
               (["Environment Variables:", env.map{|item| "#{item.name}=#{item.value}"}.join(', ')] if env.present?),
               ].compact
-             ).each { |s| say "  #{s}" }
+             )
       end
 
       paragraph do
