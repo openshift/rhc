@@ -165,7 +165,11 @@ module RHC::Commands
         if options.git
           section(:now => true, :top => 1, :bottom => 1) do
             begin
-              repo_dir = git_clone_application(rest_app)
+              if has_git?
+                repo_dir = git_clone_application(rest_app)
+              else
+                warn "You do not have git installed, so your application's git repo will not be cloned"
+              end
             rescue RHC::GitException => e
               warn "#{e}"
               unless RHC::Helpers.windows? and windows_nslookup_bug?(rest_app)

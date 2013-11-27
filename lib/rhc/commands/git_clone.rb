@@ -16,11 +16,16 @@ module RHC::Commands
     # TODO: Implement default values for arguments once ffranz has added context arguments
     # argument :directory, "The name of a new directory to clone into", [], :default => nil
     def run(app_name)
-      rest_app = find_app
-      dir = git_clone_application(rest_app)
-      success "Your application Git repository has been cloned to '#{system_path(dir)}'"
+      if has_git?
+        rest_app = find_app
+        dir = git_clone_application(rest_app)
+        success "Your application Git repository has been cloned to '#{system_path(dir)}'"
 
-      0
+        0
+      else
+        error "You do not have git installed. In order to fully interact with OpenShift you will need to install and configure a git client."
+        2
+      end
     end
 
     private
