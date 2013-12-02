@@ -411,6 +411,15 @@ describe RHC::Commands::App do
       end
     end
 
+    context 'when run without git installed' do
+      before do
+        @instance.stub(:has_git?) { false }
+      end
+      it "should print out git warning" do
+        run_output.should match("You do not have git installed")
+      end
+    end
+
     context 'when run with windows and no nslookup bug' do
       before do
         RHC::Helpers.stub(:windows?) { true }

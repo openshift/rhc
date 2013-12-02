@@ -269,6 +269,12 @@ describe AllRhcHelpers do
     before{ subject.stub(:git_version){ raise "Fake Exception" } }
     its(:has_git?) { should be_false }
 
+    context "without git" do
+      before{ subject.stub(:git_cmd){ "nonexistent_git" } }
+      its(:has_git?) { should be_false }
+      it { subject.git_config_get('key').should == nil }
+    end
+
     context "git clone repo" do
       let(:stdout){ 'fake git clone' }
       let(:exit_status){ 0 }

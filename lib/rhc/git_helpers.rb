@@ -3,8 +3,12 @@ require 'fileutils'
 
 module RHC
   module GitHelpers
+    def git_cmd
+      "git"
+    end
+
     def git_version
-      @git_version ||= `git --version 2>&1`.strip #:nocov:
+      @git_version ||= `#{git_cmd} --version 2>&1`.strip #:nocov:
     end
 
     def has_git?
@@ -46,7 +50,9 @@ module RHC
 
     # :nocov: These all call external binaries so test them in cucumber
     def git_config_get(key)
-      config_get_cmd = "git config --get #{key}"
+      return nil unless has_git?
+      
+      config_get_cmd = "#{git_cmd} config --get #{key}"
       value = %x[#{config_get_cmd}].strip
       debug "Git config '#{config_get_cmd}' returned '#{value}'"
       value = nil if $?.exitstatus != 0 or value.empty?
@@ -55,8 +61,8 @@ module RHC
     end
 
     def git_config_set(key, value)
-      unset_cmd = "git config --unset-all #{key}"
-      config_cmd = "git config --add #{key} #{value}"
+      unset_cmd = "#{git_cmd} config --unset-all #{key}"
+      config_cmd = "#{git_cmd} config --add #{key} #{value}"
       debug "Adding #{key} = #{value} to git config"
       commands = [unset_cmd, config_cmd]
       commands.each do |cmd|
@@ -70,7 +76,7 @@ module RHC
     def git_clone_repo(git_url, repo_dir)
       # quote the repo to avoid input injection risk
       destination = (repo_dir ? " \"#{repo_dir}\"" : "")
-      cmd = "git clone #{git_url}#{destination}"
+      cmd = "#{git_cmd} clone #{git_url}#{destination}"
       debug "Running #{cmd}"
 
       status, stdout, stderr = run_with_tee(cmd)
