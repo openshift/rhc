@@ -391,7 +391,7 @@ describe RHC::Auth::Token do
             context "with a token" do
               let(:default_options){ {:use_authorization_tokens => true, :token => 'foo'} }
               it("should invoke raise an error on retry because sessions are not supported") do
-                subject.should_receive(:warn).with("Your authorization token has expired. Please sign in now to continue.")
+                subject.should_receive(:warn).with("Your authorization token has expired. Please sign in now to continue on #{subject.openshift_server}.")
                 auth.should_receive(:retry_auth?).with(response, client).and_return true
                 subject.retry_auth?(response, client).should be_true
                 #expect{ subject.retry_auth?(response, client) }.to raise_error RHC::Rest::AuthorizationsNotSupported
