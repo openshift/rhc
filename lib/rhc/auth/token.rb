@@ -74,7 +74,7 @@ module RHC::Auth
         @can_get_token = client.supports_sessions? && @allows_tokens
 
         if has_token
-          warn "Your authorization token has expired. Please sign in now to continue."
+          warn "Your authorization token has expired. Please sign in now to continue on #{openshift_server}."
         elsif @can_get_token
           info "Please sign in to start a new session to #{openshift_server}."
         end
