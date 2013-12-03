@@ -5,7 +5,7 @@ require 'rhc/ssh_helpers'
 module RHC::Commands
   class Dbdump < Base
     include RHC::SSHHelpers
-    summary "asdfas"
+    summary "Save the current state of your application's databases locally"
     syntax "<action>"
     description <<-DESC
       Database dumps allow you to export the current state of your application's database
