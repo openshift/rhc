@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.18.0
+Version: 1.18.1
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,18 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Dec 04 2013 Adam Miller <admiller@redhat.com> 1.18.1-1
+- Merge pull request #518 from liggitt/sztsian-master
+  (dmcphers+openshiftbot@redhat.com)
+- Update spec test (jliggitt@redhat.com)
+- Bug 1033348  Display OpenShift instance name when requesting password
+  https://bugzilla.redhat.com/show_bug.cgi?id=1033348 Added openshift_server
+  name in Line 77 to show the server info. (zsun@fedoraproject.org)
+- Add spec tests (jliggitt@redhat.com)
+- Fix bug 1035157: Test for git (jliggitt@redhat.com)
+- Fix bug 1006154: app create indent (jliggitt@redhat.com)
+- bump_minor_versions for sprint 37 (admiller@redhat.com)
+
 * Tue Nov 19 2013 Adam Miller <admiller@redhat.com> 1.17.6-1
 - Correctly clean up scalable test (jliggitt@redhat.com)
 
