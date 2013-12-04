@@ -42,7 +42,7 @@ module RHC::Commands
       server maximum, you will be given the default value.
       DESC
     def add
-      unless options.scopes
+      unless options.scopes.to_s.strip.present?
         say "When adding an authorization, you must specify which permissions clients will have."
         scope_help
         say "Run 'rhc authorization add --help' to see more options"
