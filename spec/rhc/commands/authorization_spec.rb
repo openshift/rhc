@@ -126,6 +126,16 @@ describe RHC::Commands::Authorization do
 
     expect_an_unsupported_message
 
+    context "with empty scope options" do
+      let(:arguments) { ['authorization', 'add', '--scopes', ' ', '--note', 'a_note', '--expires-in', '300'] }
+      using_command_instance
+      with_authorization
+      before{ instance.should_receive(:scope_help) }
+
+      it('should display the scope help') { command_output.should =~ /When adding an authorization.*to see more options/m }
+      it{ expect{ run_command }.to exit_with_code(0) }
+    end
+
     context "with options" do
       let(:arguments) { ['authorization', 'add', '--scope', 'foo,bar', '--note', 'a_note', '--expires-in', '300'] }
       with_authorization
