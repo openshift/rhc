@@ -105,6 +105,10 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Dec 06 2013 Krishna Raman <kraman@gmail.com> 1.18.2.1-1
+- Bumping version for OpenShift Origin release 3 (kraman@gmail.com)
+- Fixup changelog date which prevents package from building (kraman@gmail.com)
+
 * Thu Dec 05 2013 Adam Miller <admiller@redhat.com> 1.18.2-1
 - Merge pull request #520 from liggitt/bug_1036064_empty_scopes_argument
   (dmcphers+openshiftbot@redhat.com)
