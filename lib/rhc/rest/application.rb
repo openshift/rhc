@@ -97,6 +97,14 @@ module RHC
         rest_method 'TIDY', :event => "tidy"
       end
 
+      def scale_up
+        rest_method 'SCALE_UP', :event => "scale-up"
+      end
+
+      def scale_down
+        rest_method 'SCALE_DOWN', :event => "scale-down"
+      end
+
       def start
         debug "Starting application #{name}"
         rest_method 'START', :event => "start"
