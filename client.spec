@@ -3772,7 +3772,7 @@ rm -rf $RPM_BUILD_ROOT
 - force spec file to use darwin (jimjag@redhat.com)
 - standardize message (dmcphers@redhat.com)
 
-* Tue Jul 06 2011 Jim Jagielski <jimjag@redhat.com> 0.73.10-1
+* Tue Jul 05 2011 Jim Jagielski <jimjag@redhat.com> 0.73.10-1
 - json_pure dependencies
   (mmcgrath@redhat.com)
 
