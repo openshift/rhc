@@ -214,7 +214,7 @@ module RHC
       # The list may not necessarily be sorted; we will select the last
       # matching one supported by the server.
       # See #api_version_negotiated
-      CLIENT_API_VERSIONS = [1.1, 1.2, 1.3, 1.4, 1.5]
+      CLIENT_API_VERSIONS = [1.1, 1.2, 1.3, 1.4, 1.5, 1.6]
       MAX_RETRIES = 5
 
       def initialize(*args)
