@@ -244,6 +244,26 @@ module RHC::Commands
       0
     end
 
+    summary "Scale up the application's web cartridge"
+    syntax "<app> [--namespace NAME]"
+    takes_application :argument => true
+    def scale_up(app)
+      app_action :scale_up
+
+      results { say "#{app} scaled up" }
+      0
+    end
+
+    summary "Scale down the application's web cartridge"
+    syntax "<app> [--namespace NAME]"
+    takes_application :argument => true
+    def scale_down(app)
+      app_action :scale_down
+
+      results { say "#{app} scaled down" }
+      0
+    end
+
     summary "Stops all application processes"
     syntax "<app> [--namespace NAME]"
     takes_application :argument => true

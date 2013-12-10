@@ -395,6 +395,8 @@ module RHC::Rest::Mock
        ['START',                           "domains/#{domain_id}/apps/#{app_id}/start",                          'post'],
        ['STOP',                            "domains/#{domain_id}/apps/#{app_id}/stop",                           'post'],
        ['RESTART',                         "domains/#{domain_id}/apps/#{app_id}/restart",                        'post'],
+       ['SCALE_UP',                        "broker/rest/application/#{app_id}/events",                           'scale-up'],
+       ['SCALE_DOWN',                      "broker/rest/application/#{app_id}/events",                           'scale-down'],
        ['THREAD_DUMP',                     "domains/#{domain_id}/apps/#{app_id}/event",                          'post'],
        ['ADD_ALIAS',                       "domains/#{domain_id}/apps/#{app_id}/event",                          'post'],
        ['REMOVE_ALIAS',                    "domains/#{domain_id}/apps/#{app_id}/event",                          'post'],
@@ -851,6 +853,14 @@ module RHC::Rest::Mock
     end
 
     def tidy
+      @app
+    end
+
+    def scale_up
+      @app
+    end
+
+    def scale_down
       @app
     end
 

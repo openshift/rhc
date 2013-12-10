@@ -669,6 +669,18 @@ describe RHC::Commands::App do
       it { expect{ run }.to exit_with_code(0) }
     end
 
+    context 'app scale-up' do
+      let(:arguments) { ['app', 'scale-up', '-a', 'app1'] }
+      it { run_output.should match('scaled up') }
+      it { expect{ run }.to exit_with_code(0) }
+    end
+
+    context 'app scale-down' do
+      let(:arguments) { ['app', 'scale-down', '-a', 'app1'] }
+      it { run_output.should match('scaled down') }
+      it { expect{ run }.to exit_with_code(0) }
+    end
+
     context 'app stop' do
       let(:arguments) { ['app', 'stop', 'app1'] }
 

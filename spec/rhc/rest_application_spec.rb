@@ -242,6 +242,16 @@ module RHC
         let(:control_data) { { :method => :destroy, :event => 'delete', :link => 'delete', :payload => false } }
         it_should_behave_like "a control method"
       end
+
+      context "#scale_up" do
+        let(:control_data) { { :method => :scale_up, :event => 'scale-up', :link => 'scale_up', :payload => false } }
+        it_should_behave_like "a control method"
+      end
+
+      context "#scale_down" do
+        let(:control_data) { { :method => :scale_down, :event => 'scale-down', :link => 'scale_down', :payload => false } }
+        it_should_behave_like "a control method"
+      end
     end
   end
 end
