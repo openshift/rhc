@@ -70,10 +70,8 @@ then
   cp "conf/express.conf" $RPM_BUILD_ROOT/etc/openshift/
 fi
 
-LC_ALL=en_US.UTF-8
-
 # Package the gem
-gem build rhc.gemspec
+LC_ALL=en_US.UTF-8 gem build rhc.gemspec
 
 mkdir -p .%{gemdir}
 # Ignore dependencies here because these will be handled by rpm 
@@ -3772,7 +3770,7 @@ rm -rf $RPM_BUILD_ROOT
 - force spec file to use darwin (jimjag@redhat.com)
 - standardize message (dmcphers@redhat.com)
 
-* Tue Jul 06 2011 Jim Jagielski <jimjag@redhat.com> 0.73.10-1
+* Tue Jul 05 2011 Jim Jagielski <jimjag@redhat.com> 0.73.10-1
 - json_pure dependencies
   (mmcgrath@redhat.com)
 
