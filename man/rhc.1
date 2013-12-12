@@ -1,36 +1,100 @@
 .\" Process this file with
 .\" groff -man -Tascii rhc.1
 .\"
-.TH RHC 1 "JANUARY 2012" Linux "User Manuals"
+.TH RHC 1 "NOVEMBER 2013" Linux "User Manuals"
 .SH NAME
-rhc \- Command line tool for performing operations related to your rhcloud account
+rhc \- Command line tool for performing operations related to your OpenShift account
 .SH SYNOPSIS
 .B rhc (<resource> | --help) [<command>] [<args>]
 
 .SH DESCRIPTION
 .B rhc
-Command line tool for performing operations related to your rhcloud account.
+Command line tool for performing operations related to your OpenShift account.
 
 .SH LIST OF RESOURCES
-.IP domain
-Manage a domain in rhcloud for a registered rhcloud user
-.IP app
-Create and manage an OpenShift application
-.IP sshkey
-Manage multiple keys for the registered rhcloud user
-.IP port-forward
-Forward remote ports to the workstation
-.IP setup
-Run the setup wizard to configure your account
-.IP server
-Display information about the status of the service
-.IP tail
-Tail files from remote running applications in real\-time
-.IP threaddump
-Trigger a thread dump for JBoss and Ruby applications
-.IP alias
+.TP
+.PD 1
+.B account
+Display details about your account
+.TP
+.PD 1
+.B alias
 Add or remove a custom domain name for the application
-.IP \-h|\-\-help|help
+.TP
+.PD 1
+.B app
+Create and manage an application
+.TP
+.PD 1
+.B apps
+List all your applications
+.TP
+.PD 1
+.B authorization
+Show the authorization tokens for your account
+.TP
+.PD 1
+.B cartridge
+Manage your application cartridges
+.TP
+.PD 1
+.B deployment
+Manage your application's deployments
+.TP
+.PD 1
+.B domain
+Manage a domain for a registered user
+.TP
+.PD 1
+.B env
+Manage user-defined environment variables set on a given application
+.TP
+.PD 1
+.B git-clone
+Clone and configure an application's repository locally
+.TP
+.PD 1
+.B logout
+Logout from the current session
+.TP
+.PD 1
+.B member|members
+Manage membership on domains
+.TP
+.PD 1
+.B port-forward
+Forward remote ports to the workstation
+.TP
+.PD 1
+.B server
+Display information about the status of the service
+.TP
+.PD 1
+.B setup
+Run the setup wizard to configure your account
+.TP
+.PD 1
+.B snapshot
+Manage applications snapshots
+.TP
+.PD 1
+.B ssh
+SSH into the specified application
+.TP
+.PD 1
+.B sshkey
+Manage multiple keys for the registered OpenShift user
+.TP
+.PD 1
+.B tail
+Tail files from remote running applications in real\-time
+.TP
+.PD 1
+.B threaddump
+Trigger a thread dump for JBoss and Ruby applications
+.TP
+.PD 1
+.B \-h|\-\-help|help
 Display help menu
 
 .SH FILES
@@ -59,7 +123,7 @@ Forums: https://openshift.redhat.com/community/forums/openshift
 IRC: #openshift on irc.freenode.net
 
 .SH AUTHOR
-Mike McGrath <mmcgrath@redhat.com>, Jim Jagielski <jimjag@redhat.com>
+Mike McGrath <mmcgrath@redhat.com>, Jim Jagielski <jimjag@redhat.com>, Marek Mahut <mmahut@redhat.com>
 
 .SH "SEE ALSO"
 .BR express.conf (5)
