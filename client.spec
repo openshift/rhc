@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.19.0
+Version: 1.19.1
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -103,6 +103,19 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Dec 12 2013 Adam Miller <admiller@redhat.com> 1.19.1-1
+- bump_minor_versions for sprint 38 (admiller@redhat.com)
+- Merge pull request #484 from Miciah/add-newline-to-express.conf
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #515 from mmahut/man (dmcphers+openshiftbot@redhat.com)
+- fix encoding for the gem build, fix datestamp in old changelog entry
+  (admiller@redhat.com)
+- Merge pull request #521 from liggitt/scale_up_down
+  (dmcphers+openshiftbot@redhat.com)
+- Add scale-up/scale-down support to rhc app command (jliggitt@redhat.com)
+- man: updating the rhc manual page and cleaning it up (mmahut@redhat.com)
+- express.conf: Terminate last line with newline (miciah.masters@gmail.com)
+
 * Thu Dec 05 2013 Adam Miller <admiller@redhat.com> 1.18.2-1
 - Merge pull request #520 from liggitt/bug_1036064_empty_scopes_argument
   (dmcphers+openshiftbot@redhat.com)
