@@ -1,8 +1,6 @@
 require 'rhc/commands/base'
-require 'resolv'
-require 'rhc/git_helpers'
 require 'rhc/scp_helpers'
-require 'rhc/cartridge_helpers'
+
 
 module RHC::Commands
   class Scp < Base
@@ -33,22 +31,21 @@ module RHC::Commands
 
       raise RHC::ArgumentNotValid.new("'#{action}' is not a valid argument for this command.  Please use upload or download.") unless action == 'download' || action == 'upload'
       raise RHC::FileOrPathNotFound.new("Local file, file_path, or directory could not be found.") unless File.exist?(local_path)
-
-        begin
-            start_time = Time.now
-            Net::SCP.send("#{action}!".to_sym, ssh_opts[1], ssh_opts[0], (action == 'upload' ? local_path : remote_path), (action == 'upload' ? remote_path : local_path)) do |ch, name, sent, total|
-              #:nocov:
-              $stderr.print "\r #{action}ing #{name}: #{((sent.to_f/total.to_f)*100).to_i}% complete. #{sent}/#{total} bytes transferred " + (sent == total ? "in #{Time.now - start_time} seconds \n" : "")
-              #:nocov:
-            end
-        rescue Errno::ECONNREFUSED
-          raise RHC::SSHConnectionRefused.new(ssh_opts[0], ssh_opts[1])
-        rescue SocketError => e
-          raise RHC::ConnectionFailed, "The connection to #{ssh_opts[1]} failed: #{e.message}"
-        rescue Exception => e
-          $stderr.puts e
-          raise RHC::FileOrPathNotFound.new("Remote file, file_path, or directory could not be found.")
-        end
+      
+      begin
+          start_time = Time.now
+          Net::SCP.send("#{action}!".to_sym, ssh_opts[1], ssh_opts[0], (action == 'upload' ? local_path : remote_path), (action == 'upload' ? remote_path : local_path)) do |ch, name, sent, total|
+            #:nocov:
+            $stderr.print "\r #{action}ing #{name}: #{((sent.to_f/total.to_f)*100).to_i}% complete. #{sent}/#{total} bytes transferred " + (sent == total ? "in #{Time.now - start_time} seconds \n" : "")
+            #:nocov:
+          end
+      rescue Errno::ECONNREFUSED
+        raise RHC::SSHConnectionRefused.new(ssh_opts[0], ssh_opts[1])
+      rescue SocketError => e
+        raise RHC::ConnectionFailed, "The connection to #{ssh_opts[1]} failed: #{e.message}"
+      rescue Net::SCP::Error => e
+        raise RHC::RemoteFileOrPathNotFound.new("Remote file, file_path, or directory could not be found.")
+      end
     end
 
     protected

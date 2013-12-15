@@ -217,6 +217,12 @@ module RHC
       super message
     end
   end
+  
+  class RemoteFileOrPathNotFound < FileOrPathNotFound
+    def initialize(message="Remote File, file path, or directory could not be found")
+      super message
+    end
+  end
 
   class ArgumentNotValid < Exception
     def initialize(message="Argument is not valid for this command")

@@ -68,7 +68,7 @@ describe RHC::Commands::Scp do
         @domain = rest_client.add_domain("mockdomain")
         @domain.add_application("app1", "mock_type")
         File.should_receive(:exist?).with("file.txt").once.and_return(true)
-        Net::SCP.should_receive("upload!".to_sym).with("127.0.0.1", "fakeuuidfortestsapp1","file.txt","app-root/data").and_raise("Fake Exception")
+        Net::SCP.should_receive("upload!".to_sym).with("127.0.0.1", "fakeuuidfortestsapp1","file.txt","app-root/data").and_raise(Net::SCP::Error)
       end
       it { run_output.should match("Remote file, file_path, or directory could not be found.") }
     end
