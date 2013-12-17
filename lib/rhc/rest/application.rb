@@ -21,6 +21,14 @@ module RHC
         attributes['id'] || uuid
       end
 
+      def uuid
+        if (client.api_version_negotiated >= 1.6)
+          attributes['id']
+        else
+          attributes['uuid']
+        end
+      end
+
       def domain
         domain_id
       end

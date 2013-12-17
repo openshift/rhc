@@ -98,7 +98,7 @@ module RHC::Commands
       warn "In order to deploy applications, you must create a domain with 'rhc setup' or 'rhc create-domain'." and return 1 unless domain
 
       applications = domain.applications(:include => :cartridges)
-      display_domain(domain, applications)
+      display_domain(domain, applications, true)
 
       if applications.present?
         success "You have #{pluralize(applications.length, 'application')} in your domain."
@@ -119,7 +119,7 @@ module RHC::Commands
       warn "In order to deploy applications, you must create a domain with 'rhc setup' or 'rhc create-domain'." and return 1 unless domains.present?
 
       domains.each do |d|
-        display_domain(d, nil, options.ids)
+        display_domain(d, nil, true)
       end
 
       success "You have access to #{pluralize(domains.length, 'domain')}."
