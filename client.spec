@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.19.1
+Version: 1.19.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -103,6 +103,14 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Dec 18 2013 Adam Miller <admiller@redhat.com> 1.19.2-1
+- Include supported API version in RHC user-agent string (jliggitt@redhat.com)
+- Deprecate --ids option (jliggitt@redhat.com)
+- Explicitly set git username for test (jliggitt@redhat.com)
+- Always show domain ids (jliggitt@redhat.com)
+- Update API version to 1.6 (jliggitt@redhat.com)
+- Fix bug 1043405: update autocompletes for rhc (jliggitt@redhat.com)
+
 * Thu Dec 12 2013 Adam Miller <admiller@redhat.com> 1.19.1-1
 - bump_minor_versions for sprint 38 (admiller@redhat.com)
 - Merge pull request #484 from Miciah/add-newline-to-express.conf
