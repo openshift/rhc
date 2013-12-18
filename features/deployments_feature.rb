@@ -98,6 +98,8 @@ describe "rhc deployment scenarios" do
         FileUtils.rm_rf git_directory
         git_clone
         Dir.chdir git_directory
+        `git config user.email "you@example.com"`
+        `git config user.name "Your Name"`
         `sed -i "s/Welcome to OpenShift/#{content}/" php/index.php`
         `git commit -a -m "Commit from Feature Tests"`
         `git push origin master`

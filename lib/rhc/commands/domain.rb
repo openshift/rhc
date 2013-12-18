@@ -98,7 +98,7 @@ module RHC::Commands
       warn "In order to deploy applications, you must create a domain with 'rhc setup' or 'rhc create-domain'." and return 1 unless domain
 
       applications = domain.applications(:include => :cartridges)
-      display_domain(domain, applications)
+      display_domain(domain, applications, true)
 
       if applications.present?
         success "You have #{pluralize(applications.length, 'application')} in your domain."
@@ -111,15 +111,16 @@ module RHC::Commands
 
     summary "Display all domains you have access to"
     option ['--mine'], "Display only domains you own"
-    option ['--ids'], "Display the unique id of the domain (not supported by all servers)"
+    option ['--ids'], "Display the unique id of the domain (deprecated, domain IDs are now displayed by default)"
     alias_action :domains, :root_command => true
     def list
       domains = rest_client.send(options.mine ? :owned_domains : :domains)
 
       warn "In order to deploy applications, you must create a domain with 'rhc setup' or 'rhc create-domain'." and return 1 unless domains.present?
+      warn "The --ids option is deprecated. Domain IDs are displayed by default." if options.ids
 
       domains.each do |d|
-        display_domain(d, nil, options.ids)
+        display_domain(d, nil, true)
       end
 
       success "You have access to #{pluralize(domains.length, 'domain')}."
