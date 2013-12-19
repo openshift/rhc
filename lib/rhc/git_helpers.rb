@@ -41,11 +41,20 @@ module RHC
         git_config_set "rhc.app-id", app.id
         git_config_set "rhc.app-name", app.name
         git_config_set "rhc.domain-name", app.domain_id
+
+        git_remote_add("upstream", app.initial_git_url) if app.initial_git_url.present?
       end
 
       git_clone_deploy_hooks(repo_dir)
 
       dir
+    end
+
+    def git_remote_add(remote_name, remote_url)
+      cmd = "#{git_cmd} remote add upstream \"#{remote_url}\""
+      debug "Running #{cmd} 2>&1"
+      output = %x[#{cmd} 2>&1]
+      raise RHC::GitException, "Error while adding upstream remote - #{output}" unless output.empty?
     end
 
     # :nocov: These all call external binaries so test them in cucumber

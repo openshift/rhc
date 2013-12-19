@@ -114,11 +114,17 @@ describe "rhc core scenarios" do
         Dir.chdir @app.name
       end
       let(:git_config){ `git config --list` }
+      let(:git_remotes){ `git remote -v` }
 
       it "will set Git config values" do
         git_config.should match "rhc.app-id=#{app.id}"
         git_config.should match "rhc.app-name=#{app.name}"
         git_config.should match "rhc.domain-name=#{app.domain_name}"
+      end
+
+      it "will set remote branches correctly" do
+        git_remotes.should match "origin"
+        git_remotes.should_not match "upstream"
       end
 
       it "will infer the current app from the git repository" do

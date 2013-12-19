@@ -53,6 +53,19 @@ describe RHC::Commands::GitClone do
 
         it { expect { run }.to exit_with_code(0) }
         it { run_output.should match("Cloned") }
+
+        context 'when app has an initial git url' do
+          before do
+            @app2 = @domain.add_application("app2", "mock_unique_standalone_cart", nil, "default", "git://test")
+            @instance.stub(:git_remote_add) do |remote_name, remote_url|
+              say "Added remote #{remote_name} pointing to #{remote_url}"
+              true
+            end
+          end
+          let(:arguments) { ['git-clone', 'app2'] }
+          it { run_output.should match("Added remote upstream pointing to git://test") }
+        end
+
       end
 
       context "testing git_clone_deploy_hooks" do
