@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.19.2
+Version: 1.19.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -103,6 +103,15 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Dec 20 2013 Adam Miller <admiller@redhat.com> 1.19.3-1
+- Merge pull request #528 from smarterclayton/wrap_only_when_stdout_tty
+  (dmcphers+openshiftbot@redhat.com)
+- Should only wrap when STDOUT is a tty, not STDIN (ccoleman@redhat.com)
+- Merge pull request #527 from liggitt/git_pull
+  (dmcphers+openshiftbot@redhat.com)
+- Add tests (jliggitt@redhat.com)
+- Set upstream on clone (jliggitt@redhat.com)
+
 * Wed Dec 18 2013 Adam Miller <admiller@redhat.com> 1.19.2-1
 - Include supported API version in RHC user-agent string (jliggitt@redhat.com)
 - Deprecate --ids option (jliggitt@redhat.com)
