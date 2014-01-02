@@ -7,7 +7,7 @@ module RHC
         from = opts[:from] || all_cartridges
 
         cartridge_names.map do |name|
-          next use_cart(RHC::Rest::Cartridge.for_url(name), name) if name =~ %r(\Ahttps?://)i
+          next from.find{ |c| c.url.present? && c.url.downcase == name} || use_cart(RHC::Rest::Cartridge.for_url(name), name) if name =~ %r(\Ahttps?://)i
 
           name = name.downcase
           from.find{ |c| c.name.downcase == name } ||
