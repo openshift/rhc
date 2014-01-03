@@ -370,7 +370,7 @@ module RHC
     def ssh_add
       if exe?('ssh-add')
         #:nocov:
-        `ssh-add 2&>1`
+        `ssh-add 2>&1`
         #:nocov:
       end
     end
