@@ -256,6 +256,21 @@ describe RHC::Commands::Cartridge do
       end
     end
 
+    context 'when run with custom cart url' do
+      let(:arguments) { ['cartridge', 'remove', 'https://foo.bar.com', '--confirm', '-a', 'app1'] }
+      before do
+        @domain = rest_client.add_domain("mockdomain")
+        @app = @domain.add_application("app1", "mock_type")
+        cart1 = @app.add_cartridge('mock_cart-1')
+        cart1.url = 'https://foo.bar.com'
+      end
+      it "should remove cartridge" do
+        expect { run }.to exit_with_code(0)
+        # framework cart should be the only one listed
+        @app.cartridges.length.should == 1
+      end
+    end
+
     context "against a 1.5 server" do
       let!(:rest_client){ nil }
       let(:username){ mock_user }
