@@ -13,7 +13,7 @@ module RHC
       return false if ! (File.file? filename and File.basename(filename).downcase =~ /.\.t(ar\.)?gz$/i)
 
       regex = Regexp.new search
-      if RHC::Helpers.windows? or force_ruby
+      if RHC::Helpers.windows? or RHC::Helpers.mac? or force_ruby
         begin
           zlib::GzipReader.open(filename) do |gz|
             Minitar::Reader.open gz do |tar|
