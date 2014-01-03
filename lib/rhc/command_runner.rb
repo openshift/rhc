@@ -72,7 +72,7 @@ module RHC
         begin
           run_active_command
         rescue InvalidCommandError => e
-          return RHC::Wizard.new.run unless RHC::Wizard.has_configuration? || provided_arguments.present?
+          return exec 'rhc setup' unless RHC::Wizard.has_configuration? || provided_arguments.present?
           run_help(provided_arguments)
         rescue \
           OptionParser::InvalidOption => e
