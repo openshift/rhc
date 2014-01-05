@@ -44,11 +44,11 @@ describe RHC::Commands::Authorization do
   end
 
   describe '#run' do
-    let(:arguments) { ['authorization', '--help']}
+    let(:arguments) { ['authorization']}
     context 'given no arguments' do
       it('should display help'){ run_output.should =~ /An authorization token grants access to the OpenShift REST API.*To see all your authorizations/m }
-      it 'should not raise' do
-        expect{ run }.to exit_with_code(0)
+      it 'should ask for an argument' do
+        expect{ run }.to exit_with_code(1)
       end
     end
   end
