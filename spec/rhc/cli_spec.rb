@@ -82,8 +82,7 @@ describe RHC::CLI do
       it_should_behave_like 'a global help page'
 
       context "without a config file" do
-        before{ RHC::Wizard.stub(:has_configuration?).and_return(false) }
-        it_should_behave_like 'a first run wizard'
+        it_should_behave_like 'a global help page'
       end
     end
 

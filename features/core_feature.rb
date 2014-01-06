@@ -37,9 +37,13 @@ describe "rhc core scenarios" do
       r.stdout.should match 'SSL Certificates'
     end
 
-    it "starts the wizard on default invocation" do
+    it "displays help on default invocation" do
       r = rhc
-      r.stdout.should match "OpenShift Client Tools"
+      r.status.should == 0
+      r.stdout.should match "Command line interface for OpenShift"
+      r.stdout.should match "Usage: rhc"
+      r.stdout.should match "Getting started"
+      r.stdout.should match "See 'rhc help options' for a list"
     end
   end
 
