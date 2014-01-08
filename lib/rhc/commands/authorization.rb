@@ -1,9 +1,28 @@
 module RHC::Commands
   class Authorization < Base
 
+    summary "Manage your authorization tokens"
+    syntax "<action>"
+    description <<-DESC
+      An authorization token grants access to the OpenShift REST API with a
+      set of privileges called 'scopes' for a limited time.  You can add an
+      optional note to each authorization token to assist you in remembering
+      why it was created.
+
+      To see all your authorizations, run 'rhc authorizations'.
+
+      To view the list of scopes supported by this server, run the
+      'rhc add-authorization' command with no arguments.
+
+      These commands manage your authorization tokens on the server - if you
+      want to clear your authorization tokens from the current machine use
+      'rhc logout'
+      DESC
+    default_action :help
+
     summary "Show the authorization tokens for your account"
     description <<-DESC
-      Shows the full list of authorization tokens on your account. You 
+      Shows the full list of authorization tokens on your account. You
       can add, edit, or delete authorizations with subcommands.
 
       An authorization token grants access to the OpenShift REST API with
@@ -12,7 +31,6 @@ module RHC::Commands
       remembering what is available.
       DESC
     alias_action 'authorizations', :root_command => true
-    default_action :list
     def list
       rest_client.authorizations.each{ |auth| paragraph{ display_authorization(auth, token_for_user) } } or info "No authorizations"
 

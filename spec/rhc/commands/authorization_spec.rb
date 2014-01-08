@@ -28,7 +28,7 @@ describe RHC::Commands::Authorization do
   end
 
   describe '#run' do
-    let(:arguments) { ['authorization'] }
+    let(:arguments) { ['authorizations'] }
     context "with authorizations" do
       with_authorization
       before{ challenge{ stub_authorizations } }
@@ -42,12 +42,13 @@ describe RHC::Commands::Authorization do
 
     expect_an_unsupported_message
   end
-  
+
   describe '#run' do
-    let(:arguments) { ['authorization', '--h']}
-    context 'given --h' do
-      it 'should not raise' do
-        expect{ run }.to_not raise_error
+    let(:arguments) { ['authorization']}
+    context 'given no arguments' do
+      it('should display help'){ run_output.should =~ /An authorization token grants access to the OpenShift REST API.*To see all your authorizations/m }
+      it 'should ask for an argument' do
+        expect{ run }.to exit_with_code(1)
       end
     end
   end
