@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.19.3
+Version: 1.19.4
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -103,6 +103,27 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Jan 09 2014 Troy Dawson <tdawson@redhat.com> 1.19.4-1
+- Merge pull request #524 from smarterclayton/authorization_tests
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 1048392 - force gem to version 2.11.1 so travis CI can run
+  (jforrest@redhat.com)
+- Merge pull request #532 from liggitt/bug_1046443_stderr_redirect
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 991250 - changed the behavior of the 'rhc' command called alone to
+  display help instead of the wizard if it's not configured
+  (contact@fabianofranz.com)
+- Review: test 'rhc authorization' directly (ccoleman@redhat.com)
+- Fix bug 1046443: Incorrect stderr redirect (jliggitt@redhat.com)
+- Bug 991250 - 'rhc' must call wizard with the same context as 'rhc setup'
+  (contact@fabianofranz.com)
+- Bug 1043291 - using ruby to snapshot restore on mac (tar --wildcards not
+  supported) (contact@fabianofranz.com)
+- Bug 1041313 - allow all rhc catridge commands to accept a url
+  (jforrest@redhat.com)
+- Authorization tests (ccoleman@redhat.com)
+- net-multi-ssh made it to master (ccoleman@redhat.com)
+
 * Fri Dec 20 2013 Adam Miller <admiller@redhat.com> 1.19.3-1
 - Merge pull request #528 from smarterclayton/wrap_only_when_stdout_tty
   (dmcphers+openshiftbot@redhat.com)
