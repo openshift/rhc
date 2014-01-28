@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.19.4
+Version: 1.19.5
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -103,6 +103,10 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Jan 28 2014 Adam Miller <admiller@redhat.com> 1.19.5-1
+- Bug 1058251 - gear activate requires --all to be applied to all gears
+  (contact@fabianofranz.com)
+
 * Thu Jan 09 2014 Troy Dawson <tdawson@redhat.com> 1.19.4-1
 - Merge pull request #524 from smarterclayton/authorization_tests
   (dmcphers+openshiftbot@redhat.com)
