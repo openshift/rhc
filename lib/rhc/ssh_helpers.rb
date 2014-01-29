@@ -169,7 +169,9 @@ module RHC
     def ssh_ruby(host, username, command, compression=false, request_pty=false, &block)
       debug "Opening Net::SSH connection to #{host}, #{username}, #{command}"
       exit_status = 0
-      Net::SSH.start(host, username, :compression => compression) do |session|
+      options = {:compression => compression}
+      options[:verbose] = :debug if debug?
+      Net::SSH.start(host, username, options) do |session|
         #:nocov:
         channel = session.open_channel do |channel|
           if request_pty
