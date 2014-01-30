@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.20.0
+Version: 1.20.1
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -103,6 +103,15 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Jan 30 2014 Adam Miller <admiller@redhat.com> 1.20.1-1
+- Use verbose logging in Net::SSH when in debug mode (jliggitt@redhat.com)
+- Merge pull request #537 from fabianofranz/bugs/1058251
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 1058251 - gear activate requires --all to be applied to all gears
+  (contact@fabianofranz.com)
+- Bug 1048392 - remove workaround for travis CI failures (jforrest@redhat.com)
+- bump_minor_versions for sprint 40 (admiller@redhat.com)
+
 * Thu Jan 09 2014 Troy Dawson <tdawson@redhat.com> 1.19.4-1
 - Merge pull request #524 from smarterclayton/authorization_tests
   (dmcphers+openshiftbot@redhat.com)
