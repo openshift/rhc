@@ -37,8 +37,27 @@ describe RHC::Commands::Member do
 
   let(:owner){ RHC::Rest::Membership::Member.new(:id => '1', :role => 'admin', :owner => true, :login => 'alice') }
   let(:other_admin){ RHC::Rest::Membership::Member.new(:id => '2', :role => 'admin', :login => 'Bob') }
-  let(:other_editor){ RHC::Rest::Membership::Member.new(:id => '3', :role => 'editor', :name => 'Carol', :login => 'carol') }
-  let(:other_viewer){ RHC::Rest::Membership::Member.new(:id => '4', :role => 'viewer', :name => 'Doug', :login => 'doug@doug.com') }
+  let(:other_editor){ RHC::Rest::Membership::Member.new(:id => '3', :role => 'edit', :name => 'Carol', :login => 'carol') }
+  let(:other_viewer){ RHC::Rest::Membership::Member.new(:id => '4', :role => 'view', :name => 'Doug', :login => 'doug@doug.com') }
+  let(:other_viewer2){ RHC::Rest::Membership::Member.new(:id => '5', :role => 'view', :name => 'ViewerC', :login => 'viewerc@viewer.com') }
+  let(:other_viewer3){ RHC::Rest::Membership::Member.new(:id => '6', :role => 'view', :name => 'ViewerB', :login => 'viewerb@viewer.com') }
+  let(:other_viewer4){ RHC::Rest::Membership::Member.new(:id => '7', :role => 'view', :name => 'ViewerA', :login => 'viewera@viewer.com') }
+
+  describe 'show-domain' do
+    context 'with members' do
+      let(:arguments) { ['domain', 'show', 'mock-domain-0'] }
+      let(:supports_members){ true }
+
+      before{ with_mock_domain.add_member(owner).add_member(other_editor).add_member(other_admin).add_member(other_viewer).add_member(other_viewer2).add_member(other_viewer3).add_member(other_viewer4) }
+      it { expect { run }.to exit_with_code(0) }
+      it { run_output.should =~ /owned by alice/ }
+      it { run_output.should =~ /Bob\s+\(admin\)/ }
+      it { run_output.should =~ /<carol>\s+\(edit\)/ }
+      it { run_output.should =~ /<doug@doug\.com>\s+\(view\)/ }
+      it("should order the members by role then by name") { run_output.should =~ /Bob.*admin.*Admins.*Carol.*Editors.*ViewerA.*ViewerB.*ViewerC.*Viewers/m }
+      it("should include the login value") { run_output.should =~ /alice.*Bob.*carol.*doug@doug\.com/m }
+    end
+  end
 
   describe 'list-member' do
     context 'on a domain' do
@@ -79,8 +98,8 @@ describe RHC::Commands::Member do
         it { expect { run }.to exit_with_code(0) }
         it { run_output.should =~ /alice\s+admin \(owner\)/ }
         it { run_output.should =~ /Bob\s+admin/ }
-        it { run_output.should =~ /carol\s+editor/ }
-        it { run_output.should =~ /doug\.com\s+viewer/ }
+        it { run_output.should =~ /carol\s+edit/ }
+        it { run_output.should =~ /doug\.com\s+view/ }
         it("should order the members by role") { run_output.should =~ /admin.*owner.*admin.*edit.*view/m }
         it("should include the login value") { run_output.should =~ /alice.*Bob.*carol.*doug@doug\.com/m }
         it("should show the name column") { run_output.should =~ /^Name\s+Login\s+Role$/ }

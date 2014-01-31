@@ -97,7 +97,7 @@ module RHC::Rest
     end
 
     def owner
-      if o = Array(attribute(:members)).find{ |m| m['owner'] == true }
+      if o = Array(attributes['members']).find{ |m| m['owner'] == true }
         o['name'] || o['login']
       end
     end
