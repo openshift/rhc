@@ -52,18 +52,21 @@ module RHC::Commands
             say c.description
             paragraph{ say "Tagged with: #{tags.sort.join(', ')}" } if tags.present?
             paragraph{ say format_usage_message(c) } if c.usage_rate?
+            paragraph{ warn "Does not receive automatic security updates" } unless c.automatic_updates?
           end
         end
       else
         say table(carts.collect do |c|
-          [c.usage_rate? ? "#{c.name} (*)" : c.name,
+          [[c.name, c.usage_rate? ? " (*)" : "", c.automatic_updates? ? '' : ' (!)'].join(''),
            c.display_name,
-           c.only_in_existing? ? 'addon' : 'web']
+           c.only_in_existing? ? 'addon' : 'web',
+          ]
         end)
       end
 
       paragraph{ say "Note: Web cartridges can only be added to new applications." }
-      paragraph{ say "(*) denotes a cartridge with additional usage costs." } if carts.any? { |c| c.usage_rate? }
+      paragraph{ say "(*) denotes a cartridge with additional usage costs." } if carts.any?(&:usage_rate?)
+      paragraph{ say "(!) denotes a cartridge that will not receive automatic security updates." } unless options.verbose || carts.any?(&:automatic_updates?)
 
       0
     end
