@@ -5,7 +5,7 @@ module RHC
 
       define_attr :type, :name, :display_name, :properties, :gear_profile, :status_messages, :scales_to, :scales_from, :scales_with,
                   :current_scale, :supported_scales_to, :supported_scales_from, :tags, :description, :collocated_with, :base_gear_storage,
-                  :additional_gear_storage, :url, :environment_variables, :gear_size
+                  :additional_gear_storage, :url, :environment_variables, :gear_size, :automatic_updates
 
       def scalable?
         supported_scales_to != supported_scales_from
@@ -21,6 +21,14 @@ module RHC
 
       def only_in_existing?
         type == 'embedded'
+      end
+
+      def automatic_updates?
+        v = attribute(:automatic_updates)
+        if v.nil?
+          v = !(tags.include?('no_updates') || custom?)
+        end
+        v
       end
 
       def shares_gears?
