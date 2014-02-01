@@ -697,6 +697,7 @@ module RHC::Rest::Mock
 
     def add_member(member)
       (@members ||= []) << member
+      (attributes['members'] ||= []) << member.attributes
       self
     end
   end
@@ -902,6 +903,7 @@ module RHC::Rest::Mock
 
     def add_member(member)
       (@members ||= []) << member
+      (attributes['members'] ||= []) << member.attributes
       self
     end
 

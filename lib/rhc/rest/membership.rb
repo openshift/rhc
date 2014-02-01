@@ -61,7 +61,7 @@ module RHC::Rest
     def compact_members
       arr = members.reject(&:owner?) rescue []
       if arr.length > 5
-        arr.sort_by!(&:name)
+        arr = arr.sort_by(&:name)
         admin, arr = arr.partition(&:admin?)
         edit, arr = arr.partition(&:editor?)
         view, arr = arr.partition(&:viewer?)
@@ -97,7 +97,7 @@ module RHC::Rest
     end
 
     def owner
-      if o = Array(attribute(:members)).find{ |m| m['owner'] == true }
+      if o = Array(attributes['members']).find{ |m| m['owner'] == true }
         o['name'] || o['login']
       end
     end
