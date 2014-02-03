@@ -30,7 +30,7 @@ module RHC
         @fingerprint ||= begin
           public_key = Net::SSH::KeyFactory.load_data_public_key("#{type} #{content}")
           public_key.fingerprint
-        rescue NotImplementedError, OpenSSL::PKey::PKeyError => e
+        rescue NotImplementedError, Net::SSH::Exception, OpenSSL::PKey::PKeyError
           'Invalid key'
         end if is_ssh?
       end
