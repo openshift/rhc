@@ -13,6 +13,9 @@ module RHC
     def local_config_path
       File.join(home_conf_dir, conf_name)
     end
+    def current_config_path
+      File.join(Dir.pwd, '.openshift', conf_name)
+    end
     def ssh_dir
       File.join(home_dir, '.ssh')
     end
@@ -120,6 +123,7 @@ module RHC
       @env_config = RHC::Vendor::ParseConfig.new()
       @global_config = nil
       @local_config = nil
+      @current_config = nil
       @opts_config = nil # config file passed in the options
 
       @default_proxy = nil
@@ -152,7 +156,7 @@ module RHC
 
     def save!(options)
       File.open(path, 'w'){ |f| f.puts self.class.options_to_config(options) }
-      @opts, @opts_config, @local_config, @global_config = nil
+      @opts, @opts_config, @local_config, @local_config, @global_config = nil
       load_config_files
       self
     end
@@ -161,7 +165,7 @@ module RHC
       lazy_init
 
       # evaluate in cascading order
-      configs = [@opts, @opts_config, @env_config, @local_config, @global_config, @defaults]
+      configs = [@opts, @opts_config, @env_config, @current_config, @local_config, @global_config, @defaults]
       result = nil
       configs.each do |conf|
         result = conf[key] if !conf.nil?
@@ -251,6 +255,7 @@ module RHC
     # when a script modifies the config such as in rhc setup
     def config_path
       @config_path ||= local_config_path
+      @config_path ||= current_config_path
     end
     def path
       config_path
@@ -307,6 +312,7 @@ module RHC
       def load_config_files
         @global_config = RHC::Vendor::ParseConfig.new(global_config_path) if File.exists?(global_config_path)
         @local_config = RHC::Vendor::ParseConfig.new(File.expand_path(local_config_path)) if File.exists?(local_config_path)
+        @current_config = RHC::Vendor::ParseConfig.new(File.expand_path(current_config_path)) if File.exists?(current_config_path)
       rescue Errno::EACCES => e
         raise Errno::EACCES.new("Could not open config file: #{e.message}")
       end
