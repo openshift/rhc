@@ -230,6 +230,24 @@ module RHC
     end
   end
 
+  class FileOrPathNotFound < Exception
+    def initialize(message="File, file path, or directory could not be found")
+      super message
+    end
+  end
+  
+  class RemoteFileOrPathNotFound < FileOrPathNotFound
+    def initialize(message="Remote File, file path, or directory could not be found")
+      super message
+    end
+  end
+
+  class ArgumentNotValid < Exception
+    def initialize(message="Argument is not valid for this command")
+      super message
+    end
+  end
+
   class NoDomainsForUser < Exception
     def initialize(message="In order to deploy applications, you must create a domain with 'rhc setup' or 'rhc create-domain'.")
       super message, 1
