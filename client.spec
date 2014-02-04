@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.19.5
+Version: 1.19.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -103,6 +103,10 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Feb 04 2014 Adam Miller <admiller@redhat.com> 1.19.6-1
+- Net::SSH 2.8.0 raises a different exception on fingerprint errors
+  (ccoleman@redhat.com)
+
 * Tue Jan 28 2014 Adam Miller <admiller@redhat.com> 1.19.5-1
 - Bug 1058251 - gear activate requires --all to be applied to all gears
   (contact@fabianofranz.com)
