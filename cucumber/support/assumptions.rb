@@ -29,7 +29,7 @@ Given /^we have a (.*) (.*) cartridge$/ do |status,type|
     step "the #{type} cartridge should be #{status}"
   rescue RSpec::Expectations::ExpectationNotMetError
     step "the #{type} cartridge is #{cmd}"
-    (retried = true && retry) unless retried
+    (retried = true and retry) unless retried
   end
 end
 
