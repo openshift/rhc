@@ -7,8 +7,8 @@ info on installing the tool on each supported operating system.
 
 Please stop by #openshift on irc.freenode.net if you have any questions or
 comments.  For more information about OpenShift, visit https://openshift.redhat.com
-or the OpenShift forum
-https://openshift.redhat.com/community/forums/openshift.
+or the OpenShift support page
+https://openshift.redhat.com/support.
 
 
 ## Using RHC to create an application
