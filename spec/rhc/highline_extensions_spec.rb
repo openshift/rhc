@@ -23,7 +23,7 @@ class OutputTests < SimpleDelegator
   def output_no_breaks
     say "section #{next_print_num} "
   end
-  
+
   def section_same_line
     section { output_no_breaks; say 'word' }
   end
