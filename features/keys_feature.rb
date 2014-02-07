@@ -17,7 +17,7 @@ describe "rhc sshkey scenarios" do
         app = @domain.applications.first
         keyname = "key#{rand(1000000000000)}"
         keycontent = "principal#{rand(1000000000000)}"
-        
+
         r = rhc 'sshkey', 'add', keyname, '--type', 'krb5-principal', '--content', keycontent
         r.status.should == 0
 

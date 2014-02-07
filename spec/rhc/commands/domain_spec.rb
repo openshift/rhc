@@ -385,7 +385,7 @@ describe RHC::Commands::Domain do
         rest_client.domains.empty?.should be_true
       end
     end
-    
+
   end
 
   describe 'help' do

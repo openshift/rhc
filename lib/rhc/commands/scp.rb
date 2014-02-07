@@ -31,7 +31,7 @@ module RHC::Commands
 
       raise RHC::ArgumentNotValid.new("'#{action}' is not a valid argument for this command.  Please use upload or download.") unless action == 'download' || action == 'upload'
       raise RHC::FileOrPathNotFound.new("Local file, file_path, or directory could not be found.") unless File.exist?(local_path)
-      
+
       begin
           start_time = Time.now
           Net::SCP.send("#{action}!".to_sym, ssh_opts[1], ssh_opts[0], (action == 'upload' ? local_path : remote_path), (action == 'upload' ? remote_path : local_path)) do |ch, name, sent, total|
