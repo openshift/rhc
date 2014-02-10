@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.20.1
+Version: 1.20.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -104,6 +104,31 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Feb 10 2014 Adam Miller <admiller@redhat.com> 1.20.2-1
+- Cleanup formatting (dmcphers@redhat.com)
+- Cleaning spec (dmcphers@redhat.com)
+- Merge pull request #539 from jhadvig/mongo_update
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #536 from fabianofranz/dev/441
+  (dmcphers+openshiftbot@redhat.com)
+- Removed references to OpenShift forums in several places
+  (contact@fabianofranz.com)
+- Fix infinite retry logic (jordan@liggitt.net)
+- Merge pull request #488 from developercorey/rhc_scp
+  (dmcphers+openshiftbot@redhat.com)
+- adding Requires:rubygem-net-scp to client.spec (cdaley@redhat.com)
+- Net::SSH 2.8.0 raises a different exception on fingerprint errors
+  (ccoleman@redhat.com)
+- Stop using sort_by! for ruby 1.8.7 (jliggitt@redhat.com)
+- Add test for domain with more than 5 members (jliggitt@redhat.com)
+- Merge pull request #541 from smarterclayton/show_automatic_updates
+  (dmcphers+openshiftbot@redhat.com)
+- Show automatic updates if available (ccoleman@redhat.com)
+- MongoDB version update to 2.4 (jhadvig@redhat.com)
+- fixing issues identified by clayton (cdaley@redhat.com)
+- adding rhc scp command for transferring files to and from gears, along with
+  associated tests (cdaley@redhat.com)
+
 * Thu Jan 30 2014 Adam Miller <admiller@redhat.com> 1.20.1-1
 - Use verbose logging in Net::SSH when in debug mode (jliggitt@redhat.com)
 - Merge pull request #537 from fabianofranz/bugs/1058251
