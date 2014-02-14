@@ -66,7 +66,7 @@ module RHC::Commands
 
       paragraph{ say "Note: Web cartridges can only be added to new applications." }
       paragraph{ say "(*) denotes a cartridge with additional usage costs." } if carts.any?(&:usage_rate?)
-      paragraph{ say "(!) denotes a cartridge that will not receive automatic security updates." } unless options.verbose || carts.any?(&:automatic_updates?)
+      paragraph{ say "(!) denotes a cartridge that will not receive automatic security updates." } unless options.verbose || carts.none?(&:automatic_updates?)
 
       0
     end
