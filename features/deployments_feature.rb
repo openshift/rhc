@@ -100,7 +100,7 @@ describe "rhc deployment scenarios" do
         Dir.chdir git_directory
         `git config user.email "you@example.com"`
         `git config user.name "Your Name"`
-        `sed -i "s/Welcome to OpenShift/#{content}/" php/index.php`
+        `sed -i "s/Welcome to OpenShift/#{content}/" index.php`
         `git commit -a -m "Commit from Feature Tests"`
         `git push origin master`
         Dir.chdir '../'
