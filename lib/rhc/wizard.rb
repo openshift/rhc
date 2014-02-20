@@ -569,7 +569,7 @@ module RHC
 
 In order to fully interact with OpenShift you will need to install and configure a git client if you have not already done so.
 
-Documentation for installing other tools you will need for OpenShift can be found at https://openshift.redhat.com/community/developers/install-the-client-tools
+Documentation for installing other tools you will need for OpenShift can be found at https://www.openshift.com/developers/install-the-client-tools
 
 We recommend these free applications:
 
