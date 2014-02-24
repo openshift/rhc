@@ -394,7 +394,9 @@ module RHC
       # :nocov:
       # Patch for BZ840938 to support Ruby 1.8 on machines without /etc/resolv.conf
       dns = Resolv::DNS.new((Resolv::DNS::Config.default_config_hash || {}))
-      dns.getresources(host, Resolv::DNS::Resource::IN::A).any?
+      resources = dns.getresources(host, Resolv::DNS::Resource::IN::A)
+      debug("Checking for #{host} from Resolv::DNS: #{resources.inspect}") if debug?
+      resources.present?
       # :nocov:
     end
 
@@ -402,7 +404,9 @@ module RHC
       with_tolerant_encoding do
         begin
           resolver = Resolv::Hosts.new
-          resolver.getaddress host
+          result = resolver.getaddress host
+          debug("Checking for #{host} from Resolv::Hosts: #{result.inspect}") if debug?
+          result
         rescue => e
           debug "Error while resolving with Resolv::Hosts: #{e.message}(#{e.class})\n  #{e.backtrace.join("\n  ")}"
         end

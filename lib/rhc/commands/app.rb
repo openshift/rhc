@@ -600,7 +600,7 @@ module RHC::Commands
           sleep_time *= DEFAULT_DELAY_THROTTLE
         }
 
-        debug "End checking for application dns @ '#{host} - found=#{found}'"
+        debug "End checking for application dns @ '#{host} - found=#{host_found}'"
 
         host_found
       end
