@@ -444,7 +444,7 @@ module RHC::Rest::Mock
     end
 
     def mock_domain_links(domain_id='test_domain')
-      [['ADD_APPLICATION',   "domains/#{domain_id}/apps/add", 'post', {'optional_params' => [{'name' => 'environment_variables'}]} ],
+      [['ADD_APPLICATION',   "domains/#{domain_id}/apps/add", 'post', {'optional_params' => [{'name' => 'environment_variables'}, {'name' => 'cartridges[][name]'}, {'name' => 'cartridges[][url]'}]} ],
        ['LIST_APPLICATIONS', "domains/#{domain_id}/apps/",    'get' ],
        ['UPDATE',            "domains/#{domain_id}/update",   'put'],
        ['DELETE',            "domains/#{domain_id}/delete",   'post']]

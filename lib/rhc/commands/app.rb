@@ -3,6 +3,8 @@ require 'resolv'
 require 'rhc/git_helpers'
 require 'rhc/cartridge_helpers'
 require 'rhc/deployment_helpers'
+require 'optparse'
+require 'tmpdir'
 
 module RHC::Commands
   class App < Base
@@ -51,9 +53,10 @@ module RHC::Commands
     syntax "<name> <cartridge> [... <cartridge>] [... VARIABLE=VALUE] [-n namespace]"
     option ["-n", "--namespace NAME"], "Namespace for the application"
     option ["-g", "--gear-size SIZE"], "Gear size controls how much memory and CPU your cartridges can use."
-    option ["-s", "--scaling"], "Enable scaling for the web cartridge."
+    option ["-s", "--[no-]scaling"], "Enable scaling for the web cartridge."
     option ["-r", "--repo DIR"], "Path to the Git repository (defaults to ./$app_name)"
     option ["-e", "--env VARIABLE=VALUE"], "Environment variable(s) to be set on this app, or path to a file containing environment variables", :type => :list
+    option ["--from NAME"], "Create based on another application. All content and configurations will be copied from the original app."
     option ["--from-code URL"], "URL to a Git repository that will become the initial contents of the application"
     option ["--[no-]git"], "Skip creating the local Git repository."
     option ["--[no-]dns"], "Skip waiting for the application DNS name to resolve. Must be used in combination with --no-git"
@@ -68,6 +71,22 @@ module RHC::Commands
 
       arg_envs, cartridges = cartridges.partition{|item| item.match(env_var_regex_pattern)}
 
+      rest_domain = check_domain!
+      rest_app = nil
+      repo_dir = nil
+
+      if options.from
+        raise RHC::AppCloneNotSupportedException, "The server does not support creating apps based on others (rhc create-app --from)." if (!rest_domain.has_param?('ADD_APPLICATION', 'cartridges[][name]') || !rest_domain.has_param?('ADD_APPLICATION', 'cartridges[][url]'))
+        raise ArgumentError, "Option --from-code is incompatible with --from. When creating an app based on another resource you can either specify a Git repository URL with --from-code or an existing app name with --from." if options.from_code     
+        raise ArgumentError, "Option --no-dns is incompatible with --from. We need to propagate the new app DNS to be able to configure it." if options.dns == false
+        raise ArgumentError, "Do not specify cartridges when creating an app based on another one. All cartridges will be copied from the original app." if !(cartridges || []).empty?
+
+        from_app = find_app(:app => options.from)
+
+        arg_envs = from_app.environment_variables.collect {|env| "#{env.name}=#{env.value} "} + arg_envs
+        cartridges = from_app.cartridges.reject{|c| c.tags.include?('web_proxy')}.collect{|c| c.custom? ? c.url : c.name}
+      end
+
       cartridges = check_cartridges(cartridges, &require_one_web_cart)
 
       options.default \
@@ -75,10 +94,6 @@ module RHC::Commands
         :git => true
 
       raise ArgumentError, "You have named both your main application and your Jenkins application '#{name}'. In order to continue you'll need to specify a different name with --enable-jenkins or choose a different application name." if jenkins_app_name == name && enable_jenkins?
-
-      rest_domain = check_domain!
-      rest_app = nil
-      repo_dir = nil
 
       cart_names = cartridges.collect do |c|
         c.usage_rate? ? "#{c.short_name} (addtl. costs may apply)" : c.short_name
@@ -90,13 +105,31 @@ module RHC::Commands
         warn "Server does not support environment variables."
       end
 
+      scaling = options.scaling
+
+      if from_app
+        scaling = from_app.scalable if scaling.nil?
+
+        cartridges = from_app.cartridges.reject{|c| c.tags.include?('web_proxy')}.collect do |cartridge|
+          {
+            :name => (cartridge.name if !cartridge.custom?), 
+            :url => (cartridge.url if cartridge.custom?),
+            :gear_size => options.gear_size || cartridge.gear_profile,
+            :additional_gear_storage => (cartridge.additional_gear_storage if cartridge.additional_gear_storage > 0),
+            :scales_from => (cartridge.scales_from if cartridge.scalable?),
+            :scales_to => (cartridge.scales_to if cartridge.scalable?)
+          }.reject{|k,v| v.nil? }
+        end
+      end
+
       paragraph do
         header "Application Options"
         say table([["Domain:", options.namespace],
                ["Cartridges:", cart_names],
               (["Source Code:", options.from_code] if options.from_code),
-               ["Gear Size:", options.gear_size || "default"],
-               ["Scaling:", options.scaling ? "yes" : "no"],
+              (["From app:", from_app.name] if from_app),
+               ["Gear Size:", options.gear_size || (from_app ? "Copied from '#{from_app.name}'" : "default")],
+               ["Scaling:", scaling ? "yes" : "no"],
               (["Environment Variables:", env.map{|item| "#{item.name}=#{item.value}"}.join(', ')] if env.present?),
               ].compact
              )
@@ -106,7 +139,7 @@ module RHC::Commands
         say "Creating application '#{name}' ... "
 
         # create the main app
-        rest_app = create_app(name, cartridges, rest_domain, options.gear_size, options.scaling, options.from_code, env, options.auto_deploy, options.keep_deployments, options.deployment_branch)
+        rest_app = create_app(name, cartridges, rest_domain, options.gear_size, scaling, options.from_code, env, options.auto_deploy, options.keep_deployments, options.deployment_branch, options.deployment_type)
         success "done"
 
         paragraph{ indent{ success rest_app.messages.map(&:strip) } }
@@ -161,22 +194,47 @@ module RHC::Commands
             return 0
           end
         end
+      end
 
-        if options.git
-          section(:now => true, :top => 1, :bottom => 1) do
-            begin
-              if has_git?
-                repo_dir = git_clone_application(rest_app)
-              else
-                warn "You do not have git installed, so your application's git repo will not be cloned"
-              end
-            rescue RHC::GitException => e
-              warn "#{e}"
-              unless RHC::Helpers.windows? and windows_nslookup_bug?(rest_app)
-                add_issue("We were unable to clone your application's git repo - #{e}",
-                          "Clone your git repo",
-                          "rhc git-clone #{rest_app.name}")
-              end
+      if from_app
+        from_app.aliases.each do |a|
+          begin 
+            say "Creating alias #{a.id} ... "
+            rest_app.add_alias(a.id)
+          rescue RHC::Rest::ValidationException => e
+            warn 'failure'
+            add_issue("We were unable to add an alias to your application - #{e}",
+                      "Remove the alias from the original app and then add it manually",
+                      "rhc add-alias #{name} #{a.id}")
+          else
+            success 'done'
+          end
+        end
+
+        say "Setting deployment configuration ... "
+        rest_app.configure({:auto_deploy => from_app.auto_deploy, :keep_deployments => from_app.keep_deployments , :deployment_branch => from_app.deployment_branch, :deployment_type => from_app.deployment_type})
+        success 'done'
+
+        snapshot_filename = temporary_snapshot_filename(from_app.name)
+        save_snapshot(from_app, snapshot_filename)
+        restore_snapshot(rest_app, snapshot_filename)
+        File.delete(snapshot_filename) if File.exist?(snapshot_filename)
+      end
+
+      if options.dns && options.git
+        section(:now => true, :top => 1, :bottom => 1) do
+          begin
+            if has_git?
+              repo_dir = git_clone_application(rest_app)
+            else
+              warn "You do not have git installed, so your application's git repo will not be cloned"
+            end
+          rescue RHC::GitException => e
+            warn "#{e}"
+            unless RHC::Helpers.windows? and windows_nslookup_bug?(rest_app)
+              add_issue("We were unable to clone your application's git repo - #{e}",
+                        "Clone your git repo",
+                        "rhc git-clone #{rest_app.name}")
             end
           end
         end
@@ -514,20 +572,19 @@ module RHC::Commands
         result
       end
 
-      def create_app(name, cartridges, rest_domain, gear_size=nil, scale=nil, from_code=nil, environment_variables=nil, auto_deploy=nil, keep_deployments=nil, deployment_branch=nil)
+      def create_app(name, cartridges, rest_domain, gear_size=nil, scale=nil, from_code=nil, environment_variables=nil, auto_deploy=nil, keep_deployments=nil, deployment_branch=nil, deployment_type=nil)
         app_options = {:cartridges => Array(cartridges)}
         app_options[:gear_profile] = gear_size if gear_size
         app_options[:scale] = scale if scale
         app_options[:initial_git_url] = from_code if from_code
         app_options[:debug] = true if @debug
-        app_options[:environment_variables] = environment_variables.map{ |item| item.to_hash } if environment_variables.present?
+        app_options[:environment_variables] = environment_variables.map{|i| i.to_hash}.group_by{|i| i[:name]}.values.map(&:last) if environment_variables.present?
         app_options[:auto_deploy] = auto_deploy if !auto_deploy.nil?
         app_options[:keep_deployments] = keep_deployments if keep_deployments
         app_options[:deployment_branch] = deployment_branch if deployment_branch
+        app_options[:deployment_type] = deployment_type if deployment_type
         debug "Creating application '#{name}' with these options - #{app_options.inspect}"
-        rest_app = rest_domain.add_application(name, app_options)
-
-        rest_app
+        rest_domain.add_application(name, app_options)
       rescue RHC::Rest::Exception => e
         if e.code == 109
           paragraph{ say "Valid cartridge types:" }
@@ -720,6 +777,10 @@ WARNING_OUTPUT
 
     def issues?
       not @issues.nil?
+    end
+
+    def temporary_snapshot_filename(app_name)
+      "#{Dir.tmpdir}/#{app_name}_temp_clone.tar.gz"
     end
   end
 end
