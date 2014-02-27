@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.21.0
+Version: 1.21.1
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -104,6 +104,15 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Feb 27 2014 Adam Miller <admiller@redhat.com> 1.21.1-1
+- Fixing tests (dmcphers@redhat.com)
+- Merge pull request #550 from smarterclayton/add_more_debugging_to_dns_output
+  (dmcphers+openshiftbot@redhat.com)
+- Report more info about DNS resolution (ccoleman@redhat.com)
+- fix feature test - remove obsolete php/ dir (vvitek@redhat.com)
+- Bug 1066850 - Fixing urls (dmcphers@redhat.com)
+- bump_minor_versions for sprint 41 (admiller@redhat.com)
+
 * Sun Feb 16 2014 Adam Miller <admiller@redhat.com> 1.20.3-1
 - Explain automatic updates (ccoleman@redhat.com)
 
