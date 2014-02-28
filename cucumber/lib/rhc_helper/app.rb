@@ -5,7 +5,7 @@ module RHCHelper
   # A class to help maintain the state from rhc calls and helper
   # methods around application management.
   #
-  class App 
+  class App
     extend Persistable
     extend Runnable
     extend API
@@ -118,10 +118,10 @@ module RHCHelper
 
     def get_index_file
       case @type.split("-").first
-        when "php" then "php/index.php"
+        when "php" then "index.php"
         when "ruby" then "config.ru"
-        when "python" then "wsgi/application"
-        when "perl" then "perl/index.pl"
+        when "python" then "wsgi.py"
+        when "perl" then "index.pl"
         when "jbossas" then "src/main/webapp/index.html"
         when "jbosseap" then "src/main/webapp/index.html"
         when "nodejs" then "index.html"
