@@ -47,17 +47,17 @@ describe "rhc deployment scenarios" do
 
     it "should perform a complete deploy workflow" do
       configure_app_for_manual_git_deployment
-      edit_simple_change 'Bienvenido'
-      app_page_content.should match /Welcome/
-      app_page_content.should_not match /Bienvenido/
+      edit_simple_change 'Bienvenido a'
+      app_page_content.should match /Welcome to/
+      app_page_content.should_not match /Bienvenido a/
       deploy_master
-      app_page_content.should match /Bienvenido/
-      app_page_content.should_not match /Welcome/
+      app_page_content.should match /Bienvenido a/
+      app_page_content.should_not match /Welcome to/
       deployment_id = find_inactive_deployment
       deployment_id.should_not be_nil
       activate deployment_id
-      app_page_content.should match /Welcome/
-      app_page_content.should_not match /Bienvenido/
+      app_page_content.should match /Welcome to/
+      app_page_content.should_not match /Bienvenido a/
     end
 
     private
