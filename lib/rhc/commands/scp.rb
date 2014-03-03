@@ -13,7 +13,7 @@ module RHC::Commands
       cartridge) by default.
 
       Examples:
-        Uploading a file from your workding directory to your app-root/data directory
+        Uploading a file from your working directory to your app-root/data directory
           rhc scp myapp upload somefile.txt app-root/data
 
         Downloading a file from your app-root/data directory to your working directory
