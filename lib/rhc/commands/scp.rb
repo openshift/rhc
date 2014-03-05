@@ -34,9 +34,14 @@ module RHC::Commands
 
       begin
           start_time = Time.now
+          last_sent = nil
           Net::SCP.send("#{action}!".to_sym, ssh_opts[1], ssh_opts[0], (action == 'upload' ? local_path : remote_path), (action == 'upload' ? remote_path : local_path)) do |ch, name, sent, total|
             #:nocov:
-            $stderr.print "\r #{action}ing #{name}: #{((sent.to_f/total.to_f)*100).to_i}% complete. #{sent}/#{total} bytes transferred " + (sent == total ? "in #{Time.now - start_time} seconds \n" : "")
+            if sent != last_sent
+              last_sent = sent
+              complete = total == 0 ? 100 : ((sent.to_f/total.to_f)*100).to_i
+              $stderr.print "\r #{action}ing #{name}: #{complete}% complete. #{sent}/#{total} bytes transferred " + (sent == total ? "in #{Time.now - start_time} seconds \n" : "")
+            end
             #:nocov:
           end
       rescue Errno::ECONNREFUSED
