@@ -10,9 +10,9 @@ _rhc()
     if [[ "$cur" == -* ]]; then
       opts="--always-prefix --clean --config --debug --insecure --limit --mock --noprompt --password --raw --rhlogin --server --ssl-ca-file --ssl-client-cert-file --ssl-version --timeout --token"
     elif [ -z $cur ]; then
-      opts="account alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert app app-configure app-create app-delete app-deploy app-force-stop app-reload app-restart app-scale-down app-scale-up app-show app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all authorization-list cartridge cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage deployment deployment-activate deployment-list deployment-show domain domain-configure domain-create domain-delete domain-leave domain-list domain-rename domain-show env env-list env-set env-show env-unset git-clone logout member member-add member-list member-remove port-forward server setup snapshot snapshot-restore snapshot-save ssh sshkey sshkey-add sshkey-list sshkey-remove sshkey-show tail threaddump"
+      opts="account alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert app app-configure app-create app-delete app-deploy app-force-stop app-reload app-restart app-scale-down app-scale-up app-show app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all authorization-list cartridge cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage deployment deployment-activate deployment-list deployment-show domain domain-configure domain-create domain-delete domain-leave domain-list domain-rename domain-show env env-list env-set env-show env-unset git-clone logout member member-add member-list member-remove port-forward scp server setup snapshot snapshot-restore snapshot-save ssh sshkey sshkey-add sshkey-list sshkey-remove sshkey-show tail threaddump"
     else
-      opts="account account-logout activate-deployment add-alias add-authorization add-cartridge add-member add-sshkey alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert aliases app app-configure app-create app-delete app-deploy app-env app-force-stop app-reload app-restart app-scale-down app-scale-up app-show app-snapshot app-ssh app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all authorization-list authorizations cartridge cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage cartridges configure-app configure-domain create-app create-domain delete-all-authorization delete-app delete-authorization delete-cert-alias delete-domain deploy deploy-app deployment deployment-activate deployment-list deployment-show deployments domain domain-configure domain-create domain-delete domain-leave domain-list domain-rename domain-show domains env env-add env-list env-remove env-set env-show env-unset force-stop-app git-clone leave-domain list-alias list-authorization list-cartridge list-deployment list-domain list-env list-member list-sshkey logout member member-add member-list member-remove members port-forward reload-app reload-cartridge remove-alias remove-cartridge remove-member remove-sshkey rename-domain restart-app restart-cartridge restore-snapshot save-snapshot scale-cartridge scale-down-app scale-up-app server set-env setup show-app show-cartridge show-deployment show-domain show-env show-sshkey snapshot snapshot-restore snapshot-save ssh sshkey sshkey-add sshkey-list sshkey-remove sshkey-show start-app start-cartridge status-cartridge stop-app stop-cartridge storage-cartridge tail threaddump tidy-app unset-env update-cert-alias"
+      opts="account account-logout activate-deployment add-alias add-authorization add-cartridge add-member add-sshkey alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert aliases app app-configure app-create app-delete app-deploy app-env app-force-stop app-reload app-restart app-scale-down app-scale-up app-scp app-show app-snapshot app-ssh app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all authorization-list authorizations cartridge cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage cartridges configure-app configure-domain create-app create-domain delete-all-authorization delete-app delete-authorization delete-cert-alias delete-domain deploy deploy-app deployment deployment-activate deployment-list deployment-show deployments domain domain-configure domain-create domain-delete domain-leave domain-list domain-rename domain-show domains env env-add env-list env-remove env-set env-show env-unset force-stop-app git-clone leave-domain list-alias list-authorization list-cartridge list-deployment list-domain list-env list-member list-sshkey logout member member-add member-list member-remove members port-forward reload-app reload-cartridge remove-alias remove-cartridge remove-member remove-sshkey rename-domain restart-app restart-cartridge restore-snapshot save-snapshot scale-cartridge scale-down-app scale-up-app scp server set-env setup show-app show-cartridge show-deployment show-domain show-env show-sshkey snapshot snapshot-restore snapshot-save ssh sshkey sshkey-add sshkey-list sshkey-remove sshkey-show start-app start-cartridge status-cartridge stop-app stop-cartridge storage-cartridge tail threaddump tidy-app unset-env update-cert-alias"
     fi
   else
     prev="${COMP_WORDS[@]:0:COMP_CWORD}"
@@ -276,6 +276,14 @@ _rhc()
         fi
         ;;
 
+      "rhc app scp")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --application-id --local_path --namespace --remote_path --transfer_direction"
+        else
+          opts=""
+        fi
+        ;;
+
       "rhc app show")
         if [[ "$cur" == -* ]]; then
           opts="--app --application-id --configuration --gears --namespace --state"
@@ -399,6 +407,14 @@ _rhc()
       "rhc app-scale-up")
         if [[ "$cur" == -* ]]; then
           opts="--app --application-id --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc app-scp")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --application-id --local_path --namespace --remote_path --transfer_direction"
         else
           opts=""
         fi
@@ -1391,6 +1407,14 @@ _rhc()
       "rhc scale-up-app")
         if [[ "$cur" == -* ]]; then
           opts="--app --application-id --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc scp")
+        if [[ "$cur" == -* ]]; then
+          opts="--app --application-id --local_path --namespace --remote_path --transfer_direction"
         else
           opts=""
         fi

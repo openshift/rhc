@@ -49,7 +49,8 @@ module RHC::Commands
       rescue SocketError => e
         raise RHC::ConnectionFailed, "The connection to #{ssh_opts[1]} failed: #{e.message}"
       rescue Net::SCP::Error => e
-        raise RHC::RemoteFileOrPathNotFound.new("Remote file, file_path, or directory could not be found.")
+        debug e.inspect
+        raise RHC::RemoteFileOrPathNotFound.new("An unknown error occurred: #{e.message}")
       end
     end
 
