@@ -53,7 +53,7 @@ module RHC
         @user ||= api.rest_method "GET_USER"
       end
 
-      #Find Domain by namesapce
+      #Find Domain by namespace
       def find_domain(id)
         debug "Finding domain #{id}"
         if link = api.link_href(:SHOW_DOMAIN, ':name' => id)
@@ -64,18 +64,25 @@ module RHC
       end
 
       def find_application(domain, application, options={})
+        precheck_domain_id(domain)
+        precheck_application_id(application)
         request(:url => link_show_application_by_domain_name(domain, application), :method => "GET", :payload => options)
       end
 
       def find_application_gear_groups(domain, application, options={})
+        precheck_domain_id(domain)
+        precheck_application_id(application)
         request(:url => link_show_application_by_domain_name(domain, application, "gear_groups"), :method => "GET", :payload => options)
       end
 
       def find_application_aliases(domain, application, options={})
+        precheck_domain_id(domain)
+        precheck_application_id(application)
         request(:url => link_show_application_by_domain_name(domain, application, "aliases"), :method => "GET", :payload => options)
       end
 
       def find_application_by_id(id, options={})
+        precheck_application_id(id)
         if api.supports? :show_application
           request(:url => link_show_application_by_id(id), :method => "GET", :payload => options)
         else
@@ -84,11 +91,23 @@ module RHC
       end
 
       def find_application_by_id_gear_groups(id, options={})
+        precheck_application_id(id)
         if api.supports? :show_application
           request(:url => link_show_application_by_id(id, 'gear_groups'), :method => "GET", :payload => options)
         else
           applications.find{ |a| return a.gear_groups if a.id == id }
         end or raise ApplicationNotFoundException.new("Application with id #{id} not found")
+      end
+
+      # Catch domain ids which we can't make API calls for
+      def precheck_domain_id(domain)
+        raise DomainNotFoundException.new("Domain not specified") if domain.blank?
+        raise DomainNotFoundException.new("Domain #{domain} not found") if ['.','..'].include?(domain)
+      end
+
+      def precheck_application_id(application)
+        raise ApplicationNotFoundException.new("Application not specified") if application.blank?
+        raise ApplicationNotFoundException.new("Application #{application} not found") if ['.','..'].include?(application)
       end
 
       def link_show_application_by_domain_name(domain, application, *args)

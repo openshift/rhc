@@ -67,7 +67,7 @@ module RHC
     end
 
     def find_app(opts={})
-      if id = options.application_id
+      if id = options.application_id.presence
         if opts.delete(:with_gear_groups)
           return rest_client.find_application_by_id_gear_groups(id, opts)
         else
@@ -82,7 +82,7 @@ module RHC
             [options.namespace || namespace_context, options.app]
           end
         end
-      if app && domain
+      if app.present? && domain.present?
         if opts.delete(:with_gear_groups)
           rest_client.find_application_gear_groups(domain, app, opts)
         else
