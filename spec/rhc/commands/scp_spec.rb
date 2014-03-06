@@ -63,14 +63,14 @@ describe RHC::Commands::Scp do
       it { run_output.should match("The connection to 127.0.0.1 failed: SocketError") }
     end
 
-    context 'remote file not found' do
+    context 'unknown error' do
       before(:each) do
         @domain = rest_client.add_domain("mockdomain")
         @domain.add_application("app1", "mock_type")
         File.should_receive(:exist?).with("file.txt").once.and_return(true)
-        Net::SCP.should_receive("upload!".to_sym).with("127.0.0.1", "fakeuuidfortestsapp1","file.txt","app-root/data").and_raise(Net::SCP::Error)
+        Net::SCP.should_receive("upload!".to_sym).with("127.0.0.1", "fakeuuidfortestsapp1","file.txt","app-root/data").and_raise(Net::SCP::Error.new("SCP error message"))
       end
-      it { run_output.should match("Remote file, file_path, or directory could not be found.") }
+      it { run_output.should match("An unknown error occurred: SCP error message") }
     end
   end
 
