@@ -56,7 +56,7 @@ module RHC::Commands
     option ["-s", "--[no-]scaling"], "Enable scaling for the web cartridge."
     option ["-r", "--repo DIR"], "Path to the Git repository (defaults to ./$app_name)"
     option ["-e", "--env VARIABLE=VALUE"], "Environment variable(s) to be set on this app, or path to a file containing environment variables", :type => :list
-    option ["--from NAME"], "Create based on another application. All content and configurations will be copied from the original app."
+    option ["--from-app NAME"], "Create based on another application. All content and configurations will be copied from the original app."
     option ["--from-code URL"], "URL to a Git repository that will become the initial contents of the application"
     option ["--[no-]git"], "Skip creating the local Git repository."
     option ["--[no-]dns"], "Skip waiting for the application DNS name to resolve. Must be used in combination with --no-git"
@@ -75,13 +75,13 @@ module RHC::Commands
       rest_app = nil
       repo_dir = nil
 
-      if options.from
-        raise RHC::AppCloneNotSupportedException, "The server does not support creating apps based on others (rhc create-app --from)." if (!rest_domain.has_param?('ADD_APPLICATION', 'cartridges[][name]') || !rest_domain.has_param?('ADD_APPLICATION', 'cartridges[][url]'))
-        raise ArgumentError, "Option --from-code is incompatible with --from. When creating an app based on another resource you can either specify a Git repository URL with --from-code or an existing app name with --from." if options.from_code     
-        raise ArgumentError, "Option --no-dns is incompatible with --from. We need to propagate the new app DNS to be able to configure it." if options.dns == false
+      if options.from_app
+        raise RHC::AppCloneNotSupportedException, "The server does not support creating apps based on others (rhc create-app --from-app)." if (!rest_domain.has_param?('ADD_APPLICATION', 'cartridges[][name]') || !rest_domain.has_param?('ADD_APPLICATION', 'cartridges[][url]'))
+        raise ArgumentError, "Option --from-code is incompatible with --from--app. When creating an app based on another resource you can either specify a Git repository URL with --from-code or an existing app name with --from-app." if options.from_code     
+        raise ArgumentError, "Option --no-dns is incompatible with --from-app. We need to propagate the new app DNS to be able to configure it." if options.dns == false
         raise ArgumentError, "Do not specify cartridges when creating an app based on another one. All cartridges will be copied from the original app." if !(cartridges || []).empty?
 
-        from_app = find_app(:app => options.from)
+        from_app = find_app(:app => options.from_app)
 
         arg_envs = from_app.environment_variables.collect {|env| "#{env.name}=#{env.value} "} + arg_envs
         cartridges = from_app.cartridges.reject{|c| c.tags.include?('web_proxy')}.collect{|c| c.custom? ? c.url : c.name}

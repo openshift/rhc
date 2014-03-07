@@ -480,7 +480,7 @@ describe RHC::Commands::App do
     end
 
     context 'when run' do
-      let(:arguments) { ['app', 'create', 'clone', '--from', 'app1', '--no-git'] }
+      let(:arguments) { ['app', 'create', 'clone', '--from-app', 'app1', '--no-git'] }
       it { expect { run }.to exit_with_code(0) }
       it "should clone successfully" do
         run_output.should match(/Cartridges:\s+mock_standalone_cart-1, mock_cart-1, mock_cart-2/)
@@ -491,7 +491,7 @@ describe RHC::Commands::App do
     end
 
     context 'alias already registered' do
-      let(:arguments) { ['app', 'create', 'clone', '--from', 'app1', '--no-git'] }
+      let(:arguments) { ['app', 'create', 'clone', '--from-app', 'app1', '--no-git'] }
       before do 
         RHC::Rest::Mock::MockRestApplication.any_instance.stub(:add_alias).and_raise(RHC::Rest::ValidationException.new('Foo'))
       end 
@@ -502,7 +502,7 @@ describe RHC::Commands::App do
     end
 
     context 'when run against unsupported server' do
-      let(:arguments) { ['app', 'create', 'clone', '--from', 'app1', '--no-git'] }
+      let(:arguments) { ['app', 'create', 'clone', '--from-app', 'app1', '--no-git'] }
       before { @domain.should_receive(:has_param?).with('ADD_APPLICATION','cartridges[][name]').and_return(false) }
       it { expect { run }.to exit_with_code(134) }
       it "should fail" do

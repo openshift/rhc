@@ -12,8 +12,7 @@ describe "rhc app scenarios" do
 
     it "should clone successfully" do
       app_name = "clone#{random}"
-      r = rhc 'create-app', app_name, '--from', app.name
-      #r.status.should == 0
+      r = rhc 'create-app', app_name, '--from-app', app.name
       r.stdout.should match /Domain:\s+#{app.domain}/
       r.stdout.should match /Cartridges:\s+#{app.cartridges.collect{|c| c.name}.join(', ')}/
       r.stdout.should match /From app:\s+#{app.name}/
