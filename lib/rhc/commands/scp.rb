@@ -49,10 +49,10 @@ module RHC::Commands
       rescue SocketError => e
         raise RHC::ConnectionFailed, "The connection to #{ssh_opts[1]} failed: #{e.message}"
       rescue Net::SSH::AuthenticationFailed => e
-        debug_error e.inspect
+        debug_error e
         raise RHC::SSHAuthenticationFailed.new(ssh_opts[1], ssh_opts[0])
       rescue Net::SCP::Error => e
-        debug_error e.inspect
+        debug_error e
         raise RHC::RemoteFileOrPathNotFound.new("An unknown error occurred: #{e.message}")
       end
     end
