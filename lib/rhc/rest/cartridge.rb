@@ -86,10 +86,10 @@ module RHC
         if attribute(:usage_rates)
           ur = attribute(:usage_rates)
           fmt = {
-            currency: currency_symbol(currency),
-            rate:     ur["Rate"][currency],
-            scope:    ur["Scope"] || '',
-            duration: ur["Duration"] || ''
+            :currency => currency_symbol(currency),
+            :rate     => ur["Rate"][currency],
+            :scope    => ur["Scope"] || '',
+            :duration => ur["Duration"] || ''
           }
           ur["Description"][locale] % fmt
         else
