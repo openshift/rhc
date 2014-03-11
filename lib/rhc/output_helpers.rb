@@ -137,7 +137,7 @@ module RHC
     end
 
     def format_usage_message(cart)
-      "This gear costs an additional $#{cart.usage_rate} per gear after the first 3 gears."
+      cart.usage_rate_desc
     end
 
     def default_display_env_var(env_var_name, env_var_value=nil)
