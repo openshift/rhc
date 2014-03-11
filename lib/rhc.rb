@@ -13,6 +13,7 @@ module RHC
   autoload :AutoComplete,   'rhc/autocomplete'
   autoload :Auth,           'rhc/auth'
   autoload :CartridgeHelpers, 'rhc/cartridge_helpers'
+  autoload :CurrencyHelpers, 'rhc/currency_helpers'
   autoload :CommandRunner,  'rhc/command_runner'
   autoload :Commands,       'rhc/commands'
   autoload :Config,         'rhc/config'

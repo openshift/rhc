@@ -1,6 +1,8 @@
 module RHC
   module Rest
     class Cartridge < Base
+      include RHC::CurrencyHelpers
+
       HIDDEN_TAGS = [:framework, :web_framework, :cartridge].map(&:to_s)
 
       define_attr :type, :name, :display_name, :properties, :gear_profile, :status_messages, :scales_to, :scales_from, :scales_with,
@@ -66,14 +68,40 @@ module RHC
         rate && rate > 0.0
       end
 
-      def usage_rate
-        rate = attribute(:usage_rate_usd)
+      def usage_rate(currency='usd')
+        rate = attribute("usage_rate_#{currency}".to_sym)
 
         if attribute(:usage_rates)
-          rate ||= attribute(:usage_rates).inject(0) { |total, rate| total + rate['usd'].to_f }
+          begin
+            rate ||= attribute(:usage_rates)["Rate"][currency]
+          rescue
+            rate ||= attribute(:usage_rates).inject(0) { |total, rate| total + rate[currency].to_f }
+          end
         end
 
         rate.to_f rescue 0.0
+      end
+
+      def usage_rate_desc(locale='en-us', currency='usd')
+        if attribute(:usage_rates)
+          ur = attribute(:usage_rates)
+          val = {
+            'currency' => currency_symbol(currency),
+            'rate'     => ur["Rate"][currency] || 0.0,
+            'scope'    => ur["Scope"] || '',
+            'duration' => ur["Duration"] || ''
+          }
+          desc = ur["Description"]
+          desc = desc[locale] if desc.is_a? Hash and desc.key? locale
+          begin
+            r = desc % val
+          rescue
+            r = desc.gsub(/%\{[^}]+\}/) { |m| val[m[2...-1]] }
+          end
+        else
+          r = "This gear costs an additional $#{usage_rate} per gear."
+        end
+        r
       end
 
       def scaling
