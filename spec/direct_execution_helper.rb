@@ -1,5 +1,6 @@
 require 'open4'
 require 'rhc/helpers'
+require 'tmpdir'
 
 $source_bin_rhc = File.expand_path('bin/rhc')
 
