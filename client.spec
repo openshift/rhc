@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.22.0
+Version: 1.22.1
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -104,6 +104,17 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Mar 14 2014 Adam Miller <admiller@redhat.com> 1.22.1-1
+- Update scp.rb (developercorey@users.noreply.github.com)
+- Update scp.rb (developercorey@users.noreply.github.com)
+- Bug 1073852 fixing traceback with authentication failed message
+  (cdaley@redhat.com)
+- Bug 1073307: Make error message on download failure more generic
+  (jliggitt@redhat.com)
+- Bug 1073326: Add scp to rhc autocomplete (jliggitt@redhat.com)
+- Bug 1073283: Fix scp when app name is empty or . (jliggitt@redhat.com)
+- bump_minor_versions for sprint 42 (admiller@redhat.com)
+
 * Wed Mar 05 2014 Adam Miller <admiller@redhat.com> 1.21.3-1
 - Bug 1072721: Fix divide by zero and duplicate messages in rhc scp command
   (jliggitt@redhat.com)
