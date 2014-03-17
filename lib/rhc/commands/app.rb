@@ -221,7 +221,7 @@ module RHC::Commands
         File.delete(snapshot_filename) if File.exist?(snapshot_filename)
       end
 
-      if options.dns && options.git
+      if options.git
         section(:now => true, :top => 1, :bottom => 1) do
           begin
             if has_git?
