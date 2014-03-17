@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.22.1
+Version: 1.22.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,14 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Mar 17 2014 Troy Dawson <tdawson@redhat.com> 1.22.2-1
+- Merge pull request #564 from nhr/fix_for_origin
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #563 from liggitt/require_tmpdir
+  (dmcphers+openshiftbot@redhat.com)
+- Add SCL dependency for client.spec-based RPM builds (hripps@redhat.com)
+- Require tmpdir (jliggitt@redhat.com)
+
 * Fri Mar 14 2014 Adam Miller <admiller@redhat.com> 1.22.1-1
 - Update scp.rb (developercorey@users.noreply.github.com)
 - Update scp.rb (developercorey@users.noreply.github.com)
