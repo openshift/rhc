@@ -493,11 +493,11 @@ describe RHC::Commands::App do
     context 'alias already registered' do
       let(:arguments) { ['app', 'create', 'clone', '--from-app', 'app1', '--no-git'] }
       before do 
-        RHC::Rest::Mock::MockRestApplication.any_instance.stub(:add_alias).and_raise(RHC::Rest::ValidationException.new('Foo'))
+        RHC::Rest::Mock::MockRestApplication.any_instance.stub(:aliases).and_return(['www.foo.com'])
       end 
       it { expect { run }.to exit_with_code(0) }
       it "should warn" do
-        run_output.should match(/We were unable to add an alias to your application/)
+        run_output.should match(/The application 'app1' has aliases set which were not copied/)
       end
     end
 

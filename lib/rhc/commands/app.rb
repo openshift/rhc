@@ -197,20 +197,6 @@ module RHC::Commands
       end
 
       if from_app
-        from_app.aliases.each do |a|
-          begin 
-            say "Creating alias #{a.id} ... "
-            rest_app.add_alias(a.id)
-          rescue RHC::Rest::ValidationException => e
-            warn 'failure'
-            add_issue("We were unable to add an alias to your application - #{e}",
-                      "Remove the alias from the original app and then add it manually",
-                      "rhc add-alias #{name} #{a.id}")
-          else
-            success 'done'
-          end
-        end
-
         say "Setting deployment configuration ... "
         rest_app.configure({:auto_deploy => from_app.auto_deploy, :keep_deployments => from_app.keep_deployments , :deployment_branch => from_app.deployment_branch, :deployment_type => from_app.deployment_type})
         success 'done'
@@ -219,6 +205,8 @@ module RHC::Commands
         save_snapshot(from_app, snapshot_filename)
         restore_snapshot(rest_app, snapshot_filename)
         File.delete(snapshot_filename) if File.exist?(snapshot_filename)
+
+        paragraph { warn "The application '#{from_app.name}' has aliases set which were not copied. Please configure the aliases of your new application manually." } unless from_app.aliases.empty?
       end
 
       if options.git
