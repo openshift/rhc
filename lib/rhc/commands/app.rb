@@ -129,7 +129,7 @@ module RHC::Commands
               (["Source Code:", options.from_code] if options.from_code),
               (["From app:", from_app.name] if from_app),
                ["Gear Size:", options.gear_size || (from_app ? "Copied from '#{from_app.name}'" : "default")],
-               ["Scaling:", (scaling ? "yes" : "no") + (options.scaling.nil? ? " (copied from '#{from_app.name}')" : '')],
+               ["Scaling:", (scaling ? "yes" : "no") + (from_app && options.scaling.nil? ? " (copied from '#{from_app.name}')" : '')],
               (["Environment Variables:", env.map{|item| "#{item.name}=#{item.value}"}.join(', ')] if env.present?),
               ].compact
              )
