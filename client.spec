@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.22.0
+Version: 1.22.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -21,6 +21,7 @@ Requires:      rubygem-httpclient
 Requires:      rubygem-test-unit
 Requires:      rubygem-net-ssh
 Requires:      rubygem-net-scp
+Requires:      ruby193-rubygem-net-scp
 Requires:      rubygem-net-ssh-multi
 Requires:      rubygem-archive-tar-minitar
 Requires:      rubygem-commander
@@ -104,6 +105,39 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Mar 18 2014 Adam Miller <admiller@redhat.com> 1.22.3-1
+- Merge pull request #553 from fabianofranz/dev/160
+  (dmcphers+openshiftbot@redhat.com)
+- Updates autocomplete (contact@fabianofranz.com)
+- Improved message about scaling when creating --from-app
+  (contact@fabianofranz.com)
+- Creating --from-app will no longer copy aliases, still warns about it
+  (contact@fabianofranz.com)
+- Moved check for options dns and git to previous logic
+  (contact@fabianofranz.com)
+- Changes rhc create-app --from to --from-app (contact@fabianofranz.com)
+- [origin-dev-ui-160] Add support to clone app on create: 'rhc create-app
+  <clone> --from <existing>' (contact@fabianofranz.com)
+
+* Mon Mar 17 2014 Troy Dawson <tdawson@redhat.com> 1.22.2-1
+- Merge pull request #564 from nhr/fix_for_origin
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #563 from liggitt/require_tmpdir
+  (dmcphers+openshiftbot@redhat.com)
+- Add SCL dependency for client.spec-based RPM builds (hripps@redhat.com)
+- Require tmpdir (jliggitt@redhat.com)
+
+* Fri Mar 14 2014 Adam Miller <admiller@redhat.com> 1.22.1-1
+- Update scp.rb (developercorey@users.noreply.github.com)
+- Update scp.rb (developercorey@users.noreply.github.com)
+- Bug 1073852 fixing traceback with authentication failed message
+  (cdaley@redhat.com)
+- Bug 1073307: Make error message on download failure more generic
+  (jliggitt@redhat.com)
+- Bug 1073326: Add scp to rhc autocomplete (jliggitt@redhat.com)
+- Bug 1073283: Fix scp when app name is empty or . (jliggitt@redhat.com)
+- bump_minor_versions for sprint 42 (admiller@redhat.com)
+
 * Wed Mar 05 2014 Adam Miller <admiller@redhat.com> 1.21.3-1
 - Bug 1072721: Fix divide by zero and duplicate messages in rhc scp command
   (jliggitt@redhat.com)

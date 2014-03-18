@@ -25,45 +25,15 @@ module RHC::Commands
     option ["--ssh PATH"], "Full path to your SSH executable with additional options"
     alias_action :"app snapshot save", :root_command => true, :deprecated => true
     def save(app)
-      ssh = check_ssh_executable! options.ssh
+
       rest_app = find_app
 
       raise RHC::DeploymentsNotSupportedException.new if options.deployment && !rest_app.supports?("DEPLOY")
 
-      ssh_uri = URI.parse(rest_app.ssh_url)
       filename = options.filepath ? options.filepath : "#{rest_app.name}.tar.gz"
 
-      snapshot_cmd = options.deployment ? 'gear archive-deployment' : 'snapshot'
-      ssh_cmd = "#{ssh} #{ssh_uri.user}@#{ssh_uri.host} '#{snapshot_cmd}' > #{filename}"
-      debug ssh_cmd
+      save_snapshot(rest_app, filename, options.deployment, options.ssh)
 
-      say "Pulling down a snapshot to #{filename}..."
-
-      begin
-        if !RHC::Helpers.windows?
-          status, output = exec(ssh_cmd)
-          if status != 0
-            debug output
-            raise RHC::SnapshotSaveException.new "Error in trying to save snapshot. You can try to save manually by running:\n#{ssh_cmd}"
-          end
-        else
-          Net::SSH.start(ssh_uri.host, ssh_uri.user) do |ssh|
-            File.open(filename, 'wb') do |file|
-              ssh.exec! "snapshot" do |channel, stream, data|
-                if stream == :stdout
-                  file.write(data)
-                else
-                  debug data
-                end
-              end
-            end
-          end
-        end
-      rescue Timeout::Error, Errno::EADDRNOTAVAIL, Errno::EADDRINUSE, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed => e
-        debug e.backtrace
-        raise RHC::SnapshotSaveException.new "Error in trying to save snapshot. You can try to save manually by running:\n#{ssh_cmd}"
-      end
-      results { say "Success" }
       0
     end
 
@@ -74,59 +44,14 @@ module RHC::Commands
     option ["--ssh PATH"], "Full path to your SSH executable with additional options"
     alias_action :"app snapshot restore", :root_command => true, :deprecated => true
     def restore(app)
-      ssh = check_ssh_executable! options.ssh
       rest_app = find_app
       filename = options.filepath ? options.filepath : "#{rest_app.name}.tar.gz"
 
       if File.exists? filename
-
-        include_git = RHC::Helpers.windows? ? true : RHC::TarGz.contains(filename, './*/git')
-        ssh_uri = URI.parse(rest_app.ssh_url)
-
-        ssh_cmd = "cat '#{filename}' | #{ssh} #{ssh_uri.user}@#{ssh_uri.host} 'restore#{include_git ? ' INCLUDE_GIT' : ''}'"
-
-        say "Restoring from snapshot #{filename}..."
-        debug ssh_cmd
-
-        begin
-          if !RHC::Helpers.windows?
-            status, output = exec(ssh_cmd)
-            if status != 0
-              debug output
-              raise RHC::SnapshotRestoreException.new "Error in trying to restore snapshot. You can try to restore manually by running:\n#{ssh_cmd}"
-            end
-          else
-            ssh = Net::SSH.start(ssh_uri.host, ssh_uri.user)
-            ssh.open_channel do |channel|
-              channel.exec("restore#{include_git ? ' INCLUDE_GIT' : ''}") do |ch, success|
-                channel.on_data do |ch, data|
-                  say data
-                end
-                channel.on_extended_data do |ch, type, data|
-                  say data
-                end
-                channel.on_close do |ch|
-                  say "Terminating..."
-                end
-                File.open(filename, 'rb') do |file|
-                  file.chunk(1024) do |chunk|
-                    channel.send_data chunk
-                  end
-                end
-                channel.eof!
-              end
-            end
-            ssh.loop
-          end
-        rescue Timeout::Error, Errno::EADDRNOTAVAIL, Errno::EADDRINUSE, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed => e
-          debug e.backtrace
-          raise RHC::SnapshotRestoreException.new "Error in trying to restore snapshot. You can try to restore manually by running:\n#{ssh_cmd}"
-        end
-
+        restore_snapshot(rest_app, filename, options.ssh)
       else
         raise RHC::SnapshotRestoreException.new "Archive not found: #{filename}"
       end
-      results { say "Success" }
       0
     end
 

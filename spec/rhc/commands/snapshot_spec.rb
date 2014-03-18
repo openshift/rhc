@@ -57,7 +57,7 @@ describe RHC::Commands::Snapshot do
         ssh.should_receive(:exec!).with("snapshot").and_yield(nil, :stdout, 'foo').and_yield(nil, :stderr, 'foo')
       end
       it { expect { run }.to exit_with_code(0) }
-      it { run_output.should match("Success") }
+      it { run_output.should match("done") }
     end
 
     context 'when timing out on windows' do
@@ -176,4 +176,3 @@ describe RHC::Commands::Snapshot do
     it('should raise') { expect{ run }.to raise_error(RHC::InvalidSSHExecutableException, /SSH executable '#{@targz_filename}' is not executable./) }
   end
 end
-

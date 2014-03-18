@@ -233,6 +233,7 @@ module CommandHelpers
     $terminal.close_write
     run!(*args)
   end
+
   def command_output(args=arguments)
     run_command(args)
   rescue SystemExit => e
@@ -552,6 +553,41 @@ end
 def mac?
   RbConfig::CONFIG['host_os'] =~ /^darwin/
 end
+
+def mock_save_snapshot_file(app)
+  @ssh_uri = URI.parse app.ssh_url
+  mock_popen3("ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'snapshot' > #{@app.name}.tar.gz", nil,
+              "Pulling down a snapshot of application '#{app.name}' to #{app.name}.tar.gz", nil)
+end
+
+def mock_restore_snapshot_file(app)
+  @ssh_uri = URI.parse app.ssh_url
+  File.stub(:exists?).and_return(true)
+  RHC::TarGz.stub(:contains).and_return(true)
+  in_mock, out_mock, err_mock = 
+    mock_popen3("ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'restore INCLUDE_GIT'", nil, "Restoring from snapshot #{app.name}.tar.gz to application '#{app.name}'", nil)
+  lines = ''
+  File.open(File.expand_path('../rhc/assets/targz_sample.tar.gz', __FILE__), 'rb') do |file|
+    file.chunk(4096) do |chunk|
+      lines << chunk
+    end
+  end
+  in_mock.stub(:write)
+  in_mock.stub(:close_write)
+end
+
+def mock_popen3(cmd, std_in, std_out, std_err)
+  in_mock = double('std in')
+  out_mock = double('std out')
+  err_mock = double('std err')
+  in_mock.stub(:gets).and_return(std_in)      
+  out_mock.stub(:gets).and_return(std_out)      
+  err_mock.stub(:gets).and_return(std_err)      
+  Open3.stub(:popen3)
+  Open3.should_receive(:popen3).with(cmd).and_yield(in_mock, out_mock, err_mock)
+  return in_mock, out_mock, err_mock
+end
+
 
 RSpec.configure do |config|
   config.include(ExitCodeMatchers)
