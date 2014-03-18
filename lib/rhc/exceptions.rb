@@ -138,6 +138,12 @@ module RHC
     end
   end
 
+  class AppCloneNotSupportedException < Exception
+    def initialize(message="The server does not support cloning apps")
+      super message, 134
+    end
+  end
+
   class MissingScalingValueException < Exception
     def initialize(message="Must provide either a min or max value for scaling")
       super message

@@ -192,7 +192,7 @@ _rhc()
         if [[ "$cur" == -* ]]; then
           opts=""
         else
-          opts="env snapshot create delete start stop scale-up scale-down force-stop restart reload tidy show deploy configure"
+          opts="create delete start stop scale-up scale-down force-stop restart reload tidy show deploy configure env snapshot"
         fi
         ;;
 
@@ -206,7 +206,7 @@ _rhc()
 
       "rhc app create")
         if [[ "$cur" == -* ]]; then
-          opts="--app --dns --enable-jenkins --env --from-code --gear-size --git --namespace --no-dns --no-git --no-keys --repo --scaling --type"
+          opts="--app --dns --enable-jenkins --env --from-app --from-code --gear-size --git --namespace --no-dns --no-git --no-keys --no-scaling --repo --scaling --type"
         else
           opts=""
         fi
@@ -342,7 +342,7 @@ _rhc()
 
       "rhc app-create")
         if [[ "$cur" == -* ]]; then
-          opts="--app --dns --enable-jenkins --env --from-code --gear-size --git --namespace --no-dns --no-git --no-keys --repo --scaling --type"
+          opts="--app --dns --enable-jenkins --env --from-app --from-code --gear-size --git --namespace --no-dns --no-git --no-keys --no-scaling --repo --scaling --type"
         else
           opts=""
         fi
@@ -766,7 +766,7 @@ _rhc()
 
       "rhc create-app")
         if [[ "$cur" == -* ]]; then
-          opts="--app --dns --enable-jenkins --env --from-code --gear-size --git --namespace --no-dns --no-git --no-keys --repo --scaling --type"
+          opts="--app --dns --enable-jenkins --env --from-app --from-code --gear-size --git --namespace --no-dns --no-git --no-keys --no-scaling --repo --scaling --type"
         else
           opts=""
         fi

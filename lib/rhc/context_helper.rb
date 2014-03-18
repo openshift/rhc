@@ -74,12 +74,13 @@ module RHC
           return rest_client.find_application_by_id(id, opts)
         end
       end
+      option = (opts && opts[:app]) || options.app
       domain, app =
-        if options.app
-          if options.app =~ /\//
-            options.app.split(/\//)
+        if option
+          if option =~ /\//
+            option.split(/\//)
           else
-            [options.namespace || namespace_context, options.app]
+            [options.namespace || namespace_context, option]
           end
         end
       if app.present? && domain.present?
