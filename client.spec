@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.22.2
+Version: 1.22.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,20 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Mar 18 2014 Adam Miller <admiller@redhat.com> 1.22.3-1
+- Merge pull request #553 from fabianofranz/dev/160
+  (dmcphers+openshiftbot@redhat.com)
+- Updates autocomplete (contact@fabianofranz.com)
+- Improved message about scaling when creating --from-app
+  (contact@fabianofranz.com)
+- Creating --from-app will no longer copy aliases, still warns about it
+  (contact@fabianofranz.com)
+- Moved check for options dns and git to previous logic
+  (contact@fabianofranz.com)
+- Changes rhc create-app --from to --from-app (contact@fabianofranz.com)
+- [origin-dev-ui-160] Add support to clone app on create: 'rhc create-app
+  <clone> --from <existing>' (contact@fabianofranz.com)
+
 * Mon Mar 17 2014 Troy Dawson <tdawson@redhat.com> 1.22.2-1
 - Merge pull request #564 from nhr/fix_for_origin
   (dmcphers+openshiftbot@redhat.com)
