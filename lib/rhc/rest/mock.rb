@@ -681,6 +681,7 @@ module RHC::Rest::Mock
         scale = type[:scale]
         gear_profile = type[:gear_profile]
         git_url = type[:initial_git_url]
+        tags = type[:tags]
         type = Array(type[:cartridges] || type[:cartridge])
       end
       a = MockRestApplication.new(client, name, type, self, scale, gear_profile, git_url)

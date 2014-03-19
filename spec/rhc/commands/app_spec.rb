@@ -624,6 +624,41 @@ describe RHC::Commands::App do
       it { run_output.should match(/Gears:\s+1 small/) }
       it { run_output.should match(%r(From:\s+ https://foo.bar.com)) }
     end
+
+    context 'when run with app with custom external cartridges' do
+      before do
+        @domain = rest_client.add_domain("mockdomain")
+        app = @domain.add_application("app1", "mock_type")
+        cart1 = app.add_cartridge('mock_cart-1')
+        cart1.url = 'https://foo.bar.com'
+        cart1.tags = ['external']
+        cart1.version = '2'
+        cart1.license = 'GPL'
+        cart1.website = 'http://bar.com'
+        cart1.current_scale = 0
+      end
+      context 'verbosely' do
+        let(:arguments) { ['app', 'show', 'app1', '-v'] }
+        it { run_output.should match("app1 @ https://app1-mockdomain.fake.foo/") }
+        it { run_output.should match(/Gears:\s+1 small/) }
+        it { run_output.should match(/Gears:\s+none \(external service\)/) }
+        it { run_output.should match(/Description:\s+Description of mock_cart-1/) }
+        it { run_output.should match(%r(Website:\s+ http://bar.com)) }
+        it { run_output.should match(/Version:\s+2/) }
+        it { run_output.should match(/License:\s+GPL/) }
+        it { run_output.should match(%r(From:\s+ https://foo.bar.com)) }
+      end
+      context 'not verbosely' do
+        it { run_output.should match("app1 @ https://app1-mockdomain.fake.foo/") }
+        it { run_output.should match(/Gears:\s+1 small/) }
+        it { run_output.should match(/Gears:\s+none \(external service\)/) }
+        it { run_output.should_not match(/Description:\s+Description of mock_cart-1/) }
+        it { run_output.should match(%r(Website:\s+ http://bar.com)) }
+        it { run_output.should_not match(/Version:\s+2/) }
+        it { run_output.should_not match(/License:\s+GPL/) }
+        it { run_output.should match(%r(From:\s+ https://foo.bar.com)) }
+      end
+    end
   end
 
   describe 'app show' do
