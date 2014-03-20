@@ -316,6 +316,29 @@ module RHC
           end
         end
 
+        context "when server supports LIST_APPLICATIONS_BY_OWNER" do
+          let(:api_links){ client_links.merge!(mock_response_links([['LIST_APPLICATIONS_BY_OWNER', 'applications', 'get']])) }
+          before do
+            stub_api_request(:any, "#{api_links['LIST_APPLICATIONS_BY_OWNER']['relative']}?owner=@self").
+              to_return({ :body   => {
+                            :type => 'applications',
+                            :data => [{
+                              :name  => 'mock_application_0',
+                              :links => mock_response_links(mock_app_links('mock_domain_0', 'mock_application_0')),
+                            }]
+                          }.to_json,
+                          :status => 200
+                        })
+          end
+          it "returns owned applications when called" do
+            match = nil
+            expect { match = client.owned_applications }.to_not raise_error
+            match.length.should == 1
+            match.first.name.should == 'mock_application_0'
+            match.first.class.should == RHC::Rest::Application
+          end
+        end
+
         context "find_application" do
           let(:mock_domain){ 'mock_domain_0' }
           let(:mock_app){ 'mock_app' }

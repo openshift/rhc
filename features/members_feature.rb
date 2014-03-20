@@ -161,6 +161,26 @@ describe "rhc member scenarios" do
           r.status.should == 0
         end
       end
+
+      it "should filter applications by owner" do
+        user = other_user.login
+        name = @domain.applications.first.name
+
+        r = rhc 'add-member', user, '--role', 'admin', '-n', domain.name
+        r.status.should == 0
+
+        with_environment(other_user) do
+          r = rhc 'apps', '--mine'
+          #r.status.should == 0
+          r.stdout.should match "No applications"
+
+          r = rhc 'apps'
+          r.status.should == 0
+          r.stdout.should match "You have access to 1 application"
+        end
+      end
+
+      after { @domain.applications.first.destroy }
     end
   end
 end

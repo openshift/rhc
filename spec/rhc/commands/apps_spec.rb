@@ -26,8 +26,24 @@ describe RHC::Commands::Apps do
         before{ domain.add_application('scaled', 'php', true) }
 
         it { expect { run }.to exit_with_code(0) }
-        it { run_output.should match(/scaled.*\-\-.*php.*Scaling:.*x2 \(minimum/m) }
+        it "should match output" do
+          output = run_output
+          output.should match("You have access to 1 application\\.")
+          output.should match(/scaled.*\-\-.*php.*Scaling:.*x2 \(minimum/m)
+        end
       end
+
+      context 'with one owned app' do
+        let(:arguments) { ['apps', '--mine'] }
+        before{ a = domain.add_application('scaled', 'php', true); rest_client.stub(:owned_applications).and_return([a]) }
+        it { expect { run }.to exit_with_code(0) }
+        it "should match output" do
+          output = run_output
+          output.should match("You have 1 application\\.")
+          output.should match(/scaled.*\-\-.*php.*Scaling:.*x2 \(minimum/m)
+        end
+      end
+
     end
 
     context 'when help is shown' do
