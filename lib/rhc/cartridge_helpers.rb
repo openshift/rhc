@@ -1,3 +1,5 @@
+require 'uri'
+
 module RHC
   module CartridgeHelpers
 
@@ -7,7 +9,7 @@ module RHC
         from = opts[:from] || all_cartridges
 
         cartridge_names.map do |name|
-          next from.find{ |c| c.url.present? && c.url.downcase == name} || use_cart(RHC::Rest::Cartridge.for_url(name), name) if name =~ %r(\Ahttps?://)i
+          next from.find{ |c| c.url.present? && cartridge_url_downcase(c.url) == name} || use_cart(RHC::Rest::Cartridge.for_url(name), name) if name =~ %r(\Ahttps?://)i
 
           name = name.downcase
           from.find{ |c| c.name.downcase == name } ||
@@ -113,6 +115,14 @@ module RHC
 
       def jenkins_client_cartridges
         @jenkins_client_cartridges ||= filter_jenkins_cartridges('ci_builder')
+      end
+
+      def cartridge_url_downcase(url)
+        url = URI(url)
+        url.scheme = url.scheme.downcase rescue url.scheme
+        url.host = url.host.downcase rescue url.host
+        url.path = url.path.downcase rescue url.path
+        url.to_s
       end
   end
 end
