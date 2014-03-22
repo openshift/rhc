@@ -36,10 +36,21 @@ module RHC
       end
 
       def applications(options={})
+        debug "Getting applications"
         if link = api.link_href(:LIST_APPLICATIONS)
           api.rest_method :LIST_APPLICATIONS, options
         else
           self.domains.map{ |d| d.applications(options) }.flatten
+        end
+      end
+
+      def owned_applications(options={})
+        debug "Getting owned applications"
+        if link = api.link_href(:LIST_APPLICATIONS_BY_OWNER)
+          @owned_applications ||= api.rest_method 'LIST_APPLICATIONS_BY_OWNER', :owner => '@self'
+        else
+          owned_domains_names = owned_domains.map{|d| d.name}
+          @owned_applications ||= applications(options).select{|app| owned_domains_names.include?(app.domain)}
         end
       end
 
