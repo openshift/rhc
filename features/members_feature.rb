@@ -176,7 +176,7 @@ describe "rhc member scenarios" do
 
           r = rhc 'apps'
           r.status.should == 0
-          r.stdout.should match "You have access to 1 application"
+          r.stdout.should match /You have access to \d+ applications?/
         end
       end
 
