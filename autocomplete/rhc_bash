@@ -470,7 +470,7 @@ _rhc()
 
       "rhc apps")
         if [[ "$cur" == -* ]]; then
-          opts=""
+          opts="--mine"
         else
           opts=""
         fi
