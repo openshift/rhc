@@ -192,7 +192,7 @@ _rhc()
         if [[ "$cur" == -* ]]; then
           opts=""
         else
-          opts="create delete start stop scale-up scale-down force-stop restart reload tidy show deploy configure env snapshot"
+          opts="env snapshot create delete start stop scale-up scale-down force-stop restart reload tidy show deploy configure"
         fi
         ;;
 
@@ -278,7 +278,7 @@ _rhc()
 
       "rhc app scp")
         if [[ "$cur" == -* ]]; then
-          opts="--app --application-id --local_path --namespace --remote_path --transfer_direction"
+          opts="--app --application-id --local-path --namespace --remote-path --transfer-direction"
         else
           opts=""
         fi
@@ -414,7 +414,7 @@ _rhc()
 
       "rhc app-scp")
         if [[ "$cur" == -* ]]; then
-          opts="--app --application-id --local_path --namespace --remote_path --transfer_direction"
+          opts="--app --application-id --local-path --namespace --remote-path --transfer-direction"
         else
           opts=""
         fi
@@ -470,7 +470,7 @@ _rhc()
 
       "rhc apps")
         if [[ "$cur" == -* ]]; then
-          opts=""
+          opts="--mine"
         else
           opts=""
         fi
@@ -1414,7 +1414,7 @@ _rhc()
 
       "rhc scp")
         if [[ "$cur" == -* ]]; then
-          opts="--app --application-id --local_path --namespace --remote_path --transfer_direction"
+          opts="--app --application-id --local-path --namespace --remote-path --transfer-direction"
         else
           opts=""
         fi

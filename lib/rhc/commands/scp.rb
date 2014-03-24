@@ -21,9 +21,9 @@ module RHC::Commands
     DESC
     syntax "[<app> --] <action> <local_path> <remote_path>"
     takes_application :argument => true
-    argument :action, "Transfer direction: upload|download", ["-t", "--transfer_direction upload|download"], :optional => false
-    argument :local_path, "Local filesystem path", ["-l", "--local_path file_path"], :optional => false
-    argument :remote_path, "Remote filesystem path", ["-r", "--remote_path file_path"], :optional => false
+    argument :action, "Transfer direction: upload|download", ["-t", "--transfer-direction upload|download"], :optional => false
+    argument :local_path, "Local filesystem path", ["-f", "--local-path file_path"], :optional => false
+    argument :remote_path, "Remote filesystem path", ["-r", "--remote-path file_path"], :optional => false
     alias_action 'app scp', :root_command => true
     def run(_, action, local_path, remote_path)
       rest_app = find_app
