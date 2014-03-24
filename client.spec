@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.22.3
+Version: 1.22.4
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,16 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Mar 24 2014 Adam Miller <admiller@redhat.com> 1.22.4-1
+- Bug 1079584: Fix scp option conflict with global option (jliggitt@redhat.com)
+- Fix failing test (dmcphers@redhat.com)
+- Merge pull request #566 from fabianofranz/dev/163
+  (dmcphers+openshiftbot@redhat.com)
+- [origin-ui-163] Add support to filter apps you own - 'rhc apps --mine'
+  (contact@fabianofranz.com)
+- Bug 1073108 - fixes case check when removing cartridges by url
+  (contact@fabianofranz.com)
+
 * Tue Mar 18 2014 Adam Miller <admiller@redhat.com> 1.22.3-1
 - Merge pull request #553 from fabianofranz/dev/160
   (dmcphers+openshiftbot@redhat.com)
