@@ -159,12 +159,12 @@ describe "rhc core scenarios" do
 
   context "when adding a cartridge" do
     context "with a scalable app" do
-      before(:all) do
+      before(:each) do
         standard_config
         @app = has_a_scalable_application
       end
 
-      after(:all) do
+      after(:each) do
         debug.puts "cleaning up scalable app" if debug?
         @app.destroy
       end
