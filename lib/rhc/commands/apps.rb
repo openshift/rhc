@@ -5,6 +5,7 @@ module RHC::Commands
     summary "List all your applications"
     description "Display the list of applications that you own. Includes information about each application."
     option ['--mine'], "Display only applications you own"
+    option ["-v", "--verbose"], "Display additional details about the application's cartridges"
     def run
       applications = (options.mine ?
         rest_client.owned_applications(:include => :cartridges) :
@@ -12,7 +13,7 @@ module RHC::Commands
 
       info "In order to deploy applications, you must create a domain with 'rhc setup' or 'rhc create-domain'." and return 1 if applications.empty? && rest_client.domains.empty?
 
-      applications.each{ |a| display_app(a, a.cartridges) }.blank? and
+      applications.each{ |a| display_app(a, a.cartridges, nil, options.verbose) }.blank? and
         info "No applications. Use 'rhc create-app'." and
         return 1
 

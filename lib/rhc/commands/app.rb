@@ -379,6 +379,7 @@ module RHC::Commands
     option ["--state"], "Get the current state of the cartridges in this application"
     option ["--configuration"], "Get the current configuration values set in this application"
     option ["--gears [quota|ssh]"], "Show information about the cartridges on each gear in this application. Pass 'quota' to see per gear disk usage and limits. Pass 'ssh' to print only the SSH connection strings of each gear."
+    option ["-v", "--verbose"], "Display more details about the application's cartridges"
     def show(app_name)
 
       if options.state
@@ -422,7 +423,7 @@ module RHC::Commands
 
       else
         app = find_app(:include => :cartridges)
-        display_app(app, app.cartridges)
+        display_app(app, app.cartridges, nil, options.verbose)
       end
 
       0

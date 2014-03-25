@@ -192,7 +192,7 @@ _rhc()
         if [[ "$cur" == -* ]]; then
           opts=""
         else
-          opts="env snapshot create delete start stop scale-up scale-down force-stop restart reload tidy show deploy configure"
+          opts="create delete start stop scale-up scale-down force-stop restart reload tidy show deploy configure env snapshot"
         fi
         ;;
 
@@ -286,7 +286,7 @@ _rhc()
 
       "rhc app show")
         if [[ "$cur" == -* ]]; then
-          opts="--app --application-id --configuration --gears --namespace --state"
+          opts="--app --application-id --configuration --gears --namespace --state --verbose"
         else
           opts=""
         fi
@@ -422,7 +422,7 @@ _rhc()
 
       "rhc app-show")
         if [[ "$cur" == -* ]]; then
-          opts="--app --application-id --configuration --gears --namespace --state"
+          opts="--app --application-id --configuration --gears --namespace --state --verbose"
         else
           opts=""
         fi
@@ -470,7 +470,7 @@ _rhc()
 
       "rhc apps")
         if [[ "$cur" == -* ]]; then
-          opts="--mine"
+          opts="--mine --verbose"
         else
           opts=""
         fi
@@ -1446,7 +1446,7 @@ _rhc()
 
       "rhc show-app")
         if [[ "$cur" == -* ]]; then
-          opts="--app --application-id --configuration --gears --namespace --state"
+          opts="--app --application-id --configuration --gears --namespace --state --verbose"
         else
           opts=""
         fi
