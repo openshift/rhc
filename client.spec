@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.22.4
+Version: 1.22.5
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,17 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Mar 25 2014 Adam Miller <admiller@redhat.com> 1.22.5-1
+- [origin-ui-162] surface more information in the UI for external cartridges
+  (contact@fabianofranz.com)
+- Merge pull request #571 from fabianofranz/master
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #570 from fabianofranz/bugs/1078684
+  (dmcphers+openshiftbot@redhat.com)
+- Fixes failing test (was reaching the 3 gears limit)
+  (contact@fabianofranz.com)
+- Bug 1078684 - fixes rhc help options (contact@fabianofranz.com)
+
 * Mon Mar 24 2014 Adam Miller <admiller@redhat.com> 1.22.4-1
 - Bug 1079584: Fix scp option conflict with global option (jliggitt@redhat.com)
 - Fix failing test (dmcphers@redhat.com)
