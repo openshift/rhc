@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.22.5
+Version: 1.23.0
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
