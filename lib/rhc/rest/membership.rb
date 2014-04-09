@@ -1,22 +1,54 @@
 module RHC::Rest
   module Membership
     class Member < Base
+
       define_attr :name, :login, :id, :type, :from, :role, :owner, :explicit_role
+
       def owner?
         !!owner
       end
+
       def admin?
         role == 'admin'
       end
+
       def editor?
         role == 'edit'
       end
+
       def viewer?
         role == 'view'
       end
+
+      def team?
+        type == 'team'
+      end
+
       def name
         attributes['name'] || login
       end
+
+      def type
+        attributes['type'] || 'user'
+      end
+
+      def explicit_role?
+        explicit_role.present?
+      end
+
+      def from
+        Array(attributes['from'])
+      end
+
+      def grant_from?(type, id)
+        from.detect {|f| f['type'] == type && f['id'] == id}
+      end
+
+       def teams(members)
+        team_ids = from.inject([]) {|ids, f| ids << f['id'] if f['type'] == 'team'; ids }
+        members.select {|m| m.team? && team_ids.include?(m.id) }
+      end
+
       def to_s
         if name == login
           "#{login} (#{role})"
@@ -26,12 +58,21 @@ module RHC::Rest
           "#{name} (#{role})"
         end
       end
+
+      def <=>(other)
+        [role_weight, type, name, id] <=> [other.role_weight, other.type, other.name, other.id]
+      end
+
       def role_weight
-        case role
-        when 'admin' then 0
-        when 'edit' then 1
-        when 'view' then 2
-        else 3
+        if owner?
+          0
+        else
+          case role
+          when 'admin' then 1
+          when 'edit' then 2
+          when 'view' then 3
+          else 4
+          end
         end
       end
     end
