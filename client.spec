@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.23.0
+Version: 1.23.1
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,20 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Apr 09 2014 Adam Miller <admiller@redhat.com> 1.23.1-1
+- Merge pull request #573 from jwforres/latest_rake_breaks_on_ruby18
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #574 from fabianofranz/master
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #572 from ShalomPisteuo/fixScpMisspelling
+  (dmcphers+openshiftbot@redhat.com)
+- bump_minor_versions for sprint 43 (admiller@redhat.com)
+- Fixes failing test in rhc/features/core_feature.rb:178
+  (contact@fabianofranz.com)
+- Latest version of rake breaks bundle install on ruby 1.8.x
+  (jforrest@redhat.com)
+- Fixing a misspelling. (shalompisteuo@gmail.com)
+
 * Tue Mar 25 2014 Adam Miller <admiller@redhat.com> 1.22.5-1
 - [origin-ui-162] surface more information in the UI for external cartridges
   (contact@fabianofranz.com)
