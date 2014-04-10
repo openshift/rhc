@@ -1206,7 +1206,7 @@ _rhc()
 
       "rhc list-member")
         if [[ "$cur" == -* ]]; then
-          opts="--app --ids --namespace --target"
+          opts="--all --app --ids --namespace --target"
         else
           opts=""
         fi
@@ -1246,7 +1246,7 @@ _rhc()
 
       "rhc member list")
         if [[ "$cur" == -* ]]; then
-          opts="--app --ids --namespace --target"
+          opts="--all --app --ids --namespace --target"
         else
           opts=""
         fi
@@ -1278,7 +1278,7 @@ _rhc()
 
       "rhc member-list")
         if [[ "$cur" == -* ]]; then
-          opts="--app --ids --namespace --target"
+          opts="--all --app --ids --namespace --target"
         else
           opts=""
         fi
@@ -1302,7 +1302,7 @@ _rhc()
 
       "rhc members")
         if [[ "$cur" == -* ]]; then
-          opts="--app --ids --namespace --target"
+          opts="--all --app --ids --namespace --target"
         else
           opts=""
         fi

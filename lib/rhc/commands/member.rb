@@ -32,7 +32,7 @@ module RHC::Commands
     default_action :help
 
     summary "List members of a domain or application"
-    syntax "<domain_or_app_name> [-n DOMAIN_NAME] [-a APP_NAME]"
+    syntax "<domain_or_app_name> [-n DOMAIN_NAME] [-a APP_NAME] [--all]"
     description <<-DESC
       Show the existing members of a domain or application - you can pass the name
       of your domain with '-n', the name of your application with '-a', or combine
@@ -44,24 +44,46 @@ module RHC::Commands
       '--ids'.
       DESC
     option ['--ids'], "Display the IDs of each member", :optional => true
+    option ['--all'], "Display all members, including the owner and all team members", :optional => true
     takes_application_or_domain :argument => true
     alias_action :members, :root_command => true
     def list(path)
       target = find_app_or_domain(path)
 
       members = target.members
-      show_name = members.any?{ |m| m.name && m.name != m.login }
-      explicit_members = members.select(&:explicit_role?).sort
+      if options.all
+        show_members = members.sort
+      else
+        show_members = members.select(&:explicit_role?).sort
+      end
+      show_name = show_members.any?{ |m| m.name.presence && m.name != m.login }
+      show_login = show_members.any?{ |m| m.login.presence }
+      
+      if show_members.present?
+        say table(show_members.map do |member|
+          [
+            ((member.name || "") if show_name),
+            ((member.login || "") if show_login),
+            role_description(member, member.teams(members)),
+            (member.id if options.ids),
+            member.type
+          ].compact
+        end, :header => [
+          ('Name' if show_name),
+          ('Login' if show_login),
+          'Role',
+          ("ID" if options.ids),
+          "Type"
+        ].compact)
+      else
+        info "The #{target.class.model_name.downcase} #{target.name} does not have any members."
+      end
 
-      say table((explicit_members).map do |member|
-        [
-          ((member.name || "") if show_name),
-          (member.team? ? members.select {|m| m.grant_from?('team', member.id)}.map{|m| m.login || m.name}.join(' ') : member.login || ""),
-          role_description(member, member.teams(members).present?),
-          (member.id if options.ids),
-          member.type
-        ].compact
-      end, :header => [('Name' if show_name), 'Login', 'Role', ("ID" if options.ids), "Type"].compact)
+      if show_members.any?(&:team?) && show_members.count < members.count
+        paragraph do
+          info "Pass --all to display all members, including the owner and all team members"
+        end
+      end
 
       0
     end
@@ -234,7 +256,7 @@ module RHC::Commands
 
             if exact_matches.empty?
               raise RHC::TeamNotFoundException.new("No #{global ? 'global ' : ''}team found with exact name '#{team_name}', " +
-                "did you mean one of the following: #{teams_for_name.map{|t| t.name}.join(', ')}?")
+                "did you mean one of the following:\n#{teams_for_name.map{|t| t.name}.join("\n")}?")
 
             elsif exact_matches.length == 1
               r << exact_matches.first
@@ -270,12 +292,12 @@ module RHC::Commands
         r.flatten
       end
 
-      def role_description(member, on_team=false)
+      def role_description(member, teams=[])
         if member.owner?
           "#{member.role} (owner)"
-        elsif on_team
-          "#{member.role} (+ team role)"
-        else 
+        elsif member.explicit_role != member.role && teams.present? && (teams_with_role = teams.select{|t| t.role == member.role }).present?
+          "#{member.role} (via #{teams_with_role.map(&:name).sort.join(', ')})"
+        else
           member.role
         end
       end
