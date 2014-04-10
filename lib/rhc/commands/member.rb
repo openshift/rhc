@@ -256,7 +256,7 @@ module RHC::Commands
 
             if exact_matches.empty?
               raise RHC::TeamNotFoundException.new("No #{global ? 'global ' : ''}team found with exact name '#{team_name}', " +
-                "did you mean one of the following:\n#{teams_for_name.map{|t| t.name}.join("\n")}?")
+                "did you mean one of the following?\n#{teams_for_name.map{|t| t.name}.join("\n")}")
 
             elsif exact_matches.length == 1
               r << exact_matches.first

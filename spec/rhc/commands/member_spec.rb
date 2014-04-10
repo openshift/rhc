@@ -83,13 +83,15 @@ describe RHC::Commands::Member do
     end
 
     context 'on a domain with teams' do
-      let(:arguments) { ['members', '-n', 'mock-domain-0'] }
+      let(:arguments) { ['members', '-n', 'mock-domain-0', '--all'] }
       let(:supports_members){ true }
       before{ with_mock_domain.add_member(owner).add_member(team_admin).add_member(team_editor).add_member(team_admin_member).add_member(team_editor_member).add_member(team_viewer).add_member(team_viewer_and_explicit_member) }
       it { expect { run }.to exit_with_code(0) }
       it { run_output.should =~ /alice\s+alice\s+admin \(owner\)\s+user/ }
-      it { run_output.should =~ /team1\s+memberadmin\s+admin\s+team/ }
-      it { run_output.should =~ /team2\s+membereditor\s+edit\s+team/ }
+      it { run_output.should =~ /team1\s+admin\s+team/ }
+      it { run_output.should =~ /memberadmin\s+memberadmin\s+admin \(via team1\)\s+user/ }
+      it { run_output.should =~ /team2\s+edit\s+team/ }
+      it { run_output.should =~ /membereditor\s+membereditor\s+edit \(via team2\)\s+user/ }
       it("should show the name column") { run_output.should =~ /^Name\s+Login\s+Role\s+Type$/ }
     end
 
@@ -215,7 +217,7 @@ describe RHC::Commands::Member do
           end
         end
         it { expect { run }.to exit_with_code(162) }
-        it { run_output.should =~ /Adding 1 editor to domain .*No team found with exact name 'team', did you mean one of the following: team1, team2\?/ }
+        it { run_output.should =~ /Adding 1 editor to domain .*No team found with exact name 'team', did you mean one of the following\?\nteam1\nteam2/ }
       end
 
       context 'with multiple exact team matches' do
