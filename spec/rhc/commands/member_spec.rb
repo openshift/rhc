@@ -190,7 +190,7 @@ describe RHC::Commands::Member do
           end
         end
         it { expect { run }.to exit_with_code(162) }
-        it { run_output.should =~ /Adding 1 editor to domain .*No team found with the name 'invalidteam'/ }
+        it { run_output.should =~ /Adding 1 editor to domain .*You do not have a team named 'invalidteam'/ }
       end
 
       context 'with multiple partial team matches but one exact match' do
@@ -217,7 +217,7 @@ describe RHC::Commands::Member do
           end
         end
         it { expect { run }.to exit_with_code(162) }
-        it { run_output.should =~ /Adding 1 editor to domain .*No team found with the name 'team', did you mean one of the following\?\nteam1\nteam2/ }
+        it { run_output.should =~ /Adding 1 editor to domain .*You do not have a team named 'team'. Did you mean one of the following\?\nteam1\nteam2/ }
       end
 
       context 'with a single exact case insensitive match' do

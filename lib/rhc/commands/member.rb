@@ -114,7 +114,7 @@ module RHC::Commands
           Gives the account with login 'bob@example.com' admin access on mydomain
 
         rhc add-member team1 --type team --role admin -n mydomain
-          Gives the team with name 'team1' admin access on mydomain
+          Gives your team named 'team1' admin access on mydomain
 
       DESC
     takes_domain
@@ -274,10 +274,11 @@ module RHC::Commands
           if team_for_name
             r << team_for_name
           elsif suggestions.present?
-            raise RHC::TeamNotFoundException.new("No #{global ? 'global ' : ''}team found with the name '#{team_name}', " +
-              "did you mean one of the following?\n#{suggestions.map{|t| t.name}.join("\n")}")
+            msg = global ? "No global team found with the name '#{team_name}'." : "You do not have a team named '#{team_name}'."
+            raise RHC::TeamNotFoundException.new(msg + " Did you mean one of the following?\n#{suggestions.map{|t| t.name}.join("\n")}")
           else
-            raise RHC::TeamNotFoundException.new("No #{global ? 'global ' : ''}team found with the name '#{team_name}'.")
+            msg = global ? "No global team found with the name '#{team_name}'." : "You do not have a team named '#{team_name}'."
+            raise RHC::TeamNotFoundException.new(msg)
           end
 
         end
