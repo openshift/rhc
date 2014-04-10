@@ -67,7 +67,7 @@ module RHC::Commands
     end
 
     summary "Add a member on a domain"
-    syntax "<login> [<login>...] [-n DOMAIN_NAME] [--role view|edit|admin] [--ids] [--type team|user] [--global]"
+    syntax "<login | team name | id> [<login | team name | id>...] [-n DOMAIN_NAME] [--role view|edit|admin] [--ids] [--type user|team] [--global]"
     description <<-DESC
       Adds members on a domain by passing one or more user login, team name
       or ids for other people or teams on OpenShift.  The login and ID values for each
@@ -107,7 +107,7 @@ module RHC::Commands
       type = options.__hash__[:type] || 'user'
       global = !!options.global
 
-      raise ArgumentError, 'You must pass one or more logins/names or ids to this command' unless members.present?
+      raise ArgumentError, 'You must pass at least one user login, team name, or id to this command' unless members.present?
       raise ArgumentError, "The --global option can only be used with '--type team'." if global && !team?(type)
       
       say "Adding #{pluralize(members.length, role_name(role))} to #{target.class.model_name.downcase} ... "
@@ -121,7 +121,7 @@ module RHC::Commands
     end
 
     summary "Update a member on a domain"
-    syntax "<login> [<login>...] --role view|edit|admin [-n DOMAIN_NAME] [--ids] [--type team|user]"
+    syntax "<login | team name | id> [<login | team name | id>...] --role view|edit|admin [-n DOMAIN_NAME] [--ids] [--type user|team]"
     description <<-DESC
       Updates existing members on a domain by passing one or more user login, team name
       or ids for other people or teams on OpenShift.  You can use the 'rhc members' command
@@ -156,7 +156,7 @@ module RHC::Commands
       role = options.role || 'edit'
       type = options.__hash__[:type] || 'user'
 
-      raise ArgumentError, 'You must pass one or more logins/names or ids to this command' unless members.present?
+      raise ArgumentError, 'You must pass at least one user login, team name, or id to this command' unless members.present?
       
       say "Updating #{pluralize(members.length, role_name(role))} to #{target.class.model_name.downcase} ... "
       
@@ -169,7 +169,7 @@ module RHC::Commands
     end
 
     summary "Remove a member from a domain"
-    syntax "<login> [<login>...] [-n DOMAIN_NAME] [--ids]"
+    syntax "<login | team name | id> [<login | team name | id>...] [-n DOMAIN_NAME] [--ids] [--type user|team]"
     description <<-DESC
       Remove members on a domain by passing one or more login or ids for each
       member you wish to remove.  View the list of existing members with
@@ -192,7 +192,7 @@ module RHC::Commands
         success "done"
 
       else
-        raise ArgumentError, 'You must pass one or more logins or ids to this command' unless members.present?
+        raise ArgumentError, 'You must pass at least one user login, team name, or id to this command' unless members.present?
 
         say "Removing #{pluralize(members.length, 'member')} from #{target.class.model_name.downcase} ... "
 
