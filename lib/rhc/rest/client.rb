@@ -93,7 +93,7 @@ module RHC
 
       def search_owned_teams(search)
         debug "Searching owned teams"
-        owned_teams.select{|team| team.name =~ /^#{search}/i}
+        owned_teams.select{|team| team.name.downcase =~ /#{Regexp.escape(search)}/i}
       end
 
       #Find Domain by namespace

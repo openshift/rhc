@@ -182,7 +182,7 @@ module RHC::Commands
       
       say "Updating #{pluralize(members.length, role_name(role))} to #{target.class.model_name.downcase} ... "
       
-      members = filter_members(target.members, members).map{|member| member.id} if team?(type) && !options.ids
+      members = search_team_members(target.members, members).map{|member| member.id} if team?(type) && !options.ids
       target.update_members(changes_for(members, role, type))
 
       success "done"
@@ -218,7 +218,7 @@ module RHC::Commands
 
         say "Removing #{pluralize(members.length, 'member')} from #{target.class.model_name.downcase} ... "
 
-        members = filter_members(target.members, members).map{|member| member.id} if team?(type) && !options.ids
+        members = search_team_members(target.members, members).map{|member| member.id} if team?(type) && !options.ids
         target.update_members(changes_for(members, 'none', type))
 
         success "done"
@@ -248,46 +248,78 @@ module RHC::Commands
               rest_client.search_teams(team_name, global) : 
               rest_client.search_owned_teams(team_name)
 
-          if teams_for_name.empty?
-            raise RHC::TeamNotFoundException.new("No #{global ? 'global ' : ''}team with name '#{team_name}' found.")
+          team_for_name = nil
+          suggestions = nil
 
-          elsif teams_for_name.length > 1
-            exact_matches = teams_for_name.select{|t| t.name =~ /^#{team_name}$/i}
-
-            if exact_matches.empty?
-              raise RHC::TeamNotFoundException.new("No #{global ? 'global ' : ''}team found with exact name '#{team_name}', " +
-                "did you mean one of the following?\n#{teams_for_name.map{|t| t.name}.join("\n")}")
-
-            elsif exact_matches.length == 1
-              r << exact_matches.first
-
+          if (exact_matches = teams_for_name.select {|t| t.name == team_name }).present?
+            if exact_matches.length == 1
+              team_for_name = exact_matches.first
             else
-              raise RHC::TeamNotFoundException.new("There are more than one team with name '#{team_name}'. " +
+              raise RHC::TeamNotFoundException.new("There is more than one team named '#{team_name}'. " +
                 "Please use the --ids flag and specify the exact id of the team you want to manage.")
             end
 
+          elsif (case_insensitive_matches = teams_for_name.select {|t| t.name =~ /^#{Regexp.escape(team_name)}$/i }).present?
+            if case_insensitive_matches.length == 1
+              team_for_name = case_insensitive_matches.first
+            else
+              suggestions = case_insensitive_matches
+            end
+
           else
-            r << teams_for_name
+            suggestions = teams_for_name
           end
+
+
+          if team_for_name
+            r << team_for_name
+          elsif suggestions.present?
+            raise RHC::TeamNotFoundException.new("No #{global ? 'global ' : ''}team found with the name '#{team_name}', " +
+              "did you mean one of the following?\n#{suggestions.map{|t| t.name}.join("\n")}")
+          else
+            raise RHC::TeamNotFoundException.new("No #{global ? 'global ' : ''}team found with the name '#{team_name}'.")
+          end
+
         end
         r.flatten
       end
 
-      def filter_members(members, names)
+      def search_team_members(members, names)
         r = []
+        team_members = members.select(&:team?)
         names.each do |name|
-          exact_matches = members.select{|member| member.name =~ /^#{name}$/i}
 
-          if exact_matches.empty?
-            raise RHC::MemberNotFoundException.new("No member found with name '#{name}'.")
+          team_for_name = nil
+          suggestions = nil
 
-          elsif exact_matches.length == 1
-            r << exact_matches.first
+          if (exact_matches = team_members.select{|team| team.name == name }).present?
+            if exact_matches.length == 1
+              team_for_name = exact_matches.first
+            else
+              raise RHC::MemberNotFoundException.new("There is more than one team named '#{name}'. " +
+                "Please use the --ids flag and specify the exact id of the team you want to manage.")
+            end
+
+          elsif (case_insensitive_matches = team_members.select{|team| team.name =~ /^#{Regexp.escape(name)}$/i}).present?
+            if case_insensitive_matches.length == 1
+              team_for_name = case_insensitive_matches.first
+            else
+              suggestions = case_insensitive_matches
+            end
 
           else
-            raise RHC::MemberNotFoundException.new("There are more than one member with name '#{name}'. " +
-              "Please use the --ids flag and specify the exact id of the member you want to manage.")
+            suggestions = team_members.select{|t| t.name =~ /#{Regexp.escape(name)}/i}
           end
+
+          if team_for_name
+            r << team_for_name
+          elsif suggestions.present?
+            raise RHC::TeamNotFoundException.new("No team found with the name '#{name}', " +
+              "did you mean one of the following?\n#{suggestions.map{|t| t.name}.join("\n")}")
+          else
+            raise RHC::MemberNotFoundException.new("No team found with the name '#{name}'.")
+          end
+
         end
         r.flatten
       end

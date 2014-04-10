@@ -190,7 +190,7 @@ describe RHC::Commands::Member do
           end
         end
         it { expect { run }.to exit_with_code(162) }
-        it { run_output.should =~ /Adding 1 editor to domain .*No team with name 'invalidteam' found/ }
+        it { run_output.should =~ /Adding 1 editor to domain .*No team found with the name 'invalidteam'/ }
       end
 
       context 'with multiple partial team matches but one exact match' do
@@ -217,7 +217,52 @@ describe RHC::Commands::Member do
           end
         end
         it { expect { run }.to exit_with_code(162) }
-        it { run_output.should =~ /Adding 1 editor to domain .*No team found with exact name 'team', did you mean one of the following\?\nteam1\nteam2/ }
+        it { run_output.should =~ /Adding 1 editor to domain .*No team found with the name 'team', did you mean one of the following\?\nteam1\nteam2/ }
+      end
+
+      context 'with a single exact case insensitive match' do
+        let(:arguments) { ['add-member', 'testteam', '-n', 'test', '--type', 'team'] }
+        before do
+          challenge do
+            stub_api_request(:get, "broker/rest/teams?owner=@self").
+              to_return({:body => {:type => 'teams', :data => [{:id => 111, :global => false, :name => 'TESTTEAM'}, {:id => 222, :global => false, :name => 'TESTTEAM1'}, {:id => 333, :global => false, :name => 'TESTTEAM2'}], :messages => [{:exit_code => 0, :field => nil, :index => nil, :severity => 'info', :text => 'Listing teams'},]}.to_json, :status => 200})
+          end
+          stub_api_request(:patch, "broker/rest/domains/test/members").
+            with(:body => {:members => [{:role => 'edit', :type => 'team', :id => 111, }]}).
+            to_return({:body => {:type => 'members', :data => [], :messages => [{:exit_code => 0, :field => 'id', :index => 0, :severity => 'info', :text => 'Added 1 member'},]}.to_json, :status => 200})
+        end
+        it { expect { run }.to exit_with_code(0) }
+        it { run_output.should =~ /Adding 1 editor to domain .*done/ }
+      end
+
+      context 'with an exact case sensitive match and some exact case insensitive matches' do
+        let(:arguments) { ['add-member', 'testteam', '-n', 'test', '--type', 'team'] }
+        before do
+          challenge do
+            stub_api_request(:get, "broker/rest/teams?owner=@self").
+              to_return({:body => {:type => 'teams', :data => [{:id => 111, :global => false, :name => 'testteam'}, {:id => 222, :global => false, :name => 'TESTTEAM'}], :messages => [{:exit_code => 0, :field => nil, :index => nil, :severity => 'info', :text => 'Listing teams'},]}.to_json, :status => 200})
+          end
+          stub_api_request(:patch, "broker/rest/domains/test/members").
+            with(:body => {:members => [{:role => 'edit', :type => 'team', :id => 111, }]}).
+            to_return({:body => {:type => 'members', :data => [], :messages => [{:exit_code => 0, :field => 'id', :index => 0, :severity => 'info', :text => 'Added 1 member'},]}.to_json, :status => 200})
+        end
+        it { expect { run }.to exit_with_code(0) }
+        it { run_output.should =~ /Adding 1 editor to domain .*done/ }
+      end
+
+      context 'with a team name containing special characters' do
+        let(:arguments) { ['add-member', '*1()', '-n', 'test', '--type', 'team'] }
+        before do
+          challenge do
+            stub_api_request(:get, "broker/rest/teams?owner=@self").
+              to_return({:body => {:type => 'teams', :data => [{:id => 111, :global => false, :name => '*1()'}, {:id => 222, :global => false, :name => 'another team'}], :messages => [{:exit_code => 0, :field => nil, :index => nil, :severity => 'info', :text => 'Listing teams'},]}.to_json, :status => 200})
+          end
+          stub_api_request(:patch, "broker/rest/domains/test/members").
+            with(:body => {:members => [{:role => 'edit', :type => 'team', :id => 111, }]}).
+            to_return({:body => {:type => 'members', :data => [], :messages => [{:exit_code => 0, :field => 'id', :index => 0, :severity => 'info', :text => 'Added 1 member'},]}.to_json, :status => 200})
+        end
+        it { expect { run }.to exit_with_code(0) }
+        it { run_output.should =~ /Adding 1 editor to domain .*done/ }
       end
 
       context 'with multiple exact team matches' do
@@ -229,7 +274,7 @@ describe RHC::Commands::Member do
           end
         end
         it { expect { run }.to exit_with_code(162) }
-        it { run_output.should =~ /Adding 1 editor to domain .*There are more than one team with name 'someteam'\. Please use the --ids flag and specify the exact id of the team you want to manage\./ }
+        it { run_output.should =~ /Adding 1 editor to domain .*There is more than one team named 'someteam'\. Please use the --ids flag and specify the exact id of the team you want to manage\./ }
       end
 
       context 'without a global team' do
@@ -241,7 +286,7 @@ describe RHC::Commands::Member do
           end
         end
         it { expect { run }.to exit_with_code(162) }
-        it { run_output.should =~ /Adding 1 editor to domain .*No global team with name 'testteam' found\./ }
+        it { run_output.should =~ /Adding 1 editor to domain .*No global team found with the name 'testteam'\./ }
       end
 
       context 'with an invalid role' do
@@ -327,7 +372,46 @@ describe RHC::Commands::Member do
             to_return({:body => {:type => 'members', :data => [], :messages => [{:exit_code => 0, :field => 'login', :index => 0, :severity => 'info', :text => 'Updated 1 member'},]}.to_json, :status => 200})
         end
         it { expect { run }.to exit_with_code(163) }
-        it { run_output.should =~ /Updating 1 viewer to domain .*There are more than one member with name 'testteam'/ }
+        it { run_output.should =~ /Updating 1 viewer to domain .*There is more than one team named 'testteam'/ }
+      end
+
+      context 'with a single exact case insensitive match' do
+        let(:arguments) { ['update-member', 'testteam', '-n', 'test', '-r', 'view', '--type', 'team'] }
+        before do
+          stub_api_request(:get, "broker/rest/domains/test/members").
+            to_return({:body => {:type => 'members', :data => [{:id => 1, :name => 'TESTTEAM', :owner => false, :role => 'edit', :explicit_role => 'edit', :type => 'team'}, {:id => 2, :name => 'TESTTEAM2', :owner => false, :role => 'edit', :explicit_role => 'edit', :type => 'team'}, {:id => 3, :name => 'TESTTEAM3', :owner => false, :role => 'edit', :explicit_role => 'edit', :type => 'team'}], :messages => [{:exit_code => 0, :field => nil, :index => nil, :severity => 'info', :text => 'Listing members'},]}.to_json, :status => 200})
+          stub_api_request(:patch, "broker/rest/domains/test/members").
+            with(:body => {:members => [{'id' => 1, 'role' => 'view', 'type' => 'team'}]}).
+            to_return({:body => {:type => 'members', :data => [], :messages => [{:exit_code => 0, :field => 'login', :index => 0, :severity => 'info', :text => 'Updated 1 member'},]}.to_json, :status => 200})
+        end
+        it { expect { run }.to exit_with_code(0) }
+        it { run_output.should =~ /Updating 1 viewer to domain .*done/ }
+      end
+
+      context 'with an exact case sensitive match and some exact case insensitive matches' do
+        let(:arguments) { ['update-member', 'testteam', '-n', 'test', '-r', 'view', '--type', 'team'] }
+        before do
+          stub_api_request(:get, "broker/rest/domains/test/members").
+            to_return({:body => {:type => 'members', :data => [{:id => 1, :name => 'testteam', :owner => false, :role => 'edit', :explicit_role => 'edit', :type => 'team'}, {:id => 2, :name => 'TESTTEAM', :owner => false, :role => 'edit', :explicit_role => 'edit', :type => 'team'}, {:id => 3, :name => 'TeStTeAm', :owner => false, :role => 'edit', :explicit_role => 'edit', :type => 'team'}], :messages => [{:exit_code => 0, :field => nil, :index => nil, :severity => 'info', :text => 'Listing members'},]}.to_json, :status => 200})
+          stub_api_request(:patch, "broker/rest/domains/test/members").
+            with(:body => {:members => [{'id' => 1, 'role' => 'view', 'type' => 'team'}]}).
+            to_return({:body => {:type => 'members', :data => [], :messages => [{:exit_code => 0, :field => 'login', :index => 0, :severity => 'info', :text => 'Updated 1 member'},]}.to_json, :status => 200})
+        end
+        it { expect { run }.to exit_with_code(0) }
+        it { run_output.should =~ /Updating 1 viewer to domain .*done/ }
+      end
+
+      context 'with a team name containing special characters' do
+        let(:arguments) { ['update-member', '*1()', '-n', 'test', '-r', 'view', '--type', 'team'] }
+        before do
+          stub_api_request(:get, "broker/rest/domains/test/members").
+            to_return({:body => {:type => 'members', :data => [{:id => 1, :name => '*1()', :owner => false, :role => 'edit', :explicit_role => 'edit', :type => 'team'}], :messages => [{:exit_code => 0, :field => nil, :index => nil, :severity => 'info', :text => 'Listing members'},]}.to_json, :status => 200})
+          stub_api_request(:patch, "broker/rest/domains/test/members").
+            with(:body => {:members => [{'id' => 1, 'role' => 'view', 'type' => 'team'}]}).
+            to_return({:body => {:type => 'members', :data => [], :messages => [{:exit_code => 0, :field => 'login', :index => 0, :severity => 'info', :text => 'Updated 1 member'},]}.to_json, :status => 200})
+        end
+        it { expect { run }.to exit_with_code(0) }
+        it { run_output.should =~ /Updating 1 viewer to domain .*done/ }
       end
 
       context 'with a missing user' do
@@ -346,12 +430,19 @@ describe RHC::Commands::Member do
         before do
           stub_api_request(:get, "broker/rest/domains/test/members").
             to_return({:body => {:type => 'members', :data => [], :messages => [{:exit_code => 0, :field => nil, :index => nil, :severity => 'info', :text => 'Listing teams'},]}.to_json, :status => 200})
-          stub_api_request(:patch, "broker/rest/domains/test/members").
-            with(:body => {:members => [{'login' => 'testuser', 'role' => 'view', 'type' => 'user'}]}).
-            to_return({:body => {:messages => [{:exit_code => 132, :field => 'login', :index => 0, :severity => 'error', :text => 'There is no team with a name testuser'},]}.to_json, :status => 422})
         end
         it { expect { run }.to exit_with_code(163) }
-        it { run_output.should =~ /Updating 1 viewer to domain.*No member found with name 'testteam'/ }
+        it { run_output.should =~ /Updating 1 viewer to domain.*No team found with the name 'testteam'/ }
+      end
+
+      context 'with a missing team with an identical user name' do
+        let(:arguments) { ['update-member', 'testteam', '-n', 'test', '-r', 'view', '--type', 'team'] }
+        before do
+          stub_api_request(:get, "broker/rest/domains/test/members").
+            to_return({:body => {:type => 'members', :data => [{:id => 1, :name => 'testteam', :login => 'testteam', :owner => false, :role => 'edit', :explicit_role => 'edit', :type => 'user'}], :messages => [{:exit_code => 0, :field => nil, :index => nil, :severity => 'info', :text => 'Listing members'},]}.to_json, :status => 200})
+        end
+        it { expect { run }.to exit_with_code(163) }
+        it { run_output.should =~ /Updating 1 viewer to domain.*No team found with the name 'testteam'/ }
       end
 
       context 'with a missing user id and role' do
