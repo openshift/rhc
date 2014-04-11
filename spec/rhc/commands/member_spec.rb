@@ -13,7 +13,7 @@ describe RHC::Commands::Member do
       expect { run }.to exit_with_code(0)
     end
     it('should output usage') { run_output.should match "Usage: rhc member" }
-    it('should output info about roles') { run_output.should match "Teams of developers can collaborate" }
+    it('should output info about roles') { run_output.should match "Developers can collaborate" }
   end
 
   let(:username){ 'test_user' }
@@ -200,6 +200,12 @@ describe RHC::Commands::Member do
         it { run_output.should =~ /Adding 1 editor to domain .*done/ }
       end
 
+      context 'with an invalid type' do
+        let(:arguments) { ['add-member', 'invalidteam', '-n', 'test', '--type', 'foo'] }
+        it { expect { run }.to exit_with_code(1) }
+        it { run_output.should =~ /Type must be/ }
+      end
+
       context 'with an invalid team' do
         let(:arguments) { ['add-member', 'invalidteam', '-n', 'test', '--type', 'team'] }
         before do
@@ -327,7 +333,7 @@ describe RHC::Commands::Member do
       end
 
       context 'with a missing user' do
-        let(:arguments) { ['add-member', 'testuser', '-n', 'test'] }
+        let(:arguments) { ['add-member', 'testuser', '-n', 'test', '--type', 'user'] }
         before do
           stub_api_request(:patch, "broker/rest/domains/test/members").
             with(:body => {:members => [{'login' => 'testuser', 'role' => 'edit', 'type' => 'user'}]}).
@@ -497,7 +503,7 @@ describe RHC::Commands::Member do
         it { run_output.should =~ /Updating 1 viewer to domain.*There is no user with the id 123/ }
       end
 
-      context 'when the user isn''t a member' do
+      context 'when the user is not a member' do
         let(:arguments) { ['update-member', 'testuser', '-n', 'test', '-r', 'view'] }
         before do
           stub_api_request(:patch, "broker/rest/domains/test/members").
@@ -579,7 +585,7 @@ describe RHC::Commands::Member do
         it { run_output.should =~ /Removing 1 member from domain.*There is no user with the id 123/ }
       end
 
-      context 'when the user isn''t a member' do
+      context 'when the user is not a member' do
         let(:arguments) { ['remove-member', 'testuser', '-n', 'test'] }
         before do
           stub_api_request(:patch, "broker/rest/domains/test/members").

@@ -5,7 +5,7 @@ module RHC::Commands
     summary "Manage membership on domains"
     syntax "<action>"
     description <<-DESC
-      Teams of developers can collaborate on applications by adding people to
+      Developers can collaborate on applications by adding people or teams to
       domains as members: each member has a role (admin, editor, or viewer),
       and those roles determine what the user can do with the domain and the
       applications contained within.
@@ -81,7 +81,7 @@ module RHC::Commands
 
       if show_members.any?(&:team?) && show_members.count < members.count
         paragraph do
-          info "Pass --all to display all members, including the owner and all team members"
+          info "Pass --all to display all members, including the owner and all team members."
         end
       end
 
@@ -89,12 +89,12 @@ module RHC::Commands
     end
 
     summary "Add a member on a domain"
-    syntax "<login | team name | id> [<login | team name | id>...] [-n DOMAIN_NAME] [--role view|edit|admin] [--ids] [--type user|team] [--global]"
+    syntax "(<login>... | <team name>... | <id>...) [-n DOMAIN_NAME] [--role view|edit|admin] [--ids] [--type user|team] [--global]"
     description <<-DESC
-      Adds members on a domain by passing one or more user login, team name
-      or ids for other people or teams on OpenShift.  The login and ID values for each
-      account are displayed in 'rhc account'. To change the role for a user or team, 
-      use the 'rhc member update' command.
+      Adds members on a domain by passing a user login, team name, or ID for each 
+      member. The login and ID for each account are displayed in 'rhc account'.
+      To change the role for an existing domain member, use the 'rhc member update'
+      command.
 
       Roles
         view  - able to see information about the domain and its apps,
@@ -119,17 +119,17 @@ module RHC::Commands
       DESC
     takes_domain
     option ['--ids'], "Treat the arguments as a list of IDs", :optional => true
-    option ['-r', '--role ROLE'], "The role to give to each member - view, edit, or admin (default 'edit')", :type => Role, :optional => true
-    option ['--type TYPE'], "Type of argument(s) being passed. Accepted values are either 'team' or 'user' (default).", :optional => true
+    option ['-r', '--role ROLE'], "The role to give to each member - view, edit, or admin (default is 'edit')", :type => Role, :optional => true
+    option ['--type TYPE'], "Type of argument(s) being passed. Accepted values are either 'team' or 'user' (default is 'user').", :optional => true
     option ['--global'], "Use global-scoped teams. Must be used with '--type team'.", :optional => true
-    argument :members, "A list of members (user logins or team names) to add.  Pass --ids to treat this as a list of IDs.", [], :type => :list
+    argument :members, "A list of members (user logins, team names, or IDs) to add. Pass --ids to treat this as a list of IDs.", [], :type => :list
     def add(members)
       target = find_domain
-      role = options.role || 'edit'
-      type = options.__hash__[:type] || 'user'
+      role = get_role_option(options)
+      type = get_type_option(options)
       global = !!options.global
 
-      raise ArgumentError, 'You must pass at least one user login, team name, or id to this command' unless members.present?
+      raise ArgumentError, 'You must pass at least one user login, team name, or ID to this command.' unless members.present?
       raise ArgumentError, "The --global option can only be used with '--type team'." if global && !team?(type)
       
       say "Adding #{pluralize(members.length, role_name(role))} to #{target.class.model_name.downcase} ... "
@@ -143,12 +143,11 @@ module RHC::Commands
     end
 
     summary "Update a member on a domain"
-    syntax "<login | team name | id> [<login | team name | id>...] --role view|edit|admin [-n DOMAIN_NAME] [--ids] [--type user|team]"
+    syntax "(<login>... | <team name>... | <id>...) --role view|edit|admin [-n DOMAIN_NAME] [--ids] [--type user|team]"
     description <<-DESC
-      Updates members on a domain by passing one or more user login, team name
-      or ids for other people or teams on OpenShift.  You can use the 'rhc members' command
-      to list the existing members of your domain. You cannot change the role of
-      the owner.
+      Updates members on a domain by passing a user login, team name, or ID for 
+      each member. You can use the 'rhc members' command to list the existing 
+      members of your domain. You cannot change the role of the owner.
 
       Roles
         view  - able to see information about the domain and its apps,
@@ -168,20 +167,20 @@ module RHC::Commands
           Updates the team member with name 'team1' to the 'admin' role on mydomain
 
         rhc update-member team1_id --type team --role admin -n mydomain --ids
-          Adds or updates the team with id 'team1_id' to the 'admin' role on mydomain
+          Adds or updates the team with ID 'team1_id' to the 'admin' role on mydomain
 
       DESC
     takes_domain
     option ['--ids'], "Treat the arguments as a list of IDs", :optional => true
-    option ['-r', '--role ROLE'], "The role to give to each member - view, edit, or admin (default 'edit')", :type => Role, :optional => true
-    option ['--type TYPE'], "Type of argument(s) being passed. Accepted values are either 'team' or 'user' (default).", :optional => true
-    argument :members, "A list of members (user logins or team names) to update.  Pass --ids to treat this as a list of IDs.", [], :type => :list
+    option ['-r', '--role ROLE'], "The role to give to each member - view, edit, or admin (default is 'edit')", :type => Role, :optional => true
+    option ['--type TYPE'], "Type of argument(s) being passed. Accepted values are either 'team' or 'user' (default is 'user').", :optional => true
+    argument :members, "A list of members (user logins, team names, or IDs) to update.  Pass --ids to treat this as a list of IDs.", [], :type => :list
     def update(members)
       target = find_domain
-      role = options.role || 'edit'
-      type = options.__hash__[:type] || 'user'
+      role = get_role_option(options)
+      type = get_type_option(options)
 
-      raise ArgumentError, 'You must pass at least one user login, team name, or id to this command' unless members.present?
+      raise ArgumentError, 'You must pass at least one user login, team name, or ID to this command.' unless members.present?
       
       say "Updating #{pluralize(members.length, role_name(role))} to #{target.class.model_name.downcase} ... "
       
@@ -194,9 +193,9 @@ module RHC::Commands
     end
 
     summary "Remove a member from a domain"
-    syntax "<login | team name | id> [<login | team name | id>...] [-n DOMAIN_NAME] [--ids] [--type user|team]"
+    syntax "(<login>... | <team name>... | <id>...) [-n DOMAIN_NAME] [--ids] [--type user|team]"
     description <<-DESC
-      Remove members on a domain by passing one or more login or ids for each
+      Remove members from a domain by passing a user login, team name, or ID for each
       member you wish to remove.  View the list of existing members with
       'rhc members <domain_name>'.
 
@@ -205,11 +204,11 @@ module RHC::Commands
     takes_domain
     option ['--ids'], "Treat the arguments as a list of IDs"
     option ['--all'], "Remove all members from this domain."
-    option ['--type TYPE'], "Type of argument(s) being passed. Accepted values are either 'team' or 'user' (default).", :optional => true
-    argument :members, "Member logins to remove from the domain.  Pass --ids to treat this as a list of IDs.", [], :type => :list
+    option ['--type TYPE'], "Type of argument(s) being passed. Accepted values are either 'team' or 'user' (default is 'user').", :optional => true
+    argument :members, "A list of members (user logins, team names, or IDs) to remove from the domain.  Pass --ids to treat this as a list of IDs.", [], :type => :list
     def remove(members)
       target = find_domain
-      type = options.__hash__[:type] || 'user'
+      type = get_type_option(options)
 
       if options.all
         say "Removing all members from #{target.class.model_name.downcase} ... "
@@ -217,7 +216,7 @@ module RHC::Commands
         success "done"
 
       else
-        raise ArgumentError, 'You must pass at least one user login, team name, or id to this command' unless members.present?
+        raise ArgumentError, 'You must pass at least one user login, team name, or ID to this command.' unless members.present?
 
         say "Removing #{pluralize(members.length, 'member')} from #{target.class.model_name.downcase} ... "
 
@@ -231,6 +230,24 @@ module RHC::Commands
     end
 
     protected
+      def get_role_option(options, default_value='edit')
+        options.role || default_value
+      end
+
+      def get_type_option(options, default_value='user')
+        type = options.__hash__[:type]
+        case type
+        when 'team'
+          type
+        when 'user'
+          type
+        when nil
+          default_value
+        else
+          raise ArgumentError, "The type '#{type}' is not valid. Type must be 'user' or 'team'."
+        end
+      end
+
       def changes_for(members, role, type)
         members.map do |m|
           h = {:role => role, :type => type}
@@ -239,8 +256,8 @@ module RHC::Commands
         end
       end
 
-      def team?(member_type)
-        member_type =~ /^team$/i
+      def team?(type)
+        type == 'team'
       end
 
       def search_teams(team_names, global=false)
