@@ -149,8 +149,9 @@ module RHC::Commands
       domain = rest_client.find_domain(namespace)
 
       say "Leaving domain ... "
-      domain.leave
+      result = domain.leave
       success "done"
+      result.messages.each{ |s| paragraph{ say s } }
 
       0
     end

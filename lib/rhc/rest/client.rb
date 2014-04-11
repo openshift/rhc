@@ -584,6 +584,8 @@ module RHC
             data.map{ |json| Deployment.new(json, self) }
           when 'teams'
             data.map{ |json| Team.new(json, self) }
+          when 'member'
+            RHC::Rest::Membership::Member.new(data, self)
           when 'members'
             data.map{ |json| RHC::Rest::Membership::Member.new(json, self) }
           else
