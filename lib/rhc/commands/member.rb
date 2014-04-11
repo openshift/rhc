@@ -275,7 +275,7 @@ module RHC::Commands
             r << team_for_name
           elsif suggestions.present?
             msg = global ? "No global team found with the name '#{team_name}'." : "You do not have a team named '#{team_name}'."
-            raise RHC::TeamNotFoundException.new(msg + " Did you mean one of the following?\n#{suggestions.map{|t| t.name}.join("\n")}")
+            raise RHC::TeamNotFoundException.new(msg + " Did you mean one of the following?\n#{suggestions.map(&:name).join("\n")}")
           else
             msg = global ? "No global team found with the name '#{team_name}'." : "You do not have a team named '#{team_name}'."
             raise RHC::TeamNotFoundException.new(msg)
@@ -315,8 +315,8 @@ module RHC::Commands
           if team_for_name
             r << team_for_name
           elsif suggestions.present?
-            raise RHC::TeamNotFoundException.new("No team found with the name '#{name}', " +
-              "did you mean one of the following?\n#{suggestions.map{|t| t.name}.join("\n")}")
+            raise RHC::TeamNotFoundException.new("No team found with the name '#{name}'. " +
+              "Did you mean one of the following?\n#{suggestions.map(&:name).join("\n")}")
           else
             raise RHC::MemberNotFoundException.new("No team found with the name '#{name}'.")
           end

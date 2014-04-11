@@ -67,12 +67,17 @@ describe RHC::Commands::Member do
       it("should include the login value") { run_output.should =~ /alice.*Bob.*carol.*doug@doug\.com/m }
     end
 
-    context 'with team members' do
-      # TODO
-    end
   end
 
   describe 'list-member' do
+    context 'on a domain with no members' do
+      let(:arguments) { ['members', '-n', 'mock-domain-0'] }
+      let(:supports_members){ true }
+      before{ with_mock_domain.init_members }
+      it { expect { run }.to exit_with_code(0) }
+      it { run_output.should =~ /does not have any members/ }
+    end
+
     context 'on a domain' do
       let(:arguments) { ['members', '-n', 'mock-domain-0'] }
       let(:supports_members){ true }
@@ -82,7 +87,21 @@ describe RHC::Commands::Member do
       it("should not show the name column") { run_output.should =~ /^Login\s+Role\s+Type$/ }
     end
 
-    context 'on a domain with teams' do
+    context 'on a domain with teams not showing all members' do
+      let(:arguments) { ['members', '-n', 'mock-domain-0'] }
+      let(:supports_members){ true }
+      before{ with_mock_domain.add_member(owner).add_member(team_admin).add_member(team_editor).add_member(team_admin_member).add_member(team_editor_member).add_member(team_viewer).add_member(team_viewer_and_explicit_member) }
+      it { expect { run }.to exit_with_code(0) }
+      it { run_output.should =~ /alice\s+alice\s+admin \(owner\)\s+user/ }
+      it { run_output.should =~ /team1\s+admin\s+team/ }
+      it { run_output.should_not =~ /memberadmin\s+memberadmin\s+admin \(via team1\)\s+user/ }
+      it { run_output.should =~ /team2\s+edit\s+team/ }
+      it { run_output.should_not =~ /membereditor\s+membereditor\s+edit \(via team2\)\s+user/ }
+      it("should show the name column") { run_output.should =~ /^Name\s+Login\s+Role\s+Type$/ }
+      it("should prompt to use the --all parameter") { run_output.should =~ /--all to display all members/ }
+    end
+
+    context 'on a domain with teams showing all members' do
       let(:arguments) { ['members', '-n', 'mock-domain-0', '--all'] }
       let(:supports_members){ true }
       before{ with_mock_domain.add_member(owner).add_member(team_admin).add_member(team_editor).add_member(team_admin_member).add_member(team_editor_member).add_member(team_viewer).add_member(team_viewer_and_explicit_member) }
@@ -277,6 +296,18 @@ describe RHC::Commands::Member do
         it { run_output.should =~ /Adding 1 editor to domain .*There is more than one team named 'someteam'\. Please use the --ids flag and specify the exact id of the team you want to manage\./ }
       end
 
+      context 'with multiple case-insensitive team matches' do
+        let(:arguments) { ['add-member', 'someteam', '-n', 'test', '--type', 'team'] }
+        before do
+          challenge do
+            stub_api_request(:get, "broker/rest/teams?owner=@self").
+              to_return({:body => {:type => 'teams', :data => [{:id => 111, :global => false, :name => 'SOMETEAM'}, {:id => 222, :global => false, :name => 'SomeTeam'}], :messages => [{:exit_code => 0, :field => nil, :index => nil, :severity => 'info', :text => 'Listing teams'},]}.to_json, :status => 200})
+          end
+        end
+        it { expect { run }.to exit_with_code(162) }
+        it { run_output.should =~ /Adding 1 editor to domain .*You do not have a team named 'someteam'. Did you mean one of the following\?\nSOMETEAM\nSomeTeam/ }
+      end
+
       context 'without a global team' do
         let(:arguments) { ['add-member', 'testteam', '-n', 'test', '--type', 'team', '--global'] }
         before do
@@ -373,6 +404,16 @@ describe RHC::Commands::Member do
         end
         it { expect { run }.to exit_with_code(163) }
         it { run_output.should =~ /Updating 1 viewer to domain .*There is more than one team named 'testteam'/ }
+      end
+
+      context 'with multiple team case-insensitive matches' do
+        let(:arguments) { ['update-member', 'testteam', '-n', 'test', '-r', 'view', '--type', 'team'] }
+        before do
+          stub_api_request(:get, "broker/rest/domains/test/members").
+            to_return({:body => {:type => 'members', :data => [{:id => 1, :name => 'TESTTEAM', :owner => false, :role => 'edit', :explicit_role => 'edit', :type => 'team'}, {:id => 12, :name => 'TestTeam', :owner => false, :role => 'edit', :explicit_role => 'edit', :type => 'team'}], :messages => [{:exit_code => 0, :field => nil, :index => nil, :severity => 'info', :text => 'Listing members'},]}.to_json, :status => 200})
+        end
+        it { expect { run }.to exit_with_code(162) }
+        it { run_output.should =~ /Updating 1 viewer to domain .*No team found with the name 'testteam'. Did you mean one of the following\?\nTESTTEAM\nTestTeam/ }
       end
 
       context 'with a single exact case insensitive match' do

@@ -703,6 +703,12 @@ module RHC::Rest::Mock
       @applications
     end
 
+    def init_members
+      @members ||= []
+      attributes['members'] ||= []
+      self
+    end
+
     def add_member(member)
       (@members ||= []) << member
       (attributes['members'] ||= []) << member.attributes
@@ -907,6 +913,12 @@ module RHC::Rest::Mock
       else
         raise RHC::EnvironmentVariablesNotSupportedException.new
       end
+    end
+
+    def init_members
+      @members ||= []
+      attributes['members'] ||= []
+      self
     end
 
     def add_member(member)
