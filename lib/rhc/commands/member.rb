@@ -145,7 +145,7 @@ module RHC::Commands
     summary "Update a member on a domain"
     syntax "<login | team name | id> [<login | team name | id>...] --role view|edit|admin [-n DOMAIN_NAME] [--ids] [--type user|team]"
     description <<-DESC
-      Updates existing members on a domain by passing one or more user login, team name
+      Updates members on a domain by passing one or more user login, team name
       or ids for other people or teams on OpenShift.  You can use the 'rhc members' command
       to list the existing members of your domain. You cannot change the role of
       the owner.
@@ -162,10 +162,13 @@ module RHC::Commands
 
       Examples
         rhc update-member bob@example.com --role view -n mydomain
-          Changes the member with login 'bob@example.com' to 'admin' rols on mydomain
+          Adds or updates the member with login 'bob@example.com' to 'admin' role on mydomain
 
         rhc update-member team1 --type team --role admin -n mydomain
-          Updated the team member with name 'team1' to the 'admin' role on mydomain
+          Updates the team member with name 'team1' to the 'admin' role on mydomain
+
+        rhc update-member team1_id --type team --role admin -n mydomain --ids
+          Adds or updates the team with id 'team1_id' to the 'admin' role on mydomain
 
       DESC
     takes_domain
@@ -275,7 +278,7 @@ module RHC::Commands
             r << team_for_name
           elsif suggestions.present?
             msg = global ? "No global team found with the name '#{team_name}'." : "You do not have a team named '#{team_name}'."
-            raise RHC::TeamNotFoundException.new(msg + " Did you mean one of the following?\n#{suggestions.map(&:name).join("\n")}")
+            raise RHC::TeamNotFoundException.new(msg + " Did you mean one of the following?\n#{suggestions[0..50].map(&:name).join(", ")}")
           else
             msg = global ? "No global team found with the name '#{team_name}'." : "You do not have a team named '#{team_name}'."
             raise RHC::TeamNotFoundException.new(msg)
@@ -316,7 +319,7 @@ module RHC::Commands
             r << team_for_name
           elsif suggestions.present?
             raise RHC::TeamNotFoundException.new("No team found with the name '#{name}'. " +
-              "Did you mean one of the following?\n#{suggestions.map(&:name).join("\n")}")
+              "Did you mean one of the following?\n#{suggestions[0..50].map(&:name).join(", ")}")
           else
             raise RHC::MemberNotFoundException.new("No team found with the name '#{name}'.")
           end

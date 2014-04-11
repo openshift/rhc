@@ -236,7 +236,7 @@ describe RHC::Commands::Member do
           end
         end
         it { expect { run }.to exit_with_code(162) }
-        it { run_output.should =~ /Adding 1 editor to domain .*You do not have a team named 'team'. Did you mean one of the following\?\nteam1\nteam2/ }
+        it { run_output.should =~ /Adding 1 editor to domain .*You do not have a team named 'team'. Did you mean one of the following\?\nteam1, team2/ }
       end
 
       context 'with a single exact case insensitive match' do
@@ -305,7 +305,7 @@ describe RHC::Commands::Member do
           end
         end
         it { expect { run }.to exit_with_code(162) }
-        it { run_output.should =~ /Adding 1 editor to domain .*You do not have a team named 'someteam'. Did you mean one of the following\?\nSOMETEAM\nSomeTeam/ }
+        it { run_output.should =~ /Adding 1 editor to domain .*You do not have a team named 'someteam'. Did you mean one of the following\?\nSOMETEAM, SomeTeam/ }
       end
 
       context 'without a global team' do
@@ -413,7 +413,7 @@ describe RHC::Commands::Member do
             to_return({:body => {:type => 'members', :data => [{:id => 1, :name => 'TESTTEAM', :owner => false, :role => 'edit', :explicit_role => 'edit', :type => 'team'}, {:id => 12, :name => 'TestTeam', :owner => false, :role => 'edit', :explicit_role => 'edit', :type => 'team'}], :messages => [{:exit_code => 0, :field => nil, :index => nil, :severity => 'info', :text => 'Listing members'},]}.to_json, :status => 200})
         end
         it { expect { run }.to exit_with_code(162) }
-        it { run_output.should =~ /Updating 1 viewer to domain .*No team found with the name 'testteam'. Did you mean one of the following\?\nTESTTEAM\nTestTeam/ }
+        it { run_output.should =~ /Updating 1 viewer to domain .*No team found with the name 'testteam'. Did you mean one of the following\?\nTESTTEAM, TestTeam/ }
       end
 
       context 'with a single exact case insensitive match' do
