@@ -64,6 +64,38 @@ module RHC
         @user ||= api.rest_method "GET_USER"
       end
 
+      def teams
+        debug "Getting all teams"
+        if link = api.link_href(:LIST_TEAMS)
+          @teams ||= api.rest_method "LIST_TEAMS"
+        else
+          raise RHC::TeamsNotSupportedException
+        end
+      end
+
+      def owned_teams
+        debug "Getting owned teams"
+        if link = api.link_href(:LIST_TEAMS_BY_OWNER)
+          @owned_teams ||= api.rest_method "LIST_TEAMS_BY_OWNER", :owner => '@self'
+        else
+          raise RHC::TeamsNotSupportedException
+        end
+      end
+
+      def search_teams(search, global=false)
+        debug "Searching teams"
+        if link = api.link_href(:SEARCH_TEAMS)
+          api.rest_method "SEARCH_TEAMS", :search => search, :global => global
+        else
+          raise RHC::TeamsNotSupportedException
+        end
+      end
+
+      def search_owned_teams(search)
+        debug "Searching owned teams"
+        owned_teams.select{|team| team.name.downcase =~ /#{Regexp.escape(search)}/i}
+      end
+
       #Find Domain by namespace
       def find_domain(id)
         debug "Finding domain #{id}"
@@ -550,6 +582,10 @@ module RHC
             data.map{ |json| EnvironmentVariable.new(json, self) }
           when 'deployments'
             data.map{ |json| Deployment.new(json, self) }
+          when 'teams'
+            data.map{ |json| Team.new(json, self) }
+          when 'members'
+            data.map{ |json| RHC::Rest::Membership::Member.new(json, self) }
           else
             data
           end

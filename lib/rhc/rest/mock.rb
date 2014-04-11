@@ -428,11 +428,18 @@ module RHC::Rest::Mock
     end
 
     def mock_real_client_links
-      [['GET_USER',        "broker/rest/user",       'GET'],
-       ['LIST_DOMAINS',    "broker/rest/domains",    'GET'],
-       ['ADD_DOMAIN',      "broker/rest/domains",    'POST', ({'optional_params' => [{'name' => 'allowed_gear_sizes'}]} if example_allows_gear_sizes?)].compact,
-       ['LIST_CARTRIDGES', "broker/rest/cartridges", 'GET'],
-      ]
+      mock_teams_links.concat([
+       ['GET_USER',               "broker/rest/user",       'GET'],
+       ['LIST_DOMAINS',           "broker/rest/domains",    'GET'],
+       ['ADD_DOMAIN',             "broker/rest/domains",    'POST', ({'optional_params' => [{'name' => 'allowed_gear_sizes'}]} if example_allows_gear_sizes?)].compact,
+       ['LIST_CARTRIDGES',        "broker/rest/cartridges", 'GET'],
+      ])
+    end
+
+    def mock_teams_links
+      [['SEARCH_TEAMS',           "broker/rest/teams",      'GET'],
+       ['LIST_TEAMS',             "broker/rest/teams",      'GET'],
+       ['LIST_TEAMS_BY_OWNER',    "broker/rest/teams",      'GET']]
     end
 
     def mock_api_with_authorizations
@@ -696,6 +703,12 @@ module RHC::Rest::Mock
       @applications
     end
 
+    def init_members
+      @members ||= []
+      attributes['members'] ||= []
+      self
+    end
+
     def add_member(member)
       (@members ||= []) << member
       (attributes['members'] ||= []) << member.attributes
@@ -900,6 +913,12 @@ module RHC::Rest::Mock
       else
         raise RHC::EnvironmentVariablesNotSupportedException.new
       end
+    end
+
+    def init_members
+      @members ||= []
+      attributes['members'] ||= []
+      self
     end
 
     def add_member(member)

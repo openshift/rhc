@@ -67,6 +67,24 @@ module RHC
     end
   end
 
+  class TeamsNotSupportedException < Exception
+    def initialize(message="Server does not support teams")
+      super message, 161
+    end
+  end
+
+  class TeamNotFoundException < Exception
+    def initialize(message="Team not found")
+      super message, 162
+    end
+  end
+
+  class MemberNotFoundException < Exception
+    def initialize(message="Member not found")
+      super message, 163
+    end
+  end
+
   class GitPermissionDenied < GitException; end
   class GitDirectoryExists < GitException; end
 
