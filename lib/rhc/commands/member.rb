@@ -317,7 +317,7 @@ module RHC::Commands
             if exact_matches.length == 1
               team_for_name = exact_matches.first
             else
-              raise RHC::MemberNotFoundException.new("There is more than one team named '#{name}'. " +
+              raise RHC::MemberNotFoundException.new("There is more than one member team named '#{name}'. " +
                 "Please use the --ids flag and specify the exact id of the team you want to manage.")
             end
 
@@ -335,10 +335,10 @@ module RHC::Commands
           if team_for_name
             r << team_for_name
           elsif suggestions.present?
-            raise RHC::TeamNotFoundException.new("No team found with the name '#{name}'. " +
+            raise RHC::MemberNotFoundException.new("No member team found with the name '#{name}'. " +
               "Did you mean one of the following?\n#{suggestions[0..50].map(&:name).join(", ")}")
           else
-            raise RHC::MemberNotFoundException.new("No team found with the name '#{name}'.")
+            raise RHC::MemberNotFoundException.new("No member team found with the name '#{name}'.")
           end
 
         end

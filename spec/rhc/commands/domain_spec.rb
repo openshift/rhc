@@ -334,7 +334,7 @@ describe RHC::Commands::Domain do
     let(:arguments) { ['domain', 'leave', '-n', 'deleteme'] }
 
     it "should leave the domain" do
-      rest_client.domains.first.should_receive(:leave)
+      rest_client.domains.first.should_receive(:leave).and_return(RHC::Rest::Membership::Member.new)
       expect { run }.to exit_with_code(0)
     end
   end
