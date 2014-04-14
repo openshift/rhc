@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.23.1
+Version: 1.23.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,28 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Apr 14 2014 Troy Dawson <tdawson@redhat.com> 1.23.2-1
+- Merge pull request #576 from liggitt/fabianofranz-dev/174
+  (dmcphers+openshiftbot@redhat.com)
+- Improve documentation, sample usage, grammar, and type validation
+  (jliggitt@redhat.com)
+- Bug 1086698: Improve examples for update to say that user logins or team ids
+  can add members (jliggitt@redhat.com)
+- Complete spec coverage of members command (jliggitt@redhat.com)
+- Bug 1086227: Improve message when a team cannot be found while adding
+  (jliggitt@redhat.com)
+- Add spec tests to make sure we use an exact match, handle multiple exact
+  matches, use a single case-insensitive match, suggest when there are multiple
+  matches, and handle special Regexp characters correctly (jliggitt@redhat.com)
+- Update spec tests for member list output (jliggitt@redhat.com)
+- Bug 1086138: Show info message when there are no members, reformat member
+  output, add --all option to show team members (jliggitt@redhat.com)
+- Bug 1086127: update autocomplete script (jliggitt@redhat.com)
+- Bug 1086128: Improve syntax to include --type and login,team name,id
+  (jliggitt@redhat.com)
+- [origin-ui-174] add/remove/update/list teams as members
+  (contact@fabianofranz.com)
+
 * Wed Apr 09 2014 Adam Miller <admiller@redhat.com> 1.23.1-1
 - Merge pull request #573 from jwforres/latest_rake_breaks_on_ruby18
   (dmcphers+openshiftbot@redhat.com)
