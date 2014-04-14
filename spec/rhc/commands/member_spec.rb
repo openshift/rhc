@@ -409,7 +409,7 @@ describe RHC::Commands::Member do
             to_return({:body => {:type => 'members', :data => [], :messages => [{:exit_code => 0, :field => 'login', :index => 0, :severity => 'info', :text => 'Updated 1 member'},]}.to_json, :status => 200})
         end
         it { expect { run }.to exit_with_code(163) }
-        it { run_output.should =~ /Updating 1 viewer to domain .*There is more than one team named 'testteam'/ }
+        it { run_output.should =~ /Updating 1 viewer to domain .*There is more than one member team named 'testteam'/ }
       end
 
       context 'with multiple team case-insensitive matches' do
@@ -418,8 +418,8 @@ describe RHC::Commands::Member do
           stub_api_request(:get, "broker/rest/domains/test/members").
             to_return({:body => {:type => 'members', :data => [{:id => 1, :name => 'TESTTEAM', :owner => false, :role => 'edit', :explicit_role => 'edit', :type => 'team'}, {:id => 12, :name => 'TestTeam', :owner => false, :role => 'edit', :explicit_role => 'edit', :type => 'team'}], :messages => [{:exit_code => 0, :field => nil, :index => nil, :severity => 'info', :text => 'Listing members'},]}.to_json, :status => 200})
         end
-        it { expect { run }.to exit_with_code(162) }
-        it { run_output.should =~ /Updating 1 viewer to domain .*No team found with the name 'testteam'. Did you mean one of the following\?\nTESTTEAM, TestTeam/ }
+        it { expect { run }.to exit_with_code(163) }
+        it { run_output.should =~ /Updating 1 viewer to domain .*No member team found with the name 'testteam'. Did you mean one of the following\?\nTESTTEAM, TestTeam/ }
       end
 
       context 'with a single exact case insensitive match' do
@@ -479,7 +479,7 @@ describe RHC::Commands::Member do
             to_return({:body => {:type => 'members', :data => [], :messages => [{:exit_code => 0, :field => nil, :index => nil, :severity => 'info', :text => 'Listing teams'},]}.to_json, :status => 200})
         end
         it { expect { run }.to exit_with_code(163) }
-        it { run_output.should =~ /Updating 1 viewer to domain.*No team found with the name 'testteam'/ }
+        it { run_output.should =~ /Updating 1 viewer to domain.*No member team found with the name 'testteam'/ }
       end
 
       context 'with a missing team with an identical user name' do
@@ -489,7 +489,7 @@ describe RHC::Commands::Member do
             to_return({:body => {:type => 'members', :data => [{:id => 1, :name => 'testteam', :login => 'testteam', :owner => false, :role => 'edit', :explicit_role => 'edit', :type => 'user'}], :messages => [{:exit_code => 0, :field => nil, :index => nil, :severity => 'info', :text => 'Listing members'},]}.to_json, :status => 200})
         end
         it { expect { run }.to exit_with_code(163) }
-        it { run_output.should =~ /Updating 1 viewer to domain.*No team found with the name 'testteam'/ }
+        it { run_output.should =~ /Updating 1 viewer to domain.*No member team found with the name 'testteam'/ }
       end
 
       context 'with a missing user id and role' do
