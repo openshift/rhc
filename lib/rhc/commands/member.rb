@@ -44,7 +44,7 @@ module RHC::Commands
       '--ids'.
       DESC
     option ['--ids'], "Display the IDs of each member", :optional => true
-    option ['--all'], "Display all members, including the owner and all team members", :optional => true
+    option ['--all'], "Display all members, including indirect members", :optional => true
     takes_application_or_domain :argument => true
     alias_action :members, :root_command => true
     def list(path)
@@ -54,7 +54,7 @@ module RHC::Commands
       if options.all
         show_members = members.sort
       else
-        show_members = members.select(&:explicit_role?).sort
+        show_members = members.select{|m| m.owner? || m.explicit_role? }.sort
       end
       show_name = show_members.any?{ |m| m.name.presence && m.name != m.login }
       show_login = show_members.any?{ |m| m.login.presence }
@@ -79,9 +79,9 @@ module RHC::Commands
         info "The #{target.class.model_name.downcase} #{target.name} does not have any members."
       end
 
-      if show_members.any?(&:team?) && show_members.count < members.count
+      if show_members.count < members.count
         paragraph do
-          info "Pass --all to display all members, including the owner and all team members."
+          info "Pass --all to display all members, including indirect members."
         end
       end
 
