@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.23.2
+Version: 1.23.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,12 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Apr 15 2014 Troy Dawson <tdawson@redhat.com> 1.23.3-1
+- Merge pull request #577 from liggitt/bug_1086567_handle_implicit_leaving
+  (dmcphers+openshiftbot@redhat.com)
+- Improve message when searching member teams (jliggitt@redhat.com)
+- Bug 1086567: Handle implicit members leaving (jliggitt@redhat.com)
+
 * Mon Apr 14 2014 Troy Dawson <tdawson@redhat.com> 1.23.2-1
 - Merge pull request #576 from liggitt/fabianofranz-dev/174
   (dmcphers+openshiftbot@redhat.com)
