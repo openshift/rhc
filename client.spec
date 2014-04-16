@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.23.3
+Version: 1.23.4
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,12 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Apr 16 2014 Troy Dawson <tdawson@redhat.com> 1.23.4-1
+- Merge pull request #579 from liggitt/always_show_owner
+  (dmcphers+openshiftbot@redhat.com)
+- Always show the domain or application owner in member list
+  (jliggitt@redhat.com)
+
 * Tue Apr 15 2014 Troy Dawson <tdawson@redhat.com> 1.23.3-1
 - Merge pull request #577 from liggitt/bug_1086567_handle_implicit_leaving
   (dmcphers+openshiftbot@redhat.com)
