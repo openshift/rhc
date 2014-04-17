@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.23.5
+Version: 1.23.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Apr 17 2014 Troy Dawson <tdawson@redhat.com> 1.23.6-1
+- Skip forking output for jruby (jliggitt@redhat.com)
+
 * Thu Apr 17 2014 Troy Dawson <tdawson@redhat.com> 1.23.5-1
 - Merge pull request #578 from pravisankar/dev/ravi/fix-rhc-tests
   (dmcphers+openshiftbot@redhat.com)
