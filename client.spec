@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.23.4
+Version: 1.23.5
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,12 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Apr 17 2014 Troy Dawson <tdawson@redhat.com> 1.23.5-1
+- Merge pull request #578 from pravisankar/dev/ravi/fix-rhc-tests
+  (dmcphers+openshiftbot@redhat.com)
+- Fix cucumber support script: Pick user_register_script_format based on auth
+  plugin (rpenta@redhat.com)
+
 * Wed Apr 16 2014 Troy Dawson <tdawson@redhat.com> 1.23.4-1
 - Merge pull request #579 from liggitt/always_show_owner
   (dmcphers+openshiftbot@redhat.com)
