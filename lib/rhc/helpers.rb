@@ -437,7 +437,7 @@ module RHC
     def run_with_tee(cmd)
       status, stdout, stderr = nil
 
-      if windows?
+      if windows? || jruby?
         #:nocov: TODO: Test block
         system(cmd)
         status = $?.exitstatus
