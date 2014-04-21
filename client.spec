@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.23.6
+Version: 1.23.7
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,10 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Apr 21 2014 Adam Miller <admiller@redhat.com> 1.23.7-1
+- Bug 1089665: Show application members who have their membership via domain
+  (jliggitt@redhat.com)
+
 * Thu Apr 17 2014 Troy Dawson <tdawson@redhat.com> 1.23.6-1
 - Skip forking output for jruby (jliggitt@redhat.com)
 
