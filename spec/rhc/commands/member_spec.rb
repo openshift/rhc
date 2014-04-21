@@ -51,6 +51,7 @@ describe RHC::Commands::Member do
   let(:team_viewer_member2){ RHC::Rest::Membership::Member.new(:id => '24', :role => 'view', :login => 'memberviewer2', :type => 'user', :from => [{'id' => '13', 'type' => 'team'}]) }
   let(:team_viewer_member3){ RHC::Rest::Membership::Member.new(:id => '25', :role => 'view', :login => 'memberviewer3', :type => 'user', :from => [{'id' => '13', 'type' => 'team'}]) }
   let(:team_viewer_and_explicit_member){ RHC::Rest::Membership::Member.new(:id => '26', :role => 'view', :explicit_role => 'view', :login => 'memberviewerexplicitedit', :type => 'user', :from => [{'id' => '13', 'type' => 'team'}]) }
+  let(:app_member_via_domain) { RHC::Rest::Membership::Member.new(:id => '27', :role => 'view', :login => 'app_member_via_domain', :type => 'user', :from => [{'type' => 'domain'}]) }
 
   describe 'show-domain' do
     context 'with members' do
@@ -121,6 +122,15 @@ describe RHC::Commands::Member do
 
       it { expect { run }.to exit_with_code(1) }
       it { run_output.should =~ /The server does not support adding or removing members/ }
+
+      context "with only implicit members via domain" do
+        let(:supports_members){ true }
+        before{ with_mock_app.add_member(app_member_via_domain) }
+        it { expect { run }.to exit_with_code(0) }
+        it { run_output.should =~ /app_member_via_domain\s+view \(via domain\)/ }
+        it("should not show the name column") { run_output.should =~ /^Login\s+Role\s+Type$/ }
+        it("should not show the --all message") { run_output.should_not =~ /--all/ }
+      end
 
       context "with only owner" do
         let(:supports_members){ true }
