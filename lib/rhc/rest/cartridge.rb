@@ -67,18 +67,22 @@ module RHC
       end
 
       def usage_rate?
-        rate = usage_rate
-        rate && rate > 0.0
+        rates = usage_rates
+        !(rates.nil? || rates.empty?)
       end
 
-      def usage_rate
-        rate = attribute(:usage_rate_usd)
-
-        if attribute(:usage_rates)
-          rate ||= attribute(:usage_rates).inject(0) { |total, rate| total + rate['usd'].to_f }
+      def usage_rates
+        rate = attribute(:usage_rate_usd).to_f rescue 0.0
+        if rate > 0
+          {rate => []}
+        elsif attribute(:usage_rates).present?
+          attribute(:usage_rates).inject({}) do |plans_by_rate, rate|
+            if (usd = rate['usd'].to_f rescue 0.0) > 0
+              (plans_by_rate[usd] ||= []) << rate['plan_id']
+            end
+            plans_by_rate
+          end
         end
-
-        rate.to_f rescue 0.0
       end
 
       def scaling
