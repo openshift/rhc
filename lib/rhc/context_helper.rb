@@ -10,21 +10,43 @@ module RHC
 
     def self.included(other)
       other.module_eval do
+        def self.takes_team(opts={})
+          if opts[:argument]
+            argument :team_name, "Name of a team", ["-t", "--team-name NAME"], :allow_nil => true, :covered_by => :team_id
+          else
+            #:nocov:
+            option ["-t", "--team-name NAME"], "Name of a team", :covered_by => :team_id
+            #:nocov:
+          end
+          option ["--team-id ID"], "ID of a team", :covered_by => :team_name
+        end
+
         def self.takes_domain(opts={})
           if opts[:argument]
             argument :namespace, "Name of a domain", ["-n", "--namespace NAME"], :allow_nil => true, :default => :from_local_git
           else
+            #:nocov:
             option ["-n", "--namespace NAME"], "Name of a domain", :default => :from_local_git
+            #:nocov:
           end
         end
-        # Does not take defaults to avoid conflicts
-        def self.takes_application_or_domain(opts={})
+
+        def self.takes_membership_container(opts={})
+          if opts && opts[:argument]
+            if opts && opts[:writable]
+              #:nocov:
+              argument :namespace, "Name of a domain", ["-n", "--namespace NAME"], :allow_nil => true, :default => :from_local_git
+              #:nocov:
+            else
+              argument :target, "The name of a domain, or an application name with domain (domain or domain/application)", ["--target NAME_OR_PATH"], :allow_nil => true, :covered_by => [:application_id, :namespace, :app]
+            end
+          end
           option ["-n", "--namespace NAME"], "Name of a domain"
-          option ["-a", "--app NAME"], "Name of an application"
-          if opts[:argument]
-            argument :target, "The name of a domain, or an application name with domain (domain or domain/application)", ["-t", "--target NAME_OR_PATH"], :allow_nil => true, :covered_by => [:application_id, :namespace, :app]
-          end
+          option ["-a", "--app NAME"], "Name of an application" unless opts && opts[:writable]
+          option ["-t", "--team-name NAME"], "Name of a team"
+          option ["--team-id ID"], "ID of a team"
         end
+
         def self.takes_application(opts={})
           if opts[:argument]
             argument :app, "Name of an application", ["-a", "--app NAME"], :allow_nil => true, :default => :from_local_git, :covered_by => :application_id
@@ -37,6 +59,18 @@ module RHC
       end
     end
 
+    def find_team(opts={})
+      if id = options.team_id.presence
+        return rest_client.find_team_by_id(id, opts)
+      end
+      team_name = (opts && opts[:team_name]) || options.team_name
+      if team_name.present?
+        rest_client.find_team(team_name, opts)
+      else
+        raise ArgumentError, "You must specify a team name with -t, or a team id with --team-id."
+      end
+    end
+
     def find_domain(opts={})
       domain = options.namespace || options.target || namespace_context
       if domain
@@ -46,7 +80,7 @@ module RHC
       end
     end
 
-    def find_app_or_domain(opts={})
+    def find_membership_container(opts={})
       domain, app =
         if options.target.present?
           options.target.split(/\//)
@@ -57,12 +91,19 @@ module RHC
             [options.namespace || namespace_context, options.app]
           end
         end
-      if app && domain
+
+      if options.team_id.present?
+        rest_client.find_team_by_id(options.team_id)
+      elsif options.team_name.present?
+        rest_client.find_team(options.team_name)
+      elsif app && domain
         rest_client.find_application(domain, app)
       elsif domain
         rest_client.find_domain(domain)
+      elsif opts && opts[:writable]
+        raise ArgumentError, "You must specify a domain with -n, or a team with -t."
       else
-        raise ArgumentError, "You must specify a domain with -n, or an application with -a."
+        raise ArgumentError, "You must specify a domain with -n, an application with -a, or a team with -t."
       end
     end
 

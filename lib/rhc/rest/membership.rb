@@ -88,6 +88,10 @@ module RHC::Rest
       supports? 'UPDATE_MEMBERS'
     end
 
+    def default_member_role
+      'edit'
+    end
+
     def members
       @members ||=
         if (members = attributes['members']).nil?
@@ -131,7 +135,7 @@ module RHC::Rest
     end
 
     def leave(options={})
-      raise RHC::MembersNotSupported unless supports? 'LEAVE'
+      raise RHC::MembersNotSupported.new("The server does not support leaving this resource.") unless supports? 'LEAVE'
       rest_method "LEAVE", nil, options
     ensure
       @members = attributes['members'] = nil

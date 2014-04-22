@@ -1,6 +1,24 @@
 module RHC
   module OutputHelpers
 
+    def display_team(team, ids=false)
+      paragraph do
+        header ["Team #{team.name}", ("(owned by #{team.owner})" if team.owner.present?)] do
+          section(:bottom => 1) do
+            say format_table \
+              nil,
+              get_properties(
+                team,
+                (:id if ids),
+                (:global if team.global?),
+                :compact_members
+              ),
+              :delete => true
+          end
+        end
+      end
+    end
+
     def display_domain(domain, applications=nil, ids=false)
       paragraph do
         header ["Domain #{domain.name}", ("(owned by #{domain.owner})" if domain.owner.present?)] do

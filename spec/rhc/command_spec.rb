@@ -246,6 +246,21 @@ describe RHC::Commands::Base do
     end
   end
 
+  describe "find_team" do
+    let(:instance){ subject }
+    let(:rest_client){ subject.send(:rest_client) }
+    let(:options){ subject.send(:options) }
+    def expects_method(*args)
+      expect{ subject.send(:find_team, *args) }
+    end
+
+    it("should raise without option"){ expects_method(nil).to raise_error(ArgumentError, /You must specify a team name with -t, or a team id with --team-id/) }
+    it("should handle team_id option"){ options[:team_id] = 'team_id_o'; expects_method.to call(:find_team_by_id).on(rest_client).with('team_id_o', {}) }
+    it("should handle team_name option"){ options[:team_name] = 'team_o'; expects_method.to call(:find_team).on(rest_client).with('team_o', {}) }
+    it("should handle team_name param"){ options[:team_name] = 'team_o'; expects_method.to call(:find_team).on(rest_client).with('team_o', {}) }
+
+  end
+
   describe "find_domain" do
     let(:instance){ subject }
     let(:rest_client){ subject.send(:rest_client) }
@@ -284,19 +299,23 @@ describe RHC::Commands::Base do
     end
   end
 
-  describe "find_domain_or_app" do
+  describe "find_membership_container" do
     let(:instance){ subject }
     let(:rest_client){ subject.send(:rest_client) }
     let(:options){ subject.send(:options) }
     before{ subject.stub(:namespace_context).and_return('domain_s') }
     def expects_method(*args)
-      expect{ subject.send(:find_app_or_domain, *args) }
+      expect{ subject.send(:find_membership_container, *args) }
     end
 
-    it("should not infer domain")             { expects_method.to raise_error(ArgumentError, /You must specify a domain with -n, or an application with -a/) }
+    it("should prompt for domain, app, or team") { expects_method.to raise_error(ArgumentError, /You must specify a domain with -n, an application with -a, or a team with -t/) }
+    it("should prompt for domain, or team")   { expects_method(:writable => true).to raise_error(ArgumentError, /You must specify a domain with -n, or a team with -t/) }
     it("should assume domain with -n")        { options[:namespace] = 'domain_o'; expects_method.to call(:find_domain).on(rest_client).with('domain_o') }
     it("should infer -n when -a is available"){ options[:app] = 'app_o'; expects_method.to call(:find_application).on(rest_client).with('domain_s', 'app_o') }
     it("should split -a param")               { options[:app] = 'domain_o/app_o'; expects_method.to call(:find_application).on(rest_client).with('domain_o', 'app_o') }
+    it("should split target arg")             { options[:target] = 'domain_o/app_o'; expects_method.to call(:find_application).on(rest_client).with('domain_o', 'app_o') }
+    it("should find team by name")            { options[:team_name] = 'team_o'; expects_method.to call(:find_team).on(rest_client).with('team_o') }
+    it("should find team by id")              { options[:team_id] = 'team_id_o'; expects_method.to call(:find_team_by_id).on(rest_client).with('team_id_o') }
 
     context "when an app context is available" do
       before{ subject.instance_variable_set(:@local_git_config, {:app => 'app_s'}) }

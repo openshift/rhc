@@ -10,9 +10,9 @@ _rhc()
     if [[ "$cur" == -* ]]; then
       opts="--always-prefix --clean --config --debug --insecure --limit --mock --noprompt --password --raw --rhlogin --server --ssl-ca-file --ssl-client-cert-file --ssl-version --timeout --token"
     elif [ -z $cur ]; then
-      opts="account alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert app app-configure app-create app-delete app-deploy app-force-stop app-reload app-restart app-scale-down app-scale-up app-show app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all authorization-list cartridge cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage deployment deployment-activate deployment-list deployment-show domain domain-configure domain-create domain-delete domain-leave domain-list domain-rename domain-show env env-list env-set env-show env-unset git-clone logout member member-add member-list member-remove member-update port-forward scp server setup snapshot snapshot-restore snapshot-save ssh sshkey sshkey-add sshkey-list sshkey-remove sshkey-show tail threaddump"
+      opts="account alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert app app-configure app-create app-delete app-deploy app-force-stop app-reload app-restart app-scale-down app-scale-up app-show app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all authorization-list cartridge cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage deployment deployment-activate deployment-list deployment-show domain domain-configure domain-create domain-delete domain-leave domain-list domain-rename domain-show env env-list env-set env-show env-unset git-clone logout member member-add member-list member-remove member-update port-forward scp server setup snapshot snapshot-restore snapshot-save ssh sshkey sshkey-add sshkey-list sshkey-remove sshkey-show tail team team-create team-delete team-leave team-list team-show threaddump"
     else
-      opts="account account-logout activate-deployment add-alias add-authorization add-cartridge add-member add-sshkey alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert aliases app app-configure app-create app-delete app-deploy app-env app-force-stop app-reload app-restart app-scale-down app-scale-up app-scp app-show app-snapshot app-ssh app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all authorization-list authorizations cartridge cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage cartridges configure-app configure-domain create-app create-domain delete-all-authorization delete-app delete-authorization delete-cert-alias delete-domain deploy deploy-app deployment deployment-activate deployment-list deployment-show deployments domain domain-configure domain-create domain-delete domain-leave domain-list domain-rename domain-show domains env env-add env-list env-remove env-set env-show env-unset force-stop-app git-clone leave-domain list-alias list-authorization list-cartridge list-deployment list-domain list-env list-member list-sshkey logout member member-add member-list member-remove member-update members port-forward reload-app reload-cartridge remove-alias remove-cartridge remove-member remove-sshkey rename-domain restart-app restart-cartridge restore-snapshot save-snapshot scale-cartridge scale-down-app scale-up-app scp server set-env setup show-app show-cartridge show-deployment show-domain show-env show-sshkey snapshot snapshot-restore snapshot-save ssh sshkey sshkey-add sshkey-list sshkey-remove sshkey-show start-app start-cartridge status-cartridge stop-app stop-cartridge storage-cartridge tail threaddump tidy-app unset-env update-cert-alias update-member"
+      opts="account account-logout activate-deployment add-alias add-authorization add-cartridge add-member add-sshkey alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert aliases app app-configure app-create app-delete app-deploy app-env app-force-stop app-reload app-restart app-scale-down app-scale-up app-scp app-show app-snapshot app-ssh app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all authorization-list authorizations cartridge cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage cartridges configure-app configure-domain create-app create-domain create-team delete-all-authorization delete-app delete-authorization delete-cert-alias delete-domain delete-team deploy deploy-app deployment deployment-activate deployment-list deployment-show deployments domain domain-configure domain-create domain-delete domain-leave domain-list domain-rename domain-show domains env env-add env-list env-remove env-set env-show env-unset force-stop-app git-clone leave-domain leave-team list-alias list-authorization list-cartridge list-deployment list-domain list-env list-member list-sshkey list-team logout member member-add member-list member-remove member-update members port-forward reload-app reload-cartridge remove-alias remove-cartridge remove-member remove-sshkey rename-domain restart-app restart-cartridge restore-snapshot save-snapshot scale-cartridge scale-down-app scale-up-app scp server set-env setup show-app show-cartridge show-deployment show-domain show-env show-sshkey show-team snapshot snapshot-restore snapshot-save ssh sshkey sshkey-add sshkey-list sshkey-remove sshkey-show start-app start-cartridge status-cartridge stop-app stop-cartridge storage-cartridge tail team team-create team-delete team-leave team-list team-show teams threaddump tidy-app unset-env update-cert-alias update-member"
     fi
   else
     prev="${COMP_WORDS[@]:0:COMP_CWORD}"
@@ -78,7 +78,7 @@ _rhc()
 
       "rhc add-member")
         if [[ "$cur" == -* ]]; then
-          opts="--global --ids --namespace --role --type"
+          opts="--global --ids --namespace --role --team-id --team-name --type"
         else
           opts=""
         fi
@@ -780,6 +780,14 @@ _rhc()
         fi
         ;;
 
+      "rhc create-team")
+        if [[ "$cur" == -* ]]; then
+          opts="--team-name"
+        else
+          opts=""
+        fi
+        ;;
+
       "rhc delete-all-authorization")
         if [[ "$cur" == -* ]]; then
           opts=""
@@ -815,6 +823,14 @@ _rhc()
       "rhc delete-domain")
         if [[ "$cur" == -* ]]; then
           opts="--force --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc delete-team")
+        if [[ "$cur" == -* ]]; then
+          opts="--team-id --team-name"
         else
           opts=""
         fi
@@ -1156,6 +1172,14 @@ _rhc()
         fi
         ;;
 
+      "rhc leave-team")
+        if [[ "$cur" == -* ]]; then
+          opts="--team-id --team-name"
+        else
+          opts=""
+        fi
+        ;;
+
       "rhc list-alias")
         if [[ "$cur" == -* ]]; then
           opts="--app --application-id --namespace"
@@ -1206,7 +1230,7 @@ _rhc()
 
       "rhc list-member")
         if [[ "$cur" == -* ]]; then
-          opts="--all --app --ids --namespace --target"
+          opts="--all --app --ids --namespace --target --team-id --team-name"
         else
           opts=""
         fi
@@ -1215,6 +1239,14 @@ _rhc()
       "rhc list-sshkey")
         if [[ "$cur" == -* ]]; then
           opts=""
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc list-team")
+        if [[ "$cur" == -* ]]; then
+          opts="--mine"
         else
           opts=""
         fi
@@ -1238,7 +1270,7 @@ _rhc()
 
       "rhc member add")
         if [[ "$cur" == -* ]]; then
-          opts="--global --ids --namespace --role --type"
+          opts="--global --ids --namespace --role --team-id --team-name --type"
         else
           opts=""
         fi
@@ -1246,7 +1278,7 @@ _rhc()
 
       "rhc member list")
         if [[ "$cur" == -* ]]; then
-          opts="--all --app --ids --namespace --target"
+          opts="--all --app --ids --namespace --target --team-id --team-name"
         else
           opts=""
         fi
@@ -1254,7 +1286,7 @@ _rhc()
 
       "rhc member remove")
         if [[ "$cur" == -* ]]; then
-          opts="--all --ids --namespace --type"
+          opts="--all --ids --namespace --team-id --team-name --type"
         else
           opts=""
         fi
@@ -1262,7 +1294,7 @@ _rhc()
 
       "rhc member update")
         if [[ "$cur" == -* ]]; then
-          opts="--ids --namespace --role --type"
+          opts="--ids --namespace --role --team-id --team-name --type"
         else
           opts=""
         fi
@@ -1270,7 +1302,7 @@ _rhc()
 
       "rhc member-add")
         if [[ "$cur" == -* ]]; then
-          opts="--global --ids --namespace --role --type"
+          opts="--global --ids --namespace --role --team-id --team-name --type"
         else
           opts=""
         fi
@@ -1278,7 +1310,7 @@ _rhc()
 
       "rhc member-list")
         if [[ "$cur" == -* ]]; then
-          opts="--all --app --ids --namespace --target"
+          opts="--all --app --ids --namespace --target --team-id --team-name"
         else
           opts=""
         fi
@@ -1286,7 +1318,7 @@ _rhc()
 
       "rhc member-remove")
         if [[ "$cur" == -* ]]; then
-          opts="--all --ids --namespace --type"
+          opts="--all --ids --namespace --team-id --team-name --type"
         else
           opts=""
         fi
@@ -1294,7 +1326,7 @@ _rhc()
 
       "rhc member-update")
         if [[ "$cur" == -* ]]; then
-          opts="--ids --namespace --role --type"
+          opts="--ids --namespace --role --team-id --team-name --type"
         else
           opts=""
         fi
@@ -1302,7 +1334,7 @@ _rhc()
 
       "rhc members")
         if [[ "$cur" == -* ]]; then
-          opts="--all --app --ids --namespace --target"
+          opts="--all --app --ids --namespace --target --team-id --team-name"
         else
           opts=""
         fi
@@ -1350,7 +1382,7 @@ _rhc()
 
       "rhc remove-member")
         if [[ "$cur" == -* ]]; then
-          opts="--all --ids --namespace --type"
+          opts="--all --ids --namespace --team-id --team-name --type"
         else
           opts=""
         fi
@@ -1503,6 +1535,14 @@ _rhc()
       "rhc show-sshkey")
         if [[ "$cur" == -* ]]; then
           opts=""
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc show-team")
+        if [[ "$cur" == -* ]]; then
+          opts="--team-id --team-name"
         else
           opts=""
         fi
@@ -1684,6 +1724,102 @@ _rhc()
         fi
         ;;
 
+      "rhc team")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts="create show list delete leave"
+        fi
+        ;;
+
+      "rhc team create")
+        if [[ "$cur" == -* ]]; then
+          opts="--team-name"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc team delete")
+        if [[ "$cur" == -* ]]; then
+          opts="--team-id --team-name"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc team leave")
+        if [[ "$cur" == -* ]]; then
+          opts="--team-id --team-name"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc team list")
+        if [[ "$cur" == -* ]]; then
+          opts="--mine"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc team show")
+        if [[ "$cur" == -* ]]; then
+          opts="--team-id --team-name"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc team-create")
+        if [[ "$cur" == -* ]]; then
+          opts="--team-name"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc team-delete")
+        if [[ "$cur" == -* ]]; then
+          opts="--team-id --team-name"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc team-leave")
+        if [[ "$cur" == -* ]]; then
+          opts="--team-id --team-name"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc team-list")
+        if [[ "$cur" == -* ]]; then
+          opts="--mine"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc team-show")
+        if [[ "$cur" == -* ]]; then
+          opts="--team-id --team-name"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc teams")
+        if [[ "$cur" == -* ]]; then
+          opts="--mine"
+        else
+          opts=""
+        fi
+        ;;
+
       "rhc threaddump")
         if [[ "$cur" == -* ]]; then
           opts="--app --application-id --namespace"
@@ -1718,7 +1854,7 @@ _rhc()
 
       "rhc update-member")
         if [[ "$cur" == -* ]]; then
-          opts="--ids --namespace --role --type"
+          opts="--ids --namespace --role --team-id --team-name --type"
         else
           opts=""
         fi
