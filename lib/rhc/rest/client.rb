@@ -68,7 +68,11 @@ module RHC
         debug "Adding team #{name} with options #{payload.inspect}"
         @teams = nil
         payload.delete_if{ |k,v| k.nil? or v.nil? }
-        api.rest_method "ADD_TEAM", {:name => name}.merge(payload)
+        if api.supports? 'ADD_TEAM'
+          api.rest_method "ADD_TEAM", {:name => name}.merge(payload)
+        else
+          raise RHC::TeamsNotSupportedException
+        end
       end
 
       def teams(opts={})
