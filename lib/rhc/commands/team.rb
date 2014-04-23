@@ -13,7 +13,7 @@ module RHC::Commands
       is also added as a domain member individually, their effective role is the 
       higher of their individual role or their teams' roles on the domain.
 
-      To create your first team, run 'rhc create-team'.
+      To create a team, run 'rhc create-team'.
 
       To add members to an existing team, use the 'rhc add-member' command.
 

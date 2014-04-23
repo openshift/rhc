@@ -241,7 +241,7 @@ module RHC::Commands
     description <<-DESC
       Remove members from a domain by passing a user login, team name, or ID for each
       member you wish to remove.  View the list of existing members with
-        rhc members <domain_name>
+        rhc members -n <domain_name>
 
       Remove members from a team by passing a user login, or ID for each
       member you wish to remove.  View the list of existing members with

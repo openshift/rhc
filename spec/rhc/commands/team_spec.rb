@@ -14,7 +14,7 @@ describe RHC::Commands::Team do
       let(:arguments) { ['team'] }
 
       it { expect { run }.to exit_with_code(1) }
-      it { run_output.should match(/To create your first team.*rhc create-team/m) }
+      it { run_output.should match(/To create.*rhc create-team/m) }
     end
     context 'when help is shown' do
       let(:arguments) { ['team', '--noprompt', '--help'] }
