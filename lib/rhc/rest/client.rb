@@ -195,7 +195,7 @@ module RHC
 
       def precheck_team_id(team)
         raise TeamNotFoundException.new("Team not specified") if team.blank?
-        raise TeamNotFoundException.new("team #{team} not found") if ['.','..'].include?(team)
+        raise TeamNotFoundException.new("Team #{team} not found") if ['.','..'].include?(team)
       end
 
       def link_show_application_by_domain_name(domain, application, *args)
