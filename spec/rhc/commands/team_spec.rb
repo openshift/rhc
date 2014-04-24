@@ -162,6 +162,20 @@ describe RHC::Commands::Team do
       it { run_output.should match("Team with name deleteme not found") }
     end
 
+    context 'when the server does not allow deleting' do
+      before do
+        t = rest_client.add_team("dontdelete")
+        t.links.delete 'DELETE'
+        t.id = "123"
+      end
+      let(:arguments) { ['team','delete','--team-id','123'] }
+      it "should error out" do
+        expect { run }.to exit_with_code(1)
+        rest_client.teams[0].name.should == 'dontdelete'
+      end
+      it { run_output.should match(/not support/) }
+    end
+
   end
 
   describe 'help' do

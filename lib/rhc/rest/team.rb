@@ -20,6 +20,7 @@ module RHC
 
       def destroy(force=false)
         debug "Deleting team #{name} (#{id})"
+        raise RHC::OperationNotSupportedException.new("The server does not support deleting this resource.") unless supports? 'DELETE'
         rest_method "DELETE"
       end
       alias :delete :destroy
