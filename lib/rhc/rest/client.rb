@@ -64,19 +64,30 @@ module RHC
         @user ||= api.rest_method "GET_USER"
       end
 
-      def teams
-        debug "Getting all teams"
-        if link = api.link_href(:LIST_TEAMS)
-          @teams ||= api.rest_method "LIST_TEAMS"
+      def add_team(name, payload={})
+        debug "Adding team #{name} with options #{payload.inspect}"
+        @teams = nil
+        payload.delete_if{ |k,v| k.nil? or v.nil? }
+        if api.supports? 'ADD_TEAM'
+          api.rest_method "ADD_TEAM", {:name => name}.merge(payload)
         else
           raise RHC::TeamsNotSupportedException
         end
       end
 
-      def owned_teams
+      def teams(opts={})
+        debug "Getting teams you are a member of"
+        if link = api.link_href(:LIST_TEAMS)
+          @teams ||= api.rest_method("LIST_TEAMS", opts)
+        else
+          raise RHC::TeamsNotSupportedException
+        end
+      end
+
+      def owned_teams(opts={})
         debug "Getting owned teams"
         if link = api.link_href(:LIST_TEAMS_BY_OWNER)
-          @owned_teams ||= api.rest_method "LIST_TEAMS_BY_OWNER", :owner => '@self'
+          @owned_teams ||= api.rest_method("LIST_TEAMS_BY_OWNER", opts.merge({:owner => '@self'}))
         else
           raise RHC::TeamsNotSupportedException
         end
@@ -94,6 +105,35 @@ module RHC
       def search_owned_teams(search)
         debug "Searching owned teams"
         owned_teams.select{|team| team.name.downcase =~ /#{Regexp.escape(search)}/i}
+      end
+
+      def find_team(name, options={})
+        precheck_team_id(name)
+
+        matching_teams = if options[:global]
+          search_teams(name, true).select { |t| t.name == name }
+        elsif options[:owned]
+          owned_teams.select { |t| t.name == name }
+        else
+          teams.select{ |t| t.name == name }
+        end
+
+        if matching_teams.blank?
+          raise TeamNotFoundException.new("Team with name #{name} not found")
+        elsif matching_teams.length > 1
+          raise TeamNotFoundException.new("Multiple teams with name #{name} found. Use --team-id to select the team by id.")
+        else
+          matching_teams.first
+        end
+      end
+
+      def find_team_by_id(id, options={})
+        precheck_team_id(id)
+        if api.supports? :show_team
+          request(:url => link_show_team_by_id(id), :method => "GET", :payload => options)
+        else
+          teams.find{ |t| t.id == id }
+        end or raise TeamNotFoundException.new("Team with id #{id} not found")
       end
 
       #Find Domain by namespace
@@ -153,6 +193,11 @@ module RHC
         raise ApplicationNotFoundException.new("Application #{application} not found") if ['.','..'].include?(application)
       end
 
+      def precheck_team_id(team)
+        raise TeamNotFoundException.new("Team not specified") if team.blank?
+        raise TeamNotFoundException.new("Team #{team} not found") if ['.','..'].include?(team)
+      end
+
       def link_show_application_by_domain_name(domain, application, *args)
         [
           api.links['LIST_DOMAINS']['href'],
@@ -168,6 +213,10 @@ module RHC
 
       def link_show_domain_by_name(domain, *args)
         api.link_href(:SHOW_DOMAIN, ':id' => domain)
+      end
+
+      def link_show_team_by_id(id, *args)
+        api.link_href(:SHOW_TEAM, {':id' => id}, *args)
       end
 
       #Find Cartridge by name or regex
@@ -582,6 +631,8 @@ module RHC
             data.map{ |json| EnvironmentVariable.new(json, self) }
           when 'deployments'
             data.map{ |json| Deployment.new(json, self) }
+          when 'team'
+            Team.new(data, self)
           when 'teams'
             data.map{ |json| Team.new(json, self) }
           when 'member'

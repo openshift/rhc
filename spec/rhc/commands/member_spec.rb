@@ -34,6 +34,9 @@ describe RHC::Commands::Member do
       app
     end
   end
+  def with_mock_team
+    @team ||= with_mock_rest_client.add_team("mock-team-0")
+  end
 
   let(:owner){ RHC::Rest::Membership::Member.new(:id => '1', :role => 'admin', :explicit_role => 'admin', :owner => true, :login => 'alice', :type => 'user') }
   let(:other_admin){ RHC::Rest::Membership::Member.new(:id => '2', :role => 'admin', :explicit_role => 'admin', :login => 'Bob', :type => 'user') }
@@ -212,8 +215,13 @@ describe RHC::Commands::Member do
 
       context 'with an invalid type' do
         let(:arguments) { ['add-member', 'invalidteam', '-n', 'test', '--type', 'foo'] }
+        before do
+          stub_api_request(:patch, "broker/rest/domains/test/members").
+            with(:body => {:members => [{'login' => 'invalidteam', 'role' => 'edit', 'type' => 'foo'}]}).
+            to_return({:body => {:messages => [{:exit_code => 1, :field => 'type', :index => 0, :severity => 'error', :text => "Members of type foo not supported for domain. Supported types are 'user', 'team'."}]}.to_json, :status => 422})
+        end
         it { expect { run }.to exit_with_code(1) }
-        it { run_output.should =~ /Type must be/ }
+        it { run_output.should =~ /type foo not supported for domain/ }
       end
 
       context 'with an invalid team' do

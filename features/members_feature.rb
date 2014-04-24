@@ -104,7 +104,7 @@ describe "rhc member scenarios" do
         members.any?{ |m| m.id == other_users[user1].id && m.editor? }.should be_true
         members.any?{ |m| m.id == other_users[user2].id && m.editor? }.should be_true
 
-        r = rhc 'remove-member', domain.name, '--all'
+        r = rhc 'remove-member', '-n', domain.name, '--all'
         r.status.should == 0
         r.stdout.should match "Removing all members from domain.*done"
         members = client.find_domain(domain.name).members

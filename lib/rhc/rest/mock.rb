@@ -421,10 +421,12 @@ module RHC::Rest::Mock
     end
 
     def mock_client_links
-      [['GET_USER',        'user/',       'get' ],
+      mock_teams_links.concat([
+       ['GET_USER',        'user/',       'get' ],
        ['ADD_DOMAIN',      'domains/add', 'post'],
        ['LIST_DOMAINS',    'domains/',    'get' ],
-       ['LIST_CARTRIDGES', 'cartridges/', 'get' ]]
+       ['LIST_CARTRIDGES', 'cartridges/', 'get' ]
+      ])
     end
 
     def mock_real_client_links
@@ -448,6 +450,15 @@ module RHC::Rest::Mock
         ['ADD_AUTHORIZATION',   "broker/rest/user/authorizations", 'POST'],
         ['SHOW_AUTHORIZATION',  "broker/rest/user/authorizations/:id", 'GET'],
       ])
+    end
+
+    def mock_team_links(team_id='test_team')
+      [['GET',            "team/#{team_id}",          'get'    ],
+       ['ADD_MEMBER',     "team/#{team_id}/members/", 'post', {'optional_params' => [{'name' => 'id'}, {'name' => 'login'}], 'required_params' => [{'name' => 'role'}]} ],
+       ['LIST_MEMBERS',   "team/#{team_id}/update",   'get'    ],
+       ['UPDATE_MEMBERS', "team/#{team_id}/delete",   'patch', {'optional_params' => [{'name' => 'id'}, {'name' => 'login'}, {'name' => 'members'}] } ],
+       ['LEAVE',          "team/#{team_id}/delete",   'delete' ],
+       ['DELETE',         "team/#{team_id}/delete",   'delete' ]]
     end
 
     def mock_domain_links(domain_id='test_domain')
@@ -540,6 +551,7 @@ module RHC::Rest::Mock
         end
       end
       @domains = []
+      @teams = []
       @user = MockRestUser.new(self, config.username)
       @api = MockRestApi.new(self, config)
       @version = version
@@ -555,6 +567,10 @@ module RHC::Rest::Mock
 
     def domains
       @domains
+    end
+
+    def teams(opts={})
+      @teams
     end
 
     def api_version_negotiated
@@ -577,6 +593,15 @@ module RHC::Rest::Mock
        MockRestCartridge.new(self, "embcart-2", "embedded"),
        premium_embedded
       ]
+    end
+
+    def add_team(name, extra=false)
+      t = MockRestTeam.new(self, name)
+      if extra
+        t.attributes['members'] = [{'owner' => true, 'name' => 'a_user_name'}]
+      end
+      @teams << t
+      t
     end
 
     def add_domain(id, extra=false)
@@ -660,6 +685,34 @@ module RHC::Rest::Mock
     def add_key(name, type, content)
       @keys << MockRestKey.new(client, name, type, content)
     end
+  end
+
+  class MockRestTeam < RHC::Rest::Team
+    include Helpers
+    def initialize(client, name, id="123")
+      super({}, client)
+      @id = id
+      @name = name
+      @members = []
+      self.attributes = {:links => mock_response_links(mock_team_links(id))}
+    end
+
+    def destroy
+      client.teams.delete_if { |t| t.name == @name }
+    end
+
+    def init_members
+      @members ||= []
+      attributes['members'] ||= []
+      self
+    end
+
+    def add_member(member)
+      (@members ||= []) << member
+      (attributes['members'] ||= []) << member.attributes
+      self
+    end
+
   end
 
   class MockRestDomain < RHC::Rest::Domain

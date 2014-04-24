@@ -214,13 +214,13 @@ module RHC
   end
 
   class ChangeMembersOnResourceNotSupported < Exception
-    def initialize(message="You can only add or remove members on a domain.")
+    def initialize(message="You can only add or remove members on a domain or team.")
       super message, 1
     end
   end
 
   class MembersNotSupported < Exception
-    def initialize(message="The server does not support adding or removing members.")
+    def initialize(message="The server does not support adding or removing members on this resource.")
       super message, 1
     end
   end
