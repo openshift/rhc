@@ -698,6 +698,7 @@ module RHC::Rest::Mock
     end
 
     def destroy
+      raise RHC::OperationNotSupportedException.new("The server does not support deleting this resource.") unless supports? 'DELETE'
       client.teams.delete_if { |t| t.name == @name }
     end
 
