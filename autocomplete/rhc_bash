@@ -1294,7 +1294,7 @@ _rhc()
 
       "rhc member update")
         if [[ "$cur" == -* ]]; then
-          opts="--ids --namespace --role --team-id --team-name --type"
+          opts="--ids --namespace --role --type"
         else
           opts=""
         fi
@@ -1326,7 +1326,7 @@ _rhc()
 
       "rhc member-update")
         if [[ "$cur" == -* ]]; then
-          opts="--ids --namespace --role --team-id --team-name --type"
+          opts="--ids --namespace --role --type"
         else
           opts=""
         fi
@@ -1854,7 +1854,7 @@ _rhc()
 
       "rhc update-member")
         if [[ "$cur" == -* ]]; then
-          opts="--ids --namespace --role --team-id --team-name --type"
+          opts="--ids --namespace --role --type"
         else
           opts=""
         fi

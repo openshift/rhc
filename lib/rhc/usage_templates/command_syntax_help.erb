@@ -1,4 +1,15 @@
+<% if @command.syntax.is_a?(Array) -%>
+Usage
+<%= table(
+    @command.syntax.map do |s|
+      s ? [Array(program :name).first, @command.name, s] : [' ']
+    end, 
+    table_args('  ')
+  ).join("\n") %>
+
+<% else -%>
 Usage: <%= Array(program :name).first %> <%= @command.name %><%= " #{@command.syntax}" if @command.syntax %>
+<% end -%>
 <% unless @command.options.blank? or @command.options.all?{ |o| o[:hide] } -%>
 Pass '--help' to see the full list of options
 <% end -%>

@@ -1,4 +1,14 @@
+<% if @command.syntax.is_a?(Array) -%>
+Usage
+<%= table(
+		@command.syntax.map do |s|
+			s ? [Array(program :name).first, @command.name, s] : [' ']
+		end, 
+	  table_args('  ')
+	).join("\n") %>
+<% else -%>
 Usage: <%= Array(program :name).first %> <%= @command.name %> <%= @command.syntax %>
+<% end -%>
 
 <%= @command.description || @command.summary %>
 <% if @actions.blank? or @command.root? and @command.info.present? and @command.info[:method].present? -%>

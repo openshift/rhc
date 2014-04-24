@@ -25,7 +25,7 @@ module RHC::Commands
 
         To see existing members of a domain or application, use:
 
-          rhc members -n <domain_name> [-a <app_name>]
+          rhc members -n DOMAIN_NAME [-a APP_NAME]
 
         To change the role for a domain member, simply call the update-member command 
         with the new role. You cannot change the role of the owner.
@@ -45,14 +45,20 @@ module RHC::Commands
 
         To see existing members of a team, use:
 
-          rhc members -t <team_name>
+          rhc members -t TEAM_NAME
 
       DESC
     syntax "<action>"
     default_action :help
 
     summary "List members of a domain, application, or team"
-    syntax "<domain_name>[/<app_name>] [-n DOMAIN_NAME] [-a APP_NAME] [-t TEAM_NAME] [--all]"
+    syntax [
+      "<domain_name>[/<app_name>] [--all]",
+      "-n DOMAIN_NAME [--all]",
+      "-n DOMAIN_NAME -a APP_NAME [--all]",
+      nil,
+      "-t TEAM_NAME"
+    ]
     description <<-DESC
       Show the existing members of a domain, application, or team.
 
@@ -62,7 +68,7 @@ module RHC::Commands
         rhc members <domain_name>[/<app_name>]
 
       To show the members of a team, you can pass the name of the team with '-t':
-        rhc members -t <team_name>
+        rhc members -t TEAM_NAME
 
       The owner is always listed first.  To see the unique ID of members, pass '--ids'.
       DESC
@@ -122,7 +128,14 @@ module RHC::Commands
     end
 
     summary "Add a member to a domain or team"
-    syntax "(<login>... | <team name>... | <id>...) [--ids] [--type user|team] [--global] [--role view|edit|admin] (-n DOMAIN_NAME | -t TEAM_NAME)"
+    syntax [
+      "-n DOMAIN_NAME [--role view|edit|admin] <login>...",
+      "-n DOMAIN_NAME [--role view|edit|admin] <team_name>... --type team [--global]",
+      "-n DOMAIN_NAME [--role view|edit|admin] <id>... --ids [--type user|team]",
+      nil,
+      "-t TEAM_NAME <login>...",
+      "-t TEAM_NAME <id>... --ids",
+    ]
     description <<-DESC
       Domain Membership
         Add members to a domain by passing a user login, team name, or ID for each 
@@ -187,7 +200,11 @@ module RHC::Commands
     end
 
     summary "Update a member on a domain"
-    syntax "(<login>... | <team name>... | <id>...) [--ids] [--type user|team] --role view|edit|admin -n DOMAIN_NAME"
+    syntax [
+      "-n DOMAIN_NAME --role view|edit|admin <login>...",
+      "-n DOMAIN_NAME --role view|edit|admin <team_name>... --type team",
+      "-n DOMAIN_NAME --role view|edit|admin <id>... --ids [--type user|team]",
+    ]
     description <<-DESC
       Updates members on a domain by passing a user login, team name, or ID for 
       each member. You can use the 'rhc members' command to list the existing 
@@ -200,27 +217,24 @@ module RHC::Commands
                 and SSH access
         admin - can update membership of a domain
 
-      The default role granted to domain members is 'edit' - use the '--role'
-      argument for 'view' or 'admin'.
-
       Examples
-        rhc update-member bob --role view -n mydomain
+        rhc update-member -n mydomain --role view bob
           Adds or updates the user with login 'bob' to 'admin' role on mydomain
 
-        rhc update-member team1 --type team --role admin -n mydomain
+        rhc update-member -n mydomain --role admin team1 --type team
           Updates the team member with name 'team1' to the 'admin' role on mydomain
 
-        rhc update-member team1_id --type team --role admin -n mydomain --ids
+        rhc update-member -n mydomain --role admin team1_id --ids --type team
           Adds or updates the team with ID 'team1_id' to the 'admin' role on mydomain
 
       DESC
-    takes_membership_container :writable => true
+    takes_domain
     option ['--ids'], "Update member(s) by ID", :optional => true
     option ['-r', '--role ROLE'], "The role to give to each member - view, edit, or admin", :type => Role, :optional => false
     option ['--type TYPE'], "Type of member(s) being updated - user or team (default is 'user').", :optional => true
     argument :members, "A list of members (user logins, team names, or IDs) to update.  Pass --ids to treat this as a list of IDs.", [], :type => :list
     def update(members)
-      target = find_membership_container :writable => true
+      target = find_domain
       role = get_role_option(options, target)
       type = get_type_option(options)
 
@@ -237,15 +251,22 @@ module RHC::Commands
     end
 
     summary "Remove a member from a domain or team"
-    syntax "(<login>... | <team name>... | <id>...) [--ids] [--type user|team] (-n DOMAIN_NAME | -t TEAM_NAME)"
+    syntax [
+      "-n DOMAIN_NAME <login>...",
+      "-n DOMAIN_NAME <team_name>... --type team",
+      "-n DOMAIN_NAME <id>... --ids [--type user|team]",
+      nil,
+      "-t TEAM_NAME <login>...",
+      "-t TEAM_NAME <id>... --ids",
+    ]
     description <<-DESC
       Remove members from a domain by passing a user login, team name, or ID for each
       member you wish to remove.  View the list of existing members with
-        rhc members -n <domain_name>
+        rhc members -n DOMAIN_NAME
 
       Remove members from a team by passing a user login, or ID for each
       member you wish to remove.  View the list of existing members with
-        rhc members -t <team_name>
+        rhc members -t TEAM_NAME
 
       Pass '--all' to remove all members but the owner.
       DESC
