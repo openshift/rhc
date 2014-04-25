@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 module RHC::Rest::Mock
 
   def self.start
@@ -317,7 +319,18 @@ module RHC::Rest::Mock
             {:name => 'mock_standalone_cart-1', :type => 'standalone', :tags => ['cartridge'], :display_name => 'Mock1 Cart'},
             {:name => 'mock_standalone_cart-2', :type => 'standalone', :description => 'Mock2 description'},
             {:name => 'mock_embedded_cart-1', :type => 'embedded', :tags => ['scheduled'], :display_name => 'Mock1 Embedded Cart'},
-            {:name => 'premium_cart-1', :type => 'standalone', :tags => ['premium'], :display_name => 'Premium Cart', :usage_rate_usd => '0.02'},
+            {:name => 'premium_cart-1', :type => 'standalone', :tags => ['premium'], :display_name => 'Premium Cart', :usage_rate_usd => '0.02',
+              :usage_rates => {
+                "Rate" => {
+                  "usd" => 0.05,
+                  "brl" => 0.10
+                },
+                "Description" => {
+                  "en-us" => "This gear costs an additional %{currency}%{rate} per gear after the first 3 gears.",
+                  "pt-br" => "Este gear custa %{currency}%{rate} adicionais por gear após os primeiros 3 gears."
+                }
+              }
+            },
           ],
         }.to_json
       }
@@ -579,7 +592,17 @@ module RHC::Rest::Mock
 
     def cartridges
       premium_embedded = MockRestCartridge.new(self, "premium_cart", "embedded")
-      premium_embedded.usage_rate = 0.05
+      premium_embedded.instance_variable_set(:@usage_rates, {
+                "Rate" => {
+                  "eur" => 0.02,
+                  "usd" => 0.05,
+                  "brl" => 0.10
+                },
+                "Description" => {
+                  "en-us" => "This gear costs an additional %{currency}%{rate} per gear after the first 3 gears.",
+                  "pt-br" => "Este gear custa %{currency}%{rate} adicionais por gear após os primeiros 3 gears."
+                }
+              })
 
       [MockRestCartridge.new(self, "mock_cart-1", "embedded"), # code should sort this to be after standalone
        MockRestCartridge.new(self, "mock_standalone_cart-1", "standalone"),
@@ -1013,8 +1036,6 @@ module RHC::Rest::Mock
   class MockRestCartridge < RHC::Rest::Cartridge
     include Helpers
 
-    attr_accessor :usage_rate
-
     def initialize(client, name, type, app=nil, tags=[], properties=[{'type' => 'cart_data', 'name' => 'connection_url', 'value' => "http://fake.url" }], description=nil)
       super({}, client)
       @name = name
@@ -1029,7 +1050,6 @@ module RHC::Rest::Mock
       @current_scale = 1
       @gear_profile = 'small'
       @additional_gear_storage = 5
-      @usage_rate = 0.0
     end
 
     def destroy
