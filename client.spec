@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.24.0
+Version: 1.24.1
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,24 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Apr 25 2014 Adam Miller <admiller@redhat.com> 1.24.1-1
+- bump_minor_versions for sprint 44 (admiller@redhat.com)
+- Merge pull request #585 from
+  liggitt/bug_1090912_handle_global_team_delete_error
+  (dmcphers+openshiftbot@redhat.com)
+- Update autocomplete (jliggitt@redhat.com)
+- Bug 1090912: Handle attempts to delete a global team via RHC
+  (jliggitt@redhat.com)
+- Bug 1090830: Improve help and syntax help for members command
+  (jliggitt@redhat.com)
+- Review comments (jliggitt@redhat.com)
+- Typo (jliggitt@redhat.com)
+- Guard team creation with capability check (jliggitt@redhat.com)
+- Fix incorrect feature test (jliggitt@redhat.com)
+- Team management via RHC (jliggitt@redhat.com)
+- Bug 1089665: Show application members who have their membership via domain
+  (jliggitt@redhat.com)
+
 * Thu Apr 17 2014 Troy Dawson <tdawson@redhat.com> 1.23.6-1
 - Skip forking output for jruby (jliggitt@redhat.com)
 
