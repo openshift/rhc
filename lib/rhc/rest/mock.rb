@@ -89,7 +89,7 @@ module RHC::Rest::Mock
         to_return({
           :body => {
             :data => mock_response_links(authorizations ? mock_api_with_authorizations : mock_real_client_links),
-            :supported_api_versions => [1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6],
+            :supported_api_versions => [1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7],
           }.to_json
         })
     end
