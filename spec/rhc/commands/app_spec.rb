@@ -611,6 +611,28 @@ describe RHC::Commands::App do
       it { run_output.should match(/Gears:\s+1 medium/) }
     end
 
+    context 'when run with premium cartridge with single rate' do
+      before do
+        @domain = rest_client.add_domain("mockdomain")
+        app = @domain.add_application("app1", "mock_type", true)
+        cart1 = app.add_cartridge('mock_premium_cart-1')
+        cart1.usage_rates = {0.01 => []}
+      end
+      it { run_output.should match(/This cartridge costs an additional \$0.01 per gear after the first 3 gears\./) }
+    end
+
+    context 'when run with premium cartridge with multiple rates' do
+      before do
+        @domain = rest_client.add_domain("mockdomain")
+        app = @domain.add_application("app1", "mock_type", true)
+        cart1 = app.add_cartridge('mock_premium_cart-2')
+        cart1.usage_rates = {0.01 => ['plan1','plan2', 'plan3'], 0.02 => ['plan4'], 0.03 => []}
+      end
+      it { run_output.should match(/This cartridge costs an additional \$0\.01 per gear after the first 3 gears on the Plan1, Plan2 and Plan3 plans\./) }
+      it { run_output.should match(/This cartridge costs an additional \$0\.02 per gear after the first 3 gears on the Plan4 plan\./) }
+      it { run_output.should match(/This cartridge costs an additional \$0\.03 per gear after the first 3 gears\./) }
+    end
+
     context 'when run with custom app' do
       before do
         @domain = rest_client.add_domain("mockdomain")

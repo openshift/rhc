@@ -579,7 +579,7 @@ module RHC::Rest::Mock
 
     def cartridges
       premium_embedded = MockRestCartridge.new(self, "premium_cart", "embedded")
-      premium_embedded.usage_rate = 0.05
+      premium_embedded.usage_rates = {0.05 => []}
 
       [MockRestCartridge.new(self, "mock_cart-1", "embedded"), # code should sort this to be after standalone
        MockRestCartridge.new(self, "mock_standalone_cart-1", "standalone"),
@@ -1013,7 +1013,7 @@ module RHC::Rest::Mock
   class MockRestCartridge < RHC::Rest::Cartridge
     include Helpers
 
-    attr_accessor :usage_rate
+    attr_accessor :usage_rates
 
     def initialize(client, name, type, app=nil, tags=[], properties=[{'type' => 'cart_data', 'name' => 'connection_url', 'value' => "http://fake.url" }], description=nil)
       super({}, client)
@@ -1029,7 +1029,7 @@ module RHC::Rest::Mock
       @current_scale = 1
       @gear_profile = 'small'
       @additional_gear_storage = 5
-      @usage_rate = 0.0
+      @usage_rates = {}
     end
 
     def destroy

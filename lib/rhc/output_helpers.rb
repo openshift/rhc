@@ -162,7 +162,16 @@ module RHC
     end
 
     def format_usage_message(cart)
-      "This gear costs an additional $#{cart.usage_rate} per gear after the first 3 gears."
+      cart.usage_rates.map do |rate, plans|
+        plans = plans.map(&:capitalize) if plans
+        if plans && plans.length > 1
+          "This cartridge costs an additional $#{rate} per gear after the first 3 gears on the #{plans[0...-1].join(', ')} and #{plans[-1]} plans."
+        elsif plans && plans.length == 1
+          "This cartridge costs an additional $#{rate} per gear after the first 3 gears on the #{plans.first} plan."
+        else
+          "This cartridge costs an additional $#{rate} per gear after the first 3 gears."
+        end
+      end
     end
 
     def default_display_env_var(env_var_name, env_var_value=nil)
