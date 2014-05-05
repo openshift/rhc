@@ -130,6 +130,7 @@ module RHC::Commands
     def remove(cartridge)
       rest_app = find_app(:include => :cartridges)
       rest_cartridge = check_cartridges(cartridge, :from => rest_app.cartridges).first
+      external_zero_gears = external_zero_gears_cartridge?(rest_cartridge)
 
       confirm_action "Removing a cartridge is a destructive operation that may result in loss of data associated with the cartridge.\n\nAre you sure you wish to remove #{rest_cartridge.name} from '#{rest_app.name}'?"
 
@@ -138,6 +139,8 @@ module RHC::Commands
       success "removed"
 
       paragraph{ rest_cartridge.messages.each { |msg| success msg } }
+
+      paragraph{ warn 'There may be external resources or accounts associated with this external cartridge that need to be removed manually.' } if external_zero_gears
 
       0
     end
@@ -324,6 +327,10 @@ module RHC::Commands
           result.messages.each{ |s| paragraph{ say s } }
         end
         resp
+      end
+
+      def external_zero_gears_cartridge?(rest_cartridge)
+        rest_cartridge.external? && rest_cartridge.current_scale == 0
       end
   end
 end
