@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.24.1
+Version: 1.24.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,12 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon May 05 2014 Adam Miller <admiller@redhat.com> 1.24.2-1
+- Merge pull request #586 from fabianofranz/bugs/1093166-updates-rest-api-
+  to-1.7 (dmcphers+openshiftbot@redhat.com)
+- Bug 1081235: Fix RHC rate display (jliggitt@redhat.com)
+- Bug 1093166 - increases API client to version 1.7 (contact@fabianofranz.com)
+
 * Fri Apr 25 2014 Adam Miller <admiller@redhat.com> 1.24.1-1
 - bump_minor_versions for sprint 44 (admiller@redhat.com)
 - Merge pull request #585 from
