@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.24.2
+Version: 1.24.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,11 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue May 06 2014 Troy Dawson <tdawson@redhat.com> 1.24.3-1
+- Bug 1079165 - added warning when removing external cart with zero gears
+  (contact@fabianofranz.com)
+- Workaround bundler issues (contact@fabianofranz.com)
+
 * Mon May 05 2014 Adam Miller <admiller@redhat.com> 1.24.2-1
 - Merge pull request #586 from fabianofranz/bugs/1093166-updates-rest-api-
   to-1.7 (dmcphers+openshiftbot@redhat.com)
