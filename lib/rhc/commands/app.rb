@@ -116,8 +116,8 @@ module RHC::Commands
             :url => (cartridge.url if cartridge.custom?),
             :gear_size => options.gear_size || cartridge.gear_profile,
             :additional_gear_storage => (cartridge.additional_gear_storage if cartridge.additional_gear_storage > 0),
-            :scales_from => (cartridge.scales_from if cartridge.scalable?),
-            :scales_to => (cartridge.scales_to if cartridge.scalable?)
+            :scales_from => (cartridge.scales_from if scaling && cartridge.scalable?),
+            :scales_to => (cartridge.scales_to if scaling && cartridge.scalable?)
           }.reject{|k,v| v.nil? }
         end
       end

@@ -846,7 +846,7 @@ module RHC::Rest::Mock
       self.attributes = {:links => mock_response_links(mock_app_links('mock_domain_0', 'mock_app_0')), :messages => []}
       self.gear_count = 5
       types = Array(type)
-      cart = add_cartridge(types.first, false) if types.first
+      cart = add_cartridge(types.first, true) if types.first
       if scale
         cart.supported_scales_to = (cart.scales_to = -1)
         cart.supported_scales_from = (cart.scales_from = 2)
@@ -854,6 +854,7 @@ module RHC::Rest::Mock
         cart.scales_with = "haproxy-1.4"
         prox = add_cartridge('haproxy-1.4')
         prox.collocated_with = [types.first]
+        prox.tags = ['web_proxy']
       end
       types.drop(1).each{ |c| add_cartridge(c, false) }
       @framework = types.first
