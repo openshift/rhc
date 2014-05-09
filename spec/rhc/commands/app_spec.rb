@@ -490,6 +490,25 @@ describe RHC::Commands::App do
       end
     end
 
+    context 'when cloning a scalable app as not scalable' do
+      before do
+        @scaled = @domain.add_application("scaled", "mock_standalone_cart-1", true)
+        @scaled.cartridges.each do |c|
+          c.scales_from = 2
+          c.scales_to = -1
+        end
+      end
+      let(:arguments) { ['app', 'create', 'clone', '--from-app', 'scaled', '--no-git', '--no-scaling'] }
+      it "should result in only one gear" do
+        expect { run }.to exit_with_code(0)
+        @domain.applications.size.should == 3
+        @domain.applications.select{|a| a.name == 'clone'}.size.should == 1
+        @domain.applications.select{|a| a.name == 'clone'}.first.cartridges.size.should == 1
+        @domain.applications.select{|a| a.name == 'clone'}.first.cartridges.first.scales_from.should == 1
+        @domain.applications.select{|a| a.name == 'clone'}.first.cartridges.first.scales_to.should == 1
+      end
+    end
+
     context 'alias already registered' do
       let(:arguments) { ['app', 'create', 'clone', '--from-app', 'app1', '--no-git'] }
       before do 
