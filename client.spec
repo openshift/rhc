@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.25.0
+Version: 1.25.1
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,11 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri May 16 2014 Adam Miller <admiller@redhat.com> 1.25.1-1
+- When cloning app should only copy scaling factors of the cartridge if the app
+  is scalable (contact@fabianofranz.com)
+- bump_minor_versions for sprint 45 (admiller@redhat.com)
+
 * Tue May 06 2014 Troy Dawson <tdawson@redhat.com> 1.24.3-1
 - Bug 1079165 - added warning when removing external cart with zero gears
   (contact@fabianofranz.com)
