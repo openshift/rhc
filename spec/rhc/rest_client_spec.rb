@@ -3,6 +3,7 @@ require 'spec_helper'
 require 'stringio'
 require 'rest_spec_helper'
 require 'rhc/rest'
+require 'uri'
 
 module RHC
   module Rest
@@ -367,6 +368,11 @@ module RHC
               }],
               :status => 'not_found'
             }, 404)
+          end
+          it "encodes application id correctly" do
+              url = client.link_show_application_by_domain_name("~[", "~]")
+              URI.parse(url)
+              url.should == "https://test.domain.com/domains/~%5B/applications/~%5D"
           end
           it "returns application object for nested application IDs" do
               match = client.find_application(mock_domain, mock_app)

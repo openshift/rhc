@@ -422,10 +422,10 @@ module RHC::Rest::Mock
 
     def mock_client_links
       mock_teams_links.concat([
-       ['GET_USER',        'user/',       'get' ],
+       ['GET_USER',        'user',        'get' ],
        ['ADD_DOMAIN',      'domains/add', 'post'],
-       ['LIST_DOMAINS',    'domains/',    'get' ],
-       ['LIST_CARTRIDGES', 'cartridges/', 'get' ]
+       ['LIST_DOMAINS',    'domains',     'get' ],
+       ['LIST_CARTRIDGES', 'cartridges',  'get' ]
       ])
     end
 
@@ -454,7 +454,7 @@ module RHC::Rest::Mock
 
     def mock_team_links(team_id='test_team')
       [['GET',            "team/#{team_id}",          'get'    ],
-       ['ADD_MEMBER',     "team/#{team_id}/members/", 'post', {'optional_params' => [{'name' => 'id'}, {'name' => 'login'}], 'required_params' => [{'name' => 'role'}]} ],
+       ['ADD_MEMBER',     "team/#{team_id}/members",  'post', {'optional_params' => [{'name' => 'id'}, {'name' => 'login'}], 'required_params' => [{'name' => 'role'}]} ],
        ['LIST_MEMBERS',   "team/#{team_id}/update",   'get'    ],
        ['UPDATE_MEMBERS', "team/#{team_id}/delete",   'patch', {'optional_params' => [{'name' => 'id'}, {'name' => 'login'}, {'name' => 'members'}] } ],
        ['LEAVE',          "team/#{team_id}/delete",   'delete' ],
@@ -463,7 +463,7 @@ module RHC::Rest::Mock
 
     def mock_domain_links(domain_id='test_domain')
       [['ADD_APPLICATION',   "domains/#{domain_id}/apps/add", 'post', {'optional_params' => [{'name' => 'environment_variables'}, {'name' => 'cartridges[][name]'}, {'name' => 'cartridges[][url]'}]} ],
-       ['LIST_APPLICATIONS', "domains/#{domain_id}/apps/",    'get' ],
+       ['LIST_APPLICATIONS', "domains/#{domain_id}/apps",     'get' ],
        ['UPDATE',            "domains/#{domain_id}/update",   'put'],
        ['DELETE',            "domains/#{domain_id}/delete",   'post']]
     end
