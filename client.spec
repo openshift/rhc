@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.25.1
+Version: 1.25.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,11 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed May 21 2014 Adam Miller <admiller@redhat.com> 1.25.2-1
+- Bug 1095440: Ensure gears are free for scalable test (jliggitt@redhat.com)
+- Bug 1073283: Escape URI correctly (jliggitt@redhat.com)
+- Add spec test for URL encoding (jliggitt@redhat.com)
+
 * Fri May 16 2014 Adam Miller <admiller@redhat.com> 1.25.1-1
 - When cloning app should only copy scaling factors of the cartridge if the app
   is scalable (contact@fabianofranz.com)
