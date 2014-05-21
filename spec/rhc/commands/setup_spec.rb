@@ -10,6 +10,7 @@ describe RHC::Commands::Setup do
   before{ described_class.send(:public, *described_class.protected_instance_methods) }
   before{ FakeFS::FileSystem.clear }
   before{ RHC::Config.stub(:home_dir).and_return('/home/mock_user') }
+  before{ RHC::Servers.any_instance.stub(:load) }
 
   describe '#run' do
     it{ expects_running('setup').should call(:run).on(instance).with(no_args) }

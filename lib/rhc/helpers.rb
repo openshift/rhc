@@ -2,6 +2,7 @@ require 'commander/user_interaction'
 require 'rhc/version'
 require 'rhc/config'
 require 'rhc/output_helpers'
+require 'rhc/server_helpers'
 require 'rbconfig'
 
 require 'resolv'
@@ -23,6 +24,7 @@ module RHC
     include Commander::UI
     include Commander::UI::AskForClass
     include RHC::OutputHelpers
+    include RHC::ServerHelpers
 
     extend self
 
@@ -152,19 +154,10 @@ module RHC
       ROLES[s.downcase]
     end
 
-    def openshift_server
-      to_host((options.server rescue nil) || ENV['LIBRA_SERVER'] || "openshift.redhat.com")
-    end
-    def openshift_online_server?
-      openshift_server =~ /openshift.redhat.com$/i
-    end
-    def openshift_url
-      "https://#{openshift_server}"
-    end
-
     def to_host(s)
       s =~ %r(^http(?:s)?://) ? URI(s).host : s
     end
+
     def to_uri(s)
       begin
         URI(s =~ %r(^http(?:s)?://) ? s : "https://#{s}")
@@ -185,12 +178,6 @@ module RHC
     def ssh_string_parts(ssh_url)
       uri = URI.parse(ssh_url)
       [uri.host, uri.user]
-    end
-
-    def openshift_rest_endpoint
-      uri = to_uri((options.server rescue nil) || ENV['LIBRA_SERVER'] || "openshift.redhat.com")
-      uri.path = '/broker/rest/api' if uri.path.blank? || uri.path == '/'
-      uri
     end
 
     def token_for_user
@@ -350,7 +337,8 @@ module RHC
         :downloaded_cartridge_url => 'From',
         :auto_deploy     => 'Deployment',
         :sha1            => 'SHA1',
-        :ref             => 'Git Reference'
+        :ref             => 'Git Reference',
+        :use_authorization_tokens => 'Use Auth Tokens'
       })
 
       headings[value]
@@ -474,6 +462,11 @@ module RHC
         end
       end
       env_vars
+    end
+
+    def to_boolean(s, or_nil=false)
+      return nil if s.nil? && or_nil
+      s.is_a?(String) ? !!(s =~ /^(true|t|yes|y|1)$/i) : s
     end
 
     BOUND_WARNING = self.method(:warn).to_proc

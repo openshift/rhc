@@ -201,6 +201,7 @@ module RhcExecutionHelper
   def setup_args(opts={})
     c = opts[:client] || client
     args = []
+    args << (opts[:server] || ENV['RHC_SERVER'] || 'localhost')
     args << 'yes' if (ENV['TEST_INSECURE'] == '1' || false)
     args << (opts[:login] || ENV['TEST_USERNAME'])
     args << (opts[:password] || ENV['TEST_PASSWORD'])

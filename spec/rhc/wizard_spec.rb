@@ -3,6 +3,7 @@ require 'rest_spec_helper'
 require 'rhc/wizard'
 require 'rhc/vendor/parseconfig'
 require 'rhc/config'
+require 'rhc/servers'
 require 'ostruct'
 require 'rest_spec_helper'
 require 'wizard_spec_helper'
@@ -15,10 +16,12 @@ describe RHC::Wizard do
 
   def mock_config
     RHC::Config.stub(:home_dir).and_return('/home/mock_user')
+    RHC::Servers.stub(:home_dir).and_return('/home/mock_user')
   end
 
   let(:options){ (o = Commander::Command::Options.new).default(default_options); o }
   let(:config){ RHC::Config.new.tap{ |c| c.stub(:home_dir).and_return('/home/mock_user') } }
+  let(:servers){ RHC::Servers.new.tap{|c| c.stub(:home_dir).and_return('/home/mock_user') } }
   let(:default_options){ {} }
 
   describe "#finalize_stage" do
@@ -254,8 +257,8 @@ describe RHC::Wizard do
     #after{ FileUtils.rm_rf(@tmpdir) if @tmpdir }
     let(:home_dir){ '/home/mock_user' }#@tmpdir = Dir.mktmpdir }
     let(:config){ RHC::Config.new.tap{ |c| c.stub(:home_dir).and_return(home_dir) } }
-
     let(:options){ (o = Commander::Command::Options.new).default(default_options); o }
+    let(:servers){ RHC::Servers.new.tap{|c| c.stub(:home_dir).and_return(home_dir) } }
     let(:default_options){ {:server => mock_uri} }
     let(:username){ mock_user }
     let(:password){ 'password' }
@@ -282,6 +285,7 @@ describe RHC::Wizard do
 
       it "should execute the minimal path" do
         should_greet_user
+        should_configure_server(mock_uri)
         should_challenge_for(username, password)
         should_write_config
         should_create_an_ssh_keypair
@@ -297,6 +301,7 @@ describe RHC::Wizard do
         before{ subject.stub(:windows?).and_return(true) }
         it "should display windows info" do
           should_greet_user
+          should_configure_server(mock_uri)
           should_challenge_for(username, password)
           should_write_config
           should_create_an_ssh_keypair
@@ -320,6 +325,7 @@ describe RHC::Wizard do
         end
         it "should create the domain" do
           should_greet_user
+          should_configure_server(mock_uri)
           should_challenge_for(username, password)
           should_write_config
           should_create_an_ssh_keypair
@@ -335,6 +341,7 @@ describe RHC::Wizard do
         before{ stub_api_request(:get, 'broker/rest/user', :user => username, :password => 'invalid').to_return(:status => 401).times(1).to_return(simple_user(username)) }
         it "should prompt them again" do
           should_greet_user
+          should_configure_server(mock_uri)
 
           input_line username
           input_line 'invalid'
@@ -353,6 +360,7 @@ describe RHC::Wizard do
         before{ stub_one_key('a'); stub_update_key('a') }
         it "should prompt for the new key" do
           should_greet_user
+          should_configure_server(mock_uri)
           should_challenge_for(username, password)
           should_write_config
           should_create_an_ssh_keypair
@@ -378,6 +386,7 @@ describe RHC::Wizard do
         end
         it "should give the user a name the key" do
           should_greet_user
+          should_configure_server(mock_uri)
           should_challenge_for(username, password)
           should_write_config
           should_not_create_an_ssh_keypair
@@ -402,6 +411,7 @@ describe RHC::Wizard do
 
         it "should prompt for the new key" do
           should_greet_user
+          should_configure_server(mock_uri)
           should_challenge_for(username, password)
           should_write_config
           should_not_create_an_ssh_keypair
@@ -434,6 +444,7 @@ describe RHC::Wizard do
 
       it "should skip steps that have already been completed" do
         should_greet_user
+        should_configure_server(mock_uri)
         should_challenge_for(nil, password)
         should_write_config
         should_create_an_ssh_keypair
@@ -451,6 +462,7 @@ describe RHC::Wizard do
 
         it "should overwrite the config" do
           should_greet_user
+          should_configure_server(mock_uri)
           should_challenge_for(nil, password)
           should_overwrite_config
         end
@@ -548,6 +560,7 @@ describe RHC::Wizard do
 
       it "should match ssh key fallback fingerprint to net::ssh fingerprint" do
         # we need to write to a live file system so ssh-keygen can find it
+        RHC::Servers.any_instance.stub(:save!)
         FakeFS.deactivate!
         Dir.mktmpdir do |dir|
           setup_mock_ssh_keys(dir)
@@ -614,7 +627,7 @@ describe RHC::Wizard do
     attr_accessor :mock_user, :rest_client
     def initialize(*args)
       if args.empty?
-        args = [RHC::Config.new, Commander::Command::Options.new]
+        args = [RHC::Config.new, Commander::Command::Options.new, RHC::Servers.new]
         args[1].default(args[0].to_options)
       end
       super *args
@@ -745,6 +758,10 @@ EOF
     end
   end
 end
+
+  class ServerWizardDriver < RHC::Wizard
+    include WizardDriver
+  end
 
 describe RHC::DomainWizard do
   context "with a rest client" do

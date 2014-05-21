@@ -14,21 +14,26 @@ module RHC
       #:nocov:
     end
 
-    def options_parse_trace
-      if @args.include?("--trace")
-        @args.delete "--trace"
+    def delete_args(*switches)
+      if @args.any?{|i| switches.include?(i)}
+        switches.each{|switch| @args.delete switch} 
         return true
       end
       false
     end
 
-    def options_parse_debug
-      if @args.include?("-d") or @args.include?("--debug")
-        @args.delete "-d"
-        @args.delete "--debug"
-        return true
+    def delete_options(*switches)
+      Array(switches).flatten.each do |s|
+        options.delete_if{|o| o[:switches].any?{|w| w =~ /#{s}/}}
       end
-      false
+    end
+
+    def options_parse_trace
+      delete_args("--trace")
+    end
+
+    def options_parse_debug
+      delete_args("-d", "--debug")
     end
 
     def options_parse_version
@@ -126,6 +131,10 @@ module RHC
         c.description = 'Display global or <command> help documentation.'
         c.when_called(&method(:run_help))
       end
+    end
+
+    def current
+      commands[valid_command_names_from(@args).reverse.first]
     end
 
     def run_help(args=[], options=nil)

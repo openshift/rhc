@@ -11,8 +11,7 @@ class RHC::Commands::Base
 
   attr_writer :options, :config
 
-  def initialize(options=Commander::Command::Options.new,
-                 config=RHC::Config.new)
+  def initialize(options=Commander::Command::Options.new, config=RHC::Config.new)
     @options, @config = options, config
   end
 
@@ -87,12 +86,15 @@ class RHC::Commands::Base
       o = args.join(' ')
       options[:description] = o.strip_heredoc
     end
+
     def self.summary(value)
       options[:summary] = value
     end
+
     def self.syntax(value)
       options[:syntax] = value
     end
+
     #def self.deprecated(msg)
     #  options[:deprecated] = msg
     #end
@@ -158,6 +160,10 @@ class RHC::Commands::Base
       }));
     end
 
+    def self.discard_global_option(*switches)
+      discarded << {:switches => switches}
+    end
+
   private
     def self.options_metadata
       options[:options] ||= []
@@ -167,6 +173,9 @@ class RHC::Commands::Base
     end
     def self.aliases
       options[:aliases] ||= []
+    end
+    def self.discarded
+      options[:discarded] ||= []
     end
     def self.options
       @options ||= {}

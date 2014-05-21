@@ -6,9 +6,11 @@ require 'commander/command'
 module Commander
   class Command
     attr_accessor :default_action, :root, :info
+    
     def default_action?
       default_action.present?
     end
+
     def root?
       root.present?
     end
@@ -81,6 +83,8 @@ module Commander
       begin
         @config = RHC::Config.new
         @config.use_config(config_path) if config_path
+        @config.sync_additional_config
+
         $terminal.debug("Using config file #{@config.config_path}")
 
         unless clean
@@ -94,6 +98,7 @@ module Commander
             end
           end
         end
+
       rescue ArgumentError => e
         n = OptionParser::InvalidOption.new(e.message)
         n.reason = "The configuration file #{@config.path} contains an invalid setting"
@@ -203,8 +208,7 @@ module RHC
       if not (cmd.class.suppress_wizard? or
               options.noprompt or
               options.help or
-              config.has_local_config? or
-              config.has_opts_config?)
+              config.has_configs_from_files?)
 
         $stderr.puts RHC::Helpers.color("You have not yet configured the OpenShift client tools. Please run 'rhc setup'.", :yellow)
       end
@@ -217,6 +221,7 @@ module RHC
         option = instance.global_option(*args, &block).last
         option.merge!(opts)
       end
+
       commands.each_pair do |name, opts|
         name = Array(name)
         names = [name.reverse.join('-'), name.join(' ')] if name.length > 1
@@ -260,6 +265,12 @@ module RHC
             c.root = true
           end
 
+          if (discarded_metadata = Array(opts[:discarded])).any?
+            discarded_metadata.each do |discarded|
+              instance.delete_options(discarded[:switches]) if (name == instance.current.name rescue false)
+            end
+          end
+
           c.when_called do |args, options|
             deprecated!
 
@@ -269,7 +280,7 @@ module RHC
             cmd.options = options
             cmd.config = config
 
-            args = fill_arguments(cmd, options, args_metadata, options_metadata, args)
+            args = fill_arguments(cmd, options, args_metadata, options_metadata, discarded_metadata, args)
             needs_configuration!(cmd, options, config)
 
             return execute(cmd, :help, args) unless opts[:method]
@@ -285,10 +296,11 @@ module RHC
         cmd.send(method, *args)
       end
 
-      def self.fill_arguments(cmd, options, args, opts, arguments)
+      def self.fill_arguments(cmd, options, args, opts, discarded, arguments)
         # process defaults
         defaults = {}
         covers = {}
+
         (opts + args).each do |option_meta|
           arg = option_meta[:option_symbol] || option_meta[:name] || option_meta[:arg] or next
           if arg && option_meta[:type] != :list && options[arg].is_a?(Array)
@@ -317,7 +329,7 @@ module RHC
         available = arguments.dup
 
         args.each_with_index do |arg, i|
-          value = argument_to_slot(options, available, arg)
+          value = argument_to_slot(options, available, arg, discarded)
 
           if value.nil?
             if arg[:allow_nil] != true && !arg[:optional]
@@ -343,14 +355,15 @@ module RHC
         slots
       end
 
-      def self.argument_to_slot(options, available, arg)
+      def self.argument_to_slot(options, available, arg, discarded)
         if Array(arg[:covered_by]).any?{ |k| !options.__explicit__[k].nil? }
           return nil
         end
 
         option = arg[:option_symbol]
         value = options.__explicit__[option] if option
-        if value.nil?
+        if value.nil? || 
+          (discarded.present? && discarded.collect{|i| Commander::Runner.switch_to_sym(Array(i[:switches]).last)}.include?(option))
           value =
             if arg[:type] == :list
               take_leading_list(available)

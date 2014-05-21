@@ -7,6 +7,7 @@ class Object
   def present?
     !blank?
   end
+  
   def blank?
     respond_to?(:empty?) ? empty? : !self
   end
@@ -171,16 +172,10 @@ end
 
 class Hash
   def stringify_keys!
-    keys.each do |key|
-      v = delete(key)
-      if v.is_a? Hash
-        v.stringify_keys!
-      elsif v.is_a? Array
-        v.each{ |value| value.stringify_keys! if value.is_a? Hash }
-      end
-      self[(key.to_s rescue key) || key] = v
-    end
-    self
+    transform_keys!(:to_s)
+  end
+  def symbolize_keys!
+    transform_keys!(:to_sym)
   end
   def slice!(*args)
     s = []
@@ -199,4 +194,17 @@ class Hash
     # right wins if there is no left
     merge!( other_hash ){|key,left,right| left }
   end
+  protected
+    def transform_keys!(operation)
+      keys.each do |key|
+        v = delete(key)
+        if v.is_a? Hash
+          v.transform_keys!(operation)
+        elsif v.is_a? Array
+          v.each{ |value| value.transform_keys!(operation) if value.is_a? Hash }
+        end
+        self[(key.send(operation) rescue key) || key] = v
+      end
+      self
+    end
 end

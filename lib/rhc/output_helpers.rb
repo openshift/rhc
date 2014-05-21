@@ -70,6 +70,28 @@ module RHC
       display_app(rest_app, nil, [:auto_deploy, :keep_deployments, :deployment_type, :deployment_branch])
     end
 
+    def display_server(server)
+      paragraph do
+        header ["Server '#{server.nickname || server.hostname}'", ("(in use)" if server.default?)], {:color => (:green if server.default?)} do
+          section(:bottom => 1) do
+            say format_table \
+              nil,
+              get_properties(
+                server,
+                :hostname,
+                :login,
+                :use_authorization_tokens,
+                :insecure
+              ),
+              {
+                :delete => true,
+                :color => (:green if server.default?)
+              }
+          end
+        end
+      end
+    end
+
     def format_cart_header(cart)
       [
         cart.name,

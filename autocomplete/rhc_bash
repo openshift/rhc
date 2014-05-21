@@ -10,9 +10,9 @@ _rhc()
     if [[ "$cur" == -* ]]; then
       opts="--always-prefix --clean --config --debug --insecure --limit --mock --noprompt --password --raw --rhlogin --server --ssl-ca-file --ssl-client-cert-file --ssl-version --timeout --token"
     elif [ -z $cur ]; then
-      opts="account alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert app app-configure app-create app-delete app-deploy app-force-stop app-reload app-restart app-scale-down app-scale-up app-show app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all authorization-list cartridge cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage deployment deployment-activate deployment-list deployment-show domain domain-configure domain-create domain-delete domain-leave domain-list domain-rename domain-show env env-list env-set env-show env-unset git-clone logout member member-add member-list member-remove member-update port-forward scp server setup snapshot snapshot-restore snapshot-save ssh sshkey sshkey-add sshkey-list sshkey-remove sshkey-show tail team team-create team-delete team-leave team-list team-show threaddump"
+      opts="account alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert app app-configure app-create app-delete app-deploy app-force-stop app-reload app-restart app-scale-down app-scale-up app-show app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all authorization-list cartridge cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage deployment deployment-activate deployment-list deployment-show domain domain-configure domain-create domain-delete domain-leave domain-list domain-rename domain-show env env-list env-set env-show env-unset git-clone logout member member-add member-list member-remove member-update port-forward scp server server-add server-configure server-list server-remove server-show server-status server-use setup snapshot snapshot-restore snapshot-save ssh sshkey sshkey-add sshkey-list sshkey-remove sshkey-show tail team team-create team-delete team-leave team-list team-show threaddump"
     else
-      opts="account account-logout activate-deployment add-alias add-authorization add-cartridge add-member add-sshkey alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert aliases app app-configure app-create app-delete app-deploy app-env app-force-stop app-reload app-restart app-scale-down app-scale-up app-scp app-show app-snapshot app-ssh app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all authorization-list authorizations cartridge cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage cartridges configure-app configure-domain create-app create-domain create-team delete-all-authorization delete-app delete-authorization delete-cert-alias delete-domain delete-team deploy deploy-app deployment deployment-activate deployment-list deployment-show deployments domain domain-configure domain-create domain-delete domain-leave domain-list domain-rename domain-show domains env env-add env-list env-remove env-set env-show env-unset force-stop-app git-clone leave-domain leave-team list-alias list-authorization list-cartridge list-deployment list-domain list-env list-member list-sshkey list-team logout member member-add member-list member-remove member-update members port-forward reload-app reload-cartridge remove-alias remove-cartridge remove-member remove-sshkey rename-domain restart-app restart-cartridge restore-snapshot save-snapshot scale-cartridge scale-down-app scale-up-app scp server set-env setup show-app show-cartridge show-deployment show-domain show-env show-sshkey show-team snapshot snapshot-restore snapshot-save ssh sshkey sshkey-add sshkey-list sshkey-remove sshkey-show start-app start-cartridge status-cartridge stop-app stop-cartridge storage-cartridge tail team team-create team-delete team-leave team-list team-show teams threaddump tidy-app unset-env update-cert-alias update-member"
+      opts="account account-logout activate-deployment add-alias add-authorization add-cartridge add-member add-server add-sshkey alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert aliases app app-configure app-create app-delete app-deploy app-env app-force-stop app-reload app-restart app-scale-down app-scale-up app-scp app-show app-snapshot app-ssh app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all authorization-list authorizations cartridge cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage cartridges configure-app configure-domain configure-server create-app create-domain create-team delete-all-authorization delete-app delete-authorization delete-cert-alias delete-domain delete-team deploy deploy-app deployment deployment-activate deployment-list deployment-show deployments domain domain-configure domain-create domain-delete domain-leave domain-list domain-rename domain-show domains env env-add env-list env-remove env-set env-show env-unset force-stop-app git-clone leave-domain leave-team list-alias list-authorization list-cartridge list-deployment list-domain list-env list-member list-server list-sshkey list-team logout member member-add member-list member-remove member-update members port-forward reload-app reload-cartridge remove-alias remove-cartridge remove-member remove-server remove-sshkey rename-domain restart-app restart-cartridge restore-snapshot save-snapshot scale-cartridge scale-down-app scale-up-app scp server server-add server-configure server-list server-remove server-show server-status server-use servers set-env setup show-app show-cartridge show-deployment show-domain show-env show-server show-sshkey show-team snapshot snapshot-restore snapshot-save ssh sshkey sshkey-add sshkey-list sshkey-remove sshkey-show start-app start-cartridge status-cartridge status-server stop-app stop-cartridge storage-cartridge tail team team-create team-delete team-leave team-list team-show teams threaddump tidy-app unset-env update-cert-alias update-member use-server"
     fi
   else
     prev="${COMP_WORDS[@]:0:COMP_CWORD}"
@@ -79,6 +79,14 @@ _rhc()
       "rhc add-member")
         if [[ "$cur" == -* ]]; then
           opts="--global --ids --namespace --role --team-id --team-name --type"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc add-server")
+        if [[ "$cur" == -* ]]; then
+          opts="--hostname --insecure --nickname --no-insecure --no-use-authorization-tokens --rhlogin --use-authorization-tokens"
         else
           opts=""
         fi
@@ -192,7 +200,7 @@ _rhc()
         if [[ "$cur" == -* ]]; then
           opts=""
         else
-          opts="env snapshot create delete start stop scale-up scale-down force-stop restart reload tidy show deploy configure"
+          opts="create delete start stop scale-up scale-down force-stop restart reload tidy show deploy configure env snapshot"
         fi
         ;;
 
@@ -764,6 +772,14 @@ _rhc()
         fi
         ;;
 
+      "rhc configure-server")
+        if [[ "$cur" == -* ]]; then
+          opts="--hostname --insecure --nickname --no-insecure --no-use-authorization-tokens --rhlogin --server --use-authorization-tokens"
+        else
+          opts=""
+        fi
+        ;;
+
       "rhc create-app")
         if [[ "$cur" == -* ]]; then
           opts="--app --dns --enable-jenkins --env --from-app --from-code --gear-size --git --namespace --no-dns --no-git --no-keys --no-scaling --repo --scaling --type"
@@ -1236,6 +1252,14 @@ _rhc()
         fi
         ;;
 
+      "rhc list-server")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts=""
+        fi
+        ;;
+
       "rhc list-sshkey")
         if [[ "$cur" == -* ]]; then
           opts=""
@@ -1388,6 +1412,14 @@ _rhc()
         fi
         ;;
 
+      "rhc remove-server")
+        if [[ "$cur" == -* ]]; then
+          opts="--server"
+        else
+          opts=""
+        fi
+        ;;
+
       "rhc remove-sshkey")
         if [[ "$cur" == -* ]]; then
           opts=""
@@ -1472,6 +1504,126 @@ _rhc()
         if [[ "$cur" == -* ]]; then
           opts=""
         else
+          opts="status add list use remove configure show"
+        fi
+        ;;
+
+      "rhc server add")
+        if [[ "$cur" == -* ]]; then
+          opts="--hostname --insecure --nickname --no-insecure --no-use-authorization-tokens --rhlogin --use-authorization-tokens"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc server configure")
+        if [[ "$cur" == -* ]]; then
+          opts="--hostname --insecure --nickname --no-insecure --no-use-authorization-tokens --rhlogin --server --use-authorization-tokens"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc server list")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc server remove")
+        if [[ "$cur" == -* ]]; then
+          opts="--server"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc server show")
+        if [[ "$cur" == -* ]]; then
+          opts="--server"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc server status")
+        if [[ "$cur" == -* ]]; then
+          opts="--server"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc server use")
+        if [[ "$cur" == -* ]]; then
+          opts="--server"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc server-add")
+        if [[ "$cur" == -* ]]; then
+          opts="--hostname --insecure --nickname --no-insecure --no-use-authorization-tokens --rhlogin --use-authorization-tokens"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc server-configure")
+        if [[ "$cur" == -* ]]; then
+          opts="--hostname --insecure --nickname --no-insecure --no-use-authorization-tokens --rhlogin --server --use-authorization-tokens"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc server-list")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc server-remove")
+        if [[ "$cur" == -* ]]; then
+          opts="--server"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc server-show")
+        if [[ "$cur" == -* ]]; then
+          opts="--server"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc server-status")
+        if [[ "$cur" == -* ]]; then
+          opts="--server"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc server-use")
+        if [[ "$cur" == -* ]]; then
+          opts="--server"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc servers")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
           opts=""
         fi
         ;;
@@ -1527,6 +1679,14 @@ _rhc()
       "rhc show-env")
         if [[ "$cur" == -* ]]; then
           opts="--app --application-id --env --namespace --quotes --table"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc show-server")
+        if [[ "$cur" == -* ]]; then
+          opts="--server"
         else
           opts=""
         fi
@@ -1687,6 +1847,14 @@ _rhc()
       "rhc status-cartridge")
         if [[ "$cur" == -* ]]; then
           opts="--app --application-id --cartridge --namespace"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc status-server")
+        if [[ "$cur" == -* ]]; then
+          opts="--server"
         else
           opts=""
         fi
@@ -1855,6 +2023,14 @@ _rhc()
       "rhc update-member")
         if [[ "$cur" == -* ]]; then
           opts="--ids --namespace --role --type"
+        else
+          opts=""
+        fi
+        ;;
+
+      "rhc use-server")
+        if [[ "$cur" == -* ]]; then
+          opts="--server"
         else
           opts=""
         fi
