@@ -199,12 +199,15 @@ module RHC
       end
 
       def link_show_application_by_domain_name(domain, application, *args)
-        [
-          api.links['LIST_DOMAINS']['href'],
-          domain,
-          "applications",
-          application,
-        ].concat(args).map{ |s| URI.escape(s) }.join("/")
+        if link = api.link_href(:SHOW_APPLICATION_BY_DOMAIN, {':domain_name' => domain, ':name' => application}, *args)
+          link
+        else
+          # Pre-1.5 API
+          (
+            [api.links['LIST_DOMAINS']['href']] + 
+            ([domain, "applications", application] + args).map{|s| URI.escape(s, RHC::Rest::Base::URI_ESCAPE_REGEX) }
+          ).join("/")
+        end
       end
 
       def link_show_application_by_id(id, *args)
