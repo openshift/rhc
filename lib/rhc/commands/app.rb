@@ -490,6 +490,21 @@ module RHC::Commands
       0
     end
 
+    summary "Leave an application (remove your membership)"
+    syntax "<app>"
+    takes_application :argument => true
+    def leave(app_name)
+      rest_app = find_app
+
+      say "Leaving app ... "
+      result = rest_app.leave
+      success "done"
+      result.messages.each{ |s| paragraph{ say s } }
+
+      0
+    end
+
+
     private
       include RHC::GitHelpers
       include RHC::CartridgeHelpers
