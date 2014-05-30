@@ -108,8 +108,6 @@ module RHC
       end
 
       def find_team(name, options={})
-        precheck_team_id(name)
-
         matching_teams = if options[:global]
           search_teams(name, true).select { |t| t.name == name }
         elsif options[:owned]

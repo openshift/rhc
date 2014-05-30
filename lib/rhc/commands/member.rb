@@ -219,7 +219,7 @@ module RHC::Commands
 
       Examples
         rhc update-member -n mydomain --role view bob
-          Adds or updates the user with login 'bob' to 'admin' role on mydomain
+          Adds or updates the user with login 'bob' to 'view' role on mydomain
 
         rhc update-member -n mydomain --role admin team1 --type team
           Updates the team member with name 'team1' to the 'admin' role on mydomain
