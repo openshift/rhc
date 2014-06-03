@@ -40,7 +40,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency      'open4'
   s.add_development_dependency  'rake',         '>= 0.8.7'
   s.add_development_dependency  'webmock',      '< 1.12'
-  s.add_development_dependency  'rspec',        '>= 2.8.0'
+  s.add_development_dependency  'rspec',        '>= 2.8.0', '< 3.0'
   s.add_development_dependency  'fakefs',       '>= 0.4'
   s.add_development_dependency  'thor'
   s.add_development_dependency  'cucumber'
