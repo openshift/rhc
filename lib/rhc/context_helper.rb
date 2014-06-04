@@ -42,7 +42,7 @@ module RHC
             end
           end
           option ["-n", "--namespace NAME"], "Name of a domain"
-          option ["-a", "--app NAME"], "Name of an application" unless opts && opts[:writable]
+          option ["-a", "--app NAME"], "Name of an application"
           option ["-t", "--team-name NAME"], "Name of a team"
           option ["--team-id ID"], "ID of a team"
         end

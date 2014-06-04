@@ -228,13 +228,13 @@ module RHC::Commands
           Adds or updates the team with ID 'team1_id' to the 'admin' role on mydomain
 
       DESC
-    takes_domain
+    takes_membership_container :writable => true
     option ['--ids'], "Update member(s) by ID", :optional => true
     option ['-r', '--role ROLE'], "The role to give to each member - view, edit, or admin", :type => Role, :optional => false
     option ['--type TYPE'], "Type of member(s) being updated - user or team (default is 'user').", :optional => true
     argument :members, "A list of members (user logins, team names, or IDs) to update.  Pass --ids to treat this as a list of IDs.", [], :type => :list
     def update(members)
-      target = find_domain
+      target = find_membership_container
       role = get_role_option(options, target)
       type = get_type_option(options)
 

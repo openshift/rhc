@@ -893,4 +893,19 @@ describe RHC::Commands::App do
     end
 
   end
+
+  describe 'leave' do
+    before{ 
+      @domain = rest_client.add_domain("mockdomain")
+      @app = @domain.add_application("app1", "mock_type")
+    }      
+    let(:app) { @app }
+    let(:arguments) { ['app', 'leave', '-a', 'app1'] }
+
+    it "should leave the app" do
+      app.should_receive(:leave).and_return(RHC::Rest::Membership::Member.new)
+      expect { run }.to exit_with_code(0)
+    end
+  end
+
 end
