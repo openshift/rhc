@@ -135,8 +135,10 @@ module RHC
         def challenge(uri, param_str = nil)
           return false if caller.any?{ |s| s =~ /webmock.*httpclient_adapter.*build_request_signature/ }
           uri = urify(uri)
-          challenged = @challengeable[uri]
-          @challengeable[uri] = true
+          # httpclient < 2.4.0 uses @challengeable, >= 2.4.0 uses @challenge
+          challenges = @challenge || @challengeable
+          challenged = challenges[uri]
+          challenges[uri] = true
           !challenged
         end            
       end
