@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.25.2
+Version: 1.25.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Jun 09 2014 Adam Miller <admiller@redhat.com> 1.25.3-1
+- Update RHC to work with HTTPClient >= 2.4.0 (jliggitt@redhat.com)
+
 * Wed May 21 2014 Adam Miller <admiller@redhat.com> 1.25.2-1
 - Bug 1095440: Ensure gears are free for scalable test (jliggitt@redhat.com)
 - Bug 1073283: Escape URI correctly (jliggitt@redhat.com)
