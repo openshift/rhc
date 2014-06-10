@@ -160,10 +160,6 @@ class RHC::Commands::Base
       }));
     end
 
-    def self.discard_global_option(*switches)
-      discarded << {:switches => switches}
-    end
-
   private
     def self.options_metadata
       options[:options] ||= []
@@ -173,9 +169,6 @@ class RHC::Commands::Base
     end
     def self.aliases
       options[:aliases] ||= []
-    end
-    def self.discarded
-      options[:discarded] ||= []
     end
     def self.options
       @options ||= {}

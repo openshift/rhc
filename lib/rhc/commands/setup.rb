@@ -27,7 +27,7 @@ module RHC::Commands
       If you would like to enable tab-completion in Bash shells, pass
       --autocomplete for more information.
       DESC
-    option ["--server NAME"], "Hostname of an OpenShift server", :default => :server_context, :required => true
+    option ["--server HOSTNAME"], "Hostname of an OpenShift server", :default => :server_context, :required => true
     option ['--clean'], "Ignore any saved configuration options"
     option ['--[no-]create-token'], "Create an authorization token for this server"
     option ['--autocomplete'], "Instructions for enabling tab-completion"

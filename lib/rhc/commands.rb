@@ -88,8 +88,11 @@ module Commander
         $terminal.debug("Using config file #{@config.config_path}")
 
         unless clean
-          @config.to_options.each_pair do |key, value|
+          local_command_options = @options.collect{|o| Commander::Runner.switch_to_sym(o[:switches].last.split.first)}
+
+          @config.to_options.reject{|k, v| local_command_options.include?(k)}.each_pair do |key, value|            
             next if proxy_options.detect{ |arr| arr[0] == key }
+
             if sw = opts.send(:search, :long, key.to_s.gsub(/_/, '-'))
               _, cb, val = sw.send(:conv_arg, nil, value) {|*exc| raise(*exc) }
               cb.call(val) if cb
@@ -265,9 +268,13 @@ module RHC
             c.root = true
           end
 
-          if (discarded_metadata = Array(opts[:discarded])).any?
-            discarded_metadata.each do |discarded|
-              instance.delete_options(discarded[:switches]) if (name == instance.current.name rescue false)
+          overriden_metadata = []
+          if (name == instance.current.name rescue false)
+            args_metadata.each do |a|
+              a[:switches].map(&:split).map(&:first).tap do |s|
+                overriden_metadata << {:switches => s}
+                instance.delete_options(s)
+              end
             end
           end
 
@@ -280,7 +287,7 @@ module RHC
             cmd.options = options
             cmd.config = config
 
-            args = fill_arguments(cmd, options, args_metadata, options_metadata, discarded_metadata, args)
+            args = fill_arguments(cmd, options, args_metadata, options_metadata, overriden_metadata, args)
             needs_configuration!(cmd, options, config)
 
             return execute(cmd, :help, args) unless opts[:method]
@@ -296,7 +303,7 @@ module RHC
         cmd.send(method, *args)
       end
 
-      def self.fill_arguments(cmd, options, args, opts, discarded, arguments)
+      def self.fill_arguments(cmd, options, args, opts, overriden, arguments)
         # process defaults
         defaults = {}
         covers = {}
@@ -329,7 +336,7 @@ module RHC
         available = arguments.dup
 
         args.each_with_index do |arg, i|
-          value = argument_to_slot(options, available, arg, discarded)
+          value = argument_to_slot(options, available, arg, overriden)
 
           if value.nil?
             if arg[:allow_nil] != true && !arg[:optional]
@@ -355,7 +362,7 @@ module RHC
         slots
       end
 
-      def self.argument_to_slot(options, available, arg, discarded)
+      def self.argument_to_slot(options, available, arg, overriden)
         if Array(arg[:covered_by]).any?{ |k| !options.__explicit__[k].nil? }
           return nil
         end
@@ -363,7 +370,7 @@ module RHC
         option = arg[:option_symbol]
         value = options.__explicit__[option] if option
         if value.nil? || 
-          (discarded.present? && discarded.collect{|i| Commander::Runner.switch_to_sym(Array(i[:switches]).last)}.include?(option))
+          (overriden.present? && overriden.collect{|i| Commander::Runner.switch_to_sym(Array(i[:switches]).last)}.include?(option))
           value =
             if arg[:type] == :list
               take_leading_list(available)

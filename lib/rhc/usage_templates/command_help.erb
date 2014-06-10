@@ -41,7 +41,7 @@ Options
 Global Options
 <%= table(
 	  @global_options.select do |opt| 
-	  	not (opt[:hide] || @command.options.any?{ |o| (o[:switches] & opt[:switches]).present? })
+	  	not (opt[:hide] || @command.options.any?{ |o| (o[:switches].map(&:split).map(&:first) & opt[:switches].map(&:split).map(&:first)).present? })
 	  end.map do |opt| 
 	  	[opt[:switches].join(', '), opt[:description]] 
 	  end, 

@@ -86,7 +86,7 @@ _rhc()
 
       "rhc add-server")
         if [[ "$cur" == -* ]]; then
-          opts="--hostname --insecure --nickname --no-insecure --no-use-authorization-tokens --rhlogin --use-authorization-tokens"
+          opts="--insecure --nickname --no-insecure --no-use-authorization-tokens --rhlogin --server --use-authorization-tokens"
         else
           opts=""
         fi
@@ -1510,7 +1510,7 @@ _rhc()
 
       "rhc server add")
         if [[ "$cur" == -* ]]; then
-          opts="--hostname --insecure --nickname --no-insecure --no-use-authorization-tokens --rhlogin --use-authorization-tokens"
+          opts="--insecure --nickname --no-insecure --no-use-authorization-tokens --rhlogin --server --use-authorization-tokens"
         else
           opts=""
         fi
@@ -1566,7 +1566,7 @@ _rhc()
 
       "rhc server-add")
         if [[ "$cur" == -* ]]; then
-          opts="--hostname --insecure --nickname --no-insecure --no-use-authorization-tokens --rhlogin --use-authorization-tokens"
+          opts="--insecure --nickname --no-insecure --no-use-authorization-tokens --rhlogin --server --use-authorization-tokens"
         else
           opts=""
         fi

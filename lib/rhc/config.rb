@@ -129,8 +129,8 @@ module RHC
       @default_proxy = nil
 
       @defaults.add('insecure', false)
-
       @defaults.add('libra_server', openshift_online_server)
+
       @env_config.add('libra_server', libra_server_env) if libra_server_env
       @env_config.add('libra_server', rhc_server_env) if rhc_server_env
 
@@ -180,7 +180,7 @@ module RHC
       configs = configs_cascade
       result = nil
       c = nil
-      configs.each do |conf|
+      configs.each_with_index do |conf, i|
         result = conf[key] if !conf.nil?
         c = conf
         break if !result.nil?

@@ -39,7 +39,6 @@ module RHC::Commands
       When connected to an OpenShift Enterprise or Origin server, will only display
       the version of the API that it is connecting to.
       DESC
-    discard_global_option "--server"
     argument :server, "Server hostname or nickname to check. If not provided the default server will be used.", ["--server SERVER"], :optional => true
     def status(server=nil)
       options.server = server.hostname if server && server = (server_configs.find(server) rescue nil)
@@ -73,14 +72,12 @@ module RHC::Commands
     summary "Add a new server"
     description <<-DESC
       Add and configure a new OpenShift server that will be available to 
-      use through the rhc commands.
+      use through rhc commands.
       When adding a new server users can optionally provide a 'nickname'
-      that will allow to easily switch and identify servers. 
+      that will allow to easily switch between servers. 
       DESC
     syntax "<hostname> [<nickname>] [--rhlogin LOGIN] [--[no-]use-authorization-tokens] [--[no-]insecure]"
-    discard_global_option "--server"
-    discard_global_option "-l", "--rhlogin"
-    argument :hostname, "Hostname of the server you are adding", ["--hostname HOSTNAME"]
+    argument :hostname, "Hostname of the server you are adding", ["--server HOSTNAME"]
     argument :nickname, "Optionally provide a nickname to the server you are adding (e.g. 'development', 'production', 'online')", ["--nickname NICKNAME"], :optional => true
     option ["-l", "--rhlogin LOGIN"], "Change the default OpenShift login used on this server"
     option ["--[no-]use-authorization-tokens"], "Server will attempt to create and use authorization tokens to connect to the server"
@@ -123,7 +120,6 @@ module RHC::Commands
 
     summary "Fast switch to change the default server"
     syntax "<server>"
-    discard_global_option "--server"
     argument :server, "Server hostname or nickname to use", ["--server SERVER"]
     def use(server)
       server = server_configs.find(server)
@@ -138,7 +134,6 @@ module RHC::Commands
 
     summary "Remove a server"
     syntax "<server>"
-    discard_global_option "--server"
     argument :server, "Server hostname or nickname to be removed", ["--server SERVER"]
     def remove(server)
       server = server_configs.find(server)
@@ -158,8 +153,6 @@ module RHC::Commands
 
     summary "Update server attributes"
     syntax "<server> [--hostname HOSTNAME] [--nickname NICKNAME] [--rhlogin LOGIN] [--[no-]use-authorization-tokens] [--[no-]insecure]"
-    discard_global_option "--server"
-    discard_global_option "-l", "--rhlogin"
     argument :server, "Server hostname or nickname to be configured", ["--server SERVER"]
     option ["--hostname HOSTNAME"], "Change the hostname of this server"
     option ["--nickname NICKNAME"], "Change the nickname of this server"
@@ -169,28 +162,24 @@ module RHC::Commands
     def configure(server)
       server = server_configs.find(server)
 
-      hostname = options.__explicit__[:hostname]
-      rhlogin = options.__explicit__[:rhlogin]
-      use_authorization_tokens = options.__explicit__[:use_authorization_tokens]
-      insecure = options.__explicit__[:insecure]
-      nickname = options.__explicit__[:nickname]
+      hostname = options.hostname || server.hostname
+      rhlogin = options.rhlogin || server.login
+      use_authorization_tokens = options.use_authorization_tokens.nil? ? server.use_authorization_tokens : options.use_authorization_tokens
+      insecure = options.insecure.nil? ? server.insecure : options.insecure
+      nickname = options.nickname || server.nickname
 
       say "Updating configuration of server '#{server.hostname}' ... "
       server = server_configs.update(server.hostname, 
-        :hostname => hostname || server.hostname, 
-        :nickname => nickname || server.nickname, 
-        :login => rhlogin || server.login, 
-        :use_authorization_tokens => use_authorization_tokens || server.use_authorization_tokens, 
-        :insecure => insecure || server.insecure)
+        :hostname => hostname, 
+        :nickname => nickname, 
+        :login => rhlogin, 
+        :use_authorization_tokens => use_authorization_tokens, 
+        :insecure => insecure)
       server_configs.save!
       success "done"
 
-      unless [hostname, rhlogin, use_authorization_tokens, insecure].all? {|x| x.nil?}
-        wizard_to_server(
-          hostname || server.hostname, 
-          rhlogin || server.login, 
-          use_authorization_tokens || server.use_authorization_tokens, 
-          insecure || server.insecure)
+      unless [options.hostname, options.rhlogin, options.use_authorization_tokens, options.insecure].all? {|x| x.nil?}
+        wizard_to_server(hostname, rhlogin, use_authorization_tokens, insecure)
       end
 
       paragraph{ say display_server(server) }
@@ -199,7 +188,6 @@ module RHC::Commands
 
     summary "Display the configuration of the given server"
     syntax "<server>"
-    discard_global_option "--server"
     argument :server, "Server hostname or nickname to be displayed", ["--server SERVER"]
     def show(server)
       server = server_configs.find(server)

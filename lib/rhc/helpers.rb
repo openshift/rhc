@@ -110,7 +110,7 @@ module RHC
 
     global_option '-d', '--debug', "Turn on debugging", :hide => true
 
-    global_option '--server NAME', String, 'An OpenShift server hostname (default: openshift.redhat.com)'
+    global_option '--server HOSTNAME', String, 'An OpenShift server hostname (default: openshift.redhat.com)'
     global_option '-k', '--insecure', "Allow insecure SSL connections.  Potential security risk.", :hide => true
 
     global_option '--limit INTEGER', Integer, "Maximum number of simultaneous operations to execute.", :hide => true

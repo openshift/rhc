@@ -24,7 +24,7 @@ module RHC
 
     def delete_options(*switches)
       Array(switches).flatten.each do |s|
-        options.delete_if{|o| o[:switches].any?{|w| w =~ /#{s}/}}
+        options.delete_if{|o| o[:switches].any?{|w| w =~ /^#{s}$/}}
       end
     end
 
