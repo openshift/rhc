@@ -7,10 +7,10 @@ module RHC::Commands
     summary "Manage your configured servers and check the status of services"
     description <<-DESC
       The 'rhc server' commands allow users to add multiple OpenShift
-      servers to interact through the rhc commands and easily switch between
+      servers to interact with the rhc commands and easily switch between
       them.
 
-      For example, if an user's company have installations of OpenShift Origin 
+      For example, if an user's company has installations of OpenShift Origin 
       (development) and Enterprise (production) and the user also has a personal
       OpenShift Online account:
 
@@ -18,7 +18,7 @@ module RHC::Commands
         rhc server add origin.openshift.mycompany.com development -l user@company.com
         rhc server add enterprise.openshift.mycompany.com production  -l user@company.com
 
-      Then to switch between the servers:
+      Then, to switch between the servers:
 
         rhc server use online
         rhc server use development
@@ -116,7 +116,7 @@ module RHC::Commands
       paragraph do 
         case servers.length
         when 0
-          warn "You don't have servers configured. Use 'rhc setup' to configure your OpenShift server."
+          warn "You don't have any servers configured. Use 'rhc setup' to configure your OpenShift server."
         when 1
           say "You have 1 server configured. Use 'rhc server add' to add a new server."
         else
@@ -176,21 +176,23 @@ module RHC::Commands
       insecure = options.insecure.nil? ? server.insecure : options.insecure
       nickname = options.nickname || server.nickname
 
-      say "Updating configuration of server '#{server.hostname}' ... "
+      raise RHC::ServerNicknameExistsException.new(options.nickname) if options.nickname && server_configs.nickname_exists?(options.nickname) && server_configs.find(options.nickname).hostname != server.hostname
+
       server = server_configs.update(server.hostname, 
         :hostname => hostname, 
         :nickname => nickname, 
         :login => rhlogin, 
         :use_authorization_tokens => use_authorization_tokens, 
         :insecure => insecure)
-      server_configs.save!
-      success "done"
 
       unless [options.hostname, options.rhlogin, options.use_authorization_tokens, options.insecure].all? {|x| x.nil?}
         wizard_to_server(hostname, rhlogin, use_authorization_tokens, insecure)
       end
 
+      server_configs.save!
+
       paragraph{ say display_server(server) }
+      paragraph { success "Now using '#{server.hostname}'" }
       0
     end
 

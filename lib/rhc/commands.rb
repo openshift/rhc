@@ -90,7 +90,8 @@ module Commander
         unless clean
           local_command_options = @options.collect{|o| Commander::Runner.switch_to_sym(o[:switches].last.split.first)}
 
-          @config.to_options.reject{|k, v| local_command_options.include?(k)}.each_pair do |key, value|            
+          @config.to_options.each_pair do |key, value|  
+            next if local_command_options.include?(key)          
             next if proxy_options.detect{ |arr| arr[0] == key }
 
             if sw = opts.send(:search, :long, key.to_s.gsub(/_/, '-'))

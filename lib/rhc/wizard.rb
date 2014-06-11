@@ -172,15 +172,16 @@ module RHC
     end
 
     def server_stage
-      # TODO: should not ask if server was provided as an option
       paragraph do 
-        say "If you have your own OpenShift server, you can specify it now. Just hit enter to use#{openshift_online_server? ? ' the server for OpenShift Online' : ''}: #{openshift_server}."
-        options.server = ask "Enter the server hostname: " do |q|
-          q.default = openshift_server
-          q.responses[:ask_on_error] = ''
+        unless options.__explicit__[:server]
+          say "If you have your own OpenShift server, you can specify it now. Just hit enter to use#{openshift_online_server? ? ' the server for OpenShift Online' : ''}: #{openshift_server}."
+          options.server = ask "Enter the server hostname: " do |q|
+            q.default = openshift_server
+            q.responses[:ask_on_error] = ''
+          end
+          paragraph{ say "You can add more servers later using 'rhc server'." }
         end
       end
-      paragraph{ say "You can add more servers later using 'rhc server'." }
       true
     end
 

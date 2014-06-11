@@ -86,7 +86,7 @@ describe RHC::Commands::Server do
     context "without express.conf or servers.yml" do
       let(:arguments) { ['servers'] }
       it 'should output correctly' do 
-        run_output.should =~ /You don't have servers configured\. Use 'rhc setup' to configure your OpenShift server/
+        run_output.should =~ /You don't have any servers configured\. Use 'rhc setup' to configure your OpenShift server/
       end
       it { expect { run }.to exit_with_code(0) }
     end
@@ -367,7 +367,6 @@ describe RHC::Commands::Server do
         local_config
         stub_servers_yml
       end
-      it { run_output.should =~ /Updating configuration of server '#{server}'.*done/ }
       it { run_output.should =~ /Saving server configuration to.*servers\.yml.*done/ }
       it { run_output.should =~ /Saving configuration to.*express\.conf.*done/ }
       it { run_output.should =~ /Using an existing token for #{local_config_server_new_username} to login to #{server}/ }
@@ -375,6 +374,7 @@ describe RHC::Commands::Server do
       it { run_output.should =~ /Hostname:\s+#{server}/ }
       it { run_output.should =~ /Login:\s+#{local_config_server_new_username}/ }
       it { run_output.should =~ /Insecure:\s+true/ }
+      it { run_output.should =~ /Now using '#{server}'/ }
       it { expect { run }.to exit_with_code(0) }
     end
 

@@ -48,7 +48,7 @@ module RHC
     end
 
     def <=>(other)
-      [nickname || hostname] <=> [other.nickname || other.hostname]
+      designation <=> other.designation
     end
 
   end
@@ -82,16 +82,15 @@ module RHC
     end
 
     def update(server, args={})
-      if server = find(server) rescue nil
+      find(server).tap do |s|
         args.each do |k, v|
-          server.send("#{k}=", v) unless v.nil?
+          s.send("#{k}=", v) unless v.nil?
         end
       end
-      server
     end
 
     def add_or_update(hostname, args={})
-      update(hostname, args) || add(hostname, args)
+      update(hostname, args) rescue add(hostname, args)
     end
 
     def remove(server)
@@ -104,6 +103,19 @@ module RHC
 
     def find(server)
       exists?(server).tap{|s| raise RHC::ServerNotConfiguredException.new(server) unless s }
+    end
+
+    def nickname_exists?(nickname)
+      list.select{|s| s.nickname.present? && s.nickname == nickname}.first
+    end
+
+    def hostname_exists?(hostname)
+      hostname = to_host(hostname)
+      list.select{|s| s.hostname == hostname}.first
+    end
+
+    def exists?(server)
+      hostname_exists?(server) || nickname_exists?(server)
     end
 
     def default
@@ -140,19 +152,6 @@ module RHC
         (YAML.load_file(path) || [] rescue []).collect do |e|
           Server.from_yaml_hash e['server']
         end
-      end
-
-      def nickname_exists?(nickname)
-        list.select{|s| s.nickname.present? && s.nickname == nickname}.first
-      end
-
-      def hostname_exists?(hostname)
-        hostname = to_host(hostname)
-        list.select{|s| s.hostname == hostname}.first
-      end
-
-      def exists?(server)
-        hostname_exists?(server) || nickname_exists?(server)
       end
   end
 end
