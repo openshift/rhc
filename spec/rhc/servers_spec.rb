@@ -118,6 +118,7 @@ describe RHC::Servers do
           v.add('libra_server', 'openshift.server.com')
           v.add('default_rhlogin', 'user3')
         end)
+        c.stub(:has_configs_from_files?).and_return(true)
         subject.sync_from_config(c) 
       end
       it { subject.list.length.should == 1 }

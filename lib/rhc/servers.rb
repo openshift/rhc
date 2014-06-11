@@ -111,7 +111,7 @@ module RHC
     end
 
     def sync_from_config(config)
-      unless config.nil?
+      unless config.nil? || !config.has_configs_from_files?
         o = config.to_options
         add_or_update(
           o[:server], 

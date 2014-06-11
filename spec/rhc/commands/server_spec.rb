@@ -154,12 +154,17 @@ describe RHC::Commands::Server do
 
   describe "server show" do
     context "from express.conf" do
+      let(:local_config_username){ 'local_config_user' }
+      let(:local_config_password){ 'password' }
+      let(:local_config_server){ 'openshift.redhat.com' }
+      before do 
+        local_config
+      end
       let(:arguments) { ['server', 'show', 'online'] }
-      before{ user_config }
       it 'should output correctly' do 
         run_output.should =~ /Server 'online' \(in use\)/
         run_output.should =~ /Hostname:\s+openshift.redhat.com/
-        run_output.should =~ /Login:\s+test_user/
+        run_output.should =~ /Login:\s+local_config_user/
       end
       it { expect { run }.to exit_with_code(0) }
     end
@@ -252,6 +257,23 @@ describe RHC::Commands::Server do
       end
       it { run_output.should =~ /Using an existing token for #{username} to login to #{server}/ }
       it { run_output.should =~ /Saving configuration to.*express\.conf.*done/ }
+      it { run_output.should =~ /Saving server configuration to.*servers\.yml.*done/ }
+      it { expect { run }.to exit_with_code(0) }
+    end
+
+    context "with existing express.conf and servers.yml and adding a new mock server" do
+      let(:server){ 'openshift.server.com' }
+      let(:username){ 'user3' }
+      let(:server_name){ 'server3' }
+      let(:local_config_server){ 'local.server.com' }
+      let(:local_config_username){ 'local_username' }
+      let(:arguments) { ['server', 'add', server, server_name, '-l', username, '--skip-wizard'] }
+      before do
+        local_config
+        stub_servers_yml(2)
+      end
+      it { run_output.should_not =~ /Using an existing token for #{username} to login to #{server}/ }
+      it { run_output.should_not =~ /Saving configuration to.*express\.conf.*done/ }
       it { run_output.should =~ /Saving server configuration to.*servers\.yml.*done/ }
       it { expect { run }.to exit_with_code(0) }
     end

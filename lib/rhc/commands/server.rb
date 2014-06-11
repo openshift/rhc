@@ -82,18 +82,26 @@ module RHC::Commands
     option ["-l", "--rhlogin LOGIN"], "Change the default OpenShift login used on this server"
     option ["--[no-]use-authorization-tokens"], "Server will attempt to create and use authorization tokens to connect to the server"
     option ["--[no-]insecure"], "If true, certificate errors will be ignored"
+    option ["--skip-wizard"], "If true, wizard will be skipped and a session token will not be estabilished"
     def add(hostname, nickname)
       server = server_configs.add(hostname, 
         :nickname => nickname, 
-        :login => options.login, 
+        :login => options.rhlogin, 
         :use_authorization_tokens => options.use_authorization_tokens, 
         :insecure => options.insecure)
 
-      wizard_to_server(
-        server.hostname, 
-        server.login, 
-        server.use_authorization_tokens, 
-        server.insecure) ? 0 : 1
+      unless options.skip_wizard
+        wizard_to_server(
+          server.hostname, 
+          server.login, 
+          server.use_authorization_tokens, 
+          server.insecure) ? 0 : 1
+      else
+        say "Saving server configuration to #{system_path(server_configs.path)} ... "
+        server_configs.save!
+        success "done"
+        0
+      end
     end
 
     summary "List all configured servers"
