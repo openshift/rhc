@@ -81,7 +81,11 @@ module RHC
                 :hostname,
                 :login,
                 :use_authorization_tokens,
-                :insecure
+                :insecure,
+                :timeout,
+                :ssl_version, 
+                :ssl_client_cert_file, 
+                :ssl_ca_file
               ),
               {
                 :delete => true,

@@ -53,7 +53,7 @@ module RHC
     # Option name     [config_key      type           comment_string_for_config]
     #                  if nil, == key  nil == string  won't be written to file if nil
     OPTIONS = {
-      :server                   => ['libra_server',    nil,           'The OpenShift server to connect to'],
+      :server                   => ['libra_server',    nil,           'The default OpenShift server to connect to'],
       :rhlogin                  => ['default_rhlogin', nil,           'Your OpenShift login name'],
       :password                 => nil,
       :use_authorization_tokens => [nil,               :boolean,      'If true, the server will attempt to create and use authorization tokens to connect to the server'],
@@ -73,7 +73,8 @@ module RHC
         arr << "#{value.nil? ? '#' : ''}#{opts[0] || name}=#{self.type_to_config(opts[1], value)}"
         arr << ""
         arr
-      end.join("\n")
+      end.unshift(args.nil? || args.length < OPTIONS.length ? 
+        ["# Check servers.yml for detailed server configuration", ""] : nil).flatten.compact.join("\n")
     end
 
     def self.type_to_config(type, value)
@@ -167,7 +168,7 @@ module RHC
       File.open(path, 'w') do |f| 
         f.puts self.class.options_to_config(
           options, 
-          all_options ? nil : [:server, :timeout, :ssl_version, :ssl_client_cert_file, :ssl_ca_file]
+          all_options ? nil : [:server]
         )
       end
       @opts, @opts_config, @env_config, @additional_config, @local_config, @global_config = nil

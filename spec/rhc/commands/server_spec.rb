@@ -213,7 +213,7 @@ describe RHC::Commands::Server do
       let(:local_config_server){ 'local.server.com' }
       let(:local_config_username){ 'local_username' }
       let(:token){ 'an_existing_token' }
-      let(:arguments) { ['server', 'add', server, 'server1', '-l', username, '--use-authorization-tokens', '--no-insecure', '--token', token] }
+      let(:arguments) { ['server', 'add', server, '-l', username, '--use-authorization-tokens', '--no-insecure', '--token', token] }
       subject{ RHC::ServerWizard.new(config, options, servers) }
       before(:each) do
         RHC::Servers.any_instance.stub(:save!)

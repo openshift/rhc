@@ -6,7 +6,10 @@ require 'rhc/server_helpers'
 module RHC
   class Server
     include RHC::ServerHelpers
-    attr_accessor :hostname, :nickname, :login, :use_authorization_tokens, :insecure, :default
+    attr_accessor :hostname, :nickname, :login 
+    attr_accessor :use_authorization_tokens, :insecure, :timeout
+    attr_accessor :ssl_version, :ssl_client_cert_file, :ssl_ca_file
+    attr_accessor :default
 
     def self.from_yaml_hash(hash)
       hash.symbolize_keys!
@@ -15,10 +18,14 @@ module RHC
 
     def initialize(hostname, args={})
       @hostname = RHC::Helpers.to_uri(hostname).host
-      @nickname = args[:nickname].nil? && @hostname =~ openshift_online_server_regex ? 'online' : args[:nickname] 
+      @nickname = args[:nickname]
       @login = args[:login]
       @use_authorization_tokens = RHC::Helpers.to_boolean(args[:use_authorization_tokens], true)
       @insecure = RHC::Helpers.to_boolean(args[:insecure], true)
+      @timeout = Integer(args[:timeout]) if args[:timeout].present?
+      @ssl_version = args[:ssl_version]
+      @ssl_client_cert_file = args[:ssl_client_cert_file]
+      @ssl_ca_file = args[:ssl_ca_file]
       @default = args[:default]
     end
 
@@ -50,7 +57,6 @@ module RHC
     def <=>(other)
       designation <=> other.designation
     end
-
   end
 
   class Servers
@@ -77,6 +83,8 @@ module RHC
     def add(hostname, args={})
       raise RHC::ServerHostnameExistsException.new(hostname) if hostname_exists?(hostname)
       raise RHC::ServerNicknameExistsException.new(args[:nickname]) if args[:nickname] && nickname_exists?(args[:nickname])
+
+      args[:nickname] = suggest_server_nickname(to_host(hostname)) unless args[:nickname].present?
 
       Server.new(hostname, args).tap{ |server| @servers << server }
     end
@@ -127,10 +135,13 @@ module RHC
         o = config.to_options
         add_or_update(
           o[:server], 
-          :nickname                 => o[:server] =~ openshift_online_server_regex ? 'online' : nil, 
           :login                    => o[:rhlogin], 
           :use_authorization_tokens => o[:use_authorization_tokens],
-          :insecure                 => o[:insecure])
+          :insecure                 => o[:insecure],
+          :timeout                  => o[:timeout],
+          :ssl_version              => o[:ssl_version],
+          :ssl_client_cert_file     => o[:ssl_client_cert_file],
+          :ssl_ca_file              => o[:ssl_ca_file])
         list.each{|server| server.default = server.hostname == o[:server]}
       end
     end
@@ -152,6 +163,19 @@ module RHC
         (YAML.load_file(path) || [] rescue []).collect do |e|
           Server.from_yaml_hash e['server']
         end
+      end
+
+      def suggest_server_nickname(hostname)
+        suggestion = (case hostname
+        when openshift_online_server_regex
+          'online'
+        when /^(.*)\.#{openshift_online_server.gsub(/\./, '\.')}$/i
+          $1
+        else
+          'server' + ((list.compact.map{|i| i.match(/^server(\d+)$/)}.compact.map{|i| i[1]}.map(&:to_i).max + 1).to_s rescue '1')
+        end)
+        s = nickname_exists?(suggestion)
+        s.present? && s.hostname != hostname ? nil : suggestion
       end
   end
 end

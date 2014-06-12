@@ -22,12 +22,6 @@ module RHC
       false
     end
 
-    def delete_options(*switches)
-      Array(switches).flatten.each do |s|
-        options.delete_if{|o| o[:switches].any?{|w| w =~ /^#{s}$/}}
-      end
-    end
-
     def options_parse_trace
       delete_args("--trace")
     end
@@ -131,10 +125,6 @@ module RHC
         c.description = 'Display global or <command> help documentation.'
         c.when_called(&method(:run_help))
       end
-    end
-
-    def current
-      commands[valid_command_names_from(@args).reverse.first]
     end
 
     def run_help(args=[], options=nil)

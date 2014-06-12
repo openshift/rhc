@@ -269,9 +269,13 @@ module RHC
 
           servers.backup
           servers.add_or_update(options.server, 
-            :login => options.rhlogin, 
+            :login                    => options.rhlogin, 
             :use_authorization_tokens => options.use_authorization_tokens,
-            :insecure => options.insecure)
+            :insecure                 => options.insecure,
+            :timeout                  => options.timeout,
+            :ssl_version              => options.ssl_version,
+            :ssl_client_cert_file     => options.ssl_client_cert_file,
+            :ssl_ca_file              => options.ssl_ca_file)
           servers.save!
 
           success "done"

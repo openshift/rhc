@@ -57,6 +57,20 @@ describe RHC::Servers do
       it { subject.find('another').use_authorization_tokens.should == false }
     end
 
+    context "when suggesting a nickname for unknown server" do
+      before{ subject.add('another.server.com') }
+      it { subject.find('server1').should be_true }
+      it { subject.find('another.server.com').should be_true }
+      it { subject.find('another.server.com').nickname.should == 'server1' }
+    end
+
+    context "when suggesting a nickname for an openshift subdomain" do
+      before{ subject.add('some.openshift.redhat.com') }
+      it { subject.find('some').should be_true }
+      it { subject.find('some.openshift.redhat.com').should be_true }
+      it { subject.find('some.openshift.redhat.com').nickname.should == 'some' }
+    end
+
     context "when adding an existing server" do
       it "should error accordingly" do
         expect { subject.add('openshift.server.com') }.to raise_exception(RHC::ServerHostnameExistsException)
@@ -156,7 +170,7 @@ describe RHC::Servers do
     end
 
     context "when openshift online" do
-      let(:server){ RHC::Server.from_yaml_hash({'hostname' => 'https://openshift.redhat.com'}) }
+      let(:server){ RHC::Server.from_yaml_hash({'hostname' => 'https://openshift.redhat.com', 'nickname' => 'online'}) }
       it { server.hostname.should == 'openshift.redhat.com' }
       it { server.nickname.should == 'online' }
       it { server.designation.should == 'online' }

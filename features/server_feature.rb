@@ -9,7 +9,7 @@ describe "rhc server scenarios" do
 
     it "should list the default server" do
       r = ensure_command 'servers'
-      r.stdout.should match /Server '#{server}' \(in use\)/
+      r.stdout.should match /Server 'server1' \(in use\)/
       r.stdout.should match /Hostname:\s+#{server}/
       r.stdout.should match /Login:\s+#{rhlogin}/
       r.stdout.should match /Use Auth Tokens:\s+true/
@@ -20,8 +20,8 @@ describe "rhc server scenarios" do
     it "should and and remove servers" do
       should_add_mock_servers(2)
       should_list_servers(3)
-      should_remove_server('server1')
-      should_remove_server('server2')
+      should_remove_server('mock1')
+      should_remove_server('mock2')
       should_list_servers(1)
     end
   end
@@ -29,11 +29,8 @@ describe "rhc server scenarios" do
   context "with a clean configuration" do
     before(:all){ use_clean_config }
 
-    it "should not list any server" do
-      should_list_servers(0)
-    end
-
     it "should add one working server" do
+      should_list_servers(0)
       should_add_working_server
       should_list_servers(1)
     end
@@ -60,7 +57,7 @@ describe "rhc server scenarios" do
       Array(1..quantity).each do |i|
         new_server = "foo#{i}.openshift.com"
         new_user = "user#{i}"
-        new_nickname = "server#{i}"
+        new_nickname = "mock#{i}"
 
         r = ensure_command 'server', 'add', new_server, new_nickname, '-l', new_user, '--skip-wizard'
         r.stdout.should match /Saving server configuration to .*servers\.yml .* done/
@@ -73,13 +70,12 @@ describe "rhc server scenarios" do
     end
 
     def should_add_working_server
-      nickname = 'localhost'
-      r = rhc 'server', 'add', server, nickname, '-l', rhlogin, '--insecure', :with => ['password', 'yes']
+      r = rhc 'server', 'add', server, '-l', rhlogin, '--insecure', :with => ['password', 'yes']
       r.stdout.should match /Saving configuration to .*express\.conf .* done/
       r.status.should == 0
 
       r = ensure_command 'servers'
-      r.stdout.should match /Server '#{nickname}' \(in use\)/
+      r.stdout.should match /Server 'server1' \(in use\)/
       r.stdout.should match /Hostname:\s+#{server}/
       r.stdout.should match /Login:\s+#{rhlogin}/
       r.stdout.should match /Use Auth Tokens:\s+true/

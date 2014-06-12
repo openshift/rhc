@@ -17,7 +17,7 @@ module RHC
     end
 
     def openshift_online_server_regex
-      /^#{openshift_online_server}$/i
+      /^#{openshift_online_server.gsub(/\./, '\.')}$/i
     end
 
     def openshift_url
