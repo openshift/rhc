@@ -163,7 +163,7 @@ describe "rhc core scenarios" do
     context "with a scalable app" do
       before(:each) do
         standard_config
-        has_gears_available(1)
+        has_gears_available(2) # 1 for the app create, 1 for the scale
         @app = has_a_scalable_application
       end
 
