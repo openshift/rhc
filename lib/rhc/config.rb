@@ -73,7 +73,7 @@ module RHC
         arr << "#{value.nil? ? '#' : ''}#{opts[0] || name}=#{self.type_to_config(opts[1], value)}"
         arr << ""
         arr
-      end.unshift(args.nil? || args.length < OPTIONS.length ? 
+      end.unshift(!args.nil? && args.length < OPTIONS.length ? 
         ["# Check servers.yml for detailed server configuration", ""] : nil).flatten.compact.join("\n")
     end
 
