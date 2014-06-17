@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.26.3
+Version: 1.26.4
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,17 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Jun 17 2014 Adam Miller <admiller@redhat.com> 1.26.4-1
+- [origin-ui-180] will not set server as default when add|configure, adds --use
+  option (contact@fabianofranz.com)
+- [origin-ui-180] Moved more configs to servers.yml, added server nickname
+  suggestions (contact@fabianofranz.com)
+- [origin-ui-180] Bug fixes and improvements according to code review
+  (contact@fabianofranz.com)
+- [origin-ui-180] rhc server feature tests (contact@fabianofranz.com)
+- [origin-ui-180] Removing discard_global_option (contact@fabianofranz.com)
+- [origin-ui-180] rhc supporting multiple servers (contact@fabianofranz.com)
+
 * Fri Jun 13 2014 Adam Miller <admiller@redhat.com> 1.26.3-1
 - Ensure we have free gears available (jliggitt@redhat.com)
 
