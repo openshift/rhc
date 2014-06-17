@@ -1,4 +1,5 @@
 require 'rhc/git_helpers'
+require 'rhc/server_helpers'
 
 module RHC
   #
@@ -7,6 +8,7 @@ module RHC
   #
   module ContextHelpers
     include RHC::GitHelpers
+    include RHC::ServerHelpers
 
     def self.included(other)
       other.module_eval do
@@ -136,7 +138,7 @@ module RHC
     end
 
     def server_context(defaults=nil, arg=nil)
-      value = ENV['LIBRA_SERVER'] || (!options.clean && config['libra_server']) || "openshift.redhat.com"
+      value = libra_server_env || (!options.clean && config['libra_server']) || openshift_online_server
       defaults[arg] = value if defaults && arg
       value
     end

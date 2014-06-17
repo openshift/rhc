@@ -34,12 +34,15 @@ module RHCHelper
 
     def self.rhc_setup
       # Setup questions asked by wizard which are passed in below:
-      #   1 - username
-      #   2 - password
-      #   3 - should we support an api token, if server supports it
-      #   4 - upload SSH keys
-      #   4 - if no namespace is found, create namespace? (blank is no)
-      args = [$username, $password]
+      #   1 - hostname
+      #   2 - username
+      #   3 - password
+      #   4 - should we support an api token, if server supports it
+      #   5 - upload SSH keys
+      #   5 - if no namespace is found, create namespace? (blank is no)
+      args = [ENV['RHC_SERVER']]
+      args << $username
+      args << $password
       args << 'no' if $supports_auth_tokens
       args << 'yes' unless ($keyed_users ||= []).include?($username)
       args << '' # always skip namespace

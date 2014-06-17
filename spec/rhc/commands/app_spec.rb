@@ -2,12 +2,14 @@ require 'spec_helper'
 require 'rest_spec_helper'
 require 'rhc/commands/app'
 require 'rhc/config'
+require 'rhc/servers'
 require 'resolv'
 
 describe RHC::Commands::App do
   let!(:rest_client){ MockRestClient.new }
   let!(:config){ user_config }
   before{ RHC::Config.stub(:home_dir).and_return('/home/mock_user') }
+  before{ RHC::Servers.stub(:home_dir).and_return('/home/mock_user') }
   before do
     FakeFS.activate!
     FakeFS::FileSystem.clear

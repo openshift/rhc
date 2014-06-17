@@ -110,8 +110,8 @@ class HighLineExtension < HighLine
     @wrap_at ? @wrap_at - indentation.length : nil
   end
 
-  def header(str,opts = {}, &block)
-    say Header.new(str, default_max_width, '  ')
+  def header(str, opts={}, &block)
+    say Header.new(str, default_max_width, '  ', (opts[:color]))
     if block_given?
       indent &block
     end

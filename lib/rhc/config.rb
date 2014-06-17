@@ -1,5 +1,8 @@
+require 'fileutils'
 require 'rhc/vendor/parseconfig'
 require 'rhc/core_ext'
+require 'rhc/servers'
+require 'rhc/server_helpers'
 
 module RHC
 
@@ -45,24 +48,24 @@ module RHC
   #
   class Config
     include ConfigEnv
+    include RHC::ServerHelpers
 
     # Option name     [config_key      type           comment_string_for_config]
     #                  if nil, == key  nil == string  won't be written to file if nil
     OPTIONS = {
-      :server =>      ['libra_server', nil, 'The OpenShift server to connect to'],
-      :rhlogin =>     ['default_rhlogin', nil, 'Your OpenShift login name'],
-      :password =>    nil,
-      :use_authorization_tokens =>
-                      [nil, :boolean, 'If true, the server will attempt to create and use authorization tokens to connect to the server'],
-      :timeout =>     [nil, :integer, 'The default timeout for network operations'],
-      :insecure =>    [nil, :boolean, "If true, certificate errors will be ignored.\nWARNING: This may allow others to eavesdrop on your communication with OpenShift."],
-      :ssl_version => [nil, nil, 'The SSL protocol version to use when connecting to this server'],
-      :ssl_client_cert_file => [nil, :path_to_file, 'A client certificate file for use with your server'],
-      :ssl_ca_file => [nil, :path_to_file, 'A file containing CA one or more certificates'],
+      :server                   => ['libra_server',    nil,           'The default OpenShift server to connect to'],
+      :rhlogin                  => ['default_rhlogin', nil,           'Your OpenShift login name'],
+      :password                 => nil,
+      :use_authorization_tokens => [nil,               :boolean,      'If true, the server will attempt to create and use authorization tokens to connect to the server'],
+      :timeout                  => [nil,               :integer,      'The default timeout for network operations'],
+      :insecure                 => [nil,               :boolean,      "If true, certificate errors will be ignored.\nWARNING: This may allow others to eavesdrop on your communication with OpenShift."],
+      :ssl_version              => [nil,               nil,           'The SSL protocol version to use when connecting to this server'],
+      :ssl_client_cert_file     => [nil,               :path_to_file, 'A client certificate file for use with your server'],
+      :ssl_ca_file              => [nil,               :path_to_file, 'A file containing CA one or more certificates'],
     }
 
-    def self.options_to_config(options)
-      OPTIONS.inject([]) do |arr, (name, opts)|
+    def self.options_to_config(options, args=OPTIONS.keys)
+      OPTIONS.select{|k,v| args ? args.include?(k) : true}.inject([]) do |arr, (name, opts)|
         opts ||= []
         next arr unless opts[2]
         value = options[name]
@@ -70,7 +73,8 @@ module RHC
         arr << "#{value.nil? ? '#' : ''}#{opts[0] || name}=#{self.type_to_config(opts[1], value)}"
         arr << ""
         arr
-      end.join("\n")
+      end.unshift(args.nil? || args.length < OPTIONS.length ? 
+        ["# Check servers.yml for detailed server configuration", ""] : nil).flatten.compact.join("\n")
     end
 
     def self.type_to_config(type, value)
@@ -121,12 +125,15 @@ module RHC
       @global_config = nil
       @local_config = nil
       @opts_config = nil # config file passed in the options
+      @additional_config = nil
 
       @default_proxy = nil
 
-      @defaults.add('libra_server', 'openshift.redhat.com')
-      @env_config.add('libra_server', ENV['LIBRA_SERVER']) if ENV['LIBRA_SERVER']
-      @env_config.add('libra_server', ENV['RHC_SERVER']) if ENV['RHC_SERVER']
+      @defaults.add('insecure', false)
+      @defaults.add('libra_server', openshift_online_server)
+
+      @env_config.add('libra_server', libra_server_env) if libra_server_env
+      @env_config.add('libra_server', rhc_server_env) if rhc_server_env
 
       @opts_config_path = nil
     end
@@ -135,40 +142,64 @@ module RHC
       OPTIONS.inject({}) do |h, (name, opts)|
           opts = Array(opts)
           value = self[opts[0] || name.to_s]
-          if value
+          unless value.nil?
             value = case opts[1]
                     when :integer
                       Integer(value)
                     when :boolean
-                      !!(value =~ /^\s*(y|yes|1|t|true)\s*$/i)
+                      value.is_a?(TrueClass) || !!(value =~ /^\s*(y|yes|1|t|true)\s*$/i)
                     else
                       value unless value.blank?
                     end
-            h[name] = value unless value.nil?
+            h[name] = value
           end
           h
         end
     end
 
-    def save!(options)
-      File.open(path, 'w'){ |f| f.puts self.class.options_to_config(options) }
-      @opts, @opts_config, @local_config, @global_config = nil
+    def backup
+      if File.exists? path
+        backup = "#{path}.bak"
+        FileUtils.cp(path, backup)
+      end
+    end
+
+    def save!(options, all_options=true)
+      File.open(path, 'w') do |f| 
+        f.puts self.class.options_to_config(
+          options, 
+          all_options ? nil : [:server]
+        )
+      end
+      @opts, @opts_config, @env_config, @additional_config, @local_config, @global_config = nil
       load_config_files
       self
     end
 
     def [](key)
       lazy_init
-
-      # evaluate in cascading order
-      configs = [@opts, @opts_config, @env_config, @local_config, @global_config, @defaults]
+      configs = configs_cascade
       result = nil
-      configs.each do |conf|
+      c = nil
+      configs.each_with_index do |conf, i|
         result = conf[key] if !conf.nil?
+        c = conf
         break if !result.nil?
       end
-
       result
+    end
+
+    # individual configs will be evaluated in the following cascading order
+    def configs_cascade
+      [
+        @opts, 
+        @opts_config, 
+        @env_config, 
+        @additional_config, 
+        @local_config, 
+        @global_config, 
+        @defaults
+      ]
     end
 
     # DEPRECATED - will be removed when old commands are gone
@@ -238,6 +269,15 @@ module RHC
       !@opts_config.nil?
     end
 
+    def has_additional_config?
+      lazy_init
+      !@additional_config.nil?
+    end
+
+    def has_configs_from_files?
+      has_local_config? || has_opts_config? || has_additional_config?
+    end
+
     # DEPRECATED - should be moved to Helpers
     def should_run_ssh_wizard?
       not File.exists? ssh_priv_key_file_path
@@ -252,6 +292,7 @@ module RHC
     def config_path
       @config_path ||= local_config_path
     end
+
     def path
       config_path
     end
@@ -294,8 +335,16 @@ module RHC
     # DEPRECATED - will be removed when old commands are gone
     def proxy_vars
       Hash[[:address,:user,:pass,:port].map do |x|
-        [x,default_proxy.instance_variable_get("@proxy_#{x}")]
+        [x, default_proxy.instance_variable_get("@proxy_#{x}")]
       end]
+    end
+
+    def servers
+      @servers
+    end
+
+    def sync_additional_config
+      @additional_config = servers_config
     end
 
     private
@@ -311,9 +360,19 @@ module RHC
         raise Errno::EACCES.new("Could not open config file: #{e.message}")
       end
 
+      def load_servers
+        @servers ||= RHC::Servers.new
+      end
+
+      def servers_config
+        lazy_init
+        (servers.find(self['libra_server']).to_config rescue nil) || (servers.list.first.to_config rescue nil)
+      end
+
       def lazy_init
         unless @loaded
           load_config_files
+          load_servers
           @loaded = true
         end
       end

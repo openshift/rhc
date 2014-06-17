@@ -1,6 +1,7 @@
 require 'rhc'
 require 'fileutils'
 require 'socket'
+require 'rhc/server_helpers'
 
 module RHC
   class Wizard
@@ -12,6 +13,9 @@ module RHC
 
     DEFAULT_MAX_LENGTH = 16
 
+    SERVER_STAGES = [
+      :server_stage,
+    ]
     CONFIG_STAGES = [
       :login_stage,
       :create_config_stage,
@@ -30,21 +34,24 @@ module RHC
     APP_STAGES = [
       :show_app_info_stage,
     ]
-    STAGES = [:greeting_stage] + CONFIG_STAGES + KEY_STAGES + TEST_STAGES + NAMESPACE_STAGES + APP_STAGES + [:finalize_stage]
+    STAGES = [:greeting_stage] + SERVER_STAGES + CONFIG_STAGES + KEY_STAGES + TEST_STAGES + NAMESPACE_STAGES + APP_STAGES + [:finalize_stage]
 
     def stages
       STAGES
     end
 
     attr_reader :rest_client
+    attr_reader :skip_save_conf
 
     #
     # Running the setup wizard may change the contents of opts and config if
     # the create_config_stage completes successfully.
     #
-    def initialize(config=RHC::Config.new, opts=Commander::Command::Options.new)
+    def initialize(config=RHC::Config.new, opts=Commander::Command::Options.new, servers=RHC::Servers.new)
       @config = config
       @options = opts
+      @servers = servers
+      @servers.sync_from_config(@config)
     end
 
     # Public: Runs the setup wizard to make sure ~/.openshift and ~/.ssh are correct
@@ -71,16 +78,18 @@ module RHC
     include RHC::SSHHelpers
     include RHC::GitHelpers
     include RHC::CartridgeHelpers
-    attr_reader :config, :options
+    include RHC::ServerHelpers
+    attr_reader :config, :options, :servers
     attr_accessor :auth, :user
     attr_writer :rest_client
+    attr_writer :skip_save_conf
 
     def hostname
       Socket.gethostname
     end
 
     def openshift_server
-      options.server || config['libra_server'] || "openshift.redhat.com"
+      options.server || config['libra_server'] || openshift_online_server
     end
 
     def new_client_for_options
@@ -150,6 +159,10 @@ module RHC
       true
     end
 
+    def skip_save_conf?
+      !!@skip_save_conf
+    end
+
     #
     # Stages
     #
@@ -161,6 +174,20 @@ module RHC
         say "This wizard will help you upload your SSH keys, set your application namespace, and check that other programs like Git are properly installed."
       end
 
+      true
+    end
+
+    def server_stage
+      paragraph do 
+        unless options.__explicit__[:server]
+          say "If you have your own OpenShift server, you can specify it now. Just hit enter to use#{openshift_online_server? ? ' the server for OpenShift Online' : ''}: #{openshift_server}."
+          options.server = ask "Enter the server hostname: " do |q|
+            q.default = openshift_server
+            q.responses[:ask_on_error] = ''
+          end
+          paragraph{ say "You can add more servers later using 'rhc server'." }
+        end
+      end
       true
     end
 
@@ -220,24 +247,47 @@ module RHC
 
     def create_config_stage
       paragraph do
-        if File.exists? config.path
-          backup = "#{@config.path}.bak"
-          FileUtils.cp(config.path, backup)
+        say "Saving configuration to #{system_path(config.path)} ... "
+
+        FileUtils.mkdir_p File.dirname(config.path)
+
+        first_time = !File.exists?(config.path)
+        must_sync_servers = servers.present? || (!first_time && config['libra_server'] != options.server)
+
+        unless first_time || skip_save_conf?
+          config.backup
           FileUtils.rm(config.path)
         end
 
-        say "Saving configuration to #{system_path(config.path)} ... "
-
         changed = Commander::Command::Options.new(options)
+
         changed.rhlogin = username
         changed.password = nil
         changed.use_authorization_tokens = options.create_token != false && !changed.token.nil?
+        changed.insecure = options.insecure == true
 
-        FileUtils.mkdir_p File.dirname(config.path)
-        config.save!(changed)
+        config.save!(changed, !must_sync_servers) unless skip_save_conf?
         options.__replace__(changed)
 
         success "done"
+
+        if must_sync_servers
+          say "Saving server configuration to #{system_path(servers.path)} ... "
+
+          servers.backup
+          servers.add_or_update(options.server, 
+            :login                    => options.rhlogin, 
+            :use_authorization_tokens => options.use_authorization_tokens,
+            :insecure                 => options.insecure,
+            :timeout                  => options.timeout,
+            :ssl_version              => options.ssl_version,
+            :ssl_client_cert_file     => options.ssl_client_cert_file,
+            :ssl_ca_file              => options.ssl_ca_file)
+          servers.save!
+
+          success "done"
+        end
+
       end
 
       true
@@ -629,6 +679,17 @@ EOF
     def initialize(rest_client, config, options)
       self.rest_client = rest_client
       super config, options
+    end
+  end
+
+  class ServerWizard < Wizard
+    def initialize(*args)
+      @skip_save_conf = args.length == 4 ? args.pop : nil
+      super *args
+    end
+
+    def stages
+      CONFIG_STAGES
     end
   end
 end

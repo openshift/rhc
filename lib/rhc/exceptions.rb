@@ -85,6 +85,30 @@ module RHC
     end
   end
 
+  class ServerNicknameExistsException < Exception
+    def initialize(nickname)
+      super "You already have a server configured with the nickname '#{nickname}'", 164
+    end
+  end
+
+  class ServerHostnameExistsException < Exception
+    def initialize(hostname)
+      super "You already have a server configured with the hostname '#{hostname}'", 165
+    end
+  end
+
+  class ServerNotConfiguredException < Exception
+    def initialize(server)
+      super "You don't have any server configured with the hostname or nickname '#{server}'", 166
+    end
+  end
+
+  class ServerInUseException < Exception
+    def initialize(message="Server in use")
+      super message, 167
+    end
+  end
+
   class GitPermissionDenied < GitException; end
   class GitDirectoryExists < GitException; end
 

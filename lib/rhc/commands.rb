@@ -6,9 +6,11 @@ require 'commander/command'
 module Commander
   class Command
     attr_accessor :default_action, :root, :info
+    
     def default_action?
       default_action.present?
     end
+
     def root?
       root.present?
     end
@@ -81,11 +83,17 @@ module Commander
       begin
         @config = RHC::Config.new
         @config.use_config(config_path) if config_path
+        @config.sync_additional_config
+
         $terminal.debug("Using config file #{@config.config_path}")
 
         unless clean
-          @config.to_options.each_pair do |key, value|
+          local_command_options = (@options.collect{|o| Commander::Runner.switch_to_sym(o[:switches].last.split.first)} rescue [])
+
+          @config.to_options.each_pair do |key, value|  
+            next if local_command_options.include?(key)          
             next if proxy_options.detect{ |arr| arr[0] == key }
+
             if sw = opts.send(:search, :long, key.to_s.gsub(/_/, '-'))
               _, cb, val = sw.send(:conv_arg, nil, value) {|*exc| raise(*exc) }
               cb.call(val) if cb
@@ -94,6 +102,7 @@ module Commander
             end
           end
         end
+
       rescue ArgumentError => e
         n = OptionParser::InvalidOption.new(e.message)
         n.reason = "The configuration file #{@config.path} contains an invalid setting"
@@ -203,8 +212,7 @@ module RHC
       if not (cmd.class.suppress_wizard? or
               options.noprompt or
               options.help or
-              config.has_local_config? or
-              config.has_opts_config?)
+              config.has_configs_from_files?)
 
         $stderr.puts RHC::Helpers.color("You have not yet configured the OpenShift client tools. Please run 'rhc setup'.", :yellow)
       end
@@ -217,6 +225,7 @@ module RHC
         option = instance.global_option(*args, &block).last
         option.merge!(opts)
       end
+
       commands.each_pair do |name, opts|
         name = Array(name)
         names = [name.reverse.join('-'), name.join(' ')] if name.length > 1
@@ -289,6 +298,7 @@ module RHC
         # process defaults
         defaults = {}
         covers = {}
+
         (opts + args).each do |option_meta|
           arg = option_meta[:option_symbol] || option_meta[:name] || option_meta[:arg] or next
           if arg && option_meta[:type] != :list && options[arg].is_a?(Array)

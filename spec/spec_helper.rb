@@ -366,6 +366,7 @@ module ClassSpecHelpers
   def base_config(&block)
     config = RHC::Config.new
     config.stub(:load_config_files)
+    config.stub(:load_servers)
     defaults = config.instance_variable_get(:@defaults)
     yield config, defaults if block_given?
     RHC::Config.stub(:default).and_return(config)
@@ -388,6 +389,25 @@ module ClassSpecHelpers
       opts[:password].should == password
       opts[:server].should == server if server
     end
+  end
+
+  def local_config
+    user = respond_to?(:local_config_username) ? self.local_config_username : 'test_user'
+    password = respond_to?(:local_config_password) ? self.local_config_password : 'test pass'
+    server = respond_to?(:local_config_server) ? self.local_config_server : nil
+
+    c = base_config
+
+    local_config = RHC::Vendor::ParseConfig.new
+    local_config.add('default_rhlogin', user) if user
+    local_config.add('password', password) if password
+    local_config.add('libra_server', server) if server
+    
+    c.instance_variable_set(:@local_config, local_config)
+    opts = c.to_options
+    opts[:rhlogin].should == user
+    opts[:password].should == password
+    opts[:server].should == server if server
   end
 
   def expect_multi_ssh(command, hosts, check_error=false)
