@@ -70,7 +70,7 @@ describe "rhc server scenarios" do
     end
 
     def should_add_working_server
-      r = rhc 'server', 'add', server, '-l', rhlogin, '--insecure', :with => ['password', 'yes']
+      r = rhc 'server', 'add', server, '-l', rhlogin, '--insecure', '--use', :with => ['password', 'yes']
       r.stdout.should match /Saving configuration to .*express\.conf .* done/
       r.status.should == 0
 

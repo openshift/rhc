@@ -41,6 +41,7 @@ module RHC
     end
 
     attr_reader :rest_client
+    attr_reader :skip_save_conf
 
     #
     # Running the setup wizard may change the contents of opts and config if
@@ -81,6 +82,7 @@ module RHC
     attr_reader :config, :options, :servers
     attr_accessor :auth, :user
     attr_writer :rest_client
+    attr_writer :skip_save_conf
 
     def hostname
       Socket.gethostname
@@ -155,6 +157,10 @@ module RHC
 
     def namespace_optional?
       true
+    end
+
+    def skip_save_conf?
+      !!@skip_save_conf
     end
 
     #
@@ -248,7 +254,7 @@ module RHC
         first_time = !File.exists?(config.path)
         must_sync_servers = servers.present? || (!first_time && config['libra_server'] != options.server)
 
-        unless first_time
+        unless first_time || skip_save_conf?
           config.backup
           FileUtils.rm(config.path)
         end
@@ -258,8 +264,9 @@ module RHC
         changed.rhlogin = username
         changed.password = nil
         changed.use_authorization_tokens = options.create_token != false && !changed.token.nil?
+        changed.insecure = options.insecure == true
 
-        config.save!(changed, !must_sync_servers)
+        config.save!(changed, !must_sync_servers) unless skip_save_conf?
         options.__replace__(changed)
 
         success "done"
@@ -676,6 +683,11 @@ EOF
   end
 
   class ServerWizard < Wizard
+    def initialize(*args)
+      @skip_save_conf = args.length == 4 ? args.pop : nil
+      super *args
+    end
+
     def stages
       CONFIG_STAGES
     end

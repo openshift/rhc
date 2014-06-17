@@ -82,7 +82,8 @@ module RHC::Commands
     option ["-l", "--rhlogin LOGIN"], "Change the default OpenShift login used on this server"
     option ["--[no-]use-authorization-tokens"], "Server will attempt to create and use authorization tokens to connect to the server"
     option ["--[no-]insecure"], "If true, certificate errors will be ignored"
-    option ["--skip-wizard"], "If true, the wizard will be skipped and a session token will not be estabilished"
+    option ["--use"], "If provided, the server being added will be set as default (same as 'rhc server use')"
+    option ["--skip-wizard"], "If provided, the wizard will be skipped and a session token will not be estabilished"
     def add(hostname, nickname)
       server = server_configs.add(hostname, 
         :nickname                 => nickname, 
@@ -95,7 +96,7 @@ module RHC::Commands
         :ssl_ca_file              => options.ssl_ca_file)
 
       unless options.skip_wizard
-        wizard_to_server(
+        (wizard_to_server(options.use,
           server.hostname, 
           server.login, 
           server.use_authorization_tokens, 
@@ -103,7 +104,9 @@ module RHC::Commands
           server.timeout,
           server.ssl_version,
           server.ssl_client_cert_file,
-          server.ssl_ca_file) ? 0 : 1
+          server.ssl_ca_file) ? 0 : 1).tap do |r|
+          paragraph { success "Now using '#{server.hostname}'" } if options.use
+        end
       else
         say "Saving server configuration to #{system_path(server_configs.path)} ... "
         server_configs.save!
@@ -134,13 +137,13 @@ module RHC::Commands
       0
     end
 
-    summary "Fast switch to change the default server"
+    summary "Change the default server"
     syntax "<server>"
     argument :server, "Server hostname or nickname to use", ["--server SERVER"]
     def use(server)
       server = server_configs.find(server)
 
-      if wizard_to_server(server.hostname, server.login, server.use_authorization_tokens, server.insecure)
+      if wizard_to_server(true, server.hostname, server.login, server.use_authorization_tokens, server.insecure)
         paragraph { success "Now using '#{server.hostname}'" }
         0
       else
@@ -175,6 +178,7 @@ module RHC::Commands
     option ["-l", "--rhlogin LOGIN"], "Change the default OpenShift login used on this server"
     option ["--[no-]use-authorization-tokens"], "Server will attempt to create and use authorization tokens to connect to the server"
     option ["--[no-]insecure"], "If true, certificate errors will be ignored"
+    option ["--use"], "If provided, the server being configured will be set as default (same as 'rhc server use')"
     def configure(server)
       server = server_configs.find(server)
 
@@ -201,14 +205,10 @@ module RHC::Commands
         :ssl_client_cert_file     => ssl_client_cert_file, 
         :ssl_ca_file              => ssl_ca_file)
 
-      unless [options.hostname, options.rhlogin, options.use_authorization_tokens, options.insecure].all? {|x| x.nil?}
-        wizard_to_server(hostname, rhlogin, use_authorization_tokens, insecure)
-      end
-
-      server_configs.save!
+      wizard_to_server(options.use, hostname, rhlogin, use_authorization_tokens, insecure)
 
       paragraph{ say display_server(server) }
-      paragraph { success "Now using '#{server.hostname}'" }
+      paragraph { success "Now using '#{server.hostname}'" } if options.use
       0
     end
 
@@ -223,7 +223,7 @@ module RHC::Commands
     end
 
     protected
-      def wizard_to_server(hostname, login=nil, use_authorization_tokens=nil, insecure=nil, timeout=nil, ssl_version=nil, ssl_client_cert_file=nil, ssl_ca_file=nil)
+      def wizard_to_server(set_default, hostname, login=nil, use_authorization_tokens=nil, insecure=nil, timeout=nil, ssl_version=nil, ssl_client_cert_file=nil, ssl_ca_file=nil)
         options['server'] = hostname
         options['rhlogin'] = login if login
         options['use_authorization_tokens'] = use_authorization_tokens unless use_authorization_tokens.nil?
@@ -232,7 +232,7 @@ module RHC::Commands
         options['ssl_version'] = ssl_version unless ssl_version.nil?
         options['ssl_client_cert_file'] = ssl_client_cert_file unless ssl_client_cert_file.nil?
         options['ssl_ca_file'] = ssl_ca_file unless ssl_ca_file.nil?
-        RHC::ServerWizard.new(config, options, server_configs).run
+        RHC::ServerWizard.new(config, options, server_configs, !set_default).run
       end
 
       def server_configs

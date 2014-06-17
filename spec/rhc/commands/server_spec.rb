@@ -213,7 +213,7 @@ describe RHC::Commands::Server do
       let(:local_config_server){ 'local.server.com' }
       let(:local_config_username){ 'local_username' }
       let(:token){ 'an_existing_token' }
-      let(:arguments) { ['server', 'add', server, '-l', username, '--use-authorization-tokens', '--no-insecure', '--token', token] }
+      let(:arguments) { ['server', 'add', server, '-l', username, '--use-authorization-tokens', '--no-insecure', '--token', token, '--use'] }
       subject{ RHC::ServerWizard.new(config, options, servers) }
       before(:each) do
         RHC::Servers.any_instance.stub(:save!)
@@ -248,7 +248,7 @@ describe RHC::Commands::Server do
       let(:local_config_server){ 'local.server.com' }
       let(:local_config_username){ 'local_username' }
       let(:token){ 'an_existing_token' }
-      let(:arguments) { ['server', 'add', server, server_name, '-l', username, '--use-authorization-tokens', '--no-insecure', '--token', token] }
+      let(:arguments) { ['server', 'add', server, server_name, '-l', username, '--use-authorization-tokens', '--no-insecure', '--token', token, '--use'] }
       subject{ RHC::ServerWizard.new(config, options, servers) }
       before do
         stub_wizard
@@ -360,7 +360,7 @@ describe RHC::Commands::Server do
       let(:local_config_server_new_username){ 'new_username' }
       let(:local_config_server_new_name){ 'new_name' }
       let(:token){ 'an_existing_token' }
-      let(:arguments) { ['server', 'configure', local_config_server, '--nickname', local_config_server_new_name, '-l', local_config_server_new_username, '--insecure', '--token', token] }
+      let(:arguments) { ['server', 'configure', local_config_server, '--nickname', local_config_server_new_name, '-l', local_config_server_new_username, '--insecure', '--token', token, '--use'] }
       subject{ RHC::ServerWizard.new(config, options, servers) }
       before do
         stub_wizard
