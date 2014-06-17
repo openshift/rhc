@@ -38,7 +38,11 @@ module RHC
     end
 
     def to_yaml_hash
-      {}.tap{|h| instance_variables.each{|k| h[k.to_s.delete('@')] = instance_variable_get(k)}}.reject {|k, v| v.nil? || k == 'default'}
+      {}.tap do |h| 
+        instance_variables.each do |k| 
+          h[k.to_s.delete('@')] = instance_variable_get(k)
+        end
+      end.reject{|k, v| v.nil? || k == 'default'}.inject({}){|h, (k, v)| h[k] = v.is_a?(String) ? v.to_s : v; h }
     end
 
     def to_config
