@@ -266,7 +266,7 @@ module RHC
         changed.use_authorization_tokens = options.create_token != false && !changed.token.nil?
         changed.insecure = options.insecure == true
 
-        config.save!(changed, !must_sync_servers) unless skip_save_conf?
+        config.save!(changed, !must_sync_servers) unless skip_save_conf? && !first_time
         options.__replace__(changed)
 
         success "done"
