@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.26.4
+Version: 1.26.5
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,16 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Jun 18 2014 Adam Miller <admiller@redhat.com> 1.26.5-1
+- Merge pull request #607 from fabianofranz/master
+  (dmcphers+openshiftbot@redhat.com)
+- [origin-ui-180] Several code improvements (contact@fabianofranz.com)
+- Merge pull request #606 from fabianofranz/master
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 1110357 - fixes issue with ruby/highline conversion to yaml
+  (contact@fabianofranz.com)
+- Bug 1110266 - fixes first run of rhc server add (contact@fabianofranz.com)
+
 * Tue Jun 17 2014 Adam Miller <admiller@redhat.com> 1.26.4-1
 - [origin-ui-180] will not set server as default when add|configure, adds --use
   option (contact@fabianofranz.com)
