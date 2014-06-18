@@ -99,13 +99,13 @@ describe AllRhcHelpers do
 
   describe "#human_size" do
     it{ subject.human_size(nil).should == 'unknown' }
-    it{ subject.human_size(1).should == '1 B' }
-    it{ subject.human_size(500).should == '500 B' }
-    it{ subject.human_size(1000).should == '1 KB' }
-    it{ subject.human_size(500000).should == '500 KB' }
-    it{ subject.human_size(1000*1000).should == '1 MB' }
-    it{ subject.human_size(1000*1000*1000).should == '1 GB' }
-    it{ subject.human_size(1000*1000*1000*1000).should == '1 TB' }
+    it{ subject.human_size(1).should == '1B' }
+    it{ subject.human_size(500).should == '500B' }
+    it{ subject.human_size(1024).should == '1K' }
+    it{ subject.human_size(500*1024).should == '500K' }
+    it{ subject.human_size(1024*1024).should == '1M' }
+    it{ subject.human_size(1024*1024*1024).should == '1G' }
+    it{ subject.human_size(1024*1024*1024*1024).should == '1T' }
   end
 
   describe "#distance_of_time_in_words" do

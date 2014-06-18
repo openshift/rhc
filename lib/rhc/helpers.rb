@@ -37,17 +37,17 @@ module RHC
       path
     end
 
-    PREFIX = %W(TB GB MB KB B).freeze
+    PREFIX = %W(T G M K B).freeze
 
     def human_size( s )
       return "unknown" unless s
       s = s.to_f
       i = PREFIX.length - 1
-      while s > 500 && i > 0
+      while s > 512 && i > 0
         i -= 1
-        s /= 1000
+        s /= 1024
       end
-      ((s > 9 || s.modulo(1) < 0.1 ? '%d' : '%.1f') % s) + ' ' + PREFIX[i]
+      ((s > 9 || s.modulo(1) < 0.1 ? '%d' : '%.1f') % s) + PREFIX[i]
     end
 
     def date(s)

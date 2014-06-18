@@ -749,9 +749,9 @@ describe RHC::Commands::App do
       before do
         @domain = rest_client.add_domain("mockdomain")
         @domain.add_application("app1", "mock_type", true)
-        expect_multi_ssh('echo "$(du --block-size=1 -s 2>/dev/null | cut -f 1)"', 'fakegearid0@fakesshurl.com' => '1734334', 'fakegearid1@fakesshurl.com' => '1934348')
+        expect_multi_ssh('echo "$(du -sh 2>/dev/null | cut -f 1)"', 'fakegearid0@fakesshurl.com' => '2M', 'fakegearid1@fakesshurl.com' => '3M')
       end
-      it { run_output.should match(/Gear.*Cartridges.*Used.*fakegearid0.*1\.7 MB.*1 GB.*fakegearid1.*1\.9 MB/m) }
+      it { run_output.should match(/Gear.*Cartridges.*Used.*fakegearid0.*2M.*1G.*fakegearid1.*3M/m) }
       it { expect{ run }.to exit_with_code(0) }
     end
   end
