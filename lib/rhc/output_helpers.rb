@@ -3,7 +3,7 @@ module RHC
 
     def display_team(team, ids=false)
       paragraph do
-        header ["Team #{team.name}", ("(owned by #{team.owner})" if team.owner.present?)] do
+        header ["Team #{team.name}", ("(owned by #{team.owner.name})" if team.owner.present?)] do
           section(:bottom => 1) do
             say format_table \
               nil,
@@ -21,7 +21,7 @@ module RHC
 
     def display_domain(domain, applications=nil, ids=false)
       paragraph do
-        header ["Domain #{domain.name}", ("(owned by #{domain.owner})" if domain.owner.present?)] do
+        header ["Domain #{domain.name}", ("(owned by #{domain.owner.name})" if domain.owner.present?)] do
           section(:bottom => 1) do
             say format_table \
               nil,

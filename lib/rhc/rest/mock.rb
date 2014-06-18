@@ -608,8 +608,8 @@ module RHC::Rest::Mock
       d = MockRestDomain.new(self, id)
       if extra
         d.attributes['creation_time'] = '2013-07-21T15:00:44Z'
-        d.attributes['members'] = [{'owner' => true, 'name' => 'a_user_name'}]
         d.attributes['allowed_gear_sizes'] = ['small']
+        d.add_member(RHC::Rest::Membership::Member.new(:id => '1', :role => 'admin', :explicit_role => 'admin', :owner => true, :login => 'a_user_name', :type => 'user'))
       end
       @domains << d
       d
@@ -723,6 +723,7 @@ module RHC::Rest::Mock
       @name = id
       @applications = []
       self.attributes = {:links => mock_response_links(mock_domain_links(id))}
+      init_members
     end
 
     def rename(id)

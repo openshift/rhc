@@ -17,7 +17,7 @@ describe "rhc member scenarios" do
         r = rhc 'show-domain', domain.name
         r.status.should == 0
         r.stdout.should_not match "Members:"
-        r.stdout.should match "owned by #{domain.owner}"
+        r.stdout.should match "owned by #{domain.owner.name}"
       end
 
       it "should prevent leaving the domain for the owner" do
