@@ -85,27 +85,14 @@ module RHC::Commands
     option ["--use"], "If provided, the server being added will be set as default (same as 'rhc server use')"
     option ["--skip-wizard"], "If provided, the wizard will be skipped and a session token will not be estabilished"
     def add(hostname, nickname)
+      attrs = [:login, :use_authorization_tokens, :insecure, :timeout, :ssl_version, :ssl_client_cert_file, :ssl_ca_file]
+
       server = server_configs.add(hostname, 
-        :nickname                 => nickname, 
-        :login                    => options.rhlogin, 
-        :use_authorization_tokens => options.use_authorization_tokens, 
-        :insecure                 => options.insecure,
-        :timeout                  => options.timeout,
-        :ssl_version              => options.ssl_version, 
-        :ssl_client_cert_file     => options.ssl_client_cert_file, 
-        :ssl_ca_file              => options.ssl_ca_file)
+        attrs.inject({:nickname => nickname}){ |h, (k, v)| h[k] = options[k == :login ? :rhlogin : k]; h })
 
       unless options.skip_wizard
-        (wizard_to_server(options.use,
-          server.hostname, 
-          server.login, 
-          server.use_authorization_tokens, 
-          server.insecure,
-          server.timeout,
-          server.ssl_version,
-          server.ssl_client_cert_file,
-          server.ssl_ca_file) ? 0 : 1).tap do |r|
-          paragraph { success "Now using '#{server.hostname}'" } if options.use
+        (wizard_to_server(server.hostname, options.use, attrs.inject({}){ |h, (k, v)| h[k] = server.send(k); h }) ? 0 : 1).tap do |r|
+          paragraph { success "Now using '#{server.hostname}'" } if options.use && r == 0
         end
       else
         say "Saving server configuration to #{system_path(server_configs.path)} ... "
@@ -143,7 +130,7 @@ module RHC::Commands
     def use(server)
       server = server_configs.find(server)
 
-      if wizard_to_server(true, server.hostname, server.login, server.use_authorization_tokens, server.insecure)
+      if wizard_to_server(server.hostname, true, :login => server.login, :use_authorization_tokens => server.use_authorization_tokens, :insecure => server.insecure)
         paragraph { success "Now using '#{server.hostname}'" }
         0
       else
@@ -179,33 +166,26 @@ module RHC::Commands
     option ["--[no-]use-authorization-tokens"], "Server will attempt to create and use authorization tokens to connect to the server"
     option ["--[no-]insecure"], "If true, certificate errors will be ignored"
     option ["--use"], "If provided, the server being configured will be set as default (same as 'rhc server use')"
+    option ["--skip-wizard"], "If provided, the wizard will be skipped and a session token will not be estabilished"
     def configure(server)
       server = server_configs.find(server)
 
-      hostname = options.hostname || server.hostname
-      rhlogin = options.rhlogin || server.login
-      use_authorization_tokens = options.use_authorization_tokens.nil? ? server.use_authorization_tokens : options.use_authorization_tokens
-      insecure = options.insecure.nil? ? server.insecure : options.insecure
-      nickname = options.nickname || server.nickname
-      timeout = options.timeout || server.timeout
-      ssl_version = options.ssl_version || server.ssl_version
-      ssl_client_cert_file = options.ssl_client_cert_file || server.ssl_client_cert_file
-      ssl_ca_file = options.ssl_ca_file || server.ssl_ca_file
+      attrs = [:hostname, :nickname, :login, :use_authorization_tokens, :insecure, :timeout, :ssl_version, :ssl_client_cert_file, :ssl_ca_file].inject({}){ |h, (k, v)| v = options[k == :login ? :rhlogin : k]; h[k] = (v.nil? ? server.send(k) : v); h }
 
-      raise RHC::ServerNicknameExistsException.new(options.nickname) if options.nickname && server_configs.nickname_exists?(options.nickname) && server_configs.find(options.nickname).hostname != server.hostname
+      raise RHC::ServerNicknameExistsException.new(options.nickname) if options.nickname && 
+        server_configs.nickname_exists?(options.nickname) && 
+        server_configs.find(options.nickname).hostname != server.hostname
 
-      server = server_configs.update(server.hostname, 
-        :hostname                 => hostname, 
-        :nickname                 => nickname, 
-        :login                    => rhlogin, 
-        :use_authorization_tokens => use_authorization_tokens, 
-        :insecure                 => insecure,
-        :timeout                  => timeout,
-        :ssl_version              => ssl_version, 
-        :ssl_client_cert_file     => ssl_client_cert_file, 
-        :ssl_ca_file              => ssl_ca_file)
+      server = server_configs.update(server.hostname, attrs)
 
-      wizard_to_server(options.use, hostname, rhlogin, use_authorization_tokens, insecure)
+      unless options.skip_wizard
+        wizard_to_server(attrs[:hostname], options.use, attrs.reject{|k, v| k == :hostname || k == :nickname})
+      else
+        say "Saving server configuration to #{system_path(server_configs.path)} ... "
+        server_configs.save!
+        success "done"
+        0
+      end
 
       paragraph{ say display_server(server) }
       paragraph { success "Now using '#{server.hostname}'" } if options.use
@@ -223,15 +203,15 @@ module RHC::Commands
     end
 
     protected
-      def wizard_to_server(set_default, hostname, login=nil, use_authorization_tokens=nil, insecure=nil, timeout=nil, ssl_version=nil, ssl_client_cert_file=nil, ssl_ca_file=nil)
+      def wizard_to_server(hostname, set_default, args)
         options['server'] = hostname
-        options['rhlogin'] = login if login
-        options['use_authorization_tokens'] = use_authorization_tokens unless use_authorization_tokens.nil?
-        options['insecure'] = insecure unless insecure.nil?
-        options['timeout'] = timeout unless timeout.nil?
-        options['ssl_version'] = ssl_version unless ssl_version.nil?
-        options['ssl_client_cert_file'] = ssl_client_cert_file unless ssl_client_cert_file.nil?
-        options['ssl_ca_file'] = ssl_ca_file unless ssl_ca_file.nil?
+        options['rhlogin'] = args[:login] if args[:login]
+        options['use_authorization_tokens'] = args[:use_authorization_tokens] unless args[:use_authorization_tokens].nil?
+        options['insecure'] = args[:insecure] unless args[:insecure].nil?
+        options['timeout'] = args[:timeout] unless args[:timeout].nil?
+        options['ssl_version'] = args[:ssl_version] unless args[:ssl_version].nil?
+        options['ssl_client_cert_file'] = args[:ssl_client_cert_file] unless args[:ssl_client_cert_file].nil?
+        options['ssl_ca_file'] = args[:ssl_ca_file] unless args[:ssl_ca_file].nil?
         RHC::ServerWizard.new(config, options, server_configs, !set_default).run
       end
 
