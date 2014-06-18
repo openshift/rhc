@@ -378,6 +378,30 @@ describe RHC::Commands::Server do
       it { expect { run }.to exit_with_code(0) }
     end
 
+    context "with existing express.conf and servers.yml and skipping wizard" do
+      let(:server){ 'local.server.com' }
+      let(:username){ 'local_username' }
+
+      let(:local_config_server){ server }
+      let(:local_config_username){ username }
+
+      let(:local_config_server_new_username){ 'new_username' }
+      let(:local_config_server_new_name){ 'new_name' }
+      let(:arguments) { ['server', 'configure', local_config_server, '--nickname', local_config_server_new_name, '-l', local_config_server_new_username, '--insecure', 
+        '--skip-wizard'] }
+      before do
+        local_config
+        stub_servers_yml
+      end
+      it { run_output.should =~ /Saving server configuration to.*servers\.yml.*done/ }
+      it { run_output.should_not =~ /Saving configuration to.*express\.conf.*done/ }
+      it { run_output.should_not =~ /Using an existing token/ }
+      it { run_output.should =~ /Server '#{local_config_server_new_name}' \(in use\)/ }
+      it { run_output.should_not =~ /Now using '#{server}'/ }
+      it { run_output.should =~ /Login:\s+#{local_config_server_new_username}/ }
+      it { expect { run }.to exit_with_code(0) }
+    end
+
     context "when trying to remove server not found" do
       let(:local_config_server){ 'local.server.com' }
       let(:local_config_username){ 'local_username' }
