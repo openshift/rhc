@@ -85,6 +85,8 @@ module RHC::Commands
     option ["--use"], "If provided, the server being added will be set as default (same as 'rhc server use')"
     option ["--skip-wizard"], "If provided, the wizard will be skipped and a session token will not be estabilished"
     def add(hostname, nickname)
+      raise ArgumentError, "The --use and --skip-wizard options cannot be used together." if options.use && options.skip_wizard
+
       attrs = [:login, :use_authorization_tokens, :insecure, :timeout, :ssl_version, :ssl_client_cert_file, :ssl_ca_file]
 
       server = server_configs.add(hostname, 
@@ -168,6 +170,8 @@ module RHC::Commands
     option ["--use"], "If provided, the server being configured will be set as default (same as 'rhc server use')"
     option ["--skip-wizard"], "If provided, the wizard will be skipped and a session token will not be estabilished"
     def configure(server)
+      raise ArgumentError, "The --use and --skip-wizard options cannot be used together." if options.use && options.skip_wizard
+
       server = server_configs.find(server)
 
       attrs = [:hostname, :nickname, :login, :use_authorization_tokens, :insecure, :timeout, :ssl_version, :ssl_client_cert_file, :ssl_ca_file].inject({}){ |h, (k, v)| v = options[k == :login ? :rhlogin : k]; h[k] = (v.nil? ? server.send(k) : v); h }
