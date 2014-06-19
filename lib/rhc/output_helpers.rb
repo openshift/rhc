@@ -72,7 +72,7 @@ module RHC
 
     def display_server(server)
       paragraph do
-        header ["Server '#{server.nickname || server.hostname}'", ("(in use)" if server.default?)], {:color => (:green if server.default?)} do
+        header ["Server '#{server.nickname || to_host(server.hostname)}'", ("(in use)" if server.default?)], {:color => (:green if server.default?)} do
           section(:bottom => 1) do
             say format_table \
               nil,

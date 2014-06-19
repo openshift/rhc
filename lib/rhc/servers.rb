@@ -17,7 +17,7 @@ module RHC
     end
 
     def initialize(hostname, args={})
-      @hostname = RHC::Helpers.to_uri(hostname).host
+      @hostname = RHC::Servers.to_host(hostname)
       @nickname = args[:nickname]
       @login = args[:login]
       @use_authorization_tokens = RHC::Helpers.to_boolean(args[:use_authorization_tokens], true)
@@ -80,15 +80,16 @@ module RHC
       File.exists?(path)
     end
 
-    def to_host(hostname)
-      RHC::Helpers.to_uri(hostname).host
+    def self.to_host(hostname)
+      uri = RHC::Helpers.to_uri(hostname)
+      uri.scheme == 'https' && uri.port == URI::HTTPS::DEFAULT_PORT ? uri.host : hostname
     end
 
     def add(hostname, args={})
       raise RHC::ServerHostnameExistsException.new(hostname) if hostname_exists?(hostname)
       raise RHC::ServerNicknameExistsException.new(args[:nickname]) if args[:nickname] && nickname_exists?(args[:nickname])
 
-      args[:nickname] = suggest_server_nickname(to_host(hostname)) unless args[:nickname].present?
+      args[:nickname] = suggest_server_nickname(Servers.to_host(hostname)) unless args[:nickname].present?
 
       Server.new(hostname, args).tap{ |server| @servers << server }
     end
@@ -122,7 +123,7 @@ module RHC
     end
 
     def hostname_exists?(hostname)
-      hostname = to_host(hostname)
+      hostname = Servers.to_host(hostname)
       list.select{|s| s.hostname == hostname}.first
     end
 

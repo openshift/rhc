@@ -261,6 +261,26 @@ describe RHC::Commands::Server do
       it { expect { run }.to exit_with_code(0) }
     end
 
+    context "with existing express.conf and servers.yml and adding a new server with port and http scheme" do
+      let(:server){ 'http://my.server.com:4000' }
+      let(:username){ 'user3' }
+      let(:server_name){ 'server3' }
+      let(:local_config_server){ 'local.server.com' }
+      let(:local_config_username){ 'local_username' }
+      let(:token){ 'an_existing_token' }
+      let(:arguments) { ['server', 'add', server, server_name, '-l', username, '--use-authorization-tokens', '--no-insecure', '--token', token, '--use'] }
+      subject{ RHC::ServerWizard.new(config, options, servers) }
+      before do
+        stub_wizard
+        local_config
+        stub_servers_yml(2)
+      end
+      it { run_output.should =~ /Using an existing token for #{username} to login to #{server}/ }
+      it { run_output.should =~ /Saving configuration to.*express\.conf.*done/ }
+      it { run_output.should =~ /Saving server configuration to.*servers\.yml.*done/ }
+      it { expect { run }.to exit_with_code(0) }
+    end
+
     context "with existing express.conf and servers.yml and adding a new mock server" do
       let(:server){ 'openshift.server.com' }
       let(:username){ 'user3' }

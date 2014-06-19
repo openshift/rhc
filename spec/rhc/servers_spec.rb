@@ -71,6 +71,17 @@ describe RHC::Servers do
       it { subject.find('some.openshift.redhat.com').nickname.should == 'some' }
     end
 
+    context "when adding a new server with port and http scheme" do
+      before{ subject.add('http://another.server.com:4000', :nickname => 'another', :login => 'user2') }
+      it { subject.instance_variable_get(:@servers).length.should == 2 }
+      it { subject.find('another').should be_true }
+      it { subject.find('http://another.server.com:4000').should be_true }
+      it { subject.find('another').login.should == 'user2' }
+      it { expect { subject.find('another.server.com').to raise_exception(RHC::ServerNotConfiguredException) } }
+      it { expect { subject.find('https://another.server.com:4000').to raise_exception(RHC::ServerNotConfiguredException) } }
+      it { expect { subject.find('http://another.server.com').to raise_exception(RHC::ServerNotConfiguredException) } }
+    end
+
     context "when adding an existing server" do
       it "should error accordingly" do
         expect { subject.add('openshift.server.com') }.to raise_exception(RHC::ServerHostnameExistsException)
