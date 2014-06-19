@@ -207,6 +207,27 @@ describe RHC::Commands::Server do
    end
 
   describe "server add" do
+    context "with no existing config" do
+      let(:new_server){ 'openshift1.server.com' }
+      let(:username){ 'user1' }
+      let(:token){ 'an_existing_token' }
+      let(:arguments) { ['server', 'add', new_server, '-l', username, '--use-authorization-tokens', '--no-insecure', '--token', token, '--use'] }
+      before(:each) { 
+        stub_wizard
+      }
+      it 'should create servers.yml' do
+        servers.present?.should be_false
+        servers.list.should == []
+        servers.hostname_exists?(new_server).should be_false
+        run_output.should =~ /Saving server configuration to.*servers\.yml.*done/
+        servers.reload
+        servers.present?.should be_true
+        servers.list.should_not == []
+        servers.hostname_exists?(new_server).should be_true
+      end
+      it { expect { run }.to exit_with_code(0) }
+    end
+
     context "with existing express.conf and successfully adding server" do
       let(:server){ 'openshift1.server.com' }
       let(:username){ 'user1' }
