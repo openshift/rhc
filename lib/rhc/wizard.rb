@@ -241,12 +241,23 @@ module RHC
 
     def create_config_stage
       paragraph do
-        say "Saving configuration to #{system_path(config.path)} ... "
-
         FileUtils.mkdir_p File.dirname(config.path)
 
-        # Save config unless we've been explicitly told not to save any config fields
-        if @config_fields_to_save != []
+        # Save servers.yml if:
+        # 1. we've been explicitly told to (typically when running the "rhc server" command)
+        # 2. if the servers.yml file exists
+        # 3. if we're configuring a second server
+        write_servers_yml = @save_servers || servers.present? || (servers.list.present? && !servers.hostname_exists?(options.server))
+
+        # Decide which fields to save to express.conf
+        # 1. If we've already been told explicitly, use that
+        # 2. If we're writing servers.yml, only save server to express.conf
+        # 3. If we're not writing servers.yml, save everything to express.conf
+        config_fields_to_save = @config_fields_to_save || (write_servers_yml ? [:server] : nil)
+
+        # Save config unless we've been explicitly told not to save any fields to express.conf
+        if config_fields_to_save != []
+          say "Saving configuration to #{system_path(config.path)} ... "
           config.backup
           FileUtils.rm(config.path, :force => true)
 
@@ -257,19 +268,13 @@ module RHC
           changed.use_authorization_tokens = options.create_token != false && !changed.token.nil?
           changed.insecure = options.insecure == true
 
-          config.save!(changed, @config_fields_to_save)
+          config.save!(changed, config_fields_to_save)
           options.__replace__(changed)
+          success "done"
         end
 
-        success "done"
-
-        # Save servers.yml if:
-        # 1. we've been explicitly told to (typically when running the "rhc server" command)
-        # 2. if the servers.yml file exists
-        # 3. if we're configuring a second server
-        if @save_servers || servers.present? || (servers.list.present? && !servers.hostname_exists?(options.server))
+        if write_servers_yml
           say "Saving server configuration to #{system_path(servers.path)} ... "
-
           servers.backup
           servers.add_or_update(options.server, 
             :login                    => options.rhlogin, 
@@ -280,7 +285,6 @@ module RHC
             :ssl_client_cert_file     => options.ssl_client_cert_file,
             :ssl_ca_file              => options.ssl_ca_file)
           servers.save!
-
           success "done"
         end
 

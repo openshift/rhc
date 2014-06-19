@@ -212,7 +212,7 @@ module RHC::Commands
         options['ssl_version'] = args[:ssl_version] unless args[:ssl_version].nil?
         options['ssl_client_cert_file'] = args[:ssl_client_cert_file] unless args[:ssl_client_cert_file].nil?
         options['ssl_ca_file'] = args[:ssl_ca_file] unless args[:ssl_ca_file].nil?
-        RHC::ServerWizard.new(config, options, server_configs, !set_default).run
+        RHC::ServerWizard.new(config, options, server_configs, set_default).run
       end
 
       def server_configs
