@@ -41,7 +41,6 @@ module RHC
     end
 
     attr_reader :rest_client
-    attr_reader :skip_save_conf
 
     #
     # Running the setup wizard may change the contents of opts and config if
@@ -82,7 +81,6 @@ module RHC
     attr_reader :config, :options, :servers
     attr_accessor :auth, :user
     attr_writer :rest_client
-    attr_writer :skip_save_conf
 
     def hostname
       Socket.gethostname
@@ -157,10 +155,6 @@ module RHC
 
     def namespace_optional?
       true
-    end
-
-    def skip_save_conf?
-      !!@skip_save_conf
     end
 
     #
@@ -247,33 +241,40 @@ module RHC
 
     def create_config_stage
       paragraph do
-        say "Saving configuration to #{system_path(config.path)} ... "
-
         FileUtils.mkdir_p File.dirname(config.path)
 
-        first_time = !File.exists?(config.path)
-        must_sync_servers = servers.present? || (!first_time && config['libra_server'] != options.server)
+        # Save servers.yml if:
+        # 1. we've been explicitly told to (typically when running the "rhc server" command)
+        # 2. if the servers.yml file exists
+        # 3. if we're configuring a second server
+        write_servers_yml = @save_servers || servers.present? || (servers.list.present? && !servers.hostname_exists?(options.server))
 
-        unless first_time || skip_save_conf?
+        # Decide which fields to save to express.conf
+        # 1. If we've already been told explicitly, use that
+        # 2. If we're writing servers.yml, only save server to express.conf
+        # 3. If we're not writing servers.yml, save everything to express.conf
+        config_fields_to_save = @config_fields_to_save || (write_servers_yml ? [:server] : nil)
+
+        # Save config unless we've been explicitly told not to save any fields to express.conf
+        if config_fields_to_save != []
+          say "Saving configuration to #{system_path(config.path)} ... "
           config.backup
-          FileUtils.rm(config.path)
+          FileUtils.rm(config.path, :force => true)
+
+          changed = Commander::Command::Options.new(options)
+
+          changed.rhlogin = username
+          changed.password = nil
+          changed.use_authorization_tokens = options.create_token != false && !changed.token.nil?
+          changed.insecure = options.insecure == true
+
+          config.save!(changed, config_fields_to_save)
+          options.__replace__(changed)
+          success "done"
         end
 
-        changed = Commander::Command::Options.new(options)
-
-        changed.rhlogin = username
-        changed.password = nil
-        changed.use_authorization_tokens = options.create_token != false && !changed.token.nil?
-        changed.insecure = options.insecure == true
-
-        config.save!(changed, !must_sync_servers) unless skip_save_conf? && !first_time
-        options.__replace__(changed)
-
-        success "done"
-
-        if must_sync_servers
+        if write_servers_yml
           say "Saving server configuration to #{system_path(servers.path)} ... "
-
           servers.backup
           servers.add_or_update(options.server, 
             :login                    => options.rhlogin, 
@@ -284,7 +285,6 @@ module RHC
             :ssl_client_cert_file     => options.ssl_client_cert_file,
             :ssl_ca_file              => options.ssl_ca_file)
           servers.save!
-
           success "done"
         end
 
@@ -683,9 +683,10 @@ EOF
   end
 
   class ServerWizard < Wizard
-    def initialize(*args)
-      @skip_save_conf = args.length == 4 ? args.pop : nil
-      super *args
+    def initialize(config, options, server_configs, set_as_default=false)
+      @save_servers = true
+      @config_fields_to_save = set_as_default ? [:server] : []
+      super config, options, server_configs
     end
 
     def stages

@@ -72,6 +72,12 @@ module RHC
       sync_from_config(config)
     end
 
+    def reload(config=nil)
+      @servers = load || []
+      sync_from_config(config)
+      self
+    end
+
     def path
       File.join(RHC::Config.home_dir, '.openshift', "#{ENV['OPENSHIFT_SERVERS'].presence || 'servers'}.yml")
     end

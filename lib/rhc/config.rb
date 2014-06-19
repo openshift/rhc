@@ -164,11 +164,11 @@ module RHC
       end
     end
 
-    def save!(options, all_options=true)
+    def save!(options, fields=nil)
       File.open(path, 'w') do |f| 
         f.puts self.class.options_to_config(
           options, 
-          all_options ? nil : [:server]
+          fields
         )
       end
       @opts, @opts_config, @env_config, @additional_config, @local_config, @global_config = nil
