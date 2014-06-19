@@ -1,11 +1,7 @@
 module RHC
   module ServerHelpers
     def openshift_server
-      to_host(
-        (options.server rescue nil) || 
-        ENV['LIBRA_SERVER'] || 
-        (config['libra_server'] rescue nil) ||
-        openshift_online_server)
+      to_host(openshift_raw_server)
     end
 
     def openshift_online_server?
@@ -25,7 +21,7 @@ module RHC
     end
 
     def openshift_rest_endpoint
-      uri = to_uri(openshift_server)
+      uri = to_uri(openshift_raw_server)
       uri.path = '/broker/rest/api' if uri.path.blank? || uri.path == '/'
       uri
     end
@@ -37,5 +33,10 @@ module RHC
     def rhc_server_env
       ENV['RHC_SERVER']
     end
+
+    protected
+      def openshift_raw_server
+        (options.server rescue nil) || ENV['LIBRA_SERVER'] || (config['libra_server'] rescue nil) || openshift_online_server
+      end
   end
 end
