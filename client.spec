@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.26.5
+Version: 1.26.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,13 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Jun 19 2014 Adam Miller <admiller@redhat.com> 1.26.6-1
+- Bug 1110961 - should not try to convert server to host (allows ports and
+  different schemes) (contact@fabianofranz.com)
+- Merge pull request #608 from liggitt/bug_1109865_team_show_owner
+  (dmcphers+openshiftbot@redhat.com)
+- Fetch members if needed for membership#owner (jliggitt@redhat.com)
+
 * Wed Jun 18 2014 Adam Miller <admiller@redhat.com> 1.26.5-1
 - Merge pull request #607 from fabianofranz/master
   (dmcphers+openshiftbot@redhat.com)
