@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.26.6
+Version: 1.26.7
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,17 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Jun 19 2014 Adam Miller <admiller@redhat.com> 1.26.7-1
+- Merge pull request #610 from
+  liggitt/bug_1111090_save_serversyml_from_server_command
+  (dmcphers+openshiftbot@redhat.com)
+- Prevent --use and --skip-wizard being used together (jliggitt@redhat.com)
+- Prevent full config being written to express.conf once servers.yml exists
+  (jliggitt@redhat.com)
+- Add spec test for creating servers.yml on first add (jliggitt@redhat.com)
+- Bug 1111090: Allow setting and changing nickname with only a single server
+  (jliggitt@redhat.com)
+
 * Thu Jun 19 2014 Adam Miller <admiller@redhat.com> 1.26.6-1
 - Bug 1110961 - should not try to convert server to host (allows ports and
   different schemes) (contact@fabianofranz.com)
