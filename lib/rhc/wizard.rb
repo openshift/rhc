@@ -243,6 +243,13 @@ module RHC
       paragraph do
         FileUtils.mkdir_p File.dirname(config.path)
 
+        changed = Commander::Command::Options.new(options)
+        changed.rhlogin = username
+        changed.password = nil
+        changed.use_authorization_tokens = options.create_token != false && !changed.token.nil?
+        changed.insecure = options.insecure == true
+        options.__replace__(changed)
+
         # Save servers.yml if:
         # 1. we've been explicitly told to (typically when running the "rhc server" command)
         # 2. if the servers.yml file exists
@@ -261,15 +268,7 @@ module RHC
           config.backup
           FileUtils.rm(config.path, :force => true)
 
-          changed = Commander::Command::Options.new(options)
-
-          changed.rhlogin = username
-          changed.password = nil
-          changed.use_authorization_tokens = options.create_token != false && !changed.token.nil?
-          changed.insecure = options.insecure == true
-
           config.save!(changed, config_fields_to_save)
-          options.__replace__(changed)
           success "done"
         end
 
