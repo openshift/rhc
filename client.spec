@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.26.7
+Version: 1.26.8
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,10 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Sun Jun 22 2014 Adam Miller <admiller@redhat.com> 1.26.8-1
+- Bug 1111467 - must preserve configs provided through the wizard when saving
+  new server (contact@fabianofranz.com)
+
 * Thu Jun 19 2014 Adam Miller <admiller@redhat.com> 1.26.7-1
 - Merge pull request #610 from
   liggitt/bug_1111090_save_serversyml_from_server_command
