@@ -140,21 +140,21 @@ module RHC
 
     def to_options
       OPTIONS.inject({}) do |h, (name, opts)|
-          opts = Array(opts)
-          value = self[opts[0] || name.to_s]
-          unless value.nil?
-            value = case opts[1]
-                    when :integer
-                      Integer(value)
-                    when :boolean
-                      value.is_a?(TrueClass) || !!(value =~ /^\s*(y|yes|1|t|true)\s*$/i)
-                    else
-                      value unless value.blank?
-                    end
-            h[name] = value
-          end
-          h
+        opts = Array(opts)
+        value = self[opts[0] || name.to_s]
+        unless value.nil?
+          value = case opts[1]
+                  when :integer
+                    Integer(value)
+                  when :boolean
+                    value.is_a?(TrueClass) || !!(value =~ /^\s*(y|yes|1|t|true)\s*$/i)
+                  else
+                    value unless value.blank?
+                  end
+          h[name] = value
         end
+        h
+      end
     end
 
     def backup

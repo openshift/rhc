@@ -1,3 +1,5 @@
+require 'rhc/servers'
+
 module RHC
   module ServerHelpers
     def openshift_server
@@ -36,7 +38,9 @@ module RHC
 
     protected
       def openshift_raw_server
-        (options.server rescue nil) || ENV['LIBRA_SERVER'] || (config['libra_server'] rescue nil) || openshift_online_server
+        server = (options.server rescue nil) || ENV['LIBRA_SERVER'] || (config['libra_server'] rescue nil) || openshift_online_server
+        @servers ||= RHC::Servers.new
+        (@servers.find(server).hostname rescue nil) || server
       end
   end
 end
