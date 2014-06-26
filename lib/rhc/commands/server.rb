@@ -14,15 +14,15 @@ module RHC::Commands
       (development) and Enterprise (production) and the user also has a personal
       OpenShift Online account:
 
-        rhc server add openshift.redhat.com online -l personal@email.com
-        rhc server add origin.openshift.mycompany.com development -l user@company.com
-        rhc server add enterprise.openshift.mycompany.com production  -l user@company.com
+        rhc add-server openshift.redhat.com online -l personal@email.com
+        rhc add-server origin.openshift.mycompany.com development -l user@company.com
+        rhc add-server enterprise.openshift.mycompany.com production  -l user@company.com
 
       Then, to switch between the servers:
 
-        rhc server use online
-        rhc server use development
-        rhc server use production
+        rhc use-server online
+        rhc use-server development
+        rhc use-server production
 
       To list all servers configured:
 
