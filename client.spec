@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.27.1
+Version: 1.27.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,10 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Jul 03 2014 Adam Miller <admiller@redhat.com> 1.27.2-1
+- Bug 1115386 - remove stray space from cloned app environment variables
+  (dcleal@redhat.com)
+
 * Thu Jun 26 2014 Adam Miller <admiller@redhat.com> 1.27.1-1
 - Improvements to inline help (contact@fabianofranz.com)
 - Adding support to nickname on --server option (contact@fabianofranz.com)
