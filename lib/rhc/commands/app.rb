@@ -83,7 +83,7 @@ module RHC::Commands
 
         from_app = find_app(:app => options.from_app)
 
-        arg_envs = from_app.environment_variables.collect {|env| "#{env.name}=#{env.value} "} + arg_envs
+        arg_envs = from_app.environment_variables.collect {|env| "#{env.name}=#{env.value}"} + arg_envs
         cartridges = from_app.cartridges.reject{|c| c.tags.include?('web_proxy')}.collect{|c| c.custom? ? c.url : c.name}
       end
 
