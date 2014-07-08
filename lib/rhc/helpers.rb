@@ -338,7 +338,10 @@ module RHC
         :auto_deploy     => 'Deployment',
         :sha1            => 'SHA1',
         :ref             => 'Git Reference',
-        :use_authorization_tokens => 'Use Auth Tokens'
+        :use_authorization_tokens => 'Use Auth Tokens',
+        :ssl_ca_file     => 'SSL Cert CA File',
+        :ssl_version     => 'SSL Version',
+        :ssl_client_cert_file => 'SSL x509 Client Cert File'
       })
 
       headings[value]

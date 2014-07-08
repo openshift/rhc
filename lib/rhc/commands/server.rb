@@ -132,7 +132,9 @@ module RHC::Commands
     def use(server)
       server = server_configs.find(server)
 
-      if wizard_to_server(server.hostname, true, :login => server.login, :use_authorization_tokens => server.use_authorization_tokens, :insecure => server.insecure)
+      attrs = [:login, :use_authorization_tokens, :insecure, :timeout, :ssl_version, :ssl_client_cert_file, :ssl_ca_file]
+
+      if wizard_to_server(server.hostname, true, attrs.inject({}){ |h, (k, v)| h[k] = server.send(k); h })
         paragraph { success "Now using '#{server.hostname}'" }
         0
       else
@@ -213,9 +215,9 @@ module RHC::Commands
         options['use_authorization_tokens'] = args[:use_authorization_tokens] unless args[:use_authorization_tokens].nil?
         options['insecure'] = args[:insecure] unless args[:insecure].nil?
         options['timeout'] = args[:timeout] unless args[:timeout].nil?
-        options['ssl_version'] = args[:ssl_version] unless args[:ssl_version].nil?
-        options['ssl_client_cert_file'] = args[:ssl_client_cert_file] unless args[:ssl_client_cert_file].nil?
-        options['ssl_ca_file'] = args[:ssl_ca_file] unless args[:ssl_ca_file].nil?
+        options['ssl_version'] = args[:ssl_version]
+        options['ssl_client_cert_file'] = args[:ssl_client_cert_file]
+        options['ssl_ca_file'] = args[:ssl_ca_file]
         RHC::ServerWizard.new(config, options, server_configs, set_default).run
       end
 
