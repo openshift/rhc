@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.27.2
+Version: 1.27.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,14 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Jul 09 2014 Adam Miller <admiller@redhat.com> 1.27.3-1
+- Merge pull request #620 from jcantrill/1116709_unclear_notificatio_message
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 1117466 - should not reuse SSL certs from different server configs
+  (contact@fabianofranz.com)
+- Bug 1116709 - Modified the domain rename message to inform about applications
+  that will be created (jcantril@redhat.com)
+
 * Thu Jul 03 2014 Adam Miller <admiller@redhat.com> 1.27.2-1
 - Bug 1115386 - remove stray space from cloned app environment variables
   (dcleal@redhat.com)
