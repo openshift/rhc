@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.27.3
+Version: 1.27.4
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,14 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Jul 09 2014 Adam Miller <admiller@redhat.com> 1.27.4-1
+- Merge pull request #621 from sferich888/debug_ssh
+  (dmcphers+openshiftbot@redhat.com)
+- Adding Test and reducing the code needed to make this happen
+  (erich@redhat.com)
+- Merge branch 'master' into debug_ssh (erich@redhat.com)
+- Have rhc --debug also put ssh into debugin mode (erich@redhat.com)
+
 * Wed Jul 09 2014 Adam Miller <admiller@redhat.com> 1.27.3-1
 - Merge pull request #620 from jcantrill/1116709_unclear_notificatio_message
   (dmcphers+openshiftbot@redhat.com)
