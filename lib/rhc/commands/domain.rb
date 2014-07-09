@@ -62,7 +62,7 @@ module RHC::Commands
       domain.rename(new_namespace)
       success "done"
 
-      info "Applications in this domain will use the new name in their URL."
+      info "Applications created in this domain will use the new name in their URL."
 
       0
     end

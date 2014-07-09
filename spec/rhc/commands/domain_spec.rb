@@ -206,7 +206,7 @@ describe RHC::Commands::Domain do
         expect { run }.to exit_with_code(0)
         rest_client.domains[0].name.should == 'alterednamespace'
       end
-      it { run_output.should match(/Renaming domain 'olddomain' to 'alterednamespace'.*done.*?Applications in this domain will use the new name in their URL./m) }
+      it { run_output.should match(/Renaming domain 'olddomain' to 'alterednamespace'.*done.*?Applications created in this domain will use the new name in their URL./m) }
     end
 
     context 'when there is no domain' do
@@ -227,7 +227,7 @@ describe RHC::Commands::Domain do
       expect { run }.to exit_with_code(0)
       rest_client.domains[0].name.should == 'alterednamespace'
     end
-    it { run_output.should match(/This command is deprecated.*Renaming domain 'olddomain' to 'alterednamespace'.*done.*?Applications in this domain will use the new name in their URL./m) }
+    it { run_output.should match(/This command is deprecated.*Renaming domain 'olddomain' to 'alterednamespace'.*done.*?Applications created in this domain will use the new name in their URL./m) }
   end
 
   describe 'alter alias has been removed' do
