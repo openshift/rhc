@@ -9,6 +9,19 @@ module WizardStepsHelper
     end
   end
 
+  def should_configure_server(server=nil)
+    server = 'openshift.redhat.com' if server.nil?
+    input_line server
+    next_stage.should_not be_nil
+
+    last_output do |s|
+      s.should match(/If you have your own OpenShift server, you can specify it now/)
+      s.should match(/Just hit enter to use: #{server}/)
+      s.should match(/Enter server address: |#{server}|/)
+      s.should match(/You can add more servers later using 'rhc server'/)
+    end
+  end
+
   def should_challenge_for(username, password)
     input_line username.to_s if username
     input_line password.to_s if password
@@ -34,10 +47,20 @@ module WizardStepsHelper
     last_output.should match("Saving configuration to #{current_config_path}")
 
     File.readable?(current_config_path).should be true
-    RHC::Vendor::ParseConfig.new(current_config_path).tap do |cp|
-      cp["default_rhlogin"].should == username
-      cp["libra_server"].should == mock_uri
-      cp["use_authorization_tokens"].should == 'false'
+
+    if present
+      RHC::Vendor::ParseConfig.new(current_config_path)["libra_server"].should == mock_uri
+      RHC::Servers.new.tap do |s|
+        s.list.length.should == 2
+        s.list.last.login.should == username
+        s.list.last.use_authorization_tokens.should be false
+      end
+    else
+      RHC::Vendor::ParseConfig.new(current_config_path).tap do |cp|
+        cp["default_rhlogin"].should == username
+        cp["libra_server"].should == mock_uri
+        cp["use_authorization_tokens"].should == 'false'
+      end
     end
   end
 
@@ -317,7 +340,7 @@ EOF
 default_rhlogin='a_different_user'
 
 # Server API
-libra_server = 'a_different_server.com'
+libra_server = 'a-different-server.com'
 EOF
     end
     path

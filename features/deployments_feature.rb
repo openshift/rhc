@@ -47,17 +47,17 @@ describe "rhc deployment scenarios" do
 
     it "should perform a complete deploy workflow" do
       configure_app_for_manual_git_deployment
-      edit_simple_change 'Welcome to Test'
-      app_page_content.should match /Welcome to OpenShift/
-      app_page_content.should_not match /Welcome to Test/
+      edit_simple_change 'Bienvenido a'
+      app_page_content.should match /Welcome to/
+      app_page_content.should_not match /Bienvenido a/
       deploy_master
-      app_page_content.should match /Welcome to Test/
-      app_page_content.should_not match /Welcome to OpenShift/
+      app_page_content.should match /Bienvenido a/
+      app_page_content.should_not match /Welcome to/
       deployment_id = find_inactive_deployment
       deployment_id.should_not be_nil
       activate deployment_id
-      app_page_content.should match /Welcome to OpenShift/
-      app_page_content.should_not match /Welcome to Test/
+      app_page_content.should match /Welcome to/
+      app_page_content.should_not match /Bienvenido a/
     end
 
     private
@@ -100,7 +100,7 @@ describe "rhc deployment scenarios" do
         Dir.chdir git_directory
         `git config user.email "you@example.com"`
         `git config user.name "Your Name"`
-        `sed -i "s/Welcome to OpenShift/#{content}/" php/index.php`
+        `sed -i "s/Welcome/#{content}/" index.php`
         `git commit -a -m "Commit from Feature Tests"`
         `git push origin master`
         Dir.chdir '../'

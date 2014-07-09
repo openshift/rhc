@@ -31,6 +31,7 @@ Gem::Specification.new do |s|
   ].join("\n")
 
   s.add_dependency              'net-ssh',      '>= 2.0.11'
+  s.add_dependency              'net-scp',      '>= 1.1.2'
   s.add_dependency              'net-ssh-multi','>= 1.2.0'
   s.add_dependency              'archive-tar-minitar'
   s.add_runtime_dependency      'commander',    '>= 4.0'
@@ -39,7 +40,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency      'open4'
   s.add_development_dependency  'rake',         '>= 0.8.7'
   s.add_development_dependency  'webmock',      '< 1.12'
-  s.add_development_dependency  'rspec',        '>= 2.8.0'
+  s.add_development_dependency  'rspec',        '>= 2.8.0', '< 2.99'
   s.add_development_dependency  'fakefs',       '>= 0.4'
   s.add_development_dependency  'thor'
   s.add_development_dependency  'cucumber'

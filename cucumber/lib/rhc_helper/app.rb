@@ -5,7 +5,7 @@ module RHCHelper
   # A class to help maintain the state from rhc calls and helper
   # methods around application management.
   #
-  class App 
+  class App
     extend Persistable
     extend Runnable
     extend API
@@ -34,12 +34,15 @@ module RHCHelper
 
     def self.rhc_setup
       # Setup questions asked by wizard which are passed in below:
-      #   1 - username
-      #   2 - password
-      #   3 - should we support an api token, if server supports it
-      #   4 - upload SSH keys
-      #   4 - if no namespace is found, create namespace? (blank is no)
-      args = [$username, $password]
+      #   1 - hostname
+      #   2 - username
+      #   3 - password
+      #   4 - should we support an api token, if server supports it
+      #   5 - upload SSH keys
+      #   5 - if no namespace is found, create namespace? (blank is no)
+      args = [ENV['RHC_SERVER']]
+      args << $username
+      args << $password
       args << 'no' if $supports_auth_tokens
       args << 'yes' unless ($keyed_users ||= []).include?($username)
       args << '' # always skip namespace
@@ -118,10 +121,10 @@ module RHCHelper
 
     def get_index_file
       case @type.split("-").first
-        when "php" then "php/index.php"
+        when "php" then "index.php"
         when "ruby" then "config.ru"
-        when "python" then "wsgi/application"
-        when "perl" then "perl/index.pl"
+        when "python" then "wsgi.py"
+        when "perl" then "index.pl"
         when "jbossas" then "src/main/webapp/index.html"
         when "jbosseap" then "src/main/webapp/index.html"
         when "nodejs" then "index.html"

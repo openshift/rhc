@@ -62,7 +62,7 @@ module RHC::Commands
       domain.rename(new_namespace)
       success "done"
 
-      info "Applications in this domain will use the new name in their URL."
+      info "Applications created in this domain will use the new name in their URL."
 
       0
     end
@@ -149,8 +149,9 @@ module RHC::Commands
       domain = rest_client.find_domain(namespace)
 
       say "Leaving domain ... "
-      domain.leave
+      result = domain.leave
       success "done"
+      result.messages.each{ |s| paragraph{ say s } }
 
       0
     end

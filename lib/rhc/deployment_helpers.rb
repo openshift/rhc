@@ -95,7 +95,7 @@ module RHC
         say "Activating deployment '#{deployment_id}' on application #{rest_app.name} ..."
 
         ssh_url = URI(rest_app.ssh_url)
-        remote_cmd = "gear activate #{deployment_id}"
+        remote_cmd = "gear activate --all #{deployment_id}"
 
         begin
           ssh_ruby(ssh_url.host, ssh_url.user, remote_cmd)

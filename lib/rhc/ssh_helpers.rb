@@ -169,7 +169,9 @@ module RHC
     def ssh_ruby(host, username, command, compression=false, request_pty=false, &block)
       debug "Opening Net::SSH connection to #{host}, #{username}, #{command}"
       exit_status = 0
-      Net::SSH.start(host, username, :compression => compression) do |session|
+      options = {:compression => compression}
+      options[:verbose] = :debug if debug?
+      Net::SSH.start(host, username, options) do |session|
         #:nocov:
         channel = session.open_channel do |channel|
           if request_pty
@@ -244,6 +246,94 @@ module RHC
           channel.send_data chunk
         end
       end
+    end
+
+    def save_snapshot(app, filename, for_deployment=false, ssh_executable=nil)
+      ssh_uri = URI.parse(app.ssh_url)
+      ssh_executable = check_ssh_executable! ssh_executable
+
+      snapshot_cmd = for_deployment ? 'gear archive-deployment' : 'snapshot'
+      ssh_cmd = "#{ssh_executable} #{ssh_uri.user}@#{ssh_uri.host} '#{snapshot_cmd}' > #{filename}"
+      ssh_stderr = " 2>/dev/null"
+      debug ssh_cmd
+
+      say "Pulling down a snapshot of application '#{app.name}' to #{filename} ... "
+
+      begin
+        if !RHC::Helpers.windows?
+            status, output = exec(ssh_cmd + (debug? ? '' : ssh_stderr))
+            if status != 0
+              debug output
+              raise RHC::SnapshotSaveException.new "Error in trying to save snapshot. You can try to save manually by running:\n#{ssh_cmd}"
+            end
+        else
+          Net::SSH.start(ssh_uri.host, ssh_uri.user) do |ssh|
+            File.open(filename, 'wb') do |file|
+              ssh.exec! "snapshot" do |channel, stream, data|
+                if stream == :stdout
+                  file.write(data)
+                else
+                  debug data
+                end
+              end
+            end
+          end
+        end
+      rescue Timeout::Error, Errno::EADDRNOTAVAIL, Errno::EADDRINUSE, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed => e
+        debug e.backtrace
+        raise RHC::SnapshotSaveException.new "Error in trying to save snapshot. You can try to save manually by running:\n#{ssh_cmd}"
+      end
+
+      success 'done'
+    end
+
+    def restore_snapshot(app, filename, ssh_executable=nil)
+      include_git = RHC::Helpers.windows? ? true : RHC::TarGz.contains(filename, './*/git')
+      ssh_uri = URI.parse(app.ssh_url)
+      ssh_executable = check_ssh_executable! options.ssh
+
+      ssh_cmd = "cat '#{filename}' | #{ssh_executable} #{ssh_uri.user}@#{ssh_uri.host} 'restore#{include_git ? ' INCLUDE_GIT' : ''}'"
+      ssh_stderr = " 2>/dev/null"
+      debug ssh_cmd
+
+      say "Restoring from snapshot #{filename} to application '#{app.name}' ... "
+
+      begin
+        if !RHC::Helpers.windows?
+          status, output = exec(ssh_cmd + (debug? ? '' : ssh_stderr))
+          if status != 0
+            debug output
+            raise RHC::SnapshotRestoreException.new "Error in trying to restore snapshot. You can try to restore manually by running:\n#{ssh_cmd}"
+          end
+        else
+          ssh = Net::SSH.start(ssh_uri.host, ssh_uri.user)
+          ssh.open_channel do |channel|
+            channel.exec("restore#{include_git ? ' INCLUDE_GIT' : ''}") do |ch, success|
+              channel.on_data do |ch, data|
+                debug data
+              end
+              channel.on_extended_data do |ch, type, data|
+                debug data
+              end
+              channel.on_close do |ch|
+                debug "Terminating..."
+              end
+              File.open(filename, 'rb') do |file|
+                file.chunk(4096) do |chunk|
+                  channel.send_data chunk
+                end
+              end
+              channel.eof!
+            end
+          end
+          ssh.loop
+        end
+      rescue Timeout::Error, Errno::EADDRNOTAVAIL, Errno::EADDRINUSE, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed => e
+        debug e.backtrace
+        raise RHC::SnapshotRestoreException.new "Error in trying to restore snapshot. You can try to restore manually by running:\n#{ssh_cmd}"
+      end
+
+      success 'done'
     end
 
     # Public: Generate an SSH key and store it in ~/.ssh/id_rsa

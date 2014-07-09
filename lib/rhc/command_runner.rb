@@ -14,21 +14,20 @@ module RHC
       #:nocov:
     end
 
-    def options_parse_trace
-      if @args.include?("--trace")
-        @args.delete "--trace"
+    def delete_args(*switches)
+      if @args.any?{|i| switches.include?(i)}
+        switches.each{|switch| @args.delete switch} 
         return true
       end
       false
     end
 
+    def options_parse_trace
+      delete_args("--trace")
+    end
+
     def options_parse_debug
-      if @args.include?("-d") or @args.include?("--debug")
-        @args.delete "-d"
-        @args.delete "--debug"
-        return true
-      end
-      false
+      delete_args("-d", "--debug")
     end
 
     def options_parse_version

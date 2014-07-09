@@ -2,12 +2,14 @@ require 'spec_helper'
 require 'rest_spec_helper'
 require 'rhc/commands/app'
 require 'rhc/config'
+require 'rhc/servers'
 require 'resolv'
 
 describe RHC::Commands::App do
   let!(:rest_client){ MockRestClient.new }
   let!(:config){ user_config }
   before{ RHC::Config.stub(:home_dir).and_return('/home/mock_user') }
+  before{ RHC::Servers.stub(:home_dir).and_return('/home/mock_user') }
   before do
     FakeFS.activate!
     FakeFS::FileSystem.clear
@@ -212,7 +214,7 @@ describe RHC::Commands::App do
     end
 
     context 'when run with a git url' do
-      let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart-1', '--from', 'git://url'] }
+      let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart-1', '--from-code', 'git://url'] }
       it { expect { run }.to exit_with_code(0) }
       it { run_output.should match("Success") }
       it { run_output.should match("Git remote: git:fake.foo/git/app1.git\n") }
@@ -466,6 +468,70 @@ describe RHC::Commands::App do
     end
   end
 
+  describe 'app create from another app' do
+    before(:each) do
+      FakeFS.deactivate!
+      @domain = rest_client.add_domain("mockdomain")
+      @app = @domain.add_application("app1", "mock_standalone_cart-1")
+      @app.add_alias('myfoo.com')
+      @cart1 = @app.add_cartridge('mock_cart-1')
+      @cart2 = @app.add_cartridge('mock_cart-2')
+      @cart2.gear_profile = 'medium'
+      @instance.stub(:save_snapshot)
+      @instance.stub(:restore_snapshot)
+    end
+
+    context 'when run' do
+      let(:arguments) { ['app', 'create', 'clone', '--from-app', 'app1', '--no-git'] }
+      it { expect { run }.to exit_with_code(0) }
+      it "should clone successfully" do
+        run_output.should match(/Cartridges:\s+mock_standalone_cart-1, mock_cart-1, mock_cart-2/)
+        run_output.should match(/Gear Size:\s+Copied from 'app1'/)
+        run_output.should match(/Setting deployment configuration/)
+        run_output.should match(/done/)
+      end
+    end
+
+    context 'when cloning a scalable app as not scalable' do
+      before do
+        @scaled = @domain.add_application("scaled", "mock_standalone_cart-1", true)
+        @scaled.cartridges.each do |c|
+          c.scales_from = 2
+          c.scales_to = -1
+        end
+      end
+      let(:arguments) { ['app', 'create', 'clone', '--from-app', 'scaled', '--no-git', '--no-scaling'] }
+      it "should result in only one gear" do
+        expect { run }.to exit_with_code(0)
+        @domain.applications.size.should == 3
+        @domain.applications.select{|a| a.name == 'clone'}.size.should == 1
+        @domain.applications.select{|a| a.name == 'clone'}.first.cartridges.size.should == 1
+        @domain.applications.select{|a| a.name == 'clone'}.first.cartridges.first.scales_from.should == 1
+        @domain.applications.select{|a| a.name == 'clone'}.first.cartridges.first.scales_to.should == 1
+      end
+    end
+
+    context 'alias already registered' do
+      let(:arguments) { ['app', 'create', 'clone', '--from-app', 'app1', '--no-git'] }
+      before do 
+        RHC::Rest::Mock::MockRestApplication.any_instance.stub(:aliases).and_return(['www.foo.com'])
+      end 
+      it { expect { run }.to exit_with_code(0) }
+      it "should warn" do
+        run_output.should match(/The application 'app1' has aliases set which were not copied/)
+      end
+    end
+
+    context 'when run against unsupported server' do
+      let(:arguments) { ['app', 'create', 'clone', '--from-app', 'app1', '--no-git'] }
+      before { @domain.should_receive(:has_param?).with('ADD_APPLICATION','cartridges[][name]').and_return(false) }
+      it { expect { run }.to exit_with_code(134) }
+      it "should fail" do
+        run_output.should match(/The server does not support creating apps based on others/)
+      end
+    end
+  end
+
   describe 'app delete' do
     let(:arguments) { ['app', 'delete', '--trace', '-a', 'app1', '--config', 'test.conf', '-l', 'test@test.foo', '-p',  'password'] }
 
@@ -566,6 +632,28 @@ describe RHC::Commands::App do
       it { run_output.should match(/Gears:\s+1 medium/) }
     end
 
+    context 'when run with premium cartridge with single rate' do
+      before do
+        @domain = rest_client.add_domain("mockdomain")
+        app = @domain.add_application("app1", "mock_type", true)
+        cart1 = app.add_cartridge('mock_premium_cart-1')
+        cart1.usage_rates = {0.01 => []}
+      end
+      it { run_output.should match(/This cartridge costs an additional \$0.01 per gear after the first 3 gears\./) }
+    end
+
+    context 'when run with premium cartridge with multiple rates' do
+      before do
+        @domain = rest_client.add_domain("mockdomain")
+        app = @domain.add_application("app1", "mock_type", true)
+        cart1 = app.add_cartridge('mock_premium_cart-2')
+        cart1.usage_rates = {0.01 => ['plan1','plan2', 'plan3'], 0.02 => ['plan4'], 0.03 => []}
+      end
+      it { run_output.should match(/This cartridge costs an additional \$0\.01 per gear after the first 3 gears on the Plan1, Plan2 and Plan3 plans\./) }
+      it { run_output.should match(/This cartridge costs an additional \$0\.02 per gear after the first 3 gears on the Plan4 plan\./) }
+      it { run_output.should match(/This cartridge costs an additional \$0\.03 per gear after the first 3 gears\./) }
+    end
+
     context 'when run with custom app' do
       before do
         @domain = rest_client.add_domain("mockdomain")
@@ -578,6 +666,41 @@ describe RHC::Commands::App do
       it { run_output.should match(/Gears:\s+Located with mock_type/) }
       it { run_output.should match(/Gears:\s+1 small/) }
       it { run_output.should match(%r(From:\s+ https://foo.bar.com)) }
+    end
+
+    context 'when run with app with custom external cartridges' do
+      before do
+        @domain = rest_client.add_domain("mockdomain")
+        app = @domain.add_application("app1", "mock_type")
+        cart1 = app.add_cartridge('mock_cart-1')
+        cart1.url = 'https://foo.bar.com'
+        cart1.tags = ['external']
+        cart1.version = '2'
+        cart1.license = 'GPL'
+        cart1.website = 'http://bar.com'
+        cart1.current_scale = 0
+      end
+      context 'verbosely' do
+        let(:arguments) { ['app', 'show', 'app1', '-v'] }
+        it { run_output.should match("app1 @ https://app1-mockdomain.fake.foo/") }
+        it { run_output.should match(/Gears:\s+1 small/) }
+        it { run_output.should match(/Gears:\s+none \(external service\)/) }
+        it { run_output.should match(/Description:\s+Description of mock_cart-1/) }
+        it { run_output.should match(%r(Website:\s+ http://bar.com)) }
+        it { run_output.should match(/Version:\s+2/) }
+        it { run_output.should match(/License:\s+GPL/) }
+        it { run_output.should match(%r(From:\s+ https://foo.bar.com)) }
+      end
+      context 'not verbosely' do
+        it { run_output.should match("app1 @ https://app1-mockdomain.fake.foo/") }
+        it { run_output.should match(/Gears:\s+1 small/) }
+        it { run_output.should match(/Gears:\s+none \(external service\)/) }
+        it { run_output.should_not match(/Description:\s+Description of mock_cart-1/) }
+        it { run_output.should match(%r(Website:\s+ http://bar.com)) }
+        it { run_output.should_not match(/Version:\s+2/) }
+        it { run_output.should_not match(/License:\s+GPL/) }
+        it { run_output.should match(%r(From:\s+ https://foo.bar.com)) }
+      end
     end
   end
 

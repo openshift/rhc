@@ -52,18 +52,21 @@ module RHC::Commands
             say c.description
             paragraph{ say "Tagged with: #{tags.sort.join(', ')}" } if tags.present?
             paragraph{ say format_usage_message(c) } if c.usage_rate?
+            paragraph{ warn "Does not receive automatic security updates" } unless c.automatic_updates?
           end
         end
       else
         say table(carts.collect do |c|
-          [c.usage_rate? ? "#{c.name} (*)" : c.name,
+          [[c.name, c.usage_rate? ? " (*)" : "", c.automatic_updates? ? '' : ' (!)'].join(''),
            c.display_name,
-           c.only_in_existing? ? 'addon' : 'web']
+           c.only_in_existing? ? 'addon' : 'web',
+          ]
         end)
       end
 
       paragraph{ say "Note: Web cartridges can only be added to new applications." }
-      paragraph{ say "(*) denotes a cartridge with additional usage costs." } if carts.any? { |c| c.usage_rate? }
+      paragraph{ say "(*) denotes a cartridge with additional usage costs." } if carts.any?(&:usage_rate?)
+      paragraph{ say "(!) denotes a cartridge that will not receive automatic security updates." } unless options.verbose || carts.none?(&:automatic_updates?)
 
       0
     end
@@ -127,6 +130,7 @@ module RHC::Commands
     def remove(cartridge)
       rest_app = find_app(:include => :cartridges)
       rest_cartridge = check_cartridges(cartridge, :from => rest_app.cartridges).first
+      external_zero_gears = external_zero_gears_cartridge?(rest_cartridge)
 
       confirm_action "Removing a cartridge is a destructive operation that may result in loss of data associated with the cartridge.\n\nAre you sure you wish to remove #{rest_cartridge.name} from '#{rest_app.name}'?"
 
@@ -135,6 +139,8 @@ module RHC::Commands
       success "removed"
 
       paragraph{ rest_cartridge.messages.each { |msg| success msg } }
+
+      paragraph{ warn 'There may be external resources or accounts associated with this external cartridge that need to be removed manually.' } if external_zero_gears
 
       0
     end
@@ -321,6 +327,10 @@ module RHC::Commands
           result.messages.each{ |s| paragraph{ say s } }
         end
         resp
+      end
+
+      def external_zero_gears_cartridge?(rest_cartridge)
+        rest_cartridge.external? && rest_cartridge.current_scale == 0
       end
   end
 end

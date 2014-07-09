@@ -1,5 +1,6 @@
 require 'open4'
 require 'rhc/helpers'
+require 'tmpdir'
 
 $source_bin_rhc = File.expand_path('bin/rhc')
 
@@ -140,6 +141,32 @@ module RhcExecutionHelper
     object.members.length.should == 1
   end
 
+  def has_gears_available(gear_count=1, for_user=nil)
+    debug.puts "Ensuring user has at least #{gear_count} gears free" if debug?
+
+    c = for_user ? for_user.client : client
+    
+    max_gears = c.user.max_gears
+    consumed_gears = c.user.consumed_gears
+    raise "User has max_gears=#{max_gears}, cannot make #{gear_count} gears available" if max_gears < gear_count
+    
+    max_consumed = max_gears - gear_count
+    if consumed_gears <= max_consumed
+      debug.puts "  user can use up to #{max_consumed} gears and is only using #{consumed_gears}" if debug?
+      return
+    end
+
+    delete_count = 0
+    c.owned_applications.sort_by(&:gear_count).reverse.each do |app|
+      if (consumed_gears - delete_count) > max_consumed
+        debug.puts "  deleting app to free #{app.gear_count} gears" if debug?
+        delete_count += app.gear_count
+        debug.puts "  user is now using #{consumed_gears - delete_count} gears" if debug?
+        app.destroy
+      end
+    end
+  end
+
   def has_an_application(for_user=nil)
     c = for_user ? for_user.client : client
     debug.puts "Creating or reusing an app" if debug?
@@ -174,6 +201,7 @@ module RhcExecutionHelper
   def setup_args(opts={})
     c = opts[:client] || client
     args = []
+    args << (opts[:server] || ENV['RHC_SERVER'] || 'localhost')
     args << 'yes' if (ENV['TEST_INSECURE'] == '1' || false)
     args << (opts[:login] || ENV['TEST_USERNAME'])
     args << (opts[:password] || ENV['TEST_PASSWORD'])

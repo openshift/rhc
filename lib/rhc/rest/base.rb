@@ -1,4 +1,4 @@
-require 'cgi'
+require 'uri'
 
 module RHC
   module Rest
@@ -7,6 +7,8 @@ module RHC
       extend AttributesClass
 
       define_attr :messages
+
+      URI_ESCAPE_REGEX = Regexp.new("[^#{URI::PATTERN::UNRESERVED}]")
 
       def initialize(attrs=nil, client=nil)
         @attributes = (attrs || {}).stringify_keys!
@@ -22,7 +24,7 @@ module RHC
         link = link(link_name)
         raise "No link defined for #{link_name}" unless link
         url = link['href']
-        url = url.gsub(/:\w+/) { |s| CGI.escape(options[:params][s]) || s } if options[:params]
+        url = url.gsub(/:\w+/) { |s| URI.escape(options[:params][s], URI_ESCAPE_REGEX) || s } if options[:params]
         method = options[:method] || link['method']
 
         result = client.request(options.merge({
@@ -53,7 +55,7 @@ module RHC
 
       def link_href(sym, params=nil, resource=nil, &block)
         if (l = link(sym)) && (h = l['href'])
-          h = h.gsub(/:\w+/){ |s| params[s].nil? ? s : CGI.escape(params[s]) } if params
+          h = h.gsub(/:\w+/){ |s| params[s].nil? ? s : URI.escape(params[s], URI_ESCAPE_REGEX) } if params
           h = "#{h}/#{resource}" if resource
           return h
         end

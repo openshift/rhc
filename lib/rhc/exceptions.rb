@@ -67,6 +67,48 @@ module RHC
     end
   end
 
+  class TeamsNotSupportedException < Exception
+    def initialize(message="Server does not support teams")
+      super message, 161
+    end
+  end
+
+  class TeamNotFoundException < Exception
+    def initialize(message="Team not found")
+      super message, 162
+    end
+  end
+
+  class MemberNotFoundException < Exception
+    def initialize(message="Member not found")
+      super message, 163
+    end
+  end
+
+  class ServerNicknameExistsException < Exception
+    def initialize(nickname)
+      super "You already have a server configured with the nickname '#{nickname}'", 164
+    end
+  end
+
+  class ServerHostnameExistsException < Exception
+    def initialize(hostname)
+      super "You already have a server configured with the hostname '#{hostname}'", 165
+    end
+  end
+
+  class ServerNotConfiguredException < Exception
+    def initialize(server)
+      super "You don't have any server configured with the hostname or nickname '#{server}'", 166
+    end
+  end
+
+  class ServerInUseException < Exception
+    def initialize(message="Server in use")
+      super message, 167
+    end
+  end
+
   class GitPermissionDenied < GitException; end
   class GitDirectoryExists < GitException; end
 
@@ -138,6 +180,12 @@ module RHC
     end
   end
 
+  class AppCloneNotSupportedException < Exception
+    def initialize(message="The server does not support cloning apps")
+      super message, 134
+    end
+  end
+
   class MissingScalingValueException < Exception
     def initialize(message="Must provide either a min or max value for scaling")
       super message
@@ -190,13 +238,13 @@ module RHC
   end
 
   class ChangeMembersOnResourceNotSupported < Exception
-    def initialize(message="You can only add or remove members on a domain.")
+    def initialize(message="You can only add or remove members on a domain or team.")
       super message, 1
     end
   end
 
   class MembersNotSupported < Exception
-    def initialize(message="The server does not support adding or removing members.")
+    def initialize(message="The server does not support adding or removing members on this resource.")
       super message, 1
     end
   end
@@ -226,6 +274,24 @@ module RHC
 
   class InvalidSSHExecutableException < Exception
     def initialize(message="Invalid or missing SSH executable")
+      super message
+    end
+  end
+
+  class FileOrPathNotFound < Exception
+    def initialize(message="File, file path, or directory could not be found")
+      super message
+    end
+  end
+  
+  class RemoteFileOrPathNotFound < FileOrPathNotFound
+    def initialize(message="Remote File, file path, or directory could not be found")
+      super message
+    end
+  end
+
+  class ArgumentNotValid < Exception
+    def initialize(message="Argument is not valid for this command")
       super message
     end
   end

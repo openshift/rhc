@@ -220,7 +220,7 @@ describe RHC::Commands::Cartridge do
         app = domain.add_application("app1", "mock_type")
       end
       it {
-        succeed_with_message /This gear costs an additional \$0\.05 per gear after the first 3 gears\./
+        succeed_with_message /This cartridge costs an additional \$0\.05 per gear after the first 3 gears\./
       }
     end
   end
@@ -424,7 +424,7 @@ describe RHC::Commands::Cartridge do
     end
 
     context 'when run with a premium cartridge' do
-      it { run_output.should match(/This gear costs an additional \$0\.05 per gear after the first 3 gears./) }
+      it { run_output.should match(/This cartridge costs an additional \$0\.05 per gear after the first 3 gears./) }
     end
   end
 

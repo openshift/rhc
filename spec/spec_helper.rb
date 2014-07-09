@@ -233,6 +233,7 @@ module CommandHelpers
     $terminal.close_write
     run!(*args)
   end
+
   def command_output(args=arguments)
     run_command(args)
   rescue SystemExit => e
@@ -365,6 +366,7 @@ module ClassSpecHelpers
   def base_config(&block)
     config = RHC::Config.new
     config.stub(:load_config_files)
+    config.stub(:load_servers)
     defaults = config.instance_variable_get(:@defaults)
     yield config, defaults if block_given?
     RHC::Config.stub(:default).and_return(config)
@@ -387,6 +389,25 @@ module ClassSpecHelpers
       opts[:password].should == password
       opts[:server].should == server if server
     end
+  end
+
+  def local_config
+    user = respond_to?(:local_config_username) ? self.local_config_username : 'test_user'
+    password = respond_to?(:local_config_password) ? self.local_config_password : 'test pass'
+    server = respond_to?(:local_config_server) ? self.local_config_server : nil
+
+    c = base_config
+
+    local_config = RHC::Vendor::ParseConfig.new
+    local_config.add('default_rhlogin', user) if user
+    local_config.add('password', password) if password
+    local_config.add('libra_server', server) if server
+    
+    c.instance_variable_set(:@local_config, local_config)
+    opts = c.to_options
+    opts[:rhlogin].should == user
+    opts[:password].should == password
+    opts[:server].should == server if server
   end
 
   def expect_multi_ssh(command, hosts, check_error=false)
@@ -552,6 +573,41 @@ end
 def mac?
   RbConfig::CONFIG['host_os'] =~ /^darwin/
 end
+
+def mock_save_snapshot_file(app)
+  @ssh_uri = URI.parse app.ssh_url
+  mock_popen3("ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'snapshot' > #{@app.name}.tar.gz", nil,
+              "Pulling down a snapshot of application '#{app.name}' to #{app.name}.tar.gz", nil)
+end
+
+def mock_restore_snapshot_file(app)
+  @ssh_uri = URI.parse app.ssh_url
+  File.stub(:exists?).and_return(true)
+  RHC::TarGz.stub(:contains).and_return(true)
+  in_mock, out_mock, err_mock = 
+    mock_popen3("ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'restore INCLUDE_GIT'", nil, "Restoring from snapshot #{app.name}.tar.gz to application '#{app.name}'", nil)
+  lines = ''
+  File.open(File.expand_path('../rhc/assets/targz_sample.tar.gz', __FILE__), 'rb') do |file|
+    file.chunk(4096) do |chunk|
+      lines << chunk
+    end
+  end
+  in_mock.stub(:write)
+  in_mock.stub(:close_write)
+end
+
+def mock_popen3(cmd, std_in, std_out, std_err)
+  in_mock = double('std in')
+  out_mock = double('std out')
+  err_mock = double('std err')
+  in_mock.stub(:gets).and_return(std_in)      
+  out_mock.stub(:gets).and_return(std_out)      
+  err_mock.stub(:gets).and_return(std_err)      
+  Open3.stub(:popen3)
+  Open3.should_receive(:popen3).with(cmd).and_yield(in_mock, out_mock, err_mock)
+  return in_mock, out_mock, err_mock
+end
+
 
 RSpec.configure do |config|
   config.include(ExitCodeMatchers)

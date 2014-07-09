@@ -15,3 +15,6 @@ end
 if Gem::Specification.respond_to?(:find_all_by_name) and not Gem::Specification::find_all_by_name('psych').empty?
   gem 'psych'
 end
+
+# Rake 10.1.2 does not support ruby_18
+gem "rake", "< 10.1.2"

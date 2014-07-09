@@ -50,6 +50,7 @@ describe "rhc core scenarios" do
   context "when creating an app" do
     when_running 'create-app', 'test1', a_web_cartridge
     before{ no_applications }
+    after { no_applications }
     it "returns the proper info and is in the rest api" do
       status.should == 0
       output.should match "Your application 'test1' is now available"
@@ -69,6 +70,7 @@ describe "rhc core scenarios" do
       standard_config
       @app = has_an_application
     end
+    after(:all){ @app.destroy }
 
     let(:app){ @app }
 
@@ -159,12 +161,13 @@ describe "rhc core scenarios" do
 
   context "when adding a cartridge" do
     context "with a scalable app" do
-      before(:all) do
+      before(:each) do
         standard_config
+        has_gears_available(2) # 1 for the app create, 1 for the scale
         @app = has_a_scalable_application
       end
 
-      after(:all) do
+      after(:each) do
         debug.puts "cleaning up scalable app" if debug?
         @app.destroy
       end

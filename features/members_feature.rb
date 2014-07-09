@@ -17,7 +17,7 @@ describe "rhc member scenarios" do
         r = rhc 'show-domain', domain.name
         r.status.should == 0
         r.stdout.should_not match "Members:"
-        r.stdout.should match "owned by #{domain.owner}"
+        r.stdout.should match "owned by #{domain.owner.name}"
       end
 
       it "should prevent leaving the domain for the owner" do
@@ -104,7 +104,7 @@ describe "rhc member scenarios" do
         members.any?{ |m| m.id == other_users[user1].id && m.editor? }.should be_true
         members.any?{ |m| m.id == other_users[user2].id && m.editor? }.should be_true
 
-        r = rhc 'remove-member', domain.name, '--all'
+        r = rhc 'remove-member', '-n', domain.name, '--all'
         r.status.should == 0
         r.stdout.should match "Removing all members from domain.*done"
         members = client.find_domain(domain.name).members
@@ -161,6 +161,26 @@ describe "rhc member scenarios" do
           r.status.should == 0
         end
       end
+
+      it "should filter applications by owner" do
+        user = other_user.login
+        name = @domain.applications.first.name
+
+        r = rhc 'add-member', user, '--role', 'admin', '-n', domain.name
+        r.status.should == 0
+
+        with_environment(other_user) do
+          r = rhc 'apps', '--mine'
+          #r.status.should == 0
+          r.stdout.should match "No applications"
+
+          r = rhc 'apps'
+          r.status.should == 0
+          r.stdout.should match /You have access to \d+ applications?/
+        end
+      end
+
+      after { @domain.applications.first.destroy }
     end
   end
 end

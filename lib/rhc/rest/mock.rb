@@ -89,7 +89,7 @@ module RHC::Rest::Mock
         to_return({
           :body => {
             :data => mock_response_links(authorizations ? mock_api_with_authorizations : mock_real_client_links),
-            :supported_api_versions => [1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6],
+            :supported_api_versions => [1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7],
           }.to_json
         })
     end
@@ -421,18 +421,27 @@ module RHC::Rest::Mock
     end
 
     def mock_client_links
-      [['GET_USER',        'user/',       'get' ],
+      mock_teams_links.concat([
+       ['GET_USER',        'user',        'get' ],
        ['ADD_DOMAIN',      'domains/add', 'post'],
-       ['LIST_DOMAINS',    'domains/',    'get' ],
-       ['LIST_CARTRIDGES', 'cartridges/', 'get' ]]
+       ['LIST_DOMAINS',    'domains',     'get' ],
+       ['LIST_CARTRIDGES', 'cartridges',  'get' ]
+      ])
     end
 
     def mock_real_client_links
-      [['GET_USER',        "broker/rest/user",       'GET'],
-       ['LIST_DOMAINS',    "broker/rest/domains",    'GET'],
-       ['ADD_DOMAIN',      "broker/rest/domains",    'POST', ({'optional_params' => [{'name' => 'allowed_gear_sizes'}]} if example_allows_gear_sizes?)].compact,
-       ['LIST_CARTRIDGES', "broker/rest/cartridges", 'GET'],
-      ]
+      mock_teams_links.concat([
+       ['GET_USER',               "broker/rest/user",       'GET'],
+       ['LIST_DOMAINS',           "broker/rest/domains",    'GET'],
+       ['ADD_DOMAIN',             "broker/rest/domains",    'POST', ({'optional_params' => [{'name' => 'allowed_gear_sizes'}]} if example_allows_gear_sizes?)].compact,
+       ['LIST_CARTRIDGES',        "broker/rest/cartridges", 'GET'],
+      ])
+    end
+
+    def mock_teams_links
+      [['SEARCH_TEAMS',           "broker/rest/teams",      'GET'],
+       ['LIST_TEAMS',             "broker/rest/teams",      'GET'],
+       ['LIST_TEAMS_BY_OWNER',    "broker/rest/teams",      'GET']]
     end
 
     def mock_api_with_authorizations
@@ -443,9 +452,18 @@ module RHC::Rest::Mock
       ])
     end
 
+    def mock_team_links(team_id='test_team')
+      [['GET',            "team/#{team_id}",          'get'    ],
+       ['ADD_MEMBER',     "team/#{team_id}/members",  'post', {'optional_params' => [{'name' => 'id'}, {'name' => 'login'}], 'required_params' => [{'name' => 'role'}]} ],
+       ['LIST_MEMBERS',   "team/#{team_id}/update",   'get'    ],
+       ['UPDATE_MEMBERS', "team/#{team_id}/delete",   'patch', {'optional_params' => [{'name' => 'id'}, {'name' => 'login'}, {'name' => 'members'}] } ],
+       ['LEAVE',          "team/#{team_id}/delete",   'delete' ],
+       ['DELETE',         "team/#{team_id}/delete",   'delete' ]]
+    end
+
     def mock_domain_links(domain_id='test_domain')
-      [['ADD_APPLICATION',   "domains/#{domain_id}/apps/add", 'post', {'optional_params' => [{'name' => 'environment_variables'}]} ],
-       ['LIST_APPLICATIONS', "domains/#{domain_id}/apps/",    'get' ],
+      [['ADD_APPLICATION',   "domains/#{domain_id}/apps/add", 'post', {'optional_params' => [{'name' => 'environment_variables'}, {'name' => 'cartridges[][name]'}, {'name' => 'cartridges[][url]'}]} ],
+       ['LIST_APPLICATIONS', "domains/#{domain_id}/apps",     'get' ],
        ['UPDATE',            "domains/#{domain_id}/update",   'put'],
        ['DELETE',            "domains/#{domain_id}/delete",   'post']]
     end
@@ -533,6 +551,7 @@ module RHC::Rest::Mock
         end
       end
       @domains = []
+      @teams = []
       @user = MockRestUser.new(self, config.username)
       @api = MockRestApi.new(self, config)
       @version = version
@@ -550,13 +569,17 @@ module RHC::Rest::Mock
       @domains
     end
 
+    def teams(opts={})
+      @teams
+    end
+
     def api_version_negotiated
       @version
     end
 
     def cartridges
       premium_embedded = MockRestCartridge.new(self, "premium_cart", "embedded")
-      premium_embedded.usage_rate = 0.05
+      premium_embedded.usage_rates = {0.05 => []}
 
       [MockRestCartridge.new(self, "mock_cart-1", "embedded"), # code should sort this to be after standalone
        MockRestCartridge.new(self, "mock_standalone_cart-1", "standalone"),
@@ -572,12 +595,21 @@ module RHC::Rest::Mock
       ]
     end
 
+    def add_team(name, extra=false)
+      t = MockRestTeam.new(self, name)
+      if extra
+        t.attributes['members'] = [{'owner' => true, 'name' => 'a_user_name'}]
+      end
+      @teams << t
+      t
+    end
+
     def add_domain(id, extra=false)
       d = MockRestDomain.new(self, id)
       if extra
         d.attributes['creation_time'] = '2013-07-21T15:00:44Z'
-        d.attributes['members'] = [{'owner' => true, 'name' => 'a_user_name'}]
         d.attributes['allowed_gear_sizes'] = ['small']
+        d.add_member(RHC::Rest::Membership::Member.new(:id => '1', :role => 'admin', :explicit_role => 'admin', :owner => true, :login => 'a_user_name', :type => 'user'))
       end
       @domains << d
       d
@@ -655,6 +687,35 @@ module RHC::Rest::Mock
     end
   end
 
+  class MockRestTeam < RHC::Rest::Team
+    include Helpers
+    def initialize(client, name, id="123")
+      super({}, client)
+      @id = id
+      @name = name
+      @members = []
+      self.attributes = {:links => mock_response_links(mock_team_links(id))}
+    end
+
+    def destroy
+      raise RHC::OperationNotSupportedException.new("The server does not support deleting this resource.") unless supports? 'DELETE'
+      client.teams.delete_if { |t| t.name == @name }
+    end
+
+    def init_members
+      @members ||= []
+      attributes['members'] ||= []
+      self
+    end
+
+    def add_member(member)
+      (@members ||= []) << member
+      (attributes['members'] ||= []) << member.attributes
+      self
+    end
+
+  end
+
   class MockRestDomain < RHC::Rest::Domain
     include Helpers
     def initialize(client, id)
@@ -662,6 +723,7 @@ module RHC::Rest::Mock
       @name = id
       @applications = []
       self.attributes = {:links => mock_response_links(mock_domain_links(id))}
+      init_members
     end
 
     def rename(id)
@@ -681,6 +743,7 @@ module RHC::Rest::Mock
         scale = type[:scale]
         gear_profile = type[:gear_profile]
         git_url = type[:initial_git_url]
+        tags = type[:tags]
         type = Array(type[:cartridges] || type[:cartridge])
       end
       a = MockRestApplication.new(client, name, type, self, scale, gear_profile, git_url)
@@ -695,8 +758,15 @@ module RHC::Rest::Mock
       @applications
     end
 
+    def init_members
+      @members ||= []
+      attributes['members'] ||= []
+      self
+    end
+
     def add_member(member)
       (@members ||= []) << member
+      (attributes['members'] ||= []) << member.attributes
       self
     end
   end
@@ -777,7 +847,7 @@ module RHC::Rest::Mock
       self.attributes = {:links => mock_response_links(mock_app_links('mock_domain_0', 'mock_app_0')), :messages => []}
       self.gear_count = 5
       types = Array(type)
-      cart = add_cartridge(types.first, false) if types.first
+      cart = add_cartridge(types.first, true) if types.first
       if scale
         cart.supported_scales_to = (cart.scales_to = -1)
         cart.supported_scales_from = (cart.scales_from = 2)
@@ -785,6 +855,7 @@ module RHC::Rest::Mock
         cart.scales_with = "haproxy-1.4"
         prox = add_cartridge('haproxy-1.4')
         prox.collocated_with = [types.first]
+        prox.tags = ['web_proxy']
       end
       types.drop(1).each{ |c| add_cartridge(c, false) }
       @framework = types.first
@@ -900,8 +971,15 @@ module RHC::Rest::Mock
       end
     end
 
+    def init_members
+      @members ||= []
+      attributes['members'] ||= []
+      self
+    end
+
     def add_member(member)
       (@members ||= []) << member
+      (attributes['members'] ||= []) << member.attributes
       self
     end
 
@@ -937,7 +1015,7 @@ module RHC::Rest::Mock
   class MockRestCartridge < RHC::Rest::Cartridge
     include Helpers
 
-    attr_accessor :usage_rate
+    attr_accessor :usage_rates
 
     def initialize(client, name, type, app=nil, tags=[], properties=[{'type' => 'cart_data', 'name' => 'connection_url', 'value' => "http://fake.url" }], description=nil)
       super({}, client)
@@ -953,7 +1031,7 @@ module RHC::Rest::Mock
       @current_scale = 1
       @gear_profile = 'small'
       @additional_gear_storage = 5
-      @usage_rate = 0.0
+      @usage_rates = {}
     end
 
     def destroy

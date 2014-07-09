@@ -5,7 +5,8 @@ module RHC
 
       define_attr :type, :name, :display_name, :properties, :gear_profile, :status_messages, :scales_to, :scales_from, :scales_with,
                   :current_scale, :supported_scales_to, :supported_scales_from, :tags, :description, :collocated_with, :base_gear_storage,
-                  :additional_gear_storage, :url, :environment_variables, :gear_size
+                  :additional_gear_storage, :url, :environment_variables, :gear_size, :automatic_updates,
+                  :version, :license, :website, :description
 
       def scalable?
         supported_scales_to != supported_scales_from
@@ -21,6 +22,18 @@ module RHC
 
       def only_in_existing?
         type == 'embedded'
+      end
+
+      def automatic_updates?
+        v = attribute(:automatic_updates)
+        if v.nil?
+          v = !(tags.include?('no_updates') || custom?)
+        end
+        v
+      end
+
+      def external?
+        tags.include?('external')
       end
 
       def shares_gears?
@@ -54,18 +67,22 @@ module RHC
       end
 
       def usage_rate?
-        rate = usage_rate
-        rate && rate > 0.0
+        rates = usage_rates
+        !(rates.nil? || rates.empty?)
       end
 
-      def usage_rate
-        rate = attribute(:usage_rate_usd)
-
-        if attribute(:usage_rates)
-          rate ||= attribute(:usage_rates).inject(0) { |total, rate| total + rate['usd'].to_f }
+      def usage_rates
+        rate = attribute(:usage_rate_usd).to_f rescue 0.0
+        if rate > 0
+          {rate => []}
+        elsif attribute(:usage_rates).present?
+          attribute(:usage_rates).inject({}) do |plans_by_rate, rate|
+            if (usd = rate['usd'].to_f rescue 0.0) > 0
+              (plans_by_rate[usd] ||= []) << rate['plan_id']
+            end
+            plans_by_rate
+          end
         end
-
-        rate.to_f rescue 0.0
       end
 
       def scaling

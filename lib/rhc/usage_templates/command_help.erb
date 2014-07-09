@@ -1,7 +1,17 @@
+<% if @command.syntax.is_a?(Array) -%>
+Usage
+<%= table(
+		@command.syntax.map do |s|
+			s ? [Array(program :name).first, @command.name, s] : [' ']
+		end, 
+	  table_args('  ')
+	).join("\n") %>
+<% else -%>
 Usage: <%= Array(program :name).first %> <%= @command.name %> <%= @command.syntax %>
+<% end -%>
 
 <%= @command.description || @command.summary %>
-<% if @actions.blank? or @command.root? and @command.info[:method].present? -%>
+<% if @actions.blank? or @command.root? and @command.info.present? and @command.info[:method].present? -%>
 
 <% unless @command.info[:args].blank? or @command.options.all?{ |o| o[:hide] or o[:switches].present? } -%>
 
@@ -31,7 +41,7 @@ Options
 Global Options
 <%= table(
 	  @global_options.select do |opt| 
-	  	not (opt[:hide] || @command.options.any?{ |o| (o[:switches] & opt[:switches]).present? })
+	  	not (opt[:hide] || @command.options.any?{ |o| (o[:switches].map(&:split).map(&:first) & opt[:switches].map(&:split).map(&:first)).present? })
 	  end.map do |opt| 
 	  	[opt[:switches].join(', '), opt[:description]] 
 	  end, 
