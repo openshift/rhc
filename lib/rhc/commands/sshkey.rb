@@ -22,6 +22,7 @@ module RHC::Commands
 
     summary 'Display all the SSH keys for your account'
     syntax ''
+    alias_action :"sshkeys", :root_command => true
     def list
       keys = rest_client.sshkeys.each{ |key| paragraph{ display_key(key) } }
 
