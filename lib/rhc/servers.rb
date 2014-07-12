@@ -23,7 +23,7 @@ module RHC
       @use_authorization_tokens = RHC::Helpers.to_boolean(args[:use_authorization_tokens], true)
       @insecure = RHC::Helpers.to_boolean(args[:insecure], true)
       @timeout = Integer(args[:timeout]) if args[:timeout].present?
-      @ssl_version = args[:ssl_version]
+      @ssl_version = RHC::Helpers.parse_ssl_version(args[:ssl_version])
       @ssl_client_cert_file = args[:ssl_client_cert_file]
       @ssl_ca_file = args[:ssl_ca_file]
       @default = args[:default]
@@ -42,7 +42,7 @@ module RHC
         instance_variables.each do |k| 
           h[k.to_s.delete('@')] = instance_variable_get(k)
         end
-      end.reject{|k, v| v.nil? || k == 'default'}.inject({}){|h, (k, v)| h[k] = v.is_a?(String) ? v.to_s : v; h }
+      end.reject{|k, v| v.nil? || k == 'default'}.inject({}){|h, (k, v)| h[k] = v.is_a?(String) || v.is_a?(Symbol) ? v.to_s : v; h }
     end
 
     def to_config
