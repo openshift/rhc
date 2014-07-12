@@ -109,6 +109,7 @@ module RHC::Commands
     takes_application :argument => true
     option ["--table"], "Format the output list as a table"
     option ["--quotes"], "Format the output list with double quotes for env var values"
+    alias_action :"envs", :root_command => true
     def list(app)
       rest_app = find_app
       rest_env_vars = rest_app.environment_variables
