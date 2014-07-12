@@ -76,7 +76,7 @@ module RHC::Commands
       When adding a new server users can optionally provide a 'nickname'
       that will allow to easily switch between servers. 
       DESC
-    syntax "<hostname> [<nickname>] [--rhlogin LOGIN] [--[no-]use-authorization-tokens] [--[no-]insecure]"
+    syntax "<hostname> [<nickname>] [--rhlogin LOGIN] [--[no-]use-authorization-tokens] [--[no-]insecure] [--use] [--skip-wizard] [--timeout SECONDS] [--ssl-ca-file FILE] [--ssl-client-cert-file FILE] [--ssl-version VERSION]"
     argument :hostname, "Hostname of the server you are adding", ["--server HOSTNAME"]
     argument :nickname, "Optionally provide a nickname to the server you are adding (e.g. 'development', 'production', 'online')", ["--nickname NICKNAME"], :optional => true
     option ["-l", "--rhlogin LOGIN"], "Change the default OpenShift login used on this server"
@@ -84,6 +84,10 @@ module RHC::Commands
     option ["--[no-]insecure"], "If true, certificate errors will be ignored"
     option ["--use"], "If provided, the server being added will be set as default (same as 'rhc server use')"
     option ["--skip-wizard"], "If provided, the wizard will be skipped and a session token will not be estabilished"
+    option ["--timeout SECONDS"], "The default timeout for operations on this server", :type => Integer
+    option ["--ssl-ca-file FILE"], "An SSL certificate CA file (may contain multiple certs) to be used on this server", :type => CertificateFile, :optional => true
+    option ["--ssl-client-cert-file FILE"], "An SSL x509 client certificate file to be used on this server", :type => CertificateFile, :optional => true
+    option ["--ssl-version VERSION"], "The version of SSL to use to be used on this server", :type => SSLVersion, :optional => true
     def add(hostname, nickname)
       raise ArgumentError, "The --use and --skip-wizard options cannot be used together." if options.use && options.skip_wizard
 
@@ -162,7 +166,7 @@ module RHC::Commands
     end
 
     summary "Update server attributes"
-    syntax "<server> [--hostname HOSTNAME] [--nickname NICKNAME] [--rhlogin LOGIN] [--[no-]use-authorization-tokens] [--[no-]insecure]"
+    syntax "<server> [--hostname HOSTNAME] [--nickname NICKNAME] [--rhlogin LOGIN] [--[no-]use-authorization-tokens] [--[no-]insecure] [--use] [--skip-wizard] [--timeout SECONDS] [--ssl-ca-file FILE] [--ssl-client-cert-file FILE] [--ssl-version VERSION]"
     argument :server, "Server hostname or nickname to be configured", ["--server SERVER"]
     option ["--hostname HOSTNAME"], "Change the hostname of this server"
     option ["--nickname NICKNAME"], "Change the nickname of this server"
@@ -171,6 +175,10 @@ module RHC::Commands
     option ["--[no-]insecure"], "If true, certificate errors will be ignored"
     option ["--use"], "If provided, the server being configured will be set as default (same as 'rhc server use')"
     option ["--skip-wizard"], "If provided, the wizard will be skipped and a session token will not be estabilished"
+    option ["--timeout SECONDS"], "The default timeout for operations on this server", :type => Integer
+    option ["--ssl-ca-file FILE"], "An SSL certificate CA file (may contain multiple certs) to be used on this server", :type => CertificateFile, :optional => true
+    option ["--ssl-client-cert-file FILE"], "An SSL x509 client certificate file to be used on this server", :type => CertificateFile, :optional => true
+    option ["--ssl-version VERSION"], "The version of SSL to use to be used on this server", :type => SSLVersion, :optional => true
     def configure(server)
       raise ArgumentError, "The --use and --skip-wizard options cannot be used together." if options.use && options.skip_wizard
 

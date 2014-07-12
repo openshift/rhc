@@ -117,7 +117,7 @@ module RHC
     global_option '--raw', "Do not format the output from the requested operations.", :hide => true
     global_option '--always-prefix', "Include the gear prefix on all output from the server.", :hide => true
 
-    OptionParser.accept(SSLVersion = Class.new){ |s| OpenSSL::SSL::SSLContext::METHODS.find{ |m| m.to_s.downcase == s.downcase } or raise OptionParser::InvalidOption.new(nil, "The provided SSL version '#{s}' is not valid. Supported values: #{OpenSSL::SSL::SSLContext::METHODS.map(&:to_s).map(&:downcase).join(', ')}") }
+    OptionParser.accept(SSLVersion = Class.new){ |s| parse_ssl_version(s) }
     global_option '--ssl-version VERSION', SSLVersion, "The version of SSL to use", :hide => true do |value|
       raise RHC::Exception, "You are using an older version of the httpclient gem which prevents the use of --ssl-version.  Please run 'gem update httpclient' to install a newer version (2.2.6 or newer)." unless HTTPClient::SSLConfig.method_defined? :ssl_version
     end
@@ -149,6 +149,8 @@ module RHC
       (ROLES.has_key?(s) && s) or
         raise OptionParser::InvalidOption.new(nil, "The provided role '#{s}' is not valid. Supported values: #{ROLES.keys.join(', ')}")
     end
+
+    OptionParser.accept(CertificateFile = Class.new) {|s| certificate_file(s); s}
 
     def role_name(s)
       ROLES[s.downcase]
@@ -209,6 +211,9 @@ module RHC
       raise OptionParser::InvalidOption.new(nil, "The certificate '#{file}' cannot be loaded: #{e.message} (#{e.class})")
     end
 
+    def parse_ssl_version(version)
+      OpenSSL::SSL::SSLContext::METHODS.find{ |m| m.to_s.downcase == version.downcase } or raise OptionParser::InvalidOption.new(nil, "The provided SSL version '#{version}' is not valid. Supported values: #{OpenSSL::SSL::SSLContext::METHODS.map(&:to_s).map(&:downcase).join(', ')}") unless version.nil?
+    end
 
     #
     # Output helpers
