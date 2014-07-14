@@ -222,7 +222,7 @@ module RHC::Commands
         options['rhlogin'] = args[:login] if args[:login]
         options['use_authorization_tokens'] = args[:use_authorization_tokens] unless args[:use_authorization_tokens].nil?
         options['insecure'] = args[:insecure] unless args[:insecure].nil?
-        options['timeout'] = args[:timeout] unless args[:timeout].nil?
+        options['timeout'] = args[:timeout]
         options['ssl_version'] = args[:ssl_version]
         options['ssl_client_cert_file'] = args[:ssl_client_cert_file]
         options['ssl_ca_file'] = args[:ssl_ca_file]
