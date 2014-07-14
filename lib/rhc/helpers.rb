@@ -212,7 +212,7 @@ module RHC
     end
 
     def parse_ssl_version(version)
-      OpenSSL::SSL::SSLContext::METHODS.find{ |m| m.to_s.downcase == version.downcase } or raise OptionParser::InvalidOption.new(nil, "The provided SSL version '#{version}' is not valid. Supported values: #{OpenSSL::SSL::SSLContext::METHODS.map(&:to_s).map(&:downcase).join(', ')}") unless version.nil?
+      OpenSSL::SSL::SSLContext::METHODS.find{ |m| m.to_s.downcase == version.to_s.downcase } or raise OptionParser::InvalidOption.new(nil, "The provided SSL version '#{version}' is not valid. Supported values: #{OpenSSL::SSL::SSLContext::METHODS.map(&:to_s).map(&:downcase).join(', ')}") unless version.nil?
     end
 
     #
