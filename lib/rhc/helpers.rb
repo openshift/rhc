@@ -346,7 +346,8 @@ module RHC
         :use_authorization_tokens => 'Use Auth Tokens',
         :ssl_ca_file     => 'SSL Cert CA File',
         :ssl_version     => 'SSL Version',
-        :ssl_client_cert_file => 'SSL x509 Client Cert File'
+        :ssl_client_cert_file => 'SSL x509 Client Cert File',
+        :zones           => 'Available Zones'
       })
 
       headings[value]

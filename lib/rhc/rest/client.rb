@@ -59,6 +59,15 @@ module RHC
         @cartridges ||= api.rest_method("LIST_CARTRIDGES", nil, :lazy_auth => true)
       end
 
+      def regions
+        debug "Getting all regions and zones available"
+        if supports_regions_and_zones?
+          @regions ||= api.rest_method("LIST_REGIONS")
+        else
+          raise RHC::RegionsAndZonesNotSupportedException
+        end
+      end
+
       def user
         debug "Getting user info"
         @user ||= api.rest_method "GET_USER"
@@ -264,6 +273,10 @@ module RHC
 
       def supports_sessions?
         api.supports? 'ADD_AUTHORIZATION'
+      end
+
+      def supports_regions_and_zones?
+        api.supports? :LIST_REGIONS
       end
 
       def authorizations
@@ -640,6 +653,8 @@ module RHC
             RHC::Rest::Membership::Member.new(data, self)
           when 'members'
             data.map{ |json| RHC::Rest::Membership::Member.new(json, self) }
+          when 'regions'
+            data.map{ |json| Region.new(json, self) }
           else
             data
           end

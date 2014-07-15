@@ -109,6 +109,18 @@ module RHC
     end
   end
 
+  class RegionsAndZonesNotSupportedException < Exception
+    def initialize(message="Server does not support regions and zones")
+      super message, 168
+    end
+  end
+
+  class NoRegionConfiguredException < Exception
+    def initialize(message="Server doesn't have any regions or zones configured")
+      super message, 169
+    end
+  end
+
   class GitPermissionDenied < GitException; end
   class GitDirectoryExists < GitException; end
 

@@ -271,6 +271,10 @@ module RHC::Rest::Mock
       stub_api_request(:get, 'broker/rest/cartridges', with_auth).to_return(simple_carts)
     end
 
+    def stub_simple_regions(empty=false, with_auth=mock_user_auth)
+      stub_api_request(:get, 'broker/rest/regions', with_auth).to_return(simple_regions(empty))
+    end
+
     def define_exceptional_test_on_wizard
       RHC::Wizard.module_eval <<-EOM
       private
@@ -322,6 +326,19 @@ module RHC::Rest::Mock
         }.to_json
       }
     end
+
+    def simple_regions(empty=false)
+      {
+        :body => {
+          :type => 'regions',
+          :data => empty ? [] : [
+            {:id => 'region0001', :default => false, :name => 'north', :description => 'Servers in the north of US', :zones => [{:name => 'west', :created_at => '2014-01-01T01:00:00Z', :updated_at => '2014-01-01T01:00:00Z'}, {:name => 'east', :created_at => '2014-01-01T01:00:00Z', :updated_at => '2014-01-01T01:00:00Z'}]},
+            {:id => 'region0002', :default => true, :name => 'south', :zones => [{:name => 'east', :created_at => '2014-01-01T01:00:00Z', :updated_at => '2014-01-01T01:00:00Z'}]},
+          ],
+        }.to_json
+      }
+    end
+
     def simple_user(login)
       {
         :body => {
@@ -435,6 +452,7 @@ module RHC::Rest::Mock
        ['LIST_DOMAINS',           "broker/rest/domains",    'GET'],
        ['ADD_DOMAIN',             "broker/rest/domains",    'POST', ({'optional_params' => [{'name' => 'allowed_gear_sizes'}]} if example_allows_gear_sizes?)].compact,
        ['LIST_CARTRIDGES',        "broker/rest/cartridges", 'GET'],
+       ['LIST_REGIONS',           "broker/rest/regions",    'GET'],
       ])
     end
 
@@ -844,6 +862,7 @@ module RHC::Rest::Mock
       if scale
         @scalable = true
       end
+      @region = nil
       self.attributes = {:links => mock_response_links(mock_app_links('mock_domain_0', 'mock_app_0')), :messages => []}
       self.gear_count = 5
       types = Array(type)
@@ -993,6 +1012,10 @@ module RHC::Rest::Mock
 
     def keep_deployments
       @keep_deployments
+    end
+
+    def region
+      @region
     end
 
     def deployments

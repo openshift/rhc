@@ -737,7 +737,19 @@ describe RHC::Commands::App do
         @domain = rest_client.add_domain("mockdomain")
         @domain.add_application("app1", "mock_type")
       end
+      it { run_output.should match(/ID\s+State\s+Cartridges\s+Size\s+SSH URL/) }
       it { run_output.should match("fakegearid0 started mock_type  small fakegearid0@fakesshurl.com") }
+      it { expect{ run }.to exit_with_code(0) }
+    end
+
+    context 'with regions and zones' do
+      before do
+        @domain = rest_client.add_domain("mockdomain")
+        @app = @domain.add_application("app1", "mock_type")
+        @app.gears.each{|g| g['region'] = 'south'; g['zone'] = 'west'}
+      end
+      it { run_output.should match(/ID\s+State\s+Cartridges\s+Size\s+Region\s+Zone\s+SSH URL/) }
+      it { run_output.should match(/fakegearid0\s+started\s+mock_type\s+small\s+south\s+west\s+fakegearid0@fakesshurl.com/) }
       it { expect{ run }.to exit_with_code(0) }
     end
   end
