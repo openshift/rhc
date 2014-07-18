@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.28.0
+Version: 1.28.1
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,22 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Jul 18 2014 Adam Miller <admiller@redhat.com> 1.28.1-1
+- Merge pull request #628 from liggitt/bug_1110728_rhc_help_autocomplete
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 1110728: RHC help autocomplete (jliggitt@redhat.com)
+- Bug 1118903: Fix typo (jliggitt@redhat.com)
+- Merge pull request #626 from fabianofranz/bugs/1118712
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 1118712 - fixes ssl version parse when adding new servers
+  (contact@fabianofranz.com)
+- Bug 1117466 - fixes overriding timeout config (contact@fabianofranz.com)
+- Bug 1118712 and Bug 1118500 - makes global ssl options explicit on rhc server
+  commands (contact@fabianofranz.com)
+- Bug 1035632 - added plural version to rhc env and rhc sshkey commands
+  (contact@fabianofranz.com)
+- bump_minor_versions for sprint 48 (admiller@redhat.com)
+
 * Wed Jul 09 2014 Adam Miller <admiller@redhat.com> 1.27.4-1
 - Merge pull request #621 from sferich888/debug_ssh
   (dmcphers+openshiftbot@redhat.com)
