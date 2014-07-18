@@ -144,6 +144,10 @@ module RHC
       ssh_keys.present? && ssh_keys.any? { |k| k.fingerprint.present? && k.fingerprint == fingerprint_for_default_key }
     end
 
+    def non_ssh_key_uploaded?
+      ssh_keys.present? && !ssh_keys.all?(&:is_ssh?)
+    end
+
     def existing_keys_info
       return unless ssh_keys
       indent{ ssh_keys.each{ |key| paragraph{ display_key(key) } } }
@@ -303,7 +307,7 @@ module RHC
     end
 
     def upload_ssh_key_stage
-      return true if ssh_key_uploaded?
+      return true if ssh_key_uploaded? || non_ssh_key_uploaded?
 
       upload = paragraph do
         agree "Your public SSH key must be uploaded to the OpenShift server to access code.  Upload now? (yes|no) "
@@ -530,7 +534,7 @@ module RHC
 
     # test connectivity an app
     def test_ssh_connectivity
-      return true unless ssh_key_uploaded?
+      return true unless ssh_key_uploaded? || non_ssh_key_uploaded?
 
       applications.take(1).each do |app|
         begin
