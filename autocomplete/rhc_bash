@@ -10,9 +10,9 @@ _rhc()
     if [[ "$cur" == -* ]]; then
       opts="--always-prefix --clean --config --debug --insecure --limit --mock --noprompt --password --raw --rhlogin --server --ssl-ca-file --ssl-client-cert-file --ssl-version --timeout --token"
     elif [ -z $cur ]; then
-      opts="account alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert app app-configure app-create app-delete app-deploy app-force-stop app-reload app-restart app-scale-down app-scale-up app-show app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all authorization-list cartridge cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage deployment deployment-activate deployment-list deployment-show domain domain-configure domain-create domain-delete domain-leave domain-list domain-rename domain-show env env-list env-set env-show env-unset git-clone logout member member-add member-list member-remove member-update port-forward scp server server-add server-configure server-list server-remove server-show server-status server-use setup snapshot snapshot-restore snapshot-save ssh sshkey sshkey-add sshkey-list sshkey-remove sshkey-show tail team team-create team-delete team-leave team-list team-show threaddump"
+      opts="account alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert app app-configure app-create app-delete app-deploy app-force-stop app-reload app-restart app-scale-down app-scale-up app-show app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all authorization-list cartridge cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage deployment deployment-activate deployment-list deployment-show domain domain-configure domain-create domain-delete domain-leave domain-list domain-rename domain-show env env-list env-set env-show env-unset git-clone help logout member member-add member-list member-remove member-update port-forward scp server server-add server-configure server-list server-remove server-show server-status server-use setup snapshot snapshot-restore snapshot-save ssh sshkey sshkey-add sshkey-list sshkey-remove sshkey-show tail team team-create team-delete team-leave team-list team-show threaddump"
     else
-      opts="account account-logout activate-deployment add-alias add-authorization add-cartridge add-member add-server add-sshkey alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert aliases app app-configure app-create app-delete app-deploy app-env app-force-stop app-reload app-restart app-scale-down app-scale-up app-scp app-show app-snapshot app-ssh app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all authorization-list authorizations cartridge cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage cartridges configure-app configure-domain configure-server create-app create-domain create-team delete-all-authorization delete-app delete-authorization delete-cert-alias delete-domain delete-team deploy deploy-app deployment deployment-activate deployment-list deployment-show deployments domain domain-configure domain-create domain-delete domain-leave domain-list domain-rename domain-show domains env env-add env-list env-remove env-set env-show env-unset envs force-stop-app git-clone leave-domain leave-team list-alias list-authorization list-cartridge list-deployment list-domain list-env list-member list-server list-sshkey list-team logout member member-add member-list member-remove member-update members port-forward reload-app reload-cartridge remove-alias remove-cartridge remove-member remove-server remove-sshkey rename-domain restart-app restart-cartridge restore-snapshot save-snapshot scale-cartridge scale-down-app scale-up-app scp server server-add server-configure server-list server-remove server-show server-status server-use servers set-env setup show-app show-cartridge show-deployment show-domain show-env show-server show-sshkey show-team snapshot snapshot-restore snapshot-save ssh sshkey sshkey-add sshkey-list sshkey-remove sshkey-show sshkeys start-app start-cartridge status-cartridge status-server stop-app stop-cartridge storage-cartridge tail team team-create team-delete team-leave team-list team-show teams threaddump tidy-app unset-env update-cert-alias update-member use-server"
+      opts="account account-logout activate-deployment add-alias add-authorization add-cartridge add-member add-server add-sshkey alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert aliases app app-configure app-create app-delete app-deploy app-env app-force-stop app-reload app-restart app-scale-down app-scale-up app-scp app-show app-snapshot app-ssh app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all authorization-list authorizations cartridge cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage cartridges configure-app configure-domain configure-server create-app create-domain create-team delete-all-authorization delete-app delete-authorization delete-cert-alias delete-domain delete-team deploy deploy-app deployment deployment-activate deployment-list deployment-show deployments domain domain-configure domain-create domain-delete domain-leave domain-list domain-rename domain-show domains env env-add env-list env-remove env-set env-show env-unset envs force-stop-app git-clone help leave-domain leave-team list-alias list-authorization list-cartridge list-deployment list-domain list-env list-member list-server list-sshkey list-team logout member member-add member-list member-remove member-update members port-forward reload-app reload-cartridge remove-alias remove-cartridge remove-member remove-server remove-sshkey rename-domain restart-app restart-cartridge restore-snapshot save-snapshot scale-cartridge scale-down-app scale-up-app scp server server-add server-configure server-list server-remove server-show server-status server-use servers set-env setup show-app show-cartridge show-deployment show-domain show-env show-server show-sshkey show-team snapshot snapshot-restore snapshot-save ssh sshkey sshkey-add sshkey-list sshkey-remove sshkey-show sshkeys start-app start-cartridge status-cartridge status-server stop-app stop-cartridge storage-cartridge tail team team-create team-delete team-leave team-list team-show teams threaddump tidy-app unset-env update-cert-alias update-member use-server"
     fi
   else
     prev="${COMP_WORDS[@]:0:COMP_CWORD}"
@@ -104,7 +104,7 @@ _rhc()
         if [[ "$cur" == -* ]]; then
           opts=""
         else
-          opts="add remove update-cert delete-cert list"
+          opts="add delete-cert list remove update-cert"
         fi
         ;;
 
@@ -200,7 +200,7 @@ _rhc()
         if [[ "$cur" == -* ]]; then
           opts=""
         else
-          opts="create delete start stop scale-up scale-down force-stop restart reload tidy show deploy configure env snapshot"
+          opts="configure create delete deploy env force-stop reload restart scale-down scale-up show snapshot start stop tidy"
         fi
         ;;
 
@@ -488,7 +488,7 @@ _rhc()
         if [[ "$cur" == -* ]]; then
           opts=""
         else
-          opts="list add delete delete-all"
+          opts="add delete delete-all list"
         fi
         ;;
 
@@ -568,7 +568,7 @@ _rhc()
         if [[ "$cur" == -* ]]; then
           opts=""
         else
-          opts="list add show remove start stop restart status reload scale storage"
+          opts="add list reload remove restart scale show start status stop storage"
         fi
         ;;
 
@@ -872,7 +872,7 @@ _rhc()
         if [[ "$cur" == -* ]]; then
           opts=""
         else
-          opts="list show activate"
+          opts="activate list show"
         fi
         ;;
 
@@ -936,7 +936,7 @@ _rhc()
         if [[ "$cur" == -* ]]; then
           opts=""
         else
-          opts="create rename configure show list delete leave"
+          opts="configure create delete leave list rename show"
         fi
         ;;
 
@@ -1064,7 +1064,7 @@ _rhc()
         if [[ "$cur" == -* ]]; then
           opts=""
         else
-          opts="add set remove unset list show"
+          opts="add list remove set show unset"
         fi
         ;;
 
@@ -1188,6 +1188,14 @@ _rhc()
         fi
         ;;
 
+      "rhc help")
+        if [[ "$cur" == -* ]]; then
+          opts=""
+        else
+          opts="account account-logout activate-deployment add-alias add-authorization add-cartridge add-member add-server add-sshkey alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert aliases app app-configure app-create app-delete app-deploy app-env app-force-stop app-reload app-restart app-scale-down app-scale-up app-scp app-show app-snapshot app-ssh app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all authorization-list authorizations cartridge cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage cartridges configure-app configure-domain configure-server create-app create-domain create-team delete-all-authorization delete-app delete-authorization delete-cert-alias delete-domain delete-team deploy deploy-app deployment deployment-activate deployment-list deployment-show deployments domain domain-configure domain-create domain-delete domain-leave domain-list domain-rename domain-show domains env env-add env-list env-remove env-set env-show env-unset envs force-stop-app git-clone leave-domain leave-team list-alias list-authorization list-cartridge list-deployment list-domain list-env list-member list-server list-sshkey list-team logout member member-add member-list member-remove member-update members port-forward reload-app reload-cartridge remove-alias remove-cartridge remove-member remove-server remove-sshkey rename-domain restart-app restart-cartridge restore-snapshot save-snapshot scale-cartridge scale-down-app scale-up-app scp server server-add server-configure server-list server-remove server-show server-status server-use servers set-env setup show-app show-cartridge show-deployment show-domain show-env show-server show-sshkey show-team snapshot snapshot-restore snapshot-save ssh sshkey sshkey-add sshkey-list sshkey-remove sshkey-show sshkeys start-app start-cartridge status-cartridge status-server stop-app stop-cartridge storage-cartridge tail team team-create team-delete team-leave team-list team-show teams threaddump tidy-app unset-env update-cert-alias update-member use-server"
+        fi
+        ;;
+
       "rhc leave-domain")
         if [[ "$cur" == -* ]]; then
           opts="--namespace"
@@ -1296,7 +1304,7 @@ _rhc()
         if [[ "$cur" == -* ]]; then
           opts=""
         else
-          opts="list add update remove"
+          opts="add list remove update"
         fi
         ;;
 
@@ -1512,7 +1520,7 @@ _rhc()
         if [[ "$cur" == -* ]]; then
           opts=""
         else
-          opts="status add list use remove configure show"
+          opts="add configure list remove show status use"
         fi
         ;;
 
@@ -1720,7 +1728,7 @@ _rhc()
         if [[ "$cur" == -* ]]; then
           opts=""
         else
-          opts="save restore"
+          opts="restore save"
         fi
         ;;
 
@@ -1768,7 +1776,7 @@ _rhc()
         if [[ "$cur" == -* ]]; then
           opts=""
         else
-          opts="list show add remove"
+          opts="add list remove show"
         fi
         ;;
 
@@ -1912,7 +1920,7 @@ _rhc()
         if [[ "$cur" == -* ]]; then
           opts=""
         else
-          opts="create show list delete leave"
+          opts="create delete leave list show"
         fi
         ;;
 

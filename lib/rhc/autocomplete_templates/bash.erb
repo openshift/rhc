@@ -8,9 +8,9 @@ _rhc()
   cur="${COMP_WORDS[COMP_CWORD]}"
   if [ $COMP_CWORD -eq 1 ]; then
     if [[ "$cur" == -* ]]; then
-      opts=<%= "\"%s\"" % global_options.join(' ') %>
+      opts=<%= "\"%s\"" % global_options.sort.join(' ') %>
     elif [ -z $cur ]; then
-      opts=<%= "\"%s\"" % top_level_commands.join(' ') %>
+      opts=<%= "\"%s\"" % top_level_commands.sort.join(' ') %>
     else
       opts=<%= "\"%s\"" % commands.map{ |c| c.first }.delete_if{ |s| s.include? ' ' }.sort.join(' ') %>
     fi
@@ -22,9 +22,9 @@ _rhc()
       <%- for name, data in commands %>
       <%= "\"rhc %s\")" % name %>
         if [[ "$cur" == -* ]]; then
-          opts=<%= "\"%s\"" % data[:switches].join(" ") %>
+          opts=<%= "\"%s\"" % data[:switches].sort.join(" ") %>
         else
-          opts=<%= "\"%s\"" % data[:actions].join(" ") %>
+          opts=<%= "\"%s\"" % data[:actions].sort.join(" ") %>
         fi
         ;;
       <%- end %>

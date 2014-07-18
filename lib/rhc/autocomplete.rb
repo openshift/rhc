@@ -55,6 +55,14 @@ module RHC
         end.flatten.compact.sort)
         @commands[name.to_s] = v
       end
+
+      # Inject autocomplete for a help command whose possible actions are all other commands in root or hyphenated form
+      @top_level_commands << 'help'
+      @commands['help'] = {
+        :actions => @commands.keys.sort.select {|c| c != '' && c !~ / /},
+        :switches => []
+      }
+
       @commands.delete('')
       @commands = @commands.to_a.sort{ |a,b| a[0] <=> b[0] }
 
