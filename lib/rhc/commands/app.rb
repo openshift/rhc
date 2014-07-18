@@ -77,7 +77,7 @@ module RHC::Commands
 
       if options.from_app
         raise RHC::AppCloneNotSupportedException, "The server does not support creating apps based on others (rhc create-app --from-app)." if (!rest_domain.has_param?('ADD_APPLICATION', 'cartridges[][name]') || !rest_domain.has_param?('ADD_APPLICATION', 'cartridges[][url]'))
-        raise ArgumentError, "Option --from-code is incompatible with --from--app. When creating an app based on another resource you can either specify a Git repository URL with --from-code or an existing app name with --from-app." if options.from_code     
+        raise ArgumentError, "Option --from-code is incompatible with --from-app. When creating an app based on another resource you can either specify a Git repository URL with --from-code or an existing app name with --from-app." if options.from_code     
         raise ArgumentError, "Option --no-dns is incompatible with --from-app. We need to propagate the new app DNS to be able to configure it." if options.dns == false
         raise ArgumentError, "Do not specify cartridges when creating an app based on another one. All cartridges will be copied from the original app." if !(cartridges || []).empty?
 
