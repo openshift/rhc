@@ -234,6 +234,23 @@ describe RHC::Wizard do
           options.token.should == token
         end
       end
+
+      context "when the user doesn't want to use tokens" do
+        let(:default_options){ {:rhlogin => user, :password => password, :server => server, :use_authorization_tokens => false, :create_token => false} }
+        before do
+          subject.should_receive(:new_client_for_options).ordered.and_return(rest_client)
+          rest_client.should_receive(:api).ordered
+          rest_client.should_receive(:user).ordered.and_return(user_obj)
+        end
+
+        it "should skip token generation" do
+          subject.should_receive(:say).with(/Skipping token generation/)
+          subject.should_receive(:agree).never
+
+          subject.send(:login_stage).should be_true
+          options.token.should be_nil
+        end
+      end
     end
   end
 
