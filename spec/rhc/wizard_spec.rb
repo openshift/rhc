@@ -719,6 +719,9 @@ EOF
       def type=(type)
         @table[:type] = type
       end
+      def is_ssh?
+        type != 'krb5-principal'
+      end
     end
 
     def get_mock_key_data
