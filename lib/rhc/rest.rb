@@ -18,6 +18,7 @@ module RHC
     autoload :GearGroup,            'rhc/rest/gear_group'
     autoload :Key,                  'rhc/rest/key'
     autoload :Membership,           'rhc/rest/membership'
+    autoload :Region,               'rhc/rest/region'
     autoload :Team,                 'rhc/rest/team'
     autoload :User,                 'rhc/rest/user'
 

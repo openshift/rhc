@@ -58,6 +58,7 @@ module RHC::Commands
     option ["-e", "--env VARIABLE=VALUE"], "Environment variable(s) to be set on this app, or path to a file containing environment variables", :type => :list
     option ["--from-app NAME"], "Create based on another application. All content and configurations will be copied from the original app."
     option ["--from-code URL"], "URL to a Git repository that will become the initial contents of the application"
+    option ["--region REGION"], "The region where the application gears will be located"
     option ["--[no-]git"], "Skip creating the local Git repository."
     option ["--[no-]dns"], "Skip waiting for the application DNS name to resolve. Must be used in combination with --no-git"
     option ['--no-keys'], "Skip checking SSH keys during app creation", :hide => true
@@ -106,9 +107,13 @@ module RHC::Commands
       end
 
       scaling = options.scaling
+      region = options.region
+
+      raise RHC::RegionsAndZonesNotSupportedException if region.present? && !rest_client.supports_regions_and_zones?
 
       if from_app
         scaling = from_app.scalable if scaling.nil?
+        region = from_app.region if region.nil?
 
         cartridges = from_app.cartridges.reject{|c| c.tags.include?('web_proxy')}.collect do |cartridge|
           {
@@ -131,6 +136,7 @@ module RHC::Commands
                ["Gear Size:", options.gear_size || (from_app ? "Copied from '#{from_app.name}'" : "default")],
                ["Scaling:", (scaling ? "yes" : "no") + (from_app && options.scaling.nil? ? " (copied from '#{from_app.name}')" : '')],
               (["Environment Variables:", env.map{|item| "#{item.name}=#{item.value}"}.join(', ')] if env.present?),
+              (["Region:", region + (from_app && options.region.nil? ? " (copied from '#{from_app.name}')" : '')] if region),
               ].compact
              )
       end
@@ -139,7 +145,7 @@ module RHC::Commands
         say "Creating application '#{name}' ... "
 
         # create the main app
-        rest_app = create_app(name, cartridges, rest_domain, options.gear_size, scaling, options.from_code, env, options.auto_deploy, options.keep_deployments, options.deployment_branch, options.deployment_type)
+        rest_app = create_app(name, cartridges, rest_domain, options.gear_size, scaling, options.from_code, env, options.auto_deploy, options.keep_deployments, options.deployment_branch, options.deployment_type, region)
         success "done"
 
         paragraph{ indent{ success rest_app.messages.map(&:strip) } }
@@ -410,12 +416,17 @@ module RHC::Commands
               gear['state'] == 'started' ? gear['state'] : color(gear['state'], :yellow),
               group.cartridges.collect{ |c| c['name'] }.join(' '),
               group.gear_profile,
+              gear['region'],
+              gear['zone'],
               ssh_string(gear['ssh_url'])
             ]
           end
         end.flatten(1)
 
-        say table(gear_info, :header => ['ID', 'State', 'Cartridges', 'Size', 'SSH URL'])
+        explicit_regions = gear_info.select{|i| !i[4].nil?}.present?
+        explicit_zones = gear_info.select{|i| !i[5].nil?}.present?
+
+        say table(gear_info.map(&:compact), :header => ['ID', 'State', 'Cartridges', 'Size', explicit_regions ? 'Region' : nil, explicit_zones ? 'Zone' : nil, 'SSH URL'].compact)
 
       elsif options.configuration
         display_app_configurations(find_app)
@@ -561,7 +572,7 @@ module RHC::Commands
         result
       end
 
-      def create_app(name, cartridges, rest_domain, gear_size=nil, scale=nil, from_code=nil, environment_variables=nil, auto_deploy=nil, keep_deployments=nil, deployment_branch=nil, deployment_type=nil)
+      def create_app(name, cartridges, rest_domain, gear_size=nil, scale=nil, from_code=nil, environment_variables=nil, auto_deploy=nil, keep_deployments=nil, deployment_branch=nil, deployment_type=nil, region=nil)
         app_options = {:cartridges => Array(cartridges)}
         app_options[:gear_profile] = gear_size if gear_size
         app_options[:scale] = scale if scale
@@ -572,6 +583,7 @@ module RHC::Commands
         app_options[:keep_deployments] = keep_deployments if keep_deployments
         app_options[:deployment_branch] = deployment_branch if deployment_branch
         app_options[:deployment_type] = deployment_type if deployment_type
+        app_options[:region] = region if region
         debug "Creating application '#{name}' with these options - #{app_options.inspect}"
         rest_domain.add_application(name, app_options)
       rescue RHC::Rest::Exception => e

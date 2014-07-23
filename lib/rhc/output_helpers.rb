@@ -96,6 +96,26 @@ module RHC
       end
     end
 
+    def display_region(region)
+      paragraph do
+        header ["Region '#{region.name}'", "(uuid: #{region.uuid})", ("(default)" if region.default?)], {:color => (:green if region.default?)} do
+          section(:bottom => 1) do
+            say format_table \
+              nil,
+              get_properties(
+                region,
+                :description,
+                :zones
+              ),
+              {
+                :delete => true,
+                :color => (:green if region.default?)
+              }
+          end
+        end
+      end
+    end
+
     def format_cart_header(cart)
       [
         cart.name,

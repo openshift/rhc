@@ -10,6 +10,7 @@ module RHC
                   :scalable, :health_check_path, :embedded, :gear_count,
                   :ssh_url, :building_app, :cartridges, :initial_git_url,
                   :auto_deploy, :deployment_branch, :deployment_type, :keep_deployments, :deployments
+                  :region
       alias_method :domain_name, :domain_id
 
       # Query helper to say consistent with cartridge
@@ -98,6 +99,10 @@ module RHC
 
         raise ArgumentError, "Gear #{gear_id} not found" if gear.nil?
         gear['ssh_url'] or raise NoPerGearOperations
+      end
+
+      def region
+        gears.first['region'] rescue nil
       end
 
       def tidy
