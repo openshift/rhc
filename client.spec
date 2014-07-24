@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.28.1
+Version: 1.28.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,18 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Jul 24 2014 Adam Miller <admiller@redhat.com> 1.28.2-1
+- Merge pull request #631 from brenton/BZ1122702
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #629 from liggitt/bug_1112449_skip_ssh_key_check
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 1112449: Skip key upload prompts if a kerberos key is added to the user's
+  account (jliggitt@redhat.com)
+- [origin-ui-186] Adding support to regions and zones
+  (contact@fabianofranz.com)
+- Bug 1122702 - "rhc server add" with --no-use-authorization-tokens does not
+  work as expected (bleanhar@redhat.com)
+
 * Fri Jul 18 2014 Adam Miller <admiller@redhat.com> 1.28.1-1
 - Merge pull request #628 from liggitt/bug_1110728_rhc_help_autocomplete
   (dmcphers+openshiftbot@redhat.com)
