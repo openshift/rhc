@@ -93,7 +93,7 @@ module RHC::Commands
       confirm_action "Are you sure you wish to remove the environment variable(s) above from application '#{rest_app.name}'?"
       say 'Removing environment variable(s) ... '
       rest_app.unset_environment_variables(env)
-      success 'removed'
+      success 'done'
 
       0
     end
