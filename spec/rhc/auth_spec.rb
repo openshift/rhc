@@ -16,6 +16,8 @@ describe RHC::Auth::Basic do
   its(:options){ should_not be_nil }
   its(:can_authenticate?){ should be_false }
   its(:openshift_server){ should == 'openshift.redhat.com' }
+  its( :expired_token_message) { should == "Your authorization token has expired. Please sign in now to continue on #{subject.openshift_server}." }
+  its( :get_token_message) { should == "Please sign in to start a new session to #{subject.openshift_server}." }
 
   def resolved(hash)
     hash.each_pair do |k,v|
@@ -221,6 +223,68 @@ describe RHC::Auth::Basic do
   end
 end
 
+describe RHC::Auth::X509 do
+  subject{ described_class.new(options) }
+
+  let(:default_options){ {} }
+  let(:options){ (o = Commander::Command::Options.new).default(default_options); o }
+  let(:a_cert){ OpenSSL::X509::Certificate.new }
+  let(:a_key){ OpenSSL::PKey::RSA.new }
+  its(:options){ should_not be_nil }
+  its(:can_authenticate?){ should be_true }
+  its(:openshift_server){ should == 'openshift.redhat.com' }
+  its(:expired_token_message) { should == "Your authorization token has expired.  Fetching a new token from #{subject.openshift_server}."}
+  its(:get_token_message) { should == "Fetching a new token from #{subject.openshift_server}." }
+
+  describe "#retry_auth?" do
+    context "should return true if the response was 401" do
+      let(:response){ double(:status => 401) }
+      let(:client){ double }
+      it { subject.retry_auth?(response, client).should == true }
+    end
+
+    context "should return false if the response was 403" do
+      let(:response){ double }
+      let(:client){ double }
+      let(:response){ double(:status => 403) }
+      it { subject.retry_auth?(response, client).should == false }
+    end
+  end
+
+  describe "#to_request" do
+    let(:request){ {} }
+    let(:auth_hash){ {:client_cert => a_cert, :client_key => a_key} }
+
+    context "when a certificate exists" do
+      it "should use x509 auth" do
+        OpenSSL::X509::Certificate.should_receive(:new).exactly(1).times.and_return(a_cert)
+        OpenSSL::PKey::RSA.should_receive(:new).exactly(1).times.and_return(a_key)
+        subject.to_request(request).should == auth_hash
+      end
+    end
+
+    context "when a certificate can't be loaded" do
+      it "should send a debug message and raise an error" do
+        options.should_receive(:ssl_client_cert_file).and_return("a bogus path")
+        subject.should_receive(:debug)
+        expect do
+          subject.to_request(request)
+        end.to raise_error
+      end
+    end
+
+    context "when a key can't be loaded" do
+      it "should send a debug message and raise an error" do
+        options.should_receive(:ssl_client_key_file).and_return("a bogus path")
+        subject.should_receive(:debug)
+        expect do
+          subject.to_request(request)
+        end.to raise_error
+      end
+    end
+  end
+end
+
 describe RHC::Auth::Token do
   subject{ described_class.new(options) }
 
@@ -317,7 +381,7 @@ describe RHC::Auth::Token do
     context "when token is not provided" do
       subject{ described_class.new(nil) }
 
-      it("should pass not bearer token to the server"){ subject.to_request(request).should == {} }
+      it("should submit an empty bearer token to the server to trigger the 401 retry flow for OpenShift Enterprise"){ subject.to_request(request).should == {:headers => {'authorization' => "Bearer "}} }
     end
 
     context "when a parent auth class is passed" do
@@ -383,23 +447,28 @@ describe RHC::Auth::Token do
             before{ client.should_receive(:new_session).with(:auth => auth).and_return(auth_token) }
 
             it("should print a message") do 
-              subject.should_receive(:info).with("Please sign in to start a new session to #{subject.openshift_server}.")
+              subject.should_receive(:info).with("get token message")
               auth.should_receive(:retry_auth?).with(response, client).and_return true
+              auth.should_receive(:get_token_message).and_return("get token message")
               subject.retry_auth?(response, client).should be_true
             end
 
             context "with a token" do
               let(:default_options){ {:use_authorization_tokens => true, :token => 'foo'} }
               it("should invoke raise an error on retry because sessions are not supported") do
-                subject.should_receive(:warn).with("Your authorization token has expired. Please sign in now to continue on #{subject.openshift_server}.")
+                subject.should_receive(:warn).with("expired token message")
                 auth.should_receive(:retry_auth?).with(response, client).and_return true
+                auth.should_receive(:expired_token_message).and_return("expired token message")
                 subject.retry_auth?(response, client).should be_true
                 #expect{ subject.retry_auth?(response, client) }.to raise_error RHC::Rest::AuthorizationsNotSupported
               end
             end
 
             context "when the token request fails" do
-              before{ subject.should_receive(:info).with("Please sign in to start a new session to #{subject.openshift_server}.") }
+              before do
+                subject.should_receive(:info).with("get token message")
+                auth.should_receive(:get_token_message).and_return("get token message")
+              end
               it("should invoke retry on the parent") do
                 auth.should_receive(:retry_auth?).with(response, client).and_return false
                 subject.retry_auth?(response, client).should be_false
@@ -408,7 +477,10 @@ describe RHC::Auth::Token do
 
             context "when the token request succeeds" do
               let(:auth_token){ double('auth_token', :token => 'bar') }
-              before{ subject.should_receive(:info).with("Please sign in to start a new session to #{subject.openshift_server}.") }
+              before do
+                subject.should_receive(:info).with("get token message")
+                auth.should_receive(:get_token_message).and_return("get token message")
+              end
               it("should save the token and return true") do
                 subject.should_receive(:save).with(auth_token.token).and_return true
                 subject.retry_auth?(response, client).should be_true

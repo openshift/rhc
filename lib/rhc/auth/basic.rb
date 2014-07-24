@@ -32,6 +32,14 @@ module RHC::Auth
       username? and not (password.nil? and @skip_interactive and @no_interactive)
     end
 
+    def expired_token_message
+      "Your authorization token has expired. Please sign in now to continue on #{openshift_server}."
+    end
+
+    def get_token_message
+      "Please sign in to start a new session to #{openshift_server}."
+    end
+
     attr_reader :username
 
     protected

@@ -91,7 +91,7 @@ module RHC::Commands
     def add(hostname, nickname)
       raise ArgumentError, "The --use and --skip-wizard options cannot be used together." if options.use && options.skip_wizard
 
-      attrs = [:login, :use_authorization_tokens, :insecure, :timeout, :ssl_version, :ssl_client_cert_file, :ssl_ca_file]
+      attrs = [:login, :use_authorization_tokens, :insecure, :timeout, :ssl_version, :ssl_client_cert_file, :ssl_client_key_file, :ssl_ca_file]
 
       server = server_configs.add(hostname, 
         attrs.inject({:nickname => nickname}){ |h, (k, v)| h[k] = options[k == :login ? :rhlogin : k]; h })
@@ -136,7 +136,7 @@ module RHC::Commands
     def use(server)
       server = server_configs.find(server)
 
-      attrs = [:login, :use_authorization_tokens, :insecure, :timeout, :ssl_version, :ssl_client_cert_file, :ssl_ca_file]
+      attrs = [:login, :use_authorization_tokens, :insecure, :timeout, :ssl_version, :ssl_client_cert_file, :ssl_client_key_file, :ssl_ca_file]
 
       if wizard_to_server(server.hostname, true, attrs.inject({}){ |h, (k, v)| h[k] = server.send(k); h })
         paragraph { success "Now using '#{server.hostname}'" }
@@ -184,7 +184,7 @@ module RHC::Commands
 
       server = server_configs.find(server)
 
-      attrs = [:hostname, :nickname, :login, :use_authorization_tokens, :insecure, :timeout, :ssl_version, :ssl_client_cert_file, :ssl_ca_file].inject({}){ |h, (k, v)| v = options[k == :login ? :rhlogin : k]; h[k] = (v.nil? ? server.send(k) : v); h }
+      attrs = [:hostname, :nickname, :login, :use_authorization_tokens, :insecure, :timeout, :ssl_version, :ssl_client_cert_file, :ssl_client_key_file, :ssl_ca_file].inject({}){ |h, (k, v)| v = options[k == :login ? :rhlogin : k]; h[k] = (v.nil? ? server.send(k) : v); h }
 
       raise RHC::ServerNicknameExistsException.new(options.nickname) if options.nickname && 
         server_configs.nickname_exists?(options.nickname) && 
@@ -226,6 +226,7 @@ module RHC::Commands
         options['timeout'] = args[:timeout]
         options['ssl_version'] = args[:ssl_version]
         options['ssl_client_cert_file'] = args[:ssl_client_cert_file]
+        options['ssl_client_key_file'] = args[:ssl_client_key_file]
         options['ssl_ca_file'] = args[:ssl_ca_file]
         RHC::ServerWizard.new(config, options, server_configs, set_default).run
       end

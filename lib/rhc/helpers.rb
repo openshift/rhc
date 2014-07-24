@@ -127,6 +127,9 @@ module RHC
     global_option '--ssl-client-cert-file FILE', "An SSL x509 client certificate file", :hide => true do |value|
       debug certificate_file(value)
     end
+    global_option '--ssl-client-key-file FILE', "An RSA client certificate key", :hide => true do |value|
+      debug certificate_key(value)
+    end
 
     global_option('--timeout SECONDS', Integer, 'The timeout for operations') do |value|
       raise RHC::Exception, "Timeout must be a positive integer" unless value > 0
@@ -198,7 +201,6 @@ module RHC
     def ssl_options
       {
         :ssl_version => options.ssl_version,
-        :client_cert => certificate_file(options.ssl_client_cert),
         :ca_file => options.ssl_ca_file && File.expand_path(options.ssl_ca_file),
         :verify_mode => options.insecure ? OpenSSL::SSL::VERIFY_NONE : nil,
       }.delete_if{ |k,v| v.nil? }
@@ -209,6 +211,13 @@ module RHC
     rescue => e
       debug e
       raise OptionParser::InvalidOption.new(nil, "The certificate '#{file}' cannot be loaded: #{e.message} (#{e.class})")
+    end
+
+    def certificate_key(file)
+      file && OpenSSL::PKey::RSA.new(IO.read(File.expand_path(file)))
+    rescue => e
+      debug e
+      raise OptionParser::InvalidOption.new(nil, "The key '#{file}' cannot be loaded: #{e.message} (#{e.class})")
     end
 
     def parse_ssl_version(version)

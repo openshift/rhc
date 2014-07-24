@@ -325,17 +325,29 @@ describe RHC::Commands::Base do
 
   describe "rest_client" do
     let(:instance){ subject }
+    let(:options){ subject.send(:options) }
     before{ RHC::Rest::Client.any_instance.stub(:api_version_negotiated).and_return(1.4) }
 
     context "when initializing the object" do
       let(:auth){ double('auth') }
       let(:basic_auth){ double('basic_auth') }
-      before{ RHC::Auth::Basic.should_receive(:new).at_least(1).times.with{ |arg| arg.should == instance.send(:options) }.and_return(basic_auth) }
+      let(:x509_auth){ double('x509_auth') }
+      before{ RHC::Auth::Basic.stub(:new).with{ |arg| arg.should == instance.send(:options) }.and_return(basic_auth) }
+      before{ RHC::Auth::X509.stub(:new).with{ |arg| arg.should == instance.send(:options) }.and_return(x509_auth) }
       before{ RHC::Auth::Token.stub(:new).with{ |arg, arg2, arg3| [arg, arg2, arg3].should == [instance.send(:options), basic_auth, instance.send(:token_store)] }.and_return(auth) }
 
       context "with no options" do
         before{ subject.should_receive(:client_from_options).with(:auth => basic_auth) }
         it("should create only a basic auth object"){ subject.send(:rest_client) }
+      end
+
+      context "with x509" do
+        before do
+          options.should_receive(:ssl_client_cert_file).and_return("a cert")
+          options.should_receive(:ssl_client_key_file).and_return("a key")
+          subject.should_receive(:client_from_options).with(:auth => x509_auth)
+        end
+        it("should create an x509 auth object"){ subject.send(:rest_client) }
       end
 
       context "with use_authorization_tokens" do
@@ -413,7 +425,7 @@ describe RHC::Commands::Base do
         let(:auth_token){ double(:token => 'a_token') }
         let(:arguments){ ['test', '-l', username, '--server', mock_uri] }
         before{ instance.send(:token_store).should_receive(:get).with{ |user, server| user.should == username; server.should == instance.send(:openshift_server) }.and_return(nil) }
-        before{ stub_api(false, true); stub_api_request(:get, 'broker/rest/user', false).to_return{ |request| request.headers['Authorization'] =~ /Bearer/ ? simple_user(username) : {:status => 401} } }
+        before{ stub_api(false, true); stub_api_request(:get, 'broker/rest/user', false).to_return{ |request| request.headers['Authorization'] =~ /Bearer\s\w+/ ? simple_user(username) : {:status => 401} } }
         it("should attempt to create a new token") do
           rest_client.should_receive(:new_session).ordered.and_return(auth_token)
           rest_client.user

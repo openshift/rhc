@@ -8,7 +8,7 @@ module RHC
     include RHC::ServerHelpers
     attr_accessor :hostname, :nickname, :login 
     attr_accessor :use_authorization_tokens, :insecure, :timeout
-    attr_accessor :ssl_version, :ssl_client_cert_file, :ssl_ca_file
+    attr_accessor :ssl_version, :ssl_client_cert_file, :ssl_client_key_file, :ssl_ca_file
     attr_accessor :default
 
     def self.from_yaml_hash(hash)
@@ -25,6 +25,7 @@ module RHC
       @timeout = Integer(args[:timeout]) if args[:timeout].present?
       @ssl_version = RHC::Helpers.parse_ssl_version(args[:ssl_version])
       @ssl_client_cert_file = args[:ssl_client_cert_file]
+      @ssl_client_key_file = args[:ssl_client_key_file]
       @ssl_ca_file = args[:ssl_ca_file]
       @default = args[:default]
     end
@@ -152,6 +153,7 @@ module RHC
           :timeout                  => o[:timeout],
           :ssl_version              => o[:ssl_version],
           :ssl_client_cert_file     => o[:ssl_client_cert_file],
+          :ssl_client_key_file      => o[:ssl_client_key_file],
           :ssl_ca_file              => o[:ssl_ca_file])
         list.each{|server| server.default = server.hostname == o[:server]}
       end
