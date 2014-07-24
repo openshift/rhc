@@ -246,7 +246,7 @@ describe RHC::Commands::Env do
         let(:arguments) { args }
         it { succeed_with_message /TEST_ENV_VAR/ }
         it { succeed_with_message /Removing environment variable\(s\) \.\.\./ }
-        it { succeed_with_message /removed/ }
+        it { succeed_with_message /done/ }
       end
     end
 
@@ -259,7 +259,7 @@ describe RHC::Commands::Env do
         it { succeed_with_message /TEST_ENV_VAR2/ }
         it { succeed_with_message /TEST_ENV_VAR3/ }
         it { succeed_with_message /Removing environment variable\(s\) \.\.\./ }
-        it { succeed_with_message /removed/ }
+        it { succeed_with_message /done/ }
       end
     end
 
