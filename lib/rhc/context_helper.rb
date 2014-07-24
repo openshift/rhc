@@ -83,17 +83,7 @@ module RHC
     end
 
     def find_membership_container(opts={})
-      domain, app =
-        if options.target.present?
-          options.target.split(/\//)
-        elsif options.namespace || options.app
-          if options.app =~ /\//
-            options.app.split(/\//)
-          else
-            [options.namespace || namespace_context, options.app]
-          end
-        end
-
+      domain, app = discover_domain_and_app
       if options.team_id.present?
         rest_client.find_team_by_id(options.team_id)
       elsif options.team_name.present?
@@ -160,6 +150,18 @@ module RHC
       raise RHC::NoDomainsForUser if domain.nil?
 
       domain.name
+    end
+
+    def discover_domain_and_app
+      if options.target.present?
+        options.target.split(/\//)
+      elsif options.namespace || options.app
+        if options.app =~ /\//
+          options.app.split(/\//)
+        else
+          [options.namespace || namespace_context, options.app]
+        end
+      end
     end
   end
 end
