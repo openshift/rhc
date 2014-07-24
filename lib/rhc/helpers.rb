@@ -286,10 +286,14 @@ module RHC
 
     # OVERRIDE: Replaces default commander behavior
     def color(item, *args)
-      if item.is_a? Array
-        item.map{ |i| $terminal.color(i, *args) }
-      else
-        $terminal.color(item, *args)
+      unless (options.raw rescue false)
+        if item.is_a? Array
+          item.map{ |i| $terminal.color(i, *args) }
+        else
+          $terminal.color(item, *args)
+        end
+      else 
+        item
       end
     end
 

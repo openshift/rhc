@@ -165,6 +165,12 @@ module RHC
         request(:url => link_show_application_by_domain_name(domain, application, "gear_groups"), :method => "GET", :payload => options)
       end
 
+      def find_application_gear_groups_endpoints(domain, application, options={})
+        precheck_domain_id(domain)
+        precheck_application_id(application)
+        request(:url => link_show_application_by_domain_name(domain, application, "gear_groups"), :method => "GET", :payload => options.merge(:include => 'endpoints'))
+      end
+
       def find_application_aliases(domain, application, options={})
         precheck_domain_id(domain)
         precheck_application_id(application)

@@ -731,7 +731,7 @@ describe RHC::Commands::App do
   end
 
   describe 'app show --gears' do
-    let(:arguments) { ['app', 'show', 'app1', '--gears'] }
+    let(:arguments) { ['app', 'show', 'app1', '--gears', '--raw'] }
 
     context 'when run' do
       before do

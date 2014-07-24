@@ -409,13 +409,14 @@ module RHC::Commands
         end
 
       elsif options.gears
-        gear_info = find_app(:with_gear_groups => true).map do |group|
+        domain, app = discover_domain_and_app
+        gear_info = rest_client.find_application_gear_groups_endpoints(domain, app).map do |group|
           group.gears.map do |gear|
             [
               gear['id'],
-              gear['state'] == 'started' ? gear['state'] : color(gear['state'], :yellow),
-              group.cartridges.collect{ |c| c['name'] }.join(' '),
-              group.gear_profile,
+              gear['state'] == 'started' ? color(gear['state'], :green) : color(gear['state'], :yellow),
+              (gear['endpoints'].blank? ? group.cartridges : gear['endpoints']).collect{ |c| c['cartridge_name'] || c['name'] }.join(' '),
+              group.gear_profile,              
               gear['region'],
               gear['zone'],
               ssh_string(gear['ssh_url'])
