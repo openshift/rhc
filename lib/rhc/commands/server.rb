@@ -46,7 +46,6 @@ module RHC::Commands
       say "Connected to #{openshift_server}"
 
       if openshift_online_server?
-        #status = decode_json(get("#{openshift_url}/app/status/status.json").body)
         status = rest_client.request(:method => :get, :url => "#{openshift_url}/app/status/status.json", :lazy_auth => true){ |res| decode_json(res.content) }
         open = status['open']
 
@@ -55,9 +54,9 @@ module RHC::Commands
         open.each do |i|
           i = i['issue']
           say color("%-3s %s" % ["##{i['id']}", i['title']], :bold)
-          items = i['updates'].map{ |u| [u['description'], date(u['created_at'])] }
-          items.unshift ['Opened', date(i['created_at'])]
-          table(items, :align => [nil,:right], :join => '  ').each{ |s| say "    #{s}" }
+          items = i['updates'].map{ |u| [date(u['created_at']), u['description']] }
+          items.unshift [date(i['created_at']), 'Opened']
+          say table(items, :align => [nil,:left], :join => '  ')
         end
         say "\n"
         warn pluralize(open.length, "open issue")
