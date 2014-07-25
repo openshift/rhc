@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.28.2
+Version: 1.28.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,18 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Jul 25 2014 Troy Dawson <tdawson@redhat.com> 1.28.3-1
+- Merge pull request #632 from fabianofranz/bugs/1091071
+  (dmcphers+openshiftbot@redhat.com)
+- Merge pull request #486 from brenton/x509 (dmcphers+openshiftbot@redhat.com)
+- Bug 1091071 - properly displays haproxy on app gears
+  (contact@fabianofranz.com)
+- Merge pull request #633 from fabianofranz/bugs/1082973
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 1082973 - improved exit message when there are warnings from broker
+  (contact@fabianofranz.com)
+- x509 auth (bleanhar@redhat.com)
+
 * Thu Jul 24 2014 Adam Miller <admiller@redhat.com> 1.28.2-1
 - Merge pull request #631 from brenton/BZ1122702
   (dmcphers+openshiftbot@redhat.com)
