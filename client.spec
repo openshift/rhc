@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.28.3
+Version: 1.28.4
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,11 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Jul 28 2014 Adam Miller <admiller@redhat.com> 1.28.4-1
+- Merge pull request #634 from fabianofranz/bugs/1067874
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 1067874 - fixes rhc server status messages (contact@fabianofranz.com)
+
 * Fri Jul 25 2014 Troy Dawson <tdawson@redhat.com> 1.28.3-1
 - Merge pull request #632 from fabianofranz/bugs/1091071
   (dmcphers+openshiftbot@redhat.com)
