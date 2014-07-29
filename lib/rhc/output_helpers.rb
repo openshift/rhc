@@ -30,6 +30,7 @@ module RHC
                 :creation_time,
                 (:id if ids),
                 (:allowed_gear_sizes unless domain.allowed_gear_sizes.nil?),
+                (:suffix unless domain.suffix.nil? || openshift_online_server?),
                 :compact_members
               ),
               :delete => true

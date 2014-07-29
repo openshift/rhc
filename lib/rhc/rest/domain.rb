@@ -6,7 +6,8 @@ module RHC
       define_attr :id,                  # Domain name for API version < 1.6, domain unique id otherwise
                   :name,                # Available from API version 1.6 onwards
                   :allowed_gear_sizes,  # Available from API version 1.3 onwards on compatible servers
-                  :creation_time        # Available from API version 1.3 onwards on compatible servers
+                  :creation_time,        # Available from API version 1.3 onwards on compatible servers
+                  :suffix
 
       def id
         id_and_name.first
