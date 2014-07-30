@@ -14,31 +14,27 @@ module RHC::Auth
       read_token
     end
 
-    def to_request(request)
-      if auth and !token and (!@allows_tokens or @can_get_token == false)
-        debug "Bypassing token auth"
-        auth.to_request(request)
-      else
-        # If no token is available an empty one will be submitted at this
-        # point.  This is actually required in order for the retry logic to be
-        # triggered in all cases.
-        #
-        # Previously a request with no authentication was submitted to trigger
-        # this behavior but it was found not to work in certain scenarios where
-        # Broker authentication is handled by Apache.  In those cases a 403 is
-        # returned and not secondary authentication attempt is made.
+    def to_request(request, client=nil)
+      if !token and auth and @allows_tokens and client and client.supports_sessions?
+        debug "Attempting to generate token"
+        token_rejected(nil, client)
+      end
+
+      if token
         debug "Using token authentication"
         (request[:headers] ||= {})['authorization'] = "Bearer #{token}"
+      elsif auth
+        debug "Bypassing token auth"
+        auth.to_request(request, client)
       end
       request
     end
 
     def retry_auth?(response, client)
-      case response.status
-      when 401
-        token_rejected(response, client)
-      else
+      if response && response.status != 401
         false
+      else
+        token_rejected(response, client)
       end
     end
 

@@ -12,7 +12,7 @@ module RHC::Auth
       @skip_interactive = !@password.nil?
     end
 
-    def to_request(request)
+    def to_request(request, client=nil)
       request[:user] ||=
         lambda{ username || (request[:lazy_auth] != true && ask_username) || nil }
       request[:password] ||=
@@ -21,10 +21,10 @@ module RHC::Auth
     end
 
     def retry_auth?(response, client)
-      if response.status == 401
-        credentials_rejected
-      else
+      if response && response.status != 401
         false
+      else
+        credentials_rejected
       end
     end
 

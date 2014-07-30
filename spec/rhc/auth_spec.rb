@@ -378,17 +378,51 @@ describe RHC::Auth::Token do
       end
     end
 
-    context "when token is not provided" do
-      subject{ described_class.new(nil) }
+    context "when a token is not provided when secondary auth is provided" do
+      let(:auth) { double(:can_authenticate? => true, :get_token_message => '') }
+      let(:default_options){ {:use_authorization_tokens => true} }
+      subject{ described_class.new(default_options, auth) }
 
-      it("should submit an empty bearer token to the server to trigger the 401 retry flow for OpenShift Enterprise"){ subject.to_request(request).should == {:headers => {'authorization' => "Bearer "}} }
+      context "without session support" do
+        let(:client){ double('client', :supports_sessions? => false) }
+        it("should delegate to secondary auth") do
+          auth.should_receive(:to_request).with(request, client).and_return(request)
+          subject.should_receive(:token_rejected).never
+          subject.to_request(request, client).should == {}
+        end
+      end
+
+      context "with session support" do
+        let(:client){ double('client', :supports_sessions? => true) }
+        before do
+          client.should_receive(:new_session).with(:auth => auth).and_return(auth_token)
+        end
+
+        context "when a token request fails" do
+          let(:auth_token){ nil }
+          it("should delegate to secondary auth") do
+            auth.should_receive(:retry_auth?).once.and_return(true)
+            auth.should_receive(:to_request).once.and_return(request)
+            subject.to_request(request, client).should == {}
+          end
+        end
+
+        context "when a token request succeeds" do
+          let(:auth_token){ double('auth_token', :token => token) }
+          it("should should use the newly created token") do
+            auth.should_receive(:to_request).never
+            subject.to_request(request, client).should == {:headers => {'authorization' => "Bearer #{token}"}}
+          end
+        end
+
+      end
     end
 
     context "when a parent auth class is passed" do
       subject{ described_class.new(nil, auth) }
       let(:auth){ double }
       it("should invoke the parent") do
-        auth.should_receive(:to_request).with(request).and_return(request)
+        auth.should_receive(:to_request).with(request, nil).and_return(request)
         subject.to_request(request).should == request
       end
     end
