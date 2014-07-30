@@ -71,6 +71,13 @@ describe RHC::Commands::Member do
       it("should include the login value") { run_output.should =~ /alice.*Bob.*carol.*doug@doug\.com/m }
     end
 
+    context 'without membership support' do
+      let(:arguments) { ['domain', 'show', 'mock-domain-0'] }
+      before{ with_mock_domain }
+      let(:supports_members){ false }
+      it { expect { run }.to exit_with_code(0) }
+      it { run_output.should_not =~ /owned by/ }
+    end
   end
 
   describe 'list-member' do

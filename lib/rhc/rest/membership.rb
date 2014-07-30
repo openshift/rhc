@@ -143,6 +143,8 @@ module RHC::Rest
 
     def owner
       members.find(&:owner?)
+    rescue RHC::MembersNotSupported
+      nil
     end
   end
 end
