@@ -24,6 +24,10 @@ module RHC::Auth
       raise OptionParser::InvalidOption.new(nil, "The RSA key '#{file}' cannot be loaded: #{e.message} (#{e.class})")
     end
 
+    def token_store_user_key
+      certificate_file(options.ssl_client_cert_file)
+    end
+
     def retry_auth?(response, client)
       # This is really only hit in the case of token auth falling back to x509.
       # x509 auth doesn't usually get 401s.

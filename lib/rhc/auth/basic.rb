@@ -40,6 +40,10 @@ module RHC::Auth
       "Please sign in to start a new session to #{openshift_server}."
     end
 
+    def token_store_user_key
+      username
+    end
+
     attr_reader :username
 
     protected

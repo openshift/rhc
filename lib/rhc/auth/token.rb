@@ -42,6 +42,10 @@ module RHC::Auth
       auth && auth.respond_to?(:username) && auth.username || options[:username]
     end
 
+    def token_store_user_key
+      auth && auth.respond_to?(:token_store_user_key) && auth.token_store_user_key || username
+    end
+
     def save(token)
       store.put(username, openshift_server, token) if store
       @token = token
