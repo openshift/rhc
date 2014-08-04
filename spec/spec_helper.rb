@@ -404,6 +404,7 @@ module ClassSpecHelpers
     local_config.add('libra_server', server) if server
     
     c.instance_variable_set(:@local_config, local_config)
+    c.instance_variable_set(:@servers, RHC::Servers.new)
     opts = c.to_options
     opts[:rhlogin].should == user
     opts[:password].should == password

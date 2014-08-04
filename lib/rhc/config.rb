@@ -130,7 +130,6 @@ module RHC
 
       @default_proxy = nil
 
-      @defaults.add('insecure', false)
       @defaults.add('libra_server', openshift_online_server)
 
       @env_config.add('libra_server', libra_server_env) if libra_server_env
@@ -367,7 +366,17 @@ module RHC
 
       def servers_config
         lazy_init
-        (servers.find(self['libra_server']).to_config rescue nil) || (servers.list.first.to_config rescue nil)
+        libra_server_conf = (@local_config['libra_server'] rescue nil) || (@global_config['libra_server'] rescue nil)
+        if libra_server_conf
+          begin
+            servers.find(libra_server_conf).to_config
+          rescue RHC::ServerNotConfiguredException
+            RHC::Helpers.warn "The server '#{self['libra_server']}' is not configured. Please run 'rhc setup'."
+            nil
+          end
+        else
+          (servers.list.first.to_config rescue nil)
+        end
       end
 
       def lazy_init

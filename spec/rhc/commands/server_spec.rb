@@ -9,8 +9,8 @@ describe RHC::Commands::Server do
   let(:rest_client) { MockRestClient.new }
   let(:default_options){}
   let(:options){ Commander::Command::Options.new(default_options) }
-  let(:config){ RHC::Config.new.tap{ |c| c.stub(:home_dir).and_return('/home/mock_user') } }
   let(:servers){ RHC::Servers.new.tap{|c| c.stub(:home_dir).and_return('/home/mock_user') } }
+  let(:config){ RHC::Config.new.tap{ |c| c.stub(:home_dir).and_return('/home/mock_user') } }
   before do
     FakeFS.activate!
     FakeFS::FileSystem.clear
@@ -143,6 +143,26 @@ describe RHC::Commands::Server do
       it 'should output correctly' do 
         run_output.should =~ /Server 'online' \(in use\)/
         run_output.should =~ /Hostname:\s+#{local_config_server}/
+        Array(1..entries).each do |i|
+          run_output.should =~ /Server 'server#{i}'/
+          run_output.should =~ /Hostname:\s+openshift#{i}.server.com/
+        end
+      end
+      it { expect { run }.to exit_with_code(0) }
+    end
+
+    context "when express.conf server is not present in servers.yml" do
+      let(:local_config_server){ 'some.openshift.mycompany.com' }
+      let(:entries){ 3 }
+      before do
+        local_config
+        stub_servers_yml(entries)
+      end
+      let(:arguments) { ['servers'] }
+      it 'should output correctly' do 
+        run_output.should =~ /Server '#{local_config_server}' \(in use\)/
+        run_output.should =~ /Hostname:\s+#{local_config_server}/
+        run_output.should =~/The server '#{local_config_server}' is not configured/
         Array(1..entries).each do |i|
           run_output.should =~ /Server 'server#{i}'/
           run_output.should =~ /Hostname:\s+openshift#{i}.server.com/
