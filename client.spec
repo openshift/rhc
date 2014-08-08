@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.28.5
+Version: 1.28.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,10 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Aug 08 2014 Adam Miller <admiller@redhat.com> 1.28.6-1
+- Bug 1126388 - must properly handle express.conf server missing on servers.yml
+  (contact@fabianofranz.com)
+
 * Wed Jul 30 2014 Adam Miller <admiller@redhat.com> 1.28.5-1
 - Bug 1124343 - show|list domain must tolerate servers with no membership
   support (contact@fabianofranz.com)
