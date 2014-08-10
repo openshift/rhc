@@ -371,7 +371,7 @@ module RHC
           begin
             servers.find(libra_server_conf).to_config
           rescue RHC::ServerNotConfiguredException
-            RHC::Helpers.warn "The server '#{self['libra_server']}' is not configured. Please run 'rhc setup'."
+            RHC::Helpers.warn "The server '#{self['libra_server']}' is not configured. Please run 'rhc setup'." if servers.present? && libra_server_conf == self['libra_server']
             nil
           end
         else
