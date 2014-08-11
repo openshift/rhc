@@ -162,7 +162,6 @@ describe RHC::Commands::Server do
       it 'should output correctly' do 
         run_output.should =~ /Server '#{local_config_server}' \(in use\)/
         run_output.should =~ /Hostname:\s+#{local_config_server}/
-        run_output.should =~/The server '#{local_config_server}' is not configured/
         Array(1..entries).each do |i|
           run_output.should =~ /Server 'server#{i}'/
           run_output.should =~ /Hostname:\s+openshift#{i}.server.com/
