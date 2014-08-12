@@ -154,6 +154,7 @@ module RHC
     end
 
     OptionParser.accept(CertificateFile = Class.new) {|s| certificate_file(s); s}
+    OptionParser.accept(CertificateKey = Class.new) {|s| certificate_key(s); s}
 
     def role_name(s)
       ROLES[s.downcase]

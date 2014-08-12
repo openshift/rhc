@@ -86,6 +86,7 @@ module RHC::Commands
     option ["--timeout SECONDS"], "The default timeout for operations on this server", :type => Integer
     option ["--ssl-ca-file FILE"], "An SSL certificate CA file (may contain multiple certs) to be used on this server", :type => CertificateFile, :optional => true
     option ["--ssl-client-cert-file FILE"], "An SSL x509 client certificate file to be used on this server", :type => CertificateFile, :optional => true
+    option ["--ssl-client-key-file FILE"], "An RSA client certificate key", :type => CertificateKey, :optional => true
     option ["--ssl-version VERSION"], "The version of SSL to use to be used on this server", :type => SSLVersion, :optional => true
     def add(hostname, nickname)
       raise ArgumentError, "The --use and --skip-wizard options cannot be used together." if options.use && options.skip_wizard
@@ -177,6 +178,7 @@ module RHC::Commands
     option ["--timeout SECONDS"], "The default timeout for operations on this server", :type => Integer
     option ["--ssl-ca-file FILE"], "An SSL certificate CA file (may contain multiple certs) to be used on this server", :type => CertificateFile, :optional => true
     option ["--ssl-client-cert-file FILE"], "An SSL x509 client certificate file to be used on this server", :type => CertificateFile, :optional => true
+    option ["--ssl-client-key-file FILE"], "An RSA client certificate key", :type => CertificateKey, :optional => true
     option ["--ssl-version VERSION"], "The version of SSL to use to be used on this server", :type => SSLVersion, :optional => true
     def configure(server)
       raise ArgumentError, "The --use and --skip-wizard options cannot be used together." if options.use && options.skip_wizard
