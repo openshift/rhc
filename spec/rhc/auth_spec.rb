@@ -251,6 +251,28 @@ describe RHC::Auth::X509 do
     end
   end
 
+  describe "#token_store_user_key" do
+    let(:cert) do
+      file = Tempfile.new('cert')
+      cert = OpenSSL::X509::Certificate.new
+      cert.version = 2
+      cert.serial = 1
+      cert.subject = OpenSSL::X509::Name.parse "/DC=org/DC=ruby-lang/CN=Ruby CA"
+      cert.issuer = cert.subject
+      cert.not_before = Time.now
+      cert.not_after = cert.not_before + 2 * 365 * 24 * 60 * 60
+      file.write(cert)
+      file.flush
+      file
+    end
+    let(:options){ Commander::Command::Options.new(:ssl_client_cert_file => cert.path) }
+    context "when the client cert is set", :focus => true do
+      it("should return the fingerprint") do
+        subject.token_store_user_key.length.should == 40
+      end
+    end
+  end
+
   describe "#to_request" do
     let(:request){ {} }
     let(:auth_hash){ {:client_cert => a_cert, :client_key => a_key} }
@@ -340,7 +362,8 @@ describe RHC::Auth::Token do
   end
 
   context "when initialized with a store" do
-    subject{ described_class.new(nil, nil, store) }
+    subject{ described_class.new(nil, auth, store) }
+    let(:auth){ double(:token_store_user_key => nil) }
     let(:store){ double }
     before{ store.should_receive(:get).with(nil, 'openshift.redhat.com').and_return(token) }
     it("should read the token for the user") do
@@ -349,11 +372,11 @@ describe RHC::Auth::Token do
   end
 
   describe "#save" do
-    subject{ described_class.new(nil, nil, store) }
+    subject{ described_class.new(nil, auth, store) }
     context "when store is set" do
+      let(:auth){ double(:token_store_user_key => 'foo') }
       let(:store){ double(:get => nil) }
       it("should call put on store") do
-        subject.should_receive(:username).and_return('foo')
         subject.should_receive(:openshift_server).and_return('bar')
         store.should_receive(:put).with('foo', 'bar', token)
         subject.save(token)

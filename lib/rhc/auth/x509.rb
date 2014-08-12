@@ -6,26 +6,12 @@ module RHC::Auth
 
     def to_request(request, client=nil)
       request[:client_cert] = certificate_file(options.ssl_client_cert_file)
-      request[:client_key] = rsa_key_file(options.ssl_client_key_file)
+      request[:client_key] = certificate_key(options.ssl_client_key_file)
       request
     end
 
-    def certificate_file(file)
-      file && OpenSSL::X509::Certificate.new(IO.read(File.expand_path(file)))
-    rescue => e
-      debug e
-      raise OptionParser::InvalidOption.new(nil, "The certificate '#{file}' cannot be loaded: #{e.message} (#{e.class})")
-    end
-
-    def rsa_key_file(file)
-      file && OpenSSL::PKey::RSA.new(IO.read(File.expand_path(file)))
-    rescue => e
-      debug e
-      raise OptionParser::InvalidOption.new(nil, "The RSA key '#{file}' cannot be loaded: #{e.message} (#{e.class})")
-    end
-
     def token_store_user_key
-      certificate_file(options.ssl_client_cert_file)
+      certificate_fingerprint(options.ssl_client_cert_file)
     end
 
     def retry_auth?(response, client)
