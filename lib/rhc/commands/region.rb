@@ -18,8 +18,13 @@ module RHC::Commands
         display_region(region)
       end
 
-      paragraph{ say "To create an app in a specific region use 'rhc create-app <name> <cartridge> --region <region>'." }
-
+      paragraph do
+        if regions.find{|r| r.allow_selection?}.blank?
+          warn "Regions can't be explicitly provided by users and will be automatically selected by the system."
+        else
+          say "To create an app in a specific region use 'rhc create-app <name> <cartridge> --region <region>'."
+        end
+      end
       0
     end
 
