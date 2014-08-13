@@ -1,9 +1,13 @@
 module RHC::Rest
   class Region < Base
-    define_attr :id, :name, :description, :default
+    define_attr :id, :name, :description, :default, :allow_selection
 
     def default?
       !!default
+    end
+
+    def allow_selection?
+      !!allow_selection
     end
 
     def uuid

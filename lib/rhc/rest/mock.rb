@@ -271,8 +271,8 @@ module RHC::Rest::Mock
       stub_api_request(:get, 'broker/rest/cartridges', with_auth).to_return(simple_carts)
     end
 
-    def stub_simple_regions(empty=false, with_auth=mock_user_auth)
-      stub_api_request(:get, 'broker/rest/regions', with_auth).to_return(simple_regions(empty))
+    def stub_simple_regions(empty=false, allow_selection=true, with_auth=mock_user_auth)
+      stub_api_request(:get, 'broker/rest/regions', with_auth).to_return(simple_regions(empty, allow_selection))
     end
 
     def define_exceptional_test_on_wizard
@@ -327,13 +327,13 @@ module RHC::Rest::Mock
       }
     end
 
-    def simple_regions(empty=false)
+    def simple_regions(empty=false, allow_selection=true)
       {
         :body => {
           :type => 'regions',
           :data => empty ? [] : [
-            {:id => 'region0001', :default => false, :name => 'north', :description => 'Servers in the north of US', :zones => [{:name => 'west', :created_at => '2014-01-01T01:00:00Z', :updated_at => '2014-01-01T01:00:00Z'}, {:name => 'east', :created_at => '2014-01-01T01:00:00Z', :updated_at => '2014-01-01T01:00:00Z'}]},
-            {:id => 'region0002', :default => true, :name => 'south', :zones => [{:name => 'east', :created_at => '2014-01-01T01:00:00Z', :updated_at => '2014-01-01T01:00:00Z'}]},
+            {:id => 'region0001', :default => false, :name => 'north', :allow_selection => allow_selection, :description => 'Servers in the north of US', :zones => [{:name => 'west', :created_at => '2014-01-01T01:00:00Z', :updated_at => '2014-01-01T01:00:00Z'}, {:name => 'east', :created_at => '2014-01-01T01:00:00Z', :updated_at => '2014-01-01T01:00:00Z'}]},
+            {:id => 'region0002', :default => true, :name => 'south', :allow_selection => allow_selection, :zones => [{:name => 'east', :created_at => '2014-01-01T01:00:00Z', :updated_at => '2014-01-01T01:00:00Z'}]},
           ],
         }.to_json
       }

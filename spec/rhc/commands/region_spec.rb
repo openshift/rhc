@@ -28,6 +28,24 @@ describe RHC::Commands::Region do
       it{ expect{ run }.to exit_with_code(0) }
     end
 
+    context 'when allowing region selection' do
+      before do 
+        stub_api 
+        stub_simple_regions(false, true)
+      end
+      it{ run_output.should match /To create an app in a specific region use/ }
+      it{ expect{ run }.to exit_with_code(0) }
+    end
+
+    context 'when not allowing region selection' do
+      before do 
+        stub_api 
+        stub_simple_regions(false, false)
+      end
+      it{ run_output.should match /Regions can't be explicitly provided by users/ }
+      it{ expect{ run }.to exit_with_code(0) }
+    end
+
     context 'without server regions' do
       before do 
         stub_api 
