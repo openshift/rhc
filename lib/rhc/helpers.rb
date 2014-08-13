@@ -186,7 +186,17 @@ module RHC
     end
 
     def token_for_user
-      options.token or (token_store.get(options.rhlogin, options.server) if options.rhlogin && options.use_authorization_tokens)
+      return options.token if options.token
+      return nil unless options.use_authorization_tokens
+
+      token_store_user_key = if options.ssl_client_cert_file
+        certificate_fingerprint(options.ssl_client_cert_file)
+      else
+        options.rhlogin
+      end
+
+      return nil if token_store_user_key.nil?
+      token_store.get(token_store_user_key, options.server)
     end
 
     def client_from_options(opts)
@@ -213,11 +223,15 @@ module RHC
       raise OptionParser::InvalidOption.new(nil, "The certificate '#{file}' cannot be loaded: #{e.message} (#{e.class})")
     end
 
+    def certificate_fingerprint(file)
+      Digest::SHA1.hexdigest(certificate_file(file).to_der)
+    end
+
     def certificate_key(file)
       file && OpenSSL::PKey::RSA.new(IO.read(File.expand_path(file)))
     rescue => e
       debug e
-      raise OptionParser::InvalidOption.new(nil, "The key '#{file}' cannot be loaded: #{e.message} (#{e.class})")
+      raise OptionParser::InvalidOption.new(nil, "The RSA key '#{file}' cannot be loaded: #{e.message} (#{e.class})")
     end
 
     def parse_ssl_version(version)

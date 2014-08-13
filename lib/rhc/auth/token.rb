@@ -47,7 +47,7 @@ module RHC::Auth
     end
 
     def save(token)
-      store.put(username, openshift_server, token) if store
+      store.put(token_store_user_key, openshift_server, token) if store
       @token = token
     end
 
@@ -101,7 +101,7 @@ module RHC::Auth
       end
 
       def read_token
-        @token ||= store.get(username, openshift_server) if store
+        @token ||= store.get(token_store_user_key, openshift_server) if store
       end
 
       def cannot_retry?

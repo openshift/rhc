@@ -2,6 +2,7 @@ require 'spec_helper'
 require 'rhc/commands/base'
 require 'rhc/exceptions'
 require 'rest_spec_helper'
+require 'tempfile'
 
 describe RHC::Commands::Base do
 
@@ -429,6 +430,29 @@ describe RHC::Commands::Base do
         it("should attempt to create a new token") do
           rest_client.should_receive(:new_session).ordered.and_return(auth_token)
           rest_client.user
+        end
+      end
+
+      context "with tokens enabled and a certificate" do
+        let(:config){ base_config{ |c, d| d.add('use_authorization_tokens', 'true') } }
+        let(:cert) do
+          file = Tempfile.new('cert')
+          cert = OpenSSL::X509::Certificate.new
+          cert.version = 2
+          cert.serial = 1
+          cert.subject = OpenSSL::X509::Name.parse "/DC=org/DC=ruby-lang/CN=Ruby CA"
+          cert.issuer = cert.subject
+          cert.not_before = Time.now
+          cert.not_after = cert.not_before + 2 * 365 * 24 * 60 * 60
+          file.write(cert)
+          file.flush
+          file
+        end
+        let(:arguments){ ['test', '--server', mock_uri, '--ssl-client-cert-file', cert.path] }
+        it("it should generate a certificate fingerprint") do
+          command = command_for(*arguments)
+          command.should_receive(:certificate_fingerprint).with(cert.path)
+          command.send(:token_for_user)
         end
       end
 
