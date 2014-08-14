@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.29.4
+Version: 1.29.5
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,12 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Aug 14 2014 Adam Miller <admiller@redhat.com> 1.29.5-1
+- Merge pull request #641 from fabianofranz/dev/207
+  (dmcphers+openshiftbot@redhat.com)
+- [origin-ui-207] Handle user region selection availability
+  (contact@fabianofranz.com)
+
 * Wed Aug 13 2014 Adam Miller <admiller@redhat.com> 1.29.4-1
 - Bug 1128986 - Missing "--ssl-client-key-file" option in the help message of
   'rhc server add/configure' (bleanhar@redhat.com)
