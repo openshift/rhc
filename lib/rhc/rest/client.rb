@@ -564,8 +564,9 @@ module RHC
           options[:send_timeout] ||= options[:timeout] || 0
           options[:timeout] = nil
 
-          if auth = options[:auth] || self.auth
-            auth.to_request(options)
+          auth = (options[:auth] || self.auth) unless options[:no_auth]
+          if auth
+            auth.to_request(options, self)
           end
 
           headers = (self.headers.to_a + (options.delete(:headers) || []).to_a).inject({}) do |h,(k,v)|
@@ -597,6 +598,7 @@ module RHC
 
           # remove all unnecessary options
           options.delete(:lazy_auth)
+          options.delete(:no_auth)
           options.delete(:accept)
 
           args = [options.delete(:method), options.delete(:url), query, payload, headers, true]
