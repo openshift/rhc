@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.29.5
+Version: 1.29.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,14 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Aug 15 2014 Troy Dawson <tdawson@redhat.com> 1.29.6-1
+- Merge pull request #636 from liggitt/rework_token_fallback
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 1128987 - prevent rhc from needlessly regenerating tokens with x509 auth
+  (bleanhar@redhat.com)
+- Use cert as user_key for token store hash for x509 (jliggitt@redhat.com)
+- Rework token fallback (jliggitt@redhat.com)
+
 * Thu Aug 14 2014 Adam Miller <admiller@redhat.com> 1.29.5-1
 - Merge pull request #641 from fabianofranz/dev/207
   (dmcphers+openshiftbot@redhat.com)
