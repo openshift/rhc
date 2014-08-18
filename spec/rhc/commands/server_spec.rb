@@ -108,8 +108,6 @@ describe RHC::Commands::Server do
     end
 
     context "from express.conf and servers.yml" do
-      let(:local_config_username){ 'local_config_user' }
-      let(:local_config_password){ 'password' }
       let(:local_config_server){ 'openshift.redhat.com' }
       before do
         local_config
@@ -117,9 +115,8 @@ describe RHC::Commands::Server do
       end
       let(:arguments) { ['servers'] }
       it 'should output correctly' do 
-        run_output.should =~ /Server 'online' \(in use\)/
+        run_output.should =~ /Server 'online' \(not configured, run 'rhc setup'\)/
         run_output.should =~ /Hostname:\s+#{local_config_server}/
-        run_output.should =~ /Login:\s+#{local_config_username}/
         run_output.should =~ /Server 'server1'/
         run_output.should =~ /Hostname:\s+openshift1.server.com/
         run_output.should =~ /Login:\s+user1/
@@ -131,8 +128,6 @@ describe RHC::Commands::Server do
     end
 
     context "from express.conf and several entries on servers.yml" do
-      let(:local_config_username){ 'local_config_user' }
-      let(:local_config_password){ 'password' }
       let(:local_config_server){ 'openshift.redhat.com' }
       let(:entries){ 3 }
       before do
@@ -141,8 +136,30 @@ describe RHC::Commands::Server do
       end
       let(:arguments) { ['servers'] }
       it 'should output correctly' do 
-        run_output.should =~ /Server 'online' \(in use\)/
+        run_output.should =~ /Server 'online' \(not configured, run 'rhc setup'\)/
         run_output.should =~ /Hostname:\s+#{local_config_server}/
+        Array(1..entries).each do |i|
+          run_output.should =~ /Server 'server#{i}'/
+          run_output.should =~ /Hostname:\s+openshift#{i}.server.com/
+        end
+      end
+      it { expect { run }.to exit_with_code(0) }
+    end
+
+    context "from express.conf and several entries on servers.yml, matching servers" do
+      let(:local_config_server){ 'openshift1.server.com' }
+      let(:local_config_username){ 'local_config_user' }
+      let(:local_config_password){ 'password' }
+      let(:entries){ 3 }
+      before do
+        local_config
+        stub_servers_yml(entries)
+      end
+      let(:arguments) { ['servers'] }
+      it 'should output correctly' do 
+        run_output.should =~ /Server 'server1' \(in use\)/
+        run_output.should =~ /Hostname:\s+#{local_config_server}/
+        run_output.should =~ /Login:\s+#{local_config_username}/
         Array(1..entries).each do |i|
           run_output.should =~ /Server 'server#{i}'/
           run_output.should =~ /Hostname:\s+openshift#{i}.server.com/
@@ -160,7 +177,7 @@ describe RHC::Commands::Server do
       end
       let(:arguments) { ['servers'] }
       it 'should output correctly' do 
-        run_output.should =~ /Server '#{local_config_server}' \(in use\)/
+        run_output.should =~ /Server '#{local_config_server}' \(not configured, run 'rhc setup'\)/
         run_output.should =~ /Hostname:\s+#{local_config_server}/
         Array(1..entries).each do |i|
           run_output.should =~ /Server 'server#{i}'/
@@ -520,7 +537,6 @@ describe RHC::Commands::Server do
 
   protected 
     def stub_servers_yml(entries=1, &block)
-      RHC::Servers.any_instance.stub(:save!)
       RHC::Servers.any_instance.stub(:present?).and_return(true)
       RHC::Servers.any_instance.stub(:load).and_return(
         Array(1..entries).collect do |i|
@@ -528,7 +544,8 @@ describe RHC::Commands::Server do
             :nickname => "server#{i}",
             :login => "user#{i}",
             :use_authorization_tokens => true,
-            :insecure => false)
+            :insecure => false,
+            :persisted => true)
         end.tap{|i| yield i if block_given?})
     end
 
