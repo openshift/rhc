@@ -73,7 +73,7 @@ module RHC
 
     def display_server(server)
       paragraph do
-        header ["Server '#{server.nickname || to_host(server.hostname)}'", ("(in use)" if server.default?)], {:color => (:green if server.default?)} do
+        header ["Server '#{server.nickname || to_host(server.hostname)}'", (server.persisted? ? ("(in use)" if server.default?) : "(not configured, run 'rhc setup')")], {:color => (server.persisted? ? (:green if server.default?) : :yellow)} do
           section(:bottom => 1) do
             say format_table \
               nil,
@@ -90,7 +90,7 @@ module RHC
               ),
               {
                 :delete => true,
-                :color => (:green if server.default?)
+                :color => (server.persisted? ? (:green if server.default?) : :yellow)
               }
           end
         end

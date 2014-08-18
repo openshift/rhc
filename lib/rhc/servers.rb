@@ -10,10 +10,11 @@ module RHC
     attr_accessor :use_authorization_tokens, :insecure, :timeout
     attr_accessor :ssl_version, :ssl_client_cert_file, :ssl_client_key_file, :ssl_ca_file
     attr_accessor :default
+    attr_accessor :persisted
 
     def self.from_yaml_hash(hash)
       hash.symbolize_keys!
-      Server.new(hash.delete(:hostname), hash)
+      Server.new(hash.delete(:hostname), hash.merge(:persisted => true))
     end
 
     def initialize(hostname, args={})
@@ -28,10 +29,15 @@ module RHC
       @ssl_client_key_file = args[:ssl_client_key_file]
       @ssl_ca_file = args[:ssl_ca_file]
       @default = args[:default]
+      @persisted = args[:persisted]
     end
 
     def default?
       !!@default
+    end
+
+    def persisted?
+      !!@persisted
     end
 
     def designation
@@ -43,7 +49,7 @@ module RHC
         instance_variables.each do |k| 
           h[k.to_s.delete('@')] = instance_variable_get(k)
         end
-      end.reject{|k, v| v.nil? || k == 'default'}.inject({}){|h, (k, v)| h[k] = v.is_a?(String) || v.is_a?(Symbol) ? v.to_s : v; h }
+      end.reject{|k, v| v.nil? || k == 'default' || k == 'persisted'}.inject({}){|h, (k, v)| h[k] = v.is_a?(String) || v.is_a?(Symbol) ? v.to_s : v; h }
     end
 
     def to_config
@@ -155,14 +161,17 @@ module RHC
           :ssl_client_cert_file     => o[:ssl_client_cert_file],
           :ssl_client_key_file      => o[:ssl_client_key_file],
           :ssl_ca_file              => o[:ssl_ca_file])
-        list.each{|server| server.default = server.hostname == o[:server]}
+        list.each do |server| 
+          server.default = server.hostname == o[:server]
+          server.persisted = true if !present?
+        end
       end
     end
 
     def save!
       FileUtils.mkdir_p File.dirname(path)
       File.open(path, 'w') do |c| 
-        c.puts list.collect{|s| {'server' => s.to_yaml_hash}}.to_yaml
+        c.puts list.collect{|s| s.persisted = true; {'server' => s.to_yaml_hash}}.to_yaml
       end
       self
     end
