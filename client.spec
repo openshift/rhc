@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.29.6
+Version: 1.29.7
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,10 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Aug 19 2014 Adam Miller <admiller@redhat.com> 1.29.7-1
+- Bug 1126388 - when displaying servers will warn if a given server is not yet
+  configured (contact@fabianofranz.com)
+
 * Fri Aug 15 2014 Troy Dawson <tdawson@redhat.com> 1.29.6-1
 - Merge pull request #636 from liggitt/rework_token_fallback
   (dmcphers+openshiftbot@redhat.com)
