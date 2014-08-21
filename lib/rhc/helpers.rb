@@ -444,7 +444,7 @@ module RHC
           debug("Checking for #{host} from Resolv::Hosts: #{result.inspect}") if debug?
           result
         rescue => e
-          debug "Error while resolving with Resolv::Hosts: #{e.message}(#{e.class})\n  #{e.backtrace.join("\n  ")}"
+          debug "Application could not be resolved through Hosts file:  #{e.message}(#{e.class})\n  Attempting DNS resolution."
         end
       end
     end
