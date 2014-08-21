@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.30.0
+Version: 1.30.1
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,13 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Aug 21 2014 Adam Miller <admiller@redhat.com> 1.30.1-1
+- Merge pull request #644 from liggitt/ichi-the-one-master
+  (dmcphers+openshiftbot@redhat.com)
+- Rename and hide headers option, add spec tests (jliggitt@redhat.com)
+- bump_minor_versions for sprint 50 (admiller@redhat.com)
+- Using headers with RHC (sara@otvmi300s.priv.atos.fr)
+
 * Tue Aug 19 2014 Adam Miller <admiller@redhat.com> 1.29.7-1
 - Bug 1126388 - when displaying servers will warn if a given server is not yet
   configured (contact@fabianofranz.com)
