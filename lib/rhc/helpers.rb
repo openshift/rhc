@@ -113,6 +113,7 @@ module RHC
     global_option '--server HOSTNAME', String, 'An OpenShift server hostname (default: openshift.redhat.com)'
     global_option '-k', '--insecure', "Allow insecure SSL connections.  Potential security risk.", :hide => true
 
+    global_option '--header HEADER', String,"Custom header to pass to server", :hide => true
     global_option '--limit INTEGER', Integer, "Maximum number of simultaneous operations to execute.", :hide => true
     global_option '--raw', "Do not format the output from the requested operations.", :hide => true
     global_option '--always-prefix', "Include the gear prefix on all output from the server.", :hide => true
@@ -199,11 +200,21 @@ module RHC
       return nil if token_store_user_key.nil?
       token_store.get(token_store_user_key, options.server)
     end
+    
+    def parse_headers(headers)
+      Hash[
+        Array(headers).map do |header|
+          key, value = header.split(/: */, 2)
+          [key, value || ""] if key.presence
+        end.compact
+      ]
+    end
 
     def client_from_options(opts)
       RHC::Rest::Client.new({
           :url => openshift_rest_endpoint.to_s,
           :debug => options.debug,
+          :headers => parse_headers(options.header),
           :timeout => options.timeout,
           :warn => BOUND_WARNING,
         }.merge!(ssl_options).merge!(opts))

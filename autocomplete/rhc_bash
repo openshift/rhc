@@ -8,7 +8,7 @@ _rhc()
   cur="${COMP_WORDS[COMP_CWORD]}"
   if [ $COMP_CWORD -eq 1 ]; then
     if [[ "$cur" == -* ]]; then
-      opts="--always-prefix --clean --config --debug --insecure --limit --mock --noprompt --password --raw --rhlogin --server --ssl-ca-file --ssl-client-cert-file --ssl-version --timeout --token"
+      opts="--always-prefix --clean --config --debug --header --insecure --limit --mock --noprompt --password --raw --rhlogin --server --ssl-ca-file --ssl-client-cert-file --ssl-client-key-file --ssl-version --timeout --token"
     elif [ -z $cur ]; then
       opts="account alias alias-add alias-delete-cert alias-list alias-remove alias-update-cert app app-configure app-create app-delete app-deploy app-force-stop app-reload app-restart app-scale-down app-scale-up app-show app-start app-stop app-tidy apps authorization authorization-add authorization-delete authorization-delete-all authorization-list cartridge cartridge-add cartridge-list cartridge-reload cartridge-remove cartridge-restart cartridge-scale cartridge-show cartridge-start cartridge-status cartridge-stop cartridge-storage deployment deployment-activate deployment-list deployment-show domain domain-configure domain-create domain-delete domain-leave domain-list domain-rename domain-show env env-list env-set env-show env-unset git-clone help logout member member-add member-list member-remove member-update port-forward region region-list scp server server-add server-configure server-list server-remove server-show server-status server-use setup snapshot snapshot-restore snapshot-save ssh sshkey sshkey-add sshkey-list sshkey-remove sshkey-show tail team team-create team-delete team-leave team-list team-show threaddump"
     else
@@ -86,7 +86,7 @@ _rhc()
 
       "rhc add-server")
         if [[ "$cur" == -* ]]; then
-          opts="--insecure --nickname --no-insecure --no-use-authorization-tokens --rhlogin --server --skip-wizard --ssl-ca-file --ssl-client-cert-file --ssl-version --timeout --use --use-authorization-tokens"
+          opts="--insecure --nickname --no-insecure --no-use-authorization-tokens --rhlogin --server --skip-wizard --ssl-ca-file --ssl-client-cert-file --ssl-client-key-file --ssl-version --timeout --use --use-authorization-tokens"
         else
           opts=""
         fi
@@ -774,7 +774,7 @@ _rhc()
 
       "rhc configure-server")
         if [[ "$cur" == -* ]]; then
-          opts="--hostname --insecure --nickname --no-insecure --no-use-authorization-tokens --rhlogin --server --skip-wizard --ssl-ca-file --ssl-client-cert-file --ssl-version --timeout --use --use-authorization-tokens"
+          opts="--hostname --insecure --nickname --no-insecure --no-use-authorization-tokens --rhlogin --server --skip-wizard --ssl-ca-file --ssl-client-cert-file --ssl-client-key-file --ssl-version --timeout --use --use-authorization-tokens"
         else
           opts=""
         fi
@@ -1566,7 +1566,7 @@ _rhc()
 
       "rhc server add")
         if [[ "$cur" == -* ]]; then
-          opts="--insecure --nickname --no-insecure --no-use-authorization-tokens --rhlogin --server --skip-wizard --ssl-ca-file --ssl-client-cert-file --ssl-version --timeout --use --use-authorization-tokens"
+          opts="--insecure --nickname --no-insecure --no-use-authorization-tokens --rhlogin --server --skip-wizard --ssl-ca-file --ssl-client-cert-file --ssl-client-key-file --ssl-version --timeout --use --use-authorization-tokens"
         else
           opts=""
         fi
@@ -1574,7 +1574,7 @@ _rhc()
 
       "rhc server configure")
         if [[ "$cur" == -* ]]; then
-          opts="--hostname --insecure --nickname --no-insecure --no-use-authorization-tokens --rhlogin --server --skip-wizard --ssl-ca-file --ssl-client-cert-file --ssl-version --timeout --use --use-authorization-tokens"
+          opts="--hostname --insecure --nickname --no-insecure --no-use-authorization-tokens --rhlogin --server --skip-wizard --ssl-ca-file --ssl-client-cert-file --ssl-client-key-file --ssl-version --timeout --use --use-authorization-tokens"
         else
           opts=""
         fi
@@ -1622,7 +1622,7 @@ _rhc()
 
       "rhc server-add")
         if [[ "$cur" == -* ]]; then
-          opts="--insecure --nickname --no-insecure --no-use-authorization-tokens --rhlogin --server --skip-wizard --ssl-ca-file --ssl-client-cert-file --ssl-version --timeout --use --use-authorization-tokens"
+          opts="--insecure --nickname --no-insecure --no-use-authorization-tokens --rhlogin --server --skip-wizard --ssl-ca-file --ssl-client-cert-file --ssl-client-key-file --ssl-version --timeout --use --use-authorization-tokens"
         else
           opts=""
         fi
@@ -1630,7 +1630,7 @@ _rhc()
 
       "rhc server-configure")
         if [[ "$cur" == -* ]]; then
-          opts="--hostname --insecure --nickname --no-insecure --no-use-authorization-tokens --rhlogin --server --skip-wizard --ssl-ca-file --ssl-client-cert-file --ssl-version --timeout --use --use-authorization-tokens"
+          opts="--hostname --insecure --nickname --no-insecure --no-use-authorization-tokens --rhlogin --server --skip-wizard --ssl-ca-file --ssl-client-cert-file --ssl-client-key-file --ssl-version --timeout --use --use-authorization-tokens"
         else
           opts=""
         fi

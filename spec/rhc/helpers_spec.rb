@@ -45,6 +45,17 @@ describe AllRhcHelpers do
 
   it("should decode json"){ subject.decode_json("{\"a\" : 1}").should == {'a' => 1} }
 
+  it("should parse custom headers") {
+    subject.parse_headers(nil).should == {}
+    subject.parse_headers("").should == {}
+    subject.parse_headers("A").should == {"A" => ""}
+    subject.parse_headers("A:B").should == {"A" => "B"}
+    subject.parse_headers("A: B").should == {"A" => "B"}
+    subject.parse_headers(["A: B", "A: C"]).should == {"A" => "C"}
+    subject.parse_headers(["A: B", "C: D"]).should == {"A" => "B", "C" => "D"}
+    subject.parse_headers(["A:B:C"]).should == {"A" => "B:C"}
+  }
+
   shared_examples_for "colorized output" do
     it("should be colorized") do
       message = "this is #{_color} -"
