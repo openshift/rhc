@@ -113,9 +113,7 @@ module RHC
     global_option '--server HOSTNAME', String, 'An OpenShift server hostname (default: openshift.redhat.com)'
     global_option '-k', '--insecure', "Allow insecure SSL connections.  Potential security risk.", :hide => true
 
-    global_option '-H','--headers HEADER', String,"allow header transmissions" do |headers|
-        raise RHC::Exception,"header must be a string" unless headers.instance_of? String
-        end
+    global_option '--header HEADER', String,"Custom header to pass to server", :hide => true
     global_option '--limit INTEGER', Integer, "Maximum number of simultaneous operations to execute.", :hide => true
     global_option '--raw', "Do not format the output from the requested operations.", :hide => true
     global_option '--always-prefix', "Include the gear prefix on all output from the server.", :hide => true
@@ -203,20 +201,20 @@ module RHC
       token_store.get(token_store_user_key, options.server)
     end
     
-    def headers
-       headers ={}
-       options.headers.to_s.split(',').each do |pair|
-       key,value = pair.split(/:/)
-       headers[key] = value
-      end
-      return headers
+    def parse_headers(headers)
+      Hash[
+        Array(headers).map do |header|
+          key, value = header.split(/: */, 2)
+          [key, value || ""] if key.presence
+        end.compact
+      ]
     end
 
     def client_from_options(opts)
       RHC::Rest::Client.new({
           :url => openshift_rest_endpoint.to_s,
           :debug => options.debug,
-          :headers => headers,
+          :headers => parse_headers(options.header),
           :timeout => options.timeout,
           :warn => BOUND_WARNING,
         }.merge!(ssl_options).merge!(opts))
