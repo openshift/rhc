@@ -10,8 +10,8 @@ module RHC::Commands
 
     def run
       applications = (options.mine ?
-      rest_client.owned_applications(:include => :cartridges) :
-      rest_client.applications(:include => :cartridges)).sort
+        rest_client.owned_applications(:include => :cartridges) :
+        rest_client.applications(:include => :cartridges)).sort
 
       info "In order to deploy applications, you must create a domain with 'rhc setup' or 'rhc create-domain'." and return 1 if applications.empty? && rest_client.domains.empty?
       info "No applications. Use 'rhc create-app'." and return 1 if applications.nil? || applications.empty?
