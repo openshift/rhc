@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.30.1
+Version: 1.30.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,14 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Sep 05 2014 Adam Miller <admiller@redhat.com> 1.30.2-1
+- Merge pull request #645 from tiwillia/bz1132651
+  (dmcphers+openshiftbot@redhat.com)
+- Re-added backtrace (tiwillia@redhat.com)
+- Bug 1132651 Bugzilla link https://bugzilla.redhat.com/show_bug.cgi?id=1132651
+  Removed unnecessary backtrace and improved debug message to decrease
+  confusion among users unfamilar with rhc code. (tiwillia@redhat.com)
+
 * Thu Aug 21 2014 Adam Miller <admiller@redhat.com> 1.30.1-1
 - Merge pull request #644 from liggitt/ichi-the-one-master
   (dmcphers+openshiftbot@redhat.com)
