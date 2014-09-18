@@ -954,6 +954,10 @@ module RHC::Rest::Mock
       @app
     end
 
+    def make_ha
+      @app
+    end
+
     def scale_up
       @app
     end

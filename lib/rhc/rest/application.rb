@@ -110,6 +110,10 @@ module RHC
         rest_method 'TIDY', :event => "tidy"
       end
 
+      def make_ha
+        rest_method 'MAKE_HA', :event => "make-ha"
+      end
+
       def scale_up
         rest_method 'SCALE_UP', :event => "scale-up"
       end

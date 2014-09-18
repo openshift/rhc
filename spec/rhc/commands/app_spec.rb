@@ -848,6 +848,12 @@ describe RHC::Commands::App do
       it { run_output.should match('cleaned') }
       it { expect{ run }.to exit_with_code(0) }
     end
+
+    context 'app make-ha' do
+      let(:arguments) { ['app', 'make-ha', 'app1'] }
+      it { run_output.should match('is now HA') }
+      it { expect{ run }.to exit_with_code(0) }
+    end
   end
 
   describe "#create_app" do
