@@ -313,4 +313,10 @@ module RHC
       super message, 1
     end
   end
+
+  class HighAvailabilityNotSupportedException < Exception
+    def initialize(message="The server does not support high availability")
+      super message, 135
+    end
+  end
 end

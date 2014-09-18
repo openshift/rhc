@@ -111,6 +111,7 @@ module RHC
       end
 
       def make_ha
+        raise RHC::HighAvailabilityNotSupportedException.new unless supports? "MAKE_HA"
         rest_method 'MAKE_HA', :event => "make-ha"
       end
 

@@ -851,7 +851,7 @@ describe RHC::Commands::App do
 
     context 'app make-ha' do
       let(:arguments) { ['app', 'make-ha', 'app1'] }
-      it { run_output.should match('is now HA') }
+      it { run_output.should match('is now highly available') }
       it { expect{ run }.to exit_with_code(0) }
     end
   end

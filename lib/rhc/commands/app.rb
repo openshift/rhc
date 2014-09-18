@@ -356,13 +356,13 @@ module RHC::Commands
       0
     end
 
-    summary "Make the application Highly Available (HA)"
+    summary "Make the application highly available"
     syntax "<app> [--namespace NAME]"
     takes_application :argument => true
     def make_ha(app)
       app_action :make_ha
 
-      results { say "#{app} is now HA" }
+      results { say "#{app} is now highly available" }
       0
     end
 
