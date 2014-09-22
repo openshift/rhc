@@ -3,7 +3,10 @@ require 'webmock/rspec'
 require 'fakefs/safe'
 require 'rbconfig'
 
-require 'pry' if ENV['PRY']
+if ENV['PRY']
+  require 'pry' 
+  require 'pry-debugger'
+end
 
 # Environment reset
 ENV['http_proxy'] = nil

@@ -473,23 +473,63 @@ describe RHC::Commands::App do
     before(:each) do
       FakeFS.deactivate!
       @domain = rest_client.add_domain("mockdomain")
-      @app = @domain.add_application("app1", "mock_standalone_cart-1")
+      @app = @domain.add_application("app1", :cartridge=>"mock_standalone_cart-1")
       @app.add_alias('myfoo.com')
       @cart1 = @app.add_cartridge('mock_cart-1')
       @cart2 = @app.add_cartridge('mock_cart-2')
       @cart2.gear_profile = 'medium'
       @instance.stub(:save_snapshot)
       @instance.stub(:restore_snapshot)
+      @app.stub(:region){'aRegion'}
+      rest_client.api.stub(:supports?).with(:LIST_REGIONS){true} 
     end
 
-    context 'when run' do
+    context 'when run and the broker allows region selection' do
+      before do
+        rest_client.stub(:regions) do
+          region = double()
+          region.stub(:allow_selection){true}
+          [region]
+        end
+      end
+
       let(:arguments) { ['app', 'create', 'clone', '--from-app', 'app1', '--no-git'] }
       it { expect { run }.to exit_with_code(0) }
       it "should clone successfully" do
         run_output.should match(/Cartridges:\s+mock_standalone_cart-1, mock_cart-1, mock_cart-2/)
         run_output.should match(/Gear Size:\s+Copied from 'app1'/)
         run_output.should match(/Setting deployment configuration/)
+        run_output.should match(/Region:\s+aRegion\s+\(copied from 'app1'/)
         run_output.should match(/done/)
+      end
+    end
+
+    context 'when source app has a region and the broker does not allow region selection' do
+
+      context 'and region flag is not specified' do
+        let(:arguments) { ['app', 'create', 'app2', '--from-app', 'app1', '--no-git'] }
+        it "should clone successfully" do
+          expect { run }.to exit_with_code(0)
+          run_output.should match(/Server does not allow selecting regions.  Region is being ignored./)
+          run_output.should match(/Cartridges:\s+mock_standalone_cart-1, mock_cart-1, mock_cart-2/)
+          run_output.should match(/Gear Size:\s+Copied from 'app1'/)
+          run_output.should_not match(/Region:\s+aRegion\s+\(copied from 'app1'/)
+          run_output.should match(/Setting deployment configuration/)
+          run_output.should match(/done/)
+        end
+      end
+
+      context 'and region flag is specified' do
+        let(:arguments) { ['app', 'create', 'app2', '--from-app', 'app1', '--region','foo','--no-git'] }
+        it "should clone successfully" do
+          run_output.should match(/Server does not allow selecting regions.  Region is being ignored./)
+          run_output.should match(/Cartridges:\s+mock_standalone_cart-1, mock_cart-1, mock_cart-2/)
+          run_output.should match(/Gear Size:\s+Copied from 'app1'/)
+          run_output.should_not match(/Region:\s+aRegion\s+\(copied from 'app1'/)
+          run_output.should match(/Setting deployment configuration/)
+          run_output.should match(/done/)
+          expect { run }.to exit_with_code(0)
+        end
       end
     end
 

@@ -115,6 +115,11 @@ module RHC::Commands
         scaling = from_app.scalable if scaling.nil?
         region = from_app.region if region.nil?
 
+        if region.present? && !rest_client.allows_region_selection?
+          region = nil
+          warn 'Server does not allow selecting regions.  Region is being ignored.'
+        end
+
         cartridges = from_app.cartridges.reject{|c| c.tags.include?('web_proxy')}.collect do |cartridge|
           {
             :name => (cartridge.name if !cartridge.custom?), 
