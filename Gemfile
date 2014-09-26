@@ -2,7 +2,10 @@ source 'https://rubygems.org'
 
 gemspec
 
-gem 'pry' if ENV['PRY']
+if ENV['PRY']
+  gem 'pry' 
+  gem 'pry-debugger'
+end
 
 gem 'simplecov', :require => false, :group => :test
 

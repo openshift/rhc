@@ -764,15 +764,16 @@ module RHC::Rest::Mock
       @applications = nil
     end
 
-    def add_application(name, type=nil, scale=nil, gear_profile='default', git_url=nil)
+    def add_application(name, type=nil, scale=nil, gear_profile='default', git_url=nil, region=nil)
       if type.is_a?(Hash)
         scale = type[:scale]
         gear_profile = type[:gear_profile]
         git_url = type[:initial_git_url]
         tags = type[:tags]
+        region = type[:region]
         type = Array(type[:cartridges] || type[:cartridge])
       end
-      a = MockRestApplication.new(client, name, type, self, scale, gear_profile, git_url)
+      a = MockRestApplication.new(client, name, type, self, scale, gear_profile, git_url, nil, region)
       builder = @applications.find{ |app| app.cartridges.map(&:name).any?{ |s| s =~ /^jenkins-[\d\.]+$/ } }
       a.building_app = builder.name if builder
       @applications << a
@@ -847,11 +848,13 @@ module RHC::Rest::Mock
 
   class MockRestApplication < RHC::Rest::Application
     include Helpers
+    attr_writer :region
+
     def fakeuuid
       "fakeuuidfortests#{@name}"
     end
 
-    def initialize(client, name, type, domain, scale=nil, gear_profile='default', initial_git_url=nil, environment_variables=nil)
+    def initialize(client, name, type, domain, scale=nil, gear_profile='default', initial_git_url=nil, environment_variables=nil, region=nil)
       super({}, client)
       @name = name
       @domain = domain
@@ -870,7 +873,7 @@ module RHC::Rest::Mock
       if scale
         @scalable = true
       end
-      @region = nil
+      @region = region
       self.attributes = {:links => mock_response_links(mock_app_links('mock_domain_0', 'mock_app_0')), :messages => []}
       self.gear_count = 5
       types = Array(type)

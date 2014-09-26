@@ -285,6 +285,16 @@ module RHC
         api.supports? :LIST_REGIONS
       end
 
+      #
+      # allows_region_selection? determines if the broker will allow a client
+      # to specify the region for an app
+      # @returns  true if allowed; nil otherwise
+      #
+      def allows_region_selection?
+        supported_regions = regions rescue []
+        supported_regions.any? { |region| region.allow_selection == true }
+      end
+
       def authorizations
         raise AuthorizationsNotSupported unless supports_sessions?
         api.rest_method 'LIST_AUTHORIZATIONS'
