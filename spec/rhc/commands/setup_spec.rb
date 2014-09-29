@@ -41,6 +41,7 @@ describe RHC::Commands::Setup do
   it{ command_for('setup', '--clean').options.clean.should be_true }
 
   it{ command_for('setup').options.server.should == 'openshift.redhat.com' }
+  it{ command_for('setup').options.create_token.should be_nil }
   it{ command_for('setup', '--server', 'foo.com').options.server.should == 'foo.com' }
   it{ command_for('setup', '--no-create-token').options.create_token.should == false }
   it{ command_for('setup', '--create-token').options.create_token.should == true }
@@ -51,7 +52,7 @@ describe RHC::Commands::Setup do
   end
   context "when config has use_authorization_tokens=true" do
     let!(:config){ base_config{ |c, d| d.add('use_authorization_tokens', 'true') } }
-    it{ command_for('setup').options.use_authorization_tokens.should == true }
+    it{ command_for('setup').options.use_authorization_tokens.should be_true }
   end
 
 =begin  context 'when libra_server is set' do
