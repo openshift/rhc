@@ -87,7 +87,7 @@ describe RHC::Wizard do
       subject.should_receive(:applications).and_return([app])
       Net::SSH.should_receive(:start).with("foo.com", "uuid", {:timeout => 60}).and_return(ssh)
       subject.send(:test_ssh_connectivity).should be_true
-    end    
+    end
     it "should handle a failed connection" do
       subject.should_receive(:ssh_key_uploaded?).and_return(true)
       subject.should_receive(:applications).and_return([app])
@@ -100,7 +100,7 @@ describe RHC::Wizard do
       subject.should_receive(:debug_error).with(interrupt)
       Net::SSH.should_receive(:start).and_raise(interrupt)
       expect{ subject.send(:test_ssh_connectivity) }.to raise_error(RuntimeError, /Connection attempt to foo.com was interrupted/)
-    end    
+    end
   end
 
   describe "#core_auth" do
@@ -121,79 +121,79 @@ describe RHC::Wizard do
     let(:auth){ subject.send(:auth) }
     let(:user_obj){ double(:login => user) }
 
-    subject{ described_class.new(config, options) }
+    let(:wizard){RHC::Wizard.new(config, options) }
 
     def expect_client_test(with_sessions=false)
-      subject.should_receive(:new_client_for_options).ordered.and_return(rest_client)
+      wizard.should_receive(:new_client_for_options).ordered.and_return(rest_client)
       rest_client.should_receive(:api).ordered
       rest_client.should_receive(:user).ordered.and_return(user_obj)
       rest_client.should_receive(:supports_sessions?).ordered.and_return(with_sessions)
     end
     def expect_raise_from_api(error)
-      subject.should_receive(:new_client_for_options).ordered.and_return(rest_client)
+      wizard.should_receive(:new_client_for_options).ordered.and_return(rest_client)
       rest_client.should_receive(:api).ordered.and_raise(error)
     end
 
     it "should prompt for user and password" do
       expect_client_test
-      subject.send(:login_stage).should be_true
-      subject.send(:options).rhlogin.should == user
+      wizard.send(:login_stage).should be_true
+      wizard.send(:options).rhlogin.should == user
     end
 
     context "with token" do
       let(:token){ 'a_test_value' }
       let(:default_options){ {:token => token, :rhlogin => user} }
-      before{ subject.should_receive(:say).with(/Using an existing token for #{user} to login to /).ordered }
+      before{ wizard.should_receive(:say).with(/Using an existing token for #{user} to login to /).ordered }
 
       it "should continue without prompt" do
         expect_client_test
-        subject.send(:login_stage).should be_true
+        wizard.send(:login_stage).should be_true
       end
     end
 
     context "with credentials" do
       let(:server){ mock_uri }
       let(:default_options){ {:rhlogin => user, :password => password, :server => server} }
-      before{ subject.should_receive(:say).with(/Using #{user} to login to /).ordered }
+      before{ wizard.should_receive(:say).with(/Using #{user} to login to /).ordered }
 
       it "should warn about a self signed cert error" do
         expect_raise_from_api(RHC::Rest::SelfSignedCertificate.new('reason', 'message'))
-        subject.should_receive(:warn).with(/server's certificate is self-signed/).ordered
-        subject.should_receive(:openshift_online_server?).ordered.and_return(true)
-        subject.should_receive(:warn).with(/server between you and OpenShift/).ordered
+        wizard.should_receive(:warn).with(/server's certificate is self-signed/).ordered
+        wizard.should_receive(:openshift_online_server?).ordered.and_return(true)
+        wizard.should_receive(:warn).with(/server between you and OpenShift/).ordered
 
-        subject.send(:login_stage).should be_nil
+        wizard.send(:login_stage).should be_nil
       end
 
       it "should warn about a cert error for Online" do
         expect_raise_from_api(RHC::Rest::CertificateVerificationFailed.new('reason', 'message'))
-        subject.should_receive(:warn).with(/server's certificate could not be verified/).ordered
-        subject.should_receive(:openshift_online_server?).ordered.and_return(true)
-        subject.should_receive(:warn).with(/server between you and OpenShift/).ordered
+        wizard.should_receive(:warn).with(/server's certificate could not be verified/).ordered
+        wizard.should_receive(:openshift_online_server?).ordered.and_return(true)
+        wizard.should_receive(:warn).with(/server between you and OpenShift/).ordered
 
-        subject.send(:login_stage).should be_nil
+        wizard.send(:login_stage).should be_nil
       end
 
       it "should warn about a cert error for custom server and continue" do
         expect_raise_from_api(RHC::Rest::CertificateVerificationFailed.new('reason', 'message'))
-        subject.should_receive(:warn).with(/server's certificate could not be verified/).ordered
-        subject.should_receive(:openshift_online_server?).ordered.and_return(false)
-        subject.should_receive(:warn).with(/bypass this check/).ordered
-        subject.should_receive(:agree).with(/Connect without checking/).ordered.and_return(true)
+        wizard.should_receive(:warn).with(/server's certificate could not be verified/).ordered
+        wizard.should_receive(:openshift_online_server?).ordered.and_return(false)
+        wizard.should_receive(:warn).with(/bypass this check/).ordered
+        wizard.should_receive(:agree).with(/Connect without checking/).ordered.and_return(true)
         expect_client_test
 
-        subject.send(:login_stage).should be_true
+        wizard.send(:login_stage).should be_true
         options.insecure.should be_true
       end
 
       it "should warn about a cert error for custom server and be cancelled" do
         expect_raise_from_api(RHC::Rest::CertificateVerificationFailed.new('reason', 'message'))
-        subject.should_receive(:warn).with(/server's certificate could not be verified/).ordered
-        subject.should_receive(:openshift_online_server?).ordered.and_return(false)
-        subject.should_receive(:warn).with(/bypass this check/).ordered
-        subject.should_receive(:agree).with(/Connect without checking/).ordered.and_return(false)
+        wizard.should_receive(:warn).with(/server's certificate could not be verified/).ordered
+        wizard.should_receive(:openshift_online_server?).ordered.and_return(false)
+        wizard.should_receive(:warn).with(/bypass this check/).ordered
+        wizard.should_receive(:agree).with(/Connect without checking/).ordered.and_return(false)
 
-        subject.send(:login_stage).should be_nil
+        wizard.send(:login_stage).should be_nil
         options.insecure.should be_false
       end
 
@@ -206,10 +206,10 @@ describe RHC::Wizard do
         it "should check for an existing token" do
           store.should_receive(:get).and_return(nil)
 
-          subject.should_receive(:info).with(/OpenShift can create and store a token on disk/).ordered
-          subject.should_receive(:agree).with(/Generate a token now?/).ordered.and_return(false)
+          wizard.should_receive(:info).with(/OpenShift can create and store a token on disk/).ordered
+          wizard.should_receive(:agree).with(/Generate a token now?/).ordered.and_return(false)
 
-          subject.send(:login_stage).should be_true
+          wizard.send(:login_stage).should be_true
           options.token.should be_nil
         end
       end
@@ -223,42 +223,79 @@ describe RHC::Wizard do
 
         it "should not generate a token if the user does not request it" do
           store.should_not_receive(:get)
-          subject.should_receive(:info).with(/OpenShift can create and store a token on disk/).ordered
-          subject.should_receive(:agree).with(/Generate a token now?/).ordered.and_return(false)
+          wizard.should_receive(:info).with(/OpenShift can create and store a token on disk/).ordered
+          wizard.should_receive(:agree).with(/Generate a token now?/).ordered.and_return(false)
 
-          subject.send(:login_stage).should be_true
+          wizard.send(:login_stage).should be_true
           options.token.should be_nil
+        end
+
+        context "when the option to create tokens is passed" do
+
+          shared_examples "a wizard creating tokens without prompts" do
+            it "should create the token without prompting" do
+              store.should_not_receive(:get)
+              wizard.should_receive(:info).with(/OpenShift can create and store a token on disk/).ordered
+              wizard.should_receive(:agree).never
+              wizard.should_receive(:say).with(/Generating an authorization token for this client /).ordered
+              rest_client.should_receive(:new_session).ordered.and_return(auth_token)
+              store.should_receive(:put).with(user, server, token).ordered.and_return(true)
+              wizard.should_receive(:new_client_for_options).ordered.and_return(rest_client)
+              rest_client.should_receive(:user).ordered.and_return(true)
+              wizard.should_receive(:success).with(/lasts 1 minute/).ordered
+
+              wizard.send(:login_stage).should be_true
+              options.token.should == token
+            end
+          end
+
+          describe '--create-token' do
+            it_behaves_like 'a wizard creating tokens without prompts' do
+              let(:default_options){ {:rhlogin => user, :password => password, :server => server, :create_token => true} }
+            end
+          end
+
+          describe '--use-authorization-tokens' do
+            before { store.should_receive(:get) }
+
+            it_behaves_like 'a wizard creating tokens without prompts' do
+              #create token would normally be set in rhc/commands/server if not specified
+              #and running from the command line
+              let(:default_options){ {:rhlogin => user, :password => password, :server => server, :use_authorization_tokens => true, :create_token =>true} }
+            end
+          end
         end
 
         it "should generate a token if the user requests it" do
           store.should_not_receive(:get)
-          subject.should_receive(:info).with(/OpenShift can create and store a token on disk/).ordered
-          subject.should_receive(:agree).with(/Generate a token now?/).ordered.and_return(true)
-          subject.should_receive(:say).with(/Generating an authorization token for this client /).ordered
+          wizard.should_receive(:info).with(/OpenShift can create and store a token on disk/).ordered
+          wizard.should_receive(:agree).with(/Generate a token now?/).ordered.and_return(true)
+          wizard.should_receive(:say).with(/Generating an authorization token for this client /).ordered
           rest_client.should_receive(:new_session).ordered.and_return(auth_token)
           store.should_receive(:put).with(user, server, token).ordered.and_return(true)
-          subject.should_receive(:new_client_for_options).ordered.and_return(rest_client)
+          wizard.should_receive(:new_client_for_options).ordered.and_return(rest_client)
           rest_client.should_receive(:user).ordered.and_return(true)
-          subject.should_receive(:success).with(/lasts 1 minute/).ordered
+          wizard.should_receive(:success).with(/lasts 1 minute/).ordered
 
-          subject.send(:login_stage).should be_true
+          wizard.send(:login_stage).should be_true
           options.token.should == token
         end
       end
 
+
       context "when the user doesn't want to use tokens" do
         let(:default_options){ {:rhlogin => user, :password => password, :server => server, :use_authorization_tokens => false, :create_token => false} }
         before do
-          subject.should_receive(:new_client_for_options).ordered.and_return(rest_client)
+          wizard.should_receive(:new_client_for_options).ordered.and_return(rest_client)
           rest_client.should_receive(:api).ordered
           rest_client.should_receive(:user).ordered.and_return(user_obj)
         end
 
         it "should skip token generation" do
-          subject.should_receive(:say).with(/Skipping token generation/)
-          subject.should_receive(:agree).never
+          wizard.should_receive(:say).with(/Skipping token generation/)
+          wizard.should_receive(:agree).never
 
-          subject.send(:login_stage).should be_true
+          wizard.send(:login_stage).should be_true
           options.token.should be_nil
         end
       end
@@ -407,7 +444,7 @@ describe RHC::Wizard do
 
       context "when a multiple keys exist but is not the same" do
         before{ setup_mock_ssh(true) }
-        before do 
+        before do
           stub_one_key('a_key')
           stub_add_key_error('invalid```--', 'Invalid key name')
           stub_add_key('another_key')

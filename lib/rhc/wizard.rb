@@ -182,7 +182,7 @@ module RHC
     end
 
     def server_stage
-      paragraph do 
+      paragraph do
         unless options.__explicit__[:server]
           say "If you have your own OpenShift server, you can specify it now. Just hit enter to use#{openshift_online_server? ? ' the server for OpenShift Online' : ''}: #{openshift_server}."
           options.server = ask "Enter the server hostname: " do |q|
@@ -236,7 +236,7 @@ module RHC
       elsif rest_client.supports_sessions? && !options.token
         paragraph do
           info "OpenShift can create and store a token on disk which allows to you to access the server without using your password. The key is stored in your home directory and should be kept secret.  You can delete the key at any time by running 'rhc logout'."
-          if agree "Generate a token now? (yes|no) "
+          if options.create_token or agree "Generate a token now? (yes|no) "
             say "Generating an authorization token for this client ... "
             token = rest_client.new_session
             options.token = token.token
@@ -287,8 +287,8 @@ module RHC
         if write_servers_yml
           say "Saving server configuration to #{system_path(servers.path)} ... "
           servers.backup
-          servers.add_or_update(options.server, 
-            :login                    => options.rhlogin, 
+          servers.add_or_update(options.server,
+            :login                    => options.rhlogin,
             :use_authorization_tokens => options.use_authorization_tokens,
             :insecure                 => options.insecure,
             :timeout                  => options.timeout,
@@ -605,7 +605,7 @@ module RHC
     end
 
     def generic_unix_install_check
-      paragraph do 
+      paragraph do
         say "Checking for git ... "
 
         if has_git?
