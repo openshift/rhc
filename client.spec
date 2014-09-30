@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.31.1
+Version: 1.31.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,12 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Sep 30 2014 Adam Miller <admiller@redhat.com> 1.31.2-1
+- [bug 1146802] User should not be prompted to create a token when passing
+  --create-token (jcantril@redhat.com)
+- [bug 1142653] Remove region when cloning an app and the server does not allow
+  Region selection (jcantril@redhat.com)
+
 * Thu Sep 18 2014 Adam Miller <admiller@redhat.com> 1.31.1-1
 - bump_minor_versions for sprint 51 (admiller@redhat.com)
 
