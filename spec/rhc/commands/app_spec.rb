@@ -849,15 +849,15 @@ describe RHC::Commands::App do
       it { expect{ run }.to exit_with_code(0) }
     end
 
-    context 'app make-ha' do
-      let(:arguments) { ['app', 'make-ha', 'app1'] }
+    context 'app enable-ha' do
+      let(:arguments) { ['app', 'enable-ha', 'app1'] }
       it { run_output.should match('is now highly available') }
       it { expect{ run }.to exit_with_code(0) }
     end
 
   end
 
-  describe 'app make-ha' do
+  describe 'app enable-ha' do
     before do
       @domain = rest_client.add_domain("mockdomain")
       @app = @domain.add_application("app1", "mock_type")
@@ -865,9 +865,9 @@ describe RHC::Commands::App do
       @app.links.delete 'MAKE_HA'
     end
 
-    let(:arguments) { ['app', 'make-ha', 'app1'] }
+    let(:arguments) { ['app', 'enable-ha', 'app1'] }
 
-    it "should raise make-ha not supported exception" do
+    it "should raise ha not supported exception" do
       run_output.should match(/The server does not support high availability/)
       expect{ run }.to exit_with_code(135)
     end

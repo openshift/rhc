@@ -110,7 +110,7 @@ module RHC
         rest_method 'TIDY', :event => "tidy"
       end
 
-      def make_ha
+      def enable_ha
         raise RHC::HighAvailabilityNotSupportedException.new unless supports? "MAKE_HA"
         rest_method 'MAKE_HA', :event => "make-ha"
       end

@@ -955,7 +955,7 @@ module RHC::Rest::Mock
       @app
     end
 
-    def make_ha
+    def enable_ha
       if supports? "MAKE_HA"
         @app
       else
