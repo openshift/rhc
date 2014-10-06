@@ -426,7 +426,8 @@ module RHC::Rest::Mock
        ['LIST_DEPLOYMENTS',                "broker/rest/domain/#{domain_id}/application/#{app_id}/deployments",  'get' ],
        ['UPDATE_DEPLOYMENTS',              "broker/rest/domain/#{domain_id}/application/#{app_id}/deployments",  'post' ],
        ['ACTIVATE',                        "broker/rest/domain/#{domain_id}/application/#{app_id}/events",       'post'],
-       ['DEPLOY',                          "broker/rest/domain/#{domain_id}/application/#{app_id}/deployments",  'post']
+       ['DEPLOY',                          "broker/rest/domain/#{domain_id}/application/#{app_id}/deployments",  'post'],
+       ['MAKE_HA',                         "broker/rest/application/#{app_id}/events",                           'make-ha']
       ].compact
     end
 
@@ -955,6 +956,14 @@ module RHC::Rest::Mock
 
     def tidy
       @app
+    end
+
+    def enable_ha
+      if supports? "MAKE_HA"
+        @app
+      else
+        raise RHC::HighAvailabilityNotSupportedException.new
+      end
     end
 
     def scale_up

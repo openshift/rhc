@@ -361,6 +361,16 @@ module RHC::Commands
       0
     end
 
+    summary "Make the application highly available"
+    syntax "<app> [--namespace NAME]"
+    takes_application :argument => true
+    def enable_ha(app)
+      app_action :enable_ha
+
+      results { say "#{app} is now highly available" }
+      0
+    end
+
     summary "Show information about an application"
     description <<-DESC
       Display the properties of an application, including its URL, the SSH
