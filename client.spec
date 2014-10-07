@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.31.2
+Version: 1.31.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,15 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Oct 07 2014 Adam Miller <admiller@redhat.com> 1.31.3-1
+- Merge pull request #653 from liggitt/worldline-make-ha
+  (dmcphers+openshiftbot@redhat.com)
+- Lock fakefs to a version supporting 1.8.7 (jliggitt@redhat.com)
+- Rename command to enable-ha (jliggitt@redhat.com)
+- add a test on make-ha not supported to fix coverage (Filirom1@gmail.com)
+- refactor make-ha (Filirom1@gmail.com)
+- add rhc app make-ha (Filirom1@gmail.com)
+
 * Tue Sep 30 2014 Adam Miller <admiller@redhat.com> 1.31.2-1
 - [bug 1146802] User should not be prompted to create a token when passing
   --create-token (jcantril@redhat.com)
