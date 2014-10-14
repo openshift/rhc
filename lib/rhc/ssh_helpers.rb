@@ -21,7 +21,6 @@ require 'httpclient'
 
 module RHC
   module SSHHelpers
-
     class MultipleGearTask
       def initialize(command, over, opts={})
         requires_ssh_multi!
@@ -426,18 +425,76 @@ module RHC
     end
 
     # check the version of SSH that is installed
-    def ssh_version
-      @ssh_version ||= `ssh -V 2>&1`.strip
+    def ssh_version(ssh_cmd=discover_ssh_executable)
+      `"#{ssh_cmd}" -V 2>&1`.strip
     end
 
     # return whether or not SSH is installed
     def has_ssh?
-      @has_ssh ||= begin
-        @ssh_version = nil
-        ssh_version
-        $?.success?
-      rescue
-        false
+      discover_ssh_executable.present?
+    end
+
+    # try my best to discover a ssh executable
+    def discover_ssh_executable
+      @ssh_executable ||= begin
+        guessing_locations = ['ssh']
+
+        if RHC::Helpers.windows?
+          #:nocov:
+
+          base_path = []
+
+          # try from PATH
+          guessing_locations << ['ssh.exe', 'plink.exe']
+
+          # Look for the base path int the ProgramFiles env var...
+          if program_files = ENV['ProgramFiles']; program_files.present? && File.exists?(program_files)
+            base_path << program_files
+          end
+
+          # ... and in win32ole drives (drive root or Program Files)
+          begin
+            require 'win32ole'
+            WIN32OLE.new("Scripting.FileSystemObject").tap do |file_system|
+              file_system.Drives.each do |drive|
+                base_path << [
+                  "#{drive.DriveLetter}:\\Program Files",
+                  "#{drive.DriveLetter}:\\Program Files (x86)",
+                  "#{drive.DriveLetter}:\\Progra~1",
+                  "#{drive.DriveLetter}:"
+                ]
+              end
+            end
+          rescue
+          end
+
+          base_path.flatten!
+          base_path.uniq!
+
+          # looks for ssh.exe from msysgit or plink.exe from PuTTY
+          base_path.each do |base|
+            guessing_locations << [
+              "#{base}\\Git\\bin\\ssh.exe", 
+              "#{base}\\ssh.exe", 
+              "#{base}\\PuTTY\\plink.exe",
+              "#{base}\\plink.exe"
+            ]
+          end
+
+          guessing_locations.flatten!
+          guessing_locations.uniq!
+
+          #:nocov:
+        end
+
+        # make sure commands can be executed and finally pick the first one
+        guessing_locations.select do |cmd| 
+          (check_ssh_executable!(cmd).present? rescue false) && 
+          (begin
+            ssh_version(cmd)
+            $?.success?
+          rescue ; false ; end)
+        end.collect{|cmd| cmd =~ / / ? '"' + cmd + '"' : cmd}.first
       end
     end
 
@@ -445,12 +502,13 @@ module RHC
     # if none was supplied, return installed ssh, if any.
     def check_ssh_executable!(path)
       if not path
-        raise RHC::InvalidSSHExecutableException.new("No system SSH available. Please use the --ssh option to specify the path to your SSH executable, or install SSH.") unless has_ssh?
-        'ssh'
+        discover_ssh_executable.tap do |ssh_cmd|
+          raise RHC::InvalidSSHExecutableException.new("No system SSH available. Please use the --ssh option to specify the path to your SSH executable, or install SSH.") unless ssh_cmd or has_ssh?
+        end
       else
         bin_path = path.split(' ').first
-        raise RHC::InvalidSSHExecutableException.new("SSH executable '#{bin_path}' does not exist.") unless File.exist?(bin_path) or exe?(bin_path)
-        raise RHC::InvalidSSHExecutableException.new("SSH executable '#{bin_path}' is not executable.") unless File.executable?(bin_path) or exe?(bin_path)
+        raise RHC::InvalidSSHExecutableException.new("SSH executable '#{bin_path}' does not exist.") unless File.exist?(bin_path) or File.exist?(path) or exe?(bin_path)
+        raise RHC::InvalidSSHExecutableException.new("SSH executable '#{bin_path}' is not executable.") unless File.executable?(path) or File.executable?(bin_path) or exe?(bin_path)
         path
       end
     end

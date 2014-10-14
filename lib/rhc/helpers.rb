@@ -4,7 +4,7 @@ require 'rhc/config'
 require 'rhc/output_helpers'
 require 'rhc/server_helpers'
 require 'rbconfig'
-
+require 'csv'
 require 'resolv'
 
 OptionParser.accept(URI) {|s,| URI.parse(s) if s}
@@ -515,6 +515,11 @@ module RHC
     def to_boolean(s, or_nil=false)
       return nil if s.nil? && or_nil
       s.is_a?(String) ? !!(s =~ /^(true|t|yes|y|1)$/i) : s
+    end
+
+    # split spaces but preserve sentences between quotes
+    def split_path(s, keep_quotes=false)
+      keep_quotes ? s.split(/\s(?=(?:[^"]|"[^"]*")*$)/) : CSV::parse_line(s, :col_sep => ' ')
     end
 
     BOUND_WARNING = self.method(:warn).to_proc
