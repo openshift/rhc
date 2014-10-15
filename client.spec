@@ -17,7 +17,7 @@ BuildRequires: rubygem-rdoc
 BuildRequires: ruby-irb
 Requires:      ruby >= 1.8.5
 Requires:      rubygem-parseconfig
-Requires:      rubygem-httpclient
+Requires:      rubygem-httpclient >= 2.4.0
 Requires:      rubygem-test-unit
 Requires:      rubygem-net-ssh
 Requires:      rubygem-net-scp
