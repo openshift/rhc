@@ -35,6 +35,7 @@ describe RHC::Commands::Scp do
         @domain = rest_client.add_domain("mockdomain")
         @domain.add_application("app1", "mock_type")
         File.should_receive(:exist?).with("file.txt").once.and_return(false)
+        File.should_receive(:exist?).with("git").at_least(1).and_return(true)
       end
       it { run_output.should match("Local file, file_path, or directory could not be found.") }
     end
@@ -48,6 +49,7 @@ describe RHC::Commands::Scp do
         @domain = rest_client.add_domain("mockdomain")
         @domain.add_application("app1", "mock_type")
         File.should_receive(:exist?).with("file.txt").once.and_return(true)
+        File.should_receive(:exist?).with("git").at_least(1).and_return(true)
         Net::SCP.should_receive("upload!".to_sym).with("127.0.0.1", "fakeuuidfortestsapp1","file.txt","app-root/data").and_raise(Errno::ECONNREFUSED)
       end
       it { run_output.should match("The server fakeuuidfortestsapp1 refused a connection with user 127.0.0.1.  The application may be unavailable.") }
@@ -58,6 +60,7 @@ describe RHC::Commands::Scp do
         @domain = rest_client.add_domain("mockdomain")
         @domain.add_application("app1", "mock_type")
         File.should_receive(:exist?).with("file.txt").once.and_return(true)
+        File.should_receive(:exist?).with("git").at_least(1).and_return(true)
         Net::SCP.should_receive("upload!".to_sym).with("127.0.0.1", "fakeuuidfortestsapp1","file.txt","app-root/data").and_raise(SocketError)
       end
       it { run_output.should match("The connection to 127.0.0.1 failed: SocketError") }
@@ -69,6 +72,7 @@ describe RHC::Commands::Scp do
         @domain = rest_client.add_domain("mockdomain")
         @domain.add_application("app1", "mock_type")
         File.should_receive(:exist?).with("file.txt").once.and_return(true)
+        File.should_receive(:exist?).with("git").at_least(1).and_return(true)
         Net::SCP.should_receive("upload!".to_sym).with("127.0.0.1", "fakeuuidfortestsapp1","file.txt","app-root/data").and_raise(Net::SSH::AuthenticationFailed)
       end
       it { run_output.should match("Authentication to server 127.0.0.1 with user fakeuuidfortestsapp1 failed") }
@@ -79,6 +83,7 @@ describe RHC::Commands::Scp do
         @domain = rest_client.add_domain("mockdomain")
         @domain.add_application("app1", "mock_type")
         File.should_receive(:exist?).with("file.txt").once.and_return(true)
+        File.should_receive(:exist?).with("git").at_least(1).and_return(true)
         Net::SCP.should_receive("upload!".to_sym).with("127.0.0.1", "fakeuuidfortestsapp1","file.txt","app-root/data").and_raise(Net::SCP::Error.new("SCP error message"))
       end
       it { run_output.should match("An unknown error occurred: SCP error message") }

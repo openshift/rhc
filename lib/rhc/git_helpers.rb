@@ -7,18 +7,41 @@ module RHC
       "git"
     end
 
-    def git_version
-      @git_version ||= `#{git_cmd} --version 2>&1`.strip #:nocov:
+    def git_version(cmd=discover_git_executable)
+      `"#{cmd}" --version 2>&1`.strip
     end
 
     def has_git?
-      @has_git ||= begin
-          @git_version = nil
-          git_version
-          $?.success?
-        rescue
-          false
+      discover_git_executable.present?
+    end
+
+    # try my best to discover a git executable
+    def discover_git_executable
+      @git_executable ||= begin
+        guessing_locations = [git_cmd]
+
+        #:nocov:
+        if RHC::Helpers.windows?
+          guessing_locations << 
+            discover_windows_executables do |base|
+              [ 
+                "git.exe",
+                "#{base}\\Git\\bin\\git.exe", 
+                "#{base}\\git.exe", 
+              ]
+            end
         end
+
+        # make sure commands can be executed and finally pick the first one
+        guessing_locations.flatten.uniq.select do |cmd| 
+          ((File.exist?(cmd) && File.executable?(cmd)) || exe?(cmd)) && 
+          (begin
+            git_version(cmd)
+            $?.success?
+          rescue ; false ; end)
+        end.collect{|cmd| cmd =~ / / ? '"' + cmd + '"' : cmd}.first
+        #:nocov:
+      end
     end
 
     def git_clone_deploy_hooks(repo_dir)
@@ -50,18 +73,18 @@ module RHC
       dir
     end
 
+    # :nocov: These all call external binaries so test them in cucumber
     def git_remote_add(remote_name, remote_url)
-      cmd = "#{git_cmd} remote add upstream \"#{remote_url}\""
+      cmd = "#{discover_git_executable} remote add upstream \"#{remote_url}\""
       debug "Running #{cmd} 2>&1"
       output = %x[#{cmd} 2>&1]
       raise RHC::GitException, "Error while adding upstream remote - #{output}" unless output.empty?
     end
 
-    # :nocov: These all call external binaries so test them in cucumber
     def git_config_get(key)
       return nil unless has_git?
       
-      config_get_cmd = "#{git_cmd} config --get #{key}"
+      config_get_cmd = "#{discover_git_executable} config --get #{key}"
       value = %x[#{config_get_cmd}].strip
       debug "Git config '#{config_get_cmd}' returned '#{value}'"
       value = nil if $?.exitstatus != 0 or value.empty?
@@ -70,8 +93,8 @@ module RHC
     end
 
     def git_config_set(key, value)
-      unset_cmd = "#{git_cmd} config --unset-all #{key}"
-      config_cmd = "#{git_cmd} config --add #{key} #{value}"
+      unset_cmd = "#{discover_git_executable} config --unset-all #{key}"
+      config_cmd = "#{discover_git_executable} config --add #{key} #{value}"
       debug "Adding #{key} = #{value} to git config"
       commands = [unset_cmd, config_cmd]
       commands.each do |cmd|
@@ -85,7 +108,7 @@ module RHC
     def git_clone_repo(git_url, repo_dir)
       # quote the repo to avoid input injection risk
       destination = (repo_dir ? " \"#{repo_dir}\"" : "")
-      cmd = "#{git_cmd} clone #{git_url}#{destination}"
+      cmd = "#{discover_git_executable} clone #{git_url}#{destination}"
       debug "Running #{cmd}"
 
       status, stdout, stderr = run_with_tee(cmd)

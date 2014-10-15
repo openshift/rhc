@@ -136,6 +136,8 @@ describe RHC::Commands::Ssh do
         @domain.add_application("app1", "mock_type")
         RHC::Commands::Ssh.any_instance.should_not_receive(:has_ssh?)
         File.should_receive(:exist?).with("path_to_ssh").at_least(1).and_return(false)
+        File.should_receive(:executable?).with(/.*path_to_ssh/).at_least(1).and_return(false)
+        subject.class.any_instance.stub(:discover_git_executable).and_return('git')
       end
       it { run_output.should match("SSH executable 'path_to_ssh' does not exist.") }
       it { expect { run }.to exit_with_code(1) }
@@ -148,6 +150,7 @@ describe RHC::Commands::Ssh do
         RHC::Commands::Ssh.any_instance.should_not_receive(:has_ssh?)
         File.should_receive(:exist?).with("path_to_ssh").once.and_return(true)
         File.should_receive(:executable?).with(/.*path_to_ssh/).at_least(1).and_return(false)
+        subject.class.any_instance.stub(:discover_git_executable).and_return('git')
       end
       it { run_output.should match("SSH executable 'path_to_ssh' is not executable.") }
       it { expect { run }.to exit_with_code(1) }
@@ -161,6 +164,7 @@ describe RHC::Commands::Ssh do
         File.should_receive(:exist?).with("path_to_ssh").once.and_return(true)
         File.should_receive(:executable?).with("path_to_ssh").once.and_return(true)
         Kernel.should_receive(:exec).with("path_to_ssh", "fakeuuidfortestsapp1@127.0.0.1").once.times.and_return(0)
+        subject.class.any_instance.stub(:discover_git_executable).and_return('git')
       end
       it { run_output.should match("Connecting to fakeuuidfortestsapp") }
       it { expect { run }.to exit_with_code(0) }

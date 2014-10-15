@@ -54,6 +54,7 @@ describe RHC::Commands::Snapshot do
         ssh = double(Net::SSH)
         Net::SSH.should_receive(:start).with(@ssh_uri.host, @ssh_uri.user).and_yield(ssh)
         subject.class.any_instance.stub(:discover_ssh_executable){ 'ssh' }
+        subject.class.any_instance.stub(:discover_git_executable){ 'git' }
         ssh.should_receive(:exec!).with("snapshot").and_yield(nil, :stdout, 'foo').and_yield(nil, :stderr, 'foo')
       end
       it { expect { run }.to exit_with_code(0) }
@@ -65,9 +66,10 @@ describe RHC::Commands::Snapshot do
         RHC::Helpers.stub(:windows?) do ; true; end
         RHC::Helpers.stub(:jruby?) do ; false ; end
         RHC::Helpers.stub(:linux?) do ; false ; end
-        subject.class.any_instance.stub(:discover_ssh_executable){'ssh'}
         ssh = double(Net::SSH)
         Net::SSH.should_receive(:start).with(@ssh_uri.host, @ssh_uri.user).and_raise(Timeout::Error)
+        subject.class.any_instance.stub(:discover_ssh_executable){ 'ssh' }
+        subject.class.any_instance.stub(:discover_git_executable){ 'git' }
       end
       it { expect { run }.to exit_with_code(130) }
     end
@@ -135,6 +137,7 @@ describe RHC::Commands::Snapshot do
         channel.should_receive(:on_close).and_yield(nil)
         lines = ''
         subject.class.any_instance.stub(:discover_ssh_executable){ 'ssh' }
+        subject.class.any_instance.stub(:discover_git_executable){ 'git' }
         File.open(File.expand_path('../../assets/targz_sample.tar.gz', __FILE__), 'rb') do |file|
           file.chunk(1024) do |chunk|
             lines << chunk
@@ -155,6 +158,7 @@ describe RHC::Commands::Snapshot do
         ssh = double(Net::SSH)
         Net::SSH.should_receive(:start).with(@ssh_uri.host, @ssh_uri.user).and_raise(Timeout::Error)
         subject.class.any_instance.stub(:discover_ssh_executable){ 'ssh' }
+        subject.class.any_instance.stub(:discover_git_executable){ 'git' }
       end
       it { expect { run }.to exit_with_code(130) }
     end
