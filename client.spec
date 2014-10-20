@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.31.3
+Version: 1.31.4
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Oct 20 2014 Adam Miller <admiller@redhat.com> 1.31.4-1
+- Bump httpclient to 2.4.0 to fix ssl version negotiation (jliggitt@redhat.com)
+
 * Tue Oct 07 2014 Adam Miller <admiller@redhat.com> 1.31.3-1
 - Merge pull request #653 from liggitt/worldline-make-ha
   (dmcphers+openshiftbot@redhat.com)
