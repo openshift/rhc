@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.31.4
+Version: 1.31.5
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,12 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Oct 21 2014 Adam Miller <admiller@redhat.com> 1.31.5-1
+- Merge pull request #654 from fabianofranz/bugs/1149016
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 1149016 - git auto-discovery on Windows (contact@fabianofranz.com)
+- Bug 1149016 - ssh auto-discovery on Windows (contact@fabianofranz.com)
+
 * Mon Oct 20 2014 Adam Miller <admiller@redhat.com> 1.31.4-1
 - Bump httpclient to 2.4.0 to fix ssl version negotiation (jliggitt@redhat.com)
 
