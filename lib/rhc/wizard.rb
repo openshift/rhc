@@ -623,21 +623,18 @@ module RHC
     end
 
     def windows_install
-      # Finding windows executables is hard since they can get installed
-      # in non standard directories.  Punt on this for now and simply
-      # print out urls and some instructions
-      warn <<EOF
+      unless discover_ssh_executable.present? && discover_git_executable.present?
+        warn <<EOF
 
-In order to fully interact with OpenShift you will need to install and configure a git client if you have not already done so.
-
-Documentation for installing other tools you will need for OpenShift can be found at https://www.openshift.com/developers/install-the-client-tools
+In order to fully interact with OpenShift you will need to install and configure a git client if you have not already done so. Documentation for installing other tools you will need for OpenShift can be found at https://www.openshift.com/developers/install-the-client-tools
 
 We recommend these free applications:
 
-  * Git for Windows - a basic git command line and GUI client https://github.com/msysgit/msysgit/wiki/InstallMSysGit
+  * Git for Windows - a basic git command line and GUI client http://msysgit.github.io/
   * TortoiseGit - git client that integrates into the file explorer http://code.google.com/p/tortoisegit/
-
+ 
 EOF
+      end
     end
   end
 

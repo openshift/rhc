@@ -23,7 +23,7 @@ module RHC::Commands
 
         0
       else
-        error "You do not have git installed. In order to fully interact with OpenShift you will need to install and configure a git client."
+        error "You do not have git installed. In order to fully interact with OpenShift you will need to install and configure a git client.#{RHC::Helpers.windows? ? ' We recommend this free application: Git for Windows - a basic git command line and GUI client http://msysgit.github.io/.' : ''}"
         2
       end
     end

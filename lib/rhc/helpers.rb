@@ -4,7 +4,7 @@ require 'rhc/config'
 require 'rhc/output_helpers'
 require 'rhc/server_helpers'
 require 'rbconfig'
-
+require 'csv'
 require 'resolv'
 
 OptionParser.accept(URI) {|s,| URI.parse(s) if s}
@@ -515,6 +515,68 @@ module RHC
     def to_boolean(s, or_nil=false)
       return nil if s.nil? && or_nil
       s.is_a?(String) ? !!(s =~ /^(true|t|yes|y|1)$/i) : s
+    end
+
+    # split spaces but preserve sentences between quotes
+    def split_path(s, keep_quotes=false)
+      keep_quotes ? s.split(/\s(?=(?:[^"]|"[^"]*")*$)/) : CSV::parse_line(s, :col_sep => ' ')
+    end
+
+    def discover_windows_executables(&block)
+      #:nocov:
+      if RHC::Helpers.windows?
+
+        base_path = []
+        guessing_locations = []
+
+        # Look for the base path int the ProgramFiles env var...
+        if program_files = ENV['ProgramFiles']; program_files.present? && File.exists?(program_files)
+          base_path << program_files
+        end
+
+        # ... and in win32ole drives (drive root or Program Files)
+        begin
+          require 'win32ole'
+          WIN32OLE.new("Scripting.FileSystemObject").tap do |file_system|
+            file_system.Drives.each do |drive|
+              base_path << [
+                "#{drive.DriveLetter}:\\Program Files (x86)",
+                "#{drive.DriveLetter}:\\Program Files",
+                "#{drive.DriveLetter}:\\Progra~1",
+                "#{drive.DriveLetter}:"
+              ]
+            end
+          end
+        rescue
+        end
+
+        # executables array from block
+        executable_groups = []
+        base_path.flatten.uniq.each do |base|
+          executable_groups << yield(base)
+        end
+
+        # give proper priorities
+        unless executable_groups.empty?
+          length = executable_groups.first.length
+          for i in 1..length do
+            executable_groups.each do |group|
+              guessing_locations << group[i - 1]
+            end
+          end
+        end
+
+        guessing_locations.flatten.uniq.select {|cmd| File.exist?(cmd) && File.executable?(cmd)}
+      else
+        []
+      end
+      #:nocov:
+    end
+
+    def exe?(executable)
+      ENV['PATH'].split(File::PATH_SEPARATOR).any? do |directory|
+        File.executable?(File.join(directory, executable.to_s))
+      end
     end
 
     BOUND_WARNING = self.method(:warn).to_proc

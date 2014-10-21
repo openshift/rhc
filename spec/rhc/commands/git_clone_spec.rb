@@ -34,7 +34,7 @@ describe RHC::Commands::GitClone do
 
     context 'when run without git installed' do
       before do
-        @instance.stub(:has_git?) { false }
+        @instance.stub(:discover_git_executable){ nil }
       end
       it "should print out git warning" do
         run_output.should match("You do not have git installed")
@@ -49,6 +49,7 @@ describe RHC::Commands::GitClone do
             say "Cloned"
             true
           end
+          @instance.stub(:discover_git_executable){ 'git' }
         end
 
         it { expect { run }.to exit_with_code(0) }
@@ -65,7 +66,35 @@ describe RHC::Commands::GitClone do
           let(:arguments) { ['git-clone', 'app2'] }
           it { run_output.should match("Added remote upstream pointing to git://test") }
         end
+      end
 
+      context "reports success successfully on windows" do
+        before do
+          RHC::Helpers.stub(:windows?) do ; true; end
+          RHC::Helpers.stub(:jruby?) do ; false ; end
+          RHC::Helpers.stub(:linux?) do ; false ; end
+          @instance.stub(:git_clone_repo) do |git_url, repo_dir|
+            Dir::mkdir(repo_dir)
+            say "Cloned"
+            true
+          end
+          @instance.stub(:discover_git_executable){ 'git.exe' }
+        end
+
+        it { expect { run }.to exit_with_code(0) }
+        it { run_output.should match("Cloned") }
+
+        context 'when app has an initial git url' do
+          before do
+            @app2 = @domain.add_application("app2", "mock_unique_standalone_cart", nil, "default", "git://test")
+            @instance.stub(:git_remote_add) do |remote_name, remote_url|
+              say "Added remote #{remote_name} pointing to #{remote_url}"
+              true
+            end
+          end
+          let(:arguments) { ['git-clone', 'app2'] }
+          it { run_output.should match("Added remote upstream pointing to git://test") }
+        end
       end
 
       context "testing git_clone_deploy_hooks" do
@@ -78,6 +107,7 @@ describe RHC::Commands::GitClone do
             say "Copied" if File.exists?("#{repo_dir}/.git/hooks/pre_commit")
             true
           end
+          @instance.stub(:discover_git_executable){ 'git' }
 
           # Get around the FakeFS bug (defunkt/fakefs#177) by
           # stubbing the #cp call to inject a expected fs entry
@@ -92,7 +122,10 @@ describe RHC::Commands::GitClone do
       end
 
       context "reports failure" do
-        before{ @instance.stub(:git_clone_repo).and_raise(RHC::GitException) }
+        before do 
+          @instance.stub(:git_clone_repo).and_raise(RHC::GitException) 
+          @instance.stub(:discover_git_executable){ 'git' }
+        end
 
         it { expect { run }.to exit_with_code(216) }
         it { run_output.should match("Git returned an error") }

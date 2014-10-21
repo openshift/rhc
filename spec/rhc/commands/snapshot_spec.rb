@@ -40,7 +40,6 @@ describe RHC::Commands::Snapshot do
 
     context 'when failing to save a snapshot' do
       before do
-        subject.class.any_instance.should_receive(:has_ssh?).and_return(true)
         subject.class.any_instance.should_receive(:exec).with("ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'snapshot' > #{@app.name}.tar.gz").and_return([1, 'some save failures'])
       end
       it { expect { run }.to exit_with_code(130) }
@@ -54,6 +53,8 @@ describe RHC::Commands::Snapshot do
         RHC::Helpers.stub(:linux?) do ; false ; end
         ssh = double(Net::SSH)
         Net::SSH.should_receive(:start).with(@ssh_uri.host, @ssh_uri.user).and_yield(ssh)
+        subject.class.any_instance.stub(:discover_ssh_executable){ 'ssh' }
+        subject.class.any_instance.stub(:discover_git_executable){ 'git' }
         ssh.should_receive(:exec!).with("snapshot").and_yield(nil, :stdout, 'foo').and_yield(nil, :stderr, 'foo')
       end
       it { expect { run }.to exit_with_code(0) }
@@ -67,6 +68,8 @@ describe RHC::Commands::Snapshot do
         RHC::Helpers.stub(:linux?) do ; false ; end
         ssh = double(Net::SSH)
         Net::SSH.should_receive(:start).with(@ssh_uri.host, @ssh_uri.user).and_raise(Timeout::Error)
+        subject.class.any_instance.stub(:discover_ssh_executable){ 'ssh' }
+        subject.class.any_instance.stub(:discover_git_executable){ 'git' }
       end
       it { expect { run }.to exit_with_code(130) }
     end
@@ -112,7 +115,6 @@ describe RHC::Commands::Snapshot do
       before do
         File.stub(:exists?).and_return(true)
         RHC::TarGz.stub(:contains).and_return(true)
-        subject.class.any_instance.should_receive(:has_ssh?).and_return(true)
         subject.class.any_instance.should_receive(:exec).with("cat '#{@app.name}.tar.gz' | ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'restore INCLUDE_GIT'").and_return([1, 'some restore failures'])
       end
       it { expect { run }.to exit_with_code(130) }
@@ -134,6 +136,8 @@ describe RHC::Commands::Snapshot do
         channel.should_receive(:on_extended_data).and_yield(nil, nil, 'foo')
         channel.should_receive(:on_close).and_yield(nil)
         lines = ''
+        subject.class.any_instance.stub(:discover_ssh_executable){ 'ssh' }
+        subject.class.any_instance.stub(:discover_git_executable){ 'git' }
         File.open(File.expand_path('../../assets/targz_sample.tar.gz', __FILE__), 'rb') do |file|
           file.chunk(1024) do |chunk|
             lines << chunk
@@ -153,6 +157,8 @@ describe RHC::Commands::Snapshot do
         RHC::Helpers.stub(:linux?) do ; false ; end
         ssh = double(Net::SSH)
         Net::SSH.should_receive(:start).with(@ssh_uri.host, @ssh_uri.user).and_raise(Timeout::Error)
+        subject.class.any_instance.stub(:discover_ssh_executable){ 'ssh' }
+        subject.class.any_instance.stub(:discover_git_executable){ 'git' }
       end
       it { expect { run }.to exit_with_code(130) }
     end

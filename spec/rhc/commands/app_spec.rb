@@ -163,6 +163,7 @@ describe RHC::Commands::App do
       let!(:config){ base_config }
       before{ RHC::Config.any_instance.stub(:has_local_config?).and_return(false) }
       before{ described_class.any_instance.stub(:interactive?).and_return(true) }
+      before{ described_class.any_instance.stub(:discover_git_executable).and_return('git') }
       before{ rest_client.domains.clear }
       before{ rest_client.sshkeys.delete_if {|k| !k.is_ssh? } }
       let(:arguments) { ['app', 'create', 'app1', 'mock_standalone_cart-1'] }
@@ -406,6 +407,7 @@ describe RHC::Commands::App do
       @domain = rest_client.add_domain("mockdomain")
       @instance.stub(:git_clone_application) { raise RHC::GitException }
       @instance.stub(:check_sshkeys!)
+      @instance.stub(:discover_git_executable).and_return('git')
     end
 
     context 'when run with error in git clone' do
@@ -428,6 +430,7 @@ describe RHC::Commands::App do
         RHC::Helpers.stub(:windows?) { true }
         @instance.stub(:run_nslookup) { true }
         @instance.stub(:run_ping) { true }
+        @instance.stub(:has_git?) { true }
       end
       it "should print out git warning" do
         run_output.should match(" We were unable to clone your application's git repo")
@@ -439,6 +442,7 @@ describe RHC::Commands::App do
         RHC::Helpers.stub(:windows?) { true }
         @instance.stub(:run_nslookup) { true }
         @instance.stub(:run_ping) { false }
+        @instance.stub(:has_git?) { true }
       end
       it "should print out windows warning" do
         run_output.should match("This may also be related to an issue with Winsock on Windows")
