@@ -63,6 +63,7 @@ module RHC::Commands
     option ["--[no-]dns"], "Skip waiting for the application DNS name to resolve. Must be used in combination with --no-git"
     option ['--no-keys'], "Skip checking SSH keys during app creation", :hide => true
     option ["--enable-jenkins [NAME]"], "Enable Jenkins builds for this application (will create a Jenkins application if not already available). The default name will be 'jenkins' if not specified."
+    option ["--make-ha"], "Make application highly available (HA)."
     argument :name, "Name for your application", ["-a", "--app NAME"], :optional => true
     argument :cartridges, "The web framework this application should use", ["-t", "--type CARTRIDGE"], :optional => true, :type => :list
     def create(name, cartridges)
@@ -150,7 +151,7 @@ module RHC::Commands
         say "Creating application '#{name}' ... "
 
         # create the main app
-        rest_app = create_app(name, cartridges, rest_domain, options.gear_size, scaling, options.from_code, env, options.auto_deploy, options.keep_deployments, options.deployment_branch, options.deployment_type, region)
+        rest_app = create_app(name, cartridges, rest_domain, options.gear_size, scaling, options.from_code, env, options.auto_deploy, options.keep_deployments, options.deployment_branch, options.deployment_type, region, options.make_ha)
         success "done"
 
         paragraph{ indent{ success rest_app.messages.map(&:strip) } }
@@ -588,7 +589,7 @@ module RHC::Commands
         result
       end
 
-      def create_app(name, cartridges, rest_domain, gear_size=nil, scale=nil, from_code=nil, environment_variables=nil, auto_deploy=nil, keep_deployments=nil, deployment_branch=nil, deployment_type=nil, region=nil)
+      def create_app(name, cartridges, rest_domain, gear_size=nil, scale=nil, from_code=nil, environment_variables=nil, auto_deploy=nil, keep_deployments=nil, deployment_branch=nil, deployment_type=nil, region=nil, available)
         app_options = {:cartridges => Array(cartridges)}
         app_options[:gear_profile] = gear_size if gear_size
         app_options[:scale] = scale if scale
@@ -600,6 +601,7 @@ module RHC::Commands
         app_options[:deployment_branch] = deployment_branch if deployment_branch
         app_options[:deployment_type] = deployment_type if deployment_type
         app_options[:region] = region if region
+        app_options[:ha] = available if available
         debug "Creating application '#{name}' with these options - #{app_options.inspect}"
         rest_domain.add_application(name, app_options)
       rescue RHC::Rest::Exception => e
