@@ -108,12 +108,14 @@ module RHC::Commands
 
       scaling = options.scaling
       region = options.region
+      gear_profile = options.gear_size
 
       raise RHC::RegionsAndZonesNotSupportedException if region.present? && !rest_client.supports_regions_and_zones?
 
       if from_app
         scaling = from_app.scalable if scaling.nil?
         region = from_app.region if region.nil?
+        gear_profile = from_app.gear_profile if gear_profile.nil?
 
         if region.present? && !rest_client.allows_region_selection?
           region = nil
@@ -150,7 +152,7 @@ module RHC::Commands
         say "Creating application '#{name}' ... "
 
         # create the main app
-        rest_app = create_app(name, cartridges, rest_domain, options.gear_size, scaling, options.from_code, env, options.auto_deploy, options.keep_deployments, options.deployment_branch, options.deployment_type, region)
+        rest_app = create_app(name, cartridges, rest_domain, gear_profile, scaling, options.from_code, env, options.auto_deploy, options.keep_deployments, options.deployment_branch, options.deployment_type, region)
         success "done"
 
         paragraph{ indent{ success rest_app.messages.map(&:strip) } }
@@ -588,9 +590,9 @@ module RHC::Commands
         result
       end
 
-      def create_app(name, cartridges, rest_domain, gear_size=nil, scale=nil, from_code=nil, environment_variables=nil, auto_deploy=nil, keep_deployments=nil, deployment_branch=nil, deployment_type=nil, region=nil)
+      def create_app(name, cartridges, rest_domain, gear_profile=nil, scale=nil, from_code=nil, environment_variables=nil, auto_deploy=nil, keep_deployments=nil, deployment_branch=nil, deployment_type=nil, region=nil)
         app_options = {:cartridges => Array(cartridges)}
-        app_options[:gear_profile] = gear_size if gear_size
+        app_options[:gear_profile] = gear_profile if gear_profile
         app_options[:scale] = scale if scale
         app_options[:initial_git_url] = from_code if from_code
         app_options[:debug] = true if @debug
