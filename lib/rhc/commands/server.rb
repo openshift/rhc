@@ -75,7 +75,7 @@ module RHC::Commands
       When adding a new server users can optionally provide a 'nickname'
       that will allow to easily switch between servers. 
       DESC
-    syntax "<hostname> [<nickname>] [--rhlogin LOGIN] [--[no-]use-authorization-tokens] [--[no-]insecure] [--use] [--skip-wizard] [--timeout SECONDS] [--ssl-ca-file FILE] [--ssl-client-cert-file FILE] [--ssl-version VERSION]"
+    syntax "<hostname> [<nickname>] [--rhlogin LOGIN] [--[no-]use-authorization-tokens] [--[no-]insecure] [--use] [--skip-wizard] [--timeout SECONDS] [--ssl-ca-file FILE] [--ssl-client-cert-file FILE] [--ssl-client-key-file FILE] [--ssl-version VERSION]"
     argument :hostname, "Hostname of the server you are adding", ["--server HOSTNAME"]
     argument :nickname, "Optionally provide a nickname to the server you are adding (e.g. 'development', 'production', 'online')", ["--nickname NICKNAME"], :optional => true
     option ["-l", "--rhlogin LOGIN"], "Change the default OpenShift login used on this server"
@@ -182,6 +182,7 @@ module RHC::Commands
     option ["--ssl-version VERSION"], "The version of SSL to use to be used on this server", :type => SSLVersion, :optional => true
     def configure(server)
       raise ArgumentError, "The --use and --skip-wizard options cannot be used together." if options.use && options.skip_wizard
+      raise ArgumentError, "The --ssl-client-key-file and --ssl-client-cert-file options should be used together." if options.ssl_client_cert_file.nil? ^ options.ssl_client_key_file.nil?
 
       server = server_configs.find(server)
 
