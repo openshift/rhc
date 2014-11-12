@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.32.1
+Version: 1.32.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,13 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Nov 12 2014 Adam Miller <admiller@redhat.com> 1.32.2-1
+- Fixes autocomplete (contact@fabianofranz.com)
+- Merge pull request #648 from benemon/apps_summary
+  (dmcphers+openshiftbot@redhat.com)
+- Fixed indentation to align with standards (bholmes@redhat.com)
+- Added the --summary option to the apps command (bholmes@redhat.com)
+
 * Tue Nov 11 2014 Adam Miller <admiller@redhat.com> 1.32.1-1
 - Bug 1127643 - must copy gear_profile on main app (not only cartridges) when
   cloning app (contact@fabianofranz.com)
