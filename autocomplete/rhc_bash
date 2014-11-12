@@ -494,7 +494,7 @@ _rhc()
 
       "rhc apps")
         if [[ "$cur" == -* ]]; then
-          opts="--mine --verbose"
+          opts="--mine --summary --verbose"
         else
           opts=""
         fi
