@@ -66,6 +66,21 @@ module RHC
         end
       end
     end
+    
+    def display_app_summary(applications)
+      section do
+        if !applications.nil? and !applications.empty?
+          paragraph do
+            indent do
+              say table(applications.map do |app|
+                [app.name, app.app_url]
+                  end)
+              end
+          end
+        end
+    end
+   
+    end
 
     def display_app_configurations(rest_app)
       display_app(rest_app, nil, [:auto_deploy, :keep_deployments, :deployment_type, :deployment_branch])
