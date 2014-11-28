@@ -131,6 +131,24 @@ describe RHC::Commands::PortForward do
       end
     end
 
+    # Windows 7 reportedly returns EPERM rather than EACCES when the
+    # port is in use by a local service (see
+    # <https://bugzilla.redhat.com/show_bug.cgi?id=1125963>).
+    context 'when local port is in use by local service on Windows 7' do
+      before(:each) do
+        Net::SSH.should_receive(:start).with(@uri.host, @uri.user).and_yield(@ssh).twice
+        @ssh.should_receive(:exec!).with("rhc-list-ports").and_yield(nil, :stderr, 'mysql -> 127.0.0.1:3306')
+        forward = double(Net::SSH::Service::Forward)
+        @ssh.should_receive(:forward).at_least(2).and_return(forward)
+        forward.should_receive(:local).with(3306, '127.0.0.1', 3306).and_raise(Errno::EPERM)
+        forward.should_receive(:local).with(3307, '127.0.0.1', 3306)
+        @ssh.should_receive(:loop).and_raise(Interrupt.new)
+      end
+      it 'should bind to a higher port' do
+        run_output.should include("3307")
+      end
+    end
+
     context 'when host refuses connection' do
       before(:each) do
         Net::SSH.should_receive(:start).with(@uri.host, @uri.user).and_yield(@ssh).twice
