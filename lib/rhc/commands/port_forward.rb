@@ -131,7 +131,7 @@ module RHC::Commands
                     debug args.inspect
                     ssh.forward.local(*args)
                     fs.bound = true
-                  rescue Errno::EADDRINUSE, Errno::EACCES => e
+                  rescue Errno::EADDRINUSE, Errno::EACCES, Errno::EPERM => e
                     warn "#{e} while forwarding port #{fs.port_from}. Trying local port #{fs.port_from+1}"
                     fs.port_from += 1
                   rescue Timeout::Error, Errno::EADDRNOTAVAIL, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed => e
