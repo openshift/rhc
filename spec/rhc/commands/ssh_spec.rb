@@ -36,7 +36,7 @@ describe RHC::Commands::Ssh do
       before(:each) do
         @domain = rest_client.add_domain("mockdomain")
         @domain.add_application("app1", "mock_type")
-        Kernel.should_receive(:exec).with("ssh", "-vvv", "fakeuuidfortestsapp1@127.0.0.1").and_return(0)
+        Kernel.should_receive(:exec).with("ssh", "-vv", "fakeuuidfortestsapp1@127.0.0.1").and_return(0)
       end
       # It would be nice if this checked for the debug[123]: messages from standard error but im not sure how to look for that.
       it { run_output.should match("Connecting to fakeuuidfortestsapp") }

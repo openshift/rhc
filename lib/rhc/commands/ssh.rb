@@ -39,7 +39,7 @@ module RHC::Commands
 
         debug "Using user specified SSH: #{options.ssh}" if options.ssh
 
-        command_line = [RHC::Helpers.split_path(ssh), ('-vvv' if debug?), rest_app.ssh_string.to_s, command].flatten.compact
+        command_line = [RHC::Helpers.split_path(ssh), ('-vv' if debug?), rest_app.ssh_string.to_s, command].flatten.compact
 
         debug "Invoking Kernel.exec with #{command_line.inspect}"
         begin
