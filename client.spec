@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.33.2
+Version: 1.33.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,14 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Dec 02 2014 Adam Miller <admiller@redhat.com> 1.33.3-1
+- Bug 1149016 - lowering verbosity of ssh debug messages
+  (contact@fabianofranz.com)
+- Merge pull request #663 from fabianofranz/master
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 1149016 - lowering verbosity of ssh debug messages
+  (contact@fabianofranz.com)
+
 * Mon Dec 01 2014 Adam Miller <admiller@redhat.com> 1.33.2-1
 - Fix rhc port-forward on Windows 7 (miciah.masters@gmail.com)
 - Bug 1149016 - fixes ssh path with commas (contact@fabianofranz.com)
