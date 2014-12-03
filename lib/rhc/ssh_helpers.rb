@@ -268,7 +268,7 @@ module RHC
         else
           Net::SSH.start(ssh_uri.host, ssh_uri.user) do |ssh|
             File.open(filename, 'wb') do |file|
-              ssh.exec! "snapshot" do |channel, stream, data|
+              ssh.exec! snapshot_cmd do |channel, stream, data|
                 if stream == :stdout
                   file.write(data)
                 else
