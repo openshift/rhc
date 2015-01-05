@@ -475,10 +475,10 @@ module RHC
           raise RHC::InvalidSSHExecutableException.new("No system SSH available. Please use the --ssh option to specify the path to your SSH executable, or install SSH.#{windows? ? ' We recommend this free application: Git for Windows - a basic git command line and GUI client http://msysgit.github.io/.' : ''}") unless ssh_cmd or has_ssh?
         end
       else
-        bin_path = path.split(' ').first
+        bin_path = split_path(path)[0]
         raise RHC::InvalidSSHExecutableException.new("SSH executable '#{bin_path}' does not exist.") unless File.exist?(bin_path) or File.exist?(path) or exe?(bin_path)
         raise RHC::InvalidSSHExecutableException.new("SSH executable '#{bin_path}' is not executable.") unless File.executable?(path) or File.executable?(bin_path) or exe?(bin_path)
-        path =~ / / ? '"' + path + '"' : path
+        path
       end
     end
 

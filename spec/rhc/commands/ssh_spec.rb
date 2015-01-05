@@ -171,8 +171,8 @@ describe RHC::Commands::Ssh do
     end
   end
 
-  describe 'app ssh custom ssh with spaces' do
-    let(:arguments) { ['app', 'ssh', 'app1', '--ssh', '/path/to/ssh --with_custom_flag'] }
+  describe 'app ssh custom ssh with spaces and arguments' do
+    let(:arguments) { ['app', 'ssh', 'app1', '--ssh', '"/path/to /ssh" --with_custom_flag'] }
     context 'when custom ssh does not exist as a path' do
       before(:each) do
         @domain = rest_client.add_domain("mockdomain")
@@ -181,8 +181,7 @@ describe RHC::Commands::Ssh do
         File.should_receive(:exist?).at_least(1).and_return(true)
         File.should_receive(:executable?).at_least(1).and_return(true)
         subject.class.any_instance.stub(:discover_git_executable).and_return('git')
-        Kernel.should_receive(:exec).with('/path/to/ssh --with_custom_flag', "fakeuuidfortestsapp1@127.0.0.1").once.times.and_raise(Errno::ENOENT)
-        Kernel.should_receive(:exec).with('/path/to/ssh', '--with_custom_flag', "fakeuuidfortestsapp1@127.0.0.1").once.times.and_return(0)
+        Kernel.should_receive(:exec).with("/path/to /ssh", '--with_custom_flag', "fakeuuidfortestsapp1@127.0.0.1").once.times.and_return(0)
       end
       it { expect { run }.to exit_with_code(0) }
     end

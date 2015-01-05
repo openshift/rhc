@@ -15,6 +15,10 @@ module RHC::Commands
 
       You may run a specific SSH command by passing one or more arguments, or use a
       different SSH executable or pass options to SSH with the '--ssh' option.
+
+      To use the '--ssh' flag with an SSH executable path containing a space, wrap
+      the executable path with double quotes:
+      --ssh '"C:\\path with spaces\\ssh"'
       DESC
     syntax "[--ssh path_to_ssh_executable] [--gears] [<app> --] <command>"
     takes_application :argument => true
@@ -42,16 +46,7 @@ module RHC::Commands
         command_line = [RHC::Helpers.split_path(ssh), ('-vv' if debug?), rest_app.ssh_string.to_s, command].flatten.compact
 
         debug "Invoking Kernel.exec with #{command_line.inspect}"
-        begin
-          Kernel.send(:exec, *command_line)
-        rescue Errno::ENOENT
-          debug "SSH executable #{ssh.inspect} not found, splitting and trying again..."
-
-          command_line = [ssh.chomp('"').reverse.chomp('"').reverse.split(' '), ('-vv' if debug?), rest_app.ssh_string.to_s, command].flatten.compact
-          debug "Invoking Kernel.exec with #{command_line.inspect}"
-
-          Kernel.send(:exec, *command_line)
-        end
+        Kernel.send(:exec, *command_line)
       end
     end
 
