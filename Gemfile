@@ -19,5 +19,6 @@ if Gem::Specification.respond_to?(:find_all_by_name) and not Gem::Specification:
   gem 'psych'
 end
 
-# Rake 10.1.2 does not support ruby_18
+# Latest versions of these gems do not support ruby_18
 gem "rake", "< 10.1.2"
+gem "i18n", "< 0.7.0"
