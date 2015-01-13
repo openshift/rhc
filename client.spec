@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.34.1
+Version: 1.34.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,13 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Jan 13 2015 Adam Miller <admiller@redhat.com> 1.34.2-1
+- Merge pull request #669 from jwforres/fix_rhc_ruby_18_deps
+  (dmcphers+openshiftbot@redhat.com)
+- Version 0.7.0 of i18n gem doesn't support ruby 1.8 (jforrest@redhat.com)
+- Bug 1149016 - allow spaces in paths for --ssh flag but still allow arguments.
+  (jforrest@redhat.com)
+
 * Tue Dec 09 2014 Adam Miller <admiller@redhat.com> 1.34.1-1
 - bump_minor_versions for sprint 55 (admiller@redhat.com)
 
