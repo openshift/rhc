@@ -386,6 +386,7 @@ module RHC
         :ssl_ca_file     => 'SSL Cert CA File',
         :ssl_version     => 'SSL Version',
         :ssl_client_cert_file => 'SSL x509 Client Cert File',
+        :ssl_client_key_file  => 'SSL x509 Client Key File',
         :zones           => 'Available Zones'
       })
 
