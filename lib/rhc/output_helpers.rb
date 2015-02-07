@@ -101,6 +101,7 @@ module RHC
                 :timeout,
                 :ssl_version, 
                 :ssl_client_cert_file, 
+                :ssl_client_key_file,
                 :ssl_ca_file
               ),
               {

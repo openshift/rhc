@@ -294,6 +294,7 @@ module RHC
             :timeout                  => options.timeout,
             :ssl_version              => options.ssl_version,
             :ssl_client_cert_file     => options.ssl_client_cert_file,
+            :ssl_client_key_file     => options.ssl_client_key_file,
             :ssl_ca_file              => options.ssl_ca_file)
           servers.save!
           success "done"
