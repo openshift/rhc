@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.35.0
+Version: 1.35.1
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,11 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Feb 12 2015 Adam Miller <admiller@redhat.com> 1.35.1-1
+- Bug 1187812 - must handle ssl_client_key_file in config files
+  (contact@fabianofranz.com)
+- bump_minor_versions for sprint 57 (admiller@redhat.com)
+
 * Tue Jan 13 2015 Adam Miller <admiller@redhat.com> 1.34.2-1
 - Merge pull request #669 from jwforres/fix_rhc_ruby_18_deps
   (dmcphers+openshiftbot@redhat.com)
