@@ -69,9 +69,10 @@ describe RHC::Config do
           'ssl_ca_file' => 'file2',
           'timeout' => '1',
           'use_authorization_tokens' => 'true',
+          'always_auth' => 'false',
         }
       end
-      its(:to_options){ should == {:insecure => true, :timeout => 1, :ssl_ca_file => 'file2', :ssl_client_cert_file => 'file1', :rhlogin => 'user', :password => 'pass', :server => 'test.com', :use_authorization_tokens => true} }
+      its(:to_options){ should == {:insecure => true, :timeout => 1, :ssl_ca_file => 'file2', :ssl_client_cert_file => 'file1', :rhlogin => 'user', :password => 'pass', :server => 'test.com', :use_authorization_tokens => true, :always_auth => false} }
     end
   end
 
