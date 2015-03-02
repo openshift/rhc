@@ -19,6 +19,10 @@ if Gem::Specification.respond_to?(:find_all_by_name) and not Gem::Specification:
   gem 'psych'
 end
 
+# See https://bugzilla.redhat.com/show_bug.cgi?id=1197301
+gem "net-ssh", "< 2.9.3"
+
 # Latest versions of these gems do not support ruby_18
 gem "rake", "< 10.1.2"
 gem "i18n", "< 0.7.0"
+gem "commander", "< 4.3.0"
