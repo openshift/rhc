@@ -30,11 +30,11 @@ Gem::Specification.new do |s|
     sep
   ].join("\n")
 
-  s.add_dependency              'net-ssh',      '>= 2.0.11'
+  s.add_dependency              'net-ssh',      '>= 2.0.11', '< 2.9.3'
   s.add_dependency              'net-scp',      '>= 1.1.2'
   s.add_dependency              'net-ssh-multi','>= 1.2.0'
   s.add_dependency              'archive-tar-minitar'
-  s.add_runtime_dependency      'commander',    '>= 4.0'
+  s.add_runtime_dependency      'commander',    '>= 4.0', '< 4.3.0'
   s.add_runtime_dependency      'highline',     '~> 1.6.11'
   s.add_runtime_dependency      'httpclient',   '>= 2.4.0'
   s.add_runtime_dependency      'open4'
