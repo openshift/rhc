@@ -14,7 +14,7 @@ module RHC
           :url => client.url,
           :method => :get,
           :accept => :json,
-          :no_auth => true,
+          :no_auth => !RHC::Config['always_auth'],
         })
         debug "Server supports API versions #{@server_api_versions.join(', ')}"
 
@@ -28,7 +28,7 @@ module RHC
               :method => :get,
               :accept => :json,
               :api_version => api_version_negotiated,
-              :no_auth => true,
+              :no_auth => !RHC::Config['always_auth'],
             })
           end
         else
