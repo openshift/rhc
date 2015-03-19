@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.35.1
+Version: 1.35.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,15 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Mar 19 2015 Adam Miller <admiller@redhat.com> 1.35.2-1
+- Merge pull request #674 from dobbymoodge/always-auth-BZ1187806
+  (dmcphers+openshiftbot@redhat.com)
+- Bug 1197301 - need to update gemspec to lock net-ssh and commander versions
+  (jforrest@redhat.com)
+- Bug 1197301 - need to lock net-ssh and commander versions
+  (jforrest@redhat.com)
+- Add "always_auth" config option (jolamb@redhat.com)
+
 * Thu Feb 12 2015 Adam Miller <admiller@redhat.com> 1.35.1-1
 - Bug 1187812 - must handle ssl_client_key_file in config files
   (contact@fabianofranz.com)
