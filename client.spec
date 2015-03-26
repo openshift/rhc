@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.35.2
+Version: 1.35.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Mar 26 2015 Wesley Hearn <whearn@redhat.com> 1.35.3-1
+- Parse boolean option `always_auth` (jolamb@redhat.com)
+
 * Thu Mar 19 2015 Adam Miller <admiller@redhat.com> 1.35.2-1
 - Merge pull request #674 from dobbymoodge/always-auth-BZ1187806
   (dmcphers+openshiftbot@redhat.com)
