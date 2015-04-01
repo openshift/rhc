@@ -96,7 +96,7 @@ module RHC::Commands
                 raise RHC::PermissionDeniedException.new "Permission denied." if line =~ /permission denied/i
                 # ...and also which services are available for the application
                 # for us to forward ports for.
-                if line =~ /\A\s*(\S+) -> #{HOST_AND_PORT}\z/ and (options.service.empty? or options.service.split(',').include? $1)
+                if line =~ /\A\s*(\S+) -> #{HOST_AND_PORT}\z/ and (options.service.nil? or options.service.empty? or options.service.split(',').include? $1)
                   debug fs = ForwardingSpec.new($1, $2, $3.to_i)
                   forwarding_specs << fs
                 else
