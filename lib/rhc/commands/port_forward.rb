@@ -71,6 +71,7 @@ module RHC::Commands
     syntax "<application>"
     takes_application :argument => true
     option ["-g", "--gear ID"], "Gear ID you are port forwarding to (optional)"
+    option ["-s", "--service [SERVICE,]"], "A CSV list of services to port forward (optional)"
     def run(app)
       rest_app = find_app
       ssh_uri = URI.parse(options.gear ? rest_app.gear_ssh_url(options.gear) : rest_app.ssh_url)
@@ -95,7 +96,7 @@ module RHC::Commands
                 raise RHC::PermissionDeniedException.new "Permission denied." if line =~ /permission denied/i
                 # ...and also which services are available for the application
                 # for us to forward ports for.
-                if line =~ /\A\s*(\S+) -> #{HOST_AND_PORT}\z/
+                if line =~ /\A\s*(\S+) -> #{HOST_AND_PORT}\z/ and (options.service.empty? or options.service.split(',').include? $1)
                   debug fs = ForwardingSpec.new($1, $2, $3.to_i)
                   forwarding_specs << fs
                 else
