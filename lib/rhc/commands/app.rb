@@ -109,6 +109,7 @@ module RHC::Commands
       scaling = options.scaling
       region = options.region
       gear_profile = options.gear_size
+      ha = nil
 
       raise RHC::RegionsAndZonesNotSupportedException if region.present? && !rest_client.supports_regions_and_zones?
 
@@ -116,6 +117,7 @@ module RHC::Commands
         scaling = from_app.scalable if scaling.nil?
         region = from_app.region if region.nil?
         gear_profile = from_app.gear_profile if gear_profile.nil?
+        ha = from_app.ha? if !from_app.ha.nil?
 
         if region.present? && !rest_client.allows_region_selection?
           region = nil
@@ -142,6 +144,7 @@ module RHC::Commands
               (["From app:", from_app.name] if from_app),
                ["Gear Size:", options.gear_size || (from_app ? "Copied from '#{from_app.name}'" : "default")],
                ["Scaling:", (scaling ? "yes" : "no") + (from_app && options.scaling.nil? ? " (copied from '#{from_app.name}')" : '')],
+              (["HA:", (ha ? "yes" : "no") + (from_app ? " (copied from '#{from_app.name}')" : '')] if ha.present?),
               (["Environment Variables:", env.map{|item| "#{item.name}=#{item.value}"}.join(', ')] if env.present?),
               (["Region:", region + (from_app && options.region.nil? ? " (copied from '#{from_app.name}')" : '')] if region),
               ].compact
@@ -152,7 +155,7 @@ module RHC::Commands
         say "Creating application '#{name}' ... "
 
         # create the main app
-        rest_app = create_app(name, cartridges, rest_domain, gear_profile, scaling, options.from_code, env, options.auto_deploy, options.keep_deployments, options.deployment_branch, options.deployment_type, region)
+        rest_app = create_app(name, cartridges, rest_domain, gear_profile, scaling, options.from_code, env, options.auto_deploy, options.keep_deployments, options.deployment_branch, options.deployment_type, region, ha)
         success "done"
 
         paragraph{ indent{ success rest_app.messages.map(&:strip) } }
@@ -590,7 +593,7 @@ module RHC::Commands
         result
       end
 
-      def create_app(name, cartridges, rest_domain, gear_profile=nil, scale=nil, from_code=nil, environment_variables=nil, auto_deploy=nil, keep_deployments=nil, deployment_branch=nil, deployment_type=nil, region=nil)
+      def create_app(name, cartridges, rest_domain, gear_profile=nil, scale=nil, from_code=nil, environment_variables=nil, auto_deploy=nil, keep_deployments=nil, deployment_branch=nil, deployment_type=nil, region=nil, ha=nil)
         app_options = {:cartridges => Array(cartridges)}
         app_options[:gear_profile] = gear_profile if gear_profile
         app_options[:scale] = scale if scale
@@ -602,6 +605,7 @@ module RHC::Commands
         app_options[:deployment_branch] = deployment_branch if deployment_branch
         app_options[:deployment_type] = deployment_type if deployment_type
         app_options[:region] = region if region
+        app_options[:ha] = ha if ha
         debug "Creating application '#{name}' with these options - #{app_options.inspect}"
         rest_domain.add_application(name, app_options)
       rescue RHC::Rest::Exception => e
