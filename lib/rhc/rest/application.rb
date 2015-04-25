@@ -7,7 +7,7 @@ module RHC
 
       define_attr :domain_id, :name, :creation_time, :uuid,
                   :git_url, :app_url, :gear_profile, :framework,
-                  :scalable, :health_check_path, :embedded, :gear_count,
+                  :scalable, :health_check_path, :embedded, :gear_count, :ha,
                   :ssh_url, :building_app, :cartridges, :initial_git_url,
                   :auto_deploy, :deployment_branch, :deployment_type, :keep_deployments, :deployments
                   :region
@@ -16,6 +16,10 @@ module RHC
       # Query helper to say consistent with cartridge
       def scalable?
         scalable
+      end
+
+      def ha?
+        ha
       end
 
       def id
