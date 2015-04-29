@@ -18,9 +18,11 @@ class Object
 
   # Avoid a conflict if to_json is already defined
   unless Object.new.respond_to? :to_json
+    #:nocov:
     def to_json(options=nil)
       RHC::Json.encode(self)
     end
+    #:nocov:
   end
 end
 
