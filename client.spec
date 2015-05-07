@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.36.1
+Version: 1.36.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,10 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu May 07 2015 Troy Dawson <tdawson@redhat.com> 1.36.2-1
+- Bug 1158737 - creating --from-app need to inherit HA
+  (contact@fabianofranz.com)
+
 * Fri Apr 10 2015 Wesley Hearn <whearn@redhat.com> 1.36.1-1
 - bump_minor_versions for sprint 62 (whearn@redhat.com)
 
