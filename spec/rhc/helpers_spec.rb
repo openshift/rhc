@@ -60,7 +60,7 @@ describe AllRhcHelpers do
     it("should be colorized") do
       message = "this is #{_color} -"
       output = capture{ subject.send(method,message) }
-      output.should be_colorized(message,_color)
+      output.chomp.should be_colorized(message,_color)
     end
     it("should return true"){ subject.send(method,'anything').should be_true }
   end

@@ -567,8 +567,7 @@ module ColorMatchers
       [
         ansi_code(color),
         msg,
-        ansi_code(:clear),
-        "\n"
+        ansi_code(:clear)
       ].join('')
     end
   end

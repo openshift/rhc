@@ -775,27 +775,43 @@ describe RHC::Commands::App do
   end
 
   describe 'app show --gears' do
-    let(:arguments) { ['app', 'show', 'app1', '--gears', '--raw'] }
+    context do
+      let(:arguments) { ['app', 'show', 'app1', '--gears', '--raw'] }
 
-    context 'when run' do
-      before do
-        @domain = rest_client.add_domain("mockdomain")
-        @domain.add_application("app1", "mock_type")
+      context 'when run' do
+        before do
+          @domain = rest_client.add_domain("mockdomain")
+          @domain.add_application("app1", "mock_type")
+        end
+        it { run_output.should match(/ID\s+State\s+Cartridges\s+Size\s+SSH URL/) }
+        it { run_output.should match("fakegearid0 started mock_type  small fakegearid0@fakesshurl.com") }
+        it { expect{ run }.to exit_with_code(0) }
       end
-      it { run_output.should match(/ID\s+State\s+Cartridges\s+Size\s+SSH URL/) }
-      it { run_output.should match("fakegearid0 started mock_type  small fakegearid0@fakesshurl.com") }
-      it { expect{ run }.to exit_with_code(0) }
+
+      context 'with regions and zones' do
+        before do
+          @domain = rest_client.add_domain("mockdomain")
+          @app = @domain.add_application("app1", "mock_type")
+          @app.gears.each{|g| g['region'] = 'south'; g['zone'] = 'west'}
+        end
+        it { run_output.should match(/ID\s+State\s+Cartridges\s+Size\s+Region\s+Zone\s+SSH URL/) }
+        it { run_output.should match(/fakegearid0\s+started\s+mock_type\s+small\s+south\s+west\s+fakegearid0@fakesshurl.com/) }
+        it { expect{ run }.to exit_with_code(0) }
+      end
     end
 
-    context 'with regions and zones' do
-      before do
-        @domain = rest_client.add_domain("mockdomain")
-        @app = @domain.add_application("app1", "mock_type")
-        @app.gears.each{|g| g['region'] = 'south'; g['zone'] = 'west'}
+    context do
+      let(:arguments) { ['app', 'show', 'app1', '--gears'] }
+
+      context 'with cartridge that exposes an endpoint' do
+        before do
+          @domain = rest_client.add_domain("mockdomain")
+          # An application has to be scalable to expose an endpoint.
+          @app = @domain.add_application("app1", "mock_type", true)
+          @app.gears.first['endpoints'] = [{ 'cartridge_name' => 'mock_cart-1' }]
+        end
+        it { (run_output.match(/fakegearid0\s+([^\s]+)\s+small\s+fakegearid0@fakesshurl\.com/)[1]).should be_colorized("started", :green) }
       end
-      it { run_output.should match(/ID\s+State\s+Cartridges\s+Size\s+Region\s+Zone\s+SSH URL/) }
-      it { run_output.should match(/fakegearid0\s+started\s+mock_type\s+small\s+south\s+west\s+fakegearid0@fakesshurl.com/) }
-      it { expect{ run }.to exit_with_code(0) }
     end
   end
 

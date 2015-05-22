@@ -432,10 +432,16 @@ module RHC::Commands
         domain, app = discover_domain_and_app
         gear_info = rest_client.find_application_gear_groups_endpoints(domain, app).map do |group|
           group.gears.map do |gear|
+            color_cart = if gear['endpoints'].present?
+              e = gear['endpoints'].collect{ |c| c['cartridge_name'] }.uniq
+              lambda { |c| e.include?(c) ? color(c, :green) : c }
+            else
+              lambda { |c| c }
+            end
             [
               gear['id'],
               gear['state'] == 'started' ? color(gear['state'], :green) : color(gear['state'], :yellow),
-              (gear['endpoints'].blank? ? group.cartridges : gear['endpoints']).collect{ |c| c['cartridge_name'] || c['name'] }.join(' '),
+              group.cartridges.collect{ |c| color_cart.call(c['name']) }.join(' '),
               group.gear_profile,              
               gear['region'],
               gear['zone'],
