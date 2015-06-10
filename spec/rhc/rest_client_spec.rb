@@ -71,7 +71,7 @@ module RHC
         context "against an endpoint that has a generic error" do
           let(:endpoint){ mock_href('other_error') }
           it "raises a generic error for any other error condition" do
-            expect{ client.api }.to raise_error(RHC::Rest::ConnectionException, "An unexpected error occured: Other Error")
+            expect{ client.api }.to raise_error(RHC::Rest::ConnectionException, "An unexpected error occurred: Other Error")
           end
         end
       end

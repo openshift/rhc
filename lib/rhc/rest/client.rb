@@ -436,7 +436,7 @@ module RHC
               handle_error!(e.res, args[1], client)
             end
             raise ConnectionException.new(
-              "An unexpected error occured when connecting to the server: #{e.message}")
+              "An unexpected error occurred when connecting to the server: #{e.message}")
           rescue HTTPClient::TimeoutError => e
             raise TimeoutException.new(
               "Connection to server timed out. "\
@@ -493,7 +493,7 @@ module RHC
             raise
           rescue => e
             debug_error(e)
-            raise ConnectionException, "An unexpected error occured: #{e.message}", e.backtrace
+            raise ConnectionException, "An unexpected error occurred: #{e.message}", e.backtrace
           end
         end
       end

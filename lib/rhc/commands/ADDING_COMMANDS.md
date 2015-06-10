@@ -156,7 +156,7 @@ To specify an error you can simply return a non-0 number but if you raise an exc
     def run
       ...
       # some error state is reached
-      raise RHC::DomainNotFoundError.new("An domain error has occured")
+      raise RHC::DomainNotFoundError.new("An domain error has occurred")
     end
 
 ## Results
