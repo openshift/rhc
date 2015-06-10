@@ -368,7 +368,7 @@ module RHC
           stub_request(:get, mock_href).to_return(return_data)
         end
         it "throws an error" do
-          response.should raise_error(RHC::Rest::ConnectionException, 'An unexpected error occured: unexpected nil')
+          response.should raise_error(RHC::Rest::ConnectionException, 'An unexpected error occurred: unexpected nil')
         end
       end
 
@@ -496,7 +496,7 @@ module RHC
 
       context "with a generic exception error" do
         before{ stub_request(:get, mock_href).to_raise(Exception.new('Generic Error')) }
-        it{ response.should raise_error(RHC::Rest::ConnectionException, "An unexpected error occured: Generic Error") }
+        it{ response.should raise_error(RHC::Rest::ConnectionException, "An unexpected error occurred: Generic Error") }
       end
 
       context "with an unauthorized request" do
