@@ -179,7 +179,7 @@ module RHC::Commands
               warn "not complete"
               add_issue("Jenkins failed to install - #{e}",
                         "Installing jenkins and jenkins-client",
-                        "rhc create-app jenkins",
+                        "rhc create-app jenkins jenkins-1",
                         "rhc add-cartridge jenkins-client -a #{rest_app.name}")
             end
           end
