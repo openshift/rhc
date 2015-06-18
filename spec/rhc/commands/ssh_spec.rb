@@ -171,6 +171,32 @@ describe RHC::Commands::Ssh do
     end
   end
 
+  describe 'app ssh custom private key' do
+    let(:arguments) { ['app', 'ssh', 'app1', '--key', 'valid_private_key'] }
+
+    context 'when custom private key is valid' do
+      before(:each) do
+        @domain = rest_client.add_domain("mockdomain")
+        @domain.add_application("app1", "mock_type")
+        Kernel.should_receive(:exec).with("ssh", "fakeuuidfortestsapp1@127.0.0.1", "-i", "valid_private_key").and_return(0)
+        #subject.class.any_instance.stub(:discover_git_executable).and_return('git')
+      end
+      it { run_output.should match("Connecting to fakeuuidfortestsapp") }
+      it { expect{ run }.to exit_with_code(0) }
+    end
+
+    context 'when custom private key does not exist' do
+      let(:arguments) { ['app', 'ssh', 'app1', '--key', 'nonexistent_private_key'] }
+      it { expect { run }.to exit_with_code(1) } 
+    end
+
+    context 'when custom private key is inaccessible' do
+      let(:arguments) { ['app', 'ssh', 'app1', '--key', 'inaccessible_private_key'] }
+      it { expect { run }.to exit_with_code(1) }
+    end
+
+  end
+
   describe 'app ssh custom ssh with spaces and arguments' do
     let(:arguments) { ['app', 'ssh', 'app1', '--ssh', '"/path/to /ssh" --with_custom_flag'] }
     context 'when custom ssh does not exist as a path' do

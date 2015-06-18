@@ -15,6 +15,8 @@ module RHC::Commands
 
       You may run a specific SSH command by passing one or more arguments, or use a
       different SSH executable or pass options to SSH with the '--ssh' option.
+   
+      A dedicated private key can be passed to SSH with the '--key' option.
 
       To use the '--ssh' flag with an SSH executable path containing a space, wrap
       the executable path with double quotes:
@@ -24,6 +26,7 @@ module RHC::Commands
     takes_application :argument => true
     argument :command, "Command to run in the application's SSH session", ['--command COMMAND'], :type => :list, :optional => true
     option ["--ssh PATH"], "Path to your SSH executable or additional options"
+    option ["--key KEY"], "Private KEY to use for the SSH connections. Requires a private key."
     option ["--gears"], "Execute this command on all gears in the app.  Requires a command."
     option ["--limit INTEGER"], "Limit the number of simultaneous SSH connections opened with --gears (default: 5).", :type => Integer, :default => 5
     option ["--raw"], "Output only the data returned by each host, no hostname prefix."
@@ -42,8 +45,12 @@ module RHC::Commands
         $stderr.puts "Connecting to #{rest_app.ssh_string.to_s} ..." unless command.present?
 
         debug "Using user specified SSH: #{options.ssh}" if options.ssh
-
-        command_line = [RHC::Helpers.split_path(ssh), ('-vv' if debug?), rest_app.ssh_string.to_s, command].flatten.compact
+        debug "Using user specified SSH Private Key: #{options.key}" if options.key
+        if options.key
+          command_line = [RHC::Helpers.split_path(ssh), ('-vv' if debug?), rest_app.ssh_string.to_s, "-i", options.key, command].flatten.compact
+        else
+          command_line = [RHC::Helpers.split_path(ssh), ('-vv' if debug?), rest_app.ssh_string.to_s, command].flatten.compact
+        end
 
         debug "Invoking Kernel.exec with #{command_line.inspect}"
         Kernel.send(:exec, *command_line)
