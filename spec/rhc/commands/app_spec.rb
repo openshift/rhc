@@ -990,5 +990,16 @@ describe RHC::Commands::App do
       end
     end
 
+    [['app', 'create', 'app1', 'mock_standalone_cart-1', '-e', 'FOOBAR'],
+     ['app', 'create', 'app1', 'mock_standalone_cart-1', '--env', 'FOOBAR'],
+     ['app', 'create', 'app1', 'mock_standalone_cart-1', '-eFOOBAR']
+    ].each_with_index do |args, i|
+      context "when run with syntactically incorrect env vars #{i}" do
+        let(:arguments) { args }
+        it { expect { run }.to exit_with_code(159) }
+        it { run_output.should match(/Environment variable\(s\) not provided.\nPlease provide at least one environment variable using the syntax VARIABLE=VALUE\. VARIABLE can only contain letters, digits and underscore \('_'\) and can't begin with a digit\./) }
+      end
+    end
+
   end
 end

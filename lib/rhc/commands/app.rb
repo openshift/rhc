@@ -101,6 +101,12 @@ module RHC::Commands
       end.join(', ')
 
       env = collect_env_vars(arg_envs.concat(Array(options.env)))
+      if options.env && env.empty?
+        raise RHC::EnvironmentVariableNotProvidedException.new(
+        "Environment variable(s) not provided.\n" +
+        "Please provide at least one environment variable using the syntax VARIABLE=VALUE. VARIABLE can only contain letters, digits and underscore ('_') and can't begin with a digit.")
+      end
+
       if env.present? && !rest_domain.supports_add_application_with_env_vars?
         env = []
         warn "Server does not support environment variables."
