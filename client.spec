@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.36.2
+Version: 1.36.3
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,19 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Tue Jun 30 2015 Wesley Hearn <whearn@redhat.com> 1.36.3-1
+- Merge pull request #683 from msowka/master (dmcphers+openshiftbot@redhat.com)
+- port-forward: option to enable selecting specific service(s), fix 1
+  (msowka@gmail.com)
+- Fix error message (dmcphers@redhat.com)
+- Fix spelling errors (dmcphers@redhat.com)
+- Merge pull request #681 from Miciah/bug-1125926-bug-1130028-app-show-
+  highlight-carts-with-endpoints (dmcphers+openshiftbot@redhat.com)
+- Update unit test for app show (miciah.masters@gmail.com)
+- port-forward: option to enable selecting specific service(s)
+  (msowka@gmail.com)
+- app show: highlight carts with endpoints (miciah.masters@gmail.com)
+
 * Thu May 07 2015 Troy Dawson <tdawson@redhat.com> 1.36.2-1
 - Bug 1158737 - creating --from-app need to inherit HA
   (contact@fabianofranz.com)
