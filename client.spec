@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.36.3
+Version: 1.36.4
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,12 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Jul 02 2015 Wesley Hearn <whearn@redhat.com> 1.36.4-1
+- Merge pull request #694 from tiwillia/b1232921
+  (dmcphers+openshiftbot@redhat.com)
+- Report error when a syntatically incorrect env var is provided on app-create
+  (tiwillia@redhat.com)
+
 * Tue Jun 30 2015 Wesley Hearn <whearn@redhat.com> 1.36.3-1
 - Merge pull request #683 from msowka/master (dmcphers+openshiftbot@redhat.com)
 - port-forward: option to enable selecting specific service(s), fix 1
