@@ -378,6 +378,7 @@ module RHC
         @debug ||= false
 
         @auth = options.delete(:auth)
+        @api_always_auth = options.delete(:api_always_auth)
 
         self.headers.merge!(options.delete(:headers)) if options[:headers]
         self.options.merge!(options)
@@ -387,6 +388,10 @@ module RHC
 
       def url
         @end_point
+      end
+
+      def api_always_auth
+        @api_always_auth
       end
 
       def api

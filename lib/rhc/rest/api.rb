@@ -10,12 +10,11 @@ module RHC
         @server_api_versions = []
         debug "Client supports API versions #{preferred_api_versions.join(', ')}"
         @client_api_versions = preferred_api_versions
-        always_auth = RHC::Helpers.to_boolean(RHC::Config['always_auth'], false)
         @server_api_versions, @current_api_version, links = api_info({
           :url => client.url,
           :method => :get,
           :accept => :json,
-          :no_auth => !always_auth,
+          :no_auth => !client.api_always_auth
         })
         debug "Server supports API versions #{@server_api_versions.join(', ')}"
 
@@ -29,7 +28,7 @@ module RHC
               :method => :get,
               :accept => :json,
               :api_version => api_version_negotiated,
-              :no_auth => !always_auth,
+              :no_auth => !client.api_always_auth
             })
           end
         else
