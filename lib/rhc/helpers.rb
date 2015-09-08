@@ -135,6 +135,7 @@ module RHC
     global_option('--timeout SECONDS', Integer, 'The timeout for operations') do |value|
       raise RHC::Exception, "Timeout must be a positive integer" unless value > 0
     end
+    global_option '--always-auth', "Always use authentication when making OpenShift API requests.", :hide => true
     global_option '--noprompt', "Suppress all interactive operations command", :hide => true do
       $terminal.page_at = nil
     end
@@ -217,6 +218,7 @@ module RHC
           :headers => parse_headers(options.header),
           :timeout => options.timeout,
           :warn => BOUND_WARNING,
+          :api_always_auth => options.always_auth
         }.merge!(ssl_options).merge!(opts))
     end
 
