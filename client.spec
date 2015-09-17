@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.37.1
+Version: 1.37.2
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,13 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Thu Sep 17 2015 Unknown name 1.37.2-1
+- Merge pull request #696 from tiwillia/bz1216206
+  (dmcphers+openshiftbot@redhat.com)
+- Fix create-app --from-app test timeout (miciah.masters@gmail.com)
+- Bug 1216206 - Always_auth should be able to be passed to 'setup'
+  (tiwillia@redhat.com)
+
 * Thu Jul 02 2015 Wesley Hearn <whearn@redhat.com> 1.37.1-1
 - bump_minor_versions for 2.0.65 (whearn@redhat.com)
 - Merge pull request #694 from tiwillia/b1232921
