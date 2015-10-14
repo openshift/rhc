@@ -1,6 +1,7 @@
 require 'rhc/commands/base'
 require 'rhc/config'
 require 'rhc/ssh_helpers'
+require 'open3'
 
 module RHC::Commands
   class Tail < Base
@@ -28,16 +29,33 @@ module RHC::Commands
       def tail(cartridge_name, ssh_url, options)
         debug "Tail in progress for cartridge #{cartridge_name}"
 
+        ssh = check_ssh_executable! options.ssh
+
+        debug "Using user specified SSH: #{options.ssh}" if options.ssh
+
         host = ssh_url.host
         uuid = ssh_url.user
 
         file_glob = options.files ? options.files : "#{cartridge_name}/log*/*"
         remote_cmd = "tail#{options.opts ? ' --opts ' + Base64::encode64(options.opts).chomp : ''} #{file_glob}"
-        ssh_cmd = "ssh -t #{uuid}@#{host} '#{remote_cmd}'"
+        #Use ssh -t to tail the logs
+        ssh_cmd = "#{ssh} -t #{uuid}@#{host} '#{remote_cmd}'"
+
         begin
-          #Use ssh -t to tail the logs
-          debug ssh_cmd
-          ssh_ruby(host, uuid, remote_cmd, false, true)
+          if !options.ssh
+            # Only use Net::SSH if no ssh executable is specified
+            debug "Running with ruby's ssh implementation: #{ssh_cmd}"
+            ssh_ruby(host, uuid, remote_cmd, false, true)
+          else
+            ssh_stderr = " 2>/dev/null"
+            ssh_cmd << ssh_stderr unless debug?
+            debug "Running #{ssh_cmd}"
+            Open3.popen3(ssh_cmd) do |stdin, stdout, stderr, thread|
+              while line=stdout.gets do
+                print line
+              end
+            end
+          end
         rescue
           warn "You can tail this application directly with:\n#{ssh_cmd}"
           raise

@@ -60,6 +60,7 @@ module RHC::Commands
   end
 
   class PortForward < Base
+    include RHC::SSHHelpers
 
     UP_TO_256 = /25[0-5]|2[0-4][0-9]|[01]?(?:[0-9][0-9]?)/
     UP_TO_65535 = /6553[0-5]|655[0-2][0-9]|65[0-4][0-9][0-9]|6[0-4][0-9][0-9][0-9]|[0-5]?(?:[0-9][0-9]{0,3})/
@@ -73,55 +74,77 @@ module RHC::Commands
     option ["-g", "--gear ID"], "Gear ID you are port forwarding to (optional)"
     option ["-s", "--service [SERVICE,]"], "A CSV list of services to port forward (optional)"
     def run(app)
-      rest_app = find_app
-      ssh_uri = URI.parse(options.gear ? rest_app.gear_ssh_url(options.gear) : rest_app.ssh_url)
-
-      say "Using #{ssh_uri}..." if options.debug
-
+      ssh_executable = check_ssh_executable! options.ssh
       forwarding_specs = []
 
       begin
+        rest_app = find_app
+        ssh_uri = URI.parse(options.gear ? rest_app.gear_ssh_url(options.gear) : rest_app.ssh_url)
+        debug "Using #{ssh_uri}..."
+
+        output = ""
         say "Checking available ports ... "
 
-        Net::SSH.start(ssh_uri.host, ssh_uri.user) do |ssh|
-          # If a specific gear is targeted, do not include remote (e.g. database) ports
-          list_ports_cmd = "rhc-list-ports#{options.gear ? ' --exclude-remote' : ''}"
-          ssh.exec! list_ports_cmd do |channel, stream, data|
-            if stream == :stderr
-              data.each_line do |line|
-                line.chomp!
-                # FIXME: This is really brittle; there must be a better way
-                # for the server to tell us that permission (what permission?)
-                # is denied.
-                raise RHC::PermissionDeniedException.new "Permission denied." if line =~ /permission denied/i
-                # ...and also which services are available for the application
-                # for us to forward ports for.
-                if line =~ /\A\s*(\S+) -> #{HOST_AND_PORT}\z/ and (options.service.nil? or options.service.empty? or options.service.split(',').include? $1)
-                  debug fs = ForwardingSpec.new($1, $2, $3.to_i)
-                  forwarding_specs << fs
-                else
-                  debug line
-                end
-
+        list_ports_cmd = "rhc-list-ports#{options.gear ? ' --exclude-remote' : ''}"
+        # Only use Net::SSH if no ssh executable is specified
+        if !options.ssh
+          Net::SSH.start(ssh_uri.host, ssh_uri.user) do |ssh|
+            # If a specific gear is targeted, do not include remote (e.g. database) ports
+            ssh.exec! list_ports_cmd do |channel, stream, data|
+              if stream == :stderr
+                output << data
               end
             end
           end
-
-          if forwarding_specs.length == 0
-            # check if the gears have been stopped
-            if rest_app.gear_groups.all?{ |gg| gg.gears.all?{ |g| g["state"] == "stopped" } }
-              warn "none"
-              error "The application is stopped. Please restart the application and try again."
-              return 1
-            else
-              warn "none"
-              raise RHC::NoPortsToForwardException.new "There are no available ports to forward for this application. Your application may be stopped or idled."
-            end
+        else
+          debug "Using #{ssh_executable} to determine forwarding ports."
+          ssh_cmd = "#{ssh_executable} #{ssh_uri.user}@#{ssh_uri.host} '#{list_ports_cmd} 2>&1'"
+          status, output = exec(ssh_cmd)
+          if status != 0
+            raise RHC::SSHCommandFailed.new(status, output)
           end
+        end
 
-          success "done"
+        output.each_line do |line|
+          line.chomp!
+          # FIXME: This is really brittle; there must be a better way
+          # for the server to tell us that permission (what permission?)
+          # is denied.
+          raise RHC::PermissionDeniedException.new "Permission denied." if line =~ /permission denied/i
+          # ...and also which services are available for the application
+          # for us to forward ports for.
+          if line =~ /\A\s*(\S+) -> #{HOST_AND_PORT}\z/ and (options.service.nil? or options.service.empty? or options.service.split(',').include? $1)
+            debug "Found service #{$1} with remote host #{$2} and port #{$3}"
+            fs = ForwardingSpec.new($1, $2, $3.to_i)
+            forwarding_specs << fs
+          else
+            debug line
+          end
+        end
 
-          begin
+        if forwarding_specs.length == 0
+          # check if the gears have been stopped
+          if rest_app.gear_groups.all?{ |gg| gg.gears.all?{ |g| g["state"] == "stopped" } }
+            warn "none"
+            error "The application is stopped. Please restart the application and try again."
+            return 1
+          else
+            warn "none"
+            raise RHC::NoPortsToForwardException.new "There are no available ports to forward for this application. Your application may be stopped or idled."
+          end
+        end
+
+        success "done"
+
+        begin
+          # if an ssh executable was specified, provide the command that be can run, assuming that the
+          # ssh executable's flags and options are the same as openssh's flags
+          if options.ssh
+            ssh_cmd_arg = forwarding_specs.map { |fs| fs.to_cmd_arg }.join(" ")
+            ssh_cmd = "#{ssh_executable} -N #{ssh_cmd_arg} #{ssh_uri.user}@#{ssh_uri.host}"
+            warn "You can try forwarding ports manually by running the command:\n  #{ssh_cmd}"
+            raise RHC::ArgumentNotValid.new("A SSH executable is specified and cannot be used with this command.")
+          else
             Net::SSH.start(ssh_uri.host, ssh_uri.user) do |ssh|
               say "Forwarding ports ..."
               forwarding_specs.each do |fs|
@@ -168,17 +191,17 @@ module RHC::Commands
                 warn "No ports have been bound"
                 return
               end
+
               ssh.loop { true }
             end
-          rescue Interrupt
-            say " Ending port forward"
-            return 0
           end
-
+        rescue Interrupt
+          say " Ending port forward"
+          return 0
         end
 
       rescue Timeout::Error, Errno::EADDRNOTAVAIL, Errno::EADDRINUSE, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed => e
-        ssh_cmd = ["ssh","-N"]
+        ssh_cmd = [ssh_executable,"-N"]
         unbound_fs = forwarding_specs.select { |fs| !fs.bound? }
         ssh_cmd += unbound_fs.map { |fs| fs.to_cmd_arg }
         ssh_cmd += ["#{ssh_uri.user}@#{ssh_uri.host}"]

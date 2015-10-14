@@ -29,12 +29,12 @@ module RHC
 
   #
   # Responsible for encapsulating the loading and retrieval of OpenShift
-  # configuration files and converting them to commandline option 
+  # configuration files and converting them to commandline option
   # equivalents.  It also provides the converse option - converting a set
   # of commandline options back into a config file.
   #
   # In general, the values stored in the config should be identical (require
-  # little or no type conversion) to their option form.  As new global 
+  # little or no type conversion) to their option form.  As new global
   # options are added, only this class should have to change to persist that
   # option.
   #
@@ -63,6 +63,7 @@ module RHC
       :ssl_client_cert_file     => [nil,               :path_to_file, 'A client certificate file for use with your server'],
       :ssl_client_key_file      => [nil,               :path_to_file, 'The corresponding key for the client certificate'],
       :ssl_ca_file              => [nil,               :path_to_file, 'A file containing CA one or more certificates'],
+      :ssh                      => [nil,               :path_to_file, 'Path to a ssh executable and command options to use when performing ssh commands. When providing options, ensure path and options are enclosed in single or double quotes.'],
       :always_auth              => [nil,               :boolean,      'If true, the client will use an authenticated connection for all requests. Useful for certain client certificate configurations.'],
     }
 
@@ -75,7 +76,7 @@ module RHC
         arr << "#{value.nil? ? '#' : ''}#{opts[0] || name}=#{self.type_to_config(opts[1], value)}"
         arr << ""
         arr
-      end.unshift(!args.nil? && args.length < OPTIONS.length ? 
+      end.unshift(!args.nil? && args.length < OPTIONS.length ?
         ["# Check servers.yml for detailed server configuration", ""] : nil).flatten.compact.join("\n")
     end
 
@@ -166,9 +167,9 @@ module RHC
     end
 
     def save!(options, fields=nil)
-      File.open(path, 'w') do |f| 
+      File.open(path, 'w') do |f|
         f.puts self.class.options_to_config(
-          options, 
+          options,
           fields
         )
       end
@@ -193,12 +194,12 @@ module RHC
     # individual configs will be evaluated in the following cascading order
     def configs_cascade
       [
-        @opts, 
-        @opts_config, 
-        @env_config, 
-        @additional_config, 
-        @local_config, 
-        @global_config, 
+        @opts,
+        @opts_config,
+        @env_config,
+        @additional_config,
+        @local_config,
+        @global_config,
         @defaults
       ]
     end

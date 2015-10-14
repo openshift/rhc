@@ -18,11 +18,10 @@ module RHC::Commands
     default_action :help
 
     summary "Save a snapshot of your app to disk"
-    syntax "<application> [--filepath FILE] [--ssh path_to_ssh_executable]"
+    syntax "<application> [--filepath FILE]"
     takes_application :argument => true
     option ["-f", "--filepath FILE"], "Local path to save tarball (default: ./$APPNAME.tar.gz)"
     option ["--deployment"], "Snapshot as a deployable file which can be deployed with 'rhc deploy'"
-    option ["--ssh PATH"], "Full path to your SSH executable with additional options"
     alias_action :"app snapshot save", :root_command => true, :deprecated => true
     def save(app)
 
@@ -38,10 +37,9 @@ module RHC::Commands
     end
 
     summary "Restores a previously saved snapshot"
-    syntax "<application> [--filepath FILE] [--ssh path_to_ssh_executable]"
+    syntax "<application> [--filepath FILE]"
     takes_application :argument => true
     option ["-f", "--filepath FILE"], "Local path to restore tarball"
-    option ["--ssh PATH"], "Full path to your SSH executable with additional options"
     alias_action :"app snapshot restore", :root_command => true, :deprecated => true
     def restore(app)
       rest_app = find_app

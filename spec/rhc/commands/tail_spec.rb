@@ -77,5 +77,19 @@ describe RHC::Commands::Tail do
       it { run_output.should =~ /The server does not support operations on individual gears./ }
     end
 
+    context 'succeeds when interrupted using specified ssh executable' do
+      ssh_path = '/usr/bin/ssh'
+
+      before(:each) do
+        base_config { |c, d| d.add 'ssh', ssh_path }
+        stdout = double('file handle')
+        Open3.should_receive(:popen3).with(/#{ssh_path} -t.*/).and_yield(nil, stdout, nil, nil)
+        stdout.should_receive(:gets).and_return("some tail output")
+        subject.class.any_instance.stub(:print).and_raise(Interrupt)
+      end
+
+      it { expect { run }.to raise_error(Interrupt) }
+    end
+
   end
 end
