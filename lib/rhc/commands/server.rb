@@ -10,7 +10,7 @@ module RHC::Commands
       servers to interact with the rhc commands and easily switch between
       them.
 
-      For example, if an user's company has installations of OpenShift Origin 
+      For example, if an user's company has installations of OpenShift Origin
       (development) and Enterprise (production) and the user also has a personal
       OpenShift Online account:
 
@@ -70,12 +70,12 @@ module RHC::Commands
 
     summary "Add a new server"
     description <<-DESC
-      Add and configure a new OpenShift server that will be available to 
+      Add and configure a new OpenShift server that will be available to
       use through rhc commands.
       When adding a new server users can optionally provide a 'nickname'
-      that will allow to easily switch between servers. 
+      that will allow to easily switch between servers.
       DESC
-    syntax "<hostname> [<nickname>] [--rhlogin LOGIN] [--[no-]use-authorization-tokens] [--[no-]insecure] [--use] [--skip-wizard] [--timeout SECONDS] [--ssl-ca-file FILE] [--ssl-client-cert-file FILE] [--ssl-version VERSION]"
+    syntax "<hostname> [<nickname>] [--rhlogin LOGIN] [--[no-]use-authorization-tokens] [--[no-]insecure] [--use] [--skip-wizard] [--timeout SECONDS] [--ssl-ca-file FILE] [--ssl-client-cert-file FILE] [--ssl-client-key-file FILE] [--ssl-version VERSION]"
     argument :hostname, "Hostname of the server you are adding", ["--server HOSTNAME"]
     argument :nickname, "Optionally provide a nickname to the server you are adding (e.g. 'development', 'production', 'online')", ["--nickname NICKNAME"], :optional => true
     option ["-l", "--rhlogin LOGIN"], "Change the default OpenShift login used on this server"
@@ -90,10 +90,11 @@ module RHC::Commands
     option ["--ssl-version VERSION"], "The version of SSL to use to be used on this server", :type => SSLVersion, :optional => true
     def add(hostname, nickname)
       raise ArgumentError, "The --use and --skip-wizard options cannot be used together." if options.use && options.skip_wizard
+      raise ArgumentError, "You must use the --ssl_ca_file, --ssl_client_cert_file, and --ssl_client_key_file commands together." unless !options.ssl_ca_file == !options.ssl_client_cert_file && !options.ssl_client_cert_file == !options.ssl_client_key_file
 
       attrs = [:login, :use_authorization_tokens, :insecure, :timeout, :ssl_version, :ssl_client_cert_file, :ssl_client_key_file, :ssl_ca_file]
 
-      server = server_configs.add(hostname, 
+      server = server_configs.add(hostname,
         attrs.inject({:nickname => nickname}){ |h, (k, v)| h[k] = options[k == :login ? :rhlogin : k]; h })
 
       unless options.skip_wizard
@@ -117,7 +118,7 @@ module RHC::Commands
         say display_server(server)
       end
 
-      paragraph do 
+      paragraph do
         case servers.length
         when 0
           warn "You don't have any servers configured. Use 'rhc setup' to configure your OpenShift server."
@@ -166,7 +167,7 @@ module RHC::Commands
     end
 
     summary "Update server attributes"
-    syntax "<server> [--hostname HOSTNAME] [--nickname NICKNAME] [--rhlogin LOGIN] [--[no-]use-authorization-tokens] [--[no-]insecure] [--use] [--skip-wizard] [--timeout SECONDS] [--ssl-ca-file FILE] [--ssl-client-cert-file FILE] [--ssl-version VERSION]"
+    syntax "<server> [--hostname HOSTNAME] [--nickname NICKNAME] [--rhlogin LOGIN] [--[no-]use-authorization-tokens] [--[no-]insecure] [--use] [--skip-wizard] [--timeout SECONDS] [--ssl-ca-file FILE] [--ssl-client-cert-file FILE] [--ssl-client-key-file FILE] [--ssl-version VERSION]"
     argument :server, "Server hostname or nickname to be configured", ["--server SERVER"]
     option ["--hostname HOSTNAME"], "Change the hostname of this server"
     option ["--nickname NICKNAME"], "Change the nickname of this server"
@@ -187,8 +188,8 @@ module RHC::Commands
 
       attrs = [:hostname, :nickname, :login, :use_authorization_tokens, :insecure, :timeout, :ssl_version, :ssl_client_cert_file, :ssl_client_key_file, :ssl_ca_file].inject({}){ |h, (k, v)| v = options[k == :login ? :rhlogin : k]; h[k] = (v.nil? ? server.send(k) : v); h }
 
-      raise RHC::ServerNicknameExistsException.new(options.nickname) if options.nickname && 
-        server_configs.nickname_exists?(options.nickname) && 
+      raise RHC::ServerNicknameExistsException.new(options.nickname) if options.nickname &&
+        server_configs.nickname_exists?(options.nickname) &&
         server_configs.find(options.nickname).hostname != server.hostname
 
       server = server_configs.update(server.hostname, attrs)
