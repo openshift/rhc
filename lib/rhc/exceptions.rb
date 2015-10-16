@@ -295,7 +295,7 @@ module RHC
       super message
     end
   end
-  
+
   class RemoteFileOrPathNotFound < FileOrPathNotFound
     def initialize(message="Remote File, file path, or directory could not be found")
       super message

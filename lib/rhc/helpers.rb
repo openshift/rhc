@@ -201,7 +201,7 @@ module RHC
       return nil if token_store_user_key.nil?
       token_store.get(token_store_user_key, options.server)
     end
-    
+
     def parse_headers(headers)
       Hash[
         Array(headers).map do |header|

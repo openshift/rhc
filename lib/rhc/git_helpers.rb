@@ -83,7 +83,7 @@ module RHC
 
     def git_config_get(key)
       return nil unless has_git?
-      
+
       config_get_cmd = "#{discover_git_executable} config --get #{key}"
       value = %x[#{config_get_cmd}].strip
       debug "Git config '#{config_get_cmd}' returned '#{value}'"

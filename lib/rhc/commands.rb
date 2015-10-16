@@ -6,7 +6,7 @@ require 'commander/command'
 module Commander
   class Command
     attr_accessor :default_action, :root, :info
-    
+
     def default_action?
       default_action.present?
     end
