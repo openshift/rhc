@@ -66,7 +66,7 @@ module RHC
         end
       end
     end
-    
+
     def display_app_summary(applications)
       section do
         if !applications.nil? and !applications.empty?
@@ -79,7 +79,7 @@ module RHC
           end
         end
     end
-   
+
     end
 
     def display_app_configurations(rest_app)

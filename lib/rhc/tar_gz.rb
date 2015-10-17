@@ -9,7 +9,7 @@ module RHC
   module TarGz
 
     def self.contains(filename, search, force_ruby=false)
-      
+
       return false if ! (File.file? filename and File.basename(filename).downcase =~ /.\.t(ar\.)?gz$/i)
 
       regex = Regexp.new search

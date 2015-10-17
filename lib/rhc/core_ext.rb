@@ -7,7 +7,7 @@ class Object
   def present?
     !blank?
   end
-  
+
   def blank?
     respond_to?(:empty?) ? empty? : !self
   end
@@ -40,7 +40,7 @@ class Array
 
       results
     end
-  end  
+  end
 end
 
 class File
