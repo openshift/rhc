@@ -147,7 +147,7 @@ module RHC::Commands
 
     summary "Start a cartridge"
     syntax "<cartridge> [--namespace NAME] [--app NAME]"
-    argument :cart_type, "The name of the cartridge you are stopping", ["-c", "--cartridge cartridge"]
+    argument :cart_type, "The name of the cartridge you are starting", ["-c", "--cartridge cartridge"]
     takes_application
     alias_action :"app cartridge start", :root_command => true, :deprecated => true
     def start(cartridge)
