@@ -10,7 +10,7 @@ module RHC::Commands
       servers to interact with the rhc commands and easily switch between
       them.
 
-      For example, if an user's company has installations of OpenShift Origin
+      For example, if a user's company has installations of OpenShift Origin
       (development) and Enterprise (production) and the user also has a personal
       OpenShift Online account:
 
