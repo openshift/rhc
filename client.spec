@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.38.3
+Version: 1.38.4
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,11 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Oct 23 2015 Wesley Hearn <whearn@redhat.com> 1.38.4-1
+- Merge pull request #704 from yithian/cartridge_start_usage
+  (abhgupta@redhat.com)
+- change the usage for `cartridge start` to say starting (achvatal@redhat.com)
+
 * Tue Oct 20 2015 Stefanie Forrester <sedgar@redhat.com> 1.38.3-1
 - Formatting fixes (dmcphers@redhat.com)
 
