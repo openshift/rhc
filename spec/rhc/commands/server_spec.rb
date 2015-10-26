@@ -85,7 +85,7 @@ describe RHC::Commands::Server do
   describe "server list" do
     context "without express.conf or servers.yml" do
       let(:arguments) { ['servers'] }
-      it 'should output correctly' do 
+      it 'should output correctly' do
         run_output.should =~ /You don't have any servers configured\. Use 'rhc setup' to configure your OpenShift server/
       end
       it { expect { run }.to exit_with_code(0) }
@@ -96,7 +96,7 @@ describe RHC::Commands::Server do
         stub_servers_yml
       end
       let(:arguments) { ['servers'] }
-      it 'should output correctly' do 
+      it 'should output correctly' do
         run_output.should =~ /Server 'server1'/
         run_output.should =~ /Hostname:\s+openshift1.server.com/
         run_output.should =~ /Login:\s+user1/
@@ -114,7 +114,7 @@ describe RHC::Commands::Server do
         stub_servers_yml
       end
       let(:arguments) { ['servers'] }
-      it 'should output correctly' do 
+      it 'should output correctly' do
         run_output.should =~ /Server 'online' \(not configured, run 'rhc setup'\)/
         run_output.should =~ /Hostname:\s+#{local_config_server}/
         run_output.should =~ /Server 'server1'/
@@ -135,7 +135,7 @@ describe RHC::Commands::Server do
         stub_servers_yml(entries)
       end
       let(:arguments) { ['servers'] }
-      it 'should output correctly' do 
+      it 'should output correctly' do
         run_output.should =~ /Server 'online' \(not configured, run 'rhc setup'\)/
         run_output.should =~ /Hostname:\s+#{local_config_server}/
         Array(1..entries).each do |i|
@@ -156,7 +156,7 @@ describe RHC::Commands::Server do
         stub_servers_yml(entries)
       end
       let(:arguments) { ['servers'] }
-      it 'should output correctly' do 
+      it 'should output correctly' do
         run_output.should =~ /Server 'server1' \(in use\)/
         run_output.should =~ /Hostname:\s+#{local_config_server}/
         run_output.should =~ /Login:\s+#{local_config_username}/
@@ -176,7 +176,7 @@ describe RHC::Commands::Server do
         stub_servers_yml(entries)
       end
       let(:arguments) { ['servers'] }
-      it 'should output correctly' do 
+      it 'should output correctly' do
         run_output.should =~ /Server '#{local_config_server}' \(not configured, run 'rhc setup'\)/
         run_output.should =~ /Hostname:\s+#{local_config_server}/
         Array(1..entries).each do |i|
@@ -193,11 +193,11 @@ describe RHC::Commands::Server do
       let(:local_config_username){ 'local_config_user' }
       let(:local_config_password){ 'password' }
       let(:local_config_server){ 'openshift.redhat.com' }
-      before do 
+      before do
         local_config
       end
       let(:arguments) { ['server', 'show', 'online'] }
-      it 'should output correctly' do 
+      it 'should output correctly' do
         run_output.should =~ /Server 'online' \(in use\)/
         run_output.should =~ /Hostname:\s+openshift.redhat.com/
         run_output.should =~ /Login:\s+local_config_user/
@@ -217,7 +217,7 @@ describe RHC::Commands::Server do
           end
         end
       end
-      it 'should output correctly' do 
+      it 'should output correctly' do
         run_output.should =~ /Server 'openshift1.server.com'/
         run_output.should =~ /Hostname:\s+openshift1.server.com/
         run_output.should =~ /Login:\s+user1/
@@ -235,7 +235,7 @@ describe RHC::Commands::Server do
         local_config
       end
       let(:arguments) { ['server', 'show', 'zee'] }
-      it 'should output correctly' do 
+      it 'should output correctly' do
         run_output.should =~ /You don't have any server configured with the hostname or nickname 'zee'/
       end
       it { expect { run }.to exit_with_code(166) }
@@ -248,7 +248,7 @@ describe RHC::Commands::Server do
       let(:username){ 'user1' }
       let(:token){ 'an_existing_token' }
       let(:arguments) { ['server', 'add', new_server, '-l', username, '--use-authorization-tokens', '--no-insecure', '--token', token, '--use'] }
-      before(:each) { 
+      before(:each) {
         stub_wizard
       }
       it 'should create servers.yml' do
@@ -277,7 +277,7 @@ describe RHC::Commands::Server do
         stub_wizard
         local_config
       end
-      it 'should output correctly' do 
+      it 'should output correctly' do
         run_output.should =~ /Using an existing token for #{username} to login to #{server}/
         run_output.should =~ /Saving configuration to.*express\.conf.*done/
         run_output.should =~ /Saving server configuration to.*servers\.yml.*done/
@@ -292,7 +292,7 @@ describe RHC::Commands::Server do
       before(:each) do
         local_config
       end
-      it 'should output correctly' do 
+      it 'should output correctly' do
         run_output.should =~ /You already have a server configured with the hostname '#{local_config_server}'/
       end
       it { expect { run }.to exit_with_code(165) }
@@ -364,10 +364,22 @@ describe RHC::Commands::Server do
         stub_servers_yml(2)
       end
       let(:arguments) { ['server', 'add', 'foo.com', 'server1', '-l', local_config_username, '--use-authorization-tokens', '--no-insecure'] }
-      it 'should output correctly' do 
+      it 'should output correctly' do
         run_output.should =~ /You already have a server configured with the nickname 'server1'/
       end
       it { expect { run }.to exit_with_code(164) }
+    end
+
+    context "when providing ssl information and missing a required option" do
+      let(:arguments) { ['server', 'add', 'testing.server.com', '--ssl-ca-file', '~/ca.crt', '--ssl-client-cert-file', '~/server.crt'] }
+      before do
+        RHC::HelpFormatter.any_instance.stub(:render_command_syntax).and_return('foo')
+        RHC::Helpers.stub(:certificate_file).and_return('foo')
+      end
+      it 'should output correctly' do
+        run_output.should =~ /You must use the --ssl-ca-file, --ssl-client-cert-file, and --ssl-client-key-file commands together./
+      end
+      it{ expect{run}.to exit_with_code(1) }
     end
 
     context "with wizard failure" do
@@ -390,7 +402,7 @@ describe RHC::Commands::Server do
         local_config
       end
       let(:arguments) { ['server', 'remove', local_config_server] }
-      it 'should output correctly' do 
+      it 'should output correctly' do
         run_output.should =~ /The '#{local_config_server}' server is in use/
       end
       it { expect { run }.to exit_with_code(167) }
@@ -405,7 +417,7 @@ describe RHC::Commands::Server do
         local_config
       end
       let(:arguments) { ['server', 'remove', server] }
-      it 'should output correctly' do 
+      it 'should output correctly' do
         run_output.should =~ /Removing '#{server}'.*done/
       end
       it { expect { run }.to exit_with_code(0) }
@@ -419,7 +431,7 @@ describe RHC::Commands::Server do
         local_config
       end
       let(:arguments) { ['server', 'remove', 'zee'] }
-      it 'should output correctly' do 
+      it 'should output correctly' do
         run_output.should =~ /You don't have any server configured with the hostname or nickname 'zee'/
       end
       it { expect { run }.to exit_with_code(166) }
@@ -464,7 +476,7 @@ describe RHC::Commands::Server do
 
       let(:local_config_server_new_username){ 'new_username' }
       let(:local_config_server_new_name){ 'new_name' }
-      let(:arguments) { ['server', 'configure', local_config_server, '--nickname', local_config_server_new_name, '-l', local_config_server_new_username, '--insecure', 
+      let(:arguments) { ['server', 'configure', local_config_server, '--nickname', local_config_server_new_name, '-l', local_config_server_new_username, '--insecure',
         '--skip-wizard'] }
       before do
         local_config
@@ -487,7 +499,7 @@ describe RHC::Commands::Server do
         local_config
       end
       let(:arguments) { ['server', 'configure', 'zee', '--insecure'] }
-      it 'should output correctly' do 
+      it 'should output correctly' do
         run_output.should =~ /You don't have any server configured with the hostname or nickname 'zee'/
       end
       it { expect { run }.to exit_with_code(166) }
@@ -529,13 +541,13 @@ describe RHC::Commands::Server do
         RHC::ServerWizard.any_instance.stub(:run).and_return(false)
         local_config
         stub_servers_yml
-      end 
+      end
       let(:arguments) { ['server', 'use', 'local.server.com'] }
       it { expect { run }.to exit_with_code(1) }
     end
   end
 
-  protected 
+  protected
     def stub_servers_yml(entries=1, &block)
       RHC::Servers.any_instance.stub(:present?).and_return(true)
       RHC::Servers.any_instance.stub(:load).and_return(
