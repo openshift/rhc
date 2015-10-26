@@ -61,7 +61,7 @@ describe RHC::Commands::Snapshot do
       it { run_output.should match("done") }
     end
 
-    context 'when timing out on windows' do
+    context 'when ssh times out on windows' do
       before do
         RHC::Helpers.stub(:windows?) do ; true; end
         RHC::Helpers.stub(:jruby?) do ; false ; end
@@ -72,6 +72,34 @@ describe RHC::Commands::Snapshot do
         subject.class.any_instance.stub(:discover_git_executable){ 'git' }
       end
       it { expect { run }.to exit_with_code(130) }
+    end
+
+    context 'when the specified timeout is hit' do
+      before do
+        timeout = 1
+        base_config { |c, d| d.add 'timeout', timeout }
+        RHC::Helpers.stub(:windows?) do ; false; end
+        RHC::Helpers.stub(:jruby?) do ; false ; end
+        RHC::Helpers.stub(:linux?) do ; true ; end
+        subject.class.any_instance.stub(:exec) { sleep 10 }
+        subject.class.any_instance.stub(:discover_ssh_executable){ 'ssh' }
+        subject.class.any_instance.stub(:discover_git_executable){ 'git' }
+      end
+      it { expect { run }.to exit_with_code(130) }
+      it { run_output.should match(/Save operation took longer than/) }
+    end
+
+    context 'when the application is unreachable' do
+      before do
+        RHC::Helpers.stub(:windows?) do ; true; end
+        RHC::Helpers.stub(:jruby?) do ; false ; end
+        RHC::Helpers.stub(:linux?) do ; false ; end
+        subject.class.any_instance.stub(:discover_ssh_executable){ 'ssh' }
+        subject.class.any_instance.stub(:discover_git_executable){ 'git' }
+        Net::SSH.should_receive(:start).with(@ssh_uri.host, @ssh_uri.user).and_raise(Errno::EHOSTUNREACH)
+      end
+      it { expect { run }.to exit_with_code(130) }
+      it { run_output.should match(/Error in trying to save snapshot/) }
     end
 
     describe 'snapshot save deployment' do

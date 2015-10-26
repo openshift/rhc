@@ -18,6 +18,7 @@
 require 'net/ssh'
 require 'rhc/vendor/sshkey'
 require 'httpclient'
+require 'timeout'
 
 module RHC
   module SSHHelpers
@@ -256,29 +257,43 @@ module RHC
       ssh_stderr = " 2>/dev/null"
       debug ssh_cmd
 
+      # Default timeout is 30 minutes, more than enough time to ensure the snapshot is copied successfully.
+      exec_timeout = options.timeout || 1800
+
       say "Pulling down a snapshot of application '#{app.name}' to #{filename} ... "
 
       begin
         if !RHC::Helpers.windows?
+          status = 1
+          output = ""
+          Timeout::timeout(exec_timeout) do
             status, output = exec(ssh_cmd + (debug? ? '' : ssh_stderr))
-            if status != 0
-              debug output
-              raise RHC::SnapshotSaveException.new "Error in trying to save snapshot. You can try to save manually by running:\n#{ssh_cmd}"
-            end
+          end
+          if status != 0
+            debug output
+            raise RHC::SnapshotSaveException.new "Error in trying to save snapshot. You can try to save manually by running:\n#{ssh_cmd}"
+          end
         else
-          Net::SSH.start(ssh_uri.host, ssh_uri.user) do |ssh|
-            File.open(filename, 'wb') do |file|
-              ssh.exec! snapshot_cmd do |channel, stream, data|
-                if stream == :stdout
-                  file.write(data)
-                else
-                  debug data
+          Timeout::timeout(exec_timeout) do
+            Net::SSH.start(ssh_uri.host, ssh_uri.user) do |ssh|
+              File.open(filename, 'wb') do |file|
+                ssh.exec! snapshot_cmd do |channel, stream, data|
+                  if stream == :stdout
+                    file.write(data)
+                  else
+                    debug data
+                  end
                 end
               end
             end
           end
         end
-      rescue Timeout::Error, Errno::EADDRNOTAVAIL, Errno::EADDRINUSE, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed => e
+      rescue Timeout::Error => e
+        debug e.backtrace
+        raise RHC::SnapshotSaveException.new "Save operation took longer than the timeout of #{exec_timeout} seconds.\n" +
+          "You can use the --timeout option to extend this timeout.\n" +
+          "Alternatively, you can try to save the snapshot manually by running:\n#{ssh_cmd}"
+      rescue Errno::EADDRNOTAVAIL, Errno::EADDRINUSE, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed => e
         debug e.backtrace
         raise RHC::SnapshotSaveException.new "Error in trying to save snapshot. You can try to save manually by running:\n#{ssh_cmd}"
       end
