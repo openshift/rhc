@@ -329,7 +329,7 @@ module RHC
         else
           $terminal.color(item, *args)
         end
-      else 
+      else
         item
       end
     end
@@ -522,7 +522,15 @@ module RHC
 
     # split spaces but preserve sentences between quotes
     def split_path(s, keep_quotes=false)
-      keep_quotes ? s.split(/\s(?=(?:[^"]|"[^"]*")*$)/) : CSV::parse_line(s, :col_sep => ' ')
+      #:nocov:
+      if keep_quotes
+        s.split(/\s(?=(?:[^"]|"[^"]*")*$)/)
+      elsif RUBY_VERSION.to_f < 1.9
+        CSV::parse_line(s, fs = ' ')
+      else #ruby 1.9 or newer
+        CSV::parse_line(s, :col_sep => ' ')
+      end
+      #:nocov:
     end
 
     def discover_windows_executables(&block)

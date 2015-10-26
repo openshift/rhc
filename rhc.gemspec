@@ -43,6 +43,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency  'rspec',        '>= 2.8.0', '< 2.99'
   s.add_development_dependency  'fakefs',       '>= 0.4', '< 0.6.0'
   s.add_development_dependency  'thor'
-  s.add_development_dependency  'cucumber'
+  s.add_development_dependency  'cucumber',     '<= 1.3.20'
   s.add_development_dependency  'activesupport', '~> 3.0'
 end
