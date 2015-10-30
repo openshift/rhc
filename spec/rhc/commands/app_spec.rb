@@ -4,6 +4,7 @@ require 'rhc/commands/app'
 require 'rhc/config'
 require 'rhc/servers'
 require 'resolv'
+require 'net/ssh/multi'
 
 describe RHC::Commands::App do
   let!(:rest_client){ MockRestClient.new }
@@ -930,6 +931,22 @@ describe RHC::Commands::App do
     it "should raise ha not supported exception" do
       run_output.should match(/The server does not support high availability/)
       expect{ run }.to exit_with_code(135)
+    end
+  end
+
+  describe 'app enable-ha on scaled application' do
+    before do
+      @domain = rest_client.add_domain("mockdomain")
+      @app = @domain.add_application("app1", "mock_type", true)
+      @app.add_cartridge('mock_cart-1')
+      @app.scale_up
+    end
+
+    let(:arguments) { ['app', 'enable-ha', 'app1'] }
+
+    it "should suggest scaling up to receive additional haproxy instances" do
+      run_output.should match(/You will need to scale/)
+      expect{ run }.to exit_with_code(0)
     end
   end
 
