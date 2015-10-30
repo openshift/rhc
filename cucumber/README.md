@@ -18,7 +18,7 @@ Usage
 Run from the base directory with
 
 ```
-<env variables> bundle exec rake cucummber
+<env variables> bundle exec rake cucumber
 ```
 
 At the very least, you will probably want to specify `RHC_SERVER` (or
