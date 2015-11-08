@@ -82,7 +82,7 @@ module RHC::Commands
     option ["--[no-]use-authorization-tokens"], "Server will attempt to create and use authorization tokens to connect to the server"
     option ["--[no-]insecure"], "If true, certificate errors will be ignored"
     option ["--use"], "If provided, the server being added will be set as default (same as 'rhc server use')"
-    option ["--skip-wizard"], "If provided, the wizard will be skipped and a session token will not be estabilished"
+    option ["--skip-wizard"], "If provided, the wizard will be skipped and a session token will not be created"
     option ["--timeout SECONDS"], "The default timeout for operations on this server", :type => Integer
     option ["--ssl-ca-file FILE"], "An SSL certificate CA file (may contain multiple certs) to be used on this server", :type => CertificateFile, :optional => true
     option ["--ssl-client-cert-file FILE"], "An SSL x509 client certificate file to be used on this server", :type => CertificateFile, :optional => true
@@ -177,7 +177,7 @@ module RHC::Commands
     option ["--[no-]use-authorization-tokens"], "Server will attempt to create and use authorization tokens to connect to the server"
     option ["--[no-]insecure"], "If true, certificate errors will be ignored"
     option ["--use"], "If provided, the server being configured will be set as default (same as 'rhc server use')"
-    option ["--skip-wizard"], "If provided, the wizard will be skipped and a session token will not be estabilished"
+    option ["--skip-wizard"], "If provided, the wizard will be skipped and a session token will not be created"
     option ["--timeout SECONDS"], "The default timeout for operations on this server", :type => Integer
     option ["--ssl-ca-file FILE"], "An SSL certificate CA file (may contain multiple certs) to be used on this server", :type => CertificateFile, :optional => true
     option ["--ssl-client-cert-file FILE"], "An SSL x509 client certificate file to be used on this server", :type => CertificateFile, :optional => true
