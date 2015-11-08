@@ -13,7 +13,7 @@ https://openshift.redhat.com/support.
 
 ## Using RHC to create an application
 
-DEPENDENCIES: 
+DEPENDENCIES:
 
 * git
 * openssh-clients
@@ -50,9 +50,7 @@ Then just reload your web page to see the changes.
 
 git:
 OS X 10.6 comes w/ ssh and ruby, but not with git, unless you have
-Xcode 4.0.x installed (as a developer you should have Xcode anyway).
-Xcode, however, is not free (unless you are a registered Apple
-Developer) and costs around $5 from the Apple App Store.
+Xcode 4.0.x installed.
 
 If you do not have Xcode, you can obtain a pre-packaged version
 of git from:
@@ -80,7 +78,7 @@ first).  See [README.md](https://github.com/openshift/rhc/blob/master/features/R
 have full line coverage.  Some old code is currently excluded until it
 can be refactored.  Run <code>bundle exec rake spec</code> on Ruby 1.9+
 to see your code coverage level.
-4. When writting a new Command please follow [ADDING_COMMANDS.md](https://github.com/openshift/rhc/blob/master/lib/rhc/commands/ADDING_COMMANDS.md)
+4. When writing a new Command please follow [ADDING_COMMANDS.md](https://github.com/openshift/rhc/blob/master/lib/rhc/commands/ADDING_COMMANDS.md)
 
 Once you've made your changes:
 
@@ -92,4 +90,3 @@ Once you've made your changes:
 
 If you use vim, we've included a .vimrc in the root of this project.
 In order to use it, install https://github.com/MarcWeber/vim-addon-local-vimrc
-
