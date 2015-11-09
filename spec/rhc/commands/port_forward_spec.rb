@@ -230,6 +230,27 @@ describe RHC::Commands::PortForward do
 
     end
 
+    context 'when port forwarding with a custom ssh executable' do
+      ssh_path = '/usr/bin/ssh'
+      before(:each) do
+        base_config { |c, d| d.add 'ssh', ssh_path }
+      end
+
+      it 'should use the executable to check for ports' do
+        subject.class.any_instance.should_receive(:exec).with("#{ssh_path} #{@uri.user}@#{@uri.host} 'rhc-list-ports 2>&1'").
+          and_return([0, 'httpd -> 127.1.244.1:8080'])
+        expect { run }.to exit_with_code(1)
+        expect { run_output.should match(/You can try forwarding.*rhc-list-ports.*/) }
+      end
+
+      it 'should exit when ssh command fails to collect ports' do
+        subject.class.any_instance.should_receive(:exec).with("#{ssh_path} #{@uri.user}@#{@uri.host} 'rhc-list-ports 2>&1'").
+          and_return([1, 'some ssh error'])
+        expect { run }.to exit_with_code(133)
+        expect { run_output.should match(/some ssh error/) }
+      end
+    end
+
   end
 end
 

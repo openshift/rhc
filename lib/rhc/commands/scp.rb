@@ -32,6 +32,23 @@ module RHC::Commands
       raise RHC::ArgumentNotValid.new("'#{action}' is not a valid argument for this command.  Please use upload or download.") unless action == 'download' || action == 'upload'
       raise RHC::FileOrPathNotFound.new("Local file, file_path, or directory could not be found.") unless File.exist?(local_path)
 
+      if options.ssh
+        warn "User specified a ssh executable"
+        if windows?
+          warn("On Windows, file transfers to/from a gear can be completed with many different third-party tools such as FileZilla or WinSCP.\n" \
+            "Alternatively, omit the --ssh flag and the 'ssh' directive in configuration to utilize the rhc tool's internal scp implementation.")
+        else
+          destination = "'#{ssh_opts[0]}@#{ssh_opts[1]}:$HOME/#{remote_path}'"
+          if action == "upload"
+            scp_cmd = "scp -S #{options.ssh} #{local_path} #{destination}"
+          else
+            scp_cmd = "scp -S #{options.ssh} #{destination} #{local_path}"
+          end
+          warn("'scp #{action}' can usually be used outside of rhc with the command:\n  #{scp_cmd}")
+        end
+        raise RHC::ArgumentNotValid.new("A SSH executable is specified and cannot be used with this command.")
+      end
+
       begin
           start_time = Time.now
           last_sent = nil

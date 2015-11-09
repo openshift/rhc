@@ -14,16 +14,20 @@ module RHC::Commands
       other gears run 'rhc show-app --gears' to get a list of their SSH hosts.
 
       You may run a specific SSH command by passing one or more arguments, or use a
-      different SSH executable or pass options to SSH with the '--ssh' option.
+      different SSH executable or pass options to SSH with the '--ssh' option or 'ssh'
+      configuration directive.
 
       To use the '--ssh' flag with an SSH executable path containing a space, wrap
       the executable path with double quotes:
       --ssh '"C:\\path with spaces\\ssh"'
+
+      The SSH executable path, as well as any command options, can also be specified in
+      the rhc configuration file with:
+      ssh="/path/to/executable [--example option]"
       DESC
-    syntax "[--ssh path_to_ssh_executable] [--gears] [<app> --] <command>"
+    syntax "[--gears] [<app> --] <command>"
     takes_application :argument => true
     argument :command, "Command to run in the application's SSH session", ['--command COMMAND'], :type => :list, :optional => true
-    option ["--ssh PATH"], "Path to your SSH executable or additional options"
     option ["--gears"], "Execute this command on all gears in the app.  Requires a command."
     option ["--limit INTEGER"], "Limit the number of simultaneous SSH connections opened with --gears (default: 5).", :type => Integer, :default => 5
     option ["--raw"], "Output only the data returned by each host, no hostname prefix."

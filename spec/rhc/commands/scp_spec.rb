@@ -90,4 +90,67 @@ describe RHC::Commands::Scp do
     end
   end
 
+  describe 'scp upload with custom ssh executable specified' do
+    ssh_path = '/usr/bin/ssh'
+    let (:arguments) {['app', 'scp', 'app1', 'upload', 'file.txt', 'app-root/data']}
+
+    before(:each) do
+      base_config { |c, d| d.add 'ssh', ssh_path }
+    end
+
+    context 'on windows' do
+      before(:each) do
+        @domain = rest_client.add_domain("mockdomain")
+        @domain.add_application("app1", "mock_type")
+        File.should_receive(:exist?).with("file.txt").once.and_return(true)
+        File.should_receive(:exist?).with("git").at_least(1).and_return(true)
+      end
+
+      it 'should report a helpful warning message' do
+        subject.class.any_instance.should_receive(:windows?).and_return(true)
+        expect { run }.to exit_with_code(1)
+        expect { run_output.should match(/User specified a ssh executable.*On Windows, file transfers.*cannot be used with this command/) }
+      end
+    end
+
+    context 'on linux' do
+      before(:each) do
+        @domain = rest_client.add_domain("mockdomain")
+        @domain.add_application("app1", "mock_type")
+        File.should_receive(:exist?).with("file.txt").once.and_return(true)
+        File.should_receive(:exist?).with("git").at_least(1).and_return(true)
+      end
+
+      it 'should report an scp upload command when uploading' do
+        subject.class.any_instance.should_receive(:windows?).and_return(false)
+        expect { run }.to exit_with_code(1)
+        expect { run_output.should match(/scp -S #{ssh_path} file\.txt '.*@.*'/) }
+      end
+    end
+  end
+
+  describe 'scp download with custom ssh executable specified' do
+    ssh_path = '/usr/bin/ssh'
+    let (:arguments) {['app', 'scp', 'app1', 'download', '.', '~/app-root/data/file.txt']}
+
+    before(:each) do
+      base_config { |c, d| d.add 'ssh', ssh_path }
+    end
+
+    context 'on linux' do
+      before(:each) do
+        @domain = rest_client.add_domain("mockdomain")
+        @domain.add_application("app1", "mock_type")
+        File.should_receive(:exist?).with('.').once.and_return(true)
+        File.should_receive(:exist?).with("git").at_least(1).and_return(true)
+      end
+
+      it 'should report an scp download command when downloading' do
+        subject.class.any_instance.should_receive(:windows?).and_return(false)
+        expect { run }.to exit_with_code(1)
+        expect { run_output.should match(/can usually be used.*scp -S #{ssh_path} '.*@.*' .\/file\.txt/) }
+      end
+    end
+  end
+
 end

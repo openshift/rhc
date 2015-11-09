@@ -132,6 +132,7 @@ module RHC
       debug certificate_key(value)
     end
 
+    global_option '--ssh STRING', 'Path to a ssh executable and command options to use when performing ssh commands. When providing options, ensure path and options are enclosed in single or double quotes.', :hide => true
     global_option('--timeout SECONDS', Integer, 'The timeout for operations') do |value|
       raise RHC::Exception, "Timeout must be a positive integer" unless value > 0
     end
