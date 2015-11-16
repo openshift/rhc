@@ -15,6 +15,7 @@ module RHC::Commands
 
       info "In order to deploy applications, you must create a domain with 'rhc setup' or 'rhc create-domain'." and return 1 if applications.empty? && rest_client.domains.empty?
       info "No applications. Use 'rhc create-app'." and return 1 if applications.nil? || applications.empty?
+      info "You used the -v/--verbose and -s/--summary options together, but they are incompatible." and return 1 if options.summary && options.verbose
 
       if options.summary
         display_app_summary(applications)

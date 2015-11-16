@@ -32,7 +32,7 @@ describe RHC::Commands::Apps do
           output.should match(/scaled.*\-\-.*php.*Scaling:.*x2 \(minimum/m)
         end
       end
-      
+
       context 'with apps in summary mode' do
         let(:arguments) { ['apps', '--summary' ] }
         before{ domain.add_application('scaled', 'php', true) }
@@ -43,6 +43,14 @@ describe RHC::Commands::Apps do
           output.should match("You have access to 1 application\\.")
           output.should match(/scaled.*https.*/m)
         end
+      end
+
+      context 'with apps in summary and verbose mode' do
+        let(:arguments) { ['apps', '-v', '-s'] }
+        before{ domain.add_application('scaled', 'php', true) }
+
+        it { expect { run }.to exit_with_code(1) }
+        it { run_output.should match("You used the -v/--verbose and -s/--summary options together, but they are incompatible.") }
       end
 
       context 'with one owned app' do
