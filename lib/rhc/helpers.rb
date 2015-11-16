@@ -586,7 +586,8 @@ module RHC
 
     def exe?(executable)
       ENV['PATH'].split(File::PATH_SEPARATOR).any? do |directory|
-        File.executable?(File.join(directory, executable.to_s))
+        filepath = File.join(directory, executable.to_s)
+        File.executable?(filepath) and File.file?(filepath)
       end
     end
 
