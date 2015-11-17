@@ -459,29 +459,29 @@ module RHC
         #:nocov:
         if RHC::Helpers.windows?
           # looks for ssh.exe from msysgit or plink.exe from PuTTY, either on path or specific locations
-          guessing_locations << 
+          guessing_locations <<
             discover_windows_executables do |base|
-              [ 
-                'ssh.exe', 
-                "#{base}\\Git\\bin\\ssh.exe", 
-                "#{base}\\ssh.exe", 
+              [
+                'ssh.exe',
+                "#{base}\\Git\\bin\\ssh.exe",
+                "#{base}\\ssh.exe",
                 'plink.exe',
                 "#{base}\\PuTTY\\plink.exe",
                 "#{base}\\plink.exe",
                 'putty.exe',
                 "#{base}\\PuTTY\\putty.exe",
-                "#{base}\\putty.exe" 
+                "#{base}\\putty.exe"
               ]
             end
         end
         #:nocov:
 
         # make sure commands can be executed and finally pick the first one
-        guessing_locations.flatten.uniq.select do |cmd| 
-          (check_ssh_executable!(cmd).present? rescue false) && 
+        guessing_locations.flatten.uniq.select do |cmd|
+          (check_ssh_executable!(cmd).present? rescue false) &&
           (begin
             # putty -V exit as 1
-            cmd =~ /plink\.exe/i || cmd =~ /putty\.exe/i || (begin 
+            cmd =~ /plink\.exe/i || cmd =~ /putty\.exe/i || (begin
               ssh_version(cmd)
               $?.success?
             end)
@@ -501,6 +501,7 @@ module RHC
         bin_path = split_path(path)[0]
         raise RHC::InvalidSSHExecutableException.new("SSH executable '#{bin_path}' does not exist.") unless File.exist?(bin_path) or File.exist?(path) or exe?(bin_path)
         raise RHC::InvalidSSHExecutableException.new("SSH executable '#{bin_path}' is not executable.") unless File.executable?(path) or File.executable?(bin_path) or exe?(bin_path)
+        raise RHC::InvalidSSHExecutableException.new("SSH executable '#{bin_path}' is not a regular file.") if File.exist?(bin_path) and !File.file?(bin_path)
         path
       end
     end
