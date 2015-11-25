@@ -254,7 +254,10 @@ module RHC
 
       snapshot_cmd = for_deployment ? 'gear archive-deployment' : 'snapshot'
       ssh_cmd = "#{ssh_executable} #{ssh_uri.user}@#{ssh_uri.host} '#{snapshot_cmd}' > #{filename}"
-      ssh_stderr = debug? ? '' : ' 2>/dev/null'
+      if !RHC::Helpers.windows?
+        ssh_stderr = ' 2>/dev/null'
+        ssh_cmd << ssh_stderr unless debug?
+      end
       debug ssh_cmd
 
       # Default timeout is 30 minutes, more than enough time to ensure the snapshot is copied successfully.
@@ -269,7 +272,7 @@ module RHC
           status = 1
           output = ""
           Timeout::timeout(exec_timeout) do
-            status, output = exec(ssh_cmd + ssh_stderr)
+            status, output = exec(ssh_cmd)
           end
           if status != 0
             debug output
@@ -312,9 +315,10 @@ module RHC
         ssh_cmd = "type '#{filename}' | #{ssh_executable} #{ssh_uri.user}@#{ssh_uri.host} 'restore#{include_git ? ' INCLUDE_GIT' : ''}'"
       else
         ssh_cmd = "cat '#{filename}' | #{ssh_executable} #{ssh_uri.user}@#{ssh_uri.host} 'restore#{include_git ? ' INCLUDE_GIT' : ''}'"
+        ssh_stderr = ' 2>/dev/null'
+        ssh_cmd << ssh_stderr unless debug?
       end
 
-      ssh_stderr = debug? ? '' : ' 2>/dev/null'
       debug ssh_cmd
 
       say "Restoring from snapshot #{filename} to application '#{app.name}' ... "
@@ -322,7 +326,7 @@ module RHC
       begin
         if !RHC::Helpers.windows? || options.ssh
           debug "Using user specified SSH: #{ssh_executable}" if options.ssh
-          status, output = exec(ssh_cmd + ssh_stderr)
+          status, output = exec(ssh_cmd)
           if status != 0
             debug output
             raise RHC::SnapshotRestoreException.new "Error in trying to restore snapshot. You can try to restore manually by running:\n#{ssh_cmd}"

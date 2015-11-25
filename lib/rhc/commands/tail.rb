@@ -47,8 +47,10 @@ module RHC::Commands
             debug "Running with ruby's ssh implementation: #{ssh_cmd}"
             ssh_ruby(host, uuid, remote_cmd, false, true)
           else
-            ssh_stderr = " 2>/dev/null"
-            ssh_cmd << ssh_stderr unless debug?
+            if !windows?
+              ssh_stderr = " 2>/dev/null"
+              ssh_cmd << ssh_stderr unless debug?
+            end
             debug "Running #{ssh_cmd}"
             Open3.popen3(ssh_cmd) do |stdin, stdout, stderr, thread|
               while line=stdout.gets do
