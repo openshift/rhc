@@ -30,7 +30,10 @@ module RHC::Commands
 
       raise RHC::DeploymentsNotSupportedException.new if options.deployment && !rest_app.supports?("DEPLOY")
 
-      filename = options.filepath ? options.filepath : "#{rest_app.name}.tar.gz"
+      filename = options.filepath || "#{rest_app.name}.tar.gz"
+      if File.exists? filename
+        return 0 unless RHC::Helpers.agree "File #{filename} already exists. Do you want to overwrite this file? (yes|no): "
+      end
 
       save_snapshot(rest_app, filename, options.deployment, options.ssh)
 
