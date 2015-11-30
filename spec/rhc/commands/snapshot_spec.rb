@@ -33,7 +33,7 @@ describe RHC::Commands::Snapshot do
     context 'when saving a snapshot' do
       before do
         RHC::Helpers.should_receive(:agree).with(/Do you want to overwrite this file?/).and_return(true)
-        subject.class.any_instance.should_receive(:exec).with("ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'snapshot' > #{@app.name}.tar.gz").and_return([0, 'some save output'])
+        subject.class.any_instance.should_receive(:run_with_system_ssh).with("ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'snapshot' > #{@app.name}.tar.gz").and_return([0, 'some save output'])
       end
       it { expect { run }.to exit_with_code(0) }
       it { run_output.should_not match 'some save output' }
@@ -52,7 +52,8 @@ describe RHC::Commands::Snapshot do
     context 'when failing to save a snapshot' do
       before do
         RHC::Helpers.should_receive(:agree).with(/Do you want to overwrite this file?/).and_return(true)
-        subject.class.any_instance.should_receive(:exec).with("ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'snapshot' > #{@app.name}.tar.gz").and_return([1, 'some save failures'])
+        subject.class.any_instance.stub(:run_with_system_ssh).and_raise(RHC::SSHCommandFailed.new(1, "some save failures"))
+        subject.class.any_instance.should_receive(:run_with_system_ssh).with("ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'snapshot' > #{@app.name}.tar.gz")
       end
       it { expect { run }.to exit_with_code(130) }
       it { run_output.should match 'some save failures' }
@@ -124,7 +125,7 @@ describe RHC::Commands::Snapshot do
       context 'when saving a deployment snapshot' do
         before do
           RHC::Helpers.should_receive(:agree).with(/Do you want to overwrite this file?/).and_return(true)
-          subject.class.any_instance.should_receive(:exec).with("ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'gear archive-deployment' > #{@app.name}.tar.gz").and_return([0, 'some save output'])
+          subject.class.any_instance.should_receive(:run_with_system_ssh).with("ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'gear archive-deployment' > #{@app.name}.tar.gz").and_return([0, 'some save output'])
         end
         it { expect { run }.to exit_with_code(0) }
         it { run_output.should_not match 'some save output' }
@@ -156,7 +157,7 @@ describe RHC::Commands::Snapshot do
       before do
         File.stub(:exists?).and_return(true)
         RHC::TarGz.stub(:contains).and_return(true)
-        subject.class.any_instance.should_receive(:exec).with("cat '#{@app.name}.tar.gz' | ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'restore INCLUDE_GIT'").and_return([0, 'some restore output'])
+        subject.class.any_instance.should_receive(:run_with_system_ssh).with("cat '#{@app.name}.tar.gz' | ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'restore INCLUDE_GIT'").and_return([0, 'some restore output'])
       end
       it('should succeed') { expect { run }.to exit_with_code(0) }
       it { run_output.should_not match 'some restore output' }
@@ -166,7 +167,8 @@ describe RHC::Commands::Snapshot do
       before do
         File.stub(:exists?).and_return(true)
         RHC::TarGz.stub(:contains).and_return(true)
-        subject.class.any_instance.should_receive(:exec).with("cat '#{@app.name}.tar.gz' | ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'restore INCLUDE_GIT'").and_return([1, 'some restore failures'])
+        subject.class.any_instance.stub(:run_with_system_ssh).and_raise(RHC::SSHCommandFailed.new(1, "some restore failures"))
+        subject.class.any_instance.should_receive(:run_with_system_ssh).with("cat '#{@app.name}.tar.gz' | ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'restore INCLUDE_GIT'")
       end
       it { expect { run }.to exit_with_code(130) }
       it { run_output.should match 'some restore failures' }

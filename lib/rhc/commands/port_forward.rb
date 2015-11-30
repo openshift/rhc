@@ -99,10 +99,7 @@ module RHC::Commands
         else
           debug "Using #{ssh_executable} to determine forwarding ports."
           ssh_cmd = "#{ssh_executable} #{ssh_uri.user}@#{ssh_uri.host} '#{list_ports_cmd} 2>&1'"
-          status, output = exec(ssh_cmd)
-          if status != 0
-            raise RHC::SSHCommandFailed.new(status, output)
-          end
+          status, output = run_with_system_ssh(ssh_cmd)
         end
 
         output.each_line do |line|
