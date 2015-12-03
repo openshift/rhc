@@ -269,14 +269,10 @@ module RHC
         if !RHC::Helpers.windows? || options.ssh
           debug "Using user specified SSH: #{ssh_executable}" if options.ssh
 
-          status = 1
           output = ""
           Timeout::timeout(exec_timeout) do
-            status, output = exec(ssh_cmd)
-          end
-          if status != 0
-            debug output
-            raise RHC::SnapshotSaveException.new "Error in trying to save snapshot. You can try to save manually by running:\n#{ssh_cmd}"
+            debug "Running #{ssh_cmd}"
+            status, output = run_with_system_ssh(ssh_cmd)
           end
         else
           Timeout::timeout(exec_timeout) do
@@ -294,11 +290,13 @@ module RHC
           end
         end
       rescue Timeout::Error => e
+        debug e.message
         debug e.backtrace
         raise RHC::SnapshotSaveException.new "Save operation took longer than the timeout of #{exec_timeout} seconds.\n" +
           "You can use the --timeout option to extend this timeout.\n" +
           "Alternatively, you can try to save the snapshot manually by running:\n#{ssh_cmd}"
-      rescue Errno::EADDRNOTAVAIL, Errno::EADDRINUSE, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed => e
+      rescue Errno::EADDRNOTAVAIL, Errno::EADDRINUSE, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed, RHC::SSHCommandFailed => e
+        debug e.message
         debug e.backtrace
         raise RHC::SnapshotSaveException.new "Error in trying to save snapshot. You can try to save manually by running:\n#{ssh_cmd}"
       end
@@ -326,11 +324,8 @@ module RHC
       begin
         if !RHC::Helpers.windows? || options.ssh
           debug "Using user specified SSH: #{ssh_executable}" if options.ssh
-          status, output = exec(ssh_cmd)
-          if status != 0
-            debug output
-            raise RHC::SnapshotRestoreException.new "Error in trying to restore snapshot. You can try to restore manually by running:\n#{ssh_cmd}"
-          end
+          debug "Running #{ssh_cmd}"
+          status, output = run_with_system_ssh(ssh_cmd)
         else
           ssh = Net::SSH.start(ssh_uri.host, ssh_uri.user)
           ssh.open_channel do |channel|
@@ -354,7 +349,8 @@ module RHC
           end
           ssh.loop
         end
-      rescue Timeout::Error, Errno::EADDRNOTAVAIL, Errno::EADDRINUSE, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed => e
+      rescue Timeout::Error, Errno::EADDRNOTAVAIL, Errno::EADDRINUSE, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed, RHC::SSHCommandFailed => e
+        debug e.message
         debug e.backtrace
         raise RHC::SnapshotRestoreException.new "Error in trying to restore snapshot. You can try to restore manually by running:\n#{ssh_cmd}"
       end
@@ -508,6 +504,14 @@ module RHC
         raise RHC::InvalidSSHExecutableException.new("SSH executable '#{bin_path}' is not a regular file.") if File.exist?(bin_path) and !File.file?(bin_path)
         path
       end
+    end
+
+    def run_with_system_ssh(ssh_cmd)
+      status, output = exec(ssh_cmd)
+      if status != 0
+        raise RHC::SSHCommandFailed.new(status, output)
+      end
+      return status, output
     end
 
     private

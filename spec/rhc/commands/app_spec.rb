@@ -1002,4 +1002,343 @@ describe RHC::Commands::App do
     end
 
   end
+
+  describe "configure app" do
+    deployment_app_name = 'mock_app_deploy'
+
+    before do
+      @rest_app = rest_client.add_domain("mock_domain").add_application(deployment_app_name, 'ruby-1.8.7')
+      @rest_app.stub(:ssh_url).and_return("ssh://user@test.domain.com")
+    end
+
+    context "manual deployment keeping a history of 10" do
+      let(:arguments) {['app', 'configure', '--app', deployment_app_name, '--no-auto-deploy', '--keep-deployments', '10']}
+      it "should succeed" do
+        expect{ run }.to exit_with_code(0)
+        run_output.should match(/Configuring application '#{deployment_app_name}' .../)
+        run_output.should match(/done/)
+        @rest_app.auto_deploy.should == false
+        @rest_app.keep_deployments.should == 10
+        run_output.should match(/Your application '#{deployment_app_name}' is now configured as listed above/)
+      end
+    end
+
+    context "with no configuration options" do
+      let(:arguments) {['app', 'configure', '--app', deployment_app_name]}
+      it "should display the current configuration" do
+        expect{ run }.to exit_with_code(0)
+        run_output.should_not match(/Configuring application '#{deployment_app_name}' .../)
+        run_output.should_not match(/done/)
+        run_output.should match(/Your application '#{deployment_app_name}' is configured as listed above/)
+      end
+    end
+  end
+
+  describe 'deploy' do
+    deployment_app_name = 'mock_app_deploy'
+
+    before do
+      FakeFS.deactivate!
+      @rest_app = rest_client.add_domain("mock_domain").add_application(deployment_app_name, 'ruby-1.8.7')
+      @rest_app.stub(:ssh_url).and_return("ssh://user@test.domain.com")
+      @targz_filename = File.dirname(__FILE__) + '/' + deployment_app_name + '.tar.gz'
+      FileUtils.cp(File.expand_path('../../assets/targz_sample.tar.gz', __FILE__), @targz_filename)
+      File.chmod 0644, @targz_filename unless File.executable? @targz_filename
+    end
+
+
+    context "git ref successfully" do
+      before { Net::SSH.should_receive(:start).exactly(3).times.with('test.domain.com', 'user', :compression=>false) }
+      let(:arguments) {['app', 'deploy', 'master', '--app', deployment_app_name]}
+      it "should succeed" do
+        expect{ run }.to exit_with_code(0)
+        run_output.should match(/Deployment of git ref 'master' in progress for application #{deployment_app_name} .../)
+        run_output.should match(/Success/)
+      end
+    end
+
+    context "git ref successfully with custom ssh executable" do
+      ssh_path = '/usr/bin/ssh'
+
+      let(:arguments) {['app', 'deploy', 'master', '--app', deployment_app_name, '--ssh', ssh_path]}
+      it "should succeed" do
+        @instance.should_receive(:check_ssh_executable!).at_least(:once).and_return(ssh_path)
+        @instance.should_receive(:run_with_system_ssh).at_least(:once)
+        @instance.stub(:exec).and_return([0, "success"])
+        run_output.should match(/Deployment of git ref 'master' in progress for application #{deployment_app_name} .../)
+        run_output.should match(/Success/)
+        expect{ run }.to exit_with_code(0)
+      end
+    end
+
+    context "binary file successfully" do
+      before do
+        @rest_app.stub(:deployment_type).and_return('binary')
+        ssh = double(Net::SSH)
+        session = double(Net::SSH::Connection::Session)
+        channel = double(Net::SSH::Connection::Channel)
+        exit_status = double(Net::SSH::Buffer)
+        exit_status.stub(:read_long).and_return(0)
+        Net::SSH.should_receive(:start).exactly(3).times.with('test.domain.com', 'user', :compression=>false).and_yield(session)
+        session.should_receive(:open_channel).exactly(3).times.and_yield(channel)
+        channel.should_receive(:exec).exactly(3).times.with("oo-binary-deploy").and_yield(nil, nil)
+        channel.should_receive(:on_data).exactly(3).times.and_yield(nil, 'foo')
+        channel.should_receive(:on_extended_data).exactly(3).times.and_yield(nil, nil, '')
+        channel.should_receive(:on_close).exactly(3).times.and_yield(nil)
+        channel.should_receive(:on_request).exactly(3).times.with("exit-status").and_yield(nil, exit_status)
+        lines = ''
+        File.open(@targz_filename, 'rb') do |file|
+          file.chunk(1024) do |chunk|
+            lines << chunk
+          end
+        end
+        channel.should_receive(:send_data).exactly(3).times.with(lines)
+        channel.should_receive(:eof!).exactly(3).times
+        session.should_receive(:loop).exactly(3).times
+      end
+      let(:arguments) {['app', 'deploy', @targz_filename, '--app', deployment_app_name]}
+      it "should succeed" do
+        expect{ run }.to exit_with_code(0)
+        run_output.should match(/Deployment of file '#{@targz_filename}' in progress for application #{deployment_app_name} .../)
+        run_output.should match(/Success/)
+      end
+    end
+
+    [URI('http://foo.com/path/to/file/' + deployment_app_name + '.tar.gz'),
+     URI('https://foo.com/path/to/file/' + deployment_app_name + '.tar.gz')].each do |uri|
+      context "url file successfully" do
+        before do
+        @rest_app.stub(:deployment_type).and_return('binary')
+          ssh = double(Net::SSH)
+          session = double(Net::SSH::Connection::Session)
+          channel = double(Net::SSH::Connection::Channel)
+          exit_status = double(Net::SSH::Buffer)
+          exit_status.stub(:read_long).and_return(0)
+          Net::SSH.should_receive(:start).exactly(3).times.with('test.domain.com', 'user', :compression=>false).and_yield(session)
+          session.should_receive(:open_channel).exactly(3).times.and_yield(channel)
+          channel.should_receive(:exec).exactly(3).times.with("oo-binary-deploy").and_yield(nil, nil)
+          channel.should_receive(:on_data).exactly(3).times.and_yield(nil, 'foo')
+          channel.should_receive(:on_extended_data).exactly(3).times.and_yield(nil, nil, '')
+          channel.should_receive(:on_close).exactly(3).times.and_yield(nil)
+          channel.should_receive(:on_request).exactly(3).times.with("exit-status").and_yield(nil, exit_status)
+          lines = ''
+          File.open(@targz_filename, 'rb') do |file|
+            file.chunk(1024) do |chunk|
+              lines << chunk
+            end
+          end
+          stub_request(:get, uri.to_s).to_return(:status => 200, :body => lines, :headers => {})
+          channel.should_receive(:send_data).exactly(3).times.with(lines)
+          channel.should_receive(:eof!).exactly(3).times
+          session.should_receive(:loop).exactly(3).times
+        end
+        let(:arguments) {['app', 'deploy', uri.to_s, '--app', deployment_app_name]}
+        it "should succeed" do
+          expect{ run }.to exit_with_code(0)
+          run_output.should match(/Deployment of file '#{uri.to_s}' in progress for application #{deployment_app_name} .../)
+          run_output.should match(/Success/)
+        end
+      end
+    end
+
+    context "binary file successfully with ssh executable" do
+      ssh_path = '/usr/bin/ssh'
+      before do
+        base_config { |c, d| d.add 'ssh', ssh_path }
+        @rest_app.stub(:deployment_type).and_return('binary')
+        @instance.stub(:exec).and_return([0, "success"])
+      end
+      let(:arguments) {['app', 'deploy', @targz_filename, '--app', deployment_app_name]}
+      it "should succeed" do
+        @instance.should_receive(:run_with_system_ssh).with(/cat #{@targz_filename} \|/).at_least(:once)
+        expect{ run }.to exit_with_code(0)
+        run_output.should match(/Deployment of file '#{@targz_filename}' in progress for application #{deployment_app_name} .../)
+        run_output.should match(/Success/)
+      end
+    end
+
+    context "binary file successfully with ssh executable on windows" do
+      ssh_path = 'C:\Program Files\openSSH\ssh.exe'
+      before do
+        base_config { |c, d| d.add 'ssh', ssh_path }
+        @instance.stub(:check_ssh_executable!).and_return(ssh_path)
+        @instance.stub(:windows?).and_return('true')
+        @rest_app.stub(:deployment_type).and_return('binary')
+        @instance.stub(:run_with_system_ssh).and_return([0, "success"])
+      end
+      let(:arguments) {['app', 'deploy', @targz_filename, '--app', deployment_app_name]}
+      it "should succeed" do
+        @instance.should_receive(:run_with_system_ssh).with(/type #{@targz_filename} \|/).at_least(:once)
+        expect{ run }.to exit_with_code(0)
+        run_output.should match(/Deployment of file '#{@targz_filename}' in progress for application #{deployment_app_name} .../)
+        run_output.should match(/Success/)
+      end
+    end
+
+    context "binary file from url successfully with ssh executable" do
+      ssh_path = '/usr/bin/ssh'
+      file_url = "http://example.com#{@targz_filename}"
+      before do
+        base_config { |c, d| d.add 'ssh', ssh_path }
+        @rest_app.stub(:deployment_type).and_return('binary')
+        @instance.stub(:run_with_system_ssh).and_return([0, "success"])
+      end
+      let(:arguments) {['app', 'deploy', file_url, '--app', deployment_app_name]}
+      it "should succeed" do
+        expect{ run }.to exit_with_code(0)
+        run_output.should match(/Deployment of file '#{file_url}' in progress for application #{deployment_app_name} .../)
+        run_output.should match(/Success/)
+      end
+    end
+
+    context "binary file with corrupted file" do
+      before do
+        @rest_app.stub(:deployment_type).and_return('binary')
+        ssh = double(Net::SSH)
+        session = double(Net::SSH::Connection::Session)
+        channel = double(Net::SSH::Connection::Channel)
+        exit_status = double(Net::SSH::Buffer)
+        exit_status.stub(:read_long).and_return(255)
+        Net::SSH.should_receive(:start).exactly(3).times.with('test.domain.com', 'user', :compression=>false).and_yield(session)
+        session.should_receive(:open_channel).exactly(3).times.and_yield(channel)
+        channel.should_receive(:exec).exactly(3).times.with("oo-binary-deploy").and_yield(nil, nil)
+        channel.should_receive(:on_data).exactly(3).times.and_yield(nil, 'foo')
+        channel.should_receive(:on_extended_data).exactly(3).times.and_yield(nil, nil, 'Invalid file')
+        channel.should_receive(:on_close).exactly(3).times.and_yield(nil)
+        channel.should_receive(:on_request).exactly(3).times.with("exit-status").and_yield(nil, exit_status)
+        lines = ''
+        File.open(@targz_filename, 'rb') do |file|
+          file.chunk(1024) do |chunk|
+            lines << chunk
+          end
+        end
+        channel.should_receive(:send_data).exactly(3).times.with(lines)
+        channel.should_receive(:eof!).exactly(3).times
+        session.should_receive(:loop).exactly(3).times
+      end
+      let(:arguments) {['app', 'deploy', @targz_filename, '--app', deployment_app_name]}
+      it "should not succeed" do
+        expect{ run }.to exit_with_code(133)
+        run_output.should match(/Deployment of file '#{@targz_filename}' in progress for application #{deployment_app_name} .../)
+        run_output.should match(/Invalid file/)
+      end
+    end
+
+    context "fails when deploying git ref" do
+      before (:each) { Net::SSH.should_receive(:start).and_raise(Errno::ECONNREFUSED) }
+      let(:arguments) {['app', 'deploy', 'master', '--app', deployment_app_name]}
+      it "should exit with error" do
+        expect{ run }.to exit_with_code(1)
+      end
+    end
+
+    context "fails when deploying git ref with custom ssh executable" do
+      ssh_path = '/usr/bin/ssh'
+      before do
+        base_config { |c, d| d.add 'ssh', ssh_path }
+      end
+      let(:arguments) {['app', 'deploy', 'master', '--app', deployment_app_name]}
+      it "should exit with ssh command output" do
+        @instance.stub(:exec).and_return([1, "FAILURE"])
+        expect{ run }.to exit_with_code(133)
+        run_output.should match(/FAILURE/)
+        run_output.should match(/Error deploying git ref\. You can try to deploy manually with/)
+      end
+    end
+
+    context "fails when deploying binary file" do
+      before (:each) do
+        @rest_app.stub(:deployment_type).and_return('binary')
+        Net::SSH.should_receive(:start).and_raise(Errno::ECONNREFUSED)
+      end
+      let(:arguments) {['app', 'deploy', @targz_filename, '--app', deployment_app_name]}
+      it "should exit with error" do
+        expect{ run }.to exit_with_code(1)
+      end
+    end
+
+    context "fails when deploying binary file" do
+      before (:each) do
+        @rest_app.stub(:deployment_type).and_return('binary')
+        Net::SSH.should_receive(:start).and_raise(SocketError)
+      end
+      let(:arguments) {['app', 'deploy', @targz_filename, '--app', deployment_app_name]}
+      it "should exit with error" do
+        expect{ run }.to exit_with_code(1)
+      end
+    end
+
+    context "fails when deploying url file" do
+      before (:each) do
+        @rest_app.stub(:deployment_type).and_return('binary')
+        Net::SSH.should_receive(:start).and_raise(Errno::ECONNREFUSED)
+      end
+      let(:arguments) {['app', 'deploy', 'http://foo.com/deploy.tar.gz', '--app', deployment_app_name]}
+      it "should exit with error" do
+        expect{ run }.to exit_with_code(1)
+      end
+    end
+
+    context "fails when deploying url file" do
+      before (:each) do
+        @rest_app.stub(:deployment_type).and_return('binary')
+        Net::SSH.should_receive(:start).and_raise(SocketError)
+      end
+      let(:arguments) {['app', 'deploy', 'http://foo.com/deploy.tar.gz', '--app', deployment_app_name]}
+      it "should exit with error" do
+        expect{ run }.to exit_with_code(1)
+      end
+    end
+
+    context 'when run against an unsupported server' do
+      before {
+        @rest_app.links.delete 'UPDATE'
+        @rest_app.links.delete 'DEPLOY'
+      }
+      let(:arguments) {['app', 'deploy', 'master', '--app', deployment_app_name]}
+      it "should raise not supported exception" do
+        expect{ run }.to exit_with_code(132)
+        run_output.should match(/The server does not support deployments/)
+      end
+    end
+
+    context "ssh authentication failure" do
+      before (:each) { Net::SSH.should_receive(:start).exactly(2).times.and_raise(Net::SSH::AuthenticationFailed) }
+      let(:arguments) {['app', 'deploy', 'master', '--app', deployment_app_name]}
+      it "should exit with error" do
+        expect{ run }.to exit_with_code(1)
+        run_output.should match(/Authentication to server test.domain.com with user user failed/)
+      end
+    end
+
+    context "fails when deploying git reference on an app configured to deployment_type = binary" do
+      before { @rest_app.stub(:deployment_type).and_return('binary') }
+      let(:arguments) {['app', 'deploy', 'master', '--app', deployment_app_name]}
+      it "should exit with error" do
+        expect{ run }.to exit_with_code(133)
+      end
+    end
+
+    context "fails when deploying file on an app configured to deployment_type = git" do
+      before { @rest_app.stub(:deployment_type).and_return('git') }
+      let(:arguments) {['app', 'deploy', @targz_filename, '--app', deployment_app_name]}
+      it "should exit with error" do
+        expect{ run }.to exit_with_code(133)
+      end
+    end
+
+    [URI('http://foo.com/path/to/file/' + deployment_app_name + '.tar.gz'),
+     URI('https://foo.com/path/to/file/' + deployment_app_name + '.tar.gz')].each do |uri|
+      context "fails when deploying url on an app configured to deployment_type = git" do
+        before { @rest_app.stub(:deployment_type).and_return('git') }
+        let(:arguments) {['app', 'deploy', uri.to_s, '--app', deployment_app_name]}
+        it "should exit with error" do
+          expect{ run }.to exit_with_code(133)
+        end
+      end
+    end
+
+  end
+
+
 end
