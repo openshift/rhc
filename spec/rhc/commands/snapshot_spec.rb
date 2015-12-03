@@ -32,14 +32,26 @@ describe RHC::Commands::Snapshot do
 
     context 'when saving a snapshot' do
       before do
+        RHC::Helpers.should_receive(:agree).with(/Do you want to overwrite this file?/).and_return(true)
         subject.class.any_instance.should_receive(:exec).with("ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'snapshot' > #{@app.name}.tar.gz").and_return([0, 'some save output'])
       end
       it { expect { run }.to exit_with_code(0) }
       it { run_output.should_not match 'some save output' }
     end
 
+    context 'when saving a snapshot into existing file' do
+      let(:arguments) {['snapshot', 'save', '--app', 'mockapp', '-f', 'mockapp.tar.gz']}
+      before do
+        File.stub(:exists?).and_return(true)
+        RHC::Helpers.should_receive(:agree).with(/Do you want to overwrite this file?/).and_return(true)
+        subject.class.any_instance.should_receive(:exec).with(/ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'snapshot' > #{@app.name}.tar.gz/).and_return([0, 'some save output'])
+      end
+      it { run_output.should match(/done/) }
+    end
+
     context 'when failing to save a snapshot' do
       before do
+        RHC::Helpers.should_receive(:agree).with(/Do you want to overwrite this file?/).and_return(true)
         subject.class.any_instance.should_receive(:exec).with("ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'snapshot' > #{@app.name}.tar.gz").and_return([1, 'some save failures'])
       end
       it { expect { run }.to exit_with_code(130) }
@@ -56,6 +68,7 @@ describe RHC::Commands::Snapshot do
         subject.class.any_instance.stub(:discover_ssh_executable){ 'ssh' }
         subject.class.any_instance.stub(:discover_git_executable){ 'git' }
         ssh.should_receive(:exec!).with("snapshot").and_yield(nil, :stdout, 'foo').and_yield(nil, :stderr, 'foo')
+        RHC::Helpers.should_receive(:agree).with(/Do you want to overwrite this file?/).and_return(true)
       end
       it { expect { run }.to exit_with_code(0) }
       it { run_output.should match("done") }
@@ -70,6 +83,7 @@ describe RHC::Commands::Snapshot do
         Net::SSH.should_receive(:start).with(@ssh_uri.host, @ssh_uri.user).and_raise(Timeout::Error)
         subject.class.any_instance.stub(:discover_ssh_executable){ 'ssh' }
         subject.class.any_instance.stub(:discover_git_executable){ 'git' }
+        RHC::Helpers.should_receive(:agree).with(/Do you want to overwrite this file?/).and_return(true)
       end
       it { expect { run }.to exit_with_code(130) }
     end
@@ -84,6 +98,7 @@ describe RHC::Commands::Snapshot do
         subject.class.any_instance.stub(:exec) { sleep 10 }
         subject.class.any_instance.stub(:discover_ssh_executable){ 'ssh' }
         subject.class.any_instance.stub(:discover_git_executable){ 'git' }
+        RHC::Helpers.should_receive(:agree).with(/Do you want to overwrite this file?/).and_return(true)
       end
       it { expect { run }.to exit_with_code(130) }
       it { run_output.should match(/Save operation took longer than/) }
@@ -96,6 +111,7 @@ describe RHC::Commands::Snapshot do
         RHC::Helpers.stub(:linux?) do ; false ; end
         subject.class.any_instance.stub(:discover_ssh_executable){ 'ssh' }
         subject.class.any_instance.stub(:discover_git_executable){ 'git' }
+        RHC::Helpers.should_receive(:agree).with(/Do you want to overwrite this file?/).and_return(true)
         Net::SSH.should_receive(:start).with(@ssh_uri.host, @ssh_uri.user).and_raise(Errno::EHOSTUNREACH)
       end
       it { expect { run }.to exit_with_code(130) }
@@ -107,6 +123,7 @@ describe RHC::Commands::Snapshot do
 
       context 'when saving a deployment snapshot' do
         before do
+          RHC::Helpers.should_receive(:agree).with(/Do you want to overwrite this file?/).and_return(true)
           subject.class.any_instance.should_receive(:exec).with("ssh #{@ssh_uri.user}@#{@ssh_uri.host} 'gear archive-deployment' > #{@app.name}.tar.gz").and_return([0, 'some save output'])
         end
         it { expect { run }.to exit_with_code(0) }
@@ -118,11 +135,17 @@ describe RHC::Commands::Snapshot do
 
   describe 'snapshot save with invalid ssh executable' do
     let(:arguments) {['snapshot', 'save', '--trace', '--noprompt', '-l', 'test@test.foo', '-p', 'password', '--app', 'mockapp', '--ssh', 'path_to_ssh']}
+    before do
+      RHC::Helpers.should_receive(:agree).with(/Do you want to overwrite this file?/).and_return(true)
+    end
     it('should raise') { expect{ run }.to raise_error(RHC::InvalidSSHExecutableException, /SSH executable 'path_to_ssh' does not exist./) }
   end
 
   describe 'snapshot save when ssh is not executable' do
     let(:arguments) {['snapshot', 'save', '--trace', '--noprompt', '-l', 'test@test.foo', '-p', 'password', '--app', 'mockapp', '--ssh', @targz_filename]}
+    before do
+      RHC::Helpers.should_receive(:agree).with(/Do you want to overwrite this file?/).and_return(true)
+    end
     it('should raise') { expect{ run }.to raise_error(RHC::InvalidSSHExecutableException, /SSH executable '#{@targz_filename}' is not executable./) }
   end
 
