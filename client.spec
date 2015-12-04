@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.38.5
+Version: 1.38.6
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Fri Dec 04 2015 Wesley Hearn <whearn@redhat.com> 1.38.6-1
+- gemspec: Restore net-ssh lower bound (miciah.masters@gmail.com)
+
 * Tue Nov 17 2015 Stefanie Forrester <sedgar@redhat.com> 1.38.5-1
 - Resolve dep issue (dmcphers@redhat.com)
 - rhc.gemspec: limits cucumber dependency to make code 1.8.7 friendly
