@@ -5,7 +5,13 @@ require 'rhc/commands/port_forward'
 describe RHC::Commands::PortForward do
 
   let!(:rest_client){ MockRestClient.new }
-  before{ user_config }
+  before do
+    user_config
+    @instance = RHC::Commands::PortForward.new
+    RHC::Commands::PortForward.stub(:new) do
+      @instance
+    end
+  end
 
   describe 'run' do
     let(:arguments) { ['port-forward', '--noprompt', '--config', 'test.conf', '-l', 'test@test.foo', '-p', 'password', '--app', 'mockapp'] }
@@ -237,17 +243,18 @@ describe RHC::Commands::PortForward do
       end
 
       it 'should use the executable to check for ports' do
-        subject.class.any_instance.should_receive(:exec).with("#{ssh_path} #{@uri.user}@#{@uri.host} 'rhc-list-ports 2>&1'").
-          and_return([0, 'httpd -> 127.1.244.1:8080'])
+        @instance.should_receive(:run_with_system_ssh).with("#{ssh_path} #{@uri.user}@#{@uri.host} 'rhc-list-ports 2>&1'").and_return([0, 'httpd -> 127.1.244.1:8080'])
         expect { run }.to exit_with_code(1)
         expect { run_output.should match(/You can try forwarding.*rhc-list-ports.*/) }
+        expect { run_output.should match("A SSH executable is specified and cannot be used with this command.") }
       end
 
       it 'should exit when ssh command fails to collect ports' do
-        subject.class.any_instance.should_receive(:exec).with("#{ssh_path} #{@uri.user}@#{@uri.host} 'rhc-list-ports 2>&1'").
-          and_return([1, 'some ssh error'])
-        expect { run }.to exit_with_code(133)
+        @instance.stub(:debug?).and_return(true)
+        @instance.should_receive(:run_with_system_ssh).with("#{ssh_path} #{@uri.user}@#{@uri.host} 'rhc-list-ports 2>&1'").and_raise(RHC::SSHCommandFailed.new([1, "some ssh error"]))
+        expect { run }.to exit_with_code(1)
         expect { run_output.should match(/some ssh error/) }
+        expect { run_output.should match(/-N -L <local_port>:<gear_ip>:<destination_port>/) }
       end
     end
 
