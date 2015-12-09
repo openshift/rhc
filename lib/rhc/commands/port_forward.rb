@@ -97,9 +97,14 @@ module RHC::Commands
             end
           end
         else
-          debug "Using #{ssh_executable} to determine forwarding ports."
           ssh_cmd = "#{ssh_executable} #{ssh_uri.user}@#{ssh_uri.host} '#{list_ports_cmd} 2>&1'"
-          status, output = run_with_system_ssh(ssh_cmd)
+          debug "Running #{ssh_cmd} to determine forwarding ports."
+          begin
+            status, output = run_with_system_ssh(ssh_cmd)
+          rescue RHC::SSHCommandFailed => e
+            ex_forward_cmd = "#{ssh_executable} -N -L <local_port>:<gear_ip>:<destination_port>"
+            raise RHC::PortForwardFailedException.new("#{e.message + "\n" if debug?}Error attempting to collect ports to forward from app. You can try to forward ports manually.\nFirst, to get the destination ip and port, run the following command:\n  #{ssh_cmd}\nThen, run the following command with the ports and ip substituted:\n  " + ex_forward_cmd)
+          end
         end
 
         output.each_line do |line|
