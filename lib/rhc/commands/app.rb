@@ -676,21 +676,22 @@ module RHC::Commands
         #
         debug "Start checking for application dns @ '#{host}'"
 
-        found = false
+        host_found = hosts_file_contains?(host)
 
-        # Allow DNS to propagate
-        Kernel.sleep 5
+        if !host_found
+          # Allow DNS to propagate
+          Kernel.sleep 5
 
-        # Now start checking for DNS
-        host_found = hosts_file_contains?(host) or
-        1.upto(MAX_RETRIES) { |i|
-          host_found = host_exists?(host)
-          break found if host_found
+          # Now start checking for DNS
+          1.upto(MAX_RETRIES) do |i|
+            host_found = host_exists?(host)
+            break if host_found
 
-          say "    retry # #{i} - Waiting for DNS: #{host}"
-          Kernel.sleep sleep_time.to_i
-          sleep_time *= DEFAULT_DELAY_THROTTLE
-        }
+            say "    retry # #{i} - Waiting for DNS: #{host}"
+            Kernel.sleep sleep_time.to_i
+            sleep_time *= DEFAULT_DELAY_THROTTLE
+          end
+        end
 
         debug "End checking for application dns @ '#{host} - found=#{host_found}'"
 
