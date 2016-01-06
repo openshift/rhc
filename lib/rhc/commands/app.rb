@@ -62,7 +62,7 @@ module RHC::Commands
     option ["--[no-]git"], "Skip creating the local Git repository."
     option ["--[no-]dns"], "Skip waiting for the application DNS name to resolve. Must be used in combination with --no-git"
     option ['--no-keys'], "Skip checking SSH keys during app creation", :hide => true
-    option ["--enable-jenkins [NAME]"], "Enable Jenkins builds for this application (will create a Jenkins application if not already available). The default name will be 'jenkins' if not specified."
+    option ["--enable-jenkins [NAME]"], "Enable Jenkins builds for this application (will create a Jenkins application if not already available). The default name will be 'jenkins' if not specified. The default gear size will be used unless --gear-size is specified."
     argument :name, "Name for your application", ["-a", "--app NAME"], :optional => true
     argument :cartridges, "The web framework this application should use", ["-t", "--type CARTRIDGE"], :optional => true, :type => :list
     def create(name, cartridges)
@@ -78,7 +78,7 @@ module RHC::Commands
 
       if options.from_app
         raise RHC::AppCloneNotSupportedException, "The server does not support creating apps based on others (rhc create-app --from-app)." if (!rest_domain.has_param?('ADD_APPLICATION', 'cartridges[][name]') || !rest_domain.has_param?('ADD_APPLICATION', 'cartridges[][url]'))
-        raise ArgumentError, "Option --from-code is incompatible with --from-app. When creating an app based on another resource you can either specify a Git repository URL with --from-code or an existing app name with --from-app." if options.from_code     
+        raise ArgumentError, "Option --from-code is incompatible with --from-app. When creating an app based on another resource you can either specify a Git repository URL with --from-code or an existing app name with --from-app." if options.from_code
         raise ArgumentError, "Option --no-dns is incompatible with --from-app. We need to propagate the new app DNS to be able to configure it." if options.dns == false
         raise ArgumentError, "Do not specify cartridges when creating an app based on another one. All cartridges will be copied from the original app." if !(cartridges || []).empty?
 
@@ -132,7 +132,7 @@ module RHC::Commands
 
         cartridges = from_app.cartridges.reject{|c| c.tags.include?('web_proxy')}.collect do |cartridge|
           {
-            :name => (cartridge.name if !cartridge.custom?), 
+            :name => (cartridge.name if !cartridge.custom?),
             :url => (cartridge.url if cartridge.custom?),
             :gear_size => options.gear_size || cartridge.gear_profile,
             :additional_gear_storage => (cartridge.additional_gear_storage if cartridge.additional_gear_storage > 0),
@@ -176,7 +176,7 @@ module RHC::Commands
             say "Setting up a Jenkins application ... "
 
             begin
-              build_app_exists = add_jenkins_app(rest_domain)
+              build_app_exists = add_jenkins_app(rest_domain, gear_profile)
 
               success "done"
               paragraph{ indent{ success build_app_exists.messages.map(&:strip) } }
@@ -448,7 +448,7 @@ module RHC::Commands
               gear['id'],
               gear['state'] == 'started' ? color(gear['state'], :green) : color(gear['state'], :yellow),
               group.cartridges.collect{ |c| color_cart.call(c['name']) }.join(' '),
-              group.gear_profile,              
+              group.gear_profile,
               gear['region'],
               gear['zone'],
               ssh_string(gear['ssh_url'])
@@ -628,8 +628,8 @@ module RHC::Commands
         raise
       end
 
-      def add_jenkins_app(rest_domain)
-        create_app(jenkins_app_name, jenkins_cartridge_name, rest_domain)
+      def add_jenkins_app(rest_domain, gear_size=nil)
+        create_app(jenkins_app_name, jenkins_cartridge_name, rest_domain, gear_size)
       end
 
       def add_jenkins_cartridge(rest_app)
