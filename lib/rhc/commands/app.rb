@@ -425,7 +425,8 @@ module RHC::Commands
         case options.gears
         when 'quota'
           opts = {:as => :gear, :split_cells_on => /\s*\t/, :header => ['Gear', 'Cartridges', 'Used', 'Limit'], :align => [nil, nil, :right, :right]}
-          table_from_gears('echo "$(du --block-size=1 -s 2>/dev/null | cut -f 1)"', groups, opts) do |gear, data, group|
+          # quota 'blocks' are actually kbytes, so have to multiply by 1024, see 'man quota'
+          table_from_gears('echo "$(quota | awk \' NR == 3 { print $2 * 1024 }\')" ', groups, opts) do |gear, data, group|
             [gear['id'], group.cartridges.collect{ |c| c['name'] }.join(' '), (human_size(data.chomp) rescue 'error'), human_size(group.quota)]
           end
         when 'ssh'
