@@ -631,7 +631,7 @@ In order to fully interact with OpenShift you will need to install and configure
 
 We recommend these free applications:
 
-  * Git for Windows - a basic git command line and GUI client http://msysgit.github.io/
+  * Git for Windows - a basic git command line and GUI client https://git-for-windows.github.io/
   * TortoiseGit - git client that integrates into the file explorer http://code.google.com/p/tortoisegit/
  
 EOF

@@ -458,12 +458,14 @@ module RHC
 
         #:nocov:
         if RHC::Helpers.windows?
-          # looks for ssh.exe from msysgit or plink.exe from PuTTY, either on path or specific locations
+          # looks for ssh.exe from git-for-windows or plink.exe from PuTTY, either on path or specific locations
           guessing_locations <<
             discover_windows_executables do |base|
-              [
+              from_files = ENV['PATH'].split(File::PATH_SEPARATOR).map {|p| p + File::ALT_SEPARATOR + 'ssh.exe'}
+              from_files + [
                 'ssh.exe',
                 "#{base}\\Git\\bin\\ssh.exe",
+                "#{base}\\Git\\usr\\bin\\ssh.exe",
                 "#{base}\\ssh.exe",
                 'plink.exe',
                 "#{base}\\PuTTY\\plink.exe",
@@ -495,7 +497,7 @@ module RHC
     def check_ssh_executable!(path)
       if not path
         discover_ssh_executable.tap do |ssh_cmd|
-          raise RHC::InvalidSSHExecutableException.new("No system SSH available. Please use the --ssh option to specify the path to your SSH executable, or install SSH.#{windows? ? ' We recommend this free application: Git for Windows - a basic git command line and GUI client http://msysgit.github.io/.' : ''}") unless ssh_cmd or has_ssh?
+          raise RHC::InvalidSSHExecutableException.new("No system SSH available. Please use the --ssh option to specify the path to your SSH executable, or install SSH.#{windows? ? ' We recommend this free application: Git for Windows - a basic git command line and GUI client https://git-for-windows.github.io/.' : ''}") unless ssh_cmd or has_ssh?
         end
       else
         bin_path = split_path(path)[0]
