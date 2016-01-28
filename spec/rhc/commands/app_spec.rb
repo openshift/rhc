@@ -822,7 +822,7 @@ describe RHC::Commands::App do
       before do
         @domain = rest_client.add_domain("mockdomain")
         @domain.add_application("app1", "mock_type", true)
-        expect_multi_ssh('echo "$(du --block-size=1 -s 2>/dev/null | cut -f 1)"', 'fakegearid0@fakesshurl.com' => '1734334', 'fakegearid1@fakesshurl.com' => '1934348')
+        expect_multi_ssh('echo "$(quota | awk \' NR == 3 { print $2 * 1024 }\')" ', 'fakegearid0@fakesshurl.com' => '1734334', 'fakegearid1@fakesshurl.com' => '1934348')
       end
       it { run_output.should match(/Gear.*Cartridges.*Used.*fakegearid0.*1\.7 MB.*1 GB.*fakegearid1.*1\.9 MB/m) }
       it { expect{ run }.to exit_with_code(0) }
