@@ -30,7 +30,11 @@ Gem::Specification.new do |s|
     sep
   ].join("\n")
 
-  s.add_dependency              'net-ssh',      '>= 2.0.11', '<= 2.9.2'
+  if RUBY_VERSION <= "1.9.3"
+    s.add_dependency            'net-ssh', '>= 2.0.11', '<= 2.9.2'
+  else
+    s.add_dependency            'net-ssh', '>=3.0'
+  end
   s.add_dependency              'net-scp',      '>= 1.1.2'
   s.add_dependency              'net-ssh-multi','>= 1.2.0'
   s.add_dependency              'archive-tar-minitar'
