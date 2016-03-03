@@ -22,6 +22,11 @@ end
 # See https://bugzilla.redhat.com/show_bug.cgi?id=1197301
 gem "net-ssh", "<= 2.9.2"
 
+# Limit addressable for 1.8.7 due to deprecated support
+if RUBY_VERSION < '1.9'
+  gem "addressable", "<2.4.0"
+end
+
 # Latest versions of these gems do not support ruby_18
 gem "rake", "< 10.1.2"
 gem "i18n", "< 0.7.0"
