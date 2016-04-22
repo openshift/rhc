@@ -10,6 +10,10 @@ comments.  For more information about OpenShift, visit https://openshift.redhat.
 or the OpenShift support page
 https://openshift.redhat.com/support.
 
+RHC from rubygems.org is built on Ruby 1.8.7.  RHC does have conditional 
+dependencies during build time, so it can be built on multiple versions of Ruby.  
+If you are running into any dependency issues when using RHC, please try to 
+build RHC locally using `gem build rhc.gemspec` to use the correct dependencies.
 
 ## Using RHC to create an application
 
