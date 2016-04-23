@@ -35,4 +35,4 @@ end
 # Latest versions of these gems do not support ruby_18
 gem "rake", "< 10.1.2"
 gem "i18n", "< 0.7.0"
-gem "commander", "< 4.3.0"
+gem "commander", "~> 4.3.6"
