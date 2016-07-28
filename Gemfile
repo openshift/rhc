@@ -19,10 +19,21 @@ if Gem::Specification.respond_to?(:find_all_by_name) and not Gem::Specification:
   gem 'psych'
 end
 
-# See https://bugzilla.redhat.com/show_bug.cgi?id=1197301
-gem "net-ssh", "<= 2.9.2"
+# Limit net-ssh when using older versions of ruby
+# See https://bugzilla.redhat.com/show_bug.cgi?id=1197301 for the 2.9.2 limit
+if RUBY_VERSION < '2.0'
+  gem "net-ssh", "<= 2.9.2"
+else
+  gem "net-ssh", ">= 3.0.0"
+end
+
+# Limits addressable for Ruby 1.8.7
+if RUBY_VERSION < '1.9'
+  gem "addressable", "< 2.4.0"
+end
 
 # Latest versions of these gems do not support ruby_18
 gem "rake", "< 10.1.2"
 gem "i18n", "< 0.7.0"
 gem "commander", "< 4.3.0"
+gem "json", "< 2.0.0"
