@@ -43,8 +43,8 @@ module RHC
         end
 
         v = @commands[name.to_s] || {:actions => [], :switches => []}
-        v[:switches].concat(cmd.options.map do |o| 
-          if o[:switches] 
+        v[:switches].concat(cmd.options.map do |o|
+          if o[:switches]
             s = o[:switches][-1].split(' ')[0]
             if m = /--\[no-\](.+)/.match(s)
               s = ["--#{m[1]}", "--no-#{m[1]}"]
@@ -70,5 +70,5 @@ module RHC
 
       @global_options = data.runner.options.map{ |o| o[:switches][-1].split(' ')[0] }.sort
     end
-  end  
+  end
 end
