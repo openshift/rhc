@@ -376,9 +376,37 @@ module RHC::Commands
     syntax "<app> [--namespace NAME]"
     takes_application :argument => true
     def enable_ha(app)
-      app_action :enable_ha
+      rest_app = find_app
 
-      results { say "#{app} is now highly available" }
+      scaleup_needed = false
+      cant_scale_up = false
+      gear_groups = rest_app.gear_groups
+      gear_groups.each do |gg|
+        if gg.attributes["scales_from"] and gg.attributes["scales_from"] > 1
+          scaleup_needed = true
+          if gg.attributes["scales_to"] and rest_app.gear_count == gg.attributes["scales_to"]
+            cant_scale_up = true
+          end
+        end
+      end
+
+      rest_app.send :enable_ha
+      results do
+        # If the application was already scaled, a scale up may be required.
+        if scaleup_needed
+          say "#{app} is now configured to be highly available"
+          if cant_scale_up
+            msg = "You will need to scale down the application, then scale back up to create an additional " +
+              "haproxy instance:\n  rhc app scale-down #{rest_app.name} && rhc app scale-up #{rest_app.name}"
+          else
+            msg = "You will need to scale up the application to create an additional haproxy instance:\n" +
+              "  rhc app scale-up #{rest_app.name}"
+          end
+          warn msg
+        else
+          say "#{app} is now highly available"
+        end
+      end
       0
     end
 
