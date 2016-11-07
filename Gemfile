@@ -30,6 +30,8 @@ end
 # Limits addressable for Ruby 1.8.7
 if RUBY_VERSION < '1.9'
   gem "addressable", "< 2.4.0"
+elsif RUBY_VERSION < '2.0'
+  gem "addressable", "< 2.5.0"
 end
 
 # Latest versions of these gems do not support ruby_18
