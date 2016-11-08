@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.38.4
+Version: 1.38.7
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,48 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Wed Apr 27 2016 Timothy Williams <tiwillia@redhat.com> 1.38.7-1
+- Modifying rhc to focus on support for ruby1.8.7 (rthrashe@redhat.com)
+- Remove outdated rhc-1.37.1.gem, add *.gem to .gitignore (somalley@redhat.com)
+- update search path for 'ssh.exe' (somalley@redhat.com)
+- 'rhc app show <app> --gears quota' use 'quota' not 'du' (somalley@redhat.com)
+- Bug 1111456 - jenkins app default to small gear with enable-jenkins and
+  custom gear size (vdinh@redhat.com)
+- helpers.rb: remove sslv3 output from error message (rthrashe@redhat.com)
+- Include ssh url in example port-forward command (tiwillia@redhat.com)
+- Return a helpful error message if port-forward fails with custom ssh
+  executable (tiwillia@redhat.com)
+- Enable deployment operations to utilize a custom ssh executable
+  (tiwillia@redhat.com)
+- Bug 1141093 - rhc snapshot save same filename didn't prompt conflict warning
+  (vdinh@redhat.com)
+- When stderr is redirected to `/dev/null`, no output is seen from `rhc tail`
+  and the command ends immediately. After this change, no redirection will
+  occur when run on windows systems, resolving this issue.
+  (tiwillia@redhat.com)
+- Bug 1163050 - Fix exception using rhc app ssh --ssh with custom path
+  (vdinh@redhat.com)
+- Bug 1164699 - Avoid using --summary and --verbose together for `rhc apps`
+  (vdinh@redhat.com)
+- Fix rhc_bash for usage with Zsh's bashcompinit (git@thequod.de)
+- Allow an ssh executable to be specified globally (tiwillia@redhat.com)
+- Resolve dep issue (dmcphers@redhat.com)
+- Fix typo (dmcphers@redhat.com)
+- gemspec: Restore net-ssh lower bound (miciah.masters@gmail.com)
+- Deobfuscated dns_propagated (miciah.masters@gmail.com)
+- cucumber/README.md: Fix typo in command: cucummber (miciah.masters@gmail.com)
+- Fix typo in rhc server usage text ("estabilished") (miciah.masters@gmail.com)
+- Remove cucumber/verify.feature (miciah.masters@gmail.com)
+- rhc server: Fix typo in usage text (miciah.masters@gmail.com)
+- rhc.gemspec: limits cucumber dependency to make code 1.8.7 friendly
+  (rthrashe@redhat.com)
+- Travis: Use containerized builds (miciah.masters@gmail.com)
+- Honor global timeout during snapshot save (tiwillia@redhat.com)
+- server.rb: fixes incorrect error output and additional input validation
+  (rthrashe@redhat.com)
+- rhc.1 man page: adds scp to list of resources (rthrashe@redhat.com)
+- Quote as necessary when writing configuration (miciah.masters@gmail.com)
+
 * Fri Oct 23 2015 Wesley Hearn <whearn@redhat.com> 1.38.4-1
 - Merge pull request #704 from yithian/cartridge_start_usage
   (abhgupta@redhat.com)
