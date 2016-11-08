@@ -75,8 +75,8 @@ We expect code contributions to follow these standards:
    integration tests.  Specs are in 'spec/' and can be run with <code>bundle
 exec rake spec</code>.  Features are in 'features/' and can be run with
 <code>bundle exec rake features</code> (although these tests runs
-against the gem installed locally so you will need to gem install
-first).  See [README.md](https://github.com/openshift/rhc/blob/master/features/README.md) in the features dir for more info.
+against the gem installed locally so you will need to run `./build.sh && gem install rhc`
+first).
 3. We maintain 100% line coverage of all newly added code via spec
    testing.  The build will fail if new code is added and it does not
 have full line coverage.  Some old code is currently excluded until it
