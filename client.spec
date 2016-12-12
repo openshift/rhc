@@ -3,7 +3,7 @@
 
 Summary:       OpenShift client management tools
 Name:          rhc
-Version: 1.38.7
+Version: 1.38.8
 Release:       1%{?dist}
 Group:         Network/Daemons
 License:       ASL 2.0
@@ -105,6 +105,9 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0644,-,-) /etc/bash_completion.d/rhc
 
 %changelog
+* Mon Dec 12 2016 Wesley Hearn <whearn@redhat.com> 1.38.8-1
+- Updates dependency limits for addressable (rthrashe@redhat.com)
+
 * Mon Aug 01 2016 Wesley Hearn <whearn@redhat.com> 1.38.7-1
 - Update Gemfile dependencies (rthrashe@redhat.com)
 - Modifying rhc to focus on support for ruby1.8.7 (rthrashe@redhat.com)
