@@ -290,6 +290,12 @@ module RHC
     end
   end
 
+  class InvalidRsyncExecutableException < Exception
+    def initialize(message="Invalid or missing Rsync executable")
+      super message
+    end
+  end
+
   class FileOrPathNotFound < Exception
     def initialize(message="File, file path, or directory could not be found")
       super message
