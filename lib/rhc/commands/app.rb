@@ -163,6 +163,7 @@ module RHC::Commands
         # create the main app
         rest_app = create_app(name, cartridges, rest_domain, gear_profile, scaling, options.from_code, env, options.auto_deploy, options.keep_deployments, options.deployment_branch, options.deployment_type, region, ha)
         success "done"
+        info "An empty Git repository has been created for your application.  Use 'git push' to add your code." if options.from_code == "empty" || options.from_code == nil
 
         paragraph{ indent{ success rest_app.messages.map(&:strip) } }
       end
