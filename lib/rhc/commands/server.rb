@@ -185,6 +185,7 @@ module RHC::Commands
     option ["--ssl-version VERSION"], "The version of SSL to use to be used on this server", :type => SSLVersion, :optional => true
     def configure(server)
       raise ArgumentError, "The --use and --skip-wizard options cannot be used together." if options.use && options.skip_wizard
+      raise ArgumentError, "The --ssl-client-key-file and --ssl-client-cert-file options should be used together." if options.ssl_client_cert_file.nil? ^ options.ssl_client_key_file.nil?
 
       server = server_configs.find(server)
 
