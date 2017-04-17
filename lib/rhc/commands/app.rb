@@ -378,7 +378,9 @@ module RHC::Commands
     def enable_ha(app)
       app_action :enable_ha
 
-      results { say "#{app} is now highly available" }
+      results { say "#{app} is now highly available. If the application was
+                already scaled, you may need to scale up the application to
+                deploy additional instances of haproxy." }
       0
     end
 
